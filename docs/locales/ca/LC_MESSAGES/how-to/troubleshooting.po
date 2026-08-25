@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-08-25 11:19+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -24,445 +24,590 @@ msgstr "Diagnostica i repara la teva configuració local"
 
 #: ../../how-to/troubleshooting.md:3
 msgid ""
-"Every check on this page runs locally unless it explicitly says otherwise. The optional connectivity probe opens the "
-"public AEAT Sede landing page and checks reachability. It does not submit taxpayer data."
+"Every check on this page runs locally unless it explicitly says "
+"otherwise. The optional connectivity probe opens the public AEAT Sede "
+"landing page and checks reachability. It does not submit taxpayer data."
 msgstr ""
-"Cada comprovació d'aquesta pàgina s'executa localment tret que digui explícitament el contrari. La prova de "
-"connectivitat opcional obre la pàgina d'inici pública de la Sede de l'AEAT i comprova l'accessibilitat. No presenta "
-"cap dada del contribuent."
+"Cada comprovació d'aquesta pàgina s'executa localment tret que digui "
+"explícitament el contrari. La prova de connectivitat opcional obre la "
+"pàgina d'inici pública de la Sede de l'AEAT i comprova l'accessibilitat. "
+"No presenta cap dada del contribuent."
 
 #: ../../how-to/troubleshooting.md:7
 msgid ""
-"Find the error in the headings below and follow its steps. If it is not listed, jump to [Prepare a privacy-safe "
-"support request](#prepare-a-privacy-safe-support-request)."
+"Find the error in the headings below and follow its steps. If it is not "
+"listed, jump to [Prepare a privacy-safe support request](#prepare-a"
+"-privacy-safe-support-request)."
 msgstr ""
-"Troba l'error als encapçalaments de més avall i segueix-ne els passos. Si no hi apareix, salta a [Prepara una "
-"sol·licitud d'ajuda segura per a la privadesa](#prepare-a-privacy-safe-support-request)."
+"Troba l'error als encapçalaments de més avall i segueix-ne els passos. Si"
+" no hi apareix, salta a [Prepara una sol·licitud d'ajuda segura per a la "
+"privadesa](#prepare-a-privacy-safe-support-request)."
 
 #: ../../how-to/troubleshooting.md:10
+#, fuzzy
 msgid ""
-"Profile-scoped commands need an active taxpayer profile and may ask for the master-key passphrase. See [Set up your "
-"taxpayer profile](profile-setup.md) if you have none. Output can be English, Spanish, Catalan, or Hungarian."
+"Profile-scoped commands need an active taxpayer profile and may ask for "
+"that profile's passphrase to unwrap its independent encryption key. See "
+"[Set up your taxpayer profile](profile-setup.md) if you have none. Output"
+" can be English, Spanish, Catalan, or Hungarian."
 msgstr ""
-"Les ordres limitades al perfil necessiten un perfil de contribuent actiu i poden demanar la contrasenya de clau "
-"mestra. Consulta [Configura el teu perfil de contribuent](profile-setup.md) si no en tens cap. La sortida pot ser en "
-"anglès, castellà, català o hongarès."
+"Les ordres limitades al perfil necessiten un perfil de contribuent actiu "
+"i poden demanar la contrasenya de clau mestra. Consulta [Configura el teu"
+" perfil de contribuent](profile-setup.md) si no en tens cap. La sortida "
+"pot ser en anglès, castellà, català o hongarès."
 
-#: ../../how-to/troubleshooting.md:14
+#: ../../how-to/troubleshooting.md:15
 msgid "\"This operation requires an active profile\""
 msgstr "«This operation requires an active profile»"
 
-#: ../../how-to/troubleshooting.md:16
+#: ../../how-to/troubleshooting.md:17
 msgid ""
-"The command needs a taxpayer profile and none is active. First inspect what the tool thinks is active, then run the "
-"repair check without changing anything. A healthy profile reports `ready`; a broken local pointer reports the repair "
-"action you can take:"
+"The command needs a taxpayer profile and none is active. First inspect "
+"what the tool thinks is active, then run the repair check without "
+"changing anything. A healthy profile reports `ready`; a broken local "
+"pointer reports the repair action you can take:"
 msgstr ""
-"L'ordre necessita un perfil de contribuent i no n'hi ha cap d'actiu. Inspecciona primer què creu l'eina que és actiu "
-"i, tot seguit, executa la comprovació de reparació sense canviar res. Un perfil sa informa de `ready`; un punter "
-"local trencat informa de l'acció de reparació que pots fer:"
+"L'ordre necessita un perfil de contribuent i no n'hi ha cap d'actiu. "
+"Inspecciona primer què creu l'eina que és actiu i, tot seguit, executa la"
+" comprovació de reparació sense canviar res. Un perfil sa informa de "
+"`ready`; un punter local trencat informa de l'acció de reparació que pots"
+" fer:"
 
-#: ../../how-to/troubleshooting.md:25
+#: ../../how-to/troubleshooting.md:26
 msgid ""
-"If the repair check says the active setting points at unreadable profile state, clear that broken local pointer, then"
-" switch to a good profile:"
+"If the repair check says the active setting points at unreadable profile "
+"state, clear that broken local pointer, then switch to a good profile:"
 msgstr ""
-"Si la comprovació de reparació diu que la configuració activa apunta a un estat de perfil il·legible, esborra aquell "
-"punter local trencat i, tot seguit, canvia a un perfil bo:"
+"Si la comprovació de reparació diu que la configuració activa apunta a un"
+" estat de perfil il·legible, esborra aquell punter local trencat i, tot "
+"seguit, canvia a un perfil bo:"
 
-#: ../../how-to/troubleshooting.md:32
-msgid "If no profile exists yet, create one first - see [Set up your taxpayer profile](profile-setup.md)."
+#: ../../how-to/troubleshooting.md:33
+msgid ""
+"The clear command is destructive repair and is appropriate only after the"
+" inspection reports an unreadable active pointer. Login then asks for "
+"that profile's passphrase; a headless caller must use an explicit machine"
+" secret channel instead of placing the passphrase on the command line."
 msgstr ""
-"Si encara no existeix cap perfil, crea'n un primer: consulta [Configura el teu perfil de contribuent](profile-"
-"setup.md)."
-
-#: ../../how-to/troubleshooting.md:34
-msgid "If a profile loads but the numbers look wrong, see the next symptom."
-msgstr "Si un perfil es carrega però les xifres semblen incorrectes, consulta el símptoma següent."
-
-#: ../../how-to/troubleshooting.md:36
-msgid "The numbers or facts look like someone else's"
-msgstr "Les xifres o les dades semblen d'algú altre"
 
 #: ../../how-to/troubleshooting.md:38
 msgid ""
-"The wrong profile is active. Each profile keeps its own ledger, calculations, and filings, so a command run under the"
-" wrong one shows someone else's data. See which profile is active:"
+"If no profile exists yet, create one first - see [Set up your taxpayer "
+"profile](profile-setup.md)."
 msgstr ""
-"El perfil equivocat és actiu. Cada perfil manté el seu propi ledger, els seus càlculs i les seves presentacions, de "
-"manera que una ordre executada sota el perfil equivocat mostra les dades d'algú altre. Mira quin perfil és actiu:"
+"Si encara no existeix cap perfil, crea'n un primer: consulta [Configura "
+"el teu perfil de contribuent](profile-setup.md)."
+
+#: ../../how-to/troubleshooting.md:40
+msgid "If a profile loads but the numbers look wrong, see the next symptom."
+msgstr ""
+"Si un perfil es carrega però les xifres semblen incorrectes, consulta el "
+"símptoma següent."
+
+#: ../../how-to/troubleshooting.md:42
+msgid "The numbers or facts look like someone else's"
+msgstr "Les xifres o les dades semblen d'algú altre"
 
 #: ../../how-to/troubleshooting.md:44
 msgid ""
-"Log in to the right profile with `aeat config login <profile-name>` - [Set up your taxpayer profile](profile-"
-"setup.md) covers creating profiles and moving between them."
+"The wrong profile is active. Each profile keeps its own ledger, "
+"calculations, and filings, so a command run under the wrong one shows "
+"someone else's data. See which profile is active:"
 msgstr ""
-"Inicia la sessió al perfil correcte amb `aeat config login <profile-name>`: [Configura el teu perfil de contribuent"
-"](profile-setup.md) tracta la creació de perfils i com passar d'un a l'altre."
+"El perfil equivocat és actiu. Cada perfil manté el seu propi ledger, els "
+"seus càlculs i les seves presentacions, de manera que una ordre executada"
+" sota el perfil equivocat mostra les dades d'algú altre. Mira quin perfil"
+" és actiu:"
 
-#: ../../how-to/troubleshooting.md:46
+#: ../../how-to/troubleshooting.md:50
+msgid ""
+"Log in to the right profile with `aeat config login <profile-name>` - "
+"[Set up your taxpayer profile](profile-setup.md) covers creating profiles"
+" and moving between them."
+msgstr ""
+"Inicia la sessió al perfil correcte amb `aeat config login <profile-"
+"name>`: [Configura el teu perfil de contribuent](profile-setup.md) tracta"
+" la creació de perfils i com passar d'un a l'altre."
+
+#: ../../how-to/troubleshooting.md:52
 msgid "A calculation refuses because the ledger is not ready"
 msgstr "Un càlcul es nega perquè el ledger no està a punt"
 
-#: ../../how-to/troubleshooting.md:48
+#: ../../how-to/troubleshooting.md:54
 msgid "The refusal looks like this:"
 msgstr "El refús té aquest aspecte:"
 
-#: ../../how-to/troubleshooting.md:54
-msgid ""
-"The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period "
-"you're calculating - `ledger preflight` takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) and also requires `--year`, "
-"so add it even though the message above omits it:"
-msgstr ""
-"El càlcul llegeix les teves transaccions importades, i algunes files no estan a punt. Executa la comprovació prèvia "
-"per al període que estàs calculant: `ledger preflight` pren un token de l'AEAT (`1T`-`4T`, `0A`, `01`-`12`) i també "
-"requereix `--year`, així que afegeix-lo encara que el missatge de més amunt l'ometi:"
-
 #: ../../how-to/troubleshooting.md:60
 msgid ""
-"The preflight report names the rows that block the calculation. Fix them by completing the import and review steps in"
-" [Import and manage transactions](import-bank-statements.md), then run the calculation again."
+"The calculation reads your imported transactions, and some rows aren't "
+"ready. Run the preflight check for the period you're calculating - "
+"`ledger preflight` takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) and "
+"also requires `--year`, so add it even though the message above omits it:"
 msgstr ""
-"L'informe de la comprovació prèvia anomena les files que bloquegen el càlcul. Corregeix-les completant els passos "
-"d'importació i revisió a [Importa i gestiona transaccions](import-bank-statements.md) i, tot seguit, torna a executar"
-" el càlcul."
+"El càlcul llegeix les teves transaccions importades, i algunes files no "
+"estan a punt. Executa la comprovació prèvia per al període que estàs "
+"calculant: `ledger preflight` pren un token de l'AEAT (`1T`-`4T`, `0A`, "
+"`01`-`12`) i també requereix `--year`, així que afegeix-lo encara que el "
+"missatge de més amunt l'ometi:"
 
-#: ../../how-to/troubleshooting.md:62
+#: ../../how-to/troubleshooting.md:66
+msgid ""
+"The preflight report names the rows that block the calculation. Fix them "
+"by completing the import and review steps in [Import and manage "
+"transactions](import-bank-statements.md), then run the calculation again."
+msgstr ""
+"L'informe de la comprovació prèvia anomena les files que bloquegen el "
+"càlcul. Corregeix-les completant els passos d'importació i revisió a "
+"[Importa i gestiona transaccions](import-bank-statements.md) i, tot "
+"seguit, torna a executar el càlcul."
+
+#: ../../how-to/troubleshooting.md:68
 msgid "A required value is missing"
 msgstr "Falta un valor obligatori"
 
-#: ../../how-to/troubleshooting.md:64
+#: ../../how-to/troubleshooting.md:70
 msgid "The refusal names the missing item:"
 msgstr "El refús anomena l'element que falta:"
 
-#: ../../how-to/troubleshooting.md:71
-msgid ""
-"A casilla is a numbered box on the official form. A binding is a rule that fills one. List which values are still "
-"missing for your form:"
-msgstr ""
-"Una casilla és un requadre numerat del formulari oficial. Un binding és una regla que n'omple una. Llista quins "
-"valors encara falten per al teu formulari:"
-
 #: ../../how-to/troubleshooting.md:77
 msgid ""
-"Replace the modelo, year, and period with your own. The full workflow for supplying and reviewing values lives in "
-"[Review and supply calculation inputs](review-calculation-values.md)."
+"A casilla is a numbered box on the official form. A binding is a rule "
+"that fills one. List which values are still missing for your form:"
 msgstr ""
-"Reemplaça el modelo, l'any i el període amb els teus. El flux de treball complet per aportar i revisar valors viu a "
-"[Revisa i aporta entrades de càlcul](review-calculation-values.md)."
+"Una casilla és un requadre numerat del formulari oficial. Un binding és "
+"una regla que n'omple una. Llista quins valors encara falten per al teu "
+"formulari:"
 
-#: ../../how-to/troubleshooting.md:79
+#: ../../how-to/troubleshooting.md:83
+msgid ""
+"Replace the modelo, year, and period with your own. The full workflow for"
+" supplying and reviewing values lives in [Review and supply calculation "
+"inputs](review-calculation-values.md)."
+msgstr ""
+"Reemplaça el modelo, l'any i el període amb els teus. El flux de treball "
+"complet per aportar i revisar valors viu a [Revisa i aporta entrades de "
+"càlcul](review-calculation-values.md)."
+
+#: ../../how-to/troubleshooting.md:85
 msgid "The period token is rejected"
 msgstr "El token de període es rebutja"
 
-#: ../../how-to/troubleshooting.md:81
+#: ../../how-to/troubleshooting.md:87
 msgid ""
-"Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `1T` through `4T` are the quarters, "
-"and `01` through `12` are the months. Every command takes the year separately with `--year`. [Period tokens and dates"
-"](filing-calendar.md#period-tokens-and-dates) explains which form uses which period."
+"Use one period grammar everywhere: the AEAT tokens. `0A` is the annual "
+"period, `1T` through `4T` are the quarters, and `01` through `12` are the"
+" months. Every command takes the year separately with `--year`. [Period "
+"tokens and dates](filing-calendar.md#period-tokens-and-dates) explains "
+"which form uses which period."
 msgstr ""
-"Fes servir una sola gramàtica de períodes a tot arreu: els tokens de l'AEAT. `0A` és el període anual, `1T` a `4T` "
-"són els trimestres, i `01` a `12` són els mesos. Cada ordre pren l'any per separat amb `--year`. [Tokens de període i"
-" dates](filing-calendar.md#period-tokens-and-dates) explica quin formulari fa servir quin període."
-
-#: ../../how-to/troubleshooting.md:83
-msgid "Modelo and ledger commands share the same shape - the AEAT token with `--year`:"
-msgstr "Les ordres de modelo i de ledger comparteixen la mateixa forma: el token de l'AEAT amb `--year`:"
+"Fes servir una sola gramàtica de períodes a tot arreu: els tokens de "
+"l'AEAT. `0A` és el període anual, `1T` a `4T` són els trimestres, i `01` "
+"a `12` són els mesos. Cada ordre pren l'any per separat amb `--year`. "
+"[Tokens de període i dates](filing-calendar.md#period-tokens-and-dates) "
+"explica quin formulari fa servir quin període."
 
 #: ../../how-to/troubleshooting.md:89
 msgid ""
-"The ledger `--period` commands are `ledger preflight`, `ledger status`, `ledger export`, `ledger import`, and "
-"`overview status`. Where the year is optional, a bare period token is refused with a correction:"
+"Modelo and ledger commands share the same shape - the AEAT token with "
+"`--year`:"
 msgstr ""
-"Les ordres de ledger amb `--period` són `ledger preflight`, `ledger status`, `ledger export`, `ledger import` i "
-"`overview status`. Allà on l'any és opcional, un token de període sol es rebutja amb una correcció:"
+"Les ordres de modelo i de ledger comparteixen la mateixa forma: el token "
+"de l'AEAT amb `--year`:"
 
-#: ../../how-to/troubleshooting.md:97
+#: ../../how-to/troubleshooting.md:95
 msgid ""
-"On `ledger preflight` and `ledger export`, `--year` is a required option, so omitting it is refused before the token "
-"is read:"
+"The ledger `--period` commands are `ledger preflight`, `ledger status`, "
+"`ledger export`, `ledger import`, and `overview status`. Where the year "
+"is optional, a bare period token is refused with a correction:"
 msgstr ""
-"A `ledger preflight` i `ledger export`, `--year` és una opció obligatòria, de manera que ometre-la es rebutja abans "
-"de llegir el token:"
+"Les ordres de ledger amb `--period` són `ledger preflight`, `ledger "
+"status`, `ledger export`, `ledger import` i `overview status`. Allà on "
+"l'any és opcional, un token de període sol es rebutja amb una correcció:"
 
 #: ../../how-to/troubleshooting.md:103
-msgid "A modelo token that is not valid for the form lists the accepted tokens:"
-msgstr "Un token de modelo que no és vàlid per al formulari llista els tokens acceptats:"
+msgid ""
+"On `ledger preflight` and `ledger export`, `--year` is a required option,"
+" so omitting it is refused before the token is read:"
+msgstr ""
+"A `ledger preflight` i `ledger export`, `--year` és una opció "
+"obligatòria, de manera que ometre-la es rebutja abans de llegir el token:"
 
 #: ../../how-to/troubleshooting.md:109
-msgid "Calendar shapes such as `2026Q1`, `2026-03`, or `2026` are not accepted; use the AEAT token with `--year`."
+msgid "A modelo token that is not valid for the form lists the accepted tokens:"
 msgstr ""
-"Les formes de calendari com ara `2026Q1`, `2026-03` o `2026` no s'accepten; fes servir el token de l'AEAT amb "
-"`--year`."
+"Un token de modelo que no és vàlid per al formulari llista els tokens "
+"acceptats:"
 
-#: ../../how-to/troubleshooting.md:111
+#: ../../how-to/troubleshooting.md:115
+msgid ""
+"Calendar shapes such as `2026Q1`, `2026-03`, or `2026` are not accepted; "
+"use the AEAT token with `--year`."
+msgstr ""
+"Les formes de calendari com ara `2026Q1`, `2026-03` o `2026` no "
+"s'accepten; fes servir el token de l'AEAT amb `--year`."
+
+#: ../../how-to/troubleshooting.md:117
 msgid "An export refuses because no verified calculation exists"
 msgstr "Una exportació es nega perquè no existeix cap càlcul verificat"
 
-#: ../../how-to/troubleshooting.md:113
-msgid ""
-"Exports only work from a calculation that passed verification. Run the verification first - [Verify a draft filing"
-"](verification-reports.md) owns that workflow and explains what the report tells you."
-msgstr ""
-"Les exportacions només funcionen a partir d'un càlcul que ha superat la verificació. Executa primer la verificació: "
-"[Verifica una presentació en esborrany](verification-reports.md) és qui gestiona aquell flux de treball i explica què"
-" t'indica l'informe."
-
-#: ../../how-to/troubleshooting.md:115
-msgid "Recording a filing refuses because the filing window is not open"
-msgstr "Registrar una presentació es nega perquè la finestra de presentació no és oberta"
-
-#: ../../how-to/troubleshooting.md:117
-msgid ""
-"This refusal applies to `aeat app modelo work file` only - exporting works at any time. See [File your modelo at the "
-"AEAT portal](file-at-aeat.md) for the recording workflow and [Plan your filing calendar](filing-calendar.md) for when"
-" each window opens."
-msgstr ""
-"Aquest refús s'aplica només a `aeat app modelo work file`: l'exportació funciona en qualsevol moment. Consulta [Puja "
-"el teu modelo exportat al portal de l'AEAT](file-at-aeat.md) per al flux de treball de registre i [Planifica el teu "
-"calendari de presentacions](filing-calendar.md) per saber quan s'obre cada finestra."
-
 #: ../../how-to/troubleshooting.md:119
+msgid ""
+"Exports only work from a calculation that passed verification. Run the "
+"verification first - [Verify a draft filing](verification-reports.md) "
+"owns that workflow and explains what the report tells you."
+msgstr ""
+"Les exportacions només funcionen a partir d'un càlcul que ha superat la "
+"verificació. Executa primer la verificació: [Verifica una presentació en "
+"esborrany](verification-reports.md) és qui gestiona aquell flux de "
+"treball i explica què t'indica l'informe."
+
+#: ../../how-to/troubleshooting.md:121
+msgid "Recording a filing refuses because the filing window is not open"
+msgstr ""
+"Registrar una presentació es nega perquè la finestra de presentació no és"
+" oberta"
+
+#: ../../how-to/troubleshooting.md:123
+msgid ""
+"This refusal applies to `aeat app modelo work file` only - exporting "
+"works at any time. See [File your modelo at the AEAT portal](file-at-"
+"aeat.md) for the recording workflow and [Plan your filing calendar"
+"](filing-calendar.md) for when each window opens."
+msgstr ""
+"Aquest refús s'aplica només a `aeat app modelo work file`: l'exportació "
+"funciona en qualsevol moment. Consulta [Puja el teu modelo exportat al "
+"portal de l'AEAT](file-at-aeat.md) per al flux de treball de registre i "
+"[Planifica el teu calendari de presentacions](filing-calendar.md) per "
+"saber quan s'obre cada finestra."
+
+#: ../../how-to/troubleshooting.md:125
 msgid "Output appears in the wrong language"
 msgstr "La sortida apareix en l'idioma equivocat"
 
-#: ../../how-to/troubleshooting.md:121
-msgid ""
-"Add `--language` to the command. Accepted values are `en`, `es`, `ca`, and `hu`. The flag changes both command output"
-" and help text:"
-msgstr ""
-"Afegeix `--language` a l'ordre. Els valors acceptats són `en`, `es`, `ca` i `hu`. L'opció canvia tant la sortida de "
-"l'ordre com el text d'ajuda:"
-
 #: ../../how-to/troubleshooting.md:127
 msgid ""
-"The `--language` flag applies to that one command. A profile also carries a default output language - set it with "
-"`--output-language` at profile creation, as described in [Set up your taxpayer profile](profile-setup.md)."
+"Add `--language` to the command. Accepted values are `en`, `es`, `ca`, "
+"and `hu`. The flag changes both command output and help text:"
 msgstr ""
-"L'opció `--language` s'aplica a aquella única ordre. Un perfil també porta un idioma de sortida per defecte: "
-"estableix-lo amb `--output-language` en crear el perfil, tal com es descriu a [Configura el teu perfil de contribuent"
-"](profile-setup.md)."
+"Afegeix `--language` a l'ordre. Els valors acceptats són `en`, `es`, `ca`"
+" i `hu`. L'opció canvia tant la sortida de l'ordre com el text d'ajuda:"
 
-#: ../../how-to/troubleshooting.md:131
+#: ../../how-to/troubleshooting.md:133
+msgid ""
+"The `--language` flag applies to that one command. A profile also carries"
+" a default output language - set it with `--output-language` at profile "
+"creation, as described in [Set up your taxpayer profile](profile-"
+"setup.md)."
+msgstr ""
+"L'opció `--language` s'aplica a aquella única ordre. Un perfil també "
+"porta un idioma de sortida per defecte: estableix-lo amb `--output-"
+"language` en crear el perfil, tal com es descriu a [Configura el teu "
+"perfil de contribuent](profile-setup.md)."
+
+#: ../../how-to/troubleshooting.md:137
 msgid "A live read from AEAT refuses"
 msgstr "Una lectura en directe de l'AEAT es nega"
 
-#: ../../how-to/troubleshooting.md:133
-msgid "Live reads need a registered digital certificate, Cl@ve Móvil, or Cl@ve Permanente. Check your authentication:"
-msgstr ""
-"Les lectures en directe necessiten un certificat digital registrat, Cl@ve Móvil o Cl@ve Permanente. Comprova la teva "
-"autenticació:"
-
-#: ../../how-to/troubleshooting.md:140
+#: ../../how-to/troubleshooting.md:139
 msgid ""
-"`auth test` checks stored credentials without contacting AEAT. An expired certificate, or one within the 14-day "
-"critical window, blocks authenticated work. The earlier 60-day warning is advisory. If expiry is close, follow [Renew"
-" your certificate before it expires](authenticate-with-aeat.md#renew-your-certificate-before-it-expires)."
+"Live reads need a registered digital certificate, Cl@ve Móvil, or Cl@ve "
+"Permanente. Check your authentication:"
 msgstr ""
-"`auth test` comprova les credencials desades sense contactar amb l'AEAT. Un certificat caducat, o un dins de la "
-"finestra crítica de 14 dies, bloqueja el treball autenticat. L'advertiment anterior de 60 dies és informatiu. Si la "
-"caducitat és a prop, segueix [Renova el teu certificat abans que caduqui](authenticate-with-aeat.md#renew-your-"
-"certificate-before-it-expires)."
+"Les lectures en directe necessiten un certificat digital registrat, Cl@ve"
+" Móvil o Cl@ve Permanente. Comprova la teva autenticació:"
 
-#: ../../how-to/troubleshooting.md:145
+#: ../../how-to/troubleshooting.md:146
+msgid ""
+"`auth test` checks stored credentials without contacting AEAT. An expired"
+" certificate, or one within the 14-day critical window, blocks "
+"authenticated work. The earlier 60-day warning is advisory. If expiry is "
+"close, follow [Renew your certificate before it expires](authenticate-"
+"with-aeat.md#renew-your-certificate-before-it-expires)."
+msgstr ""
+"`auth test` comprova les credencials desades sense contactar amb l'AEAT. "
+"Un certificat caducat, o un dins de la finestra crítica de 14 dies, "
+"bloqueja el treball autenticat. L'advertiment anterior de 60 dies és "
+"informatiu. Si la caducitat és a prop, segueix [Renova el teu certificat "
+"abans que caduqui](authenticate-with-aeat.md#renew-your-certificate-"
+"before-it-expires)."
+
+#: ../../how-to/troubleshooting.md:151
 msgid "Check that the tool can reach the AEAT website:"
 msgstr "Comprova que l'eina pot accedir al lloc web de l'AEAT:"
 
-#: ../../how-to/troubleshooting.md:150
-msgid "If authentication was never set up, follow [Authenticate with AEAT](authenticate-with-aeat.md)."
-msgstr "Si mai no s'ha configurat l'autenticació, segueix [Autentica't amb l'AEAT](authenticate-with-aeat.md)."
-
-#: ../../how-to/troubleshooting.md:152
-msgid "When a live login fails, the tool captures an encrypted diagnostic of the failure. List and inspect them:"
+#: ../../how-to/troubleshooting.md:156
+msgid ""
+"If authentication was never set up, follow [Authenticate with AEAT"
+"](authenticate-with-aeat.md)."
 msgstr ""
-"Quan un inici de sessió en directe falla, l'eina captura un diagnòstic xifrat de la fallada. Llista'ls i "
-"inspecciona'ls:"
+"Si mai no s'ha configurat l'autenticació, segueix [Autentica't amb l'AEAT"
+"](authenticate-with-aeat.md)."
 
 #: ../../how-to/troubleshooting.md:158
 msgid ""
-"`list` shows when each failure happened, the reason, and which login method and profile were involved. `show` prints "
-"one diagnostic with sensitive content redacted. Configured credentials appear only as present/absent flags and "
-"fingerprints, never as values."
+"When a live login fails, the tool captures an encrypted diagnostic of the"
+" failure. List and inspect them:"
 msgstr ""
-"`list` mostra quan va passar cada fallada, el motiu, i quin mètode d'inici de sessió i quin perfil hi van intervenir."
-" `show` imprimeix un diagnòstic amb el contingut sensible ocultat. Les credencials configurades apareixen només com a"
-" indicadors de present/absent i empremtes, mai com a valors."
+"Quan un inici de sessió en directe falla, l'eina captura un diagnòstic "
+"xifrat de la fallada. Llista'ls i inspecciona'ls:"
 
-#: ../../how-to/troubleshooting.md:160
+#: ../../how-to/troubleshooting.md:164
 msgid ""
-"For Cl@ve failures, the missing piece is often what happened on your phone, something the tool cannot see. Record "
-"what you observed so the diagnostic is complete:"
+"`list` shows when each failure happened, the reason, and which login "
+"method and profile were involved. `show` prints one diagnostic with "
+"sensitive content redacted. Configured credentials appear only as "
+"present/absent flags and fingerprints, never as values."
 msgstr ""
-"Per a les fallades de Cl@ve, la peça que falta sovint és què va passar al teu telèfon, una cosa que l'eina no pot "
-"veure. Registra el que vas observar perquè el diagnòstic sigui complet:"
+"`list` mostra quan va passar cada fallada, el motiu, i quin mètode "
+"d'inici de sessió i quin perfil hi van intervenir. `show` imprimeix un "
+"diagnòstic amb el contingut sensible ocultat. Les credencials "
+"configurades apareixen només com a indicadors de present/absent i "
+"empremtes, mai com a valors."
 
-#: ../../how-to/troubleshooting.md:165
+#: ../../how-to/troubleshooting.md:166
 msgid ""
-"Accepted states are `app_prompted_and_accepted`, `app_prompted_not_accepted`, `app_did_not_prompt`, and "
+"For Cl@ve failures, the missing piece is often what happened on your "
+"phone, something the tool cannot see. Record what you observed so the "
+"diagnostic is complete:"
+msgstr ""
+"Per a les fallades de Cl@ve, la peça que falta sovint és què va passar al"
+" teu telèfon, una cosa que l'eina no pot veure. Registra el que vas "
+"observar perquè el diagnòstic sigui complet:"
+
+#: ../../how-to/troubleshooting.md:171
+msgid ""
+"Accepted states are `app_prompted_and_accepted`, "
+"`app_prompted_not_accepted`, `app_did_not_prompt`, and "
 "`operator_did_not_check`."
 msgstr ""
-"Els estats acceptats són `app_prompted_and_accepted`, `app_prompted_not_accepted`, `app_did_not_prompt` i "
+"Els estats acceptats són `app_prompted_and_accepted`, "
+"`app_prompted_not_accepted`, `app_did_not_prompt` i "
 "`operator_did_not_check`."
 
-#: ../../how-to/troubleshooting.md:167
+#: ../../how-to/troubleshooting.md:173
 msgid "The diagnostic toolbox"
 msgstr "La caixa d'eines de diagnòstic"
 
-#: ../../how-to/troubleshooting.md:169
+#: ../../how-to/troubleshooting.md:175
 msgid ""
-"Use these when no single symptom matches, or before asking for help. Run the read-only diagnostics in order: overall "
-"status, active profile, recent logs, and both integrity checks."
+"Use these when no single symptom matches, or before asking for help. Run "
+"the read-only diagnostics in order: overall status, active profile, "
+"recent logs, and both integrity checks."
 msgstr ""
-"Fes-les servir quan cap símptoma concret coincideix, o abans de demanar ajuda. Executa els diagnòstics de només "
-"lectura en ordre: estat general, perfil actiu, registres recents i totes dues comprovacions d'integritat."
+"Fes-les servir quan cap símptoma concret coincideix, o abans de demanar "
+"ajuda. Executa els diagnòstics de només lectura en ordre: estat general, "
+"perfil actiu, registres recents i totes dues comprovacions d'integritat."
 
-#: ../../how-to/troubleshooting.md:177
+#: ../../how-to/troubleshooting.md:183
 msgid ""
-"`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. "
-"Together they tell you whether the problem is your setup or your data. `repair logs` prints the log file path and the"
-" most recent lines. Use `--lines` to control how many. `integrity objects` checks the security seals on your "
-"encrypted records, and `integrity registry` checks the tax rule definitions. If either fails, the report names the "
-"affected item. Take that report to the issue tracker rather than editing stored data by hand."
+"`overview status` reports your profile, ledger, and modelo readiness; "
+"`profile status` reports the active profile. Together they tell you "
+"whether the problem is your setup or your data. `repair logs` prints the "
+"log file path and the most recent lines. Use `--lines` to control how "
+"many. `integrity objects` checks the security seals on your encrypted "
+"records, and `integrity registry` checks the tax rule definitions. If "
+"either fails, the report names the affected item. Take that report to the"
+" issue tracker rather than editing stored data by hand."
 msgstr ""
-"`overview status` informa de la preparació del teu perfil, del ledger i del modelo; `profile status` informa del "
-"perfil actiu. Junts et diuen si el problema és la teva configuració o les teves dades. `repair logs` imprimeix el "
-"camí del fitxer de registre i les línies més recents. Fes servir `--lines` per controlar-ne quantes. `integrity "
-"objects` comprova els segells de seguretat dels teus registres xifrats, i `integrity registry` comprova les "
-"definicions de les regles tributàries. Si alguna falla, l'informe anomena l'element afectat. Porta aquell informe al "
+"`overview status` informa de la preparació del teu perfil, del ledger i "
+"del modelo; `profile status` informa del perfil actiu. Junts et diuen si "
+"el problema és la teva configuració o les teves dades. `repair logs` "
+"imprimeix el camí del fitxer de registre i les línies més recents. Fes "
+"servir `--lines` per controlar-ne quantes. `integrity objects` comprova "
+"els segells de seguretat dels teus registres xifrats, i `integrity "
+"registry` comprova les definicions de les regles tributàries. Si alguna "
+"falla, l'informe anomena l'element afectat. Porta aquell informe al "
 "seguidor d'incidències en lloc d'editar les dades desades a mà."
-
-#: ../../how-to/troubleshooting.md:179
-msgid "When unreadable encrypted records block other commands, move them aside. Preview first, then apply:"
-msgstr "Quan uns registres xifrats il·legibles bloquegen altres ordres, aparta'ls. Previsualitza primer i després aplica:"
 
 #: ../../how-to/troubleshooting.md:185
 msgid ""
-"The preview lists how many records would move, per storage area, without changing anything. The real run requires "
-"`--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine "
-"archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later "
-"restore, the archived records still exist. See [Protect access to your data](protect-data-access.md)."
+"When unreadable encrypted records block other commands, move them aside. "
+"Preview first, then apply:"
 msgstr ""
-"La previsualització llista quants registres es mourien, per àrea d'emmagatzematge, sense canviar res. L'execució real"
-" requereix `--yes`. La quarantena no suprimeix res: cada registre il·legible es mou, encara xifrat, a un arxiu de "
-"quarantena dins del mateix emmagatzematge, i els registres llegibles queden intactes. Si la causa era una clau que "
-"faltava i que després recuperes (per exemple amb la clau de recuperació, consulta [Protegeix l'accés a les teves "
-"dades](protect-data-access.md)), els registres arxivats encara existeixen."
+"Quan uns registres xifrats il·legibles bloquegen altres ordres, "
+"aparta'ls. Previsualitza primer i després aplica:"
 
-#: ../../how-to/troubleshooting.md:187
+#: ../../how-to/troubleshooting.md:191
 msgid ""
-"To find which finalized calculations and filings used a transaction, query the participation index. Rebuild it first "
-"if the lookup appears incomplete:"
+"The preview lists how many records would move, per storage area, without "
+"changing anything. The real run requires `--yes`. Quarantine does not "
+"delete anything: each unreadable record is moved, still encrypted, into a"
+" quarantine archive inside the same storage, and readable records are "
+"untouched. If the cause was a missing key that you later restore, the "
+"archived records still exist. See [Protect access to your data](protect-"
+"data-access.md)."
 msgstr ""
-"Per trobar quins càlculs i presentacions finalitzats van utilitzar una transacció, consulta l'índex de participació. "
-"Reconstrueix-lo primer si la consulta sembla incompleta:"
+"La previsualització llista quants registres es mourien, per àrea "
+"d'emmagatzematge, sense canviar res. L'execució real requereix `--yes`. "
+"La quarantena no suprimeix res: cada registre il·legible es mou, encara "
+"xifrat, a un arxiu de quarantena dins del mateix emmagatzematge, i els "
+"registres llegibles queden intactes. Si la causa era una clau que faltava"
+" i que després recuperes (per exemple amb la clau de recuperació, "
+"consulta [Protegeix l'accés a les teves dades](protect-data-access.md)), "
+"els registres arxivats encara existeixen."
 
-#: ../../how-to/troubleshooting.md:194
+#: ../../how-to/troubleshooting.md:193
 msgid ""
-"The index is a derived cross-reference, safe to regenerate at any time: `rebuild` rescans the finalized calculation "
-"records and rewrites it. Run it if a participation lookup looks incomplete. Rebuilding changes no ledger or filing "
-"data."
+"To find which finalized calculations and filings used a transaction, "
+"query the participation index. Rebuild it first if the lookup appears "
+"incomplete:"
 msgstr ""
-"L'índex és una referència creuada derivada, segura de regenerar en qualsevol moment: `rebuild` torna a escanejar els "
-"registres de càlcul finalitzats i el reescriu. Executa'l si una consulta de participació sembla incompleta. La "
-"reconstrucció no canvia cap dada del ledger ni de presentació."
+"Per trobar quins càlculs i presentacions finalitzats van utilitzar una "
+"transacció, consulta l'índex de participació. Reconstrueix-lo primer si "
+"la consulta sembla incompleta:"
 
-#: ../../how-to/troubleshooting.md:196
+#: ../../how-to/troubleshooting.md:200
 msgid ""
-"Both `participation` verbs read the active profile's encrypted bucket, so they need an unlocked profile session. If "
-"either refuses with `No hay una sesion de bucket activa`, log in to the profile first with `aeat config login "
-"<profile-name>`."
+"The index is a derived cross-reference, safe to regenerate at any time: "
+"`rebuild` rescans the finalized calculation records and rewrites it. Run "
+"it if a participation lookup looks incomplete. Rebuilding changes no "
+"ledger or filing data."
 msgstr ""
-"Tots dos verbs de `participation` llegeixen el bucket xifrat del perfil actiu, de manera que necessiten una sessió de"
-" perfil desbloquejada. Si algun es nega amb `No hay una sesion de bucket activa`, inicia primer la sessió al perfil "
-"amb `aeat config login <profile-name>`."
+"L'índex és una referència creuada derivada, segura de regenerar en "
+"qualsevol moment: `rebuild` torna a escanejar els registres de càlcul "
+"finalitzats i el reescriu. Executa'l si una consulta de participació "
+"sembla incompleta. La reconstrucció no canvia cap dada del ledger ni de "
+"presentació."
 
-#: ../../how-to/troubleshooting.md:198
+#: ../../how-to/troubleshooting.md:202
 msgid ""
-"When nothing else recovers the problem, and only then, clear the saved progress of interrupted commands. This command"
-" is destructive:"
+"Both `participation` verbs read the active profile's encrypted bucket, so"
+" they need an unlocked profile session. If either refuses with `No hay "
+"una sesion de bucket activa`, log in to the profile first with `aeat "
+"config login <profile-name>`."
 msgstr ""
-"Quan res més no resol el problema, i només llavors, esborra el progrés desat de les ordres interrompudes. Aquesta "
-"ordre és destructiva:"
+"Tots dos verbs de `participation` llegeixen el bucket xifrat del perfil "
+"actiu, de manera que necessiten una sessió de perfil desbloquejada. Si "
+"algun es nega amb `No hay una sesion de bucket activa`, inicia primer la "
+"sessió al perfil amb `aeat config login <profile-name>`."
 
 #: ../../how-to/troubleshooting.md:204
 msgid ""
-"It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active"
-" profile's bucket, so switch to the profile first if it refuses with `No hay una sesion de bucket activa`."
+"When nothing else recovers the problem, and only then, clear the saved "
+"progress of interrupted commands. This command is destructive:"
 msgstr ""
-"Elimina el progrés desat de les ordres interrompudes i requereix `--yes`. Com els verbs de participació, llegeix el "
-"bucket del perfil actiu, així que canvia primer al perfil si es nega amb `No hay una sesion de bucket activa`."
+"Quan res més no resol el problema, i només llavors, esborra el progrés "
+"desat de les ordres interrompudes. Aquesta ordre és destructiva:"
 
-#: ../../how-to/troubleshooting.md:207
+#: ../../how-to/troubleshooting.md:210
+msgid ""
+"It removes saved interrupted-command progress and requires `--yes`. Like "
+"the participation verbs, it reads the active profile's bucket, so switch "
+"to the profile first if it refuses with `No hay una sesion de bucket "
+"activa`."
+msgstr ""
+"Elimina el progrés desat de les ordres interrompudes i requereix `--yes`."
+" Com els verbs de participació, llegeix el bucket del perfil actiu, així "
+"que canvia primer al perfil si es nega amb `No hay una sesion de bucket "
+"activa`."
+
+#: ../../how-to/troubleshooting.md:213
 msgid "Prepare a privacy-safe support request"
 msgstr "Prepara una sol·licitud d'ajuda segura per a la privadesa"
 
-#: ../../how-to/troubleshooting.md:209
-msgid "When the steps on this page don't resolve the problem, gather this before asking for help:"
-msgstr "Quan els passos d'aquesta pàgina no resolen el problema, reuneix això abans de demanar ajuda:"
+#: ../../how-to/troubleshooting.md:215
+msgid ""
+"When the steps on this page don't resolve the problem, gather this before"
+" asking for help:"
+msgstr ""
+"Quan els passos d'aquesta pàgina no resolen el problema, reuneix això "
+"abans de demanar ajuda:"
 
-#: ../../how-to/troubleshooting.md:211
+#: ../../how-to/troubleshooting.md:217
 msgid "The exact command you ran."
 msgstr "L'ordre exacta que has executat."
 
-#: ../../how-to/troubleshooting.md:212
+#: ../../how-to/troubleshooting.md:218
 msgid "The error lines the command printed."
 msgstr "Les línies d'error que l'ordre ha imprès."
 
-#: ../../how-to/troubleshooting.md:213
+#: ../../how-to/troubleshooting.md:219
 msgid "The log path and the relevant recent lines from `aeat config repair logs`."
-msgstr "El camí del registre i les línies recents rellevants de `aeat config repair logs`."
+msgstr ""
+"El camí del registre i les línies recents rellevants de `aeat config "
+"repair logs`."
 
-#: ../../how-to/troubleshooting.md:214
+#: ../../how-to/troubleshooting.md:220
 msgid "Any report or work-unit IDs the output shows."
 msgstr "Qualsevol ID d'informe o d'unitat de treball que mostri la sortida."
 
-#: ../../how-to/troubleshooting.md:216
-msgid ""
-"Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), names, addresses, and file paths that embed "
-"your user name. Log lines can contain personal data - read them before pasting."
-msgstr ""
-"Elimina primer les dades personals: identificadors tributaris (NIF, CIF, DNI, NIE, NII), noms, adreces i camins de "
-"fitxer que incrusten el teu nom d'usuari. Les línies de registre poden contenir dades personals: llegeix-les abans d"
-"'enganxar-les."
-
-#: ../../how-to/troubleshooting.md:218
-msgid "Take the request to the [project issue tracker](https://github.com/nevenincs/cadrumo/issues)."
-msgstr "Porta la sol·licitud al [seguidor d'incidències del projecte](https://github.com/nevenincs/cadrumo/issues)."
-
-#: ../../how-to/troubleshooting.md:220
-#, python-brace-format
-msgid "If a term in an error message is unfamiliar, look it up in the {doc}`glossary </_generated/glossary>`."
-msgstr "Si un terme d'un missatge d'error no et resulta familiar, cerca'l al {doc}`glossari </_generated/glossary>`."
-
 #: ../../how-to/troubleshooting.md:222
+msgid ""
+"Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), "
+"names, addresses, and file paths that embed your user name. Log lines can"
+" contain personal data - read them before pasting."
+msgstr ""
+"Elimina primer les dades personals: identificadors tributaris (NIF, CIF, "
+"DNI, NIE, NII), noms, adreces i camins de fitxer que incrusten el teu nom"
+" d'usuari. Les línies de registre poden contenir dades personals: "
+"llegeix-les abans d'enganxar-les."
+
+#: ../../how-to/troubleshooting.md:224
+msgid ""
+"Take the request to the [project issue "
+"tracker](https://github.com/nevenincs/cadrumo/issues)."
+msgstr ""
+"Porta la sol·licitud al [seguidor d'incidències del "
+"projecte](https://github.com/nevenincs/cadrumo/issues)."
+
+#: ../../how-to/troubleshooting.md:226
+#, python-brace-format
+msgid ""
+"If a term in an error message is unfamiliar, look it up in the "
+"{doc}`glossary </_generated/glossary>`."
+msgstr ""
+"Si un terme d'un missatge d'error no et resulta familiar, cerca'l al "
+"{doc}`glossari </_generated/glossary>`."
+
+#: ../../how-to/troubleshooting.md:228
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/troubleshooting.md:224
-msgid "[Quickstart: produce a modelo file](quickstart.md) - follow the first local filing path."
-msgstr "[Guia ràpida: produeix un fitxer de modelo](quickstart.md) - segueix el primer camí de presentació local."
-
-#: ../../how-to/troubleshooting.md:225
-msgid "[Set up your taxpayer profile](profile-setup.md) - create and switch profiles."
-msgstr "[Configura el teu perfil de contribuent](profile-setup.md) - crea i canvia de perfils."
-
-#: ../../how-to/troubleshooting.md:226
-msgid "[Authenticate with AEAT](authenticate-with-aeat.md) - check read-only live access setup."
-msgstr "[Autentica't amb l'AEAT](authenticate-with-aeat.md) - comprova la configuració de l'accés en directe de només lectura."
-
-#: ../../how-to/troubleshooting.md:227
-msgid "[Check AEAT notifications](check-aeat-notifications.md) - inspect saved DEHu notification snapshots."
+#: ../../how-to/troubleshooting.md:230
+msgid ""
+"[Quickstart: produce a modelo file](quickstart.md) - follow the first "
+"local filing path."
 msgstr ""
-"[Consulta notificacions de l'AEAT](check-aeat-notifications.md) - inspecciona les instantànies desades de "
-"notificacions DEHu."
+"[Guia ràpida: produeix un fitxer de modelo](quickstart.md) - segueix el "
+"primer camí de presentació local."
 
-#: ../../how-to/troubleshooting.md:228
-msgid "[Pipeline explanation](../explanation/index.md) - what the registry, secure storage, and workflow state are."
+#: ../../how-to/troubleshooting.md:231
+msgid ""
+"[Set up your taxpayer profile](profile-setup.md) - create and switch "
+"profiles."
 msgstr ""
-"[Explicació del flux](../explanation/index.md) - què són el registre, l'emmagatzematge segur i l'estat del flux de "
-"treball."
+"[Configura el teu perfil de contribuent](profile-setup.md) - crea i "
+"canvia de perfils."
 
-#: ../../how-to/troubleshooting.md:229
-msgid "[CLI reference](../cli/index.rst) - every repair command, flag, and exit code."
-msgstr "[Referència de la CLI](../cli/index.rst) - cada ordre de reparació, opció i codi de sortida."
+#: ../../how-to/troubleshooting.md:232
+msgid ""
+"[Authenticate with AEAT](authenticate-with-aeat.md) - check read-only "
+"live access setup."
+msgstr ""
+"[Autentica't amb l'AEAT](authenticate-with-aeat.md) - comprova la "
+"configuració de l'accés en directe de només lectura."
+
+#: ../../how-to/troubleshooting.md:233
+msgid ""
+"[Check AEAT notifications](check-aeat-notifications.md) - inspect saved "
+"DEHu notification snapshots."
+msgstr ""
+"[Consulta notificacions de l'AEAT](check-aeat-notifications.md) - "
+"inspecciona les instantànies desades de notificacions DEHu."
+
+#: ../../how-to/troubleshooting.md:234
+msgid ""
+"[Pipeline explanation](../explanation/index.md) - what the registry, "
+"secure storage, and workflow state are."
+msgstr ""
+"[Explicació del flux](../explanation/index.md) - què són el registre, "
+"l'emmagatzematge segur i l'estat del flux de treball."
+
+#: ../../how-to/troubleshooting.md:235
+msgid ""
+"[CLI reference](../cli/index.rst) - every repair command, flag, and exit "
+"code."
+msgstr ""
+"[Referència de la CLI](../cli/index.rst) - cada ordre de reparació, opció"
+" i codi de sortida."
 
