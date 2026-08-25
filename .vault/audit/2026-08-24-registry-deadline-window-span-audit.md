@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:05350f217e2e881be983dc3cb42b35542e708d6d7636c9fde1ab97f5420d5c21'
+body_hash: 'sha256:e61782aab96b5b8cb60a8b46b8c32036370e3faa7c931d9c643c14487b683e9d'
 related: []
 ---
 
@@ -546,6 +546,45 @@ Two things keep this honest rather than convenient:
 Recorded rather than silently left: anyone reading the span fixes should know
 they surface a design-coverage gap rather than close one, and that the gap is
 the pre-existing condition of this registry.
+
+## Diagnosed: the CLI runtime tests fail on a global-graph coupling
+
+`test_command_runtime` fails three cases with an opaque envelope --
+`cli.runtime.unexpected_absent`, exit code 6, "Interno. El comando fallo por un
+error interno inesperado". The envelope redacts the cause by design, so the
+message names nothing actionable.
+
+Traced by invoking the same synthetic app outside pytest and reading the
+exception the envelope swallows:
+
+```
+_profile_authentication_gate.py:167, in preflight_parsed_leaf
+    node = next(node for node in COMMAND_GRAPH.nodes() if node.spec.key == spec.key)
+StopIteration
+```
+
+`build_command_app(graph)` compiles an app from ANY spec graph -- that is what
+the runtime is for, and what these tests exercise with a two-node synthetic
+graph. But the auth preflight resolves the invoked spec against the GLOBAL
+production `COMMAND_GRAPH`, so a spec that is not in the shipped surface raises
+a bare `StopIteration` that reaches the boundary as an unclassified internal
+error. Landed `903dd90992`, two days ago.
+
+The fix is a design choice inside that feature, and both obvious options are
+wrong in a way worth stating:
+
+- Giving `next(...)` a `None` default and falling back to a default posture
+  would let a spec absent from the production graph run with whatever posture
+  the default carries. The posture governs PROFILE AUTHENTICATION, so a
+  permissive default fails open on an authentication gate.
+- Refusing when the spec is absent fails closed correctly, but still leaves
+  these tests red, because their specs are legitimately absent from the shipped
+  graph.
+
+The shape that resolves both is for the preflight to consult the graph the app
+was built from rather than a module-global, which is a change to how the gate
+receives its graph. Left to the owner of the command-runtime work with the
+cause named, since the diagnosis -- not the patch -- was the hard part.
 
 ## Durable lesson
 
