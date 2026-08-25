@@ -181,6 +181,7 @@ ALL_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = tuple(
 #: immediately re-arms every row it owns.
 REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = required_evidence_rows(load_descriptor())
 
+
 def _require_json_object(payload: object, *, surface: str) -> dict[str, object]:
     """Return a decoded JSON object or refuse the named release surface."""
     if not isinstance(payload, dict):
@@ -208,14 +209,9 @@ def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
     versions = {version for _relative, version in project_versions} | {init_version, manifest_version}
     passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins
     surfaces = " ".join(f"{relative}={version!r}" for relative, version in project_versions)
-    detail = (
-        f"{surfaces} init={init_version!r} manifest={manifest_version!r} pins={observed_pins!r}"
-    )
+    detail = f"{surfaces} init={init_version!r} manifest={manifest_version!r} pins={observed_pins!r}"
     if passed:
-        detail = (
-            "all release authorities and mandatory exact companion dependencies agree on "
-            f"{pyproject_version!r}"
-        )
+        detail = f"all release authorities and mandatory exact companion dependencies agree on {pyproject_version!r}"
     return ReadinessCheck("version-surfaces-agree", "blocking", passed, detail)
 
 

@@ -75,10 +75,7 @@ def _valid_attestation() -> dict[str, object]:
         "node_count": 1,
         "source_commit": "a" * 40,
         "forbidden_artifacts_absent": True,
-        **{
-            field: format(index, "x") * 64
-            for index, field in enumerate(_DIGEST_FIELDS, start=1)
-        },
+        **{field: format(index, "x") * 64 for index, field in enumerate(_DIGEST_FIELDS, start=1)},
     }
     value["envelope_sha256"] = _projection_digest(value)
     return value
@@ -98,9 +95,7 @@ def _calls_canonical_loader(source: str) -> bool:
     module_aliases: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module and node.module.endswith("python_cohort"):
-            aliases.update(
-                item.asname or item.name for item in node.names if item.name == "load_python_cohort"
-            )
+            aliases.update(item.asname or item.name for item in node.names if item.name == "load_python_cohort")
         elif isinstance(node, ast.Import):
             module_aliases.update(
                 item.asname or item.name for item in node.names if item.name.endswith("python_cohort")
@@ -179,9 +174,7 @@ def _calls_forbidden_builder(source: str) -> bool:
         ):
             return True
         tokens = [
-            item.value
-            for item in ast.walk(node)
-            if isinstance(item, ast.Constant) and isinstance(item.value, str)
+            item.value for item in ast.walk(node) if isinstance(item, ast.Constant) and isinstance(item.value, str)
         ]
         if "uv" in tokens and "build" in tokens:
             return True
@@ -235,27 +228,22 @@ def test_every_downstream_consumer_loads_the_sealed_cohort_and_cannot_rebuild_it
         if "tests" not in path.parts
         and path.name != "python_cohort.py"
         and "--cohort-dir" in path.read_text(encoding="utf-8")
-        and any(
-            marker in path.read_text(encoding="utf-8")
-            for marker in ("load_python_cohort", "python-cohort.json")
-        )
+        and any(marker in path.read_text(encoding="utf-8") for marker in ("load_python_cohort", "python-cohort.json"))
     }
     for relative in sorted(discovered):
         source = (REPO_ROOT / relative).read_text(encoding="utf-8")
         assert _calls_canonical_loader(source), f"discovered cohort consumer bypasses validator: {relative}"
     scoop = (REPO_ROOT / "dev/packaging/acquire_scoop.ps1").read_text(encoding="utf-8")
-    assert scoop.count("dev.packaging.python_cohort\", \"verify\", \"--cohort-dir") == 2
+    assert scoop.count('dev.packaging.python_cohort", "verify", "--cohort-dir') == 2
 
 
 def test_canonical_loader_detector_follows_import_and_assignment_aliases() -> None:
     assert _calls_canonical_loader(
-        "from dev.packaging.python_cohort import load_python_cohort as validate\n"
-        "sealed = validate\nsealed(path)\n"
+        "from dev.packaging.python_cohort import load_python_cohort as validate\nsealed = validate\nsealed(path)\n"
     )
     assert not _calls_canonical_loader("def load_python_cohort(path): return path\nload_python_cohort(path)\n")
     assert _calls_forbidden_builder(
-        "from dev.packaging.python_cohort import build_python_cohort as build\n"
-        "again = build\nagain(repo, out)\n"
+        "from dev.packaging.python_cohort import build_python_cohort as build\nagain = build\nagain(repo, out)\n"
     )
     assert _calls_forbidden_builder(
         "import dev.packaging.python_cohort as cohort\nrebuild = cohort.build_python_cohort\nrebuild(repo, out)\n"
@@ -293,8 +281,10 @@ def test_deferred_target_detector_rejects_missing_private_wrong_kind_and_unknown
     }
     exec(compile(ast.Module(body=[function], type_ignores=[]), "<probe-resolve>", "exec"), namespace)  # noqa: S102
     resolve = namespace["resolve"]
+
     def target(qualname: str) -> SimpleNamespace:
         return SimpleNamespace(module="planted", qualname=qualname, identity=f"planted:{qualname}")
+
     with pytest.raises(AttributeError):
         resolve(("handler", "target"), target("missing"))  # type: ignore[operator]
     with pytest.raises(AssertionError):
@@ -332,9 +322,7 @@ def test_installed_probe_origin_guard_defeats_competing_ambient_cadrumo(tmp_path
 
 
 def test_locale_values_and_both_root_artifact_member_sets_are_digest_bound(tmp_path: Path) -> None:
-    assert _projection_digest([("key", "en", "value-a")]) != _projection_digest(
-        [("key", "en", "value-b")]
-    )
+    assert _projection_digest([("key", "en", "value-a")]) != _projection_digest([("key", "en", "value-b")])
     wheel = tmp_path / "root.whl"
     with zipfile.ZipFile(wheel, "w") as archive:
         archive.writestr("cadrumo/__init__.py", "")
@@ -360,9 +348,7 @@ def test_canonical_loader_derives_forbidden_absence_from_self_consistent_artifac
     make_minimal_test_python_cohort(tmp_path, version="1.0.0")
     manifest_path = tmp_path / "python-cohort.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    artifact_key = {"wheel": "cadrumo", "sdist": "cadrumo-sdist", "source": "source-archive"}[
-        artifact_kind
-    ]
+    artifact_key = {"wheel": "cadrumo", "sdist": "cadrumo-sdist", "source": "source-archive"}[artifact_kind]
     artifact = tmp_path / manifest["artifacts"][artifact_key]
     if artifact_kind in {"wheel", "source"}:
         forbidden = (

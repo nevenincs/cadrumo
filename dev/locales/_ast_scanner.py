@@ -451,9 +451,7 @@ def _is_locale_key_row_table_literal(node: ast.expr | None) -> bool:
     for element in node.elts:
         if not isinstance(element, ast.Tuple | ast.List) or not element.elts:
             return False
-        values = [
-            item.value for item in element.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)
-        ]
+        values = [item.value for item in element.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)]
         if len(values) != len(element.elts):
             return False
         rows.append(values)

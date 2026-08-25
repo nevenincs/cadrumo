@@ -96,7 +96,7 @@ def test_logout_then_delete_uses_durable_pointer_not_the_sandbox_override(tmp_pa
         "aeat --format json config logout\n"
         '@expect status == "success"\n'
         "@result aeat --format json config profile delete docs-sequence-sandbox --yes\n"
-        '@expect result.deleted == true\n'
+        "@expect result.deleted == true\n"
         "@expect exit_code == 0\n",
         sequence_id="runner-logout-delete",
     )

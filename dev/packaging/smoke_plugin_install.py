@@ -206,9 +206,7 @@ def _extract_exact_marketplace(release: LoadedReleaseCohort, destination: Path) 
         target = destination.joinpath(*PurePosixPath(name).parts)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(payload)
-    document = json.loads(
-        (destination / ".claude-plugin" / "marketplace.json").read_text(encoding=_UTF_8)
-    )
+    document = json.loads((destination / ".claude-plugin" / "marketplace.json").read_text(encoding=_UTF_8))
     if not isinstance(document, dict):
         raise SystemExit("sealed marketplace manifest is not an object")
     return document

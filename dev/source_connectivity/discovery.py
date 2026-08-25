@@ -185,11 +185,7 @@ def _dotted_name(node: ast.AST) -> str:
 
 
 def _class_names(node: ast.ClassDef) -> frozenset[str]:
-    return frozenset(
-        name.rsplit(".", maxsplit=1)[-1]
-        for child in ast.walk(node)
-        if (name := _dotted_name(child))
-    )
+    return frozenset(name.rsplit(".", maxsplit=1)[-1] for child in ast.walk(node) if (name := _dotted_name(child)))
 
 
 def _secure_mechanism(node: ast.ClassDef) -> SecureRepositoryMechanism | None:
@@ -544,9 +540,7 @@ def _exported_symbols(source_root: Path) -> frozenset[str]:
             if not isinstance(node, (ast.List, ast.Tuple, ast.Set)):
                 continue
             exported.update(
-                child.value
-                for child in node.elts
-                if isinstance(child, ast.Constant) and isinstance(child.value, str)
+                child.value for child in node.elts if isinstance(child, ast.Constant) and isinstance(child.value, str)
             )
     return frozenset(exported)
 
@@ -564,9 +558,7 @@ def discover_calculation_helpers(repo_root: Path) -> tuple[CalculationHelperCapa
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or node.name not in exported:
                 continue
             binary_operations = {
-                type(child.op).__name__
-                for child in ast.walk(node)
-                if isinstance(child, (ast.BinOp, ast.AugAssign))
+                type(child.op).__name__ for child in ast.walk(node) if isinstance(child, (ast.BinOp, ast.AugAssign))
             }
             aggregate_calls = {
                 name
@@ -731,10 +723,7 @@ def discovered_source_capability_evidence(repo_root: Path) -> dict[str, str]:
         *discover_source_readiness(repo_root),
     )
     evidence.update((row.capability_id, row.evidence_locator) for row in located_rows)
-    evidence.update(
-        (row.capability_id, f"{row.module}:{row.line}")
-        for row in discover_row_assemblers(repo_root)
-    )
+    evidence.update((row.capability_id, f"{row.module}:{row.line}") for row in discover_row_assemblers(repo_root))
     evidence.update(
         (row.capability_id, "src/cadrumo/application/modelo/_calculation_route.py")
         for row in discover_source_ownership()
@@ -790,9 +779,7 @@ def assign_capabilities_to_census(
         prefix = _COVERAGE_SELECTOR_PREFIXES[selector]
         claimed = tuple(
             sorted(
-                capability_id
-                for capability_id in discovered - explicitly_claimed
-                if capability_id.startswith(prefix)
+                capability_id for capability_id in discovered - explicitly_claimed if capability_id.startswith(prefix)
             )
         )
         actual_digest = _capability_digest(claimed)
@@ -849,9 +836,7 @@ _LEXICAL_STOPWORDS = frozenset(
 def _lexical_tokens(value: str) -> frozenset[str]:
     expanded = re.sub(r"(?<=[a-záéíóúñ])(?=[A-ZÁÉÍÓÚÑ])", " ", value)
     return frozenset[str](
-        token
-        for token in re.findall(r"[a-záéíóúñ]{4,}", expanded.lower())
-        if token not in _LEXICAL_STOPWORDS
+        token for token in re.findall(r"[a-záéíóúñ]{4,}", expanded.lower()) if token not in _LEXICAL_STOPWORDS
     )
 
 

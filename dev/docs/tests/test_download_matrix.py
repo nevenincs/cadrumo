@@ -71,11 +71,7 @@ def test_runtime_wheelhouse_belongs_to_the_base_python_channel() -> None:
     It must not recreate a host-extension or client-specific download channel.
     """
     descriptor = load_descriptor()
-    owners = [
-        channel.id
-        for channel in descriptor.channel
-        if ArtifactKind.PYTHON_WHEELHOUSE in channel.artifact_kinds
-    ]
+    owners = [channel.id for channel in descriptor.channel if ArtifactKind.PYTHON_WHEELHOUSE in channel.artifact_kinds]
     assert owners == ["python"]
     # The claim is about WHERE the wheelhouse lives, not about whether the
     # product extends a host application at all: both host-extension channels

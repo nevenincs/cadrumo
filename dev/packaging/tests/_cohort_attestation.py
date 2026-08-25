@@ -13,9 +13,7 @@ from .._hashing import sha256_path
 from ..python_cohort import _artifact_command_projection, _projection_digest
 
 
-def add_test_source_archive(
-    directory: Path, artifacts: dict[str, str], digests: dict[str, str]
-) -> Path:
+def add_test_source_archive(directory: Path, artifacts: dict[str, str], digests: dict[str, str]) -> Path:
     """Add the mandatory retained Git-archive stand-in to a test cohort."""
     lock = b"version = 1\nrevision = 1\nrequires-python = '>=3.13'\n"
     path = directory / f"cadrumo-source-{'a' * 40}.zip"
@@ -85,9 +83,7 @@ def make_test_command_spec_attestation(
     root_sdist = directory / artifacts["cadrumo-sdist"]
     try:
         member_digest = _projection_digest(
-            _artifact_command_projection(
-                root_wheel, root_sdist, directory / artifacts["source-archive"]
-            )
+            _artifact_command_projection(root_wheel, root_sdist, directory / artifacts["source-archive"])
         )
     except (OSError, tarfile.TarError, zipfile.BadZipFile):
         member_digest = "0" * 64
@@ -157,7 +153,5 @@ def make_minimal_test_python_cohort(
             directory, artifacts, source_commit=source_commit
         ),
     }
-    (directory / "python-cohort.json").write_text(
-        json.dumps(manifest, sort_keys=True), encoding="utf-8"
-    )
+    (directory / "python-cohort.json").write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8")
     return digests

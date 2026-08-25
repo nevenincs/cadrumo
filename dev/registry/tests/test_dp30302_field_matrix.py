@@ -166,10 +166,7 @@ def _projection_endpoints(revision_id: str) -> tuple[dict, ...]:
     happened.
     """
     directory = (
-        REPO_ROOT
-        / "src/cadrumo/_data/registry/aeat/modelos/303/revisions"
-        / revision_id
-        / "projection_endpoints"
+        REPO_ROOT / "src/cadrumo/_data/registry/aeat/modelos/303/revisions" / revision_id / "projection_endpoints"
     )
     endpoints: list[dict] = []
     for fragment in sorted(directory.glob("*.toml")):
@@ -185,10 +182,7 @@ def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterl
     assert any("Devolución cuotas soportadas otros países" in item for item in descriptions)
     assert any("Cuotas soportadas - 4T" in item for item in descriptions)
 
-    refs = tuple(
-        compile_filing_projection_ref(item["projection_ref"])
-        for item in _projection_endpoints("2023")
-    )
+    refs = tuple(compile_filing_projection_ref(item["projection_ref"]) for item in _projection_endpoints("2023"))
     non_agricultural_slot_one = {
         ref.fact
         for ref in refs

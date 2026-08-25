@@ -45,9 +45,7 @@ def _real_render_profile(modelo: str, design_epoch: str, source_ref: str, catalo
         for rule in (*profile.singleton_rules, *profile.width_17_rules)
     )
     evidence = (
-        load_render_profile_source_evidence(
-            bundled_path() / catalogues.sources[source_ref].corpus_path, profile
-        )
+        load_render_profile_source_evidence(bundled_path() / catalogues.sources[source_ref].corpus_path, profile)
         if claims_official
         else RenderProfileSourceEvidence(design_identity=profile.design_identity, entries=())
     )

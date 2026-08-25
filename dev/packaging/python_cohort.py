@@ -401,9 +401,7 @@ def _artifact_command_projection(
         if PurePosixPath(name).parts[0] == archive_root
     )
     with zipfile.ZipFile(source_archive) as archive:
-        source_members = tuple(
-            ("source", PurePosixPath(name).as_posix()) for name in archive.namelist()
-        )
+        source_members = tuple(("source", PurePosixPath(name).as_posix()) for name in archive.namelist())
     return tuple(sorted((*wheel_members, *sdist_members, *source_members)))
 
 
@@ -473,9 +471,7 @@ def _attest_installed_command_specs(
     install_root.mkdir()
     try:
         _run([uv, "pip", "install", "--target", str(install_root), "--no-deps", str(root_wheel)], cwd=work_root)
-        dependency_site = next(
-            path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir()
-        )
+        dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
         environment = os.environ.copy()
         environment["PYTHONPATH"] = ""
         environment["AEAT_DEPENDENCY_SITE"] = str(dependency_site)
@@ -974,9 +970,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     if command_spec_attestation["artifact_members_sha256"] != _projection_digest(projection):
         raise SystemExit("Python cohort CommandSpec attestation artifact member projection drifted")
     forbidden_members = tuple(
-        (kind, member)
-        for kind, member in projection
-        if PurePosixPath(member).name in _FORBIDDEN_COMMAND_ARTIFACT_NAMES
+        (kind, member) for kind, member in projection if PurePosixPath(member).name in _FORBIDDEN_COMMAND_ARTIFACT_NAMES
     )
     if forbidden_members:
         raise SystemExit(f"Python cohort contains forbidden command authority artifacts: {forbidden_members!r}")

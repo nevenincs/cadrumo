@@ -191,9 +191,7 @@ class RegistryClosureReport(_ClosureReportModel):
             raise ValueError("registry closure report must contain one row per temporal revision coordinate")
         if coordinates != tuple(sorted(coordinates)):
             raise ValueError("registry closure report rows must be sorted by modelo and revision")
-        expected_row_disagreements = tuple(
-            disagreement for row in self.rows for disagreement in row.join_disagreements
-        )
+        expected_row_disagreements = tuple(disagreement for row in self.rows for disagreement in row.join_disagreements)
         report_missing_limb_disagreements = tuple(
             item for item in self.join_disagreements if item.kind == "missing_from_limb"
         )

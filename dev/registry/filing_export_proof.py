@@ -318,7 +318,6 @@ def canonical_live_filing_export_proof_authority(
     )
 
 
-
 def verify_filing_export_payload_acceptance(
     *,
     entry: FilingExportLiveProofEntry,

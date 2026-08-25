@@ -380,7 +380,7 @@ def test_a_real_release_waits_for_its_own_publication_before_consuming_the_candi
     dispatch = surface.index("dev.release.run_resolution")
     consume = surface.index("mark_candidate_consumed")
     assert dispatch < consume, "the candidate must remain selectable until publication succeeds"
-    assert '.github/workflows/publish-release.yml' in surface
+    assert ".github/workflows/publish-release.yml" in surface
     assert '--head-sha "${HEAD_SHA}"' in surface
     assert "--conclude-seconds 7200" in surface, "the publication conclusion must be awaited"
     assert "dev.release.release_candidate import candidate_tag, mark_candidate_consumed" in surface

@@ -851,8 +851,7 @@ class _ModuleVisitor(ast.NodeVisitor):
                 keywords.get("name"), field="name", line=node.lineno, where=judged, deferred_names=deferred
             )
             scope = (
-                _literal_string(keywords.get("scope"), field="scope", line=node.lineno, where=judged)
-                or _DEFAULT_SCOPE
+                _literal_string(keywords.get("scope"), field="scope", line=node.lineno, where=judged) or _DEFAULT_SCOPE
             )
             autouse = _literal_bool(
                 keywords.get("autouse"),

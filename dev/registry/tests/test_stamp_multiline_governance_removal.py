@@ -99,15 +99,12 @@ def test_a_bracket_initial_prose_line_does_not_end_the_revision_table() -> None:
 
     block = (
         'reviewed_by = """\n'
-        'agent: coverage 0 -> 15 of 108. AEAT prints them as [14] at @270+4 and\n'
-        '[13]. VERIFIED -- the wrap put a bracket at the start of this line\n'
-        'and the scan must not read it as a table header.\n'
+        "agent: coverage 0 -> 15 of 108. AEAT prints them as [14] at @270+4 and\n"
+        "[13]. VERIFIED -- the wrap put a bracket at the start of this line\n"
+        "and the scan must not read it as a table header.\n"
         '"""\n'
     )
-    neighbour = (
-        '\n[revisions."2019-y-siguientes".family_dispositions.formulas]\n'
-        'reason = "unchanged neighbour"\n'
-    )
+    neighbour = '\n[revisions."2019-y-siguientes".family_dispositions.formulas]\nreason = "unchanged neighbour"\n'
 
     rewritten = _apply_governance(
         _manifest(block) + neighbour,

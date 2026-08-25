@@ -83,11 +83,7 @@ def test_real_live_filing_success_cannot_invent_a_complete_source_limb() -> None
         registry_authority=authority,
         filing_proof_authority=_m151_live_filing_authority(authority),
     )
-    row = next(
-        item
-        for item in report.rows
-        if (item.modelo, item.revision) == (Modelo.M151, _M151_REVISION)
-    )
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M151, _M151_REVISION))
 
     assert row.temporal_coverage.status == "validated"
     assert row.filing_export is not None
@@ -105,11 +101,7 @@ def test_real_live_filing_success_cannot_invent_a_complete_source_limb() -> None
 def test_real_below_grade_row_is_complete_from_canonical_manual_source_evidence() -> None:
     """M036's real manual source evidence completes its non-filing closure row."""
     report = _canonical_report()
-    row = next(
-        item
-        for item in report.rows
-        if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes")
-    )
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes"))
 
     assert row.temporal_coverage.status == "validated"
     assert row.filing_export is not None
@@ -121,10 +113,7 @@ def test_real_below_grade_row_is_complete_from_canonical_manual_source_evidence(
     assert row.source_connectivity is not None
     assert row.source_connectivity.outcome == "satisfied"
     assert row.source_connectivity.refusal is None
-    assert {
-        evidence.authority
-        for evidence in row.source_connectivity.evidence
-    } == {
+    assert {evidence.authority for evidence in row.source_connectivity.evidence} == {
         "source-domain-to-casilla-connectivity:censo.modelo-036-profile-status",
     }
     assert row.predicate_outcome == "satisfied"
@@ -143,11 +132,7 @@ def test_real_complete_below_grade_row_refuses_mutated_manual_source_evidence() 
         entries=tuple(entry for entry in census.entries if entry.candidate_id != m036.candidate_id),
     )
     report = _compose_report(authority=authority, census=mutated_census)
-    row = next(
-        item
-        for item in report.rows
-        if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes")
-    )
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes"))
 
     assert row.temporal_coverage.status == "validated"
     assert row.source_connectivity is not None
@@ -165,11 +150,7 @@ def test_real_complete_below_grade_row_refuses_pending_source_disposition_mutati
     authority = bundled_authority()
     census = load_source_connectivity_census()
     m036 = next(entry for entry in census.entries if entry.candidate_id == "censo.modelo-036-profile-status")
-    follow_up = next(
-        entry.bounded_follow_up
-        for entry in census.entries
-        if entry.bounded_follow_up is not None
-    )
+    follow_up = next(entry.bounded_follow_up for entry in census.entries if entry.bounded_follow_up is not None)
     pending_m036 = m036.model_copy(
         update={
             "disposition": SourceConnectivityDisposition.CONNECT_CANDIDATE,
@@ -178,17 +159,10 @@ def test_real_complete_below_grade_row_refuses_pending_source_disposition_mutati
     )
     mutated_census = _validated_census(
         census,
-        entries=tuple(
-            pending_m036 if entry.candidate_id == m036.candidate_id else entry
-            for entry in census.entries
-        ),
+        entries=tuple(pending_m036 if entry.candidate_id == m036.candidate_id else entry for entry in census.entries),
     )
     report = _compose_report(authority=authority, census=mutated_census)
-    row = next(
-        item
-        for item in report.rows
-        if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes")
-    )
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes"))
 
     assert row.source_connectivity is not None
     assert (row.source_connectivity.outcome, row.source_connectivity.refusal.reason) == (
@@ -203,15 +177,9 @@ def test_real_grade_scope_row_guards_bite_both_participation_mutations() -> None
     """Real composed rows reject filing participation that contradicts temporal grade."""
     report = _canonical_report()
     below_grade = next(
-        item
-        for item in report.rows
-        if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes")
+        item for item in report.rows if (item.modelo, item.revision) == (Modelo.M036, "2025-02-03-y-siguientes")
     )
-    filing_grade = next(
-        item
-        for item in report.rows
-        if (item.modelo, item.revision) == (Modelo.M100, "2025")
-    )
+    filing_grade = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M100, "2025"))
     assert below_grade.filing_export is not None
     assert filing_grade.filing_export is not None
 
@@ -257,11 +225,7 @@ def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation()
     mutated = replace(authority, catalogues=catalogues, _snapshots={})
 
     report = load_registry_closure_report(as_of=_AS_OF, registry_authority=mutated)
-    row = next(
-        item
-        for item in report.rows
-        if (item.modelo, item.revision) == (Modelo.M100, "2025")
-    )
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M100, "2025"))
 
     assert row.filing_export is not None
     assert (row.filing_export.outcome, row.filing_export.refusal.reason) == (
@@ -290,11 +254,7 @@ def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_ca
     )
 
     report = load_registry_closure_report(as_of=_AS_OF, registry_authority=mutated)
-    row = next(
-        item
-        for item in report.rows
-        if (item.modelo, item.revision) == (Modelo.M303, "2026-y-siguientes")
-    )
+    row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M303, "2026-y-siguientes"))
 
     assert row.temporal_coverage.failure_code == "selected_revision_mismatch"
     assert row.filing_export is not None

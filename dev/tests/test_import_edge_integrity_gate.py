@@ -329,9 +329,7 @@ def test_family9_census_spans_the_whole_first_party_tree() -> None:
     census_roots = {src_root for _path, src_root in first_party_census_files()}
     covered = {str(root).replace("\\", "/") for root in census_roots}
 
-    assert any(c.endswith("/src") for c in covered), (
-        f"census omits the package source root: {sorted(covered)}"
-    )
+    assert any(c.endswith("/src") for c in covered), f"census omits the package source root: {sorted(covered)}"
     assert any(c == str(REPO_ROOT).replace("\\", "/") for c in covered), (
         f"census omits the development tooling tree: {sorted(covered)}"
     )

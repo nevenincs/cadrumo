@@ -64,7 +64,7 @@ def test_new_command_spec_ingress_is_detected_without_a_typer_decorator(tmp_path
     _write(
         tmp_path,
         "src/cadrumo/entrypoints/cli/_probe_command_specs.py",
-        '''PROBE_WRITE = ExecutionPolicySpec(
+        """PROBE_WRITE = ExecutionPolicySpec(
     capabilities=frozenset({"encrypted-facts"}),
     side_effects=frozenset({"local-state"}),
     performance="local-io",
@@ -83,7 +83,7 @@ PROBE_COMMAND_SPECS = (
         ),
     ),
 )
-''',
+""",
     )
     _write(
         tmp_path,
@@ -116,7 +116,7 @@ def test_command_spec_leaf_resolves_declared_and_fallback_handlers_without_execu
     _write(
         tmp_path,
         "src/cadrumo/entrypoints/cli/_probe_command_specs.py",
-        '''PROBE_WRITE = ExecutionPolicySpec(
+        """PROBE_WRITE = ExecutionPolicySpec(
     capabilities=frozenset({"encrypted-facts"}),
     side_effects=frozenset({"local-state"}),
     performance="local-io",
@@ -140,7 +140,7 @@ PROBE_COMMAND_SPECS = (
     _leaf("fallback-handler", "cadrumo.entrypoints.cli._probe", PROBE_WRITE),
     _leaf("explicit-handler", "cadrumo.entrypoints.cli._probe", PROBE_WRITE, handler_name="record_probe"),
 )
-''',
+""",
     )
     _write(
         tmp_path,
@@ -211,10 +211,7 @@ def assemble_probe_observations() -> tuple[ProbeObservation, ...]:
 
     rows = discover_row_assemblers(tmp_path)
 
-    assert [
-        (row.grouping, row.source_kind, row.assembler_name, row.observation_return_type)
-        for row in rows
-    ] == [
+    assert [(row.grouping, row.source_kind, row.assembler_name, row.observation_return_type) for row in rows] == [
         (
             "per_probe",
             "RowSetGroupingKind.PROBE",

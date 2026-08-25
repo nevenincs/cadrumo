@@ -579,4 +579,3 @@ def test_real_repo_root_resolves_and_version_surfaces_currently_agree() -> None:
     assert check.passed is True, check.detail
     project_names = readiness.check_project_names_are_canonical(root)
     assert project_names.passed is True, project_names.detail
-

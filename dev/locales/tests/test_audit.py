@@ -108,6 +108,8 @@ _PROSE_KEYS = {
         "docs.legal.page.intro",
     },
 }
+
+
 def _manager_for(tmp_path: Path, values: Mapping[str, str]) -> LocaleManager:
     """Write one real YAML catalogue per language and return its manager."""
     locales_dir = tmp_path / "locales"

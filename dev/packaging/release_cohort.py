@@ -130,7 +130,7 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
     return load_python_cohort(destination)
 
 
-_SEALED_MATERIALIZER_SOURCE: Final[str] = r'''
+_SEALED_MATERIALIZER_SOURCE: Final[str] = r"""
 import json
 import os
 import sys
@@ -197,7 +197,7 @@ for name, module in tuple(sys.modules.items()):
             f"materializer module origin escaped sealed site/stdlib: {name}={origin}"
         ) from exc
 print(json.dumps({"plugin_source": result.plugin_source}, sort_keys=True))
-'''
+"""
 
 
 def _materialise_claude_artifacts(
@@ -214,11 +214,7 @@ def _materialise_claude_artifacts(
     uv = shutil.which("uv")
     if uv is None:
         raise SystemExit("uv is required to provision the sealed release materializer")
-    environment = {
-        key: value
-        for key, value in os.environ.items()
-        if key not in {"PYTHONHOME", "PYTHONPATH"}
-    }
+    environment = {key: value for key, value in os.environ.items() if key not in {"PYTHONHOME", "PYTHONPATH"}}
     environment.update(
         {
             "CADRUMO_MATERIALIZER_COHORT": str(cohort.directory),
@@ -261,9 +257,7 @@ def _materialise_claude_artifacts(
         evidence = json.loads(result.stdout)
         plugin_source = PurePosixPath(str(evidence["plugin_source"]).removeprefix("./"))
     except (json.JSONDecodeError, KeyError, TypeError) as exc:
-        raise SystemExit(
-            f"sealed marketplace materializer returned invalid evidence: {result.stdout!r}"
-        ) from exc
+        raise SystemExit(f"sealed marketplace materializer returned invalid evidence: {result.stdout!r}") from exc
     if plugin_source.is_absolute() or ".." in plugin_source.parts:
         raise SystemExit(f"sealed marketplace declared an unsafe plugin source: {plugin_source}")
     plugin_tree = marketplace_tree.joinpath(*plugin_source.parts)
