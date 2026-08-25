@@ -58,10 +58,12 @@ def root_command(
         return
     from ...adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ...adapters.outbound.aeat.auth.session_store import build_session_store
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
     from ...adapters.persistence.workflow import build_workflow_persistence_port
     from ...application.auth.protocols import bind_session_store
     from ...application.auth.providers import bind_auth_provider_selector
+    from ...application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from ...application.user_profile.custody_ports import bind_profile_custody_port
     from ...application.user_profile.language_resolver import register_language_resolver
     from ...application.user_profile.login_session_port import bind_profile_login_session_port
@@ -70,6 +72,7 @@ def root_command(
     ctx.with_resource(bind_profile_custody_port(build_profile_custody_port()))
     ctx.with_resource(bind_profile_login_session_port(build_profile_login_session_port()))
     ctx.with_resource(bind_workflow_persistence_port(build_workflow_persistence_port()))
+    ctx.with_resource(bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository))
     ctx.with_resource(bind_auth_provider_selector(select_outbound_auth_provider))
     ctx.with_resource(bind_session_store(build_session_store()))
     register_language_resolver()
