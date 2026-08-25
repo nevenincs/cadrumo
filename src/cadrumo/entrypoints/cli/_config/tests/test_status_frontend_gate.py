@@ -36,8 +36,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from .....application.user_profile import StatusFactRow
     from .....domain.user_profile import UserProfileRecord
-    from .....entrypoints.tui.profile.status import StatusFactRow
 
 
 def _ctx_with_format(format_name: str) -> typer.Context:
@@ -513,7 +513,7 @@ def test_every_zone_degrades_on_an_empty_storage_root(profile_storage_root: Path
     """
     from dataclasses import fields as dataclass_fields
 
-    from .....entrypoints.tui.profile.status import StatusPageData
+    from .....application.user_profile import StatusPageData
 
     data = _status_frontend.build_status_page_data()
     assert isinstance(data, StatusPageData)
