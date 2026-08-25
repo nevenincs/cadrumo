@@ -53,14 +53,6 @@ _MISSING_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_
 _NAMED_LABEL_CASILLA: CasillaId = validated_casilla_id("my-label", surface="_NAMED_LABEL_CASILLA")
 _DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="_DECL_CNAE_CASILLA")
 _EXPECTED_COMMITTED_M130_DEADLINE_WINDOWS = (
-    "modelo-130-2022-1t",
-    "modelo-130-2022-2t",
-    "modelo-130-2022-3t",
-    "modelo-130-2022-4t",
-    "modelo-130-2023-1t",
-    "modelo-130-2023-2t",
-    "modelo-130-2023-3t",
-    "modelo-130-2023-4t",
     "modelo-130-2024-1t",
     "modelo-130-2024-2t",
     "modelo-130-2024-3t",
@@ -73,6 +65,14 @@ _EXPECTED_COMMITTED_M130_DEADLINE_WINDOWS = (
     "modelo-130-2026-2t",
     "modelo-130-2026-3t",
     "modelo-130-2026-4t",
+    "modelo-130-2022-1t",
+    "modelo-130-2022-2t",
+    "modelo-130-2022-3t",
+    "modelo-130-2022-4t",
+    "modelo-130-2023-1t",
+    "modelo-130-2023-2t",
+    "modelo-130-2023-3t",
+    "modelo-130-2023-4t",
 )
 
 
