@@ -38,7 +38,7 @@ from __future__ import annotations
 
 from base64 import b64decode, b64encode
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -244,17 +244,17 @@ def _encode_recovery_slot(source: ProfileCapsuleSource) -> bytes:
     return length.to_bytes(_SLOT_LENGTH_PREFIX_BYTES, "big") + body + bytes(capacity - len(body))
 
 
-def _decode_payload(payload: bytes, *, expected_bucket_id: str) -> ProfileCapsuleSource:
+def _decode_payload(payload_bytes: bytes, *, expected_bucket_id: str) -> ProfileCapsuleSource:
     """Parse the archive payload back into restorable capsule material."""
     import json
 
     try:
-        decoded = json.loads(payload.decode(UTF_8_ENCODING))
+        decoded_payload: object = json.loads(payload_bytes.decode(UTF_8_ENCODING))
     except (UnicodeDecodeError, ValueError) as exc:
         raise ProfileCapsuleArchiveError("archive payload is not readable canonical JSON") from exc
-    if not isinstance(decoded, dict):
+    if not isinstance(decoded_payload, dict):
         raise ProfileCapsuleArchiveError("archive payload is not a canonical JSON object")
-    payload: dict[str, object] = decoded
+    payload = cast(dict[str, object], decoded_payload)
     if payload.get("schema_version") != _CAPSULE_ARCHIVE_PAYLOAD_SCHEMA_VERSION:
         raise ProfileCapsuleArchiveError("archive payload does not declare the current layout")
     if payload.get("profile_id") != expected_bucket_id:
