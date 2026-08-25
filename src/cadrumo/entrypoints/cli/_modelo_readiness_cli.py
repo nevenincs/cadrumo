@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo._export import modelo_export_readiness_refusal
+from ...application.modelo import modelo_export_readiness_refusal
 from ...application.state_projection import (
     ModeloReadinessRequest,
     ProjectionModeloReadiness,

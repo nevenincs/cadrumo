@@ -78,11 +78,11 @@ from ...application.modelo import (
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
+    amendment_evidence_missing_precondition,
     get_calculation_revision,
     get_filing_record,
     registry_casillas_for_registry_scope,
 )
-from ...application.modelo._action_errors import amendment_evidence_missing_precondition
 from ...core import STRICT_FROZEN_CONFIG, Modelo, Period, permitted_amendment_kind_values
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage

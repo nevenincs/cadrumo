@@ -67,11 +67,11 @@ from ...application.modelo import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     calculate_modelo_work_revision,
+    modelo_work_wizard_retry_exhausted_precondition,
     profile_resolvable_binding_ids,
     registry_bindings_for_scope,
     registry_casillas_for_registry_scope,
 )
-from ...application.modelo._action_errors import modelo_work_wizard_retry_exhausted_precondition
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
