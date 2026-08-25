@@ -130,9 +130,7 @@ _RUNTIME_WHEELHOUSE_SCHEMA = "cadrumo.runtime-wheelhouse.v2"
 _RUNTIME_WHEELHOUSE_MANIFEST = "runtime-wheelhouse.json"
 _RUNTIME_WHEELHOUSE_PREFIX = "wheels/"
 _RUNTIME_WHEELHOUSE_SUBDIR = "wheelhouse"
-_SUPPORTED_WHEELHOUSE_TARGETS = frozenset(
-    {"linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64"}
-)
+_SUPPORTED_WHEELHOUSE_TARGETS = frozenset({"linux-aarch64", "linux-x86-64", "macos-arm64", "windows-x86-64"})
 _RUNTIME_WHEELHOUSE_FLOORS = {
     "linux-aarch64": "glibc-2.17",
     "linux-x86-64": "glibc-2.17",
@@ -571,13 +569,9 @@ def _extract_runtime_wheelhouse(
             for distribution, filename in rows.items():
                 record = wheels.get(filename) if isinstance(filename, str) else None
                 if not isinstance(distribution, str) or not isinstance(record, dict):
-                    raise ValueError(
-                        f"runtime wheelhouse target references an unknown wheel: {target!r}"
-                    )
+                    raise ValueError(f"runtime wheelhouse target references an unknown wheel: {target!r}")
                 if record.get("distribution") != distribution:
-                    raise ValueError(
-                        f"runtime wheelhouse target swaps distribution bytes: {target!r}/{distribution!r}"
-                    )
+                    raise ValueError(f"runtime wheelhouse target swaps distribution bytes: {target!r}/{distribution!r}")
     return {str(key): value for key, value in document.items()}
 
 

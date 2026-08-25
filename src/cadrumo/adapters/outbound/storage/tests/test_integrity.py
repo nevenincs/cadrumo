@@ -42,9 +42,15 @@ def test_payload_byte_length_guard_refuses_provider_metadata_drift(provider: str
         "stored_byte_length": "1",
         "actual_byte_length": "11",
     }
-    _assert_safety(raised.value.terminal_precondition_verdict, "storage.integrity.payload_byte_length_matches", {
-        "provider": provider, "stored_byte_length": "1", "actual_byte_length": "11",
-    })
+    _assert_safety(
+        raised.value.terminal_precondition_verdict,
+        "storage.integrity.payload_byte_length_matches",
+        {
+            "provider": provider,
+            "stored_byte_length": "1",
+            "actual_byte_length": "11",
+        },
+    )
 
 
 @pytest.mark.parametrize("stored_hash", ("", "md5-deadbeef", "sha256-unverified", "sha256-" + "g" * 64))
@@ -58,12 +64,21 @@ def test_full_sha256_guard_refuses_unverified_or_malformed_provider_hashes(store
         )
 
     assert raised.value.context == {"provider": "Google Drive", "stored_hash": stored_hash}
-    _assert_safety(raised.value.terminal_precondition_verdict, "storage.integrity.sha256_digest_valid", {
-        "provider": "Google Drive", "stored_hash": stored_hash,
-    })
+    _assert_safety(
+        raised.value.terminal_precondition_verdict,
+        "storage.integrity.sha256_digest_valid",
+        {
+            "provider": "Google Drive",
+            "stored_hash": stored_hash,
+        },
+    )
 
 
 def test_content_hash_mismatch_carries_exact_safety_verdict() -> None:
     with pytest.raises(OutboundStorageIntegrityError) as raised:
-        verify_content_hash("actual", "stored", message="mismatch", context={"provider": "local"}, translated_message="x")
-    _assert_safety(raised.value.terminal_precondition_verdict, "storage.integrity.content_hash_matches", {"provider": "local"})
+        verify_content_hash(
+            "actual", "stored", message="mismatch", context={"provider": "local"}, translated_message="x"
+        )
+    _assert_safety(
+        raised.value.terminal_precondition_verdict, "storage.integrity.content_hash_matches", {"provider": "local"}
+    )

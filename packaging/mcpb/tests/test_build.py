@@ -441,10 +441,7 @@ def test_build_contains_exact_wheels_and_canonical_digest_binding(
             f"artifacts/{cohort.harness_wheel.name}",
             f"artifacts/{cohort.manuals_wheel.name}",
             f"artifacts/{cohort.official_wheel.name}",
-            *(
-                f"artifacts/wheelhouse/{filename}"
-                for filename in sorted(wheelhouse.manifest["wheels"])
-            ),
+            *(f"artifacts/wheelhouse/{filename}" for filename in sorted(wheelhouse.manifest["wheels"])),
             "artifacts/wheelhouse/runtime-wheelhouse.json",
             "constraints.txt",
             "manifest.json",
