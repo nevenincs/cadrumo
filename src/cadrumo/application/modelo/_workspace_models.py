@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
-    CalculationSourceLineageRole,
     CasillaId,
     OutputLanguage,
     Period,
@@ -31,7 +30,7 @@ from ...domain.calculations.registry import (
     SourceRefId,
 )
 from ...domain.filing import ModeloScalar
-from ...domain.modelos import ModeloCode, WorkUnitState
+from ...domain.modelos import CalculationSourceRef, ModeloCode, WorkUnitState
 from ..ledger import LedgerPreflightIssueReason
 from ..operator_actions import ActionReference
 from ..registry import RegistryClosureLimb
@@ -481,24 +480,10 @@ class ModeloWorkspaceFamilyDispositionV1(_WorkspaceModel):
 
 
 class ModeloWorkspaceProvenanceRecordV1(_WorkspaceModel):
-    """One redacted canonical resolver lineage row for a workspace subject."""
+    """One selected canonical resolver lineage row for a workspace subject."""
 
     subject: ModeloWorkspaceSchemaReferenceV1
-    resolver_id: _BoundedCode
-    lineage_role: CalculationSourceLineageRole
-    resolved_source_kind: BindingSourceKind
-    contributor_source_kind: BindingSourceKind | None = None
-    source_ref: SourceRefId
-    parent_source_ref: SourceRefId | None = None
-    fingerprint: ContentDigest | None = None
-
-    @model_validator(mode="after")
-    def _require_coherent_redacted_lineage(self) -> ModeloWorkspaceProvenanceRecordV1:
-        if self.lineage_role is CalculationSourceLineageRole.PRIMARY and self.parent_source_ref is not None:
-            raise ValueError("primary workspace provenance cannot have a parent source reference")
-        if self.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR and self.parent_source_ref is None:
-            raise ValueError("contributor workspace provenance requires a parent source reference")
-        return self
+    calculation_source: CalculationSourceRef
 
 
 class ModeloWorkspaceScalarMaterializationV1(_WorkspaceModel):

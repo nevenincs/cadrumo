@@ -13,6 +13,7 @@ from ....core import (
     RegistrySchemaFamilyDisposition,
     RevisionReviewStatus,
 )
+from ....domain.modelos import CalculationSourceRef
 from ...registry import RegistryClosureLimb, RegistryClosureOwnerDisposition, RegistryClosureRefusal
 from .._work_addressing import ModeloVisibleFilingTarget
 from .._workspace_models import (
@@ -287,35 +288,50 @@ def test_workspace_bounded_facet_pins_all_root_consistency_coordinates() -> None
         )
 
 
-def test_workspace_provenance_retains_only_redacted_canonical_lineage_coordinates() -> None:
+@pytest.mark.parametrize(
+    "calculation_source",
+    (
+        CalculationSourceRef(
+            resolver_id="ledger-iva",
+            resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+            contributor_source_kind="external_taxpayer_document",
+            contributor_binding_source=None,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref="transaction:ledger-transaction-42",
+            parent_source_ref=None,
+            fingerprint="payload-fingerprint:transaction-42",
+            dependency_treatment="factual_evidence",
+        ),
+        CalculationSourceRef(
+            resolver_id="ledger-iva",
+            resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+            contributor_source_kind="external_taxpayer_document",
+            contributor_binding_source=None,
+            lineage_role=CalculationSourceLineageRole.CONTRIBUTOR,
+            source_ref="transaction:ledger-transaction-43",
+            parent_source_ref="transaction:ledger-transaction-42",
+            fingerprint="payload-fingerprint:transaction-43",
+            dependency_treatment="direct_annual_settlement",
+        ),
+    ),
+)
+def test_workspace_provenance_round_trips_the_exact_canonical_calculation_source_ref(
+    calculation_source: CalculationSourceRef,
+) -> None:
     provenance = ModeloWorkspaceProvenanceRecordV1(
         subject=ModeloWorkspaceCasillaReferenceV1(casilla_id="0001"),
-        resolver_id="ledger-iva",
-        lineage_role=CalculationSourceLineageRole.PRIMARY,
-        resolved_source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        contributor_source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        source_ref="aeat-dr-303-2025-v2",
-        parent_source_ref=None,
-        fingerprint=_DIGEST,
+        calculation_source=calculation_source,
     )
 
-    assert provenance.source_ref == "aeat-dr-303-2025-v2"
-    assert provenance.fingerprint == _DIGEST
-    assert "calculation_source" not in provenance.model_dump()
-    with pytest.raises(ValidationError, match="primary workspace provenance"):
-        ModeloWorkspaceProvenanceRecordV1.model_validate(
-            {**provenance.model_dump(), "parent_source_ref": "aeat-dr-303-2025-v1"}
-        )
-    contributor = ModeloWorkspaceProvenanceRecordV1(
-        subject=ModeloWorkspaceCasillaReferenceV1(casilla_id="0001"),
-        resolver_id="ledger-iva",
-        lineage_role=CalculationSourceLineageRole.CONTRIBUTOR,
-        resolved_source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        source_ref="aeat-dr-303-2025-v1",
-        parent_source_ref="aeat-dr-303-2025-v2",
-    )
+    restored = ModeloWorkspaceProvenanceRecordV1.model_validate_json(provenance.model_dump_json())
 
-    assert contributor.parent_source_ref == "aeat-dr-303-2025-v2"
+    assert restored == provenance
+    assert restored.calculation_source == calculation_source
+    assert restored.calculation_source.source_ref.startswith("transaction:")
+    assert restored.calculation_source.fingerprint == calculation_source.fingerprint
+    assert restored.calculation_source.contributor_source_kind == "external_taxpayer_document"
+    assert restored.calculation_source.contributor_binding_source is None
+    assert restored.calculation_source.dependency_treatment == calculation_source.dependency_treatment
 
 
 @pytest.mark.parametrize(

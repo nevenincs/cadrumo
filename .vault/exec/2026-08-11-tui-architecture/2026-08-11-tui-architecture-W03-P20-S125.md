@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c6599c4261ee9d43c64b244f077d0da6d0d7781690336d1dd1ad468990a26e3'
+body_hash: 'sha256:0e7198cfe5999f77193943d798bdbf24f630c3dd595950dce71a901222d1e053'
 step_id: 'S125'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -15,25 +15,21 @@ related:
 ## Scope
 
 - `src/cadrumo/application/modelo/_workspace_models.py`
+- `src/cadrumo/application/modelo/tests/test_workspace_models.py`
 
 ## Description
 
-- Grounded the Workspace V1 boundary in the accepted registry API ADR, Workspace V1 contract reference, S125 audit, semantic RAG, and exact source census.
-- Kept canonical `ModeloVisibleFilingTarget` and `ModeloExactWorkUnitTarget` as the operands of narrow literal-tagged Workspace arms. The public request and domain refusal now carry the tagged arms; they do not shape-sniff, reparse, or reconstruct a parallel target grammar.
-- Bound every capability to its exact resolved target and explicit selected revision. Baselines and all bounded facets carry and validate the V1 version, selected revision, schema identity and fingerprint, baseline, and sorted contributor tuple.
-- Added typed schema destinations for continuity, applicability, constraints, formula operands, relation endpoints, and export exposure, with executable finite bounds for eager nested collections.
-- Replaced nullable materialization payloads with strict scalar and repeated-row discriminated record arms.
-- Kept provenance as a bounded redacted Workspace DTO: canonical resolver/source kinds and lineage role, safe reference, optional fingerprint, and parent reference are preserved without raw `CalculationSourceRef` or source-object identity.
-- Added a strict typed Workspace readiness projection that preserves the canonical profile, registry, binding, ledger-preflight, nullable ledger verdict, issue, and aggregate-ready axes without collapsing them into generic facts or inferring capability availability.
-- Bounded localized values, cursors, facts, evidence references, facet records, contributors, schema relationships, repeated rows, provenance rows, readiness rows, family dispositions, and closure limbs.
-- Added integration-marked adversarial tests for tagged target parsing, safe provenance, typed schema relationship destinations, real materialization discrimination, collection and cursor limits, exact capability-revision binding, and projection coordinate drift.
+- Grounded the Workspace V1 boundary with Vaultspec RAG and exact source census before correcting provenance.
+- Retained the approved tagged canonical target arms, strict readiness projection, bounded nested collections/cursors, and discriminated materialization records.
+- Replaced the lossy parallel workspace provenance DTO with a direct `CalculationSourceRef` field. The canonical source ref now retains resolver, resolved binding source, arbitrary contributor-source kind, optional contributor binding source, lineage role, ordinary transaction source/parent references, optional fingerprint, and dependency treatment without a second validator or narrowed identifier aliases.
+- Added integration contract coverage that round-trips primary and contributor canonical transaction provenance with external contributor taxonomy, non-digest fingerprints, and both dependency-treatment values.
 
 ## Outcome
 
-Corrected implementation is review-ready. S125 remains open pending independent re-review; no plan checkbox or status was closed. The public application facade and executable workspace service remain separately owned, and this step adds no compatibility shim, fallback parser, duplicate owner, or facade re-export.
+Corrective implementation is review-ready. S125 remains open pending independent re-review; no plan checkbox or status was closed. This correction adds no compatibility shim, alternate provenance vocabulary, facade re-export, or second provenance owner.
 
 ## Notes
 
-Vaultspec RAG confirmed the governing Workspace decision and canonical model family before the correction. The final code-index query was temporarily unavailable while the shared index refreshed; exact `rg` census is the closing redeclaration evidence: every `ModeloWorkspace*` definition is in the one canonical model module, no production compatibility bridge exists, and the removed `_target_from_mapping`, `_adapt_wire_target`, raw `CalculationSourceRef`, and raw `ProjectionModeloReadiness` references have zero matches there.
+RAG located `CalculationSourceRef` at `domain.modelos._calculation_revision` and its sanctioned `domain.modelos` facade export. Exact source census confirmed the application workspace record is now only a subject plus that canonical type; no parallel lineage fields remain.
 
-Focused evidence: `uv run --no-sync ruff check src/cadrumo/application/modelo/_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_models.py` passed; `uv run --no-sync basedpyright src/cadrumo/application/modelo/_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_models.py` passed with 0 errors; `uv run --no-sync pytest -q -o addopts='' -m integration src/cadrumo/application/modelo/tests/test_workspace_models.py` passed with 16 tests; `git diff --check` passed for the owned paths.
+Focused evidence: `uv run ruff check src/cadrumo/application/modelo/_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_models.py` passed; `uv run pytest src/cadrumo/application/modelo/tests/test_workspace_models.py -m integration -q` passed with 17 tests; `uv run ty check src/cadrumo/application/modelo/_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_models.py` passed; `git diff --check` passed.
