@@ -35,21 +35,46 @@ related:
 
 ## Scope
 
-<!-- What was audited and why -->
+Independent architecture-grade review of S125 commit `6f210459d3` against the accepted Workspace V1 ADRs, the implementation plan, and the grounded contract reference. The review included line-by-line model inspection, semantic and exact definition census, focused integration tests, Ruff, and basedpyright. No source correction was made during review.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### workspace-coordinate-binding | high | Capability and facet records are not pinned to their exact Workspace coordinate
 
-       ### S125 Workspace V1 model review | {level} | {summary}
+`ModeloWorkspaceCapabilityV1` omits the exact target and law-selected revision required for every copied capability answer. `ModeloWorkspaceBoundedFacetV1` likewise omits the contract version, selected revision, schema identity, baseline token, and contributor-stamp coordinate required to make independently traversed pages consistency-verifiable. A consumer therefore cannot prove that a capability or later facet page belongs to the projection it is rendering.
 
-     followed by a paragraph carrying the detail. S125 Workspace V1 model review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### schema-denominator-shape | high | Schema records cannot represent the accepted explanatory identity universe
+
+`ModeloWorkspaceSchemaRecordV1` carries a primary reference, label, classification, family disposition, and legal/source references, but has no typed destinations for continuity, applicability, constraints, formula operands, relation endpoints, export exposure, or the remaining accepted explanatory identity relationships. S127 cannot generate the ADR-mandated exhaustive manifest into this destination without omission or an untyped escape hatch.
+
+### materialization-discrimination | high | Materialization uses a nullable arm container instead of a discriminated union
+
+`ModeloWorkspaceMaterializationRecordV1` exposes a free `kind` plus two nullable payload fields and repairs the state with a model validator. The accepted boundary requires strict discriminated records. Separate scalar and repeated-row record arms with literal discriminators are required so the schema itself is closed and consumers do not inherit nullable-arm interpretation.
+
+### boundary-boundedness | medium | Display values and cursors are unbounded
+
+`ModeloWorkspaceLocalizedTextV1.value` and `ModeloWorkspaceBoundedFacetV1.next_cursor` accept unrestricted strings. This violates the bounded DTO and traversal posture and permits an otherwise bounded page to carry unbounded presentation or cursor data.
+
+### static-analysis | medium | Focused basedpyright reports nine errors
+
+The three identifier `TypeAdapter` instances infer `Unknown`, their validated values flow into typed constructors as unknown arguments, mapping adaptation retains unknown key/value types, and `ModeloWorkspaceDomainRefusalV1` reaches across class privacy to `_adapt_wire_target`. The implementation does not meet the project static-analysis gate.
+
+### duplicate-owner-census | low | No redeclaration, shim, alias, or re-export bridge was found
+
+Vaultspec RAG and exact source census found all `ModeloWorkspace*` definitions in the S125 canonical model module and no production imports or compatibility surfaces. This clean result must be retained by the correction and later public-boundary work; it does not offset the blocking contract findings above.
+
+### target-wire-redeclaration | high | Shape sniffing creates a second target grammar instead of tagged canonical arms
+
+`_target_from_mapping` and `ModeloWorkspaceRequestV1._adapt_wire_target` at `src/cadrumo/application/modelo/_workspace_models.py:157` redeclare allowed-key sets, select an arm by the presence of `work_unit_id`, reparse `Period`, and reconstruct the canonical target dataclasses. The request target at line 213 is therefore not a public discriminated union, and the refusal at line 668 reuses the private validator across class ownership. This is distinct from the clean duplicate-model census: it is a parallel wire-parser authority over existing target models. Replace it with narrow Workspace-owned literal-tagged arms containing the canonical operands, or first reconcile the canonical target contract; delete the shape-sniffing helper without an alias or bridge.
+
+### readiness-contract-loss | high | Generic facts cannot preserve the canonical readiness axes
+
+The model family has no typed Workspace readiness projection, while `ModeloWorkspaceCapabilityV1` at `src/cadrumo/application/modelo/_workspace_models.py:429` offers only an open-ended tuple of name/value facts. That shape cannot preserve `profile_ready`, `per_operation_requirements_assessed`, profile refusal and missing requirements, registry and binding readiness, ledger preflight and nullable ledger readiness, issues, and aggregate readiness exactly as the accepted ADR requires. S128 would have to encode a parallel fact-name convention or drop owner data. Add a strict typed projection of the canonical readiness record and keep evidence facts explanatory only.
+
+### nested-payload-bounds | medium | The outer page limit leaves nested record cardinality unbounded
+
+Beyond the unrestricted localized value at `src/cadrumo/application/modelo/_workspace_models.py:286` and cursor at line 470, the page-size check at lines 473-483 bounds only outer records. `section_path`, legal/source references, repeated-row values and provenance, family dispositions, and evidence-horizon references have neither authoritative finite maxima nor bounded expansion contracts. Declare executable bounds for each nested collection or move it behind a coordinate-pinned page or expansion envelope; add oversize refusal tests.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Keep S125 open. Amend the canonical model module in place to bind capability and facet rows to exact coordinates, provide typed schema relationship destinations, replace the materialization container with a real discriminated union, bound all strings and cursors, and clear focused basedpyright without aliases, shims, re-export bridges, or duplicate owners. Extend adversarial tests for every repaired invariant, then repeat this independent review before S125 closure.

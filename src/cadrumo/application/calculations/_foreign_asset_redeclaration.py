@@ -179,8 +179,6 @@ def _modelo_720_positions(observation: RegistryModeloObservation) -> Mapping[tup
         group = _M720_VALUATION_CASILLA_GROUPS.get(item.casilla_id)
         if group is None:
             continue
-        if not isinstance(item.value, Decimal):
-            continue
         totals[group] = totals.get(group, Decimal("0")) + item.value
 
     return {
@@ -199,15 +197,14 @@ def _modelo_721_positions(observation: RegistryModeloObservation) -> Mapping[tup
     custodian_country = ""
     token = ""
     for item in observation.observations:
+        value = _decimal_text(item.value)
         if item.casilla_id == _M721_CUSTODIAN_NAME_CASILLA:
-            custodian_name = _decimal_text(item.value) if isinstance(item.value, Decimal) else item.value
+            custodian_name = value
         elif item.casilla_id == _M721_CUSTODIAN_COUNTRY_CASILLA:
-            custodian_country = _decimal_text(item.value) if isinstance(item.value, Decimal) else item.value
+            custodian_country = value
         elif item.casilla_id == _M721_CRYPTO_ASSET_CASILLA:
-            token = _decimal_text(item.value) if isinstance(item.value, Decimal) else item.value
+            token = value
         elif item.casilla_id == _M721_BALANCE_CASILLA and token:
-            if not isinstance(item.value, Decimal):
-                continue
             key = (
                 ForeignAssetObligationGroup.MONEDAS_VIRTUALES.value,
                 custodian_name,

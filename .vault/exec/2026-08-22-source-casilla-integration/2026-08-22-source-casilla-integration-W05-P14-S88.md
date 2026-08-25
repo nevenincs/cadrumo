@@ -30,4 +30,3 @@ Google Sheets pull now passes each populated row set and its law-selected regist
 ## Notes
 
 Focused verification passed: `pytest -n 0 src/cadrumo/entrypoints/cli/_config/tests/test_google_sync_calc_pull_observations.py -q` (2 passed) and scoped Ruff for the production and test modules. Scoped code review found no issue. S89 through S91 remain intentionally open.
-
