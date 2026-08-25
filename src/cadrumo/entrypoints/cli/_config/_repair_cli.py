@@ -28,7 +28,7 @@ from ....application.diagnostics import (
 from ....application.diagnostics import (
     render_config_repair_text as _render_config_repair_text,
 )
-from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
+from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.json_contract import strict_round_trip
 from ....core.logging import default_log_file_path as _default_log_file_path
 from .._common import emit_envelope, resolve_cli_precondition_action

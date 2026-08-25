@@ -14,7 +14,8 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....core import ServiceCapability, resolve_active_bucket_id
+from ....core import ServiceCapability
+from ....core.bucket_pointer import resolve_active_bucket_id
 
 if TYPE_CHECKING:
     from ....application.provisioning import ContentionSnapshot, DependencyStatus, HardwareProfile

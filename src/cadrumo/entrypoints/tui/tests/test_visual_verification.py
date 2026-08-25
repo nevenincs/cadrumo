@@ -38,7 +38,7 @@ from ....application.user_profile import (
     register_profile_with_credentials,
 )
 from ....application.user_profile.status_projection import StatusFactRow, StatusPageData
-from ....core import require_active_bucket_id
+from ....core.bucket_pointer import require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.presentation import FormField, FormPage
 from ....entrypoints.tui.profile.overview import ProfileManagerApp

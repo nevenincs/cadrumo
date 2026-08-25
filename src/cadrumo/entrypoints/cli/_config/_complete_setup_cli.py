@@ -25,7 +25,7 @@ from typing import cast
 
 import typer
 
-from ....core import resolve_active_bucket_id
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.i18n import tr
 from .._common import bad, emit_envelope
 

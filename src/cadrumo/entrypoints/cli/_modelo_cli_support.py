@@ -768,7 +768,7 @@ def resolve_actor_option(actor: str | None) -> str:
 def resolve_default_actor() -> str:
     """Return the active profile label, or a permanent fallback label."""
     try:
-        from ...core import resolve_active_bucket_id
+        from ...core.bucket_pointer import resolve_active_bucket_id
 
         label = active_profile_label()
         if label:

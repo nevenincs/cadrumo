@@ -60,7 +60,7 @@ def bind_profile_target(ctx: typer.Context, *, bucket_id: str) -> None:
 def normalize_ambient_profile(ctx: typer.Context) -> None:
     """Normalize an ambient label pointer to the canonical live bucket UUID."""
     from ...application.workflow import ProfileLabelAmbiguousError, resolve_profile_bucket
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config import override_settings
     from ...core.errors import CadrumoError
 
@@ -101,7 +101,7 @@ def activate_profile_session(
 
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...application.storage_write_policy import inspect_storage_write_policy
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     common = _common()
     leaf = common.RequestedCliLeaf(

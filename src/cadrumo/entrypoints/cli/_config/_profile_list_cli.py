@@ -36,7 +36,7 @@ def config_list(
     """List committed profile pointers without importing sibling commands."""
     _activate_output_language(ctx, output_language)
     from ....application.workflow import list_profile_buckets
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
     from .._config_payloads import ConfigListResult, ProfilePointerPayload
 
     active = resolve_active_bucket_id()

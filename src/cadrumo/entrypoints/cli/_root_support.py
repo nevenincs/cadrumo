@@ -149,7 +149,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...application.operator_surface import build_root_landing_report
     from ...application.workflow import list_profile_buckets
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ._root_landing import render_cli_root_landing_lines
     from ._root_payloads import RootStatusResult
 
@@ -276,7 +276,7 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
         ProfileLabelAmbiguousError,
         resolve_profile_bucket,
     )
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config import override_settings
     from ...core.errors import CadrumoError
     from ._errors import CliRefusedBoundaryError

@@ -154,7 +154,7 @@ def _seed_m115_retencion_observation() -> None:
 
 
 def _active_bucket_id() -> str:
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None, "profile create must install an active-profile pointer"

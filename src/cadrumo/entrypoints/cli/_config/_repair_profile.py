@@ -11,7 +11,7 @@ from collections.abc import Callable
 
 import typer
 
-from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
+from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,

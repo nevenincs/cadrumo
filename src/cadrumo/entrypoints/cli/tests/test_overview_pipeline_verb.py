@@ -25,7 +25,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....application.overview import ModeloReadinessState
-from ....core import resolve_active_bucket_id
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.modelos import (
     VerificationCompletenessStatus,
     VerificationReport,

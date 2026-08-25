@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import typer
 
-from ....core import ServiceCapability, resolve_active_bucket_id
+from ....core import ServiceCapability
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.i18n import tr
 from .._common import bad, emit_envelope
 

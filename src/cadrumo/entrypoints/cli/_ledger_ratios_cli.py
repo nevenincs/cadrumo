@@ -24,7 +24,7 @@ _log = get_logger(__name__)
 
 def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     """Return ``(bucket_id, active_profile_id)`` from workflow state."""
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     return _ratios_bucket_id(), resolve_active_bucket_id()
 

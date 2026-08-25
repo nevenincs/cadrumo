@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import AttachmentStore
-from ....core import resolve_active_bucket_id
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.attachments import (
     AttachmentBytesContent,
     AttachmentIngestionRequest,

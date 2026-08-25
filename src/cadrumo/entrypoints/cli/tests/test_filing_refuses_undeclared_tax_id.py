@@ -78,7 +78,7 @@ def _persist_facts(*, include_tax_id: bool) -> None:
     entry: the path is simply never among the facts written, which is what makes
     absence unambiguous.
     """
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
     from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 
     bucket_id = resolve_active_bucket_id()
@@ -100,7 +100,7 @@ def _persist_facts(*, include_tax_id: bool) -> None:
 
 
 def _active_record():
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
     from ....tests.profile_capsule import load_test_profile_record
 
     bucket_id = resolve_active_bucket_id()

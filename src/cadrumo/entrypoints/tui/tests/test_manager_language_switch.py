@@ -29,7 +29,7 @@ from ....application.user_profile import (
     login_profile,
     register_profile_with_credentials,
 )
-from ....core import require_active_bucket_id
+from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.profile_capsule import load_test_profile_record

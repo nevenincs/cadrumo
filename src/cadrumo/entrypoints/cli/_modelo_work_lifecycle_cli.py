@@ -104,7 +104,7 @@ def guard_unsupported_work_modelo(modelo: str) -> None:
 def _validate_registry_target_before_profile_if_needed(
     *, modelo: str, filing_year: int, period: Period, registry_revision_id: RevisionId | None
 ) -> None:
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     if resolve_active_bucket_id() is not None:
         return
@@ -176,7 +176,7 @@ def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str
         return ([], [])
     from ...application.overview import build_filing_obligation_advisories
     from ...application.user_profile import ProfileRecordRepository, record_to_values
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     bucket = resolve_active_bucket_id()
     if bucket is None:

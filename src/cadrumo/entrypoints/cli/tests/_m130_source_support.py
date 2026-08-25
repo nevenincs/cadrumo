@@ -7,7 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import resolve_active_bucket_id
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

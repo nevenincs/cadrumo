@@ -41,13 +41,8 @@ from ....application.flows.definition import FlowPage
 from ....application.flows.errors import FlowAnswerError
 from ....application.flows.scripted import run_scripted_flow
 from ....application.modelo import amendment_evidence_missing_precondition, get_calculation_revision, get_filing_record
-from ....core import (
-    STR_KEYED_MAPPING_ADAPTER,
-    ActionConditionality,
-    NoRecoveryOutcome,
-    Period,
-    resolve_active_bucket_id,
-)
+from ....core import STR_KEYED_MAPPING_ADAPTER, ActionConditionality, NoRecoveryOutcome, Period
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....core.resources import resources
 from ....domain.justificante import Justificante

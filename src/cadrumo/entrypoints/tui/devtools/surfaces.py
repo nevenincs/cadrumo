@@ -77,7 +77,7 @@ def _manager() -> App[Any]:
         apply_manager_profile_field_mutation,
         build_profile_overview,
     )
-    from ....core import require_active_bucket_id
+    from ....core.bucket_pointer import require_active_bucket_id
     from ....entrypoints.tui.profile.overview import ProfileManagerApp
 
     profile_id = require_active_bucket_id()

@@ -39,7 +39,7 @@ def resolve_profile_by_label(name: str) -> ProfileBucketPointer:
 
 def resolve_active_profile_pointer() -> ProfileBucketPointer | None:
     from ....application.workflow import read_profile_bucket_by_id
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     return None if active is None else read_profile_bucket_by_id(active)

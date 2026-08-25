@@ -1128,7 +1128,8 @@ def active_profile_label() -> str | None:
     """
     from ...adapters.persistence.storage import StorageValidationError
     from ...application.workflow import resolve_profile_bucket
-    from ...core import FormerProductStateError, resolve_active_bucket_id
+    from ...core import FormerProductStateError
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     try:
         bucket_id = resolve_active_bucket_id()
@@ -1191,7 +1192,7 @@ no_active_profile_refusal = _no_active_profile_refusal
 
 def _state() -> WorkflowState:
     from ...application.workflow import workflow_state_repository
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     # Without an active profile there is no bucket database to open;
     # workflow_state_repository().load() would raise a raw StorageError
@@ -1626,7 +1627,7 @@ def active_bucket_id_or_refuse() -> str:
     bucket-bound CLI command families. :func:`_active_bucket_id_or_bad`
     delegates here.
     """
-    from ...core import require_active_bucket_id
+    from ...core.bucket_pointer import require_active_bucket_id
     from ...core.errors import NoActiveProfileError
 
     try:

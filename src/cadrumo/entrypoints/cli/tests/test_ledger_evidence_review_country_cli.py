@@ -40,7 +40,8 @@ from typing import Final
 import pytest
 
 from ....application.ledger import InvoiceDraft, deterministic_findings, write_extraction_draft
-from ....core import STR_KEYED_MAPPING_ADAPTER, resolve_active_bucket_id
+from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session

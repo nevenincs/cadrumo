@@ -327,7 +327,7 @@ def overview_status(
     matching draft rows.
     """
     from ...application.user_profile import record_to_values
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     current = _state() if resolve_active_bucket_id() is not None else None
     if period is not None:
@@ -610,7 +610,7 @@ def _overview_calendar_all_profiles(
     ``overview.calendar``.
     """
     from ...application.workflow import list_profile_buckets
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     today = today_madrid()
     buckets = list_profile_buckets()

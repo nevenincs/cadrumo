@@ -380,7 +380,7 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
 
 def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> None:
     """An operator's public CLI M100 path carries ledger income through 0171/0180/0224."""
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile()
     work_unit = invoke_cached_cli(
@@ -584,7 +584,7 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
 
 def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_evidence() -> None:
     """A classified rent ledger row alone must hard-stop instead of producing zeros."""
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_115_work_unit()
@@ -647,7 +647,7 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()
@@ -826,7 +826,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     that suppression on the operator-facing calculate surface across both the
     JSON ``notices`` channel and the human text output.
     """
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()
@@ -915,7 +915,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
     repercutido-general binding must leave ``source_advisories`` empty and emit
     no ADVISORY line.
     """
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()

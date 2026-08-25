@@ -18,7 +18,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import resolve_active_bucket_id
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....tests import FIXTURES_DIR
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_runner import invoke_cached_cli

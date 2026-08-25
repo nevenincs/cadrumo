@@ -22,7 +22,8 @@ from textual.widgets import DataTable, Input, Static
 from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ....application.user_profile import build_profile_overview, login_profile, logout_active_profile
 from ....application.user_profile.login_interaction import attempt_profile_login, profile_login_choices
-from ....core import assess_profile_password, require_active_bucket_id
+from ....core import assess_profile_password
+from ....core.bucket_pointer import require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....tests.modelo_work_review import build_real_modelo_work_review
 from ....tests.profile_capsule import load_test_profile_record

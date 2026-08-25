@@ -28,15 +28,8 @@ from ....application.workflow import (
     load_run,
     save_run,
 )
-from ....core import (
-    ActionArgumentStatus,
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    Modelo,
-    NoRecoveryOutcome,
-    Period,
-    resolve_active_bucket_id,
-)
+from ....core import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance, Modelo, NoRecoveryOutcome, Period
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.deadlines import ObligationStatus
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli

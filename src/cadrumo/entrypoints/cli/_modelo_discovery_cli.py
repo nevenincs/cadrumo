@@ -33,7 +33,8 @@ from ...application.modelo import (
 )
 from ...application.operator_actions import ActionReference
 from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
-from ...core import ActionArgumentSource, ActionArgumentStatus, Period, TaxDomain, resolve_active_bucket_id
+from ...core import ActionArgumentSource, ActionArgumentStatus, Period, TaxDomain
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
 from ...domain.calculations.registry import (

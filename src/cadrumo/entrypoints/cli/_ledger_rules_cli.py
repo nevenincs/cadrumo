@@ -53,7 +53,7 @@ def rule_add(
 ) -> None:
     """Add or idempotently update a ledger classification rule."""
     from ...application.ledger import add_classification_rule
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = _rule_bucket_id()
     if not description_pattern.strip():
@@ -218,7 +218,7 @@ def rule_apply(
 ) -> None:
     """Apply stored rules to ACTIVE NOT_YET_PROCESSED transactions."""
     from ...application.ledger import apply_classification_rules
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = _rule_bucket_id()
     resolved_actor = actor or resolve_active_bucket_id() or "operator"

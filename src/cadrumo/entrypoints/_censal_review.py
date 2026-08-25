@@ -27,7 +27,7 @@ from ..application.user_profile import (
     ProfileRecordRepository,
     build_censal_operation_request,
 )
-from ..core import require_active_bucket_id
+from ..core.bucket_pointer import require_active_bucket_id
 from ..core.operations import (
     OperationEffect,
     OperationLifecycle,

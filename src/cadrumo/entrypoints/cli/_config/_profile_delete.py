@@ -58,7 +58,7 @@ def _refuse_deleting_the_active_profile(*, bucket_id: str, label: str) -> None:
     limitation of this verb so much as a statement that closing a session is a
     separate, already-owned operation the operator must perform first.
     """
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     if resolve_active_bucket_id() != bucket_id:
         return
@@ -130,9 +130,10 @@ def _destroy(bucket_id: str, *, label: str) -> str:
     """
     from uuid import UUID
 
-    from ....application.user_profile import ProfileCapsuleLifecycle, activeprofile_pointer
+    from ....application.user_profile import ProfileCapsuleLifecycle
+    from ....application.user_profile.profile_pointer import active_profile_pointer_transaction
 
-    with activeprofile_pointer():
+    with active_profile_pointer_transaction():
         # Revalidate under the canonical root/pointer lock and retain it until
         # every journalled owner effect completes. A concurrent login cannot
         # activate the target between this decision and tombstone removal.

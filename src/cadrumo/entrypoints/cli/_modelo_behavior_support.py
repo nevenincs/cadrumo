@@ -21,7 +21,8 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
-from ...core import Period, PeriodError, resolve_active_bucket_id
+from ...core import Period, PeriodError
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.logging import get_logger

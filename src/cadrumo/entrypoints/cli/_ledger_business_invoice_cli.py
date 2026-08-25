@@ -184,7 +184,7 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     # document: the profile package reaches back into this layer.
     from ...application.invoices import simplificada_requires_tax_id_for_domestic_issuer
     from ...application.user_profile import ProfileRecordRepository, projection_for_taxpayer
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ...domain.user_profile import ProfileNotFoundError
 
     bucket_id = resolve_active_bucket_id()

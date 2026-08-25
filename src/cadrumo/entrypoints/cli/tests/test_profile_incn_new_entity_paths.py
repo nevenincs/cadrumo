@@ -106,7 +106,7 @@ def _load_active_taxpayer_profile():
 
     from ....application.user_profile import record_to_path_values
     from ....application.workflow import workflow_state_repository
-    from ....core import read_pointer
+    from ....core.bucket_pointer import read_pointer
     from ....core.config import load_settings
     from ....domain.deadlines import taxpayer_profile_from_mapping
 

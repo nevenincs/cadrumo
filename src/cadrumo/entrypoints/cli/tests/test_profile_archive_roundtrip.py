@@ -129,7 +129,7 @@ def test_archive_export_restore_roundtrip(tmp_path: Path) -> None:
     archive that restored an empty but structurally valid profile would pass
     every other assertion here.
     """
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     csv_path = tmp_path / "bank.csv"
     _create_profile("profile", tax_id="12345678Z")
@@ -296,7 +296,7 @@ def test_archive_restore_refuses_an_identity_already_published(tmp_path: Path) -
     root that already holds that identity would collide with a capsule the
     operator is actively using. The refusal must not leak the raw id.
     """
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile("profile5", tax_id="33333333P")
     source_bucket_id = resolve_active_bucket_id()

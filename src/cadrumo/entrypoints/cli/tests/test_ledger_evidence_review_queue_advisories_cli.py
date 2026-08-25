@@ -46,13 +46,8 @@ from ....application.ledger import (
     ground_draft_against_transcription,
     write_extraction_draft,
 )
-from ....core import (
-    LOCAL_TRANSPORT_LABEL,
-    FieldGroundingOutcome,
-    FieldOrigin,
-    ReviewAdvisoryKind,
-    resolve_active_bucket_id,
-)
+from ....core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin, ReviewAdvisoryKind
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 

@@ -363,7 +363,7 @@ def test_config_profile_delete_tombstones_with_yes() -> None:
     result = _invoke_profile_app(("delete", "operator", "--yes"))
     assert result.exit_code == 0, result.output
     assert "status\ttombstoned" in result.output
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     assert resolve_active_bucket_id() is None
 
@@ -392,7 +392,7 @@ def test_config_login_refuses_a_tombstoned_profile() -> None:
     one with exit code 0.
     """
 
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     # Registered through the real credential door: ``seed`` provisions a raw
     # session key, not a passphrase-backed custody envelope, so ``config login``
@@ -513,7 +513,7 @@ def test_show_and_status_do_not_contradict_on_a_registered_profile() -> None:
 def test_config_profile_show_refuses_when_no_active_profile(_isolated_backend: Path) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
     # resolver returns None and the show verb refuses.
-    from ....core import BucketPointer, write_pointer
+    from ....core.bucket_pointer import BucketPointer, write_pointer
     from ....core.config import override_settings
 
     write_pointer(_isolated_backend, BucketPointer.absent(transition_revision=1))
@@ -578,7 +578,7 @@ def test_config_profile_status_exits_nonzero_for_dangling_pointer(_isolated_back
     """``config profile status`` exits non-zero when the active profile
     has a dangling pointer (registered but no manifest bucket)."""
 
-    from ....core import BucketPointer, write_pointer
+    from ....core.bucket_pointer import BucketPointer, write_pointer
 
     # Write a pointer to a non-existent bucket so status sees dangling_pointer.
     write_pointer(_isolated_backend, BucketPointer.selected(bucket_id="phantom", transition_revision=1))

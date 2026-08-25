@@ -223,7 +223,7 @@ def preflight_parsed_leaf(
 
     if spec.allow_unregistered_profile_diagnostic:
         from ...application.workflow import read_profile_bucket_by_id
-        from ...core import resolve_active_bucket_id
+        from ...core.bucket_pointer import resolve_active_bucket_id
 
         active = resolve_active_bucket_id()
         if active is not None and read_profile_bucket_by_id(active) is None:
@@ -248,7 +248,7 @@ def preflight_parsed_leaf(
         )
     else:
         if root is not None and explicit_target is None:
-            from ...core import resolve_active_bucket_id
+            from ...core.bucket_pointer import resolve_active_bucket_id
 
             if resolve_active_bucket_id() is None:
                 _refuse("profile_secrets_missing_target")

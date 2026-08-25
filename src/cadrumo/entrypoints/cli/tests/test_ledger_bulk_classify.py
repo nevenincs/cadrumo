@@ -65,7 +65,7 @@ def _list_transactions() -> list[dict[str, Any]]:
 
 def _stored_transaction(transaction_id: str) -> Any:
     from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None

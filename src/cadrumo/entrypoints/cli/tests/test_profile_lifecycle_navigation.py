@@ -142,7 +142,7 @@ def test_delete_active_profile_is_refused_and_survivors_stay_reachable(
     the survivor must remain reachable afterwards.
     """
     from ....application.workflow import read_profile_bucket
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     create_profile_via_cli("alpha")
     create_profile_via_cli("beta")
@@ -173,7 +173,7 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
     the pointer so no session resolves at root-callback time. ``switch``
     must still open its own session and activate the named profile.
     """
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     create_profile_via_cli("solo")
 
@@ -218,7 +218,7 @@ def test_delete_active_profile_refuses_and_keeps_the_pointer_intact(
     custody redesign refuses the delete instead. The refusal must not
     leave the pointer cleared — the profile remains active afterwards.
     """
-    from ....core import resolve_active_bucket_id
+    from ....core.bucket_pointer import resolve_active_bucket_id
 
     create_profile_via_cli("alpha")
     assert _invoke(("config", "login", "alpha")).exit_code == 0

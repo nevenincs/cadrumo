@@ -36,7 +36,7 @@ from ....application.user_profile import (
     login_profile,
     register_profile_with_credentials,
 )
-from ....core import require_active_bucket_id
+from ....core.bucket_pointer import require_active_bucket_id
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..profile.overview import ProfileManagerApp
