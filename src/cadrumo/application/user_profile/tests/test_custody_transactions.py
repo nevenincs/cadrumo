@@ -55,6 +55,7 @@ from .._custody_transactions import (
     ProfileCustodyTransactionRefusalError,
     ProfileCustodyTransactionState,
 )
+from ..profile_pointer import ActiveProfilePointerTransactionError, active_profile_pointer_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -65,19 +66,19 @@ _INSTANT = datetime(2026, 8, 13, 12, 34, 56, tzinfo=UTC)
 
 def _observe_pointer(root: Path) -> BucketPointer:
     """Observe through the only public current-pointer transaction."""
-    with user_profiles.active_profile_pointer_transaction(root) as transaction:
+    with active_profile_pointer_transaction(root) as transaction:
         return transaction.read()
 
 
 def _select_pointer(root: Path, bucket_id: str) -> BucketPointer:
     """Select through the sole transition owner."""
-    with user_profiles.active_profile_pointer_transaction(root) as transaction:
+    with active_profile_pointer_transaction(root) as transaction:
         return transaction.select(bucket_id)
 
 
 def _clear_expected_pointer(root: Path, expected: BucketPointer) -> BucketPointer:
     """Model a crash boundary using the canonical compare-and-transition verb."""
-    with user_profiles.active_profile_pointer_transaction(root) as transaction:
+    with active_profile_pointer_transaction(root) as transaction:
         return transaction.compare_and_restore(
             expected=expected,
             captured=BucketPointer.absent(transition_revision=0),
@@ -1008,8 +1009,8 @@ def test_pointer_transition_and_active_pointer_writer_share_one_root_lock(tmp_pa
         replacement = _observe_pointer(tmp_path)
         assert replacement.bucket_id == str(_OTHER_PROFILE_ID)
         with (
-            user_profiles.active_profile_pointer_transaction(tmp_path) as transaction,
-            pytest.raises(user_profiles.ActiveProfilePointerTransactionError),
+            active_profile_pointer_transaction(tmp_path) as transaction,
+            pytest.raises(ActiveProfilePointerTransactionError),
         ):
             transaction.compare_and_restore(
                 expected=captured,

@@ -23,7 +23,7 @@ from contextlib import contextmanager
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, Final, override
+from typing import TYPE_CHECKING, Annotated, Any, Final, Literal, override
 
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import (
@@ -1334,7 +1334,12 @@ def _active_profile_pointer_observation() -> tuple[Path, BucketPointer]:
 
 
 @lru_cache(maxsize=8)
-def _constructed_settings(root: Path, pointer: BucketPointer) -> Settings:
+def _constructed_settings(
+    root: Path,
+    selection: Literal["absent", "selected"],
+    bucket_id: str | None,
+    transition_revision: int,
+) -> Settings:
     """Build the settings for one active-profile pointer state and hold them.
 
     Construction is expensive out of proportion to what it produces: the model
@@ -1344,7 +1349,8 @@ def _constructed_settings(root: Path, pointer: BucketPointer) -> Settings:
     over two hundred production sites — around ten times for a single profile
     field edit, which is how a keystroke came to cost seconds.
 
-    The argument is not read; it is the cache key. Keying on the pointer keeps
+    The transition coordinate arguments are not read; they are the cache key.
+    Keying on the pointer keeps
     the hold from outliving a bucket switch, which is what the profile-bucket
     lifecycle requires of any cache that could otherwise strand a stale route.
     A handful of entries is enough for the few profiles one process touches.
@@ -1353,6 +1359,14 @@ def _constructed_settings(root: Path, pointer: BucketPointer) -> Settings:
     directly and so never reach this cache; tests that need different values
     use :func:`override_settings`, which is consulted ahead of it.
     """
+    from .bucket_pointer import BucketPointer
+
+    pointer = BucketPointer(
+        selection=selection,
+        bucket_id=bucket_id,
+        transition_revision=transition_revision,
+        schema_version=2,
+    )
     token = _settings_pointer_observation.set((root, pointer))
     try:
         return Settings()
@@ -1382,7 +1396,12 @@ def load_settings() -> Settings:
     if override is not None:
         return override
     root, pointer = _active_profile_pointer_observation()
-    return _constructed_settings(root, pointer)
+    return _constructed_settings(
+        root,
+        pointer.selection,
+        pointer.bucket_id,
+        pointer.transition_revision,
+    )
 
 
 @contextmanager

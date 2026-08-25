@@ -22,9 +22,9 @@ from ....application.state_projection import _build_active_profile
 from ....application.user_profile import (
     ProfileCapsuleLifecycle,
     ProfileRecordSession,
-    active_profile_pointer_transaction,
     bound_profile_record_session,
 )
+from ....application.user_profile.profile_pointer import active_profile_pointer_transaction
 from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord

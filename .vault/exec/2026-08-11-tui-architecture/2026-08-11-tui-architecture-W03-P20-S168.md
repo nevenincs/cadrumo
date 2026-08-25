@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:9d7181ce0d9471f795c42c9a9e907b70acf1fe0ac42f98f6e5ee9d5957a05177'
+body_hash: 'sha256:2f001ae8b3b279e7f6b2456a8c490e7acb362221102085ebcf61610fd3c45fc9'
 step_id: 'S168'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -45,6 +45,14 @@ related:
 
 Focused verification passed: core pointer and authority coverage, 35 custody/authority unit tests with 3 correctly marker-deselected, 22 reset tests, and 26 non-keychain handover integration tests. Collection found 71 requested tests and 38 marker deselections. Scoped Ruff passed for the full pointer surface and every closure correction; scoped basedpyright passed for all changed pointer sources without inherited diagnostics and for every correction file. Vault feature validation completed without errors. RAG and exact source census found one production low-level writer, the canonical transaction, and no retired capture, restore, clear, byte-CAS, duplicate-snapshot, or raw-byte handover paths.
 
+Reopened-review remediation hard-moved the public definitions to
+`core.bucket_pointer` and `application.user_profile.profile_pointer`, then
+removed every pointer binding from both package facades. A deterministic
+Settings test forces an A-to-B switch after the single pointer read and proves
+the cache coordinate and derived database route remain A. A reset recovery
+test forces a later select-and-clear tombstone and proves resume pauses rather
+than accepting that unrelated successor.
+
 ## Notes
 
 `d64845fbf1a` landed before its final verification pass. Concurrent `03d2b3caef1` then swept the five resulting test/static corrections during a shared-worktree operations relocation. This closure is deliberately limited to the execution record and CLI plan check; shared commits are not rewritten or restaged.
@@ -52,3 +60,10 @@ Focused verification passed: core pointer and authority coverage, 35 custody/aut
 The `filing/_review.py` and `flows/_definition.py` changes bundled in `d64845fbf1a` are unrelated `content_hash_hex` refactors rather than pointer-coordinate consumers. They are an accidental scope sweep for separate review and are neither extended nor reverted here.
 
 Repository-wide import hygiene reached 77 passing checks before two external failures: a transient TUI test syntax error and dangling imports during the concurrent operations-module relocation. Neither diagnostic named an S168 path. Later focused collection completed after the registry/auth worktree settled. Full basedpyright still reports inherited, pre-S168 diagnostics in `core/config.py`, `workflow/_profile_health.py`, and `_lifecycle.py`; the S168-specific subset is clean.
+
+Shared-history remediation tuple: `d64845fbf1a` initial contract,
+`56dea1fa90` public core move, `5975b39f3b` public transaction move,
+`25259e7249` concurrent sweep, and
+`85ab2a53657209aa70c8e4cc821f400e8d9b1bea` direct defining-module consumer
+migration. The final reset collection was blocked only by the unrelated missing
+`WorkflowInputMismatchError` workflow-facade symbol during concurrent relocation.

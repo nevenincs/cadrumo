@@ -52,8 +52,8 @@ def _late_bound_facade_names() -> frozenset[str]:
 _SETTINGS_PATH_MODULES = ("config.py", "bucket_pointer.py")
 
 
-def test_bucket_pointer_public_surface_remains_lazy_and_importable() -> None:
-    """The consolidated pointer module must remain reachable through the core facade."""
+def test_bucket_pointer_public_surface_is_defining_module_only() -> None:
+    """Pointer APIs have no core-facade bridge or lazy binding."""
     from ... import core
     from .. import bucket_pointer
 
@@ -67,9 +67,10 @@ def test_bucket_pointer_public_surface_remains_lazy_and_importable() -> None:
         "write_pointer",
     )
 
-    assert all(core._LAZY_EXPORTS[name] == ".bucket_pointer" for name in names)
-    assert all(getattr(core, name) is getattr(bucket_pointer, name) for name in names)
-    assert all(name in core.__all__ for name in names)
+    assert all(not hasattr(core, name) for name in names)
+    assert all(hasattr(bucket_pointer, name) for name in names)
+    assert all(name not in core._LAZY_EXPORTS for name in names)
+    assert all(name not in core.__all__ for name in names)
 
 
 def _facade_imported_names(module_path: Path) -> set[str]:
