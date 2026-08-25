@@ -10,37 +10,17 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import (
+from ....adapters.persistence.operations.journal import OperationJournalRepository
+from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from ....adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
-from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
+from ....adapters.persistence.storage import (
+    SecureObjectRepository,
 )
-from cadrumo.application.operations.models import (
-    OperationRequest,
-    OperationTerminalReceipt,
-)
-from cadrumo.application.operations.persistence.events import OperationNoticeEvent
-from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationRegistry,
-    OperationSchemaBindingV1,
-)
-from cadrumo.core.operations import (
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -49,13 +29,32 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-
-from ....adapters.persistence.storage import (
-    SecureObjectRepository,
-)
-from ....core import STRICT_FROZEN_CONFIG
 from ....tests.secure_sql import isolated_runtime_profile
+from ..capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from ..models import (
+    OperationRequest,
+    OperationTerminalReceipt,
+)
 from ..owner import OperationExecutorContext
+from ..persistence.events import OperationNoticeEvent
+from ..persistence.journal import OperationPersistedSnapshot
+from ..registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+    OperationRegistry,
+    OperationSchemaBindingV1,
+)
 from ..supervisor import OperationSupervisor, _SupervisorExecutorContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
