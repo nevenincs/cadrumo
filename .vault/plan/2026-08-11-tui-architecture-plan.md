@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-25'
-body_hash: 'sha256:b33c375accd08a8a48e8fa8b9019686a203aed54869f18ffd388367d31934bb4'
+body_hash: 'sha256:b274589be7b1920e9eab6eb2fa994cd1ba346cb5401eeb3fead1f82e9e7f99d2'
 ---
 
 # `tui-architecture` plan
@@ -198,7 +198,7 @@ Rehome presentation mechanics mechanically beneath cadrumo.entrypoints.tui witho
 
 Create the canonical TUI entrypoint packages and relocate presentation-only themes, widgets, forms, dialogs, status, errors, and logs.
 
-- [ ] `W04.P09.S46` - Create the narrow TUI package facade and reserve launcher-level exports only; `src/cadrumo/entrypoints/tui/__init__.py`.
+- [x] `W04.P09.S46` - Create the narrow TUI package facade and reserve launcher-level exports only; `src/cadrumo/entrypoints/tui/__init__.py`.
 - [ ] `W04.P09.S47` - Relocate terminal theme and styling primitives without carrying application state; `src/cadrumo/entrypoints/tui/components/theme.py`.
 - [ ] `W04.P09.S48` - Relocate reusable terminal widgets behind the components facade; `src/cadrumo/entrypoints/tui/components/widgets.py`.
 - [ ] `W04.P09.S49` - Relocate immutable form presentation contracts and widgets without orchestration or backend validation; `src/cadrumo/entrypoints/tui/components/forms.py`.
