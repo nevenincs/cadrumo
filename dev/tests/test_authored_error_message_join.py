@@ -231,12 +231,15 @@ def test_live_join_is_exhaustively_partitioned_by_the_current_registry_and_exact
         and site.owner_qualnames == ("cadrumo.core.json_contract.OutputSchemaError",)
         for site in partition.owned_sites
     )
-    assert sum(
-        site.path == "src/cadrumo/adapters/persistence/profile/transactions.py"
-        and site.callee == "LedgerStorageError"
-        and site.owner_qualnames == ("cadrumo.domain.transactions._errors.LedgerStorageError",)
-        for site in partition.owned_sites
-    ) == 12
+    assert (
+        sum(
+            site.path == "src/cadrumo/adapters/persistence/profile/transactions.py"
+            and site.callee == "LedgerStorageError"
+            and site.owner_qualnames == ("cadrumo.domain.transactions._errors.LedgerStorageError",)
+            for site in partition.owned_sites
+        )
+        == 12
+    )
     assert len(partition.clean_codes) > 100
 
 

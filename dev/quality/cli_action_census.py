@@ -1312,18 +1312,12 @@ class _SourceFacadeReexportResolver:
         for statement in tree.body:
             value: ast.expr | None = None
             if (
-                (
-                    isinstance(statement, ast.Assign)
-                    and any(
-                        isinstance(target, ast.Name) and target.id == "_LAZY_EXPORTS"
-                        for target in statement.targets
-                    )
-                )
-                or (
-                    isinstance(statement, ast.AnnAssign)
-                    and isinstance(statement.target, ast.Name)
-                    and statement.target.id == "_LAZY_EXPORTS"
-                )
+                isinstance(statement, ast.Assign)
+                and any(isinstance(target, ast.Name) and target.id == "_LAZY_EXPORTS" for target in statement.targets)
+            ) or (
+                isinstance(statement, ast.AnnAssign)
+                and isinstance(statement.target, ast.Name)
+                and statement.target.id == "_LAZY_EXPORTS"
             ):
                 value = statement.value
             if not isinstance(value, ast.Dict):
@@ -1420,19 +1414,10 @@ class _AuthoredMessageVisitor(ast.NodeVisitor):
         if isinstance(node, ast.Attribute):
             base = self._resolve(node.value)
             direct_errors = frozenset(
-                candidate
-                for module in base.modules
-                if (candidate := f"{module}.{node.attr}") in self._known_qualnames
+                candidate for module in base.modules if (candidate := f"{module}.{node.attr}") in self._known_qualnames
             )
-            reexported = tuple(
-                self._facade_reexports.resolve(module, node.attr)
-                for module in base.modules
-            )
-            errors = direct_errors | frozenset(
-                owner
-                for reference in reexported
-                for owner in reference.error_qualnames
-            )
+            reexported = tuple(self._facade_reexports.resolve(module, node.attr) for module in base.modules)
+            errors = direct_errors | frozenset(owner for reference in reexported for owner in reference.error_qualnames)
             if (
                 not errors
                 and self._facade_reexports.is_possible_registered_name(node.attr)
