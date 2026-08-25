@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e2e72ebcb29bbcb42a0c4651749f1f3225b70f7e98c1c5c07baef2330800d3e6'
+body_hash: 'sha256:9cb71fe440da50be5b130ec3a213b558728a9497f59953e15d17dd63bd721e9e'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -140,6 +140,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W06-P20-S226]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S227]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S228]]'
+  - '[[2026-08-22-source-casilla-integration-W06-P20-S229]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -196,7 +197,9 @@ related:
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m390-2021-annual-value-arrival-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m390-2021-source-owner-deferral-adr]]'
+  - '[[2026-08-25-source-casilla-integration-m721-structured-message-source-owner-deferral-adr]]'
   - '[[2026-08-25-source-casilla-integration-modelo-220-group-value-source-grounding-research]]'
+  - '[[2026-08-25-source-casilla-integration-modelo-721-structured-message-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-s100-m182-row-source-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s101-m182-terminal-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-followup-audit]]'
@@ -209,6 +212,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s227-m220-source-owner-deferral-repair-follow-up-audit]]'
   - '[[2026-08-25-source-casilla-integration-s227-modelo-220-source-deferral-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s228-m390-2021-grounding-boundary-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s87-independent-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit]]'
@@ -245,6 +249,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-m187-source-owner-deferral-adr` - `source-casilla-integration` adr: `m187 source owner deferral` | (**status:** `accepted`)
 - `2026-08-25-source-casilla-integration-m220-source-owner-deferral-adr` - `source-casilla-integration` adr: `m220 source owner deferral` | (**status:** `accepted`)
 - `2026-08-25-source-casilla-integration-m390-2021-source-owner-deferral-adr` - `source-casilla-integration` adr: `m390 2021 source owner deferral` | (**status:** `accepted`)
+- `2026-08-25-source-casilla-integration-m721-structured-message-source-owner-deferral-adr` - `source-casilla-integration` adr: `m721 structured-message source owner deferral` | (**status:** `accepted`)
 
 ### audit
 
@@ -301,6 +306,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit` - `source-casilla-integration` audit: `S226 Modelo 187 source-owner decision review`
 - `2026-08-25-source-casilla-integration-s227-m220-source-owner-deferral-repair-follow-up-audit` - `source-casilla-integration` audit: `S227 M220 source-owner deferral repair follow-up`
 - `2026-08-25-source-casilla-integration-s227-modelo-220-source-deferral-review-audit` - `source-casilla-integration` audit: `S227 Modelo 220 source deferral review`
+- `2026-08-25-source-casilla-integration-s228-m390-2021-grounding-boundary-review-audit` - `source-casilla-integration` audit: `S228 M390 2021 grounding-boundary review`
 - `2026-08-25-source-casilla-integration-s87-independent-post-review-audit` - `source-casilla-integration` audit: `S87 snapshot-bound row assembly independent review`
 - `2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit` - `source-casilla-integration` audit: `s88 google pull post review`
 - `2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit` - `source-casilla-integration` audit: `S89 row source identity review`
@@ -458,6 +464,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W06-P20-S226` - Adjudicate Modelo 187's non-substitutable payer and Article 42 RGAT entity/IIC value paths, including required type-1/type-2 filer facts, before defining a canonical source, binding, casilla, provenance, collision policy, or census disposition.
 - `2026-08-22-source-casilla-integration-W06-P20-S227` - defer Modelo 220 group values as an ingress-blocked evidence decision
 - `2026-08-22-source-casilla-integration-W06-P20-S228` - defer Modelo 390 2021's complete annual surface at a grounding boundary
+- `2026-08-22-source-casilla-integration-W06-P20-S229` - defer Modelo 721's two structured-message source domains at an ingress boundary
 
 ### plan
 
@@ -475,4 +482,5 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-m296-row-source-grounding-research` - `source-casilla-integration` research: `Modelo 296 withholding row source grounding`
 - `2026-08-25-source-casilla-integration-m390-2021-annual-value-arrival-grounding-research` - `source-casilla-integration` research: `m390 2021 annual value arrival grounding`
 - `2026-08-25-source-casilla-integration-modelo-220-group-value-source-grounding-research` - `source-casilla-integration` research: `modelo 220 group value source grounding`
+- `2026-08-25-source-casilla-integration-modelo-721-structured-message-source-grounding-research` - `source-casilla-integration` research: `modelo 721 structured-message source grounding`
 - `2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research` - `source-casilla-integration` research: `s113 helper candidate classification`
