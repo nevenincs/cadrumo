@@ -97,7 +97,9 @@ class ConsumingExecutor:
         backing: bytearray | None = None
         async with context.ephemeral_secret.consume() as secret:
             assert secret.tobytes() == _SECRET
-            backing = secret.obj
+            candidate = secret.obj
+            assert isinstance(candidate, bytearray)
+            backing = candidate
         assert backing is not None
         self.backing_zeroized = all(value == 0 for value in backing)
         try:
@@ -168,8 +170,8 @@ def _definition(executor: ConsumingExecutor | BlockingExecutor) -> OperationDefi
     )
 
 
-def _request() -> OperationRequest[SafeUnlockRequest]:
-    return OperationRequest[SafeUnlockRequest](
+def _request() -> OperationRequest[BaseModel]:
+    return OperationRequest[BaseModel](
         definition_id="profile.unlock.ephemeral",
         subject_ref=f"profile:{_PROFILE_ID}",
         payload=SafeUnlockRequest(profile_id=_PROFILE_ID, purpose_code="unlock"),
