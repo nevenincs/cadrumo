@@ -64,14 +64,32 @@ class _CoreProtocolTestAuthority:
         )
 
 
-class _WorkflowAuthorityWithoutConnection(_CoreProtocolTestAuthority):
+class _WorkflowAuthorityWithoutConnection:
     """Deliberately stale implementation of the earlier workflow seam."""
 
-    def operator_workflow_reaches_source(  # type: ignore[override]
+    def __init__(self) -> None:
+        self._authority = _CoreProtocolTestAuthority()
+
+    def source_is_enrolled(self, connection: core.SourceConnectivityConnectionIdentity) -> bool:
+        return self._authority.source_is_enrolled(connection)
+
+    def operator_workflow_reaches_source(
         self,
         proof: core.SourceConnectivityOperatorReachabilityProof,
     ) -> bool:
-        return (proof.entrypoint_id, proof.command_id) in self._workflows
+        return (proof.entrypoint_id, proof.command_id) in self._authority._workflows
+
+    def executable_evidence_digest(
+        self,
+        evidence: core.SourceConnectivityExecutableEvidence,
+    ) -> str | None:
+        return self._authority.executable_evidence_digest(evidence)
+
+    def encrypted_revision_matches(
+        self,
+        proof: core.SourceConnectivityEncryptedRevisionProof,
+    ) -> bool:
+        return self._authority.encrypted_revision_matches(proof)
 
 
 def _grounding(
@@ -221,9 +239,9 @@ def test_core_facade_exposes_every_connectivity_owner() -> None:
 
 def test_workflow_authority_without_connection_fails_at_protocol_usage() -> None:
     with pytest.raises(TypeError, match="positional argument"):
-        core.SourceConnectivityCensusRow.validate_with_authority(
+        core.SourceConnectivityCensusRow.model_validate(
             _connected_payload(),
-            authority=_WorkflowAuthorityWithoutConnection(),
+            context={"source_connectivity_proof_authority": _WorkflowAuthorityWithoutConnection()},
         )
 
 
