@@ -311,10 +311,7 @@ def _undeclared_advisory(revision: ModeloRevision, casilla_id: CasillaId) -> Cal
             "children or other eligible descendants, the Art. 58 LIRPF allowance is being silently "
             "omitted"
         ),
-        remedy=(
-            "Declare each descendant with `descendiente add --descendiente "
-            "NACIMIENTO=YYYY-MM-DD`, before filing."
-        ),
+        remedy=("Declare each descendant with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`, before filing."),
         casilla_id=casilla_id,
         # Casilla-derived: this advisory's subject IS the casilla's own zero, and
         # its own grounding already carries the Art. 58 allowance the message

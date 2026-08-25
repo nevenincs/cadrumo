@@ -200,7 +200,6 @@ def _direct_string_literals(node: ast.AST) -> tuple[tuple[str, int], ...]:
     return ()
 
 
-
 #: A name that HOLDS registry source references, as opposed to one that merely
 #: begins with the same letters. The token must end after ``SOURCE_REF`` or
 #: ``SOURCE_REFS`` -- at the end of the name or before an underscore -- so

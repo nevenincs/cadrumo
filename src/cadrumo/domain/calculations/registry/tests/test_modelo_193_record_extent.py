@@ -60,9 +60,7 @@ def _modelo_193_cases():
     modelos, catalogues = _committed_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "193")
     for revision_id, revision in modelo.revisions.items():
-        design_refs = [
-            ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"
-        ]
+        design_refs = [ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"]
         assert design_refs, f"193/{revision_id} declares no record design to check against"
         design = extract_record_design(bundled_path() / catalogues.sources[design_refs[0]].corpus_path)
         sheets = {sheet.name: sheet for sheet in design.sheets}

@@ -1268,9 +1268,7 @@ def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> Content
                         _canonical_decimal_string(movement.unit_cost) if movement.unit_cost is not None else None
                     ),
                     "taxable_base": (
-                        _canonical_decimal_string(movement.taxable_base)
-                        if movement.taxable_base is not None
-                        else None
+                        _canonical_decimal_string(movement.taxable_base) if movement.taxable_base is not None else None
                     ),
                     "iva_rate": _canonical_decimal_string(movement.iva_rate),
                     "iva_amount": (
@@ -1279,9 +1277,7 @@ def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> Content
                     "deductible_iva_ratio": _canonical_decimal_string(movement.deductible_iva_ratio),
                     "schema_version": movement.schema_version,
                     "acquisition_fingerprint": (
-                        inventory_acquisition_fingerprint(movement)
-                        if movement.kind is MovementKind.PURCHASE
-                        else None
+                        inventory_acquisition_fingerprint(movement) if movement.kind is MovementKind.PURCHASE else None
                     ),
                 }
                 for movement in _sorted_movements(ledger)

@@ -114,12 +114,12 @@ def _binding(
     """Build a minimal DataBindingDefinition for the gate to validate."""
 
     payload: dict[str, object] = {
-            "id": binding_id,
-            "source": source,
-            "selector": selector,
-            "legal_refs": ("ley-35-2006:art-99",),
-            "source_refs": ("aeat-test",),
-        }
+        "id": binding_id,
+        "source": source,
+        "selector": selector,
+        "legal_refs": ("ley-35-2006:art-99",),
+        "source_refs": ("aeat-test",),
+    }
     if aggregation_op is not None:
         payload["aggregation"] = {"op": aggregation_op}
     return DataBindingDefinition.model_validate(payload)

@@ -1,4 +1,5 @@
 """Strict complete 2025 inventory projection tests."""
+
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
@@ -46,74 +47,156 @@ def _ref(value: str) -> FilingEvidenceReference:
 
 def _acquisition() -> InventoryAcquisitionCost:
     return InventoryAcquisitionCost(
-        consideration_excluding_iva=Decimal("100.00"), consideration_iva_amount=Decimal("21.00"),
+        consideration_excluding_iva=Decimal("100.00"),
+        consideration_iva_amount=Decimal("21.00"),
         consideration_deductible_iva_ratio=Decimal("0.50"),
-        attributable_cost_components=(InventoryAttributableCostComponent(
-            component_id="freight-1", kind=InventoryAttributableCostKind.FREIGHT,
-            taxable_base=Decimal("10.00"), iva_amount=Decimal("2.10"), deductible_iva_ratio=Decimal("0"),
-            evidence_references=(_ref("freight-evidence"),),
-        ),),
+        attributable_cost_components=(
+            InventoryAttributableCostComponent(
+                component_id="freight-1",
+                kind=InventoryAttributableCostKind.FREIGHT,
+                taxable_base=Decimal("10.00"),
+                iva_amount=Decimal("2.10"),
+                deductible_iva_ratio=Decimal("0"),
+                evidence_references=(_ref("freight-evidence"),),
+            ),
+        ),
         evidence=(
-            InventoryAcquisitionEvidence(reference=_ref("invoice-evidence"), evidence_kind=InventoryAcquisitionEvidenceKind.PURCHASE_INVOICE, content_digest="a" * 64),
-            InventoryAcquisitionEvidence(reference=_ref("freight-evidence"), evidence_kind=InventoryAcquisitionEvidenceKind.TRANSPORT_DOCUMENT, content_digest="b" * 64),
-            InventoryAcquisitionEvidence(reference=_ref("cost-review-evidence"), evidence_kind=InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW, content_digest="c" * 64),
-            InventoryAcquisitionEvidence(reference=_ref("iva-review-evidence"), evidence_kind=InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW, content_digest="d" * 64),
+            InventoryAcquisitionEvidence(
+                reference=_ref("invoice-evidence"),
+                evidence_kind=InventoryAcquisitionEvidenceKind.PURCHASE_INVOICE,
+                content_digest="a" * 64,
+            ),
+            InventoryAcquisitionEvidence(
+                reference=_ref("freight-evidence"),
+                evidence_kind=InventoryAcquisitionEvidenceKind.TRANSPORT_DOCUMENT,
+                content_digest="b" * 64,
+            ),
+            InventoryAcquisitionEvidence(
+                reference=_ref("cost-review-evidence"),
+                evidence_kind=InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW,
+                content_digest="c" * 64,
+            ),
+            InventoryAcquisitionEvidence(
+                reference=_ref("iva-review-evidence"),
+                evidence_kind=InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW,
+                content_digest="d" * 64,
+            ),
         ),
         completeness=InventoryAcquisitionCompleteness(
-            consideration_evidence=_ref("invoice-evidence"), attributable_cost_review_evidence=_ref("cost-review-evidence"),
+            consideration_evidence=_ref("invoice-evidence"),
+            attributable_cost_review_evidence=_ref("cost-review-evidence"),
             iva_recoverability_review_evidence=_ref("iva-review-evidence"),
-        ), directly_attributable_cost_total=Decimal("10.00"), nonrecoverable_iva_included=Decimal("12.60"),
-        recoverable_iva_excluded=Decimal("10.50"), total_acquisition_cost=Decimal("122.60"),
+        ),
+        directly_attributable_cost_total=Decimal("10.00"),
+        nonrecoverable_iva_included=Decimal("12.60"),
+        recoverable_iva_excluded=Decimal("10.50"),
+        total_acquisition_cost=Decimal("122.60"),
     )
 
 
 def _purchase(movement_id: str = "purchase-1", movement_date: date = date(2025, 2, 1)) -> MovementRecord:
     return MovementRecord(
-        movement_id=movement_id, movement_date=movement_date, kind=MovementKind.PURCHASE, quantity=Decimal("2"),
-        unit_cost=Decimal("50.00"), taxable_base=Decimal("100.00"), iva_rate=Decimal("21"),
-        iva_amount=Decimal("21.00"), deductible_iva_ratio=Decimal("0.50"), acquisition_cost=_acquisition(),
+        movement_id=movement_id,
+        movement_date=movement_date,
+        kind=MovementKind.PURCHASE,
+        quantity=Decimal("2"),
+        unit_cost=Decimal("50.00"),
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("21"),
+        iva_amount=Decimal("21.00"),
+        deductible_iva_ratio=Decimal("0.50"),
+        acquisition_cost=_acquisition(),
     )
 
 
-def _authority(opening: Decimal, *, physical: Decimal | None = None, select_physical: bool = False) -> InventoryClosingAuthorityRecord:
+def _authority(
+    opening: Decimal, *, physical: Decimal | None = None, select_physical: bool = False
+) -> InventoryClosingAuthorityRecord:
     continuity = (PriorClosingContinuityEvidence(reference=_ref("prior-evidence"), content_digest="f" * 64),)
-    observation = None if physical is None else PhysicalClosingObservation(
-        observation_id="physical-2025", observed_on=date(2026, 1, 1), as_of_date=date(2025, 12, 31),
-        actividad_id="retail", filing_year=2025, closing_value=physical,
-        valuation_basis=InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
-        evidence=(
-            PhysicalClosingEvidence(reference=_ref("count-evidence"), role=PhysicalClosingEvidenceRole.PHYSICAL_COUNT, content_digest="1" * 64),
-            PhysicalClosingEvidence(reference=_ref("value-evidence"), role=PhysicalClosingEvidenceRole.ACQUISITION_PRICE_VALUATION, content_digest="2" * 64),
-        ),
+    observation = (
+        None
+        if physical is None
+        else PhysicalClosingObservation(
+            observation_id="physical-2025",
+            observed_on=date(2026, 1, 1),
+            as_of_date=date(2025, 12, 31),
+            actividad_id="retail",
+            filing_year=2025,
+            closing_value=physical,
+            valuation_basis=InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
+            evidence=(
+                PhysicalClosingEvidence(
+                    reference=_ref("count-evidence"),
+                    role=PhysicalClosingEvidenceRole.PHYSICAL_COUNT,
+                    content_digest="1" * 64,
+                ),
+                PhysicalClosingEvidence(
+                    reference=_ref("value-evidence"),
+                    role=PhysicalClosingEvidenceRole.ACQUISITION_PRICE_VALUATION,
+                    content_digest="2" * 64,
+                ),
+            ),
+        )
     )
     return InventoryClosingAuthorityRecord(
         decision=InventoryClosingAuthorityDecision(
-            decision_id="decision-2025", actividad_id="retail", filing_year=2025,
-            authority=InventoryClosingAuthority.PHYSICAL_OBSERVATION if select_physical else InventoryClosingAuthority.MOVEMENT_DERIVED,
+            decision_id="decision-2025",
+            actividad_id="retail",
+            filing_year=2025,
+            authority=InventoryClosingAuthority.PHYSICAL_OBSERVATION
+            if select_physical
+            else InventoryClosingAuthority.MOVEMENT_DERIVED,
             physical_observation_id=observation.observation_id if observation else None,
             physical_observation_fingerprint=observation.fingerprint if observation else None,
-            reason="Reviewed annual inventory authority.", actor="reviewer",
-            source_command="inventory.closing.authority.decide", decided_at=datetime(2026, 1, 2, tzinfo=UTC),
-            evidence=(InventoryClosingDecisionEvidence(reference=_ref("decision-evidence"), role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION, content_digest="e" * 64),),
-        ), physical_observation=observation,
+            reason="Reviewed annual inventory authority.",
+            actor="reviewer",
+            source_command="inventory.closing.authority.decide",
+            decided_at=datetime(2026, 1, 2, tzinfo=UTC),
+            evidence=(
+                InventoryClosingDecisionEvidence(
+                    reference=_ref("decision-evidence"),
+                    role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
+                    content_digest="e" * 64,
+                ),
+            ),
+        ),
+        physical_observation=observation,
         prior_closing_link=PriorAuthoritativeClosingLink(
-            actividad_id="retail", current_filing_year=2025, prior_filing_year=2024,
-            prior_authoritative_closing_value=opening, current_opening_value=opening,
+            actividad_id="retail",
+            current_filing_year=2025,
+            prior_filing_year=2024,
+            prior_authoritative_closing_value=opening,
+            current_opening_value=opening,
             prior_authoritative_source_fingerprint="3" * 64,
             prior_authoritative_closing_fingerprint=fingerprint_prior_authoritative_closing(
-                actividad_id="retail", filing_year=2024, authoritative_closing_value=opening,
-                authoritative_source_fingerprint="3" * 64, evidence=continuity,
-            ), evidence=continuity,
+                actividad_id="retail",
+                filing_year=2024,
+                authoritative_closing_value=opening,
+                authoritative_source_fingerprint="3" * 64,
+                evidence=continuity,
+            ),
+            evidence=continuity,
         ),
     )
 
 
-def _ledger(*, opening: str = "100.00", movements: tuple[MovementRecord, ...] = (), physical: str | None = None, select_physical: bool = False) -> InventoryLedger:
+def _ledger(
+    *,
+    opening: str = "100.00",
+    movements: tuple[MovementRecord, ...] = (),
+    physical: str | None = None,
+    select_physical: bool = False,
+) -> InventoryLedger:
     value = Decimal(opening)
     return InventoryLedger(
-        actividad_id="retail", year=2025, valuation_method=ValuationMethod.FIFO, opening_stock=value,
+        actividad_id="retail",
+        year=2025,
+        valuation_method=ValuationMethod.FIFO,
+        opening_stock=value,
         period_movements=movements,
-        closing_authority_record=_authority(value, physical=Decimal(physical) if physical else None, select_physical=select_physical),
+        closing_authority_record=_authority(
+            value, physical=Decimal(physical) if physical else None, select_physical=select_physical
+        ),
     )
 
 
@@ -133,7 +216,9 @@ def test_complete_cost_owns_0181_and_increase() -> None:
 def test_equal_and_decrease_split() -> None:
     equal = compute_inventory_anexo_d_projection(_ledger())
     assert (equal.casilla_0177, equal.casilla_0182) == (Decimal("0.00"), Decimal("0.00"))
-    sale = MovementRecord(movement_id="sale", movement_date=date(2025, 3, 1), kind=MovementKind.COGS, quantity=Decimal("0.25"))
+    sale = MovementRecord(
+        movement_id="sale", movement_date=date(2025, 3, 1), kind=MovementKind.COGS, quantity=Decimal("0.25")
+    )
     decrease = compute_inventory_anexo_d_projection(_ledger(movements=(sale,)))
     assert (decrease.casilla_0177, decrease.casilla_0182) == (Decimal("0.00"), Decimal("25.00"))
 
@@ -152,7 +237,9 @@ def test_missing_unreadable_wrong_year_and_out_of_period_refuse() -> None:
         compute_inventory_anexo_d_projection(_ledger().model_copy(update={"closing_authority_record": None}))
     tampered_purchase = _purchase().model_copy(update={"acquisition_cost": None})
     with pytest.raises(InventoryLedgerError, match="incomplete or unreadable"):
-        compute_inventory_anexo_d_projection(_ledger(movements=(_purchase(),)).model_copy(update={"period_movements": (tampered_purchase,)}))
+        compute_inventory_anexo_d_projection(
+            _ledger(movements=(_purchase(),)).model_copy(update={"period_movements": (tampered_purchase,)})
+        )
     with pytest.raises(InventoryLedgerError, match="grounded only"):
         compute_inventory_anexo_d_projection(_ledger().model_copy(update={"year": 2024}))
     out_of_period = _purchase().model_copy(update={"movement_date": date(2024, 12, 31)})
@@ -181,9 +268,12 @@ def test_purchase_fingerprints_are_reorder_invariant() -> None:
     assert evidence_result.projection_fingerprint == forward.projection_fingerprint
     scale_equivalent = first.model_copy(
         update={
-            "quantity": Decimal("2.0"), "unit_cost": Decimal("50.0"),
-            "taxable_base": Decimal("100.0"), "iva_rate": Decimal("21.0"),
-            "iva_amount": Decimal("21.0"), "deductible_iva_ratio": Decimal("0.5"),
+            "quantity": Decimal("2.0"),
+            "unit_cost": Decimal("50.0"),
+            "taxable_base": Decimal("100.0"),
+            "iva_rate": Decimal("21.0"),
+            "iva_amount": Decimal("21.0"),
+            "deductible_iva_ratio": Decimal("0.5"),
         }
     )
     scaled_result = compute_inventory_anexo_d_projection(_ledger(movements=(scale_equivalent, second)))
@@ -194,20 +284,27 @@ def test_purchase_fingerprints_are_reorder_invariant() -> None:
 
 
 def test_projection_refuses_output_override_and_result_forgery() -> None:
-    result = compute_inventory_anexo_d_projection(_ledger(movements=(_purchase(),), physical="130.00", select_physical=True))
+    result = compute_inventory_anexo_d_projection(
+        _ledger(movements=(_purchase(),), physical="130.00", select_physical=True)
+    )
     movement_result = compute_inventory_anexo_d_projection(_ledger(movements=(_purchase(),), physical="130.00"))
     with pytest.raises(TypeError):
         compute_inventory_anexo_d_projection(_ledger(), **{"authoritative_closing_value": Decimal("999")})
     assert result.closing_conflict is not None
     correlated_physical_fingerprint = "8" * 64
     for mutation in (
-        {"casilla_0181": Decimal("1.00")}, {"acquisition_fingerprints": ()},
+        {"casilla_0181": Decimal("1.00")},
+        {"acquisition_fingerprints": ()},
         {"acquisition_fingerprints": result.acquisition_fingerprints * 2},
         {"acquisition_fingerprints": ("7" * 64,)},
-        {"authority_record_fingerprint": "6" * 64}, {"decision_id": "forged-decision"},
-        {"decision_fingerprint": "5" * 64}, {"prior_closing_link_fingerprint": "4" * 64},
-        {"issues": ()}, {"authoritative_closing_value": Decimal("100.00")},
-        {"physical_observation_id": None}, {"physical_observation_fingerprint": "9" * 64},
+        {"authority_record_fingerprint": "6" * 64},
+        {"decision_id": "forged-decision"},
+        {"decision_fingerprint": "5" * 64},
+        {"prior_closing_link_fingerprint": "4" * 64},
+        {"issues": ()},
+        {"authoritative_closing_value": Decimal("100.00")},
+        {"physical_observation_id": None},
+        {"physical_observation_fingerprint": "9" * 64},
         {
             "physical_observation_id": "forged-observation",
             "physical_observation_fingerprint": correlated_physical_fingerprint,
@@ -244,11 +341,25 @@ def test_projection_refuses_output_override_and_result_forgery() -> None:
         type(result).model_validate(_projection_validation_payload(reminted))
     serialized = result.model_dump_json()
     for canary in (
-        "invoice-evidence", "freight-evidence", "cost-review-evidence", "iva-review-evidence",
-        "decision-evidence", "count-evidence", "value-evidence", "prior-evidence",
-        "1" * 64, "2" * 64, "3" * 64,
-        "a" * 64, "b" * 64, "c" * 64, "d" * 64, "e" * 64, "f" * 64,
-        "reviewer", "inventory.closing.authority.decide",
+        "invoice-evidence",
+        "freight-evidence",
+        "cost-review-evidence",
+        "iva-review-evidence",
+        "decision-evidence",
+        "count-evidence",
+        "value-evidence",
+        "prior-evidence",
+        "1" * 64,
+        "2" * 64,
+        "3" * 64,
+        "a" * 64,
+        "b" * 64,
+        "c" * 64,
+        "d" * 64,
+        "e" * 64,
+        "f" * 64,
+        "reviewer",
+        "inventory.closing.authority.decide",
     ):
         assert canary not in serialized
     with pytest.raises(ValidationError, match="source_ledger"):

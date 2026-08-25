@@ -91,9 +91,12 @@ def calculation_no_recovery_verdict(
         the failed condition and its explicit no-recovery outcome.
     """
     from ..operator_actions import no_action_precondition_verdict
+
     return no_action_precondition_verdict(
-        condition_id=condition.value, facts=facts,
-        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION, outcome=outcome,
+        condition_id=condition.value,
+        facts=facts,
+        provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        outcome=outcome,
     )
 
 

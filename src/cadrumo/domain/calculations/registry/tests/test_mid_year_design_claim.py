@@ -60,8 +60,7 @@ def test_a_half_year_revision_reports_no_boundary_inside_its_own_year() -> None:
 def test_the_genuine_cross_year_spans_still_report() -> None:
     """The detector control is independent of whether a revision claims filing support."""
     all_subjects = {
-        (modelo.id, rid): _boundaries_for(modelo.id, revision)
-        for modelo, rid, revision in _declared_revisions()
+        (modelo.id, rid): _boundaries_for(modelo.id, revision) for modelo, rid, revision in _declared_revisions()
     }
     silent = {subject for subject in _CROSS_YEAR_SPANS if not all_subjects.get(subject)}
 

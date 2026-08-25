@@ -6,94 +6,38 @@ import ast
 import asyncio
 from dataclasses import fields
 from pathlib import Path
-from typing import cast
 
 import pytest
 
-from ...adapters.persistence.profile import SyncRunRecordRepository
 from ...adapters.persistence.storage import current_active_bucket_session
-from ...application.auth import build_auth_operation_definitions, build_auth_operation_registrations
-from ...application.export import (
-    build_google_sheets_export_operation_definition,
-    build_google_sheets_export_operation_registration,
-)
-from ...application.live import build_filed_history_operation_definition, build_filed_history_operation_registration
 from ...application.operations import (
     OperationCancellationService,
     OperationComposedServices,
-    OperationDefinition,
     OperationDetachService,
     OperationObservationService,
-    OperationPublicDefinitionRegistrationV1,
     OperationRequest,
     OperationReviewProjectionService,
     OperationSubmission,
     OperationSubmissionService,
     OperationWorkspaceRefreshTargetService,
 )
-from ...application.user_profile import (
-    CENSAL_OPERATION_DEFINITION,
-    build_censal_operation_registration,
-    build_user_profile_operation_definitions,
-    build_user_profile_operation_registrations,
-)
 from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from .. import build_production_operation_registry
 from .._operation_composition import compose_operation_dependencies
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def _owner_registry_fixed_point() -> tuple[
-    tuple[OperationDefinition, ...],
-    tuple[OperationPublicDefinitionRegistrationV1, ...],
-]:
-    """Derive the live denominator from every current public owner facade."""
-    auth_definitions = build_auth_operation_definitions()
-    profile_definitions = build_user_profile_operation_definitions()
-    google_export_definition = build_google_sheets_export_operation_definition()
-    filed_history_definition = build_filed_history_operation_definition(
-        sync_run_repository_factory=SyncRunRecordRepository
-    )
-    definitions = tuple(
-        sorted(
-            (
-                *auth_definitions,
-                *profile_definitions,
-                CENSAL_OPERATION_DEFINITION,
-                filed_history_definition,
-                google_export_definition,
-            ),
-            key=lambda item: item.definition_id,
-        )
-    )
-    registrations = tuple(
-        sorted(
-            (
-                *build_auth_operation_registrations(auth_definitions),
-                *build_user_profile_operation_registrations(profile_definitions),
-                build_censal_operation_registration(CENSAL_OPERATION_DEFINITION),
-                build_filed_history_operation_registration(filed_history_definition),
-                build_google_sheets_export_operation_registration(google_export_definition),
-            ),
-            key=lambda item: item.contract.definition_id,
-        )
-    )
-    return (
-        cast(tuple[OperationDefinition, ...], definitions),
-        cast(tuple[OperationPublicDefinitionRegistrationV1, ...], registrations),
-    )
-
-
 def test_production_composition_reaches_the_owner_registry_fixed_point(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         dependencies = compose_operation_dependencies()
-        expected_definitions, expected_registrations = _owner_registry_fixed_point()
+        expected_registry = build_production_operation_registry()
         registry = dependencies.observation.registry
 
         assert tuple(item.definition_id for item in registry.definitions) == tuple(
-            item.definition_id for item in expected_definitions
+            item.definition_id for item in expected_registry.definitions
         )
-        assert registry.public_contract_set.definitions == tuple(item.contract for item in expected_registrations)
+        assert registry.public_contract_set == expected_registry.public_contract_set
         assert len(registry.public_contract_set.contract_set_digest) == 64
         assert isinstance(dependencies.observation, OperationObservationService)
         assert isinstance(dependencies.submission, OperationSubmissionService)

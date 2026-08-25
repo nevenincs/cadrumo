@@ -542,7 +542,6 @@ def m353_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     }
 
 
-
 _M202_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
     FilingProducerKey.M202_CNAE_ACTIVIDAD_PRINCIPAL: "principal_cnae",
     FilingProducerKey.M202_REGIMEN_LEY_49_2002_SIN_FINES_LUCRATIVOS: "regimen_ley_49_2002_sin_fines_lucrativos",
@@ -574,10 +573,8 @@ def m202_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     """
     profile = model_profile if isinstance(model_profile, Modelo202ProducerProfile) else None
     return {
-        key: (getattr(profile, field) if profile is not None else None)
-        for key, field in _M202_FIELD_BY_KEY.items()
+        key: (getattr(profile, field) if profile is not None else None) for key, field in _M202_FIELD_BY_KEY.items()
     }
-
 
 
 _M210_SCOPE_FIELD_BY_KEY: dict[FilingProducerKey, tuple[str, str]] = {
@@ -723,7 +720,6 @@ def m210_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
         scope = getattr(profile, scope_name, None) if profile is not None else None
         values[key] = getattr(scope, field, None) if scope is not None else None
     return values
-
 
 
 _M200_FIELD_BY_KEY: dict[FilingProducerKey, str] = {
@@ -924,8 +920,7 @@ def m200_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     """
     profile = model_profile if isinstance(model_profile, Modelo200ProfileFacts) else None
     return {
-        key: (getattr(profile, field) if profile is not None else None)
-        for key, field in _M200_FIELD_BY_KEY.items()
+        key: (getattr(profile, field) if profile is not None else None) for key, field in _M200_FIELD_BY_KEY.items()
     }
 
 

@@ -195,16 +195,19 @@ def test_row_source_identity_is_hashed_redacted_and_coordinate_checked() -> None
         },
     ]
     changed = identity.model_copy(update={"fingerprint": "b" * 64})
-    assert derive_calculation_revision_id(
-        work_unit_id="a" * 64,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        row_binding_values={key[0]: {"1": "10.00"}},
-        row_source_identities={key: changed},
-        casilla_values={},
-        filing_instance_evidence=None,
-        source_provenance=(),
-    ) != revision_id
+    assert (
+        derive_calculation_revision_id(
+            work_unit_id="a" * 64,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            row_binding_values={key[0]: {"1": "10.00"}},
+            row_source_identities={key: changed},
+            casilla_values={},
+            filing_instance_evidence=None,
+            source_provenance=(),
+        )
+        != revision_id
+    )
 
     with pytest.raises(ValidationError, match="has no row binding value"):
         orphan_id = derive_calculation_revision_id(

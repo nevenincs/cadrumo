@@ -112,17 +112,14 @@ class ExecutionPolicySpec:
             for effect, capability in required_by_effect.items()
         ):
             raise ValueError("execution policy side effect lacks its owning capability")
-        if self.write_route != "none" and (
-            "local-state" not in self.side_effects or "profile-custody" not in expanded
-        ):
+        if self.write_route != "none" and ("local-state" not in self.side_effects or "profile-custody" not in expanded):
             raise ValueError("storage write routes require profile custody and local-state effects")
         if self.destructive and "local-state" not in self.side_effects:
             raise ValueError("destructive execution requires a local-state effect")
         if self.handoff and ("filing" not in expanded or "local-state" not in self.side_effects):
             raise ValueError("filing handoff requires filing authority and a local-state effect")
         if self.live_write and (
-            "network" not in expanded
-            or not self.side_effects.intersection({"network", "browser"})
+            "network" not in expanded or not self.side_effects.intersection({"network", "browser"})
         ):
             raise ValueError("live writes require network authority and a network/browser effect")
 
@@ -801,8 +798,7 @@ class CommandSpecGraph:
         rows = {
             spec.result_schema.identity: spec
             for spec in self.specs
-            if spec.result_schema.state is SchemaState.TARGET
-            and spec.result_schema.identity is not None
+            if spec.result_schema.state is SchemaState.TARGET and spec.result_schema.identity is not None
         }
         expected = sum(spec.result_schema.state is SchemaState.TARGET for spec in self.specs)
         if len(rows) != expected:

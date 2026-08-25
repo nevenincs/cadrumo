@@ -85,14 +85,14 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
     click_type = (
         Choice(spec.value.choices, case_sensitive=spec.constraint.case_sensitive)
         if spec.value.choices
-        else None if spec.value.click_type is None else resolve_deferred_target(spec.value.click_type)
+        else None
+        if spec.value.click_type is None
+        else resolve_deferred_target(spec.value.click_type)
     )
     if isinstance(click_type, type):
         click_type = click_type()
     choice_metavar = None if not spec.value.choices else f"<{'|'.join(spec.value.choices)}>"
-    argument_choice_metavar = (
-        None if choice_metavar is None else f"{spec.name}:{choice_metavar}"
-    )
+    argument_choice_metavar = None if choice_metavar is None else f"{spec.name}:{choice_metavar}"
     if isinstance(spec, ArgumentSpec):
         argument_factory = cast(Any, typer.Argument)
         argument_kwargs: dict[str, object] = {
@@ -132,9 +132,7 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
             "count": spec.count,
             "prompt": None if spec.prompt_key is None else tr(spec.prompt_key.value),
             "confirmation_prompt": (
-                False
-                if spec.confirmation_prompt_key is None
-                else tr(spec.confirmation_prompt_key.value)
+                False if spec.confirmation_prompt_key is None else tr(spec.confirmation_prompt_key.value)
             ),
             "envvar": list(spec.envvar) or None,
             "is_eager": spec.eager,
@@ -191,8 +189,7 @@ def _behavior_wrapper(spec: CommandSpec) -> Callable[..., object]:
                 # the fully parsed child authority.
                 return None
         if context_parameter is not None and (
-            spec.kind == "leaf"
-            or (spec.kind == "group" and spec.invocation.terminal_behavior == "executable")
+            spec.kind == "leaf" or (spec.kind == "group" and spec.invocation.terminal_behavior == "executable")
         ):
             from ._config._secure_input import clear_staged_machine_secret_payloads
             from ._profile_authentication_gate import preflight_parsed_leaf
@@ -251,18 +248,18 @@ def _lazy_children(graph: CommandSpecGraph, parent: CommandSpec) -> tuple[LazySu
     """Compile one node-local immutable child projection from CommandSpec."""
     children = tuple(spec for spec in graph.specs if spec.parent_key == parent.key)
     return tuple(
-            LazySubcommand(
-                child.token,
-                LazyFactoryTarget(
-                    _SpecNodeFactory(graph, child.key),
-                    optional_dependencies=frozenset(child.handler.optional_dependencies)
-                    if child.handler is not None
-                    else frozenset(),
-                ),
-                help=tr(child.help_key.value),
-                short_help=None if child.short_help_key is None else tr(child.short_help_key.value),
-                hidden=child.invocation.hidden,
-            )
+        LazySubcommand(
+            child.token,
+            LazyFactoryTarget(
+                _SpecNodeFactory(graph, child.key),
+                optional_dependencies=frozenset(child.handler.optional_dependencies)
+                if child.handler is not None
+                else frozenset(),
+            ),
+            help=tr(child.help_key.value),
+            short_help=None if child.short_help_key is None else tr(child.short_help_key.value),
+            hidden=child.invocation.hidden,
+        )
         for child in children
     )
 

@@ -154,11 +154,15 @@ def test_compute_verdict_key_is_sensitive_to_every_input() -> None:
         loader_code_fingerprint_override="registry-code-a",
     )
     assert key != compute_verdict_key(
-        identity_digest="identity-a", source_evidence_fingerprints=src, package_version="1.0.1",
+        identity_digest="identity-a",
+        source_evidence_fingerprints=src,
+        package_version="1.0.1",
         loader_code_fingerprint_override="registry-code-a",
     )
     assert key != compute_verdict_key(
-        identity_digest="identity-b", source_evidence_fingerprints=src, package_version="1.0.0",
+        identity_digest="identity-b",
+        source_evidence_fingerprints=src,
+        package_version="1.0.0",
         loader_code_fingerprint_override="registry-code-a",
     )
     assert key != compute_verdict_key(

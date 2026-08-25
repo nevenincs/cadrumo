@@ -1132,9 +1132,7 @@ class CalculationRevision(BaseModel):
         ):
             raise ModeloValidationError("secure calculation revision is missing required row materialization fields")
         primary_refs = tuple(
-            row.source_ref
-            for row in self.source_provenance
-            if row.lineage_role is CalculationSourceLineageRole.PRIMARY
+            row.source_ref for row in self.source_provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY
         )
         if len(primary_refs) != len(set(primary_refs)):
             raise ModeloValidationError("source provenance primary reference is ambiguous")
@@ -1150,9 +1148,7 @@ class CalculationRevision(BaseModel):
         _validate_annual_summary_handoff_target(self)
         _validate_replay_channels(self)
         row_value_keys = {
-            (binding_id, int(row_index))
-            for binding_id, rows in self.row_binding_values.items()
-            for row_index in rows
+            (binding_id, int(row_index)) for binding_id, rows in self.row_binding_values.items() for row_index in rows
         }
         if not set(self.row_source_identities).issubset(row_value_keys):
             raise ModeloValidationError("row source identity coordinate has no row binding value")

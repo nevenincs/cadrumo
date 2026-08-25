@@ -39,10 +39,7 @@ def _modelo_210():
 
 
 def _cited_design(revision, catalogues) -> str:
-    designs = [
-        str(ref) for ref in revision.source_refs
-        if catalogues.sources[str(ref)].kind == "record_design"
-    ]
+    designs = [str(ref) for ref in revision.source_refs if catalogues.sources[str(ref)].kind == "record_design"]
     assert len(designs) == 1, designs
     return designs[0]
 
@@ -78,16 +75,10 @@ def test_each_revision_emits_the_positions_its_own_design_declares() -> None:
             bundled_path() / catalogues.sources[_cited_design(revision, catalogues)].corpus_path,
         )
         page_one = next(s for s in design.sheets if s.name.strip().endswith(_PAGE_ONE_SUFFIX))
-        record = next(
-            rec
-            for layout in revision.export_layouts
-            for rec in layout.records
-            if rec.id == _AUTOLIQUIDACION
-        )
+        record = next(rec for layout in revision.export_layouts for rec in layout.records if rec.id == _AUTOLIQUIDACION)
         extent = max(f.offset + f.length - 1 for f in record.fields if f.offset)
         assert extent == page_one.total_positions, (
-            f"210/{revision_id} emits {extent} positions but its cited design declares "
-            f"{page_one.total_positions}"
+            f"210/{revision_id} emits {extent} positions but its cited design declares {page_one.total_positions}"
         )
         checked += 1
 

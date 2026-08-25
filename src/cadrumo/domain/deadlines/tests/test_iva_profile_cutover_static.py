@@ -227,8 +227,5 @@ def test_every_claimed_current_iva_profile_has_the_canonical_required_axes() -> 
     )
     assert incomplete_modelo_iva_constructors == []
     assert incomplete_literal_maps == Counter(
-        {
-            (entry.path, entry.function): entry.expected_count
-            for entry in _LITERAL_NON_PROFILE_EXCLUSIONS
-        }
+        {(entry.path, entry.function): entry.expected_count for entry in _LITERAL_NON_PROFILE_EXCLUSIONS}
     )

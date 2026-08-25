@@ -358,9 +358,7 @@ def test_modelo_353_2025_deadlines_exactly_match_the_official_aeat_calendars() -
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-2025"]
     windows = {
-        window.period.registry_token: window
-        for window in revision.deadline_windows
-        if window.filing_year == 2025
+        window.period.registry_token: window for window in revision.deadline_windows if window.filing_year == 2025
     }
     expected = {
         "01": (date(2025, 2, 1), date(2025, 2, 28), date(2025, 2, 25)),

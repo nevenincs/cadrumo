@@ -28,6 +28,7 @@ from ..application.live import (
 )
 from ..application.operations import (
     OperationComposedServices,
+    OperationDefinition,
     OperationRegistry,
     compose_operation_services,
 )
@@ -107,19 +108,13 @@ def compose_google_sheets_export_service(
     return build_google_sheets_export_service(export_port=_google_sheets_export_port(settings=resolved_settings))
 
 
-def compose_operation_dependencies(
+def build_production_operation_registry(
     *,
     settings: Settings | None = None,
-) -> OperationComposedServices:
-    """Compose the immutable production registry and all public services.
-
-    Construction is deliberately explicit and effect-light: it opens no
-    browser and starts no operation. Profile-bound repositories resolve only
-    when an operation uses them, so the same graph can own pre-login and
-    post-login execution without retaining a stale profile repository.
-    """
+    censal_definition: OperationDefinition | None = None,
+) -> OperationRegistry:
+    """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
-    storage_root = effective_storage_root(settings=resolved_settings)
     auth_definitions = build_auth_operation_definitions()
     profile_definitions = build_user_profile_operation_definitions()
     google_export_definition = build_google_sheets_export_operation_definition(
@@ -133,7 +128,7 @@ def compose_operation_dependencies(
             (
                 *auth_definitions,
                 *profile_definitions,
-                CENSAL_OPERATION_DEFINITION,
+                CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition,
                 filed_history_definition,
                 google_export_definition,
             ),
@@ -145,14 +140,32 @@ def compose_operation_dependencies(
             (
                 *build_auth_operation_registrations(auth_definitions),
                 *build_user_profile_operation_registrations(profile_definitions),
-                build_censal_operation_registration(CENSAL_OPERATION_DEFINITION),
+                build_censal_operation_registration(
+                    CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition
+                ),
                 build_filed_history_operation_registration(filed_history_definition),
                 build_google_sheets_export_operation_registration(google_export_definition),
             ),
             key=lambda item: item.contract.definition_id,
         )
     )
-    registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
+    return OperationRegistry(definitions=definitions, public_registrations=registrations)
+
+
+def compose_operation_dependencies(
+    *,
+    settings: Settings | None = None,
+) -> OperationComposedServices:
+    """Compose the immutable production registry and all public services.
+
+    Construction is deliberately explicit and effect-light: it opens no
+    browser and starts no operation. Profile-bound repositories resolve only
+    when an operation uses them, so the same graph can own pre-login and
+    post-login execution without retaining a stale profile repository.
+    """
+    resolved_settings = settings or load_settings()
+    storage_root = effective_storage_root(settings=resolved_settings)
+    registry = build_production_operation_registry(settings=resolved_settings)
     journal = OperationJournalRepository(storage_root=storage_root)
     leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
     operands = operation_secure_reference_repository()
@@ -172,4 +185,8 @@ def compose_operation_dependencies(
     )
 
 
-__all__ = ["compose_google_sheets_export_service", "compose_operation_dependencies"]
+__all__ = [
+    "build_production_operation_registry",
+    "compose_google_sheets_export_service",
+    "compose_operation_dependencies",
+]

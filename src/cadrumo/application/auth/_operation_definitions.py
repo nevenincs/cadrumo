@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from pathlib import Path
 from uuid import UUID
@@ -131,6 +132,9 @@ async def _result_reference(result: BaseModel, context: OperationExecutorContext
 
 
 class ProfileLoginOperationExecutor:
+    def __init__(self, *, login: Callable[..., ProfileLoginOutcome] = login_profile) -> None:
+        self._login = login
+
     async def execute(
         self,
         request: OperationRequest[ProfileLoginOperationRequest],
@@ -143,7 +147,7 @@ class ProfileLoginOperationExecutor:
             try:
                 await context.events.effect(OperationEffect.UNKNOWN)
                 await context.events.phase("auth.login.execute")
-                result = login_profile(name=str(request.payload.profile_id), passphrase_callback=lambda: passphrase)
+                result = self._login(name=str(request.payload.profile_id), passphrase_callback=lambda: passphrase)
             finally:
                 passphrase = ""
         if result.bucket_id != str(request.payload.profile_id):
@@ -154,6 +158,13 @@ class ProfileLoginOperationExecutor:
 
 
 class ProfilePassphraseRotationOperationExecutor:
+    def __init__(
+        self,
+        *,
+        rotate_passphrase: Callable[..., ProfilePassphraseRotationOutcome] = rotate_profile_passphrase,
+    ) -> None:
+        self._rotate_passphrase = rotate_passphrase
+
     async def execute(
         self,
         request: OperationRequest[ProfilePassphraseRotationOperationRequest],
@@ -169,7 +180,7 @@ class ProfilePassphraseRotationOperationExecutor:
             try:
                 await context.events.effect(OperationEffect.UNKNOWN)
                 await context.events.phase("auth.passphrase.execute")
-                result = rotate_profile_passphrase(
+                result = self._rotate_passphrase(
                     profile_id=request.payload.profile_id,
                     current_passphrase=current,
                     new_passphrase=replacement,
@@ -184,6 +195,9 @@ class ProfilePassphraseRotationOperationExecutor:
 
 
 class AuthConfigureOperationExecutor:
+    def __init__(self, *, configure: Callable[..., AuthConfigureResult] = configure_operator_auth) -> None:
+        self._configure = configure
+
     async def execute(
         self,
         request: OperationRequest[AuthConfigureOperationRequest],
@@ -193,7 +207,7 @@ class AuthConfigureOperationExecutor:
         await context.events.phase("auth.configure.preflight")
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.configure.execute")
-        result = configure_operator_auth(
+        result = self._configure(
             request.payload.provider.value,
             certificate_path=request.payload.certificate_path,
         )
@@ -203,6 +217,9 @@ class AuthConfigureOperationExecutor:
 
 
 class AuthSessionAcquireOperationExecutor:
+    def __init__(self, *, acquire: Callable[..., Awaitable[AuthLoginResult]] = login_operator_auth) -> None:
+        self._acquire = acquire
+
     async def execute(
         self,
         request: OperationRequest[AuthSessionAcquireOperationRequest],
@@ -212,7 +229,7 @@ class AuthSessionAcquireOperationExecutor:
         await context.events.phase("auth.acquire.preflight")
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.acquire.execute")
-        result = await login_operator_auth(
+        result = await self._acquire(
             request.payload.provider.value if request.payload.provider is not None else None,
             fresh=request.payload.fresh,
             reset_lock=request.payload.reset_lock,
@@ -223,6 +240,9 @@ class AuthSessionAcquireOperationExecutor:
 
 
 class AuthLogoutOperationExecutor:
+    def __init__(self, *, logout: Callable[..., AuthLogoutResult] = logout_operator_auth) -> None:
+        self._logout = logout
+
     async def execute(
         self,
         request: OperationRequest[AuthTeardownOperationRequest],
@@ -232,7 +252,7 @@ class AuthLogoutOperationExecutor:
         await context.events.phase("auth.logout.preflight")
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.logout.execute")
-        result = logout_operator_auth(
+        result = self._logout(
             provider=request.payload.provider.value if request.payload.provider is not None else None,
             all_providers=request.payload.all_providers,
             target_bucket_id=target_bucket_id,
@@ -244,6 +264,9 @@ class AuthLogoutOperationExecutor:
 
 
 class AuthResetOperationExecutor:
+    def __init__(self, *, reset: Callable[..., AuthResetResult] = reset_operator_auth) -> None:
+        self._reset = reset
+
     async def execute(
         self,
         request: OperationRequest[AuthTeardownOperationRequest],
@@ -253,7 +276,7 @@ class AuthResetOperationExecutor:
         await context.events.phase("auth.reset.preflight")
         await context.events.effect(OperationEffect.UNKNOWN)
         await context.events.phase("auth.reset.execute")
-        result = reset_operator_auth(
+        result = self._reset(
             provider=request.payload.provider.value if request.payload.provider is not None else None,
             all_providers=request.payload.all_providers,
             target_bucket_id=target_bucket_id,
@@ -278,6 +301,7 @@ def _definition(
     request_type: type[BaseModel],
     result_type: type[BaseModel],
     executor_type: type[object],
+    build: Callable[[], object],
     phases: tuple[str, ...],
     secret_kind: str | None = None,
     request_storage: OperationRequestStoragePolicy = OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
@@ -289,7 +313,7 @@ def _definition(
         executor_factory=OperationExecutorFactory(
             request_type=request_type,
             executor_type=executor_type,
-            build=executor_type,
+            build=build,
         ),
         phase_codes=phases,
         interaction_kinds=frozenset[OperationInteractionKind](),
@@ -321,12 +345,22 @@ def _definition(
     )
 
 
-AUTH_OPERATION_DEFINITIONS = (
+def _build_auth_operation_definitions(
+    *,
+    profile_login: Callable[..., ProfileLoginOutcome] = login_profile,
+    rotate_passphrase: Callable[..., ProfilePassphraseRotationOutcome] = rotate_profile_passphrase,
+    configure: Callable[..., AuthConfigureResult] = configure_operator_auth,
+    acquire: Callable[..., Awaitable[AuthLoginResult]] = login_operator_auth,
+    logout: Callable[..., AuthLogoutResult] = logout_operator_auth,
+    reset: Callable[..., AuthResetResult] = reset_operator_auth,
+) -> tuple[OperationDefinition, ...]:
+    return (
     _definition(
         definition_id=PROFILE_LOGIN_OPERATION_DEFINITION_ID,
         request_type=ProfileLoginOperationRequest,
         result_type=ProfileLoginOutcome,
         executor_type=ProfileLoginOperationExecutor,
+        build=lambda: ProfileLoginOperationExecutor(login=profile_login),
         phases=("auth.login.secret-consume", "auth.login.execute", "auth.login.settlement"),
         secret_kind="profile.login.passphrase",  # noqa: S106
     ),
@@ -335,6 +369,7 @@ AUTH_OPERATION_DEFINITIONS = (
         request_type=AuthConfigureOperationRequest,
         result_type=AuthConfigureResult,
         executor_type=AuthConfigureOperationExecutor,
+        build=lambda: AuthConfigureOperationExecutor(configure=configure),
         phases=("auth.configure.preflight", "auth.configure.execute", "auth.configure.settlement"),
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
     ),
@@ -343,6 +378,7 @@ AUTH_OPERATION_DEFINITIONS = (
         request_type=AuthSessionAcquireOperationRequest,
         result_type=AuthLoginResult,
         executor_type=AuthSessionAcquireOperationExecutor,
+        build=lambda: AuthSessionAcquireOperationExecutor(acquire=acquire),
         phases=("auth.acquire.preflight", "auth.acquire.execute", "auth.acquire.settlement"),
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
     ),
@@ -351,6 +387,7 @@ AUTH_OPERATION_DEFINITIONS = (
         request_type=AuthTeardownOperationRequest,
         result_type=AuthLogoutResult,
         executor_type=AuthLogoutOperationExecutor,
+        build=lambda: AuthLogoutOperationExecutor(logout=logout),
         phases=("auth.logout.preflight", "auth.logout.execute", "auth.logout.settlement"),
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
     ),
@@ -359,6 +396,7 @@ AUTH_OPERATION_DEFINITIONS = (
         request_type=AuthTeardownOperationRequest,
         result_type=AuthResetResult,
         executor_type=AuthResetOperationExecutor,
+        build=lambda: AuthResetOperationExecutor(reset=reset),
         phases=("auth.reset.preflight", "auth.reset.execute", "auth.reset.settlement"),
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
     ),
@@ -367,15 +405,37 @@ AUTH_OPERATION_DEFINITIONS = (
         request_type=ProfilePassphraseRotationOperationRequest,
         result_type=ProfilePassphraseRotationOutcome,
         executor_type=ProfilePassphraseRotationOperationExecutor,
+        build=lambda: ProfilePassphraseRotationOperationExecutor(rotate_passphrase=rotate_passphrase),
         phases=("auth.passphrase.secret-consume", "auth.passphrase.execute", "auth.passphrase.settlement"),
         secret_kind="profile.passphrase.rotation",  # noqa: S106
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
     ),
-)
+    )
 
 
-def build_auth_operation_definitions() -> tuple[OperationDefinition, ...]:
-    return AUTH_OPERATION_DEFINITIONS
+AUTH_OPERATION_DEFINITIONS = _build_auth_operation_definitions()
+
+
+def build_auth_operation_definitions(
+    *,
+    profile_login: Callable[..., ProfileLoginOutcome] | None = None,
+    rotate_passphrase: Callable[..., ProfilePassphraseRotationOutcome] | None = None,
+    configure: Callable[..., AuthConfigureResult] | None = None,
+    acquire: Callable[..., Awaitable[AuthLoginResult]] | None = None,
+    logout: Callable[..., AuthLogoutResult] | None = None,
+    reset: Callable[..., AuthResetResult] | None = None,
+) -> tuple[OperationDefinition, ...]:
+    """Build the owner registrations with optional outer authority ports."""
+    if all(item is None for item in (profile_login, rotate_passphrase, configure, acquire, logout, reset)):
+        return AUTH_OPERATION_DEFINITIONS
+    return _build_auth_operation_definitions(
+        profile_login=login_profile if profile_login is None else profile_login,
+        rotate_passphrase=rotate_profile_passphrase if rotate_passphrase is None else rotate_passphrase,
+        configure=configure_operator_auth if configure is None else configure,
+        acquire=login_operator_auth if acquire is None else acquire,
+        logout=logout_operator_auth if logout is None else logout,
+        reset=reset_operator_auth if reset is None else reset,
+    )
 
 
 def build_auth_operation_registrations(

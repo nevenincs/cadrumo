@@ -436,7 +436,9 @@ def test_modelo_303_2023_deadlines_exactly_cover_declared_quarterly_and_monthly_
         assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
         assert window.filing_year == window.period.filing_year == 2023
         assert window.id == f"modelo-303-2023-{period.lower()}{'-mensual' if period.isdigit() else ''}"
-        calendar_source = "aeat-calendario-contribuyente-2024" if period in {"4T", "12"} else "aeat-calendario-contribuyente-2023"
+        calendar_source = (
+            "aeat-calendario-contribuyente-2024" if period in {"4T", "12"} else "aeat-calendario-contribuyente-2023"
+        )
         assert calendar_source in window.source_refs
 
 
@@ -447,7 +449,10 @@ def test_modelo_303_2023_deadline_coordinates_have_only_the_canonical_2023_owner
         period: [
             revision.id
             for revision in modelo.revisions.values()
-            if any(window.filing_year == 2023 and window.period.registry_token == period for window in revision.deadline_windows)
+            if any(
+                window.filing_year == 2023 and window.period.registry_token == period
+                for window in revision.deadline_windows
+            )
         ]
         for period in expected_periods
     }
@@ -521,11 +526,7 @@ def test_modelo_303_historical_deadline_census_is_exact_and_canonically_owned() 
 def test_modelo_303_only_unpublished_2026_month_12_remains_unmaterialised() -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2026-y-siguientes"]
-    authored = {
-        window.period.registry_token
-        for window in revision.deadline_windows
-        if window.filing_year == 2026
-    }
+    authored = {window.period.registry_token for window in revision.deadline_windows if window.filing_year == 2026}
 
     assert authored == {"1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 12))}
     assert set(revision.period_selector.periods) - authored == {"12"}

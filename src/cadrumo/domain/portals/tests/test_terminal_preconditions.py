@@ -176,14 +176,12 @@ def _registry_terminal_carriers() -> dict[str, ast.Call]:
 
 def _failure_constructor(function_name: str) -> tuple[ast.Call, dict[str, ast.expr]]:
     tree = ast.parse(inspect.getsource(errors_module))
-    function = next(
-        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == function_name
-    )
+    function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == function_name)
     return (
         next(
-        node
-        for node in ast.walk(function)
-        if isinstance(node, ast.Call) and _call_name(node.func) == "PortalFailureClassification"
+            node
+            for node in ast.walk(function)
+            if isinstance(node, ast.Call) and _call_name(node.func) == "PortalFailureClassification"
         ),
         _assignments(function),
     )
@@ -247,15 +245,11 @@ def test_portal_failure_classification_and_boundary_authority_are_single_homed()
             for node in ast.walk(tree)
             if isinstance(node, ast.ImportFrom)
             and (
-                (
-                    node.module is None
-                    and any(alias.name == "application" for alias in node.names)
-                )
+                (node.module is None and any(alias.name == "application" for alias in node.names))
                 or (
                     node.module is not None
                     and (
-                        node.module == "application"
-                        or node.module.startswith(("application.", "cadrumo.application"))
+                        node.module == "application" or node.module.startswith(("application.", "cadrumo.application"))
                     )
                 )
             )
@@ -300,9 +294,7 @@ def test_portal_failure_classification_and_boundary_authority_are_single_homed()
         node for node in cli_tree.body if isinstance(node, ast.FunctionDef) and node.name == "portals_show"
     )
     assert all(
-        _call_name(node.func) != "BadParameter"
-        for node in ast.walk(show_callback)
-        if isinstance(node, ast.Call)
+        _call_name(node.func) != "BadParameter" for node in ast.walk(show_callback) if isinstance(node, ast.Call)
     )
 
     unknown_tree = ast.parse(inspect.getsource(UnknownPortalError))

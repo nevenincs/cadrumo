@@ -165,10 +165,13 @@ def test_public_source_import_refuses_partial_required_manifest_without_writes(r
         _PROFILE_ID,
         event_types=(BucketEventType.MODELO_WORK_UNIT_CREATED,),
     )
-    assert CalculationObservationRepository().load_observation(
-        "130",
-        Period.from_year_and_code(2026, "1T"),
-    ) is None
+    assert (
+        CalculationObservationRepository().load_observation(
+            "130",
+            Period.from_year_and_code(2026, "1T"),
+        )
+        is None
+    )
 
 
 def test_csv_filing_refuses_tampered_observation_evidence_binding(repos: _Repos) -> None:

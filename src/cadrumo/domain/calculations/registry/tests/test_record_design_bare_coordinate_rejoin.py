@@ -47,7 +47,11 @@ from .._record_design import _BARE_COORDINATE_TRIPLE_RE, _rejoin_bare_coordinate
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DESIGN = bundled_path(
-    "corpus", "aeat_official", "disenos_registro", "modelo_200", "files",
+    "corpus",
+    "aeat_official",
+    "disenos_registro",
+    "modelo_200",
+    "files",
     "17-200-orden-eha-1338-2010-actualizado-a-11-06-2010-283-kb-pdf.pdf",
 )
 #: The two records the split row used to cost.
@@ -64,9 +68,7 @@ def test_the_design_now_reads_without_skipping_a_record() -> None:
 def test_the_recovered_record_carries_the_rebuilt_row(suffix: str) -> None:
     """The row itself, at the position that used to be the record's only hole."""
     extraction = extract_record_design(_DESIGN)
-    sheet = next(
-        (s for s in extraction.sheets if s.name.strip().endswith(f" {suffix}")), None
-    )
+    sheet = next((s for s in extraction.sheets if s.name.strip().endswith(f" {suffix}")), None)
     assert sheet is not None, f"record ending {suffix!r} is absent"
 
     field = next((f for f in sheet.fields if f.offset == 10), None)
@@ -164,9 +166,7 @@ def test_both_of_the_mirrored_designs_recover_their_first_record() -> None:
         "02-200-ejercicio-2010-472-kb-pdf.pdf",
         "03-200-ejercicio-2011-522-kb-pdf.pdf",
     ):
-        design = bundled_path(
-            "corpus", "aeat_official", "disenos_registro", "modelo_200", "files", name
-        )
+        design = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_200", "files", name)
         extraction = extract_record_design(design)
         skipped = {sheet.name.strip()[-2:] for sheet in extraction.skipped}
         assert "21" not in skipped, (name, sorted(skipped))

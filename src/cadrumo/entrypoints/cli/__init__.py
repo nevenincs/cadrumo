@@ -106,8 +106,6 @@ CommandExecutionPolicy = _CommandExecutionPolicy
 # ---------------------------------------------------------------------
 
 
-
-
 app = _build_command_app(_COMMAND_GRAPH)
 _decorate_typer_app(app)
 command_graph = _COMMAND_GRAPH

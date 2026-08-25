@@ -6,19 +6,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from ....adapters.persistence.profile import SyncRunRecordRepository
-from ...auth import build_auth_operation_definitions, build_auth_operation_registrations
-from ...export import (
-    build_google_sheets_export_operation_definition,
-    build_google_sheets_export_operation_registration,
-)
-from ...live import build_filed_history_operation_definition, build_filed_history_operation_registration
-from ...user_profile import (
-    CENSAL_OPERATION_DEFINITION,
-    build_censal_operation_registration,
-    build_user_profile_operation_definitions,
-    build_user_profile_operation_registrations,
-)
+from ....entrypoints import build_production_operation_registry
 from .. import (
     OperationCancellation,
     OperationClosePolicy,
@@ -26,7 +14,6 @@ from .. import (
     OperationEffect,
     OperationInteractionKind,
     OperationOwnedResource,
-    OperationRegistry,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -159,44 +146,9 @@ _REGISTERED_EXECUTOR_MATRIX = (
 )
 
 
-def _production_registered_executor_registry() -> OperationRegistry:
-    """Build the real exported population without owner-specific request fixtures."""
-    auth_definitions = build_auth_operation_definitions()
-    user_profile_definitions = build_user_profile_operation_definitions()
-    filed_history_definition = build_filed_history_operation_definition(
-        sync_run_repository_factory=SyncRunRecordRepository
-    )
-    google_sheets_export_definition = build_google_sheets_export_operation_definition()
-    definitions = tuple(
-        sorted(
-            (
-                *auth_definitions,
-                *user_profile_definitions,
-                CENSAL_OPERATION_DEFINITION,
-                filed_history_definition,
-                google_sheets_export_definition,
-            ),
-            key=lambda definition: definition.definition_id,
-        )
-    )
-    registrations = tuple(
-        sorted(
-            (
-                *build_auth_operation_registrations(auth_definitions),
-                *build_user_profile_operation_registrations(user_profile_definitions),
-                build_censal_operation_registration(CENSAL_OPERATION_DEFINITION),
-                build_filed_history_operation_registration(filed_history_definition),
-                build_google_sheets_export_operation_registration(google_sheets_export_definition),
-            ),
-            key=lambda registration: registration.contract.definition_id,
-        )
-    )
-    return OperationRegistry(definitions=definitions, public_registrations=registrations)
-
-
 def test_every_production_registered_executor_matches_the_shared_conformance_matrix() -> None:
     """Exercise all production registrations without duplicating executor behavior harnesses."""
-    registry = _production_registered_executor_registry()
+    registry = build_production_operation_registry()
     cases_by_definition_id = {case.definition_id: case for case in _REGISTERED_EXECUTOR_MATRIX}
 
     assert tuple(cases_by_definition_id) == tuple(case.definition_id for case in _REGISTERED_EXECUTOR_MATRIX)
