@@ -6,7 +6,7 @@ import pytest
 
 from ....core import Modelo
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaDefinition
+from cadrumo.domain.calculations.registry.schema import CasillaDefinition
 from .._calculation_modelo_adjustments import _m390_303_reconciliation_targets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

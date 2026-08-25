@@ -78,7 +78,7 @@ if TYPE_CHECKING:
     #: undecorated, and the pydantic models in this module use
     #: ``CalculationRevisionId`` instead -- a pydantic field WOULD need the
     #: symbol at model-build time and could not be deferred this way.
-    from ...domain.calculations.registry import RevisionId
+    from ...domain.calculations.registry.ids import RevisionId
     from ...domain.modelos import WorkUnit
     from ..modelo.work_addressing import ModeloResolvedRevisionProjection, ModeloWorkTarget
 

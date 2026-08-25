@@ -9,15 +9,12 @@ import pytest
 from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
-from .. import (
-    ModeloDefinition,
-    RegistryCatalogues,
-    RegistryValidationError,
-    RegistryValidator,
-    bundled_authority,
-    previous_filing_source_reference,
-    select_revision,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.bindings import previous_filing_source_reference
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ..snapshot import build_snapshot
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
@@ -558,10 +555,7 @@ def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> Non
     from decimal import Decimal
 
     from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
-    from .. import (
-        IvaLedgerObservation,
-        resolve_ledger_iva_aggregation_binding_values,
-    )
+    from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-2025"]

@@ -85,13 +85,10 @@ from ....core import (
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from ....domain.calculations.registry import (
-    BindingId,
-    InputKind,
-    RegistryModeloObservation,
-    calculate_registry_snapshot,
-    resolve_available_bound_inputs_by_casilla_id,
-)
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.iva import (
     IvaDeductionClassificationProvenance,
 )

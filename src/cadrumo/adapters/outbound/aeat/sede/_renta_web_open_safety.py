@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
 from .....core import fold_diacritics
 from .....core.logging import get_logger
-from .....domain.calculations.registry import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
+from .....domain.calculations.registry.remote_state_guard import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
 from .errors import SedeFailureMode, SedeNavigationError
 
 logger = get_logger(__name__)

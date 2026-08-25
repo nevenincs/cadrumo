@@ -28,7 +28,7 @@ from ....core import (
 from ....core.classification import SensitivityClass
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from ....domain.calculations.registry import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import (
     Invoice,

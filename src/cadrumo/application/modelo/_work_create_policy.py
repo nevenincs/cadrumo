@@ -147,7 +147,7 @@ def modelo_work_create_applicability_refusal(
 
     from ...application.user_profile.projections import projection_for_taxpayer
     from cadrumo.application.workflow.persistence import workflow_state_repository
-    from ...domain.calculations.registry import (
+    from ...domain.calculations.registry.applicability import (
         ApplicabilityVerdict,
         derive_modelo_applicability,
     )

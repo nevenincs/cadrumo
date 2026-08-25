@@ -40,7 +40,7 @@ from ....core import (
     RegistryAuthorityGrade,
     validated_casilla_id,
 )
-from ....domain.calculations.registry import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos import (
     Modelo840IaeExemptionAssessment,
     Modelo840IaeExemptionStatus,

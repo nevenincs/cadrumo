@@ -54,7 +54,9 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, CasillaId, Modelo, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import DataBindingDefinition, InputKind, selector_as_dict
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,

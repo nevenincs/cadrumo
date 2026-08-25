@@ -23,7 +23,9 @@ from datetime import date
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidationError, build_snapshot
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
 from ..ids import LegalRefId, SourceRefId
 from ..schema import (
     LegalReference,

@@ -28,7 +28,7 @@ from functools import lru_cache
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente import (
     DescendantInfo,
     compute_deduccion_maternidad_0611,

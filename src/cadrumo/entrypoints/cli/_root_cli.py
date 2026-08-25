@@ -59,12 +59,18 @@ def root_command(
     from ...adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ...adapters.outbound.aeat.auth.session_store import build_session_store
     from ...adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
+    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
     from ...adapters.persistence.workflow import build_workflow_persistence_port
     from ...application.auth.protocols import bind_session_store
     from ...application.auth.providers import bind_auth_provider_selector
     from ...application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory
+    from ...application.ledger.transaction_repository import bind_transaction_catalogue_repository_factory
+    from ...application.modelo.calculation_repository import bind_calculation_revision_catalogue_repository_factory
+    from ...application.modelo.filing_repository import bind_modelo_record_catalogue_repository_factory
     from ...application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from ...application.user_profile.custody_ports import bind_profile_custody_port
     from ...application.user_profile.language_resolver import register_language_resolver
@@ -75,6 +81,9 @@ def root_command(
     ctx.with_resource(bind_profile_login_session_port(build_profile_login_session_port()))
     ctx.with_resource(bind_workflow_persistence_port(build_workflow_persistence_port()))
     ctx.with_resource(bind_extraction_draft_repository_factory(ExtractionDraftRepository))
+    ctx.with_resource(bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository))
+    ctx.with_resource(bind_calculation_revision_catalogue_repository_factory(CalculationRevisionCatalogueRepository))
+    ctx.with_resource(bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository))
     ctx.with_resource(bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository))
     ctx.with_resource(bind_auth_provider_selector(select_outbound_auth_provider))
     ctx.with_resource(bind_session_store(build_session_store()))

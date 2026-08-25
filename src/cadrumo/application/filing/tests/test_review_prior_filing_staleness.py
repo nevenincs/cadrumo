@@ -33,10 +33,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.calculations.registry import (
-    CasillaObservation,
-    RegistryModeloObservation,
-)
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.filing import CasillaSchemaProvider, ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import TestRuntimeProfile

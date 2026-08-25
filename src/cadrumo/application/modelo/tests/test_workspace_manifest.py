@@ -11,7 +11,7 @@ from pydantic import BaseModel, ValidationError
 
 from ....core import BindingSourceKind
 from ....core.resources import resources
-from ....domain.calculations.registry import selector_model_for_source
+from cadrumo.domain.calculations.registry.bindings import selector_model_for_source
 from .._workspace_manifest import (
     MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
     ModeloWorkspaceFieldManifestEntryV1,

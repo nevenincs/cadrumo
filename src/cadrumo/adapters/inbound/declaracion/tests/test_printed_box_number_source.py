@@ -42,10 +42,7 @@ import pytest
 
 from .....core import validated_casilla_id
 from .....core.resources import resources
-from .....domain.calculations.registry import (
-    ExtractionProfileDefinition,
-    ExtractionTargetDefinition,
-)
+from cadrumo.domain.calculations.registry.schema import ExtractionProfileDefinition, ExtractionTargetDefinition
 from ..errors import DeclaracionParseError
 from .._parser import _numeric_casilla_anchors
 

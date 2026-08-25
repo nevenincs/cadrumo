@@ -35,7 +35,7 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .. import extract_record_design
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from ..record_design import (
     _EMPTY_CORRECTIONS,
     _better_page_record_lines,

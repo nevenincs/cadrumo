@@ -12,17 +12,12 @@ from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
-from .. import (
-    InputKind,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistryValidationError,
-    RegistryValidator,
-    binding_aggregation_op,
-    binding_source_casilla_ids,
-    expression_casilla_refs,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.bindings import binding_aggregation_op, binding_source_casilla_ids
+from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import binding_source_modelo
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
@@ -482,7 +477,7 @@ def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str)
     assert "modelo-390-rel-303-compensacion-ultimo-periodo" not in relations
     assert "modelo-390-rel-303-compensacion-generada-ejercicio-no-97" not in relations
 
-    from .. import iva_compensation_annual_partition_requirement
+    from cadrumo.domain.calculations.registry.bindings import iva_compensation_annual_partition_requirement
 
     requirement = iva_compensation_annual_partition_requirement(revision)
     assert requirement is not None
@@ -581,10 +576,7 @@ def test_modelo_390_prorrata_regularizacion_is_in_annual_deducible_formula(revis
 @pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations(revision_id: str) -> None:
     from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
-    from .. import (
-        IvaLedgerObservation,
-        resolve_ledger_iva_aggregation_binding_values,
-    )
+    from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions[revision_id]

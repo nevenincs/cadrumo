@@ -29,7 +29,7 @@ from collections.abc import Mapping
 from typing import Final
 
 from ....core import record_design_epoch_year
-from ._schema_references import SourceReference
+from .schema_references import SourceReference
 
 #: The modelo a design belongs to, read from where the file LIVES rather than from
 #: its id. The whole point of this check is to constrain a free-form string, so

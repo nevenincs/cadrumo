@@ -19,13 +19,9 @@ from pydantic import ValidationError
 
 from ....core import CasillaId, Period, TaxDomain, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    FormulaId,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistrySnapshot,
-    revision_reference_identity_failures,
-)
+from cadrumo.domain.calculations.registry.ids import FormulaId
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 from ....domain.filing import ModeloBuilderError
 from ..runtime import (
     RegistryCasillaCollection,

@@ -27,11 +27,8 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    ModeloRevision,
-    enum_consumed_binding_ids,
-    revision_date_binding_ids,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from .._calculate_input import ModeloCalculateBindingInputError, ModeloCalculateDecimalInputError
 from .._projection import _parse_projection_binding_overrides
 

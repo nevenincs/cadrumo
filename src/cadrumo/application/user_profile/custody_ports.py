@@ -19,12 +19,13 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import SecureObjectWrite, StorageCategory, storage_location
+from ...core import SecureObjectWrite, StorageCategory, StorageCustodyProfile, storage_location
 from ...core.classification import SensitivityClass
 from ...core.errors import CoreError
 
 if TYPE_CHECKING:
     from ...domain.buckets import BucketEventHistoryCatalogue
+    from ...domain.user_profile.portable_export import CarriedSecureObject
     from ...domain.user_profile.values import UserProfileSnapshot
     from .recovery_contracts import ProfileCustodyRecoveryArtifactWarning
 
@@ -785,6 +786,22 @@ class ProfileCustodySecureObjectNamespace:
     schema_version: int
 
 
+@dataclass(frozen=True, slots=True)
+class ProfileCustodyCarryMaterial:
+    """Immutable persistence facts projected for one portable-profile carry.
+
+    Persistence resolves natural keys and registry custody dispositions. The
+    application consumes only the carried domain rows plus exact coverage facts;
+    it retains ownership of fail-closed export policy and manifest construction.
+    """
+
+    carried_objects: tuple[CarriedSecureObject, ...]
+    carried_namespaces: tuple[str, ...]
+    excluded_namespaces: tuple[str, ...]
+    row_counts_by_namespace: Mapping[str, int]
+    unclassified_namespaces: tuple[str, ...]
+
+
 class ProfileCustodyBucketEventHistoryPort(Protocol):
     """Current bucket-event history authority for custody-bound operations."""
 
@@ -1065,6 +1082,24 @@ class ProfileCustodyPort(Protocol):
 
     def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
         """Return active-bucket namespace inventory."""
+        ...
+
+    def collect_profile_custody_carry(
+        self,
+        *,
+        bucket_id: str,
+        profile: StorageCustodyProfile,
+    ) -> ProfileCustodyCarryMaterial:
+        """Project portable rows and namespace coverage through persistence."""
+        ...
+
+    def restore_profile_custody_carry(
+        self,
+        carried_objects: tuple[CarriedSecureObject, ...],
+        *,
+        target_bucket_id: str,
+    ) -> None:
+        """Atomically restore portable rows under the recipient bucket key."""
         ...
 
     def profile_snapshot_persistence(
@@ -1532,6 +1567,7 @@ __all__ = [
     "ProfileBucketStoragePort",
     "ProfileCustodyBucketEventHistoryPort",
     "ProfileCustodyCapsuleLabelPort",
+    "ProfileCustodyCarryMaterial",
     "ProfileCustodyCommitPort",
     "ProfileCustodyEnvelopePort",
     "ProfileCustodyLabelHeadPort",

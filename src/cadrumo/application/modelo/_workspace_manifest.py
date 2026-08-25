@@ -12,11 +12,9 @@ from pydantic.fields import FieldInfo
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, content_hash_hex
 from ...core.identity import ContentDigest
-from ...domain.calculations.registry import (
-    RegistrySnapshot,
-    derive_export_layouts_from_bindings,
-    selector_model_for_source,
-)
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.export import derive_export_layouts_from_bindings
+from ...domain.calculations.registry.bindings import selector_model_for_source
 from .workspace_models import ModeloWorkspaceContributorIdentityV1, ModeloWorkspaceSchemaClassification
 from .workspace_producers import (
     ModeloWorkspaceContributorKindV1,

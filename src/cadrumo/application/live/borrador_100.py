@@ -36,7 +36,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, SnapshotId
-from ...domain.calculations.registry import BindingId
+from ...domain.calculations.registry.ids import BindingId
 from .errors import LiveApplicationInputError
 from .snapshot_base import (
     SnapshotLifecycleState,

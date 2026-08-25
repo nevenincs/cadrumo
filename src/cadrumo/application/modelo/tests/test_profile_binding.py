@@ -24,14 +24,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    DataBindingDefinition,
-    FormulaDefinition,
-    FormulaExpression,
-    RegistrySnapshot,
-    RelationId,
-)
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, FormulaExpression, RegistrySnapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile

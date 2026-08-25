@@ -266,7 +266,7 @@ def test_calendar_excludes_non_applicable_modelos() -> None:
     ``NOT_APPLICABLE`` row shown as confidently due is the regression defect.
     """
 
-    from ....domain.calculations.registry import ApplicabilityVerdict, derive_modelo_applicability
+    from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 
     profile = _objetiva_autonomo()
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))

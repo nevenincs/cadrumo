@@ -8,7 +8,8 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import M210_TIPO_RENTA_CODE_PROJECTION, ResultDisposition, TipoRentaIrnr
-from .. import DeadlineWindowDefinition, RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

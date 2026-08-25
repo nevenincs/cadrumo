@@ -49,7 +49,7 @@ from ....core import (
 )
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from ....domain.calculations.registry import BindingId
+from cadrumo.domain.calculations.registry.ids import BindingId
 from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile

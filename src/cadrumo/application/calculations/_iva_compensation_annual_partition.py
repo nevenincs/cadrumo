@@ -25,16 +25,18 @@ from ...core import (
 )
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain.calculations.registry import (
-    BindingId,
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import (
     ModeloRevision,
-    RegistryModeloObservation,
     RegistrySnapshot,
-    RegistryValidationError,
-    iva_compensation_annual_partition_requirement,
-    select_revision,
-    undeclared_casilla_ids,
 )
+from ...domain.calculations.registry.bindings import (
+    RegistryModeloObservation,
+    iva_compensation_annual_partition_requirement,
+)
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.temporal import select_revision
+from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.iva_compensation import (
     IvaCompensationPeriodState,
     build_iva_compensation_carry_forward_report,
@@ -77,7 +79,7 @@ def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) 
 
 def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
     from ...core.resources import bundled_path
-    from ...domain.calculations.registry import load_registry_tree
+    from ...domain.calculations.registry.loader import load_registry_tree
 
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(candidate for candidate in modelos if candidate.id == observation.modelo)
@@ -261,7 +263,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
         revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
         if revision is None:
             from ...core.resources import bundled_path
-            from ...domain.calculations.registry import load_registry_tree
+            from ...domain.calculations.registry.loader import load_registry_tree
 
             modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
             modelo = next(candidate for candidate in modelos if candidate.id == context.modelo)

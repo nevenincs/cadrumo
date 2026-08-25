@@ -11,7 +11,8 @@ import pytest
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import Modelo202Modality, RegistrySnapshot
+from cadrumo.domain.calculations.registry.applicability import Modelo202Modality
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos import (
     ModeloRecordCatalogue,
     ModeloRecordStatus,

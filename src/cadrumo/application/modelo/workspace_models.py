@@ -18,7 +18,7 @@ from ...core import (
     RevisionReviewStatus,
 )
 from ...core.identity import BucketId, ContentDigest, ContinuidadId, ProfileId, TransactionId, WorkUnitId
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     ApplicabilityRuleId,
     BindingId,
     ExportFieldId,

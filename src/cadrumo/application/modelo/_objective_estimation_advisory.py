@@ -37,7 +37,8 @@ from ...domain.modelos import (
 )
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import LegalParameter, SourceRefId
+    from ...domain.calculations.registry.schema import LegalParameter
+    from ...domain.calculations.registry.ids import SourceRefId
     from ...domain.modelos import WorkUnit
 
 _SETTLED_YEAR_MIN = 2016

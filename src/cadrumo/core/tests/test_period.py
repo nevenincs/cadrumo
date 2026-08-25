@@ -265,7 +265,7 @@ class TestPeriodTypeBoundarySplit:
     @pytest.mark.parametrize("token", (*ADMINISTRATIVE_TOKENS, SYMBOLIC_EVENT_SELECTOR))
     def test_registry_coordinate_still_admits_the_administrative_vocabulary(self, token: str) -> None:
         """The other direction: the registry must keep loading."""
-        from ...domain.calculations.registry import RegistrySnapshotRef
+        from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 
         assert _validate_test_model(token) == token
         ref = RegistrySnapshotRef(
@@ -286,7 +286,7 @@ class TestPeriodTypeBoundarySplit:
     )
     def test_declared_period_selectors_still_validate(self, declared: tuple[str, ...]) -> None:
         """The shipped declarations that made the widening necessary in the first place."""
-        from ...domain.calculations.registry import PeriodSelector
+        from cadrumo.domain.calculations.registry.schema import PeriodSelector
 
         selector = PeriodSelector(year_from=2012, periods=declared)
 

@@ -35,13 +35,13 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CalculationSourceLineageRole, Period
 from ...core.money import CENT, round_to_cents
-from ...domain.calculations.registry import (
-    BindingId,
-    ModeloRevision,
+from ...domain.calculations.registry.bindings import (
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
     unsupported_ledger_oss_observations,
 )
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceLine, iva_rate_kind
 from ...domain.iva import (
     EUMemberState,

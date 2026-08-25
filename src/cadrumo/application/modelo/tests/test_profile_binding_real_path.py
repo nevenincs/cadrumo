@@ -36,7 +36,7 @@ from typing import Any
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

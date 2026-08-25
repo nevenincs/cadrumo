@@ -35,8 +35,8 @@ from ._m303_orden_constants import (
 from ._m303_orden_constants import (
     validate_generated_source_counts as _validate_generated_source_counts,
 )
-from ._schema_base import RegistryModel
-from ._schema_references import LegalReference, SourceReference
+from .schema_base import RegistryModel
+from .schema_references import LegalReference, SourceReference
 
 _M303_2022_RECORD_DESIGN_SOURCE_REF = "aeat-dr-303-2022"
 _M303_2022_RECORD_DESIGN_SOURCE_DIGEST = "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"

@@ -26,7 +26,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....tests.registry_tree import bundled_registry_tree

@@ -48,13 +48,9 @@ from ...core.i18n import tr as _tr
 from ...core.identity import same_tax_identifier
 from ...core.logging import get_logger as _get_logger
 from ...core.time import now
-from ...domain.calculations.registry import (
-    ApplicabilityVerdict as _ApplicabilityVerdict,
-)
-from ...domain.calculations.registry import (
-    derive_modelo_applicability as _derive_modelo_applicability,
-)
-from ...domain.calculations.registry import taxpayer_model_is_declared as _taxpayer_model_is_declared
+from ...domain.calculations.registry.applicability import ApplicabilityVerdict as _ApplicabilityVerdict
+from ...domain.calculations.registry.applicability import derive_modelo_applicability as _derive_modelo_applicability
+from ...domain.calculations.registry.applicability import taxpayer_model_is_declared as _taxpayer_model_is_declared
 from ...domain.deadlines import DeadlineEngine as _DeadlineEngine
 from ...domain.deadlines import DeadlineValidationError as _DeadlineValidationError
 from ...domain.deadlines import ModeloDeadline as _ModeloDeadline
@@ -140,7 +136,7 @@ from ._coverage import build_obligation_coverage
 from ._next_actions import declare_next_action as _declare_next_action
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import DeadlineWindowDefinition
+    from ...domain.calculations.registry.schema import DeadlineWindowDefinition
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
     from ..live.expedientes import PersistedExpedientesSnapshot

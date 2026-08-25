@@ -11,7 +11,8 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import VerificationPredicateDefinition, load_modelo_path
+from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from cadrumo.domain.calculations.registry.loader import load_modelo_path
 from ....domain.modelos import ModeloVerificationFindingKind
 from .._verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile

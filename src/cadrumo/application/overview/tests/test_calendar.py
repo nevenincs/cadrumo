@@ -11,7 +11,8 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ....adapters.outbound.aeat.sede import Declaracion, RemoteNotification
 from ....core import Period
-from ....domain.calculations.registry import ApplicabilityVerdict, bundled_authority, derive_modelo_applicability
+from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import (
     DeadlineEngine,
     EntityType,

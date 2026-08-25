@@ -45,7 +45,8 @@ from decimal import Decimal
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
-from .. import RegistrySnapshot, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ..authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

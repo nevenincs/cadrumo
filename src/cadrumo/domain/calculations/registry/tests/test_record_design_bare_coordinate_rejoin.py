@@ -41,7 +41,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import extract_record_design
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from ..record_design import _BARE_COORDINATE_TRIPLE_RE, _rejoin_bare_coordinate_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

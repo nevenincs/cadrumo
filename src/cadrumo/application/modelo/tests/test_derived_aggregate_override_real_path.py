@@ -47,7 +47,7 @@ import pytest
 
 from ....core import Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId
+from cadrumo.domain.calculations.registry.ids import BindingId
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.values import UserProfileFact

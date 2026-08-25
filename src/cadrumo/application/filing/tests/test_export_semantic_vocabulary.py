@@ -10,13 +10,7 @@ import pytest
 
 from ....core import FilingProducerKey, Modelo, Period
 from ....domain.calculations import registry
-from ....domain.calculations.registry import (
-    ExportComputedKey,
-    ExportDraftAttribute,
-    FilingEnvelopeDefinition,
-    FilingEnvelopePrefixFieldDeclaration,
-    FilingEnvelopePrefixRole,
-)
+from cadrumo.domain.calculations.registry.schema import ExportComputedKey, ExportDraftAttribute, FilingEnvelopeDefinition, FilingEnvelopePrefixFieldDeclaration, FilingEnvelopePrefixRole
 from .. import (
     FilingEnvelopeOccurrence,
     FilingEnvelopeRenderRequest,

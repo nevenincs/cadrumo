@@ -15,7 +15,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.identity import nif_check_letter
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId, RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,

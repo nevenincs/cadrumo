@@ -76,9 +76,11 @@ from ...domain.bienes_inversion import (
     compute_registro_regularizacion,
 )
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.schema import (
     DataBindingDefinition,
     ExportLayoutDefinition,
+)
+from ...domain.calculations.registry.applicability import (
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )

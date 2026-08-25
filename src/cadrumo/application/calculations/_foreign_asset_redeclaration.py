@@ -36,13 +36,13 @@ from ...core import (
     foreign_asset_obligation_group,
 )
 from ...core.aggregation import ForeignAssetClass
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.bindings import (
     CasillaObservation,
-    ModeloRevision,
     RegistryModeloObservation,
     foreign_asset_binding_row_field,
     previous_filing_binding_source_casilla_ids,
 )
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos import (
     CalculationRevision,
     ModeloVerificationFinding,

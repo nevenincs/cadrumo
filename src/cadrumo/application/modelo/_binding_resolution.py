@@ -34,12 +34,14 @@ from typing import TYPE_CHECKING
 from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import CasillaId
 from ...core import Period as _Period
-from ...domain.calculations.registry import (
-    BindingId,
-    InputKind,
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
-    casillas_by_id,
+)
+from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
 )

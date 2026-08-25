@@ -21,16 +21,10 @@ from ....core import (
 )
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    IvaLedgerObservation,
-    RegistryCalculationResult,
-    RegistryModeloObservation,
-    RegistrySnapshot,
-    calculate_registry_snapshot,
-    materialize_relation_binding_values,
-    resolve_available_bound_inputs_by_casilla_id,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id, resolve_ledger_iva_aggregation_binding_values
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,

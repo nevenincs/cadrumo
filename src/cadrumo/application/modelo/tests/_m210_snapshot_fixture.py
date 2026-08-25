@@ -3,11 +3,9 @@
 import pytest
 
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import (
-    RegistrySnapshot,
-    load_convenio_authority,
-    load_registry_tree,
-)
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.convenio import load_convenio_authority
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from ....domain.calculations.registry.tests import build_snapshot
 
 

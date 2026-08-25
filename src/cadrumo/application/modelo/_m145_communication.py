@@ -30,7 +30,9 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.resources import bundled_path
-from ...domain.calculations.registry import RevisionId, load_registry_tree, select_revision
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.temporal import select_revision
 
 M145_COMMUNICATION_MODELO = Modelo.M145.value
 M145_COMMUNICATION_PERIOD = "comunicacion"

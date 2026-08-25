@@ -7,11 +7,9 @@ from decimal import Decimal
 
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core.resources import resources
-from ...domain.calculations.registry import (
-    CasillaObservation,
-    RegistrySnapshot,
-    resolve_m303_regimen_simplificado_snapshot,
-)
+from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...domain.iva import is_last_filing_period_of_year, validate_regimen_simplificado_rows
 from ...domain.modelos import FilingInstanceEvidence, M303FilingInstanceEvidence, WorkUnit
 from ..calculations import calculate_m303_regimen_simplificado_result

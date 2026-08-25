@@ -20,7 +20,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...core import STR_KEYED_MAPPING_ADAPTER, BindingSourceKind
-from ...domain.calculations.registry import ModeloRevision, previous_filing_observation_requirements
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.bindings import previous_filing_observation_requirements
 
 _PER_GRUPO_MEMBER: str = "per_grupo_member"
 

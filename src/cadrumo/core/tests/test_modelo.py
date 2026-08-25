@@ -52,7 +52,7 @@ def test_non_registry_modelos_are_not_registry_loadable() -> None:
     enum must still raise from ``validate_modelo`` — adding a registry TOML for
     it (reviving active support) would break this test.
     """
-    from ...domain.calculations.registry import RegistrySnapshotError
+    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
     from ..resources import resources
 
     authority = resources().modelos.authority

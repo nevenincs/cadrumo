@@ -40,7 +40,7 @@ from .schema import (
     SourceReference,
     filing_period_from_scope,
 )
-from ._schema_references import governed_period_span
+from .schema_references import governed_period_span
 from .temporal import select_revision
 from .validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad

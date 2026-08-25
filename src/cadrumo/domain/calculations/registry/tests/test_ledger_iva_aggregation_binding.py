@@ -18,16 +18,10 @@ from ....iva import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from .. import (
-    DataBindingDefinition,
-    IvaLedgerObservation,
-    ModeloRevision,
-    RegistryValidationError,
-    resolve_ledger_iva_aggregation_binding_values,
-    unsupported_ledger_iva_observations,
-    validate_ledger_iva_aggregation_binding_definition,
-)
-from .._ledger_bindings import _IvaLedgerSelector
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values, unsupported_ledger_iva_observations, validate_ledger_iva_aggregation_binding_definition
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from ..ledger_bindings import _IvaLedgerSelector
 from ..schema import PeriodSelector
 from ._ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA,

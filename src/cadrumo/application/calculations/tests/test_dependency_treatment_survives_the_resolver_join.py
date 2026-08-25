@@ -32,18 +32,15 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistryFoldRequirement,
-    previous_filing_observation_requirements,
-    relation_source_requirements,
-)
+from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement, relation_source_requirements
+from cadrumo.domain.calculations.registry.bindings import previous_filing_observation_requirements
 from .._binding_prefill import PrefilledBinding, _prefilled_bindings
 from .._relation_prefill import _relation_value_grounding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 if TYPE_CHECKING:
-    from ....domain.calculations.registry import RegistrySnapshot
+    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 _SETTLEMENT = "direct_annual_settlement"
 _EVIDENCE = "factual_evidence"

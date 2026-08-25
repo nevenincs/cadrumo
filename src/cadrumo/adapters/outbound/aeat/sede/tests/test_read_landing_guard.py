@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......domain.calculations.registry import RemoteStateGuardPolicy
+from cadrumo.domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from ......tests.aeat_literal_fixtures import (
     CENSAL_M036_FILING_TOOL_PATH_CANARY,
     CENSAL_MODIF_DOMICILIO_FISCAL_PATH_CANARY,

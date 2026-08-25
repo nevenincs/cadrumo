@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import resources
-from .. import verification_tolerance_or_exact
+from cadrumo.domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

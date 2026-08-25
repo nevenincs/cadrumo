@@ -23,7 +23,7 @@ from .._reconcile_casilla import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 if TYPE_CHECKING:
-    from ....domain.calculations.registry import ModeloRevision
+    from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 
 def test_matching_casillas_produce_no_divergences() -> None:
@@ -163,7 +163,7 @@ class TestExportExemptCasillasAreOutOfPdfScope:
         # a broad M303 revision was decomposed into four narrower revisions -- and
         # a literal key dies the moment that happens, on a test whose subject is
         # unrelated to the re-cut.
-        from ....domain.calculations.registry import bundled_authority
+        from cadrumo.domain.calculations.registry.authority import bundled_authority
 
         return bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
 

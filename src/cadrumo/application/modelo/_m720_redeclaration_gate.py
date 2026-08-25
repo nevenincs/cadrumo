@@ -34,7 +34,7 @@ See Also:
 from __future__ import annotations
 
 from ...core import Modelo
-from ...domain.calculations.registry import RegistrySnapshotError
+from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos import CalculationRevision, ModeloVerificationFinding, WorkUnit
 from ..calculations import (
     CalculationObservationRepository,

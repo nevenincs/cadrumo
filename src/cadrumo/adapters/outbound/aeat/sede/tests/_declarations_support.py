@@ -18,14 +18,12 @@ from reportlab.pdfgen import canvas
 from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id, validated_casilla_id_map
 from ......core.config import Settings
 from ......core.resources import resources
-from ......domain.calculations.registry import (
-    InputKind,
-    RegistryValidationError,
-    calculate_registry_snapshot,
-    parse_export_payload,
-    relation_source_requirements,
-    resolve_export_layout,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.relations import relation_source_requirements
+from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from ......tests import FIXTURES_DIR
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime

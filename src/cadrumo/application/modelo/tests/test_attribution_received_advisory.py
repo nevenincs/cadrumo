@@ -16,7 +16,7 @@ import pytest
 
 from ....core import Modelo, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos import (
     ModeloCode,
     ModeloVerificationFinding,

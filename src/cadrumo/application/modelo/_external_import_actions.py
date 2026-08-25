@@ -61,7 +61,11 @@ from ...domain.buckets import (
 from ...domain.buckets import (
     bucket_event_history_write as _bucket_event_write,
 )
-from ...domain.calculations.registry import BindingId, RegistryModeloObservation, RelationId
+from ...domain.calculations.registry.ids import (
+    BindingId,
+    RelationId,
+)
+from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.justificante import Justificante
 from ...domain.modelos import (
     CalculationRevision,

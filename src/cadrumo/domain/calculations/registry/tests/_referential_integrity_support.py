@@ -19,11 +19,9 @@ from .....core import (
 )
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
-from .. import (
-    InputKind,
-    RegistryValidationError,
-    ValidatedRegistryAuthority,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ..schema import (
     ApplicationLinkDefinition,
     CalculationCompletenessCasilla,

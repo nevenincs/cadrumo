@@ -39,11 +39,9 @@ import pytest
 
 from ....core.directory_scan import iter_directory
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import (
-    RegistryValidationError,
-    RegistryValidator,
-    clear_fingerprint_cache,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.loader import clear_fingerprint_cache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

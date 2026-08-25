@@ -15,7 +15,8 @@ from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from typing import TYPE_CHECKING, NoReturn, Protocol
 
-from ....domain.calculations.registry import RegistrySnapshot, RegistryValidationError
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.errors import RegistryValidationError
 from ._engine import collect_row_sets
 
 __all__ = ["assemble_row_sets_for_snapshot"]

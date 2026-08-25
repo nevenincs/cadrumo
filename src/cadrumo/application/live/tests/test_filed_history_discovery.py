@@ -674,7 +674,7 @@ def test_the_breakdown_keys_on_period_not_on_the_query_pair() -> None:
 
 def _stored_130_registry_observation(*, casilla_03: str):
     from ....core import validated_casilla_id
-    from ....domain.calculations.registry import RegistryModeloObservation
+    from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
     from ....tests.registry_observations import registry_grounded_observations
 
     return RegistryModeloObservation(
@@ -714,7 +714,7 @@ def test_a_casilla_the_stored_revision_never_held_is_not_a_divergence() -> None:
     reporting it as one would train the operator to ignore the alert.
     """
     from ....core import validated_casilla_id
-    from ....domain.calculations.registry import RegistryModeloObservation
+    from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
     from ....tests.registry_observations import registry_grounded_observations
 
     stored_without_03 = RegistryModeloObservation(
@@ -763,7 +763,7 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
     production entry point -- against a REAL persisted stored observation, so
     the proof is not confined to the pure comparator in isolation.
     """
-    from ....domain.calculations.registry import RegistryModeloObservation
+    from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
     from ....tests.registry_observations import registry_grounded_observations
     from ....tests.secure_sql import isolated_runtime_profile
     from ...calculations import CalculationObservationRepository
@@ -794,7 +794,7 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
 
 def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path: Path) -> None:
     """The mutation-based counterpart: a genuine divergence still reaches the operator as a Notice."""
-    from ....domain.calculations.registry import RegistryModeloObservation
+    from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
     from ....tests.registry_observations import registry_grounded_observations
     from ....tests.secure_sql import isolated_runtime_profile
     from ...calculations import CalculationObservationRepository

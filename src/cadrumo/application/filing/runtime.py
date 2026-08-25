@@ -50,44 +50,52 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field
 
+from cadrumo.domain.calculations.registry.loader_fingerprints import (
+    clear_fingerprint_cache as _clear_loader_fingerprint_cache,
+)
+from cadrumo.domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistrySnapshot,
+)
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
+# Importing the renta package registers the first-slice routing
+# cross-domain snapshot check required by Modelo 100 snapshots.
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CalculationCompletenessManifest,
+    CasillaConstraints,
+    CasillaDefinition,
+)
+
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, Period
 from ...core.aggregation import BindingSourceKind
 from ...core.identity import SubjectTaxId
 from ...core.resources import bundled_path
-
-# Importing the renta package registers the first-slice routing
-# cross-domain snapshot check required by Modelo 100 snapshots.
-from ...domain.calculations.registry import (
-    CalculationCompletenessManifest,
-    CasillaConstraints,
-    CasillaDefinition,
-    DataBindingDefinition,
-    ExportLayoutDefinition,
-    FormulaDefinition,
-    FormulaId,
-    LegalRefId,
-    ModeloDefinition,
-    ModeloRevision,
-    RateBoxPartition,
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
-    RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
+)
+from ...domain.calculations.registry.ids import (
+    FormulaId,
+    LegalRefId,
     RevisionId,
-    SourceReference,
     SourceRefId,
-    ValidatedRegistryAuthority,
-    collect_registry_tree_fingerprints,
+)
+from ...domain.calculations.registry.rate_box_partition import (
+    RateBoxPartition,
     derive_rate_box_partitions,
-    expression_casilla_refs,
-    fold_reconciliation_total_casilla_ids,
-    registry_scalar_value_type,
-    revision_reference_identity_failures,
 )
-from ...domain.calculations.registry import (
-    clear_fingerprint_cache as _clear_loader_fingerprint_cache,
-)
+from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
+from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type
+from ...domain.calculations.registry.schema_verification import fold_reconciliation_total_casilla_ids
+from ...domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 from ...domain.filing import CasillaCollection, CasillaSchema, registry_schema_version
 from .errors import ModeloApplicationError as ModeloBuilderError
 
@@ -423,11 +431,12 @@ def load_default_filing_profile(
         ModeloBuilderError: When no profile is active in the workflow
             state.
     """
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+
     from ..wizard.status import (
         WizardStatusError,
         load_active_taxpayer_profile,
     )
-    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     try:
@@ -628,6 +637,8 @@ def registry_tree_fingerprint(
         cached_time, cached_val = _FINGERPRINT_CACHE[root]
         if now - cached_time < 1.0:
             return cached_val
+
+    from ...domain.calculations.registry.loader import collect_registry_tree_fingerprints
 
     val = collect_registry_tree_fingerprints(root)
     _FINGERPRINT_CACHE[root] = (now, val)

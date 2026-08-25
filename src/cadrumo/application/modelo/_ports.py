@@ -25,7 +25,7 @@ from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
 from ...core import CasillaId
-from ...domain.calculations.registry import ExportRecordDefinition
+from ...domain.calculations.registry.schema import ExportRecordDefinition
 
 
 @runtime_checkable

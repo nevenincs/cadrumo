@@ -149,11 +149,17 @@ def compose_runtime_ports() -> Iterator[None]:
     from .adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from .adapters.outbound.aeat.auth.session_store import build_session_store
     from .adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
+    from .adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from .adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from .adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from .adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from .adapters.persistence.workflow import build_workflow_persistence_port
     from .application.auth.protocols import bind_session_store
     from .application.auth.providers import bind_auth_provider_selector
     from .application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory
+    from .application.ledger.transaction_repository import bind_transaction_catalogue_repository_factory
+    from .application.modelo.calculation_repository import bind_calculation_revision_catalogue_repository_factory
+    from .application.modelo.filing_repository import bind_modelo_record_catalogue_repository_factory
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .application.workflow.persistence import bind_workflow_persistence_port
     from .tests.profile_persistence import composed_profile_persistence_ports
@@ -162,6 +168,9 @@ def compose_runtime_ports() -> Iterator[None]:
         composed_profile_persistence_ports(),
         bind_workflow_persistence_port(build_workflow_persistence_port()),
         bind_extraction_draft_repository_factory(ExtractionDraftRepository),
+        bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository),
+        bind_calculation_revision_catalogue_repository_factory(CalculationRevisionCatalogueRepository),
+        bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository),
         bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository),
         bind_auth_provider_selector(select_outbound_auth_provider),
         bind_session_store(build_session_store()),
@@ -263,7 +272,8 @@ def _isolate_registry_caches() -> Iterator[None]:
     require.
     """
     from cadrumo.domain.calculations.registry.loader import clear_fingerprint_cache
-    from .domain.calculations.registry._loader import _load_registry_tree_cached
+
+    from .domain.calculations.registry.loader import _load_registry_tree_cached
 
     def _reset() -> None:
         _load_registry_tree_cached.cache_clear()

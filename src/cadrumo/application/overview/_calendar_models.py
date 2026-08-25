@@ -30,7 +30,8 @@ from ...core import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
-from ...domain.calculations.registry import ApplicabilityVerdict, RevisionId
+from ...domain.calculations.registry.applicability import ApplicabilityVerdict
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines import ObligationStatus as _ObligationStatus
 from ...domain.deadlines import Recovery as _Recovery

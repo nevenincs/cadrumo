@@ -42,7 +42,7 @@ from ....core.directory_scan import (
     scan_directory,
 )
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime

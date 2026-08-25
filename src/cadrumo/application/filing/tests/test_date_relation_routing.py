@@ -31,7 +31,8 @@ import pytest
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistrySnapshot, enum_consumed_binding_ids
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.submission import ModeloDraftStatus
 from .. import (
     _bound_casilla_binding_ids,

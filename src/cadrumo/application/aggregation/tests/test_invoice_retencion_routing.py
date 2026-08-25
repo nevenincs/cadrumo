@@ -26,7 +26,8 @@ import pytest
 from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....core import BindingSourceKind, Modelo, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision, resolve_retenciones_aggregation_binding_values
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.bindings import resolve_retenciones_aggregation_binding_values
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.iva import InvoiceKind, IvaCategory, IvaRetencionRole, category_components
 from ....tests.secure_sql import isolated_runtime_profile

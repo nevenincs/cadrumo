@@ -11,7 +11,7 @@ from collections.abc import Mapping
 
 from ....core import CasillaId
 from .casilla_membership import casillas_by_id
-from ._record_design_coverage import calculation_closure_casilla_ids
+from .record_design_coverage import calculation_closure_casilla_ids
 from .schema import CalculationCompletenessCasilla, CasillaDefinition, ModeloRevision
 
 

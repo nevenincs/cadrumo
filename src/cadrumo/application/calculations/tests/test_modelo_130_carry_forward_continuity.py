@@ -44,10 +44,8 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    RegistryModeloObservation,
-)
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, ExternalEvidenceKind, ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

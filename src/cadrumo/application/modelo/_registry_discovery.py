@@ -16,12 +16,12 @@ from datetime import date
 
 from ...core import Period, TaxDomain
 from ...core.resources import resources
-from ...domain.calculations.registry import (
-    InputKind,
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.queries import (
     ModeloSupportMatrixReport,
     RegistryQueryService,
-    RegistryValidationError,
 )
+from ...domain.calculations.registry.errors import RegistryValidationError
 
 
 def _service() -> RegistryQueryService:

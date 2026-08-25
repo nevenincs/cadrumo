@@ -68,7 +68,7 @@ from .ids import (
     WorkbookOutputId,
     WorkbookParityRefId,
 )
-from ._schema_base import EvidenceTier, LegalRefs, RegistryModel, SourceRefs
+from .schema_base import EvidenceTier, LegalRefs, RegistryModel, SourceRefs
 from .schema_scalars import DecimalValue, WorkbookCellRefStr
 
 __all__ = [

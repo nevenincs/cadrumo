@@ -40,7 +40,7 @@ from ..m303_orden_manifest import (
     check_m303_annual_orden_census_artefact,
     collect_m303_annual_orden_fingerprints,
 )
-from .._schema_references import SourceReference
+from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

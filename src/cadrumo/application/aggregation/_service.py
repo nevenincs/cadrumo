@@ -27,7 +27,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Modelo, Period
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import LogExtra, get_logger
-from ...domain.calculations.registry import WithholdingObservation
+from ...domain.calculations.registry.bindings import WithholdingObservation
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,

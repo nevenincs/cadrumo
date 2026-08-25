@@ -31,7 +31,8 @@ import pytest
 
 from ....core import BindingSourceKind
 from ....core.resources import resources
-from ....domain.calculations.registry import FormulaExpression, ModeloRevision, RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import FormulaExpression, ModeloRevision
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry._formula_runtime import (
     _evaluate_expression,
     _UnresolvedFormulaDependencyError,

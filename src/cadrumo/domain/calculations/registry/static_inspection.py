@@ -33,7 +33,7 @@ from .schema import (
     SourceReference,
     WorkbookParityReference,
 )
-from ._schema_base import RegistryModel
+from .schema_base import RegistryModel
 
 __all__ = [
     "GeneratedArtifactInspection",

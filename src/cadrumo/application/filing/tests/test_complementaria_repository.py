@@ -20,7 +20,7 @@ from ....adapters.persistence.storage.bucket import bucket_paths
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ....domain.filing import (
     CasillaChange,
     ModeloComplementaria,

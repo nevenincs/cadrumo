@@ -16,7 +16,7 @@ import re
 
 import pytest
 
-from ......domain.calculations.registry import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
+from cadrumo.domain.calculations.registry.remote_state_guard import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
 from ......tests import REPO_ROOT
 from .._renta_web_open_safety import (
     ALLOWED_CLICK_OVERRIDES,

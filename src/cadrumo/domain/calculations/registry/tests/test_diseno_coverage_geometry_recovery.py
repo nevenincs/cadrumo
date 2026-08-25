@@ -30,7 +30,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from ..loader import load_registry_tree
-from .._record_design_coverage import build_diseno_coverage_report
+from ..record_design_coverage import build_diseno_coverage_report
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

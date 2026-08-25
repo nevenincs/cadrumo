@@ -20,7 +20,8 @@ from ....domain.bienes_inversion import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from ....domain.calculations.registry import CasillaObservation, ModeloRevision, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .._bienes_inversion_regularizacion import (

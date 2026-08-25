@@ -32,7 +32,7 @@ from .binding_selector_utils import boolean_binding_encoded_values
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .ids import BindingId, RelationId
 from .period_selector_match import registry_period_for_request, selector_token_for_request
-from ._query_reports import (
+from .query_reports import (
     BindingSelectorQueryEntry,
     BindingSelectorQueryProjection,
     BindingSelectorQueryValue,

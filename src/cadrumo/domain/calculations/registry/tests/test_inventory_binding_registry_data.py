@@ -7,7 +7,7 @@ import pytest
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregationOp
 from .....core.resources import resources
-from .. import InventorySelector
+from cadrumo.domain.calculations.registry.bindings import InventorySelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

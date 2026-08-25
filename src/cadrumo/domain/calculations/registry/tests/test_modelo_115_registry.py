@@ -8,13 +8,11 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import (
-    InputKind,
-    RegistryValidator,
-    build_snapshot,
-    bundled_authority,
-    resolve_available_bound_inputs_by_casilla_id,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo

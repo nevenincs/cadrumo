@@ -256,7 +256,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # restoring parity with the old set.
         StorageCategory.REGISTRY_DISK_CACHE,
         "cache/registry",
-        consumer_module="domain/calculations/registry/_loader_cache.py",
+        consumer_module="domain/calculations/registry/loader_cache.py",
         settings_field="cadrumo_registry_disk_cache_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.CACHE,
@@ -268,7 +268,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
             "subpath, so every xdist worker and subprocess-spawning test shares "
             "one compiled pickle for the immutable bundled registry tree rather "
             "than each deriving a private, per-worker cache from a per-pid "
-            "storage root. See _loader_cache.registry_disk_cache_dir."
+            "storage root. See loader_cache.registry_disk_cache_dir."
         ),
     ),
     _location(

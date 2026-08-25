@@ -20,24 +20,30 @@ from typing import Final, Literal
 from ....core import BindingSourceKind, CasillaId, Period
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr
-from ....domain.calculations.registry import (
+from ....domain.calculations.registry.bindings import (
     BindingAggregationOp,
+    binding_aggregation_op,
+)
+from ....domain.calculations.registry.binding_selector_utils import (
     BindingRowSetSelector,
+    binding_row_set_selector,
+)
+from ....domain.calculations.registry.schema import (
     CasillaDefinition,
     DataBindingDefinition,
     FormulaDefinition,
-    InputKind,
     ModeloRevision,
-    RegistryRoundingCode,
     RegistrySnapshot,
-    RegistryValidationError,
-    binding_aggregation_op,
-    binding_row_set_selector,
-    casillas_by_id,
+)
+from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.schema_rounding import RegistryRoundingCode
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.casilla_membership import casillas_by_id
+from ....domain.calculations.registry.relations import (
     relation_requirement_index,
     relation_source_requirements,
-    resolve_parameter,
 )
+from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.period import calculation_filing_date
 from .errors import CalcSheetsEngineError
 from ._layout import SheetLayout, plan_layout

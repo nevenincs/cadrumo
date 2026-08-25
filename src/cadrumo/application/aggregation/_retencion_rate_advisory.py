@@ -132,7 +132,7 @@ from ...core.aggregation import (
     work_income_retencion_treatment,
 )
 from ...core.money import CENT
-from ...domain.calculations.registry import LegalRefId
+from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.transactions import (
     administrador_retencion_legal_refs,
     load_administrador_retencion_rates,

@@ -79,3 +79,23 @@ retrieved_at = 2026-07-21
 applies_from = 2016-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/dr341_2016.xls"
 review_status = "reviewed"
+
+# The historical AEAT index publishes this parser-readable design as the 2004
+# Orden's layout for exercises through 2015. BOE-A-2004-17306's final provision
+# makes its electronic presentation available from the first period after
+# 2005-02-01. It is catalogue evidence only: the 2000-y-siguientes revision's
+# current export layout has not yet been compared to its 619-position geometry,
+# and its pre-2005 claimed years remain unevidenced.
+[sources."aeat-dr-341-2005-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2005"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_341/files/02-341-orden-eha-3212-2004-ejercicios-hasta-2015.pdf"
+sha256 = "c1c59a317be87dbb4898c017ace8f6327e9df340648808fb6d1831a0c7295c3d"
+bytes = 44020
+retrieved_at = 2026-08-26
+applies_from = 2005-02-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr341_2005.pdf"
+review_status = "reviewed"

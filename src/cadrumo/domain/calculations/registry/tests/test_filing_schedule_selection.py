@@ -11,11 +11,9 @@ from .....core.resources import bundled_path
 from ....deadlines import IVARegime, ModeloEnrollment, TaxpayerProfile
 from ....user_profile.loader import load_user_profile_schema
 from ....user_profile.registry_contract import validate_user_profile_registry_contract
-from .. import (
-    RegistryValidationError,
-    RegistryValidator,
-    applicable_filing_schedules,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
 from ..authority import ValidatedRegistryAuthority
 from ..schema import RegistrySnapshot
 

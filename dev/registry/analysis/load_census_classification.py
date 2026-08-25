@@ -106,8 +106,8 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "_convenio",
             "_identity",
             "_loader",
-            "_loader_cache",
-            "_loader_fingerprints",
+            "loader_cache",
+            "loader_fingerprints",
             "_m303_orden_census_artefact",
             "_m303_orden_constants",
             "_m303_orden_keys",
@@ -161,7 +161,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "_legal",
             "_modelo_localization",
             "_period_offset_math",
-            "_record_design_coverage",
+            "record_design_coverage",
             "_relations",
             "_retenciones_bindings",
             "_runtime_graph",
@@ -239,7 +239,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "_period_selector_match",
             "_snapshot",
             "_temporal",
-            "_validate_cross_domain_snapshot",
+            "validate_cross_domain_snapshot",
             "_validate_reference_checker",
             "_validate_reference_sections",
             "_validate_references",
@@ -368,7 +368,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
         members=_registry(
             "_export_parse",
             "_record_design",
-            "_record_design_schema",
+            "record_design_schema",
             "_record_spec",
         ),
     ),
@@ -397,7 +397,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "than from the facade, so the reference map reports no external consumer for them."
         ),
         members=_registry(
-            "_counterpart_bindings",
+            "counterpart_bindings",
             "_ledger_binding_resolution",
             "_m347_threshold",
         ),
@@ -438,7 +438,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "builders inside it fire only for a corpus with a contiguity divergence, which the "
             "bundled corpus does not currently present."
         ),
-        members=_registry("_validate_cross_revision_advisory"),
+        members=_registry("validate_cross_revision_advisory"),
     ),
     ClassificationRule(
         classification="conditionally_reachable",

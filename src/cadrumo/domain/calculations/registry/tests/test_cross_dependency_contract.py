@@ -10,12 +10,9 @@ import pytest
 
 from .....core.aggregation import RelationAggregationOp
 from .....core.resources import bundled_path
-from .. import (
-    binding_source_casilla_ids,
-    expression_relation_refs,
-    relation_consumption_index,
-    relation_is_consumed,
-)
+from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids
+from cadrumo.domain.calculations.registry.runtime_graph import expression_relation_refs
+from cadrumo.domain.calculations.registry.handoffs import relation_consumption_index, relation_is_consumed
 from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..iva_wallet_relation_targets import is_iva_wallet_owned_relation_target

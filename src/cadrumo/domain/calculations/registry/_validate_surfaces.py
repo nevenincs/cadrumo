@@ -11,7 +11,7 @@ from collections.abc import Callable, Iterable, Mapping
 
 from ....core import CasillaId
 from .schema import LegalReference, ModeloRevision, SourceReference
-from ._schema_surfaces import CasillaDefinition
+from .schema_surfaces import CasillaDefinition
 from .schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     VerificationExpectationDefinition,

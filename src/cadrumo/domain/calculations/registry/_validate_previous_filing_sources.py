@@ -21,7 +21,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 from ....core import BindingSourceKind
-from ._bindings_previous_filing import previous_filing_source_reference
+from .bindings_previous_filing import previous_filing_source_reference
 from .errors import RegistryValidationError
 from .schema import DataBindingDefinition, ModeloDefinition
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure

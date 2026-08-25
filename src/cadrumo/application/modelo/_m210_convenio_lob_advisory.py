@@ -38,7 +38,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...core import CasillaId, TipoRentaIrnr
-from ...domain.calculations.registry import RegistrySnapshot
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     ModeloError,

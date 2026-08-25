@@ -26,7 +26,7 @@ from ....core.classification import SensitivityClass
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
-from ....domain.calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloDraft,
     ModeloValidationFinding,

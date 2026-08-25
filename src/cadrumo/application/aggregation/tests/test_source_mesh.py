@@ -12,7 +12,7 @@ from ....adapters.persistence.storage.errors import DecryptionError
 from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations import DirectRowMaterializationProvenance
-from ....domain.calculations.registry import RevisionId
+from cadrumo.domain.calculations.registry.ids import RevisionId
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
 from .. import (
     CalculationSourceDiagnostic,

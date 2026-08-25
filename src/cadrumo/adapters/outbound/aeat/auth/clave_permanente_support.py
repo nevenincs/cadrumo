@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
 from .....core.errors import AuthError
-from .....domain.calculations.registry import RemoteStateGuardPolicy
+from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .errors import AuthConfigurationError
 
 if TYPE_CHECKING:

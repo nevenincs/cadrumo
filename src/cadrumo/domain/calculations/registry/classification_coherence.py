@@ -80,7 +80,7 @@ from ....core.resources import bundled_path
 from .ids import ModeloId
 from .loader import load_registry_tree
 from .schema import ModeloDefinition
-from ._schema_base import CalculationClass
+from .schema_base import CalculationClass
 from ._validate_revision_rules import validate_informative_class_invariant
 
 #: The ``calculation_class`` value naming the informative enforcement posture.

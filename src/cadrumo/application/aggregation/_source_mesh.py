@@ -52,14 +52,14 @@ from ...domain.calculations import (
     RowCasillaKey,
     RowSourceIdentity,
 )
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
     ModeloId,
-    ModeloRevision,
     RelationId,
     SourceRefId,
 )
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.modelos import M303RegimenSimplificadoAnnualSummaryHandoff, ModeloDetailRow
 from .errors import AggregationValidationError, t
 

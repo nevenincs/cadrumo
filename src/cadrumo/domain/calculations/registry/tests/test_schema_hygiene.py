@@ -21,7 +21,7 @@ from .....core.directory_scan import scan_directory
 from .....core.aggregation import BindingTypedEnumKind
 from .....core.resources import bundled_path, resources
 from ..._export_field_kind import CasillaFieldKind
-from .. import revision_reference_identity_failures
+from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 from ..schema import DataBindingDefinition, ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

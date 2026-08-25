@@ -8,12 +8,9 @@ import pytest
 
 from ....core import BindingSourceKind, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    DataBindingDefinition,
-    InputKind,
-    ModeloRevision,
-    RegistryValidationError,
-)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_actions import _reject_caller_overrides_of_source_bindings
 from .._calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES

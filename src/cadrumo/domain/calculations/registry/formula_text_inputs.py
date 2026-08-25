@@ -22,7 +22,7 @@ from collections.abc import Mapping
 from ....core import CasillaId, validated_casilla_id
 from .errors import RegistryValidationError
 from .schema_scalars import registry_scalar_value_type, validate_registry_text_scalar
-from ._schema_surfaces import CasillaDefinition
+from .schema_surfaces import CasillaDefinition
 
 __all__ = ["validate_text_input_targets", "validated_text_input_casilla_ids"]
 

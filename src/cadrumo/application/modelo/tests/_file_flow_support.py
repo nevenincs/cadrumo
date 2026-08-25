@@ -12,10 +12,6 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
-from cadrumo.application.workflow.abort import WorkflowAbortReason
-from cadrumo.application.workflow.engine import WorkflowEngine
-from cadrumo.application.workflow.run_models import WorkflowPurpose, WorkflowStage
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -29,14 +25,11 @@ from ....domain.buckets import (
 from ....domain.buckets import (
     BucketEventType as BucketEventType,
 )
-from ....domain.calculations.registry import (
-    InputKind,
-    ModeloRevision,
-    RegistryModeloObservation,
-    previous_filing_observation_requirements,
-    relation_source_requirements,
-    select_revision,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, previous_filing_observation_requirements
+from cadrumo.domain.calculations.registry.relations import relation_source_requirements
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
@@ -56,6 +49,9 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
+from ...workflow.abort import WorkflowAbortReason
+from ...workflow.engine import WorkflowEngine
+from ...workflow.run_models import WorkflowPurpose, WorkflowStage
 from .._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,

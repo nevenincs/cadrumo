@@ -18,12 +18,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile.capsule_record import (
-    ProfileRecordIntegrityError,
-    ProfileRecordSession,
-    ProfileRecordStore,
-)
-
 from ....adapters.persistence.storage.custody import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
     create_profile_custody_password_envelope,
@@ -32,6 +26,11 @@ from ....adapters.persistence.storage.custody import (
     unlock_profile_custody_recovery,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..capsule_record import (
+    ProfileRecordIntegrityError,
+    ProfileRecordSession,
+    ProfileRecordStore,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -138,7 +137,7 @@ def test_rotation_must_re_head_the_record_row_because_its_header_binds_the_envel
 
 def _register(tmp_path: Path, handed: list[str]):
     """Register one profile with recovery enrolled, capturing its phrase."""
-    from cadrumo.application.user_profile.registration import register_profile_with_credentials
+    from ..registration import register_profile_with_credentials
 
     return register_profile_with_credentials(
         label=f"{_LABEL} {tmp_path.name}",
@@ -151,6 +150,6 @@ def _register(tmp_path: Path, handed: list[str]):
 
 def _unlock_dek(material) -> bytes:
     """Return the profile's DEK through the real password door."""
-    from cadrumo.application.user_profile.custody_ports import unlock_profile_custody_password
+    from ..custody_ports import unlock_profile_custody_password
 
     return unlock_profile_custody_password(material, password=_PASSPHRASE).dek

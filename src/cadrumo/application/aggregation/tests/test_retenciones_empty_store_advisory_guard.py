@@ -16,7 +16,7 @@ import pytest
 
 from ....core import NoRecoveryOutcome, Period
 from ....core.aggregation import BindingSourceKind
-from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver

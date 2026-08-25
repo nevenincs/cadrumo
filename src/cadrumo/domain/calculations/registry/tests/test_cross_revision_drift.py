@@ -20,7 +20,9 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaConstraints, LegalRefId, load_modelo_directory
+from cadrumo.domain.calculations.registry.schema import CasillaConstraints
+from cadrumo.domain.calculations.registry.ids import LegalRefId
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from ..errors import RegistryValidationError
 from ..modelo_localization import casilla_occurrence_locale_key
 from ..schema import (

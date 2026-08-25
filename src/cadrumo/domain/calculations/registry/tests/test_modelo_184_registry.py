@@ -8,7 +8,8 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -231,7 +232,7 @@ def _tipo2_sheets(design_ref: str) -> tuple[object, object]:
     """Return the (entidad, socio) Tipo 2 sheets of a Modelo 184 design."""
     from pathlib import Path
 
-    from .._record_design_coverage import _extract_record_design
+    from ..record_design_coverage import _extract_record_design
 
     _, catalogues = _load_modelo_184()
     source = catalogues.sources[design_ref]

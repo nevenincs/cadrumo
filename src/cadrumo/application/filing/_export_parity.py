@@ -73,15 +73,17 @@ from ...core import (
     result_disposition_requires_bank_account,
     validated_casilla_id,
 )
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.schema import (
     CalculationCompletenessManifest,
     ExportLayoutDefinition,
     ExportRecordDefinition,
-    RateBoxPartition,
-    fixed_width_record_casilla_ids,
-    rate_box_coverage_shortfalls,
-    xml_dictionary_entries,
 )
+from ...domain.calculations.registry.rate_box_partition import (
+    RateBoxPartition,
+    rate_box_coverage_shortfalls,
+)
+from ...domain.calculations.registry.export import fixed_width_record_casilla_ids
+from ...domain.calculations.registry.export_parse import xml_dictionary_entries
 from ...domain.filing import CasillaCollection, ModeloDraft
 from .errors import ModeloApplicationError as FilingExportError
 from .runtime import CasillaRecordMetadata, RegistrySchemaAccessor

@@ -18,17 +18,12 @@ import pytest
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    CasillaDefinition,
-    DataBindingDefinition,
-    InputKind,
-    ModeloRevision,
-    PeriodSelector,
-    RegistryValidationError,
-    VerificationPredicateDefinition,
-    calculate_registry_snapshot,
-)
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.schema import CasillaDefinition, DataBindingDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
 from ....domain.modelos import (

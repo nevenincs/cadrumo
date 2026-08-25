@@ -16,8 +16,8 @@ from lxml import etree
 from .record_design_xsd_support import (
     SchemaCompilationError,
     bundled_modelo_100_xsds,
-    compile_record_design_schema,
-    compile_record_design_schemas,
+    compilerecord_design_schema,
+    compilerecord_design_schemas,
     repair_xsd_regex_escapes,
 )
 
@@ -100,7 +100,7 @@ def test_every_bundled_schema_compiles_after_repair() -> None:
     """
     xsds = bundled_modelo_100_xsds()
 
-    compiled = compile_record_design_schemas(xsds)
+    compiled = compilerecord_design_schemas(xsds)
 
     assert set(compiled) == set(xsds), (
         f"compiled a different set than requested; missing {sorted(p.name for p in set(xsds) - set(compiled))}"
@@ -192,7 +192,7 @@ def test_compiling_a_set_refuses_to_return_a_partial_result(tmp_path: Path) -> N
     requested = (*bundled_modelo_100_xsds(), broken)
 
     with pytest.raises(SchemaCompilationError) as excinfo:
-        compile_record_design_schemas(requested)
+        compilerecord_design_schemas(requested)
 
     message = str(excinfo.value)
     assert f"compiled {len(requested) - 1} of {len(requested)}" in message
@@ -202,7 +202,7 @@ def test_compiling_a_set_refuses_to_return_a_partial_result(tmp_path: Path) -> N
 def test_compiling_an_empty_set_refuses() -> None:
     """An empty compile set would report success while covering nothing."""
     with pytest.raises(SchemaCompilationError, match="empty compile set proves nothing"):
-        compile_record_design_schemas(())
+        compilerecord_design_schemas(())
 
 
 def test_compiling_one_schema_names_the_file_it_could_not_repair(tmp_path: Path) -> None:
@@ -211,4 +211,4 @@ def test_compiling_one_schema_names_the_file_it_could_not_repair(tmp_path: Path)
     broken.write_text("<not-a-schema/>", encoding="utf-8")
 
     with pytest.raises(SchemaCompilationError, match=re.escape("unrepairable.xsd")):
-        compile_record_design_schema(broken)
+        compilerecord_design_schema(broken)

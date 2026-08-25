@@ -31,7 +31,7 @@ from ..external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
     RentaWebOpenReplayPayload,
 )
-from .._renta_web_open_oracle import RentaWebOpenReplayDriver
+from ..renta_web_open_oracle import RentaWebOpenReplayDriver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

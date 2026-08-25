@@ -9,7 +9,7 @@ import pydantic
 import pytest
 
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....domain.calculations.registry import IvaLedgerObservation
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,

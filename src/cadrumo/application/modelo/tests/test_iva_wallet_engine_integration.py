@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....core import ObservedHeaderFact, Period, ResultDisposition
-from ....domain.calculations.registry import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.iva_compensation import IvaCompensationOverride, IvaCompensationReconciliationDecision
 from ....tests import general_m303_filing_evidence
 from ...calculations import (

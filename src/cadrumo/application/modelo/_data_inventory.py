@@ -35,20 +35,24 @@ from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.i18n import output_language
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     BindingId,
-    CasillaDefinition,
-    DataBindingDefinition,
-    InputKind,
     LegalRefId,
     RevisionId,
     SourceRefId,
-    binding_profile_keys,
-    bound_casilla_binding_ids,
-    build_profile_grounding_index,
-    load_registry_tree,
-    select_revision,
 )
+from ...domain.calculations.registry.schema import (
+    CasillaDefinition,
+    DataBindingDefinition,
+)
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.profile_grounding import (
+    binding_profile_keys,
+    build_profile_grounding_index,
+)
+from ...domain.calculations.registry.bindings import bound_casilla_binding_ids
+from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.temporal import select_revision
 from ._binding_readiness import profile_resolvable_binding_ids
 from ._registry_resources import authority_via_resources
 
@@ -72,7 +76,7 @@ _LIVE_OBSERVATION_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 )
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import ModeloRevision
+    from ...domain.calculations.registry.schema import ModeloRevision
 
 
 @dataclass(frozen=True, slots=True)

@@ -58,7 +58,7 @@ from ..loader import (
     load_registry_tree,
     registry_disk_cache_enabled,
 )
-from .._loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
+from ..loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 from ._loader_directory_mode_support import _standard_manifest_text, _standard_revision_preamble_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

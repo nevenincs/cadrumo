@@ -20,7 +20,7 @@ import pytest
 
 from ..... import __version__
 from .....tests.attribute_scope import scoped_attribute
-from .. import _loader_cache as loader_cache
+from .. import loader_cache as loader_cache
 from ..identity import (
     FingerprintTuples,
     RegistryIdentityOrigin,
@@ -32,7 +32,7 @@ from ..identity import (
     write_registry_identity_stamp,
 )
 from ..loader import clear_fingerprint_cache
-from .._loader_cache import _bundled_registry_root, _bundled_root_match
+from ..loader_cache import _bundled_registry_root, _bundled_root_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -64,7 +64,7 @@ def bundled_root_pointing_at() -> Iterator[Callable[[Path], None]]:
     registry. Everything under test -- the stamp read, the version gate, the
     predicate, the resolver -- stays real.
 
-    Rebinds the name inside ``_loader_cache`` rather than on ``core.resources``,
+    Rebinds the name inside ``loader_cache`` rather than on ``core.resources``,
     because that module does ``from ...resources import bundled_path`` and so
     holds its OWN reference: patching the source module leaves the predicate
     calling the original. Both memoised roots are cleared on every repoint --

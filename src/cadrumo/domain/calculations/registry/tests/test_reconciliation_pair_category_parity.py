@@ -36,7 +36,8 @@ from collections.abc import Mapping
 import pytest
 
 from .....core import BindingSourceKind
-from .. import ModeloRevision, selector_as_dict
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

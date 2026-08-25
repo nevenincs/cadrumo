@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .. import PeriodSelector, RegistrySnapshotRef
-from .._bindings_previous_filing import PreviousModeloSelector
+from cadrumo.domain.calculations.registry.schema import PeriodSelector, RegistrySnapshotRef
+from ..bindings_previous_filing import PreviousModeloSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

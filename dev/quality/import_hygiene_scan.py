@@ -535,6 +535,17 @@ def scan_canonical_authority(
     return sorted(violations, key=lambda item: (item.path.as_posix(), item.lineno, item.kind, item.detail))
 
 
+def public_definition_names(path: Path) -> frozenset[str]:
+    """Return public top-level function and class definitions from one module."""
+    tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+    return frozenset(
+        node.name
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        and not node.name.startswith("_")
+    )
+
+
 class TuiRetirementRemnantKind(StrEnum):
     """A direct route by which the retired TUI can re-enter the tree."""
 
@@ -1651,10 +1662,10 @@ def find_dev_prose_violations(
 # Violation family 7: production import of a demoted registry raw-loader symbol
 # ---------------------------------------------------------------------------
 
-REGISTRY_LOADER_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
+REGISTRY_LOADER_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry.loader"
 
 #: Raw-loader-and-unguarded-entry-point names demoted from the registry
-#: package's public ``__all__`` (W01.P04.S10 for the four loader names,
+#: loader module's public contract (W01.P04.S10 for the four loader names,
 #: W01.P04.S34 for ``build_snapshot`` -- the plan's own text calls it "the
 #: same unguarded-entry-point class as the raw loader family"). Each had zero
 #: cross-package production OR test consumers at demotion time, EXCEPT
@@ -1702,8 +1713,9 @@ def find_registry_loader_import_violations(
     """Return every PRODUCTION import site naming a demoted raw-loader symbol.
 
     Scoped to non-test sites outside the registry package itself, which still
-    reaches its own loader internals directly (an intra-package private
-    import, always permitted, never routed through this facade).
+    reaches its own loader internals directly. The registry package is the
+    loader's implementation boundary; other production consumers name the
+    public ``authority`` module instead.
 
     Args:
         all_sites: Import sites to scan, from :func:`walk_module_imports`.

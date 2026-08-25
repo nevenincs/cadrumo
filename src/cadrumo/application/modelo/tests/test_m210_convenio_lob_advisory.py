@@ -33,7 +33,7 @@ from ._m210_snapshot_fixture import m210_snapshot
 __all__ = ["m210_snapshot"]
 
 from ....core import validated_casilla_id
-from ....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding

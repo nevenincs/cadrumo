@@ -6,7 +6,7 @@ import pytest
 
 from ..errors import RegistryLoadError
 from ..loader import load_legal_parameters_only, load_modelo_directory, load_registry_tree
-from .._loader_cache import discover_modelo_sources
+from ..loader_cache import discover_modelo_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

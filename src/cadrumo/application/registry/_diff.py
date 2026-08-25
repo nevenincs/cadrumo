@@ -30,24 +30,18 @@ from pydantic import BaseModel, ConfigDict
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core import CasillaId as _CasillaId
 from ...core.resources import bundled_path as _bundled_path
-from ...domain.calculations.registry import AmbiguousRevisionSelectionError as _AmbiguousRevisionSelectionError
-from ...domain.calculations.registry import (
-    CasillaDefinition as _CasillaDefinition,
-)
-from ...domain.calculations.registry import (
-    DataBindingDefinition as _DataBindingDefinition,
-)
-from ...domain.calculations.registry import FormulaId as _FormulaId
-from ...domain.calculations.registry import LegalRefId as _LegalRefId
-from ...domain.calculations.registry import ModeloDefinition as _ModeloDefinition
-from ...domain.calculations.registry import ModeloRevision as _ModeloRevision
-from ...domain.calculations.registry import NoRevisionForPeriodError as _NoRevisionForPeriodError
-from ...domain.calculations.registry import ParameterId as _ParameterId
-from ...domain.calculations.registry import RevisionId as _RevisionId
-from ...domain.calculations.registry import (
-    ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
-)
-from ...domain.calculations.registry import select_revision_for_year as _select_revision_for_year
+from ...domain.calculations.registry.errors import AmbiguousRevisionSelectionError as _AmbiguousRevisionSelectionError
+from ...domain.calculations.registry.schema import CasillaDefinition as _CasillaDefinition
+from ...domain.calculations.registry.schema import DataBindingDefinition as _DataBindingDefinition
+from ...domain.calculations.registry.ids import FormulaId as _FormulaId
+from ...domain.calculations.registry.ids import LegalRefId as _LegalRefId
+from ...domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
+from ...domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
+from ...domain.calculations.registry.errors import NoRevisionForPeriodError as _NoRevisionForPeriodError
+from ...domain.calculations.registry.ids import ParameterId as _ParameterId
+from ...domain.calculations.registry.ids import RevisionId as _RevisionId
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
+from ...domain.calculations.registry.temporal import select_revision_for_year as _select_revision_for_year
 from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 
 __all__ = [

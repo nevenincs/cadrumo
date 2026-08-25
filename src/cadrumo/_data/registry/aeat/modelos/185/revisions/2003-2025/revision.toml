@@ -5,7 +5,9 @@ authority_grade = "applicability"
 # governs only 2026-onward, confirmed from its own fetched text: "entrará en
 # vigor el 1 de enero de 2026"). The real instrument for this span is
 # orden-hac-96-2003, confirmed by BOE search, its own derogatoria clause, and
-# AEAT's design corpus carrying zero files for 2003-2025.
+# AEAT's historical design index carrying zero files for 2003-2025. The
+# as-published BOE Annex I is separately bundled, but its scanned Type 2 table
+# is not yet an exact parser-bijected record-design binary.
 #
 # Deliberately carries ONLY what is grounded: the orden citation and the 12
 # deadline windows that demonstrably belong to it (every one carries
@@ -25,6 +27,7 @@ legal_refs = [
 ]
 source_refs = [
     "enrolled-modelo-185-procedure-2003",
+    "boe-modelo-185-2003-annex-i",
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
@@ -48,16 +51,18 @@ The revision's valid_to of 2025-12-31 is not an invention: Orden HAC/1197/2025 e
 force 2026-01-01 and derogates this orden, and the sibling revision 2025-y-siguientes \
 opens exactly there, so the pair is gap-free and overlap-free at the boundary. NOT CLAIMED \
 -- independent_check_coverage is n/a: NO CLAIM, not zero. NOT CLAIMED -- SPAN: the gate \
-reports 0 comparable bundled design year(s) inside this claimed span. That is an ABSENCE \
-of comparable evidence, not evidence against the revision, unlike the contrary-evidence \
-class the same gate reports for m220 and m763; closing it needs AEAT acquisition. NOT \
+reports 0 comparable parser-valid design year(s) inside this claimed span. The raw BOE \
+Annex I is now hash-pinned, but its Type-2 table is not separately read by the canonical \
+parser, so it cannot safely promote this revision or support a coordinate map. That is an \
+ABSENCE of comparable evidence, not evidence against the revision, unlike the \
+contrary-evidence class the same gate reports for m220 and m763. NOT \
 CLAIMED -- support_probe_describes_this_revision is false, which is expected for a closed \
 historical span: AEAT's live support surface describes the current 2026 modelo, not this \
 one, and nothing here asserts otherwise. NOT CLAIMED -- this revision declares 2 casillas \
 and the anexo I record detail is not modelled; no export layout of either kind is \
 declared. NOT CLAIMED -- all 3 locales are complete for the 2 labels, but the strings were \
 not audited for accuracy."""
-reviewed_at = 2026-08-21
+reviewed_at = 2026-08-26
 
 [revisions."2003-2025".family_dispositions.casilla_continuidad_evolutions]
 reason = """

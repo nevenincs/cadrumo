@@ -6,7 +6,12 @@ import ast
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+import json
+import os
 from pathlib import Path
+from shutil import copytree
+import subprocess
+import sys
 from threading import Barrier, Event, Lock, Thread
 
 import pytest
@@ -14,15 +19,16 @@ import pytest
 from .....core import RegistryAuthorityGrade
 from .....core.directory_scan import scan_directory
 from .....tests import REPO_ROOT
-from .. import (
+from cadrumo.domain.calculations.registry.authority import (
     RegistryAuthorityCapture,
-    RegistryRevisionInspection,
-    RegistrySnapshot,
-    RegistrySnapshotError,
+    RegistryAuthorityCurrentCoordinate,
     ValidatedRegistryAuthority,
     bundled_authority,
     reset_registry_caches,
 )
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,7 +37,7 @@ _FILING_YEAR = 2026
 _PERIOD = "1T"
 _CAPTURE_WORKERS = 8
 _REGISTRY_SOURCE = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
-_AUTHORITY_SOURCE = _REGISTRY_SOURCE / "_authority.py"
+_AUTHORITY_SOURCE = _REGISTRY_SOURCE / "authority.py"
 _FACADE_SOURCE = _REGISTRY_SOURCE / "__init__.py"
 
 
@@ -90,6 +96,103 @@ def test_native_capture_selects_the_existing_inspection_or_snapshot_authority(
     assert inspection_capture.projection.revision_id == snapshot_capture.projection.revision.id
     assert inspection_capture.generation == snapshot_capture.generation
     assert snapshot_capture.generation == registry_authority.read_current_generation()
+
+
+def test_native_capture_accepts_a_current_coordinate_from_its_own_domain(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """Capture validity is a typed same-domain comparison, not an integer check."""
+    capture = registry_authority.capture_law_selected_projection(
+        _MODEL0_ID,
+        filing_year=_FILING_YEAR,
+        period=_PERIOD,
+    )
+    current = registry_authority.read_current_coordinate()
+
+    assert capture.require_current(current) is capture
+    assert current.require_current(capture) is current
+
+
+def test_native_capture_refuses_a_coordinate_from_a_distinct_registry_root(
+    tmp_path: Path,
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """Equal-looking generations from different physical owners cannot compare."""
+    copied_root = tmp_path / "registry-copy"
+    copytree(registry_authority.root, copied_root)
+    other = ValidatedRegistryAuthority.load(copied_root, source_root=registry_authority.source_root)
+    capture = registry_authority.capture_law_selected_projection(
+        _MODEL0_ID,
+        filing_year=_FILING_YEAR,
+        period=_PERIOD,
+    )
+    switched_root_current = other.read_current_coordinate()
+    same_generation_foreign_current = RegistryAuthorityCurrentCoordinate(
+        comparison_domain=switched_root_current.comparison_domain,
+        generation=capture.generation,
+    )
+
+    assert capture.comparison_domain != switched_root_current.comparison_domain
+    with pytest.raises(RegistrySnapshotError, match="physical-root process domain"):
+        capture.require_current(same_generation_foreign_current)
+
+
+def test_native_capture_refuses_a_reset_stale_coordinate_in_its_same_domain(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """A reset advances currentness without inventing a new physical domain."""
+    stale_capture = registry_authority.capture_law_selected_projection(
+        _MODEL0_ID,
+        filing_year=_FILING_YEAR,
+        period=_PERIOD,
+    )
+
+    reset_registry_caches()
+    current = bundled_authority().read_current_coordinate()
+
+    assert stale_capture.comparison_domain == current.comparison_domain
+    assert stale_capture.generation != current.generation
+    with pytest.raises(RegistrySnapshotError, match="no longer current"):
+        stale_capture.require_current(current)
+
+
+def test_native_capture_refuses_a_real_child_process_coordinate(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """The domain nonce prevents a child process from comparing parent captures."""
+    capture = registry_authority.capture_law_selected_projection(
+        _MODEL0_ID,
+        filing_year=_FILING_YEAR,
+        period=_PERIOD,
+    )
+    child_program = "\n".join(
+        (
+            "import json",
+            "import sys",
+            "from pathlib import Path",
+            "from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority",
+            "authority = ValidatedRegistryAuthority.load(Path(sys.argv[1]), source_root=Path(sys.argv[2]))",
+            "current = authority.read_current_coordinate()",
+            "print(json.dumps({'comparison_domain': current.comparison_domain, 'generation': current.generation}))",
+        )
+    )
+    environment = os.environ.copy()
+    source_path = str(REPO_ROOT / "src")
+    environment["PYTHONPATH"] = source_path + os.pathsep + environment.get("PYTHONPATH", "")
+    child = subprocess.run(
+        (sys.executable, "-c", child_program, str(registry_authority.root), str(registry_authority.source_root)),
+        cwd=REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        check=True,
+        text=True,
+        timeout=180,
+    )
+    child_current = RegistryAuthorityCurrentCoordinate(**json.loads(child.stdout))
+
+    assert child_current.comparison_domain != capture.comparison_domain
+    with pytest.raises(RegistrySnapshotError, match="physical-root process domain"):
+        capture.require_current(child_current)
 
 
 def test_native_capture_snapshot_is_isolated_from_the_authority_cache(
@@ -472,14 +575,24 @@ def test_native_capture_has_one_public_registry_home_without_workspace_coupling(
         node.name
         for node in ast.walk(authority_tree)
         if isinstance(node, ast.FunctionDef)
-        and node.name in {"capture_law_selected_projection", "read_current_generation"}
+        and node.name
+        in {
+            "capture_law_selected_projection",
+            "read_current_coordinate",
+            "read_current_generation",
+        }
     }
-    assert authority_methods == {"capture_law_selected_projection", "read_current_generation"}
+    assert authority_methods == {
+        "capture_law_selected_projection",
+        "read_current_coordinate",
+        "read_current_generation",
+    }
 
     production_capture_homes = tuple(
         path.relative_to(_REGISTRY_SOURCE).as_posix()
         for path in scan_directory(_REGISTRY_SOURCE, pattern="*.py", recursive=True)
         if "tests" not in path.parts and "capture_law_selected_projection" in path.read_text(encoding="utf-8")
     )
-    assert production_capture_homes == ("_authority.py",)
-    assert "RegistryAuthorityCapture" in facade_source
+    assert production_capture_homes == ("authority.py",)
+    assert "RegistryAuthorityCapture" not in facade_source
+    assert ast.parse(facade_source).body[-1].__class__ is ast.AnnAssign

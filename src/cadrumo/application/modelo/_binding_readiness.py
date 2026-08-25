@@ -28,15 +28,15 @@ from datetime import date
 
 from ...core import Period
 from ...core.logging import get_logger
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
     RegistrySnapshotError,
     RegistryValidationError,
-    RevisionId,
-    ValidatedRegistryAuthority,
-    select_revision_for_year,
 )
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.temporal import select_revision_for_year
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
 from ._registry_resources import authority_via_resources

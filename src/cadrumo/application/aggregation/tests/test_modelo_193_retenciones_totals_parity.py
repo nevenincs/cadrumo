@@ -52,13 +52,10 @@ import pytest
 
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RelationId,
-    calculate_registry_snapshot,
-    materialize_relation_binding_values,
-    resolve_available_bound_inputs_by_casilla_id,
-    resolve_retenciones_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.ids import RelationId
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id, resolve_retenciones_aggregation_binding_values
 from ....tests.secure_sql import isolated_runtime_profile
 from .._retenciones import (
     RetencionObservation,

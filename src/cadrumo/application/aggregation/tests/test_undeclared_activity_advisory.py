@@ -29,7 +29,7 @@ import pytest
 
 from ....core import Modelo, Period, TipoActividad
 from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ....domain.transactions import (
     BusinessClassification,
     Transaction,

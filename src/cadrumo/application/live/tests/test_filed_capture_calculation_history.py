@@ -25,10 +25,8 @@ from ....core import CasillaValueKind, IvaCompensationStateProvenance, Period, v
 from ....core.config import Settings
 from ....core.json_contract import NoticeSeverity
 from ....domain.buckets import BucketEventType
-from ....domain.calculations.registry import (
-    RegistryModeloObservation,
-    RegistryValidationError,
-)
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....domain.modelos import (
     ExternalEvidence,

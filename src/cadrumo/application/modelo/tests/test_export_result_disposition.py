@@ -9,7 +9,7 @@ import pytest
 
 from ....core import CasillaId, PaymentElection, Period, RefundElection
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,

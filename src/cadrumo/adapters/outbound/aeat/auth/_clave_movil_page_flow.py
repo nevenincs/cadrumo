@@ -30,7 +30,7 @@ from .....core.errors import AeatLoginAssertionError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time import now
-from .....domain.calculations.registry import RemoteOperation, assert_remote_operation_allowed
+from .....domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ....persistence.storage import (
     CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
     secure_object_repository_for_active_bucket,

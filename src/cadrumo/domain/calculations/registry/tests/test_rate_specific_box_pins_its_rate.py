@@ -70,7 +70,7 @@ import pytest
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
 from ..authority import ValidatedRegistryAuthority
-from .._record_design_coverage import _CASILLA_TAG_RE
+from ..record_design_coverage import _CASILLA_TAG_RE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

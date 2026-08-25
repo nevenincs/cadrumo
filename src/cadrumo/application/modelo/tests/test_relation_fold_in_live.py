@@ -45,12 +45,9 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import AggregationCaptureKind, CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import (
-    RegistryModeloObservation,
-    calculate_registry_snapshot,
-    resolve_available_bound_inputs_by_casilla_id,
-    select_revision,
-)
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record

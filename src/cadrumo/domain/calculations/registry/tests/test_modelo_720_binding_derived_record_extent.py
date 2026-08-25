@@ -25,7 +25,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import extract_record_design
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from ..export import derive_export_layouts_from_bindings
 from ._registry_schema_support import _committed_registry_tree
 

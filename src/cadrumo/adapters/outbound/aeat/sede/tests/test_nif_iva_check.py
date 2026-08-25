@@ -17,11 +17,8 @@ import pytest
 from pydantic import AnyUrl, ValidationError
 
 from ......core.config import Settings
-from ......domain.calculations.registry import (
-    RegistryValidationError,
-    RemoteOperation,
-    assert_remote_operation_allowed,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.aeat_literal_fixtures import (
     AEAT_NON_HOST_AUTHORITY_CANARIES,
     CENSAL_WRITE_SURFACE_PATH_CANARIES,

@@ -52,7 +52,7 @@ from ....core import (
     Period,
     validated_casilla_id,
 )
-from ....domain.calculations.registry import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva import (
     IvaDeductionClassificationProvenance,
@@ -584,7 +584,8 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     # paths call calculate_registry_snapshot, so the projection is transport-shared.
     from datetime import date as _date
 
-    from ....domain.calculations.registry import InputKind, calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
     snap = _authority_for_303().snapshot("303", filing_year=2026, period="1T")
     rev = snap.revision

@@ -14,6 +14,7 @@ from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
+from secrets import token_bytes
 from threading import Condition, RLock
 from typing import Protocol, override
 
@@ -26,8 +27,13 @@ from ....core.access_gate import (
     load_authorization_manifest,
 )
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.identity import ContentDigest
 from ....core.resources import bundled_path as _bundled_path
+from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
+from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
+from ._validate_evidence import flush_corpus_text_cache
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
+from .errors import RegistrySnapshotError, RegistryValidationError
 from .identity import (
     FingerprintTuples,
     RegistryIdentity,
@@ -36,7 +42,6 @@ from .identity import (
     write_registry_identity_stamp,
 )
 from .ids import ModeloId, RevisionId
-from .loader import collect_registry_tree_fingerprints, load_registry_tree
 from .schema import (
     DeadlineWindowDefinition,
     ModeloDefinition,
@@ -47,13 +52,10 @@ from .schema import (
 from .snapshot import (
     _build_validated_snapshot,  # pyright: ignore[reportPrivateUsage]  # the registry authority owns snapshot admission
 )
-from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from .static_inspection import RegistryRevisionInspection, StaticGeneratedArtifactInspection
-from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
 from .supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
 from .temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
 from .validate import RegistryValidator
-from ._validate_evidence import flush_corpus_text_cache
 from .verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
@@ -61,7 +63,6 @@ from .verdict_cache import (
     shipped_verdict_location,
     stamp_bundled_verdict,
 )
-from .errors import RegistrySnapshotError, RegistryValidationError
 
 
 def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTuples:
@@ -76,6 +77,8 @@ def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTu
     Returns:
         The concatenated fingerprint tuples for ``resolved_root``.
     """
+    from .loader import collect_registry_tree_fingerprints
+
     return (
         collect_registry_tree_fingerprints(resolved_root)
         + collect_convenio_fingerprints(resolved_root)
@@ -131,14 +134,39 @@ class _SilentRegistryAuthorityLifecycleObserver:
 
 
 _SILENT_AUTHORITY_LIFECYCLE_OBSERVER = _SilentRegistryAuthorityLifecycleObserver()
+_AUTHORITY_PROCESS_NONCE = token_bytes(32)
 
 
 @dataclass(frozen=True, slots=True)
 class RegistryAuthorityCapture:
-    """One isolated law-selected registry projection with its native generation."""
+    """One isolated law-selected registry projection and its currentness coordinate."""
 
     projection: RegistryAuthorityProjection
+    comparison_domain: ContentDigest
     generation: int
+
+    def require_current(self, current: RegistryAuthorityCurrentCoordinate) -> RegistryAuthorityCapture:
+        """Refuse a currentness comparison outside this physical process domain."""
+        current.require_current(self)
+        return self
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryAuthorityCurrentCoordinate:
+    """Opaque same-process coordinate for one registry authority owner scope."""
+
+    comparison_domain: ContentDigest
+    generation: int
+
+    def require_current(self, captured: RegistryAuthorityCapture) -> RegistryAuthorityCurrentCoordinate:
+        """Require a capture from this exact root pair and process incarnation."""
+        if self.comparison_domain != captured.comparison_domain:
+            raise RegistrySnapshotError(
+                "registry authority coordinates can compare only within one physical-root process domain"
+            )
+        if self.generation != captured.generation:
+            raise RegistrySnapshotError("registry authority capture is no longer current")
+        return self
 
 
 @dataclass(frozen=True, slots=True)
@@ -433,6 +461,18 @@ def _authority_root_key(root: Path, source_root: Path) -> _AuthorityRootKey:
     return root, source_root
 
 
+def _authority_comparison_domain(root: Path, source_root: Path) -> ContentDigest:
+    """Return the non-persisted coordinate domain for one resolved root pair."""
+    digest = hashlib.sha256()
+    for label, path in ((b"registry-root", root), (b"source-root", source_root)):
+        encoded = str(path).encode(UTF_8_ENCODING)
+        digest.update(label)
+        digest.update(len(encoded).to_bytes(8, "big"))
+        digest.update(encoded)
+    digest.update(_AUTHORITY_PROCESS_NONCE)
+    return digest.hexdigest()
+
+
 def _authority_load_state(root_key: _AuthorityRootKey) -> _AuthorityLoadState:
     """Return the one transition state for an authority owner scope."""
     with _AUTHORITY_STATE_LOCK:
@@ -496,6 +536,7 @@ class ValidatedRegistryAuthority:
     _capture_reset_epoch: int = field(default=0, init=False, repr=False)
     _capture_state: _AuthorityLoadState | None = field(default=None, init=False, repr=False)
     _capture_root_key: _AuthorityRootKey | None = field(default=None, init=False, repr=False)
+    _capture_comparison_domain: ContentDigest | None = field(default=None, init=False, repr=False)
     _state_lock: AbstractContextManager[object] = field(default_factory=RLock, init=False, repr=False)
 
     @classmethod
@@ -525,6 +566,7 @@ class ValidatedRegistryAuthority:
         """Bind this newly constructed object to the owner's current generation."""
         self._capture_state = state
         self._capture_root_key = _authority_root_key(self.root, self.source_root)
+        self._capture_comparison_domain = _authority_comparison_domain(self.root, self.source_root)
         self._capture_generation = generation
         self._capture_reset_epoch = reset_epoch
 
@@ -784,8 +826,18 @@ class ValidatedRegistryAuthority:
             self._require_current_capture_incarnation()
             return RegistryAuthorityCapture(
                 projection=isolated_projection,
+                comparison_domain=self._current_coordinate().comparison_domain,
                 generation=self._capture_generation,
             )
+
+    def read_current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
+        """Return the typed current coordinate for same-domain capture validation."""
+        state = self._capture_state
+        if state is None:
+            raise RegistrySnapshotError("registry authority has no published capture incarnation")
+        with _AUTHORITY_LOAD_BARRIER.read(), state.lock:
+            self._require_current_capture_incarnation()
+            return self._current_coordinate()
 
     def read_current_generation(self) -> int:
         """Return this authority's still-current native capture generation.
@@ -793,12 +845,16 @@ class ValidatedRegistryAuthority:
         A registry-cache reset invalidates the instance rather than letting an
         old projection claim the next authority incarnation's generation.
         """
-        state = self._capture_state
-        if state is None:
-            raise RegistrySnapshotError("registry authority has no published capture incarnation")
-        with _AUTHORITY_LOAD_BARRIER.read(), state.lock:
-            self._require_current_capture_incarnation()
-            return self._capture_generation
+        return self.read_current_coordinate().generation
+
+    def _current_coordinate(self) -> RegistryAuthorityCurrentCoordinate:
+        comparison_domain = self._capture_comparison_domain
+        if comparison_domain is None:
+            raise RegistrySnapshotError("registry authority has no published capture coordinate")
+        return RegistryAuthorityCurrentCoordinate(
+            comparison_domain=comparison_domain,
+            generation=self._capture_generation,
+        )
 
     def _require_current_capture_incarnation(self) -> None:
         """Refuse capture when reset or an observed identity change made it stale."""
@@ -991,7 +1047,7 @@ def reset_registry_caches(
     from .loader import (
         _load_registry_tree_cached,  # pyright: ignore[reportPrivateUsage]  # reset owns the complete registry cache surface
     )
-    from ._loader_fingerprints import clear_fingerprint_cache
+    from .loader_fingerprints import clear_fingerprint_cache
 
     lifecycle_observer.registry_cache_reset_requested()
     with _AUTHORITY_LOAD_BARRIER.reset():
@@ -1038,6 +1094,8 @@ def _construct_authority(
     identity: RegistryIdentity,
 ) -> ValidatedRegistryAuthority:
     """Compile registry material before either filing or inspection admission."""
+    from .loader import load_registry_tree
+
     modelos, catalogues = load_registry_tree(root, identity=identity)
     # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
     # onto the shared catalogues so every snapshot projects the same authority.

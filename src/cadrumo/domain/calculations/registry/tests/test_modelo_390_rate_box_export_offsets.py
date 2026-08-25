@@ -37,7 +37,7 @@ import re
 import pytest
 
 from .....core.resources import bundled_path, resources
-from .. import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

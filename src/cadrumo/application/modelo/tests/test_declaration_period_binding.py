@@ -26,7 +26,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId
+from cadrumo.domain.calculations.registry.ids import BindingId
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence

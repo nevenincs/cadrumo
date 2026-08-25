@@ -9,14 +9,12 @@ import pytest
 
 from .....core import FilingProducerKey
 from .....core.resources import bundled_path
-from .. import (
-    InputKind,
-    RegistryValidator,
-    build_snapshot,
-    extract_record_design,
-    load_catalogue_file,
-    resolve_record_design_binary,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -45,7 +45,8 @@ from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity import SubjectTaxId
 from ....core.logging import get_logger
-from ....domain.calculations.registry import RegistrySnapshot, bundled_authority
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
     CalculationRevisionAggregateContext,

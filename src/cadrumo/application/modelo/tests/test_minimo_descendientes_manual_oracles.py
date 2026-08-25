@@ -36,7 +36,7 @@ from typing import Any
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests import read_manual_worked_example
 from ....domain.contribuyente import RentaMaritalStatus
 from ....domain.user_profile.values import UserProfileFactValue

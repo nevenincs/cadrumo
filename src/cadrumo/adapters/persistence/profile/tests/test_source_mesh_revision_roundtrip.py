@@ -38,7 +38,7 @@ from sqlalchemy import select
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
-from .....domain.calculations.registry import CasillaObservation
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from .....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,

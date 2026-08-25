@@ -12,7 +12,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import resources
-from .....domain.calculations.registry import BindingId, RelationId
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from .._calc_sheets_pull import (
     ValueRange,
     _batch_get_values,
@@ -89,7 +89,7 @@ def test_decode_operator_edits_returns_empty_for_no_ids() -> None:
 def test_decode_operator_edits_reads_decimal_from_value_range() -> None:
     """Use a real casilla pulled from the live registry to exercise the helper."""
 
-    from .....domain.calculations.registry import InputKind
+    from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
     snapshot = resources().modelos.authority.snapshot("130", filing_year=2024, period="2T")
     manual_casillas = [c for c in snapshot.revision.casillas if c.input_kind == InputKind.MANUAL]

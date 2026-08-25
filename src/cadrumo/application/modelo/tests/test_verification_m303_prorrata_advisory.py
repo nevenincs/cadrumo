@@ -44,10 +44,8 @@ import pytest
 
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    ModeloRevision,
-    VerificationPredicateDefinition,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile

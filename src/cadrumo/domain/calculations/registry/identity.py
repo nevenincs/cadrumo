@@ -34,7 +34,7 @@ running package; anything else falls back to the full walk. Per
 falls back and recomputes, and no shape but the current one is ever read.
 
 See Also:
-    :func:`~domain.calculations.registry._loader_cache.is_bundled_registry_root`
+    :func:`~domain.calculations.registry.loader_cache.is_bundled_registry_root`
         Why a bundled root is not by itself an immutability claim, and why stamp
         presence is the discriminator this module adds on top of it.
 """
@@ -53,7 +53,7 @@ from pydantic import BaseModel, ConfigDict
 from .... import __version__
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.external_constants import UTF_8_ENCODING
-from ._loader_cache import is_bundled_registry_root
+from .loader_cache import is_bundled_registry_root
 
 FingerprintTuples = tuple[tuple[str, int, int, str], ...]
 """``(path, size, mtime_ns, content_digest)`` loader tuples, exactly as collected for the cache key."""

@@ -16,7 +16,7 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....core import CalculationSourceLineageRole, Period, RegistryAuthorityGrade
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet

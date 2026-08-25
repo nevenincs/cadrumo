@@ -39,7 +39,7 @@ import pytest
 
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import load_test_profile_record, seed_test_profile_record

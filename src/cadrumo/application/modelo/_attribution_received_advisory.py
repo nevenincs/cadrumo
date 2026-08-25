@@ -53,7 +53,8 @@ from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_r
 
 if TYPE_CHECKING:
     from ...core import CasillaId
-    from ...domain.calculations.registry import LegalRefId, RegistrySnapshot
+    from ...domain.calculations.registry.ids import LegalRefId
+    from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.modelos import WorkUnit
 
 _ATRIBUCION_ACT_ECO_ROLE = "irpf_rendimiento_act_eco_atribuido_rdto_neto"

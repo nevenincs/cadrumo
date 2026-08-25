@@ -29,12 +29,9 @@ from .....domain.iva import (
     RegimenSimplificadoFilingRows,
 )
 from ....filing_evidence import FilingEvidenceReference
-from .. import (
-    RegistryValidationError,
-    project_m303_regimen_simplificado_rows,
-    resolve_m303_regimen_simplificado_snapshot,
-    validate_m303_regimen_simplificado_endpoint_epoch,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection import project_m303_regimen_simplificado_rows, validate_m303_regimen_simplificado_endpoint_epoch
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -125,7 +122,7 @@ def test_epoch_admission_refuses_real_horno_fact_shapes_outside_the_selected_des
 def test_projection_identity_never_uses_json_serialisation() -> None:
     import inspect
 
-    from .. import _m303_regimen_simplificado_projection as module
+    import cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection as module
 
     source = inspect.getsource(module)
     assert "model_dump_json" not in source

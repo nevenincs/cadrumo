@@ -32,7 +32,7 @@ from .....core.aggregation import (
     BindingAggregationOp,
     BindingSourceKind,
 )
-from .._binding_aggregation import _ROWS_DEFAULT_SOURCE_KINDS, binding_aggregation_op, default_binding_aggregation_op
+from ..binding_aggregation import _ROWS_DEFAULT_SOURCE_KINDS, binding_aggregation_op, default_binding_aggregation_op
 from ..schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

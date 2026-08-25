@@ -8,9 +8,7 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import scan_directory
-from ... import registry
-from .. import __all__ as registry_public_names
-from .. import resolve_available_bound_inputs_by_casilla_id
+from ..bindings import resolve_available_bound_inputs_by_casilla_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -19,7 +17,7 @@ _RETIRED_RESOLVER = "resolve_bound_inputs_by_casilla_id"
 
 
 def _production_python_paths() -> tuple[Path, ...]:
-    package_root = Path(registry.__file__).resolve().parents[3]
+    package_root = Path(resolve_available_bound_inputs_by_casilla_id.__code__.co_filename).resolve().parents[3]
     return scan_directory(package_root, pattern="*.py", recursive=True, prune_directories=("tests",))
 
 
@@ -56,9 +54,9 @@ def test_available_bound_input_projector_is_the_sole_resolver_surface() -> None:
     production_paths = _production_python_paths()
 
     assert _resolver_definitions(production_paths) == (
-        ("_bindings.py", "resolve_available_bound_inputs_by_casilla_id"),
+        ("bindings.py", "resolve_available_bound_inputs_by_casilla_id"),
     )
     assert _retired_imports(production_paths) == ()
-    assert resolve_available_bound_inputs_by_casilla_id.__name__ in registry_public_names
-    assert _RETIRED_RESOLVER not in vars(registry)
-    assert _RETIRED_RESOLVER not in registry.__all__
+    assert resolve_available_bound_inputs_by_casilla_id.__module__ == (
+        "cadrumo.domain.calculations.registry.bindings"
+    )

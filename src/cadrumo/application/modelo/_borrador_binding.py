@@ -38,7 +38,11 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ActionEvidenceProvenance, BindingSourceKind, CalculationSourceLineageRole, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
-from ...domain.calculations.registry import BindingId, DataBindingDefinition, RegistrySnapshot
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    RegistrySnapshot,
+)
 from ...domain.modelos import ModeloError
 from ..aggregation import (
     BorradorSourceProvenance,

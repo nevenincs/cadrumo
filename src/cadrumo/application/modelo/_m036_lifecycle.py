@@ -46,7 +46,7 @@ from ...domain.buckets import (
     bucket_event_history_write,
     build_bucket_event,
 )
-from ...domain.calculations.registry import CensoModeloEventKind
+from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from ...domain.modelos import Modelo036PriorAltaRequiredError, Modelo036TerminalStateError
 
 if TYPE_CHECKING:

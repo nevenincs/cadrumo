@@ -61,11 +61,8 @@ from .....domain.buckets import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from .....domain.calculations.registry import (
-    CasillaObservation,
-    RegistryModeloObservation,
-    RegistrySnapshotRef,
-)
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from .....domain.categories import SpendingCategory
 from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod

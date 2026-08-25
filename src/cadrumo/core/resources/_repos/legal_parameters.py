@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, override
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
-    from ....domain.calculations.registry import LegalParameter
+    from ....domain.calculations.registry.schema import LegalParameter
 
 
 class LegalParameterRepository(ResourceCacheRepository[Mapping[str, "LegalParameter"], None]):
@@ -25,7 +25,7 @@ class LegalParameterRepository(ResourceCacheRepository[Mapping[str, "LegalParame
 
     @override
     def _load(self, key: None) -> Mapping[str, LegalParameter]:
-        from ....domain.calculations.registry import load_legal_parameters_only
+        from ....domain.calculations.registry.loader import load_legal_parameters_only
         from .._boundary import bundled_path
 
         return load_legal_parameters_only(bundled_path("registry", "aeat"))

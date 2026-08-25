@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ._applicability_payer_facts import PayerFact
+from .applicability_payer_facts import PayerFact
 
 PAYER_FACT_INCOMPLETE_LABELS: dict[PayerFact, str] = {
     PayerFact.PAYS_WITHHELD_INCOME: "paga retribuciones sujetas a retención",

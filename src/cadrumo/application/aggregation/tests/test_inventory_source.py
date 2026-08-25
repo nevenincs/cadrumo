@@ -24,12 +24,8 @@ from ....adapters.persistence.storage.sql.engine import get_engine
 from ....core import BindingSourceKind, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    DataBindingDefinition,
-    InventoryProjectionOperation,
-    InventorySelector,
-    ModeloRevision,
-)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.bindings import InventoryProjectionOperation, InventorySelector
 from ....domain.contribuyente.inventory import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,

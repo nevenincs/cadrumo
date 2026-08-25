@@ -36,13 +36,15 @@ from defusedxml import ElementTree as DefusedElementTree
 from ...core import CasillaId, FilingProducerKey, Modelo
 from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.export_parse import (
     SINO_DICTIONARY_TYPE,
     XML_DICTIONARY_BOOLEAN_TYPES,
-    ExportLayoutDefinition,
-    SourceReference,
     XmlDictionaryEntry,
     xml_dictionary_entries,
+)
+from ...domain.calculations.registry.schema import (
+    ExportLayoutDefinition,
+    SourceReference,
 )
 from ...domain.contribuyente import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing import FilingExportError, FilingExportValidationError, ModeloDraft

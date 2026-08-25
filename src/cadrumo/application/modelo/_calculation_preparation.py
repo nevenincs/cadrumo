@@ -26,7 +26,14 @@ from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo, RegistryAuthorityGrade
-from ...domain.calculations.registry import BindingId, ModeloRevision, RegistrySnapshot, RelationId
+from ...domain.calculations.registry.ids import (
+    BindingId,
+    RelationId,
+)
+from ...domain.calculations.registry.schema import (
+    ModeloRevision,
+    RegistrySnapshot,
+)
 from ...domain.deadlines import IVARegime
 from ...domain.modelos import (
     WorkUnit,

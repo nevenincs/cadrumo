@@ -13,7 +13,11 @@ from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.config import Settings
 from ...core.errors import BaseSeverity
 from ...core.logging import get_logger
-from ...domain.calculations.registry import RegistrySnapshotError, ValidatedRegistryAuthority, bundled_authority
+from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+    bundled_authority,
+)
 from ...domain.manuals import (
     ManualCasillaReference,
     ManualId,

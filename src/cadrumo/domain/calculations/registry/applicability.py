@@ -110,15 +110,15 @@ from ...deadlines import (
     TaxpayerProfile,
 )
 from ._applicability_labels import PAYER_FACT_INCOMPLETE_LABELS as _PAYER_FACT_INCOMPLETE_LABELS
-from ._applicability_modelo202 import (
+from .applicability_modelo202 import (
     Modelo202Modality,
     Modelo202ModalityVerdict,
     derive_modelo_202_modality,
     modelo_202_modality_from_inputs,
 )
-from ._applicability_payer_facts import PayerFact, payer_fact_holds
-from ._applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
-from ._applicability_routes import TaxRoute
+from .applicability_payer_facts import PayerFact, payer_fact_holds
+from .applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
+from .applicability_routes import TaxRoute
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .ids import LegalRefId, ModeloId
 from .schema import ApplicabilityRuleDefinition

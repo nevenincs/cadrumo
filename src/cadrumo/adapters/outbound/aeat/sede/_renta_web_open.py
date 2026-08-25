@@ -43,15 +43,17 @@ from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.i18n import tr
 from .....core.logging import get_logger
-from .....domain.calculations.registry import (
-    RegistryValidationError,
+from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
+)
+from .....domain.calculations.registry.renta_web_open_oracle import (
     RentaWebOpenDisplayOverride,
     RentaWebOpenLivePayload,
     RentaWebOpenObservation,
     RentaWebOpenSyntheticProfile,
-    assert_remote_operation_allowed,
     parse_renta_web_open_live_payload,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError

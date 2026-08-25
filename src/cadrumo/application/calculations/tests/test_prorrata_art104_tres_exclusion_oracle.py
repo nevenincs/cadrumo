@@ -31,7 +31,7 @@ import pytest
 
 from ....core import Period
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import IvaLedgerObservation
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
 from ....domain.iva import (
     IvaCategory,
     IvaExemptionArticle,

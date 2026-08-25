@@ -38,7 +38,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import validated_casilla_id
-from ....domain.calculations.registry import select_revision
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....domain.deadlines import EntityType, IVARegime, TaxpayerProfile
 from ....tests.registry_tree import bundled_registry_tree
 from .._verification_predicates import _evaluate_predicate_expression, evaluate_advisory_predicate_fires

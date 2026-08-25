@@ -24,14 +24,8 @@ from .....domain.iva import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from .. import (
-    CasillaDefinition,
-    DataBindingDefinition,
-    ModeloRevision,
-    PeriodSelector,
-    derive_rate_box_partitions,
-    rate_box_coverage_shortfalls,
-)
+from cadrumo.domain.calculations.registry.schema import CasillaDefinition, DataBindingDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.rate_box_partition import derive_rate_box_partitions, rate_box_coverage_shortfalls
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

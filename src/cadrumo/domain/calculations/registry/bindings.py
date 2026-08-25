@@ -47,9 +47,9 @@ from ...iva_compensation import (
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
 )
-from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
+from .binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from .binding_selector_utils import selector_against_model, selector_as_dict
-from ._bindings_previous_filing import (
+from .bindings_previous_filing import (
     PreviousModeloSelector,
     previous_filing_binding_source_casilla_ids,
     previous_filing_observation_requirements,
@@ -57,7 +57,7 @@ from ._bindings_previous_filing import (
     resolve_previous_filing_binding_values,
     validate_previous_filing_binding,
 )
-from ._counterpart_bindings import (
+from .counterpart_bindings import (
     CounterpartAggregationObservation,
     CounterpartObservationRequirement,
     counterpart_binding_requirements,
@@ -65,7 +65,7 @@ from ._counterpart_bindings import (
     resolve_counterpart_binding_values,
     validate_counterpart_binding,
 )
-from ._detail_record_bindings import (
+from .detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
     RefundOperationObservation,
@@ -80,34 +80,34 @@ from ._detail_record_bindings import (
     validate_refund_binding,
     validate_related_party_binding,
 )
-from ._detail_record_bindings import (
+from .detail_record_bindings import (
     AtributionSelector as _AtributionSelector,
 )
-from ._detail_record_bindings import (
+from .detail_record_bindings import (
     ForeignAssetSelector as _ForeignAssetSelector,
 )
-from ._detail_record_bindings import (
+from .detail_record_bindings import (
     RefundSelector as _RefundSelector,
 )
-from ._detail_record_bindings import (
+from .detail_record_bindings import (
     RelatedPartySelector as _RelatedPartySelector,
 )
-from ._detail_record_bindings import (
+from .detail_record_bindings import (
     build_foreign_asset_rows as _build_foreign_asset_rows,
 )
-from ._detail_record_bindings import (
+from .detail_record_bindings import (
     build_related_party_rows as _build_related_party_rows,
 )
-from ._donativo_bindings import (
+from .donativo_bindings import (
     DonativoDonorObservation,
     resolve_donativo_binding_row_values,
     validate_donativo_binding,
 )
-from ._donativo_bindings import (
+from .donativo_bindings import (
     DonativoSelector as _DonativoSelector,
 )
 from .errors import RegistryValidationError
-from ._gasto193_bindings import (
+from .gasto193_bindings import (
     Gasto193Observation,
     _Gasto193Selector,
     resolve_gasto193_binding_row_values,
@@ -115,12 +115,12 @@ from ._gasto193_bindings import (
     validate_gasto193_binding_selector_shape,
 )
 from .ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
-from ._inventory_bindings import (
+from .inventory_bindings import (
     InventoryProjectionOperation,
     InventorySelector,
     validate_inventory_binding,
 )
-from ._invoice_bindings import (
+from .invoice_bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
     InvoiceObservation,
     InvoiceObservationRequirement,
@@ -134,10 +134,10 @@ from ._invoice_bindings import (
     validate_invoice_binding,
     validate_invoice_binding_definition,
 )
-from ._invoice_bindings import (
+from .invoice_bindings import (
     InvoiceSelector as _InvoiceSelector,
 )
-from ._irnr_ledger_bindings import (
+from .irnr_ledger_bindings import (
     IrnrIncomeObservationProtocol,
     _IrnrLedgerIncomeSelector,
     resolve_ledger_irnr_income_aggregation_binding_values,
@@ -146,7 +146,7 @@ from ._irnr_ledger_bindings import (
     validate_ledger_irnr_income_aggregation_binding_definition,
 )
 from .ledger_binding_resolution import UnroutedLedgerQuantity
-from ._ledger_bindings import (
+from .ledger_bindings import (
     LEDGER_BINDING_SOURCE_KINDS,
     IvaLedgerObservation,
     OssIossLedgerObservation,
@@ -180,47 +180,47 @@ from ._ledger_bindings import (
     validate_ledger_renta_income_aggregation_binding,
     validate_ledger_renta_income_aggregation_binding_definition,
 )
-from ._ledger_bindings import (
+from .ledger_bindings import (
     IvaLedgerSelector as _IvaLedgerSelector,
 )
-from ._ledger_bindings import (
+from .ledger_bindings import (
     OssIossLedgerSelector as _OssIossLedgerSelector,
 )
-from ._ledger_bindings import (
+from .ledger_bindings import (
     RentaLedgerGastosEstimacionDirectaSelector as _RentaLedgerGastosEstimacionDirectaSelector,
 )
-from ._ledger_bindings import (
+from .ledger_bindings import (
     RentaLedgerGastosPagoFraccionadoSelector as _RentaLedgerGastosPagoFraccionadoSelector,
 )
-from ._ledger_bindings import (
+from .ledger_bindings import (
     RentaLedgerIncomeSelector as _RentaLedgerIncomeSelector,
 )
-from ._ledger_impatriado_bindings import (
+from .ledger_impatriado_bindings import (
     ImpatriadoIncomeObservationProtocol,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
     validate_ledger_impatriado_income_aggregation_binding,
     validate_ledger_impatriado_income_aggregation_binding_definition,
 )
-from ._ledger_impatriado_bindings import (
+from .ledger_impatriado_bindings import (
     ImpatriadoLedgerIncomeSelector as _ImpatriadoLedgerIncomeSelector,
 )
 from .period_selector_match import selector_period_matches_request
-from ._retenciones_bindings import (
+from .retenciones_bindings import (
     RetencionesAggregationSelector as _RetencionesAggregationSelector,
 )
-from ._retenciones_bindings import (
+from .retenciones_bindings import (
     resolve_retenciones_aggregation_binding_values,
     validate_retenciones_aggregation_binding,
 )
 from .schema import CasillaDefinition, DataBindingDefinition, InputKind, ModeloRevision
-from ._withholding296_bindings import (
+from .withholding296_bindings import (
     Withholding296Observation,
     _Withholding296Selector,
     resolve_withholding296_binding_row_values,
     validate_withholding296_binding_selector_shape,
 )
-from ._withholding_bindings import (
+from .withholding_bindings import (
     WithholdingClaveBreakdown,
     WithholdingObservation,
     WithholdingObservationRequirement,
@@ -232,7 +232,7 @@ from ._withholding_bindings import (
     validate_withholding_binding_selector_shape,
     withholding_binding_requirements,
 )
-from ._withholding_bindings import (
+from .withholding_bindings import (
     WithholdingSelector as _WithholdingSelector,
 )
 

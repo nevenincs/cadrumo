@@ -38,7 +38,7 @@ import pytest
 from .....core import RECORD_DESIGN_EPOCH_PATTERN
 from .....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryValidationError
-from .._schema_references import SourceReference
+from ..schema_references import SourceReference
 from .._validate_record_design_epochs import (
     validate_record_design_epoch_uniqueness,
     validate_record_design_epoch_window,

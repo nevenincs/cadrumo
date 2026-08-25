@@ -37,7 +37,7 @@ from pathlib import Path
 
 from ....core import CasillaId, FilingProjectionRef
 from ....core.aggregation import BindingAggregationOp
-from ._binding_aggregation import binding_aggregation_op
+from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     BindingExportSelector,
     BindingFixedExportSelector,

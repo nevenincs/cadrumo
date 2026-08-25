@@ -31,8 +31,8 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import CasillaId
-from ...domain.calculations.registry import (
-    ModeloRevision,
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.rate_box_partition import (
     derive_rate_box_partitions,
     rate_box_coverage_shortfalls,
 )

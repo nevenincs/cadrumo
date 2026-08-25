@@ -29,17 +29,19 @@ from ...core import Modelo, Period
 from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date
 from ...core.resources import resources
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
-    ModeloRevision,
-    ProfileKeyGrounding,
-    RegistrySnapshotError,
-    RevisionId,
-    ValidatedRegistryAuthority,
-    build_profile_grounding_index,
     derive_modelo_applicability,
-    select_revision,
 )
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.profile_grounding import (
+    ProfileKeyGrounding,
+    build_profile_grounding_index,
+)
+from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.temporal import select_revision
 from ...domain.deadlines import EntityType, IrpfIncomeCategory
 from ...domain.modelos import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError

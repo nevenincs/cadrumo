@@ -9,8 +9,8 @@ The v3 shape additionally carries the generic secure-object custody
 schema and coverage manifest, default-empty until the transport-aware
 phases populate them.
 The ledger category is loaded as a
-:class:`~cadrumo.domain.transactions.TransactionCatalogue` through
-:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+:class:`~cadrumo.domain.transactions.TransactionCatalogue` through its
+application-owned repository port.
 
 Bundles carry typed domain-model payloads, not encrypted blobs, key
 material, or raw secure-storage rows. Export reads domain records from
@@ -36,8 +36,7 @@ import json
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Final
 
-from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
-from ...core import STR_KEYED_MAPPING_ADAPTER
+from ...core import STR_KEYED_MAPPING_ADAPTER, StorageCustodyProfile
 from ...core.errors import CadrumoError
 from ...core.time import now
 from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType, emit_bucket_event
@@ -52,7 +51,7 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
-    from ...domain.user_profile.portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
+    from ...domain.user_profile.portable_export import UserProfilePortableExport
 
 # Import is an operator handoff, so the trail names the operator rather than the
 # emitting module. The payload version tracks the import event's own key set.
@@ -80,6 +79,7 @@ BUNDLE_PAYLOAD_UPGRADERS: Mapping[int, Callable[[dict[str, object]], dict[str, o
 SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset(
     range(BUNDLE_DURABILITY_FLOOR, BUNDLE_SCHEMA_VERSION + 1),
 )
+
 
 def _stamped_bundle_version(payload: dict[str, object], *, expected_written_version: int | None) -> int:
     """Read the payload's own stamped schema version, refusing a contradiction.
@@ -201,7 +201,7 @@ def serialize_profile_bundle(
     Args:
         bucket_id: Profile bucket whose domain repositories are exported.
         custody_profile: Secure-object custody scope to apply, as a
-            :class:`~cadrumo.adapters.persistence.storage.StorageCustodyProfile`
+            :class:`~cadrumo.core.StorageCustodyProfile`
             or one of its string values.
 
     The bundle carries only decrypted pydantic domain-model payloads
@@ -209,30 +209,31 @@ def serialize_profile_bundle(
     each object under its own bucket data-encryption key through the
     standard repository save paths on import.
     """
-    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...domain.user_profile.portable_export import UserProfilePortableExport
+    from ..ledger.transaction_repository import transaction_catalogue_repository
+    from ..modelo.calculation_repository import calculation_revision_catalogue_repository
+    from ..modelo.filing_repository import modelo_record_catalogue_repository
+    from ..modelo.work_unit_repository import work_unit_catalogue_repository
+    from .custody_carry import build_secure_object_custody_payload, normalize_storage_custody_profile
     from .profile_record_repository import ProfileRecordRepository
 
     record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
 
-    work_unit_catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+    work_unit_catalogue = work_unit_catalogue_repository(bucket_id=bucket_id).load()
     work_units = tuple(work_unit_catalogue)
 
-    transaction_catalogue = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+    transaction_catalogue = transaction_catalogue_repository(bucket_id=bucket_id).load()
     ledger_transactions = tuple(transaction_catalogue)
 
-    revision_catalogue = CalculationRevisionCatalogueRepository(bucket_id=bucket_id).load()
+    revision_catalogue = calculation_revision_catalogue_repository(bucket_id=bucket_id).load()
     calculation_revisions = tuple(revision_catalogue)
 
-    filing_catalogue = ModeloRecordCatalogueRepository(bucket_id=bucket_id).load()
+    filing_catalogue = modelo_record_catalogue_repository(bucket_id=bucket_id).load()
     filing_records = tuple(filing_catalogue)
 
-    carried_objects, coverage_manifest = _build_secure_object_custody_payload(
+    carried_objects, coverage_manifest = build_secure_object_custody_payload(
         bucket_id=bucket_id,
-        custody_profile=_normalize_custody_profile(custody_profile),
+        custody_profile=normalize_storage_custody_profile(custody_profile),
     )
 
     return UserProfilePortableExport(
@@ -244,91 +245,6 @@ def serialize_profile_bundle(
         filing_records=filing_records,
         carried_objects=carried_objects,
         coverage_manifest=coverage_manifest,
-    )
-
-
-def _normalize_custody_profile(custody_profile: StorageCustodyProfile | str) -> StorageCustodyProfile:
-    if isinstance(custody_profile, StorageCustodyProfile):
-        return custody_profile
-    try:
-        return StorageCustodyProfile(custody_profile)
-    except ValueError as exc:
-        from ...domain.user_profile.errors import ProfileExportError
-
-        raise ProfileExportError(
-            context={"custody_profile": custody_profile},
-        ) from exc
-
-
-def _build_secure_object_custody_payload(
-    *,
-    bucket_id: str,
-    custody_profile: StorageCustodyProfile,
-) -> tuple[tuple[CarriedSecureObject, ...], CoverageManifest]:
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
-    from ...domain.user_profile.portable_export import CoverageManifest
-    from .custody_carry import (
-        TYPED_CATEGORY_NAMESPACES,
-        carried_namespace_definitions,
-        serialize_carried_objects,
-    )
-
-    repository = secure_object_repository_for_bucket(bucket_id)
-    populated_namespaces = tuple(repository.list_namespaces())
-    row_counts_by_namespace = {namespace: len(repository.list_keys(namespace)) for namespace in populated_namespaces}
-
-    carried_namespace_set = frozenset(
-        definition.namespace for definition in carried_namespace_definitions(custody_profile)
-    )
-    carried_or_typed = carried_namespace_set | TYPED_CATEGORY_NAMESPACES
-    # ``excluded_namespaces`` (for the manifest) is every populated namespace not
-    # carried by this profile — the deliberately-excluded host-local / derived /
-    # full-only stores plus the typed-category-covered ones are reported honestly.
-    excluded_namespaces = tuple(
-        namespace for namespace in populated_namespaces if namespace not in carried_namespace_set
-    )
-
-    if custody_profile is StorageCustodyProfile.FULL:
-        # Every registered namespace declares a custody disposition (carried,
-        # typed-category, or deliberately excluded such as PROCESS_LOCAL credentials
-        # or the DERIVED participation index), so it is accounted for. The gate fails
-        # closed only on a populated namespace that is NOT in the registry at all — an
-        # unclassified durable store that would otherwise be silently dropped.
-        registered_namespaces = frozenset(definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
-        _assert_full_custody_coverage(
-            populated_namespaces=populated_namespaces,
-            covered_namespaces=carried_or_typed | registered_namespaces,
-        )
-
-    carried_objects = serialize_carried_objects(bucket_id=bucket_id, profile=custody_profile)
-    carried_namespaces = tuple(
-        namespace
-        for namespace in (definition.namespace for definition in carried_namespace_definitions(custody_profile))
-        if row_counts_by_namespace.get(namespace, 0) > 0
-    )
-
-    coverage_manifest = CoverageManifest(
-        # pyrefly: ignore[bad-argument-type]  # reason: StrEnum `.value` widens to `str`, and the manifest declares the closed literal set. The two agree by construction — the enum's members ARE those literals — but the domain model cannot import the adapters-layer enum to say so without inverting the hexagonal direction.
-        custody_profile=custody_profile.value,
-        carried_namespaces=carried_namespaces,
-        excluded_namespaces=excluded_namespaces,
-        row_counts_by_namespace=row_counts_by_namespace,
-    )
-    return carried_objects, coverage_manifest
-
-
-def _assert_full_custody_coverage(
-    *,
-    populated_namespaces: tuple[str, ...],
-    covered_namespaces: frozenset[str],
-) -> None:
-    missing = tuple(namespace for namespace in populated_namespaces if namespace not in covered_namespaces)
-    if not missing:
-        return
-    from ...domain.user_profile.errors import ProfileExportError
-
-    raise ProfileExportError(
-        context={"unclassified_namespaces": missing, "custody_profile": StorageCustodyProfile.FULL.value},
     )
 
 
@@ -424,11 +340,11 @@ def register_imported_profile_bundle(
             :func:`deserialize_profile_bundle` for an unsupported bundle version;
             no event is emitted when the restore refuses.
     """
-    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from .custody_ports import default_profile_bucket_event_history_repository
 
     deserialize_profile_bundle(bundle, target_bucket_id=target_bucket_id)
     return emit_bucket_event(
-        repository=BucketEventHistoryRepository(),
+        repository=default_profile_bucket_event_history_repository(),
         bucket_id=target_bucket_id,
         event_type=BucketEventType.PROFILE_IMPORTED,
         occurred_at=now().replace(microsecond=0),
@@ -457,14 +373,14 @@ def _rebuild_participation_index(*, target_bucket_id: str) -> None:
 
 
 def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...domain.modelos import (
         upsert_work_unit,
     )
+    from ..modelo.work_unit_repository import work_unit_catalogue_repository
 
     if not bundle.work_units:
         return
-    repo = WorkUnitCatalogueRepository(bucket_id=target_bucket_id)
+    repo = work_unit_catalogue_repository(bucket_id=target_bucket_id)
     catalogue = repo.load()
     for unit in bundle.work_units:
         catalogue = upsert_work_unit(catalogue, unit)
@@ -472,12 +388,12 @@ def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: s
 
 
 def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...domain.transactions import Transaction, TransactionCatalogue
+    from ..ledger.transaction_repository import transaction_catalogue_repository
 
     if not bundle.ledger_transactions:
         return
-    repo = TransactionCatalogueRepository(bucket_id=target_bucket_id)
+    repo = transaction_catalogue_repository(bucket_id=target_bucket_id)
     existing = repo.load()
     merged: dict[str, Transaction] = dict(existing.transactions)
     for txn in bundle.ledger_transactions:
@@ -486,12 +402,12 @@ def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_buc
 
 
 def _import_calculation_revisions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...domain.modelos import upsert_calculation_revision
+    from ..modelo.calculation_repository import calculation_revision_catalogue_repository
 
     if not bundle.calculation_revisions:
         return
-    repo = CalculationRevisionCatalogueRepository(bucket_id=target_bucket_id)
+    repo = calculation_revision_catalogue_repository(bucket_id=target_bucket_id)
     catalogue = repo.load()
     for revision in bundle.calculation_revisions:
         catalogue = upsert_calculation_revision(catalogue, revision)
@@ -499,14 +415,14 @@ def _import_calculation_revisions(bundle: UserProfilePortableExport, *, target_b
 
 
 def _import_filing_records(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...domain.modelos import (
         upsert_filing_record,
     )
+    from ..modelo.filing_repository import modelo_record_catalogue_repository
 
     if not bundle.filing_records:
         return
-    repo = ModeloRecordCatalogueRepository(bucket_id=target_bucket_id)
+    repo = modelo_record_catalogue_repository(bucket_id=target_bucket_id)
     catalogue = repo.load()
     for record in bundle.filing_records:
         catalogue = upsert_filing_record(catalogue, record)

@@ -45,7 +45,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import resources
-from .. import CasillaDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import CasillaDefinition, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -127,7 +127,7 @@ def test_the_super_reducido_cuota_still_reaches_the_declared_total() -> None:
     which is why the repair needed no formula change. If a later edit removed 170
     from that total, this fix would silently turn into an under-declaration.
     """
-    from .. import expression_casilla_refs
+    from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 
     revision = _revision()
     total = next(f for f in revision.formulas if f.id == "modelo-303-iva-cuota-devengada-total")

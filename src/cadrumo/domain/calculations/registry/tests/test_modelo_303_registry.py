@@ -21,19 +21,15 @@ from ....iva import (
     IvaDeductionClassificationProvenance,
     IvaLedgerObservationRole,
 )
-from .. import (
-    InputKind,
-    ModeloDefinition,
-    NoRevisionForPeriodError,
-    RegistryCatalogues,
-    RegistryValidator,
-    binding_aggregation_op,
-    bundled_authority,
-    expression_casilla_refs,
-    resolve_available_bound_inputs_by_casilla_id,
-    select_revision,
-    selector_as_dict,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.bindings import binding_aggregation_op, resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ..bindings import binding_source_casilla_ids, binding_source_modelo
 from ..snapshot import build_snapshot
 
@@ -633,10 +629,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaFlowDirection,
         IvaRateKind,
     )
-    from .. import (
-        IvaLedgerObservation,
-        resolve_ledger_iva_aggregation_binding_values,
-    )
+    from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2022"]
@@ -875,13 +868,8 @@ def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> 
 
 
 def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_casilla_id() -> None:
-    from .. import (
-        materialize_relation_binding_values,
-        previous_filing_observation_requirements,
-        relation_source_requirements,
-        resolve_previous_filing_binding_values,
-        resolve_relation_values_from_observations,
-    )
+    from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values, relation_source_requirements, resolve_relation_values_from_observations
+    from cadrumo.domain.calculations.registry.bindings import previous_filing_observation_requirements, resolve_previous_filing_binding_values
 
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2022"]
@@ -924,13 +912,8 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_c
 
 
 def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter() -> None:
-    from .. import (
-        materialize_relation_binding_values,
-        previous_filing_observation_requirements,
-        relation_source_requirements,
-        resolve_previous_filing_binding_values,
-        resolve_relation_values_from_observations,
-    )
+    from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values, relation_source_requirements, resolve_relation_values_from_observations
+    from cadrumo.domain.calculations.registry.bindings import previous_filing_observation_requirements, resolve_previous_filing_binding_values
 
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2022"]
@@ -973,7 +956,7 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
 
 
 def test_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder() -> None:
-    from .. import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="2T")
@@ -1091,7 +1074,7 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
         ModeloIVAProfile,
         TaxpayerProfile,
     )
-    from .. import applicable_filing_schedules
+    from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
 
     modelo, _catalogues = _load_modelo_303()
     revision = modelo.revisions["2025"]
@@ -1176,7 +1159,7 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
     tipo general = 21%), NOT from the registry implementation under test; this
     test would fail if the formula were mis-wired or the tipo were wrong.
     """
-    from .. import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
@@ -1249,7 +1232,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
     tipo 21%), not from a second call to the same formula.  If the formula
     constant were changed to, say, 0.10, this test would catch it immediately.
     """
-    from .. import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")

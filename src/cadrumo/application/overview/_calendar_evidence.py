@@ -42,7 +42,7 @@ from ...core import normalise_aeat_csv
 from ...core.i18n import tr
 from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.calculations.registry import TaxRoute
+from ...domain.calculations.registry.applicability import TaxRoute
 from ...domain.modelos import is_justificante_backed_external_evidence
 from ..calculations import ObservationSourceKind, is_official_aeat_observation_source
 from ._calendar_models import (

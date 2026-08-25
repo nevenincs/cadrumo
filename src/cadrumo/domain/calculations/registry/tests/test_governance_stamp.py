@@ -16,11 +16,11 @@ import pytest
 
 from .....core import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .....tests.registry_tree import bundled_registry_tree
-from .. import loader as _loader
+import cadrumo.domain.calculations.registry.loader as _loader
 from ..errors import RegistryLoadError
 from ..loader import load_modelo_directory
 from ..schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
-from .._schema_base import GOVERNANCE_STAMP, governance_stamp_fields
+from ..schema_base import GOVERNANCE_STAMP, governance_stamp_fields
 from .._schema_governance import REVISION_REVIEW_DATE_CEILING, REVISION_REVIEW_DATE_FLOOR
 from ._loader_directory_mode_support import _load_revision as _shared_load_revision
 from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo

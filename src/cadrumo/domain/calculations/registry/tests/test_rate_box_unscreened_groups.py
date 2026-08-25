@@ -40,12 +40,9 @@ from collections.abc import Iterator
 import pytest
 
 from .....core.resources import resources
-from .. import (
-    ModeloRevision,
-    derive_rate_box_partitions,
-    rate_box_unscreened_groups,
-    selector_as_dict,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.rate_box_partition import derive_rate_box_partitions, rate_box_unscreened_groups
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ..rate_box_partition import _NO_RATE_BLIND_SIBLING
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -174,7 +171,7 @@ def test_every_reported_reason_is_a_known_one() -> None:
     Derived from the module's own constants rather than restated, so adding a
     reason without exporting it fails here.
     """
-    from .. import _rate_box_partition as module
+    import cadrumo.domain.calculations.registry.rate_box_partition as module
 
     known = {
         value

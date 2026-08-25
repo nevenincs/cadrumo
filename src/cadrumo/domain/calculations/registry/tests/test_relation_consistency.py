@@ -4,7 +4,7 @@ from collections.abc import Iterable, Mapping
 
 import pytest
 
-from .. import previous_filing_source_reference
+from cadrumo.domain.calculations.registry.bindings import previous_filing_source_reference
 from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RelationDefinition
 from .._validate_relation_periods import (
     select_relation_source_revisions,

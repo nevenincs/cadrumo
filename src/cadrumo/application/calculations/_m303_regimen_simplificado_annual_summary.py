@@ -14,13 +14,11 @@ from typing import ClassVar
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period, RegistryAuthorityGrade
 from ...core.errors import CoreValidationError
 from ...core.resources import bundled_path, resources
-from ...domain.calculations.registry import (
-    RegistrySnapshot,
-    RevisionId,
-    load_registry_tree,
-    m303_regimen_simplificado_annual_summary_requirement,
-    select_revision,
-)
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
+from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva import ActividadAgricolaSimplificado
 from ...domain.modelos import (

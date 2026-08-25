@@ -34,7 +34,7 @@ from ..live_parity import (
     collect_applicability_declarations,
     collect_orphan_oracle_ids,
 )
-from .._renta_web_open_oracle import RentaWebOpenOracle
+from ..renta_web_open_oracle import RentaWebOpenOracle
 from ..schema import ModeloDefinition
 from ._registry_schema_support import _committed_registry_tree
 

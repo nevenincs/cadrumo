@@ -21,11 +21,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.i18n import Translatable as tr
-from ....domain.calculations.registry import (
-    DataBindingDefinition,
-    ModeloRevision,
-    PeriodSelector,
-)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
 from ....domain.categories import (
     CategoryCitation,
     CategoryCitationSource,

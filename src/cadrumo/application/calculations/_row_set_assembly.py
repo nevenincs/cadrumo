@@ -54,22 +54,24 @@ from ...core.aggregation import RetencionClave, RowSetGroupingKind
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing import parse_iso8601_date
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.bindings import (
     AtributionMemberObservation,
     BindingAggregationOp,
     DonativoDonorObservation,
     Gasto193Observation,
     Modelo720RowObservation,
-    ModeloRevision,
     RefundOperationObservation,
-    RegistrySnapshot,
-    RegistryValidationError,
     RelatedPartyOperationObservation,
     Withholding296Observation,
     WithholdingObservation,
     binding_aggregation_op,
-    binding_row_set_selector,
 )
+from ...domain.calculations.registry.schema import (
+    ModeloRevision,
+    RegistrySnapshot,
+)
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 
 __all__ = [
     "AssembledObservations",

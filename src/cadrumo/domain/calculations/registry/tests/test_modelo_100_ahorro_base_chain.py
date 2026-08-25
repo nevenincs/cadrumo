@@ -41,7 +41,8 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RelationAggregationOp
-from .. import RegistrySnapshot, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ..relation_aggregation import relation_aggregation_op
 from ..relations import resolve_relation_values
 from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings

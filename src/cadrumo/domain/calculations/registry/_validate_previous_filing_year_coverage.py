@@ -52,7 +52,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from ....core import BindingSourceKind, Modelo
-from ._bindings_previous_filing import previous_filing_source_reference
+from .bindings_previous_filing import previous_filing_source_reference
 from .errors import RegistryValidationError
 from .ids import BindingId, ModeloId
 from .schema import DataBindingDefinition, ModeloDefinition, ModeloRevision

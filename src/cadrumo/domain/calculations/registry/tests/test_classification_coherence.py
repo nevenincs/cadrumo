@@ -49,9 +49,9 @@ from ..schema import (
     ModeloDefinition,
     ModeloRevision,
 )
-from .._schema_base import CalculationClass
+from ..schema_base import CalculationClass
 from ..schema_input_kind import InputKind
-from .._schema_references import PeriodSelector
+from ..schema_references import PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

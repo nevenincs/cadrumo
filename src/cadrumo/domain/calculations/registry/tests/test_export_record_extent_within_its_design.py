@@ -57,7 +57,7 @@ from .....tests.registry_tree import bundled_registry_tree
 from ..authority import ValidatedRegistryAuthority
 from ..record_design import extract_record_design
 from ..schema import ModeloRevision
-from .._schema_exports import ExportRecordDefinition
+from ..schema_exports import ExportRecordDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

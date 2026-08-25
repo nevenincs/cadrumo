@@ -38,11 +38,8 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    IvaLedgerObservation,
-    casilla_noncanonical_reference_targets,
-    declared_casilla_ids,
-)
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
+from cadrumo.domain.calculations.registry.casilla_membership import casilla_noncanonical_reference_targets, declared_casilla_ids
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,

@@ -64,14 +64,12 @@ from ...core.hashing import sha256_hex
 from ...core.identity import FilingRecordId, same_tax_identifier, tax_id_identity_token
 from ...core.resources import bundled_path
 from ...core.time import UtcInstant, now
-from ...domain.calculations.registry import (
-    RegistryModeloObservation,
-    RegistrySnapshotError,
-    RevisionId,
-    load_registry_tree,
-    select_revision,
-    undeclared_casilla_ids,
-)
+from ...domain.calculations.registry.bindings import RegistryModeloObservation
+from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.temporal import select_revision
+from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from .errors import (
     CalculationRefusalPrecondition,

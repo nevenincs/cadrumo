@@ -9,7 +9,7 @@ import pytest
 
 from ....core import ActionConditionality, CasillaId, NoRecoveryOutcome, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId
+from cadrumo.domain.calculations.registry.ids import BindingId
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,

@@ -69,14 +69,14 @@ from ...core.identity import AeatExpedienteId
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path, resources
 from ...core.time import now
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.schema import (
     ModeloDefinition,
     ModeloRevision,
-    RegistryModeloObservation,
-    load_registry_tree,
-    select_revision,
-    verification_tolerance_or_exact,
 )
+from ...domain.calculations.registry.bindings import RegistryModeloObservation
+from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.temporal import select_revision
+from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
 from ..operations.owner import OperationEventEmitter
 from ..storage.sync_runs import (
     SyncRunRecordReference,

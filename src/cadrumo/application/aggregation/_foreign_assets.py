@@ -38,9 +38,9 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import TransactionId
 from ...core.parsing import IsoDateString, require_iso8601_date
 from ...domain.calculations import RowSourceIdentity
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
+from ...domain.calculations.registry.bindings import (
     Modelo720RowObservation,
-    binding_row_set_selector,
     resolve_foreign_asset_binding_row_values,
 )
 from .._foreign_asset_thresholds import (

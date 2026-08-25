@@ -12,13 +12,8 @@ from ....core import (
     M303Exonerado390ActivityProjectionRef,
     Period,
 )
-from ....domain.calculations.registry import (
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    ExportValuePolicy,
-    RegistrySnapshotRef,
-)
+from cadrumo.domain.calculations.registry.schema import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition, RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from ....domain.filing import (
     FilingExportValidationError,
     ModeloDraft,

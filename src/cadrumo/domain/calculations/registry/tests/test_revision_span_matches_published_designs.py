@@ -149,7 +149,7 @@ from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from .....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from .. import ModeloDefinition, ModeloRevision, SourceReference
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, SourceReference
 from ..authority import ValidatedRegistryAuthority
 from ..record_design import (
     _clean_pdf_line,
@@ -158,8 +158,8 @@ from ..record_design import (
     extract_record_design_workbook,
     extract_record_design_xls_workbook,
 )
-from .._record_design_coverage import _CASILLA_TAG_RE
-from .._record_design_schema import RecordDesignSheet
+from ..record_design_coverage import _CASILLA_TAG_RE
+from ..record_design_schema import RecordDesignSheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -1803,7 +1803,7 @@ def test_the_box_marker_is_the_registry_canonical_one_and_reads_every_modelo() -
     keys zero boxes is not clean, it is unread, and it reports identically to a modelo
     with nothing to find.
     """
-    from .._record_design_coverage import _CASILLA_TAG_RE as _CANONICAL_TAG_RE
+    from ..record_design_coverage import _CASILLA_TAG_RE as _CANONICAL_TAG_RE
 
     assert _BOX_MARKER is _CANONICAL_TAG_RE, (
         "this module re-declared the bracketed box-number pattern instead of using the registry's "

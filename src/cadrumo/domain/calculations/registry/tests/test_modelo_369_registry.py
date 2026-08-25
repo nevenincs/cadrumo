@@ -12,17 +12,12 @@ import pytest
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .. import (
-    LegalRefId,
-    ModeloDefinition,
-    OssIossLedgerObservation,
-    RegistryCatalogues,
-    RegistryValidator,
-    bundled_authority,
-    extract_record_design,
-    resolve_available_bound_inputs_by_casilla_id,
-    resolve_ledger_oss_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.ids import LegalRefId
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.bindings import OssIossLedgerObservation, resolve_available_bound_inputs_by_casilla_id, resolve_ledger_oss_aggregation_binding_values
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -654,7 +649,7 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
         OssIossRegime,
         TransactionKind,
     )
-    from .. import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-union"]
@@ -733,7 +728,7 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
         OssIossRegime,
         TransactionKind,
     )
-    from .. import calculate_registry_snapshot
+    from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-importacion"]

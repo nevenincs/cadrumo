@@ -47,13 +47,13 @@ from typing import Final, NamedTuple, Never, override
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core import Period as _Period
 from ...core.identity import same_tax_identifier
-from ...domain.calculations.registry import (
-    BindingId,
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
-    RegistrySnapshotError,
-    previous_filing_observation_requirements,
 )
+from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.bindings import previous_filing_observation_requirements
 from ...domain.iva_compensation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
 from ...domain.modelos import (
     CalculationRevision,

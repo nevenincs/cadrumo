@@ -47,10 +47,8 @@ import pytest
 
 from ....core import BindingSourceKind
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    DataBindingDefinition,
-    RegistryQueryService,
-)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+from cadrumo.domain.calculations.registry.queries import RegistryQueryService
 from ...aggregation import (
     BindingSourceDisposition,
     build_binding_source_dispositions,

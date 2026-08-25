@@ -68,11 +68,9 @@ from ....transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from .. import (
-    ModeloRevision,
-    build_snapshot,
-    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.bindings import resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -35,11 +35,9 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core import Period
 from ....core.resources import bundled_path, resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from ....domain.calculations.registry import (
-    ModeloRevision,
-    load_registry_tree,
-    structurally_unroutable_iva_base_categories,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.bindings import structurally_unroutable_iva_base_categories
 from ....domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,

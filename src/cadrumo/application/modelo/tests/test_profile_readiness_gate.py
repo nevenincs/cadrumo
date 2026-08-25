@@ -500,7 +500,7 @@ def test_grounding_index_lookup_stays_bounded_across_repeated_readiness_checks(t
     import time
 
     from ....core.resources import resources
-    from ....domain.calculations.registry import build_profile_grounding_index
+    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
 
     authority = resources().modelos.authority
 

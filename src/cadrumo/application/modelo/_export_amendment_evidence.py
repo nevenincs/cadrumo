@@ -6,7 +6,7 @@ from typing import NoReturn, Protocol
 
 from ...application.filing import AmendmentEvidence
 from ...core import Modelo
-from ...domain.calculations.registry import bundled_authority
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
 from ...domain.modelos import (

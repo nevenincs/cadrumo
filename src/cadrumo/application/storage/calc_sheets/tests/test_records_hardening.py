@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import CasillaId, Period, validated_casilla_id
-from .....domain.calculations.registry import LegalRefId
+from cadrumo.domain.calculations.registry.ids import LegalRefId
 from ..errors import CalcSheetsRecordError
 from .._records import (
     OperatorInput,

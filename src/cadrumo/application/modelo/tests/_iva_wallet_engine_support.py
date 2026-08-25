@@ -16,11 +16,9 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    RegistryModeloObservation,
-    RegistrySnapshot,
-)
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (

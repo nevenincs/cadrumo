@@ -9,8 +9,7 @@ from ._status_rendering import precondition_action_lines
 
 
 def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
-    from cadrumo.application.workflow.profile_health import unavailable_profile_record_verdict
-
+    from ....application.workflow.profile_health import unavailable_profile_record_verdict
     from .._config_payloads import ConfigProfileShowResult
 
     action = resolve_cli_precondition_action(
@@ -53,8 +52,7 @@ def _emit_profile_record_unreadable(
     label: str,
     error: Exception,
 ) -> None:
-    from cadrumo.application.workflow.profile_health import unavailable_profile_record_verdict
-
+    from ....application.workflow.profile_health import unavailable_profile_record_verdict
     from .._config_payloads import ConfigProfileShowResult
 
     action = resolve_cli_precondition_action(
@@ -92,10 +90,9 @@ def _emit_profile_record_unreadable(
 
 def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read through the exact live session established by the parsed root gate."""
-    from cadrumo.domain.user_profile.errors import ProfileNotFoundError
-
     from ....adapters.persistence.storage import active_bucket_session_serves
     from ....application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ....domain.user_profile.errors import ProfileNotFoundError
 
     if active_bucket_session_serves(bucket_id):
         return ProfileRecordRepository.for_current_session(bucket_id).load(profile_id)

@@ -20,11 +20,8 @@ import pytest
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import (
-    LegalRefId,
-    SourceRefId,
-    verify_legal_catalogue,
-)
+from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
+from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 from ....domain.modelos import ModeloVerificationFindingKind
 from ...calculations import (
     CrossPeriodCleanStateBlocker,

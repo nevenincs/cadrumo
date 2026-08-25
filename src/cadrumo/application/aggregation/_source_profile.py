@@ -14,7 +14,8 @@ from collections.abc import Iterable
 from typing import ClassVar
 
 from ...core import BindingSourceKind
-from ...domain.calculations.registry import BindingId, RegistrySnapshot
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceResolution,

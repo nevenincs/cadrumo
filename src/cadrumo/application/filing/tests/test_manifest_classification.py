@@ -31,7 +31,7 @@ from typing import Any
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import InputKind
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

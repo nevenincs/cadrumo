@@ -5,16 +5,10 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import (
-    RegistryRelationHandoffApplicabilityAudit,
-    RegistryRelationHandoffAudit,
-    RelationHandoffRecord,
-    audit_registry_relation_handoff_applicability,
-    audit_registry_relation_handoffs,
-    bound_casilla_binding_ids,
-    bundled_authority,
-    relation_aggregation_op,
-)
+from cadrumo.domain.calculations.registry.handoffs import RegistryRelationHandoffApplicabilityAudit, RegistryRelationHandoffAudit, RelationHandoffRecord, audit_registry_relation_handoff_applicability, audit_registry_relation_handoffs
+from cadrumo.domain.calculations.registry.bindings import bound_casilla_binding_ids
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.relation_aggregation import relation_aggregation_op
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

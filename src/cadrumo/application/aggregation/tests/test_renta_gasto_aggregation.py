@@ -31,10 +31,8 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    InputKind,
-    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.bindings import resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.prorrata_register import ProrrataRegisterEntry
 from ....domain.transactions import (

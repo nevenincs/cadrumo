@@ -37,16 +37,14 @@ from .....domain.iva import (
     IvaRateKind,
 )
 from .....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
-from .. import (
-    InputKind,
-    IvaLedgerObservation,
-    RegistryValidationError,
-    build_snapshot,
-    extract_record_design,
-    load_catalogue_file,
-    project_m303_differentiated_deduction_rows,
-    resolve_record_design_binary,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from cadrumo.domain.calculations.registry.m303_differentiated_deduction_projection import project_m303_differentiated_deduction_rows
+from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

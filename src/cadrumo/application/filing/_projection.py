@@ -19,14 +19,16 @@ from ...core import (
     M303RegimenSimplificadoModuleProjectionRef,
     Modelo,
 )
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.schema import (
     CasillaFieldKind,
     ExportLayoutDefinition,
     ExportRecordDefinition,
-    RecordId,
     RegistrySnapshot,
-    project_m303_differentiated_deduction_rows,
-    project_m303_prorrata_activity_rows,
+)
+from ...domain.calculations.registry.ids import RecordId
+from ...domain.calculations.registry.m303_differentiated_deduction_projection import project_m303_differentiated_deduction_rows
+from ...domain.calculations.registry.m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
+from ...domain.calculations.registry.m303_regimen_simplificado_projection import (
     project_m303_regimen_simplificado_rows,
     validate_m303_regimen_simplificado_endpoint_epoch,
 )

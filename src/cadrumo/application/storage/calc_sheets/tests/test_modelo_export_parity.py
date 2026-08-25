@@ -20,7 +20,7 @@ from datetime import date
 import pytest
 
 from .....core.resources import resources
-from .....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from .. import build_export_plan
 from .._layout import plan_layout
 from .._translator import is_translatable

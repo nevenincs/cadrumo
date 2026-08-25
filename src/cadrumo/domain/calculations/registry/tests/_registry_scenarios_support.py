@@ -9,7 +9,7 @@ from functools import lru_cache
 
 from .....core import CasillaId, validated_casilla_id, validated_casilla_id_map
 from .....core.resources import bundled_path
-from .. import LegalRefId, SourceRefId
+from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ._registry_schema_support import _committed_modelo
 from ._scenarios import (
     RegistryCalculationScenario,

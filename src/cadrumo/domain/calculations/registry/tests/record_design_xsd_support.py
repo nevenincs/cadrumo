@@ -10,7 +10,7 @@ shipped. Only 2022 and 2023 do.
 
 A gate that compiles these schemas without handling that will silently cover
 two of six revisions while appearing to cover all six, which is why
-:func:`compile_record_design_schemas` refuses to return a short set rather than
+:func:`compilerecord_design_schemas` refuses to return a short set rather than
 reporting one.
 
 The module is public rather than underscored because it is consumed from outside
@@ -21,7 +21,7 @@ one, so the oracle is named publicly and shared.
 
 The repair is deliberately split from the compilation. :func:`repair_xsd_regex_escapes`
 is a pure text transformation that needs no XML toolchain, so its soundness
-property is provable on its own; only :func:`compile_record_design_schema` needs
+property is provable on its own; only :func:`compilerecord_design_schema` needs
 ``lxml``, which it imports lazily.
 
 Using the redacted submission fixture
@@ -65,8 +65,8 @@ __all__ = [
     "MODELO_100_XSD_ROOT",
     "SchemaCompilationError",
     "bundled_modelo_100_xsds",
-    "compile_record_design_schema",
-    "compile_record_design_schemas",
+    "compilerecord_design_schema",
+    "compilerecord_design_schemas",
     "repair_xsd_regex_escapes",
 ]
 
@@ -150,7 +150,7 @@ def _decoded(xsd: Path) -> str:
     return _ENCODING_DECLARATION.sub('encoding="UTF-8"', raw, count=1)
 
 
-def compile_record_design_schema(xsd: Path) -> XMLSchema:
+def compilerecord_design_schema(xsd: Path) -> XMLSchema:
     """Compile one record-design XSD, repairing AEAT's illegal escapes first.
 
     Args:
@@ -171,7 +171,7 @@ def compile_record_design_schema(xsd: Path) -> XMLSchema:
         raise SchemaCompilationError(f"{xsd.name} does not compile even after escape repair: {exc}") from exc
 
 
-def compile_record_design_schemas(xsds: Iterable[Path]) -> Mapping[Path, XMLSchema]:
+def compilerecord_design_schemas(xsds: Iterable[Path]) -> Mapping[Path, XMLSchema]:
     """Compile every schema in ``xsds``, refusing to return a partial set.
 
     A caller that silently accepted fewer compiled schemas than it asked for
@@ -195,7 +195,7 @@ def compile_record_design_schemas(xsds: Iterable[Path]) -> Mapping[Path, XMLSche
     failures: list[str] = []
     for xsd in requested:
         try:
-            compiled[xsd] = compile_record_design_schema(xsd)
+            compiled[xsd] = compilerecord_design_schema(xsd)
         except SchemaCompilationError as exc:
             failures.append(str(exc))
 

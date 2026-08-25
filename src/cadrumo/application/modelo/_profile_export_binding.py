@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from ...domain.calculations.registry import DataBindingDefinition
+from ...domain.calculations.registry.schema import DataBindingDefinition
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileSchemaDefinition

@@ -13,7 +13,7 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Modelo, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
+from cadrumo.domain.calculations.registry.bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import (
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,

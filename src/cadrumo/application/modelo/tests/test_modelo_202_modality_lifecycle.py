@@ -24,7 +24,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import (
     EntityType,
     IVARegime,

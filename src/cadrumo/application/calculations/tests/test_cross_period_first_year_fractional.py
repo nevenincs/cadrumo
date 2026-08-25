@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.calculations.registry import Modelo202Modality
+from cadrumo.domain.calculations.registry.applicability import Modelo202Modality
 from .. import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,

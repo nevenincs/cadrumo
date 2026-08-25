@@ -30,12 +30,9 @@ import pytest
 
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import resources
-from .....domain.calculations.registry import (
-    CasillaObservation,
-    RegistryCalculationUnresolvedOutcome,
-    RegistryUnresolvedOutcomeReason,
-    resolve_m303_regimen_simplificado_snapshot,
-)
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome, RegistryUnresolvedOutcomeReason
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from .....domain.filing_evidence import FilingEvidenceReference
 from .....domain.iva import (
     M303RegimenSimplificadoScope,

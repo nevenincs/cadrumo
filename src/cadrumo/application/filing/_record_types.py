@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...domain.calculations.registry import BindingId, FilingProjectionRef, RecordId
+from ...core import FilingProjectionRef
+from ...domain.calculations.registry.ids import BindingId, RecordId
 
 
 @dataclass(frozen=True, slots=True)

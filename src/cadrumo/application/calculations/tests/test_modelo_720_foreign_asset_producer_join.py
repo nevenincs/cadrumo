@@ -62,7 +62,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import BindingSourceKind, CasillaId, Modelo, Period, validated_casilla_id
 from ....core.aggregation import ForeignAssetClass
 from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision, selector_as_dict
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

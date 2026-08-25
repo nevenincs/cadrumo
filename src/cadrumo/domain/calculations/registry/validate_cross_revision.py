@@ -25,7 +25,7 @@ from .schema import (
     ModeloDefinition,
     ModeloRevision,
 )
-from ._validate_cross_revision_advisory import (
+from .validate_cross_revision_advisory import (
     CrossRevisionCasillaDriftSummary,
     summarize_non_overlapping_cross_revision_casilla_drift,
 )

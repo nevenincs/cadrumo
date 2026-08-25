@@ -41,7 +41,8 @@ from .....application.aggregation import (
 # gate running zero assertions rather than failing loudly.
 from .....application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .....core import BindingSourceKind
-from .. import InputKind, PeriodSelector
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema import PeriodSelector
 from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

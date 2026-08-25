@@ -18,12 +18,8 @@ import pytest
 
 from ....core import AggregationCaptureKind, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
-from ....domain.calculations.registry import (
-    DataBindingDefinition,
-    ModeloRevision,
-    PeriodSelector,
-    WithholdingObservation,
-)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.bindings import WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._percepciones_observations_repository import PercepcionObservationRepository
 from .._source_mesh import CalculationSourceContext

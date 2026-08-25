@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ....domain.calculations.registry import selector_period_matches_request
+from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
 from .._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 
 

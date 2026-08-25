@@ -57,4 +57,4 @@ surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["orden-eha-3435-2007:anexo-iv"]
-source_refs = ["aeat-modelo-126-procedure", "aeat-dr-126-2020"]
+source_refs = ["aeat-modelo-126-procedure", "aeat-dr-126-2015-2019", "aeat-dr-126-2020"]

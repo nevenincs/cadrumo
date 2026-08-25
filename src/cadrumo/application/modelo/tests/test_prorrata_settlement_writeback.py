@@ -38,7 +38,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

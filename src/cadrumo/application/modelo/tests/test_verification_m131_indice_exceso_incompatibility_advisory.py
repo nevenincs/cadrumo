@@ -46,11 +46,9 @@ import pytest
 
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import (
-    ModeloRevision,
-    VerificationPredicateDefinition,
-    load_modelo_path,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from cadrumo.domain.calculations.registry.loader import load_modelo_path
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     ModeloVerificationFindingKind,

@@ -9,7 +9,7 @@ from playwright.async_api import Error as PlaywrightError
 from playwright.async_api import Playwright
 
 from ......core.config import Settings
-from ......domain.calculations.registry import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ... import verify as verify_module
 from ...browser import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import (

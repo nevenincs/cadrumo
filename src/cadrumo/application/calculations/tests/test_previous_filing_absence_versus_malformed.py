@@ -25,7 +25,8 @@ import pytest
 
 from ....core import validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistryValidationError, resolve_previous_filing_binding_values
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.bindings import resolve_previous_filing_binding_values
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import resolve_bindings_from_local_store

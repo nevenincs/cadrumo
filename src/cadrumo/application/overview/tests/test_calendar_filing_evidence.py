@@ -11,9 +11,7 @@ from pydantic import ValidationError
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....core import Period
 from ....core.hashing import sha256_hex
-from ....domain.calculations.registry import (
-    ApplicabilityVerdict,
-)
+from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import ExternalEvidenceKind
 from ...live.expedientes import PersistedExpedientesSnapshot

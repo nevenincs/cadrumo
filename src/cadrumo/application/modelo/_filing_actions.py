@@ -56,7 +56,7 @@ from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.applicability import (
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )

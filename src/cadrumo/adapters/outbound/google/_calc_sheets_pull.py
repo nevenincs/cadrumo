@@ -74,18 +74,24 @@ from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import ActionEvidenceProvenance, CasillaId, NoRecoveryOutcome, Period
 from ....core.decimal import coerce_decimal, coerce_finite_european_decimal
 from ....core.time import coerce_utc_aware
-from ....domain.calculations.registry import (
+from ....domain.calculations.registry.ids import (
     BindingId,
-    CasillaDefinition,
-    InputKind,
     LegalRefId,
     ModeloId,
-    RegistryCalculationResult,
-    RegistrySnapshot,
     RelationId,
     RevisionId,
     SourceRefId,
+)
+from ....domain.calculations.registry.schema import (
+    CasillaDefinition,
+    RegistrySnapshot,
+)
+from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.formula_runtime import (
+    RegistryCalculationResult,
     calculate_registry_snapshot,
+)
+from ....domain.calculations.registry.casilla_membership import (
     casillas_by_id,
     undeclared_casilla_ids,
 )

@@ -56,10 +56,10 @@ from ...core import (
 )
 from ...core.errors import CoreValidationError
 from ...core.resources import resources
-from ...domain.calculations.registry import (
-    ModeloRevision,
-    RegistrySnapshotError,
-    RevisionId,
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
     format_noncanonical_casilla_reference,

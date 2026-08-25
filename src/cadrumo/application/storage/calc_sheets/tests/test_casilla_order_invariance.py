@@ -35,7 +35,7 @@ from datetime import date
 import pytest
 
 from .....core.resources import resources
-from .....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....filing.runtime import collection_from_snapshot
 from .. import build_export_plan
 from .._engine import registry_sha

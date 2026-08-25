@@ -7,7 +7,7 @@ mirroring each PDF's path relative to ``corpus/``.  The sidecar embeds the
 sha256 of the source PDF bytes as its content key so it remains valid after
 installation (unlike size/mtime, which change across environments).
 
-At runtime :mod:`cadrumo.domain.calculations.registry.validate_evidence`
+At runtime :mod:`cadrumo.domain.calculations.registry._validate_evidence`
 reads the shipped sidecar for every ``manual_pdf`` source reference, verifies
 the sha256 against the deployed PDF bytes, and falls back to on-demand
 pypdfium2 extraction only on a mismatch.  End-user machines should never
@@ -104,7 +104,7 @@ def extract_raw_text(path: Path) -> str:
     a private name would force that gate to reach into module internals.
 
     This is the same extraction logic as
-    :func:`cadrumo.domain.calculations.registry.validate_evidence._extract_pdf_text_impl`
+    :func:`cadrumo.domain.calculations.registry._validate_evidence._extract_pdf_text_impl`
     and must produce byte-identical output so runtime validation passes.
     """
     try:

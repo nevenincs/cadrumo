@@ -9,7 +9,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from .. import resolve_keyed_bracket
+from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_keyed_bracket
 from ..convenio import load_convenio_authority
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot

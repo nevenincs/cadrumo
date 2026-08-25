@@ -31,7 +31,7 @@ from collections.abc import Callable
 from decimal import Decimal
 
 from ...core.decimal import coerce_finite_european_decimal
-from ...domain.calculations.registry import BindingId
+from ...domain.calculations.registry.ids import BindingId
 
 
 def decimal_from_string(

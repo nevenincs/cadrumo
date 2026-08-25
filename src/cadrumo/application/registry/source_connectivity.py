@@ -30,32 +30,40 @@ from ...core import (
     SourceConnectivityProofAuthority,
 )
 from ...core.resources import bundled_path
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     BindingId,
-    CensoModeloEventKind,
-    DataBindingDefinition,
-    FormulaDefinition,
     FormulaId,
-    InputKind,
-    InputKindValue,
     LegalRefId,
     ModeloId,
-    ModeloRevision,
-    RegistrySnapshot,
-    RelationConsumptionChannel,
-    RelationDefinition,
     RelationId,
     RevisionId,
     SourceRefId,
-    ValidatedRegistryAuthority,
-    casillas_by_binding,
+)
+from ...domain.calculations.registry.censo_modelos import CensoModeloEventKind
+from ...domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    ModeloRevision,
+    RegistrySnapshot,
+    RelationDefinition,
+)
+from ...domain.calculations.registry.schema_input_kind import (
+    InputKind,
+    InputKindValue,
+)
+from ...domain.calculations.registry.handoffs import (
+    RelationConsumptionChannel,
+    relation_consumption_channels,
+    relation_consumption_index,
+)
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.bindings import casillas_by_binding
+from ...domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_casilla_refs,
     expression_relation_refs,
-    relation_consumption_channels,
-    relation_consumption_index,
-    select_revision,
 )
+from ...domain.calculations.registry.temporal import select_revision
 from ..aggregation import BindingSourceDisposition
 from ..modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 

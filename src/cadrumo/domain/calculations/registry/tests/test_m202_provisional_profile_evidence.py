@@ -7,7 +7,8 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import RegistryCatalogues, RegistryValidator
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
 from ..errors import RegistryValidationError
 from ..schema import ExtractionProfileDefinition, ExtractionTargetDefinition, ModeloDefinition
 from ._registry_schema_support import _committed_modelo

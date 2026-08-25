@@ -38,7 +38,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import CasillaId
-from ...domain.calculations.registry import ModeloRevision
+from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic
 from ..calculations import CalculationObservationRepository
 from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics

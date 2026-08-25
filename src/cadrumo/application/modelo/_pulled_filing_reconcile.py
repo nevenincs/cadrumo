@@ -64,7 +64,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...domain.calculations.registry import verification_tolerance_or_exact
+from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
 from ...domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -75,7 +75,10 @@ from ._reconcile_population import resolve_casilla_population_scope
 
 if TYPE_CHECKING:
     from ...core import CasillaId
-    from ...domain.calculations.registry import CasillaDefinition, RegistrySnapshot
+    from ...domain.calculations.registry.schema import (
+        CasillaDefinition,
+        RegistrySnapshot,
+    )
     from ...domain.modelos import CalculationRevision, WorkUnit
     from ..calculations import CalculationObservationRepository
 

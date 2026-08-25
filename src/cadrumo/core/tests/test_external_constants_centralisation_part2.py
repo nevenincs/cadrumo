@@ -619,7 +619,7 @@ def test_dehu_rechazo_tacito_window_resolves_to_the_reviewed_legal_entry() -> No
     matching the constant's value. Changing the constant without the law
     changing fails at the last assertion.
     """
-    from ...domain.calculations.registry import legal_reference_quotes_corpus, verify_legal_catalogue
+    from cadrumo.domain.calculations.registry.legal import legal_reference_quotes_corpus, verify_legal_catalogue
     from ..external_constants import DEHU_RECHAZO_TACITO_DIAS_NATURALES
     from ..resources import bundled_path, resources
 

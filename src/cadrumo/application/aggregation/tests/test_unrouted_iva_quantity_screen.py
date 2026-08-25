@@ -29,12 +29,8 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from ....domain.calculations.registry import (
-    IvaLedgerObservation,
-    ModeloRevision,
-    unrouted_ledger_iva_quantities,
-    unsupported_ledger_iva_observations,
-)
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, unrouted_ledger_iva_quantities, unsupported_ledger_iva_observations
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva import (
     InvoiceKind,
     IvaCashAccountingTreatment,

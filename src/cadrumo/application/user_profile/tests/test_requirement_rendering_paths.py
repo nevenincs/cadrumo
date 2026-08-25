@@ -18,7 +18,7 @@ from cadrumo.application.user_profile.preflight import (
 )
 
 from ....core.resources import resources
-from ....domain.calculations.registry import binding_profile_keys
+from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys
 from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

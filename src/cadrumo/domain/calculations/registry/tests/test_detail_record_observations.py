@@ -28,10 +28,10 @@ from ..bindings import (
     RefundOperationObservation,
     RelatedPartyOperationObservation,
 )
-from .._detail_record_bindings import _build_related_party_rows
-from .._donativo_bindings import _build_donativo_rows
+from ..detail_record_bindings import _build_related_party_rows
+from ..donativo_bindings import _build_donativo_rows
 from ..errors import RegistryValidationError
-from .._withholding_bindings import (
+from ..withholding_bindings import (
     WithholdingObservation,
     _build_withholding_rows,
 )
@@ -667,7 +667,7 @@ def test_build_withholding_rows_incapacidad_parts_file_on_their_claves() -> None
 def test_withholding_totals_include_the_incapacidad_parts() -> None:
     """The resumen-anual magnitudes are the row's FULL totals: the design's
     split of the base and incap blocks must not under-count the summary."""
-    from .._withholding_bindings import percibido_total, retencion_total
+    from ..withholding_bindings import percibido_total, retencion_total
 
     observations = (
         _observation(

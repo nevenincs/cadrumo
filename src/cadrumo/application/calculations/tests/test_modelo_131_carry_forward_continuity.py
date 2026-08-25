@@ -50,12 +50,8 @@ import pytest
 
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistryCalculationResult,
-    RegistryModeloObservation,
-    calculate_registry_snapshot,
-    resolve_available_bound_inputs_by_casilla_id,
-)
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import resolve_bindings_from_local_store

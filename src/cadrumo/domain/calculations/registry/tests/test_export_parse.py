@@ -18,7 +18,9 @@ from decimal import Decimal
 
 import pytest
 
-from .. import ExportEncoding, ExportFieldDefinition, parse_fixed_width_export_field, xml_dictionary_entries
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, parse_fixed_width_export_field
+from cadrumo.domain.calculations.registry.schema import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
 from ..errors import RegistryValidationError
 from ..export_parse import (
     _local_name,

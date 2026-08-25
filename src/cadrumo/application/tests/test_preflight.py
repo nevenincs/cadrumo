@@ -201,9 +201,7 @@ def test_registry_row_healthy_when_all_references_resolve() -> None:
 
 def test_registry_probe_snapshots_every_real_revision_at_its_declared_grade() -> None:
     """Bundled applicability, calculation, and filing revisions retain their exact grade."""
-    from ...domain.calculations.registry import (
-        bundled_authority,
-    )
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
     from ..preflight import _probe_registry_authority
 
     authority = bundled_authority()

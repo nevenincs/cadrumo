@@ -11,7 +11,8 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from .. import RegistryCatalogues, RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import RegistryModeloObservation
 from ..relations import (
@@ -20,7 +21,7 @@ from ..relations import (
     resolve_relation_values_from_observations,
 )
 from ..schema import ModeloDefinition, ModeloRevision
-from .._schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
+from ..schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
 from ..validate import RegistryValidator
 from .._validate_relation_sources import (
     RelationSourceYearCoverageAllowance,

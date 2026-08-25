@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from .. import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ..loader import load_registry_tree
 from ._gate_support import fragment_declaring
 

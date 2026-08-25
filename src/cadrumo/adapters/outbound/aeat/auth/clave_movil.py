@@ -68,7 +68,7 @@ from .....core.i18n import tr
 from .....core.identity import same_tax_identifier, tax_id_identity_token
 from .....core.logging import get_logger
 from .....core.time import now
-from .....domain.calculations.registry import canonical_remote_hostname
+from .....domain.calculations.registry.aeat_hosts import canonical_remote_hostname
 from .....domain.user_profile.errors import UserProfileError
 from .._playwright import PlaywrightTimeoutError
 from ._clave_movil_page_flow import _ClaveMovilPageFlowMixin

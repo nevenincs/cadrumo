@@ -23,11 +23,8 @@ import pytest
 
 from ....core.errors import CadrumoError, build_error_envelope
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    enum_consumed_binding_ids,
-    revision_date_binding_ids,
-)
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
 from .._calculate_input import (
     ModeloCalculateBindingInputError,
     _validated_binding_input_channel,

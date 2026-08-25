@@ -20,13 +20,35 @@ duplicates and remain the registry package's own authority.
 from __future__ import annotations
 
 import ast
+import importlib
 from pathlib import Path
 
 import pytest
 
 from .....core.directory_scan import scan_directory
 from .....tests import REPO_ROOT
-from ... import registry
+from ..bindings import (
+    IvaLedgerObservation,
+    OssIossLedgerObservation,
+    resolve_ledger_iva_aggregation_binding_values,
+    resolve_ledger_oss_aggregation_binding_values,
+    validate_ledger_iva_aggregation_binding_definition,
+    validate_ledger_oss_aggregation_binding_definition,
+)
+from ..cross_revision_divergence import CrossRevisionCasillaDivergence
+from ..formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
+from ..runtime_graph import (
+    expression_binding_refs,
+    expression_casilla_refs,
+    expression_date_binding_refs,
+    expression_parameter_refs,
+    expression_relation_refs,
+)
+from ..schema import CasillaContinuidadEvolutionDefinition
+from ..validate_cross_revision import (
+    CrossRevisionCasillaDriftSummary,
+    summarize_non_overlapping_cross_revision_casilla_drift,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,50 +69,76 @@ _CASILLA_CONTINUITY_PUBLIC_NAMES = (
     "CrossRevisionCasillaDriftSummary",
     "summarize_non_overlapping_cross_revision_casilla_drift",
 )
-_CASILLA_CONTINUITY_PRIVATE_NAMES = (
-    "_iter_cross_revision_casilla_divergences",
-    "_validate_cross_revision_casilla_consistency",
-    "validate_cross_revision_casilla_consistency",
-)
-_FORMULA_REFERENCE_PUBLIC_NAMES = (
-    "expression_binding_refs",
-    "expression_casilla_refs",
-    "expression_date_binding_refs",
-    "expression_parameter_refs",
-    "expression_relation_refs",
-)
-_PARAMETER_RESOLUTION_PUBLIC_NAMES = ("resolve_keyed_bracket", "resolve_parameter")
 _MODELO_REGISTRY_PRIVATE_MODULES = ("_bindings", "_errors", "_record_design", "_schema")
 
 
-def test_registry_ledger_binding_substrate_is_public_api() -> None:
-    exported = set(registry.__all__)
+def test_registry_ledger_binding_substrate_lives_in_its_defining_module() -> None:
+    contracts = (
+        IvaLedgerObservation,
+        OssIossLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
+        resolve_ledger_oss_aggregation_binding_values,
+        validate_ledger_iva_aggregation_binding_definition,
+        validate_ledger_oss_aggregation_binding_definition,
+    )
 
-    assert all(hasattr(registry, name) for name in _LEDGER_BINDING_PUBLIC_NAMES)
-    assert set(_LEDGER_BINDING_PUBLIC_NAMES).issubset(exported)
-
-
-def test_registry_casilla_continuity_reports_are_public_api() -> None:
-    exported = set(registry.__all__)
-
-    assert all(hasattr(registry, name) for name in _CASILLA_CONTINUITY_PUBLIC_NAMES)
-    assert set(_CASILLA_CONTINUITY_PUBLIC_NAMES).issubset(exported)
-    assert not any(hasattr(registry, name) for name in _CASILLA_CONTINUITY_PRIVATE_NAMES)
-    assert exported.isdisjoint(_CASILLA_CONTINUITY_PRIVATE_NAMES)
-
-
-def test_registry_formula_reference_walkers_are_public_api() -> None:
-    exported = set(registry.__all__)
-
-    assert all(hasattr(registry, name) for name in _FORMULA_REFERENCE_PUBLIC_NAMES)
-    assert set(_FORMULA_REFERENCE_PUBLIC_NAMES).issubset(exported)
+    assert tuple(contract.__name__ for contract in contracts) == _LEDGER_BINDING_PUBLIC_NAMES
+    assert {contract.__module__ for contract in contracts} == {
+        "cadrumo.domain.calculations.registry.bindings"
+    }
 
 
-def test_registry_parameter_resolution_is_public_api() -> None:
-    exported = set(registry.__all__)
+def test_registry_casilla_continuity_reports_live_in_their_defining_modules() -> None:
+    contracts = (
+        CasillaContinuidadEvolutionDefinition,
+        CrossRevisionCasillaDivergence,
+        CrossRevisionCasillaDriftSummary,
+        summarize_non_overlapping_cross_revision_casilla_drift,
+    )
 
-    assert all(hasattr(registry, name) for name in _PARAMETER_RESOLUTION_PUBLIC_NAMES)
-    assert set(_PARAMETER_RESOLUTION_PUBLIC_NAMES).issubset(exported)
+    assert tuple(contract.__name__ for contract in contracts) == _CASILLA_CONTINUITY_PUBLIC_NAMES
+    assert {contract.__module__ for contract in contracts} == {
+        "cadrumo.domain.calculations.registry.schema",
+        "cadrumo.domain.calculations.registry.cross_revision_divergence",
+        "cadrumo.domain.calculations.registry.validate_cross_revision",
+    }
+
+
+def test_registry_formula_reference_walkers_live_in_their_defining_module() -> None:
+    walkers = (
+        expression_binding_refs,
+        expression_casilla_refs,
+        expression_date_binding_refs,
+        expression_parameter_refs,
+        expression_relation_refs,
+    )
+
+    assert tuple(walker.__name__ for walker in walkers) == (
+        "expression_binding_refs",
+        "expression_casilla_refs",
+        "expression_date_binding_refs",
+        "expression_parameter_refs",
+        "expression_relation_refs",
+    )
+    assert {walker.__module__ for walker in walkers} == {
+        "cadrumo.domain.calculations.registry.runtime_graph"
+    }
+
+
+def test_registry_parameter_resolution_lives_in_its_defining_module() -> None:
+    resolvers = (resolve_keyed_bracket, resolve_parameter)
+
+    assert tuple(resolver.__name__ for resolver in resolvers) == ("resolve_keyed_bracket", "resolve_parameter")
+    assert {resolver.__module__ for resolver in resolvers} == {
+        "cadrumo.domain.calculations.registry.formula_runtime_ops"
+    }
+
+
+def test_registry_package_marker_is_inert() -> None:
+    registry = importlib.import_module("cadrumo.domain.calculations.registry")
+
+    assert registry.__all__ == []
+    assert not any(hasattr(registry, name) for name in _LEDGER_BINDING_PUBLIC_NAMES)
 
 
 def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:

@@ -37,7 +37,7 @@ from ....modelos import (
     derive_calculation_revision_id,
 )
 from ....submission import ModeloDraftStatus
-from .. import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ..bindings import (
     CasillaObservation,
     OracleModeloObservation,

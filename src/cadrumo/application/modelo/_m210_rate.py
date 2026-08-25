@@ -31,7 +31,12 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import ConvenioOverrideKind, TipoRentaIrnr
-from ...domain.calculations.registry import ConvenioOverride, LegalRefId, RegistrySnapshot, SourceRefId
+from ...domain.calculations.registry.convenio import ConvenioOverride
+from ...domain.calculations.registry.ids import (
+    LegalRefId,
+    SourceRefId,
+)
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     ModeloVerificationFinding,
@@ -41,7 +46,7 @@ from ...domain.modelos import (
 
 if TYPE_CHECKING:
     from ...core import CasillaId
-    from ...domain.calculations.registry import ParameterDefinition
+    from ...domain.calculations.registry.schema import ParameterDefinition
 
 _ZERO = Decimal("0")
 

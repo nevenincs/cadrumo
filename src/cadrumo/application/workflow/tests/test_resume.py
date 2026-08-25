@@ -23,7 +23,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.errors import SiteHealthError, SiteHealthState, resolve_error_message
-from ....domain.calculations.registry import CasillaObservation
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import (
     CalculationRevision,

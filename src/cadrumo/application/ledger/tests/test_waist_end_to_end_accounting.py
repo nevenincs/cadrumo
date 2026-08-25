@@ -59,11 +59,9 @@ from ....domain.attachments import (
     AttachmentSource,
     add_attachment,
 )
-from ....domain.calculations.registry import (
-    INVOICE_BINDING_SOURCE_KINDS,
-    ModeloRevision,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.bindings import INVOICE_BINDING_SOURCE_KINDS
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices import Invoice
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile

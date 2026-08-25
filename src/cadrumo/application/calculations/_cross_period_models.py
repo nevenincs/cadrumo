@@ -11,7 +11,12 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, OperatorActionAxis, Period
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId
-from ...domain.calculations.registry import LegalRefId, RegistryModeloObservation, RevisionId, SourceRefId
+from ...domain.calculations.registry.ids import (
+    LegalRefId,
+    RevisionId,
+    SourceRefId,
+)
+from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.modelos import (
     CalculationRevisionState,
     ExternalEvidenceKind,

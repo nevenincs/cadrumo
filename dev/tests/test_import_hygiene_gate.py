@@ -811,13 +811,13 @@ def test_family4_no_underscore_named_entries_in_any_facade_all() -> None:
 #
 # Four raw-loader names (ModeloRevisionSource, ModeloSource,
 # discover_modelo_sources, load_modelo_source) were demoted from the registry
-# package's public __all__, and build_snapshot followed as the same
+# loader module's direct contract, and build_snapshot followed as the same
 # unguarded-entry-point class as the raw loader family. Every one of the five had
 # zero cross-package PRODUCTION consumers at demotion time (build_snapshot's sole external caller is a test fixture).
-# The Python import itself still succeeds -- __all__ only governs star-imports
-# and introspection -- so this family is the actual enforcement: it reds a NEW
-# production import of any of these five names, keeping the demotion from
-# being silently reopened.
+# The direct loader import remains technically importable for implementation
+# use, so this family is the actual enforcement: it reds a NEW production
+# import of any of these five names, keeping the demotion from being silently
+# reopened.
 #
 # Hard zero, no allowlist: the current production count is zero, and every one
 # of the eight raw-loader siblings that stayed exported (each with a
@@ -831,9 +831,8 @@ def test_no_production_import_of_a_demoted_registry_loader_symbol() -> None:
 
     Hard-zero check: at demotion time none of the five names had a live
     production or test consumer, so any hit here is new. A genuine future need
-    is served by keeping the symbol on the facade with a stated per-caller
-    reason (the pattern already used for the seven siblings that stayed
-    exported), never by adding an allowlist entry to this gate.
+    is served by a defining public boundary with a stated per-caller reason,
+    never by adding an allowlist entry to this gate.
     """
     py_files = _package_py_files()
     assert py_files, f"no shipped modules found under {PKG_ROOT}; a hard-zero gate over an empty scan is not a zero"
@@ -844,8 +843,7 @@ def test_no_production_import_of_a_demoted_registry_loader_symbol() -> None:
     assert offenders == [], (
         "production import(s) of a demoted registry raw-loader symbol found: "
         f"{offenders}. Route through ValidatedRegistryAuthority, or state the real per-caller "
-        "need and keep the symbol on the facade (as already done for load_registry_tree and its "
-        "six siblings) -- do not add an allowlist entry to this gate."
+        "need and give it a defining public boundary -- do not add an allowlist entry to this gate."
     )
 
 
@@ -884,7 +882,7 @@ def test_the_registry_loader_gate_permits_a_planted_test_import(tmp_path: Path) 
 
 
 def test_the_registry_loader_gate_permits_a_planted_import_of_a_kept_symbol(tmp_path: Path) -> None:
-    """The gate is precise: a production import of a symbol that stayed exported is NOT a violation."""
+    """The gate is precise: a production import of a kept loader symbol is NOT a violation."""
     planted = _plant_module(
         tmp_path,
         "cadrumo/planted_registry_loader_clean.py",
@@ -893,7 +891,7 @@ def test_the_registry_loader_gate_permits_a_planted_import_of_a_kept_symbol(tmp_
     all_sites = walk_module_imports(planted, src_root=tmp_path)
 
     assert find_registry_loader_import_violations(all_sites) == [], (
-        "the registry-loader gate fired on a symbol that was deliberately kept on the facade"
+        "the registry-loader gate fired on a symbol that remains supported by the loader module"
     )
     assert "load_registry_tree" not in DEMOTED_REGISTRY_LOADER_SYMBOLS
 

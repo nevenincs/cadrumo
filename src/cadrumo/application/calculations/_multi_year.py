@@ -33,7 +33,8 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...domain.calculations.registry import BindingId, RegistrySnapshot
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,

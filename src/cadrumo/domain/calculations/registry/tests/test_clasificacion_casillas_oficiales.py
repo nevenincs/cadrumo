@@ -5,8 +5,10 @@ from __future__ import annotations
 import pytest
 
 from .....core import EstadoCasillaOficial, validated_casilla_id
-from .. import RegistryValidationError, bundled_authority, clasificar_casillas_oficiales
-from .. import export as owner
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
+import cadrumo.domain.calculations.registry.export as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -20,7 +20,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
-from ._bindings_previous_filing import is_direct_previous_filing_binding
+from .bindings_previous_filing import is_direct_previous_filing_binding
 from .errors import RegistryValidationError
 from .ids import ModeloId, RelationId
 from .iva_wallet_relation_targets import (

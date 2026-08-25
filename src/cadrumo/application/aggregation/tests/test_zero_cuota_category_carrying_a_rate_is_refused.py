@@ -45,7 +45,7 @@ from pathlib import Path
 import pytest
 
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
-from ....domain.calculations.registry import IvaLedgerObservation
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
 from ....domain.iva import IvaCategory, IvaDeductionClassificationProvenance
 from ....domain.transactions import (
     BusinessClassification,

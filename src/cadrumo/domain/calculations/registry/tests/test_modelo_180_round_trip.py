@@ -19,7 +19,8 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import InputKind, resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo

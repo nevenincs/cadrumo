@@ -20,8 +20,8 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
-from .. import RegistryFoldRequirement
-from .._bindings_previous_filing import (
+from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement
+from ..bindings_previous_filing import (
     previous_filing_observation_requirements,
 )
 

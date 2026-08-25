@@ -15,13 +15,8 @@ from ....core import (
     Modelo,
     ResultDisposition,
 )
-from ....domain.calculations.registry import (
-    CasillaFieldKind,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.schema import CasillaFieldKind, ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from ....domain.filing import FilingExportValidationError
 from .. import build_filing_producer_snapshot
 from .._export import _preflight_projection_plan

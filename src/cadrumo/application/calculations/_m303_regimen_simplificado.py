@@ -8,7 +8,11 @@ from decimal import Decimal, InvalidOperation
 from ...core import Period
 from ...core.errors import CoreValidationError
 from ...core.money import round_to_cents
-from ...domain.calculations.registry import LegalParameter, M303RegimenSimplificadoSnapshot, RegistryCatalogues
+from ...domain.calculations.registry.schema import (
+    LegalParameter,
+    RegistryCatalogues,
+)
+from ...domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ...domain.iva import (
     ActividadNoAgricolaSimplificado,
     ActividadOrdenAnual,

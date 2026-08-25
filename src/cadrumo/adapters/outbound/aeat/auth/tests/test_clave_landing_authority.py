@@ -22,7 +22,7 @@ from typing import Protocol
 import pytest
 
 from ......core.config import Settings
-from ......domain.calculations.registry import canonical_remote_hostname
+from cadrumo.domain.calculations.registry.aeat_hosts import canonical_remote_hostname
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_permanente import ClavePermanenteAuthProvider
 from ._clave_movil_support import _DOMAINS, _aeat_url

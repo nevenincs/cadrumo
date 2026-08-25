@@ -21,7 +21,7 @@ from ._m303_orden_constants import (
     EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT,
     EXPECTED_SEASONAL_INDEXES,
 )
-from ._schema_base import RegistryModel
+from .schema_base import RegistryModel
 
 
 class M303AnnualOrdenRawModule(RegistryModel):

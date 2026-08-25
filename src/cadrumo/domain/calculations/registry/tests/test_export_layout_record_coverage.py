@@ -35,7 +35,7 @@ import pytest
 from .....core import ExportLayoutFormat
 from ..export import derive_export_layouts_from_bindings
 from ..record_design import extract_record_design
-from .._record_design_schema import (
+from ..record_design_schema import (
     RecordDesignExtraction,
     RecordDesignField,
     RecordDesignNote,

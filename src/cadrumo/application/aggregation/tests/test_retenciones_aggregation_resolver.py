@@ -21,7 +21,7 @@ import pytest
 
 from ....core import AggregationCaptureKind, BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver

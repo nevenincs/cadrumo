@@ -68,20 +68,26 @@ from ...domain.calculations import (
     RowCasillaKey,
     RowSourceIdentity,
 )
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     BindingId,
-    InputKind,
-    ModeloRevision,
-    RegistryCalculationResult,
     RelationId,
-    bound_casilla_binding_ids,
+)
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.formula_runtime import (
+    RegistryCalculationResult,
     calculate_registry_snapshot,
-    casillas_by_id,
+)
+from ...domain.calculations.registry.bindings import (
+    bound_casilla_binding_ids,
+    resolve_available_bound_inputs_by_casilla_id,
+)
+from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.iva_wallet_relation_targets import (
     iva_wallet_owned_binding_ids_for_revision,
     iva_wallet_owned_relation_targets_for_revision,
-    resolve_available_bound_inputs_by_casilla_id,
-    validated_text_input_casilla_ids,
 )
+from ...domain.calculations.registry.formula_text_inputs import validated_text_input_casilla_ids
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -171,7 +177,8 @@ from ._revision_persistence import persist_calculation_revision, require_filing_
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import Modelo720RowObservation, RegistrySnapshot
+    from ...domain.calculations.registry.bindings import Modelo720RowObservation
+    from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation import (
         CalculationSourceDiagnostic,
         CalculationSourceDiagnosticReason,
