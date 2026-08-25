@@ -452,7 +452,7 @@ def test_exact_projection_requires_a_real_cli_apply_choice() -> None:
     def review() -> None:
         typer.echo(f"decision={confirm_censal_review(projection)}")
 
-    result = CliRunner().invoke(app, ["review"], input="y\n")
+    result = CliRunner().invoke(app, [], input="y\n")
 
     assert result.exit_code == 0, result.output
     assert "contact.postcode: 28013 [adopt]" in result.output

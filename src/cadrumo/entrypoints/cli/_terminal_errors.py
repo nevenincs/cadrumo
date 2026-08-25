@@ -465,10 +465,16 @@ def _emit_crash(exc: Exception) -> NoReturn:
         # holder still knows which leaf was requested, where the Click context no
         # longer does.
         requested_leaf = current_requested_cli_leaf()
+    boundary_context = getattr(boundary, "context", None)
+    boundary_command = boundary_context.get("command") if isinstance(boundary_context, dict) else None
     payload = render_error_payload(
         boundary,
         as_json=_json_requested_for(exc),
-        command=None if requested_leaf is None else requested_leaf.subject_leaf_key,
+        command=(
+            requested_leaf.subject_leaf_key
+            if requested_leaf is not None
+            else boundary_command if isinstance(boundary_command, str) else None
+        ),
         action=None if projection is None else projection.precondition_action,
     )
     write_stderr(payload)

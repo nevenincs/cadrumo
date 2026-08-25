@@ -2077,6 +2077,12 @@ cli:
         list_help: List descendants declared on the active profile.
         remove_help: Remove one descendant by 0-based index from the active profile.
         remove_index_help: 0-based index of the descendant to remove.
+      add_row:
+        help: Add one row to a schema-declared repeatable profile section.
+        section_help: Repeatable profile section key.
+        value_help: Row field as FIELD=VALUE; repeat for each populated field.
+        invalid_value: Each --value must use FIELD=VALUE syntax; nothing was written.
+        duplicate_field: Field %{field} was supplied more than once; nothing was written.
       duplicate_display_name_help: Display name for the new profile (defaults to the
         target id)
       duplicate_help: Copy a profile under a new id and display name

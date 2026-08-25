@@ -2247,6 +2247,12 @@ cli:
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
+      add_row:
+        help: Añadir una fila a una sección repetible declarada por el esquema del perfil.
+        section_help: Clave de la sección repetible del perfil.
+        value_help: Campo de la fila como CAMPO=VALOR; repítalo por cada campo informado.
+        invalid_value: Cada --value debe usar la sintaxis CAMPO=VALOR; no se escribió nada.
+        duplicate_field: El campo %{field} se indicó más de una vez; no se escribió nada.
       duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto
         el id de destino)
       duplicate_help: Copiar un perfil bajo un nuevo id y nombre visible

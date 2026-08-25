@@ -154,11 +154,16 @@ def _collect_apoderado_answers_interactively(
 ) -> tuple[str, tuple[str, ...]]:
     """Collect representation intent through the canonical line-mode flow."""
     from ....application.auth import apoderado_answers_from_state, build_apoderado_flow_definition
-    from ....application.flows import LineFlowFrontend
+    from ....application.flows import FlowUnsupportedConsoleError, LineFlowFrontend
     from ....core.flows import FlowMode
 
     definition = build_apoderado_flow_definition(catalogue)
-    state, _projection = LineFlowFrontend(definition).run(mode=FlowMode.MODIFY)
+    try:
+        state, _projection = LineFlowFrontend(definition).run(mode=FlowMode.MODIFY)
+    except FlowUnsupportedConsoleError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.apoderado.configure.no_console_hint",
+        ) from exc
     return apoderado_answers_from_state(state)
 
 

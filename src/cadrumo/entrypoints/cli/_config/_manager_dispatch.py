@@ -115,7 +115,7 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
 
 
 def profile_create(ctx: typer.Context, **parameters: object) -> None:
-    """Run the create-mode profile wizard behavior."""
+    """Run scripted profile registration through the canonical application door."""
     profile_wizard_behavior("create")(ctx=ctx, **parameters)
 
 

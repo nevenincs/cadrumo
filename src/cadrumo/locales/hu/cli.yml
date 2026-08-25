@@ -2223,6 +2223,12 @@ cli:
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.
         remove_index_help: Az eltávolítandó leszármazott 0-alapú indexe.
+      add_row:
+        help: Sor hozzáadása egy séma által meghatározott ismételhető profilszakaszhoz.
+        section_help: Az ismételhető profilszakasz kulcsa.
+        value_help: Sormező MEZŐ=ÉRTÉK alakban; minden kitöltött mezőhöz ismételje meg.
+        invalid_value: Minden --value kapcsolónak MEZŐ=ÉRTÉK alakúnak kell lennie; nem történt írás.
+        duplicate_field: A(z) %{field} mező többször szerepelt; nem történt írás.
       duplicate_display_name_help: 'Az új profil megjelenítési neve (alapértelmezés:
         a célazonosító).'
       duplicate_help: Profil másolása új azonosítóra és megjelenítési névre.
