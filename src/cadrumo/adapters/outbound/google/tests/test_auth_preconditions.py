@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import ast
 import inspect
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from types import ModuleType
+from typing import override
 
 import pytest
 from google.oauth2.credentials import Credentials
@@ -199,7 +201,7 @@ def _message_identity(node: ast.expr) -> str:
     assert isinstance(node, ast.JoinedStr)
     parts: list[str] = []
     for part in node.values:
-        parts.append(part.value if isinstance(part, ast.Constant) else "{value}")
+        parts.append(part.value if isinstance(part, ast.Constant) and isinstance(part.value, str) else "{value}")
     return "".join(parts)
 
 
@@ -213,12 +215,14 @@ def _google_auth_carriers() -> dict[str, ast.Call]:
                 self.module_name = module_name
                 self.owner = "<module>"
 
+            @override
             def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
                 prior_owner = self.owner
                 self.owner = node.name
                 self.generic_visit(node)
                 self.owner = prior_owner
 
+            @override
             def visit_Call(self, node: ast.Call) -> None:
                 error_type = _call_name(node.func)
                 if error_type is not None and error_type.startswith("GoogleAuth") and error_type.endswith("Error"):
@@ -273,7 +277,7 @@ def _assert_terminal_contract(
     error: GoogleAuthError,
     *,
     condition: GoogleAuthPreconditionCondition,
-    facts: dict[str, str | int | bool],
+    facts: Mapping[str, str | int | bool],
     provenance: ActionEvidenceProvenance,
     outcome: NoRecoveryOutcome,
 ) -> None:
