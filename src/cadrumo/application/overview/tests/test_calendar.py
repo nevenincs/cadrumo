@@ -820,6 +820,28 @@ def test_build_orders_entries_by_close_then_modelo_then_period() -> None:
     assert keys == sorted(keys)
 
 
+def test_build_preserves_each_modelo_303_2025_obligation_once_in_canonical_order() -> None:
+    """Overview must not erase or multiply legal rows while projecting a schedule."""
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2026, 2, 28)),
+        today=date(2025, 1, 1),
+    )
+
+    coordinates = tuple(
+        (entry.modelo, entry.period.filing_year, entry.period.registry_token)
+        for entry in calendar.entries
+        if entry.modelo == "303" and entry.period.filing_year == 2025
+    )
+
+    assert coordinates == (
+        ("303", 2025, "1T"),
+        ("303", 2025, "2T"),
+        ("303", 2025, "3T"),
+        ("303", 2025, "4T"),
+    )
+
+
 def test_build_tape_invocation_2025q4_through_2026q2_spans_year_boundary() -> None:
     """``--from 2025-10-01 --to 2026-07-20`` spans multiple years."""
     calendar = build_overview_calendar(

@@ -735,6 +735,31 @@ def test_c0_receipt_exact_and_semantic_producer_censuses_are_a_fixed_point() -> 
     )
 
 
+def test_c0_receipt_semantic_census_refuses_missing_and_competing_authorities() -> None:
+    current = _supplied_semantic_census_for_contract_test()
+    for discovered_paths, message in (
+        (
+            tuple(path for path in current.discovered_paths if path != "src/cadrumo/application/operations/_registry.py"),
+            "missed canonical operation authorities",
+        ),
+        (
+            (*current.discovered_paths, "src/cadrumo/application/operations/_duplicate_projection.py"),
+            "competing operation authorities",
+        ),
+    ):
+        evidence = _semantic_census(
+            tool_version=current.tool_version,
+            source_tree_digest=current.source_tree_digest,
+            discovered_paths=tuple(sorted(discovered_paths)),
+        )
+        with pytest.raises(ValueError, match=message):
+            _validate_semantic_producer_census(
+                evidence,
+                workspace_root=_ROOT,
+                source_tree_digest=current.source_tree_digest,
+            )
+
+
 def test_c0_receipt_dirty_tree_guard_uses_a_real_git_worktree(tmp_path: Path) -> None:
     workspace = tmp_path / "receipt-git"
     workspace.mkdir()

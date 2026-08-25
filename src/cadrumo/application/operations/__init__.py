@@ -27,14 +27,7 @@ from ._composition import (
     compose_operation_services,
 )
 from ._events import OperationLogSeverity
-from ._executor import (
-    OperationEventEmitter,
-    OperationExecutor,
-    OperationExecutorContext,
-    OperationInteractionAccess,
-    OperationResumableExecutor,
-    OperationResumeCheckpoint,
-)
+from ._interactions import OperationResponseIntent
 from ._models import (
     CredentialFreeOperationRequest,
     OperationDefinitionId,
@@ -51,7 +44,6 @@ from ._observation import OperationObservationService
 from ._projection_services import (
     OperationCancellationService,
     OperationDetachService,
-    OperationResponseCapability,
     OperationResponseControlService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
@@ -168,15 +160,11 @@ __all__ = [
     "OperationEffect",
     "OperationEphemeralSecretDeclaration",
     "OperationEventCursor",
-    "OperationEventEmitter",
     "OperationEventKind",
-    "OperationExecutor",
-    "OperationExecutorContext",
     "OperationExecutorFactory",
     "OperationFrontendProjection",
     "OperationId",
     "OperationIdentity",
-    "OperationInteractionAccess",
     "OperationInteractionKind",
     "OperationLifecycle",
     "OperationLogSeverity",
@@ -215,7 +203,6 @@ __all__ = [
     "OperationRequest",
     "OperationRequestStoragePolicy",
     "OperationResponseApplyRequestV1",
-    "OperationResponseCapability",
     "OperationResponseControlRefusalCode",
     "OperationResponseControlRefusalV1",
     "OperationResponseControlRequestV1",
@@ -223,12 +210,11 @@ __all__ = [
     "OperationResponseControlService",
     "OperationResponseControlSuccessV1",
     "OperationResponseControlVersionHeader",
+    "OperationResponseIntent",
     "OperationResponseMutationRequestV1",
     "OperationResponseMutationResultV1",
     "OperationResponseMutationSuccessV1",
     "OperationResponseRejectRequestV1",
-    "OperationResumableExecutor",
-    "OperationResumeCheckpoint",
     "OperationReviewAvailableInteractionV1",
     "OperationReviewProjectionReferenceV1",
     "OperationReviewProjectionRefusalCode",
