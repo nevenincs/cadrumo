@@ -47,7 +47,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
+
+from .._paths import REPO_ROOT
 
 _ROOT: Final[Path] = REPO_ROOT
 _PLANS: Final[Path] = _ROOT / ".vault/plan"
