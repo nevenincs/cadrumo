@@ -16,9 +16,8 @@ cannot drift from the visible frames. The browser widget (not yet built) only
 toggles visibility and adds controls; it never injects content. A missing or
 stale golden is an instructive build error naming the exact ``refresh`` command.
 
-This module lives outside the ``dev/docs/sequences`` engine package and imports
-its public facade; ``docs/conf.py`` registers the directive by calling
-:func:`register`.
+This module lives outside the ``dev/docs/sequences`` engine package; ``docs/conf.py``
+registers the directive by calling :func:`register`.
 """
 
 from __future__ import annotations
@@ -446,12 +445,12 @@ class CliSequenceDirective(Directive):
         from pathlib import Path
 
         from .sequences import (
-            SequenceEngineError,
             parse_sequence,
             read_golden,
             read_sequence_contract,
             refuse_live_frames,
         )
+        from .sequences.errors import SequenceEngineError
 
         sequence_id = self.arguments[0].strip()
         env = self.state.document.settings.env
