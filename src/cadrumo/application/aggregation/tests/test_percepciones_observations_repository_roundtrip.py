@@ -182,7 +182,7 @@ def test_anti_tautology_strict_payload_rejects_dropped_field() -> None:
         "period": Period.from_year_and_code(2024, "0A"),
         "observation": _observation(nif="44444444A", clave="A"),
         "captured_at": datetime.now(UTC),
-        "source_kind": "aggregate_pull",
+        "source_kind": AggregationCaptureKind.AGGREGATE_PULL,
     }
     _PercepcionObservationEnvelopePayload.model_validate(full)
     partial = {k: v for k, v in full.items() if k != "observation"}
