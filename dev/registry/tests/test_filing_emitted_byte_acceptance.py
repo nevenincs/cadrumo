@@ -160,8 +160,8 @@ def test_an_empty_canonical_live_proof_cannot_turn_a_declared_layout_into_emitte
     assert "emitted-byte" in limb.refusal.detail
 
 
-def test_modelo_353_layout_gap_is_selected_by_its_own_law_coordinate_and_cannot_be_masked_by_2026() -> None:
-    """The real M353 source/layout gap stays bound to its pre-2026 selection."""
+def test_modelo_353_revisions_keep_distinct_law_coordinates_and_each_require_production_emission_proof() -> None:
+    """A later M353 revision cannot mask its predecessor's proof outcome."""
     authority, proof_authority = _canonical_filing_authority()
     modelo = authority.modelo(Modelo.M353.value)
     revision_limbs = tuple(
@@ -174,29 +174,27 @@ def test_modelo_353_layout_gap_is_selected_by_its_own_law_coordinate_and_cannot_
         )
         for revision in modelo.revisions.values()
     )
-    gap_revision, gap_limb = next(
-        (revision, limb)
-        for revision, limb in revision_limbs
-        if limb.refusal is not None and limb.refusal.disposition.work_item == f"{_EXPORT_OWNER}:filing-layout"
-    )
-    successor_revision = next(revision for revision, _limb in revision_limbs if revision.id != gap_revision.id)
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
-    gap_coordinates = revision_selection_coordinates(gap_revision, assessment_horizon=assessment_horizon)
-    successor_coordinates = revision_selection_coordinates(successor_revision, assessment_horizon=assessment_horizon)
-
+    coordinates_by_revision = {
+        revision.id: revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
+        for revision, _limb in revision_limbs
+    }
+    assert all(coordinates for coordinates in coordinates_by_revision.values())
     assert all(
-        authority.inspect_revision(modelo.id, filing_year=filing_year, period=period).revision_id == gap_revision.id
-        for filing_year, period in gap_coordinates
+        authority.inspect_revision(modelo.id, filing_year=filing_year, period=period).revision_id == revision_id
+        for revision_id, coordinates in coordinates_by_revision.items()
+        for filing_year, period in coordinates
     )
     assert all(
-        authority.inspect_revision(modelo.id, filing_year=filing_year, period=period).revision_id
-        == successor_revision.id
-        for filing_year, period in successor_coordinates
+        not set(left_coordinates).intersection(right_coordinates)
+        for left_revision, left_coordinates in coordinates_by_revision.items()
+        for right_revision, right_coordinates in coordinates_by_revision.items()
+        if left_revision < right_revision
     )
-    assert not set(gap_coordinates).intersection(successor_coordinates)
 
-    assert gap_limb.outcome == "refused"
-    assert gap_limb.refusal is not None
-    assert gap_limb.refusal.reason == "missing_evidence"
-    assert gap_limb.refusal.disposition.owner == _EXPORT_OWNER
-    assert gap_limb.refusal.disposition.work_item == f"{_EXPORT_OWNER}:filing-layout"
+    for _revision, limb in revision_limbs:
+        assert limb.outcome == "refused"
+        assert limb.refusal is not None
+        assert limb.refusal.reason == "missing_evidence"
+        assert limb.refusal.disposition.owner == _EXPORT_OWNER
+        assert limb.refusal.disposition.work_item == f"{_EXPORT_OWNER}:production-emission-proof"
