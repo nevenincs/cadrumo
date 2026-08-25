@@ -11,7 +11,6 @@ import pytest
 
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors import TerminalPreconditionErrorMixin
-from ....entrypoints.cli import _app_live_portals_cli as portals_cli_module
 from .. import _errors as errors_module
 from .. import _registry as registry_module
 from .._errors import (
@@ -236,7 +235,7 @@ def test_portal_terminal_carrier_totality_is_exact_and_mutation_sensitive() -> N
             assert ast.unparse(carrier.args[0]) == expected.facts[0][1]
 
 
-def test_portal_failure_classification_and_boundary_authority_are_single_homed() -> None:
+def test_portal_failure_classification_is_single_homed_in_domain() -> None:
     modules: tuple[ModuleType, ...] = (errors_module, registry_module)
     for module in modules:
         tree = ast.parse(inspect.getsource(module))
@@ -261,41 +260,6 @@ def test_portal_failure_classification_and_boundary_authority_are_single_homed()
         }
         assert imports_application == [], module.__name__
         assert not constructors, module.__name__
-
-    cli_tree = ast.parse(inspect.getsource(portals_cli_module))
-    cli_constructors = {
-        _call_name(node.func)
-        for node in ast.walk(cli_tree)
-        if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
-    }
-    assert not cli_constructors
-    assert [
-        _call_name(node.func)
-        for node in ast.walk(cli_tree)
-        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
-    ] == ["no_action_precondition_verdict"]
-
-    for callback_name in ("portals_list", "portals_show"):
-        callback = next(
-            node for node in cli_tree.body if isinstance(node, ast.FunctionDef) and node.name == callback_name
-        )
-        assert any(
-            isinstance(handler.type, ast.Name)
-            and handler.type.id == "PortalRegistryError"
-            and any(
-                isinstance(node, ast.Call) and _call_name(node.func) == "_project_portal_refusal"
-                for node in ast.walk(handler)
-            )
-            for handler in ast.walk(callback)
-            if isinstance(handler, ast.ExceptHandler)
-        )
-
-    show_callback = next(
-        node for node in cli_tree.body if isinstance(node, ast.FunctionDef) and node.name == "portals_show"
-    )
-    assert all(
-        _call_name(node.func) != "BadParameter" for node in ast.walk(show_callback) if isinstance(node, ast.Call)
-    )
 
     unknown_tree = ast.parse(inspect.getsource(UnknownPortalError))
     unknown_failure = next(

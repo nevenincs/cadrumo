@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
 import json
 import re
 from collections.abc import Sequence
@@ -13,12 +15,21 @@ from ....core.i18n import tr
 from ....domain.portals import PORTAL_REGISTRY
 from ....domain.portals._errors import PortalRegistryInvariant, portal_integrity_error
 from ....tests.cli_runner import invoke_cached_cli
+from .. import _app_live_portals_cli as portals_cli_module
 from .._app_live_portals_cli import _project_portal_refusal
 from .._common import cli_policy_refusal_projection
 
 # INTENTIONAL: integration because it exercises the portals CLI surface over the static
 # portal registry without contacting AEAT.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _call_name(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return None
 
 
 def _invoke_portals(args: Sequence[str]) -> Result:
@@ -51,6 +62,43 @@ def _assert_exact_terminal_action(
         "conditionality": "not_applicable",
         "no_recovery_outcome": "operator_decision",
     }
+
+
+def test_portal_cli_projection_and_handlers_are_single_homed() -> None:
+    cli_tree = ast.parse(inspect.getsource(portals_cli_module))
+    cli_constructors = {
+        _call_name(node.func)
+        for node in ast.walk(cli_tree)
+        if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
+    }
+    assert not cli_constructors
+    assert [
+        _call_name(node.func)
+        for node in ast.walk(cli_tree)
+        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
+    ] == ["no_action_precondition_verdict"]
+
+    for callback_name in ("portals_list", "portals_show"):
+        callback = next(
+            node for node in cli_tree.body if isinstance(node, ast.FunctionDef) and node.name == callback_name
+        )
+        assert any(
+            isinstance(handler.type, ast.Name)
+            and handler.type.id == "PortalRegistryError"
+            and any(
+                isinstance(node, ast.Call) and _call_name(node.func) == "_project_portal_refusal"
+                for node in ast.walk(handler)
+            )
+            for handler in ast.walk(callback)
+            if isinstance(handler, ast.ExceptHandler)
+        )
+
+    show_callback = next(
+        node for node in cli_tree.body if isinstance(node, ast.FunctionDef) and node.name == "portals_show"
+    )
+    assert all(
+        _call_name(node.func) != "BadParameter" for node in ast.walk(show_callback) if isinstance(node, ast.Call)
+    )
 
 
 def test_portals_list_emits_every_registered_entry() -> None:
