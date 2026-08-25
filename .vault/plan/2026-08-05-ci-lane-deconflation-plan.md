@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-25'
-body_hash: 'sha256:4dd6de4e6f8fd749e69a17a70ed4c64d40231501340f1458b191e2cf144cce36'
+body_hash: 'sha256:9ccb643099c4e3d08cddbf86b8916b7d5661fa73b08fb5c569d47c2da20a41c8'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -12,7 +12,7 @@ related:
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
 ---
 
-<!-- RETIRED: S01 -->
+<!-- RETIRED: S01, S10 -->
 
 # `ci-lane-deconflation` plan
 
@@ -50,7 +50,6 @@ Enrolling the integration suite and the dev tooling gates exposed accumulated ro
 - [x] `P02.S07` - Reshape overview.calendar profiles to a per-profile summary with detail behind a per-profile call, the resource_link this row first prescribed is refused because resolution re-runs a read verb over persisted state while this verb is computed from a clock; `src/cadrumo/entrypoints/mcp`.
 - [x] `P02.S08` - Measure the dev tooling gates at a clean HEAD, the local count of 55 is contaminated because 32 belong to an uncommitted peer legal entry and the true figure is nearer 23; `dev/audit, dev/deploy, dev/env, dev/registry, dev/docs`.
 - [x] `P02.S09` - Flip continue-on-error off the integration parallel step once its backlog closes, the step is deterministic so it can go blocking independently of the serial pass; `.github/workflows/ci-full.yml`.
-- [ ] `P02.S10` - Flip continue-on-error off the integration serial step once one runner execution is observed, its build branch producing three wheels and three sdists has never been watched. CLOSE CRITERION UNCHANGED and deliberately not narrowed. The artefact count is the observation rather than a green summary, and S28 must convert the wall-clock budgets to a process CPU-time failure condition first, so an observed green run is necessary and not sufficient. THE BLOCKER HAS CHANGED IDENTITY A SECOND TIME AND IS NOW OUTSIDE THIS PLAN. It was runner absence, then queue saturation. The queue has since DRAINED and the runner reports online and not busy, so neither survives. Run 31674646030, the ci-full dispatch obtained specifically for this row, completed with conclusion failure WITHOUT REACHING THE BUILD BRANCH. It carries exactly one job, 07:00:33 to 07:03:09 UTC, two minutes thirty-six seconds, dying in just check-style at the check-relative-imports recipe. RE-RUN AT HEAD rather than trusted from the log, that gate exits 1 with 87 violations spanning src/cadrumo/application at 62, src/cadrumo/domain at 20, src/cadrumo/adapters at 3, and one each in src/cadrumo/tests and src/cadrumo/entrypoints. A large share are registry tests importing resolve_available_bound_inputs_by_casilla_id from cadrumo.application.modelo by absolute path. THAT BACKLOG IS A CROSS-PACKAGE CONCERN WITH MANY OWNERS, is not a ci-lane-deconflation defect, and stands between ci-full and EVERY observation downstream of the style gate rather than only this row's. Route it to its owners rather than absorbing it here. Its closure is the precondition for this row's observation, so this row waits on it rather than working it, and no further ci-full dispatch helps until it clears; `.github/workflows/ci-full.yml`.
 - [x] `P02.S22` - Author the ADR reshaping the overview.calendar payload, the resource_link remedy the gate names cannot apply to a computed verb with no persisted record and the irreducible floor leaves only 622 characters of headroom; `src/cadrumo/entrypoints/mcp`.
 - [x] `P02.S23` - Fix thin_output_schema growing the schemas it thins, its oneOf inline-or-linked shape duplicates the property body so thinning a shared-defs verb enlarges it; `src/cadrumo/entrypoints/mcp`.
 - [x] `P02.S28` - Convert the two wall-clock budgets guarding the integration serial step so that a process CPU-time bound becomes the failure condition while the wall-clock threshold is retained as a loud advisory, because the budgets were measured on a box shared with the dev machine and the agent fleet and flake under load regardless of code quality, and because a straight conversion would delete the only bound that catches a genuine share hang given that a test blocked on I/O burns almost no CPU, applying the repository control-plane invariant that perf gates assert process CPU-time with wall advisory only rather than inventing a remedy, noting the perf marker is not available as an escape because it is absent from _CI_INCAPABLE_MARKERS and the perf lane is path-scoped to dev/packaging, and covering the two named budgets only while inheriting the load stamp owned by the pytest ceiling row; `the two integration serial budget tests and .github/workflows/ci-full.yml`.
