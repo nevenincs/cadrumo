@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:b3d5e4cd8c3c186c8d02c61900b73e03ca040e282e4c550461ae5300ec2444f9'
+body_hash: 'sha256:6b55283761e2e824a320d3d70ec24000bec8dd9066215658d5026b77cc9ddac3'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -310,7 +310,7 @@ Carry assembled typed worksheet rows across the governed calculation and encrypt
 Adjudicate, connect or close, persist, and review the M232 row source.
 
 - [x] `W05.P15.S92` - adjudicate M232 row semantics and source ownership from official evidence; `.vault/research/2026-08-22-source-casilla-integration-m232-row-source-grounding-research.md`.
-- [ ] `W05.P15.S93` - enroll the related-party operation resolver and remove its deferral; `src/cadrumo/application/aggregation/_source_mesh.py`.
+- [x] `W05.P15.S93` - retain the M232 related-party-operation deferral until its carrier preserves direction and relationship type, a secure source owner exists, and S94 proves the full encrypted row route; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W05.P15.S94` - prove row persistence, diagnostics, provenance, replay, review, and export for M232; `src/cadrumo/application/modelo/tests/test_m232_row_source.py`.
 - [ ] `W05.P15.S95` - close the M232 census disposition and obtain formal review; `.vault/audit/2026-08-22-m232-row-source-code-review.md`.
 
@@ -424,4 +424,3 @@ The plan is complete only when:
 - Two consecutive final discovery runs expose no unclassified, expired, silently deferred, or unactioned candidate.
 - All approved operator and developer documentation agrees with the live architecture and passes command-conformance and nitpicky Sphinx gates.
 - Every Phase has an execution summary, every Step has an execution record, every formal code review passes, and all plan rows are checked.
-
