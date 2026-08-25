@@ -52,6 +52,26 @@ def _late_bound_facade_names() -> frozenset[str]:
 _SETTINGS_PATH_MODULES = ("config.py", "bucket_pointer.py")
 
 
+def test_bucket_pointer_public_surface_remains_lazy_and_importable() -> None:
+    """The consolidated pointer module must remain reachable through the core facade."""
+    from ... import core
+    from .. import bucket_pointer
+
+    names = (
+        "BucketPointer",
+        "pointer_path",
+        "read_pointer",
+        "require_active_bucket_id",
+        "resolve_active_bucket_id",
+        "resolve_repository_bucket_id",
+        "write_pointer",
+    )
+
+    assert all(core._LAZY_EXPORTS[name] == ".bucket_pointer" for name in names)
+    assert all(getattr(core, name) is getattr(bucket_pointer, name) for name in names)
+    assert all(name in core.__all__ for name in names)
+
+
 def _facade_imported_names(module_path: Path) -> set[str]:
     """Return every name ``module_path`` imports from the ``cadrumo.core`` facade.
 
