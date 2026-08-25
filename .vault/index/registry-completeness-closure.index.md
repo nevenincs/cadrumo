@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:a682e1f5c2b506a7c2aa57d709cf9e50d834d0f18e0332cdc4e8b7129773b583'
+body_hash: 'sha256:b8a73e14fe28fcd97381f70b197999d60cea94be3c79fc14e61b703042d4956a'
 related:
   - '[[2026-08-23-registry-unblock-loop-reference]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
@@ -194,7 +194,6 @@ related:
   - '[[2026-08-25-registry-completeness-closure-production-emission-proof-reference]]'
   - '[[2026-08-25-registry-completeness-closure-s32-independent-post-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s33-filing-grade-export-verification-audit]]'
-  - '[[2026-08-25-registry-completeness-closure-s33-production-emission-proof-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s34-independent-temporal-predecessor-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s34-temporal-predecessor-closure-audit-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s34-temporal-predecessor-final-close-audit]]'
@@ -301,7 +300,6 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-25-registry-completeness-closure-audit` - `registry-completeness-closure` audit: `S11 final outcome corpus independent review`
 - `2026-08-25-registry-completeness-closure-s32-independent-post-review-audit` - `registry-completeness-closure` audit: `W03.P05.S32 independent review`
 - `2026-08-25-registry-completeness-closure-s33-filing-grade-export-verification-audit` - `registry-completeness-closure` audit: `S33 corpus-wide filing-grade export verification`
-- `2026-08-25-registry-completeness-closure-s33-production-emission-proof-review-audit` - `registry-completeness-closure` audit: `S33 production emission proof review`
 - `2026-08-25-registry-completeness-closure-s34-independent-temporal-predecessor-review-audit` - `registry-completeness-closure` audit: `S34 independent temporal-predecessor review`
 - `2026-08-25-registry-completeness-closure-s34-temporal-predecessor-closure-audit-audit` - `registry-completeness-closure` audit: `S34 temporal predecessor closure reconciliation`
 - `2026-08-25-registry-completeness-closure-s34-temporal-predecessor-final-close-audit` - `registry-completeness-closure` audit: `S34 temporal predecessor predicate closure reconciliation`
