@@ -5,8 +5,11 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry._authority import bundled_authority
-from cadrumo.domain.calculations.registry._errors import RegistryValidationError
+from cadrumo.domain.calculations.registry import (
+    RegistryFailureCondition,
+    RegistryValidationError,
+    bundled_authority,
+)
 
 from .test_revision_span_matches_published_designs import _boundaries_for, _declared_revisions, _filing_revisions
 
@@ -35,10 +38,26 @@ def test_known_unsupported_spans_remain_detectable_and_pinned() -> None:
 
 def test_modelo_200_filing_request_refuses_at_the_authority_boundary() -> None:
     """The unsafe mixed-layout revision must fail before any filing bytes exist."""
-    with pytest.raises(RegistryValidationError, match="Validate and attest the revision at the requested grade"):
+    with pytest.raises(RegistryValidationError) as exc_info:
         bundled_authority().snapshot(
             "200",
             filing_year=2025,
             period="0A",
             grade=RegistryAuthorityGrade.FILING,
         )
+
+    error = exc_info.value
+    assert str(error) == (
+        "modelo 200 revision 2024-y-siguientes declares 'calculation' authority grade, "
+        "which cannot satisfy the requested 'filing' snapshot authority."
+    )
+    failure = error.registry_failure
+    assert failure is not None
+    assert failure.condition is RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT
+    assert failure.facts == {
+        "modelo": "200",
+        "revision_id": "2024-y-siguientes",
+        "requested_authority_grade": "filing",
+        "declared_authority_grade": "calculation",
+        "authority_grade_declared": True,
+    }
