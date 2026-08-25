@@ -173,3 +173,24 @@ applies_from = 2003-01-31
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1911"
 review_status = "reviewed"
+
+# The as-published BOE Annex I is the original primary record-layout source for
+# the 2003-2025 span. It is deliberately a form_spec, not a record_design:
+# the canonical parser reads the Type-1 table but cannot yet make a separate,
+# exact Type-2 record from this rotated/raster historical page. Promoting it
+# would therefore fabricate a parser-backed coordinate authority. The raw
+# bytes do establish the two 120-position record types, and remain available
+# for a later parser-supported era split without re-acquisition.
+[sources."boe-modelo-185-2003-annex-i"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2003-1911-modelo-185-annex-i.pdf"
+sha256 = "5013b9b86d98a729f0026b1301bae2051c1d5a334cf7334163c170600135d47d"
+bytes = 290582
+retrieved_at = 2026-08-26
+published_at = 2003-01-30
+applies_from = 2003-01-31
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/boe/dias/2003/01/30/pdfs/A03911-03920.pdf"
+review_status = "reviewed"
