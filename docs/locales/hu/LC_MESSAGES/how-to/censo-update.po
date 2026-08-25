@@ -224,7 +224,7 @@ msgstr ""
 "új megfigyelést alkalmazza. Mielőtt a frissített profilra támaszkodnál, "
 "ellenőrizd magát a `--apply` eredményét. Folyamatban van, hogy ezen a "
 "parancson elérhetővé váljon az alkalmazás által rögzített, pontos "
-"alapvonalú felülvizsgálat–alkalmazás életciklus; amíg ez nem készül el, "
+"alapvonalú felülvizsgálati és alkalmazási életciklus; amíg ez nem készül el, "
 "ne tekintsd a korábbi előnézetet alkalmazott operandusnak."
 
 #: ../../how-to/censo-update.md:97
@@ -508,4 +508,3 @@ msgstr ""
 
 #~ msgid "**Adopted**: the profile had no answer, so AEAT's value fills it."
 #~ msgstr "**Átvett**: a profilban nem volt érték, ezért az AEAT értéke tölti ki."
-
