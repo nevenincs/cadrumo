@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:77c46d44851a7defa7e7388b75d1bb0786fd2163e7624b8899f0883d57930649'
+body_hash: 'sha256:e584d5aa9ce4bcc18666e5763f3d8e638c33909f242bed80e7f458d2e1ecb232'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -131,6 +131,8 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P19-S108]]'
   - '[[2026-08-22-source-casilla-integration-W05-P19-S109]]'
   - '[[2026-08-22-source-casilla-integration-W05-P19-S110]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P19-S111]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P19-summary]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -414,6 +416,8 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P19-S108` - adjudicate M296 withholding-row semantics and source ownership from official evidence
 - `2026-08-22-source-casilla-integration-W05-P19-S109` - recast Modelo 296 withholding rows as a bounded registry-blocked refusal pending a non-lossy encrypted M296 owner, declarant-owned recipient/representative/Annex identity and provenance, row-preserving resolver lifecycle, and source-owned repeated-record export proof while preserving manual/direct paths and the distinct M180/M193 withholding lifecycle
 - `2026-08-22-source-casilla-integration-W05-P19-S110` - prove Modelo 296 remains unavailable to connected encrypted persistence, provenance, replay, review, and source-owned repeated-row export until S109's predicate, with explicit registry-blocked/unmeasured governance and no binding/resolver/fixture while preserving direct/manual and M180/M193 paths
+- `2026-08-22-source-casilla-integration-W05-P19-S111` - close the M296 census disposition and obtain formal review
+- `2026-08-22-source-casilla-integration-W05-P19-summary` - `source-casilla-integration` `W05.P19` summary
 
 ### plan
 

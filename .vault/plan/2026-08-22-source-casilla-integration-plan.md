@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
+modified: '2026-08-25'
+body_hash: 'sha256:e4a849943dee9cdb70fecfd1afe39e4206d42a398bf9566d188d08780a22f220'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -15,8 +17,6 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
-modified: '2026-08-25'
-body_hash: 'sha256:b3ee736e063d2c60e8849aa98e8fe7f9c2e6fa4a9f4dcc6ad1067a5131d76165'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -355,7 +355,7 @@ Adjudicate, connect or close, persist, and review the M296 row source.
 - [x] `W05.P19.S108` - adjudicate M296 withholding-row semantics and source ownership from official evidence; `.vault/research/2026-08-25-source-casilla-integration-m296-row-source-grounding-research.md`.
 - [x] `W05.P19.S109` - recast Modelo 296 withholding rows as a bounded registry-blocked refusal pending a non-lossy encrypted M296 owner, declarant-owned recipient/representative/Annex identity and provenance, row-preserving resolver lifecycle, and source-owned repeated-record export proof while preserving manual/direct paths and the distinct M180/M193 withholding lifecycle; `src/cadrumo/_data/source_connectivity/census.toml; dev/source_connectivity/tests/test_m296_deferral.py`.
 - [x] `W05.P19.S110` - prove Modelo 296 remains unavailable to connected encrypted persistence, provenance, replay, review, and source-owned repeated-row export until S109's predicate, with explicit registry-blocked/unmeasured governance and no binding/resolver/fixture while preserving direct/manual and M180/M193 paths; `dev/source_connectivity/tests/test_m296_deferral.py`.
-- [ ] `W05.P19.S111` - close the M296 census disposition and obtain formal review; `.vault/audit/2026-08-22-m296-row-source-code-review.md`.
+- [x] `W05.P19.S111` - formally close the reviewed M296 registry-blocked and intentionally unmeasured withholding-row census boundary, retain its owner, expiry, follow-up, reopening predicate, manual/direct and distinct M180/M193 boundaries, no-connected-route proof, and hand off independent final review; `.vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W05-P19-S111.md`.
 
 ## Wave `W06` - rerun discovery, align documentation, and close honestly
 
