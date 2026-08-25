@@ -98,7 +98,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from cadrumo.core import scan_directory
-from cadrumo.tests._inventory import repo_relative
+from cadrumo.tests import repo_relative
 from dev._paths import REPO_ROOT
 from dev.quality.import_hygiene_scan import (
     _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256,

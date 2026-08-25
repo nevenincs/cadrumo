@@ -68,7 +68,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cadrumo.tests._inventory import (
+from cadrumo.tests import (
     ast_for_path,
     import_binding_map,
     package_ast_items,

@@ -35,7 +35,7 @@ from typing import NamedTuple
 
 import pytest
 
-from cadrumo.tests._inventory import (
+from cadrumo.tests import (
     ast_for_path,
     discover_test_control_modules,
     discover_test_modules,

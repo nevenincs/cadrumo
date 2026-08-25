@@ -31,7 +31,7 @@ from typing import NamedTuple
 import pytest
 
 from cadrumo.core import scan_directory
-from cadrumo.tests._inventory import ast_for_path, qualified_name, repo_relative
+from cadrumo.tests import ast_for_path, qualified_name, repo_relative
 from dev._paths import REPO_ROOT
 
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_CASES as _CAMPAIGN_METADATA_CASES

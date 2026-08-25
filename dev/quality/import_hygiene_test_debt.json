@@ -4,70 +4,6 @@
     "_note": "Each site is a test file reaching a foreign package's private submodule to exercise an internal helper, evaluator, repository factory, or module-private constant/cache by name. Grouped by owning package below for readability; the gate reads the flat 'sites' list. Each site records an 'occurrence' ordinal -- 1-based among the entries sharing its (importer_path, target_mod, imported_names) triple, in the order the reaches appear in the importing file -- because one reach can occur several times in a file, each reasoned separately, and something has to say which reason belongs to which site. It replaces a stored line number, which was a cache of a scan with nothing to invalidate it and had drifted on roughly half the entries; the live line is recoverable from dev/quality/import_hygiene_scan.py at any time, whereas the ordinal only moves when the number of occurrences moves, which the gate checks.",
     "sites": [
       {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_login_screen.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._login_frontend",
-        "imported_names": [
-          "attempt_login"
-        ],
-        "reason": "White-box test reach: the login screen is unlocked with the REAL login callback so the screen is exercised against actual Argon2id derivation, AEAD unwrap, and session minting rather than a double. `attempt_login` is the CLI's composition of application.user_profile onto the TUI screen -- entrypoint-owned by design, and consumed in production only inside entrypoints.cli._config._login_frontend itself. Deliberately NOT promoted, for the same reason recorded on the `attempt_registration` entries above: a presenter seam minted onto the public CLI facade to serve tests alone would legitimise the adapter-to-entrypoint inversion rather than record it."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_login_screen.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "attempt_registration"
-        ],
-        "reason": "White-box test reach: the login screen's fixture registers a profile with the REAL register callback so the screen is exercised against actual application behaviour rather than a double. `attempt_registration` is the CLI's composition of application.user_profile onto the TUI screen -- entrypoint-owned by design, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, for the reason recorded on the other `attempt_registration` entries above."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_field_editors.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "persist_active_profile_field",
-          "profile_field_value_refusal"
-        ],
-        "reason": "White-box test reach, for the same reason as the sibling manager-screen tests: the screen is driven with the REAL write and REAL value judge, so a boolean picked from the list travels the actual write path and a bad date is refused by the actual schema rule rather than by a double. A doubled judge would make these tests agree with themselves instead of with storage, which is precisely the divergence the dialog-side refusal exists to close. Both symbols are the CLI's composition of profile doors onto the TUI screen -- entrypoint-owned, consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_language_switch.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "persist_active_profile_field"
-        ],
-        "reason": "White-box test reach: the manager screen is driven with the REAL persist callback so an edit goes through the actual write path (blank-clears-the-fact, re-read rather than patch) instead of a double. `persist_active_profile_field` is the CLI's composition of the profile write door onto the TUI screen -- entrypoint-owned, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries above."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_masked_field_preservation.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "persist_active_profile_field"
-        ],
-        "reason": "White-box test reach: the manager screen is driven with the REAL persist callback so an edit goes through the actual write path (blank-clears-the-fact, re-read rather than patch) instead of a double. `persist_active_profile_field` is the CLI's composition of the profile write door onto the TUI screen -- entrypoint-owned, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries above."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_masked_required_field.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "persist_active_profile_field"
-        ],
-        "reason": "White-box test reach: the manager screen is driven with the REAL persist callback so an edit goes through the actual write path (blank-clears-the-fact, re-read rather than patch) instead of a double. Load-bearing here in particular -- these tests measure what a blank submission does to the RECORD for a field that is masked and required, so a double standing in for the write door would decide the very outcome under test. `persist_active_profile_field` is the CLI's composition of the profile write door onto the TUI screen -- entrypoint-owned, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries below."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_required_field_refusal.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "persist_active_profile_field"
-        ],
-        "reason": "White-box test reach: the manager screen is driven with the REAL persist callback so an edit goes through the actual write path (blank-clears-the-fact, re-read rather than patch) instead of a double. `persist_active_profile_field` is the CLI's composition of the profile write door onto the TUI screen -- entrypoint-owned, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries above."
-      },
-      {
         "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py",
         "occurrence": 1,
         "target_mod": "cadrumo.entrypoints.cli._config._manager_actions",
@@ -92,42 +28,6 @@
         "reason": "White-box test that the TUI's mounted shipped action never surfaces a missing profile path as a KeyError. The reach is to the CLI's own private profile-field path constants and the commit helper behind them: the assertion is that the TUI mount and the CLI action agree on the SAME path strings, so reading them through a double would assert the double instead. The constants are internal addressing for one action family, not a contract another package should depend on in production, so there is no promotion candidate."
       },
       {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "persist_active_profile_field"
-        ],
-        "reason": "White-box test reach: the manager screen is driven with the REAL persist callback so an edit goes through the actual write path (blank-clears-the-fact, re-read rather than patch) instead of a double. `persist_active_profile_field` is the CLI's composition of the profile write door onto the TUI screen -- entrypoint-owned, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries above."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_registration_language_switch.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "attempt_registration"
-        ],
-        "reason": "White-box test reach: the registration screen is constructed with the REAL register callback so the screen is exercised against actual application behaviour (including the refusal-to-text translation) rather than a double. `attempt_registration` is the CLI's composition of application.user_profile onto the TUI screen -- entrypoint-owned by design, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface for test consumers alone would put implementation detail on the public CLI API. A Ruling-4 documented bridge was considered and rejected for the same reason -- a bridge is a canonical PUBLIC source for real consumers, and this seam has none outside these tests, so a bridge would mint production API to serve tests and would legitimise the adapter-to-entrypoint inversion rather than record it."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "attempt_registration"
-        ],
-        "reason": "White-box test reach: the registration screen is constructed with the REAL register callback so the screen is exercised against actual application behaviour (including the refusal-to-text translation) rather than a double. `attempt_registration` is the CLI's composition of application.user_profile onto the TUI screen -- entrypoint-owned by design, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface for test consumers alone would put implementation detail on the public CLI API. A Ruling-4 documented bridge was considered and rejected for the same reason -- a bridge is a canonical PUBLIC source for real consumers, and this seam has none outside these tests, so a bridge would mint production API to serve tests and would legitimise the adapter-to-entrypoint inversion rather than record it."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_theme.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "attempt_registration"
-        ],
-        "reason": "White-box test reach: the registration screen is constructed with the REAL register callback so the screen is exercised against actual application behaviour (including the refusal-to-text translation) rather than a double. `attempt_registration` is the CLI's composition of application.user_profile onto the TUI screen -- entrypoint-owned by design, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface for test consumers alone would put implementation detail on the public CLI API. A Ruling-4 documented bridge was considered and rejected for the same reason -- a bridge is a canonical PUBLIC source for real consumers, and this seam has none outside these tests, so a bridge would mint production API to serve tests and would legitimise the adapter-to-entrypoint inversion rather than record it."
-      },
-      {
         "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
         "occurrence": 1,
         "target_mod": "cadrumo.entrypoints.cli._config._login_frontend",
@@ -137,93 +37,6 @@
           "preselected_profile_id"
         ],
         "reason": "White-box test reach: the login screen is composed the way `present_login` composes it, against a real profile that exists but is LOCKED, which is the machine state the login verb exists for. The choice list and the preselection come from the real frontend functions because a hand-built list or a dropped preselection is the identical stand-in shape the defect this enrollment catches actually was. `_login_choices` is module-private with no cross-package production consumer at all -- its callers are its own module, its own package's tests, and the dev-tree TUI surface harness -- so it is an internals-only helper with no promotion candidate, and promoting it would put a private sort-and-assemble step on a public contract. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_actions",
-        "imported_names": [
-          "manager_actions"
-        ],
-        "reason": "White-box test reach: the manager screen is built with the REAL action row, because building it without one renders cleanly and shows a manager with zero buttons -- exactly the bug this visual enrollment exists to catch on a real terminal render rather than by hand. A hand-built action list would reproduce the stand-in shape the bug WAS. `manager_actions` is the CLI's composition of the profile verbs onto the TUI screen, consumed in production only inside entrypoints.cli._config itself. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
-        "occurrence": 2,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_actions",
-        "imported_names": [
-          "manager_actions"
-        ],
-        "reason": "Second occurrence, in the manager-overview render case rather than the fixture: the same REAL action row for the same reason -- a zero-button manager renders cleanly and only a real render catches it. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
-        "occurrence": 3,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_actions",
-        "imported_names": [
-          "manager_actions"
-        ],
-        "reason": "Third occurrence, in the masked-field width case: the same REAL action row is built alongside the REAL persist callback so the screen under a real terminal-width render carries a real action row rather than a stand-in shape, for the same reason as the two occurrences above. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "attempt_registration"
-        ],
-        "reason": "White-box test reach: the registration screen is constructed with the REAL register callback so the screen is exercised against actual application behaviour (including the refusal-to-text translation) rather than a double. `attempt_registration` is the CLI's composition of application.user_profile onto the TUI screen -- entrypoint-owned by design, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface for test consumers alone would put implementation detail on the public CLI API. A Ruling-4 documented bridge was considered and rejected for the same reason -- a bridge is a canonical PUBLIC source for real consumers, and this seam has none outside these tests, so a bridge would mint production API to serve tests and would legitimise the adapter-to-entrypoint inversion rather than record it."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "build_active_profile_overview",
-          "persist_active_profile_field",
-          "profile_field_value_refusal"
-        ],
-        "reason": "White-box test reach, the same shape as the sibling manager-screen tests: the screen is composed with the REAL overview builder, REAL write and REAL value judge, against a real unlocked profile (real Argon2id, real AEAD, no stand-in storage). Two layout defects this enrollment was written for -- a clipped action row and a value column off the right edge -- were found by hand and neither is reachable through a double. All three are the CLI's composition of profile doors onto the TUI screen, consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "persist_active_profile_field"
-        ],
-        "reason": "White-box test reach in the manager-overview render case: the screen is driven with the REAL persist callback so an edit travels the actual write path rather than a double's bookkeeping, matching the disposition already recorded for the sibling manager-screen tests that reach the same symbol. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
-        "occurrence": 2,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
-        "imported_names": [
-          "build_active_profile_overview",
-          "persist_active_profile_field",
-          "profile_field_value_refusal"
-        ],
-        "reason": "Second occurrence, in the manager-overview render fixture rather than the populated-manager one: the same REAL overview builder, REAL write and REAL value judge for the same reason -- a hand-built overview or a doubled judge would reproduce the stand-in shape the layout defects this enrollment guards against were found by, escaping a hand check rather than a real render. Deliberately NOT promoted, for the reason recorded on the first occurrence above."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._status_frontend",
-        "imported_names": [
-          "build_status_page_data"
-        ],
-        "reason": "White-box test reach: the status page is built through the REAL production door, `build_status_page_data()`, rather than a hand-built `StatusPageData`, so a freshly registered profile's zero AEAT-sourced observations produce the genuine `no_aeat_history_notice` INFO notice this fixture needs rather than a fabricated one. This is the fixture that caught the shipped defect where `NoticeBand` claimed the whole scroll column and every panel beneath it stopped painting -- every other status fixture builds with no notices at all, so none of them could have seen it. `build_status_page_data` is the CLI's composition of profile status onto the TUI screen, consumed in production only inside entrypoints.cli._config._status_frontend itself. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_ledger.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.llm._providers.base",
-        "imported_names": [
-          "ProviderCompletion",
-          "ProviderRequest",
-          "_ProviderAdapter"
-        ],
-        "reason": "Adapter-conformance reach: the evidence-consent refusal is proven by driving a REAL `_ProviderAdapter` implementation through the client's dispatch, so the refusal is observed at the boundary a live provider crosses rather than at a double that cannot refuse. `_ProviderAdapter` is the provider-side Protocol and is deliberately private: it is the seam adapters implement, never a symbol a consumer calls, so promoting it would publish an extension point the package does not offer. `ProviderCompletion` and `ProviderRequest` are its argument and return shapes and are meaningless apart from it, so per-symbol judgement puts all three on the same side rather than promoting the two public-named ones alone."
       },
       {
         "importer_path": "src/cadrumo/adapters/outbound/storage/tests/test_google_drive.py",
@@ -582,27 +395,6 @@
         "reason": "White-box test reach: the gate asserts that every absent-bound-carry advisory is distinguishable by its notice context alone, so it must build the REAL diagnostics from the loaded registry authority -- requirements, target bindings and self-carries all come from the M200 snapshot rather than a fixture, so a registry change flows into the gate instead of being masked. `_absent_bound_carry_diagnostics` is an internals-only builder taking four internal-shaped arguments, with a single production caller inside _relation_prefill itself. Deliberately NOT promoted: putting a four-argument diagnostic assembly step on the application.calculations facade would publish implementation detail no production consumer needs, for one test."
       },
       {
-        "importer_path": "src/cadrumo/llm/tests/test_evidence_draft_vision.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.ledger.tests._llm_vision_evidence_support",
-        "imported_names": [
-          "_json_array",
-          "_json_object",
-          "_png_image",
-          "_run_against_loopback_ollama"
-        ],
-        "reason": "Shared loopback-Ollama vision test-support helpers. The ledger and llm suites must drive the SAME local-model harness (identical PNG builder, JSON envelope shapes, and live-model skip/run predicate) or the two suites would silently diverge on what a local vision run means. Private test-support scaffolding with no production consumer; promoting it to a package facade would put test fixtures on a production surface."
-      },
-      {
-        "importer_path": "src/cadrumo/llm/tests/test_evidence_draft_vision.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.ledger.tests._llm_vision_evidence_support",
-        "imported_names": [
-          "profile"
-        ],
-        "reason": "Pytest fixture re-export. The `profile` fixture must be imported into the consuming test module's namespace for pytest to resolve it, and is re-exported through the module's `__all__` for that reason alone. Same shared-harness rationale as the helper import above."
-      },
-      {
         "importer_path": "src/cadrumo/llm/tests/test_llm_vision_classifier.py",
         "occurrence": 1,
         "target_mod": "cadrumo.application.ledger._llm_classification",
@@ -611,28 +403,6 @@
           "_ResolvedEvidence"
         ],
         "reason": "White-box test reach exercising the evidence-classification internals directly: `_classify_with_evidence` is the private composition step and `_ResolvedEvidence` its private carrier. Both are internals-only; the public ledger facade exposes the classification entry point, not this seam, and promoting either would put an implementation detail on the facade for one test."
-      },
-      {
-        "importer_path": "src/cadrumo/llm/tests/test_llm_vision_classifier.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.ledger.tests._llm_vision_evidence_support",
-        "imported_names": [
-          "_json_array",
-          "_json_object",
-          "_png_image",
-          "_run_against_loopback_ollama",
-          "_transaction"
-        ],
-        "reason": "Shared loopback-Ollama vision test-support helpers, plus the `_transaction` builder so the classifier suite classifies the same transaction shape the ledger suite does. Same shared-harness rationale as the `test_evidence_draft_vision.py` entry; private test scaffolding with no production consumer."
-      },
-      {
-        "importer_path": "src/cadrumo/llm/tests/test_llm_vision_classifier.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.ledger.tests._llm_vision_evidence_support",
-        "imported_names": [
-          "profile"
-        ],
-        "reason": "Pytest fixture re-export, imported into the module namespace so pytest can resolve it and re-exported through `__all__` for that reason alone. Same shared-harness rationale as the helper import above."
       },
       {
         "importer_path": "src/cadrumo/tests/fixtures/manual_annexes/tests/test_manual_annex_provenance.py",

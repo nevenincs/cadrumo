@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests._inventory import (
+from cadrumo.tests import (
     FIXTURES_DIR,
     REPO_ROOT,
     SRC_CADRUMO,

@@ -48,7 +48,7 @@ from typing import Final, NamedTuple
 
 import pytest
 
-from cadrumo.tests._inventory import ast_for_path, repo_relative
+from cadrumo.tests import ast_for_path, repo_relative
 
 from ._project_inventory import all_test_control_modules
 
