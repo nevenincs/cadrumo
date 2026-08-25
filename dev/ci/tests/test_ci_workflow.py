@@ -338,13 +338,12 @@ def test_ci_per_push_integration_conformance_step_is_exact_and_blocking() -> Non
     """The four-gate per-push verdict delegates once and cannot be made advisory."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     static = document["jobs"]["cadrumo-static"]
+    step_name = (
+        "Per-push integration conformance gates "
+        "(rule-surface, status-frontend, self-referential-string, suggestion-command)"
+    )
     step = next(
-        (
-            candidate
-            for candidate in static["steps"]
-            if candidate.get("name")
-            == "Per-push integration conformance gates (rule-surface, status-frontend, self-referential-string, suggestion-command)"
-        ),
+        (candidate for candidate in static["steps"] if candidate.get("name") == step_name),
         None,
     )
 
