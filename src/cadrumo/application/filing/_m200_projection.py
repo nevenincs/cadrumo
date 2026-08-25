@@ -18,6 +18,7 @@ profile rather than projected from an existing substrate.
 
 from __future__ import annotations
 
+from ...core import FilingProjectionRef
 from ...domain.calculations.registry import ExportLayoutDefinition, RegistrySnapshot
 from ._producer_snapshot import FilingProducerSnapshot, Modelo200ProfileFacts
 from ._projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
@@ -40,6 +41,29 @@ _M200_FAMILY_BY_KIND: dict[str, str] = {
     "m200_socio_sicav_disolucion": "socio_sicav_disolucion",
     "m200_transparencia_fiscal_internacional": "transparencia_fiscal_internacional",
 }
+
+
+def _m200_address(reference: FilingProjectionRef) -> tuple[int, str] | None:
+    """Return the fixed row address carried by a supported M200 reference."""
+    match reference.projection_kind:
+        case (
+            "m200_administrador"
+            | "m200_entidad_menor_dependiente"
+            | "m200_entidad_participada"
+            | "m200_establecimiento_permanente"
+            | "m200_incn_grupo_sociedad"
+            | "m200_operacion_reestructuracion"
+            | "m200_participacion_directa"
+            | "m200_participacion_socio"
+            | "m200_participe_aie_ute"
+            | "m200_representante_legal"
+            | "m200_secretario_consejo"
+            | "m200_socio_sicav_disolucion"
+            | "m200_transparencia_fiscal_internacional"
+        ):
+            return reference.slot, str(reference.field)
+        case _:
+            return None
 
 
 def _rows_for(profile: object, kind: str) -> tuple[object, ...]:
@@ -73,7 +97,10 @@ def build_m200_filing_projection_plan(
         filled = 0
         for ref in refs:
             filled = max(filled, len(_rows_for(profile, ref.projection_kind)))
-        depth = min(filled, max((ref.slot for ref in refs), default=0))
+        depth = min(
+            filled,
+            max((address[0] for ref in refs if (address := _m200_address(ref)) is not None), default=0),
+        )
         for occurrence in range(1, depth + 1):
             contexts.append(
                 FilingRecordRenderContext(
@@ -84,14 +111,18 @@ def build_m200_filing_projection_plan(
                 ),
             )
             for ref in refs:
+                address = _m200_address(ref)
+                if address is None:
+                    continue
+                slot, field_name = address
                 family_rows = _rows_for(profile, ref.projection_kind)
-                row = family_rows[ref.slot - 1] if ref.slot <= len(family_rows) else None
+                row = family_rows[slot - 1] if slot <= len(family_rows) else None
                 values.append(
                     FilingProjectionValue(
                         projection_ref=ref,
                         record_id=record.id,
                         occurrence=occurrence,
-                        value=getattr(row, str(ref.field), None) if row is not None else None,
+                        value=getattr(row, field_name, None) if row is not None else None,
                     ),
                 )
     return FilingProjectionPlan(contexts=tuple(contexts), values=tuple(values))
