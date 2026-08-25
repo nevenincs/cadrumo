@@ -12,7 +12,6 @@ from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage import custody
 from ...core import BucketPointer
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.paths import effective_storage_root
