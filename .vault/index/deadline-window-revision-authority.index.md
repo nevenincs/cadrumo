@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:67aa98a6f4d6aa7901cc3ef0a0b0ad5e67ee066022d2c05669cce0e10e6e54cb'
+body_hash: 'sha256:9176d9f79ef56e3225ffc54296e7ee22cfabe51c88df231690aa1c8e011fc2be'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S01]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S02]]'
@@ -49,6 +49,7 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W04-P12-S32]]'
   - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S33]]'
   - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S34]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S36]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-engine-projection-audit]]'
@@ -79,6 +80,7 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-s40-m130-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-s41-m131-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-all-modelo-surface-parity-audit]]'
+  - '[[2026-08-25-deadline-window-revision-authority-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-consumer-canonical-api-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-exec]]'
   - '[[2026-08-25-deadline-window-revision-authority-final-architecture-review-audit]]'
@@ -126,8 +128,9 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-s40-m130-audit` - `deadline-window-revision-authority` audit: `S40 Modelo 130 deadline corpus`
 - `2026-08-24-deadline-window-revision-authority-s41-m131-audit` - `deadline-window-revision-authority` audit: `s41 m131`
 - `2026-08-25-deadline-window-revision-authority-all-modelo-surface-parity-audit` - `deadline-window-revision-authority` audit: `all modelo surface parity`
+- `2026-08-25-deadline-window-revision-authority-audit` - `deadline-window-revision-authority` audit: `architecture corpus and lifecycle reconciliation`
 - `2026-08-25-deadline-window-revision-authority-consumer-canonical-api-audit` - `deadline-window-revision-authority` audit: `consumer canonical API`
-- `2026-08-25-deadline-window-revision-authority-final-architecture-review-audit` - `deadline-window-revision-authority` audit: `Final architecture review`
+- `2026-08-25-deadline-window-revision-authority-final-architecture-review-audit` - `deadline-window-revision-authority` audit: `final architecture review`
 - `2026-08-25-deadline-window-revision-authority-historical-engine-cli-scenarios-audit` - `deadline-window-revision-authority` audit: `historical engine CLI scenarios`
 - `2026-08-25-deadline-window-revision-authority-ordered-consumer-multiplicity-audit` - `deadline-window-revision-authority` audit: `ordered consumer multiplicity`
 - `2026-08-25-deadline-window-revision-authority-real-cli-json-deadline-parity-audit` - `deadline-window-revision-authority` audit: `real cli json deadline parity`
@@ -176,6 +179,7 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-W04-P12-S32` - Add all-modelo parity coverage across registry, DeadlineEngine, overview, workflow, and real CLI for every supported filing year
 - `2026-08-24-deadline-window-revision-authority-W04-P13-S33` - Run the bundled-registry invariant proving zero ownership, identity, uniqueness, qualifier, period, and completeness violations
 - `2026-08-24-deadline-window-revision-authority-W04-P13-S34` - Run exact historical engine and CLI scenarios for every repaired modelo against the adjudicated registry census
+- `2026-08-24-deadline-window-revision-authority-W04-P13-S36` - Perform formal code and architecture review
 - `2026-08-25-deadline-window-revision-authority-exec` - Fleet periodic deadline completeness hard gate
 
 ### plan
