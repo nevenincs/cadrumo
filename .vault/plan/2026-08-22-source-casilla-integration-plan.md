@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-25'
-body_hash: 'sha256:93707130b0e7d8eb21b041de243b618337159e3c78bcd7361980acd499c9d79b'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -17,6 +15,8 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
+modified: '2026-08-25'
+body_hash: 'sha256:d40f41facbda9aaa4d7760b98cfb18431894cfa5c492275f1809bb12e6798d97'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -353,7 +353,7 @@ Adjudicate, connect or close, persist, and review the M193 row source.
 Adjudicate, connect or close, persist, and review the M296 row source.
 
 - [x] `W05.P19.S108` - adjudicate M296 withholding-row semantics and source ownership from official evidence; `.vault/research/2026-08-25-source-casilla-integration-m296-row-source-grounding-research.md`.
-- [ ] `W05.P19.S109` - enroll the M296 withholding resolver and remove its deferral; `src/cadrumo/application/aggregation/_source_mesh.py`.
+- [ ] `W05.P19.S109` - recast Modelo 296 withholding rows as a bounded registry-blocked refusal pending a non-lossy encrypted M296 owner, declarant-owned recipient/representative/Annex identity and provenance, row-preserving resolver lifecycle, and source-owned repeated-record export proof while preserving manual/direct paths and the distinct M180/M193 withholding lifecycle; `src/cadrumo/_data/source_connectivity/census.toml; dev/source_connectivity/tests/test_m296_deferral.py`.
 - [ ] `W05.P19.S110` - prove row persistence, diagnostics, provenance, replay, review, and export for M296; `src/cadrumo/application/modelo/tests/test_m296_row_source.py`.
 - [ ] `W05.P19.S111` - close the M296 census disposition and obtain formal review; `.vault/audit/2026-08-22-m296-row-source-code-review.md`.
 

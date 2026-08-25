@@ -333,7 +333,7 @@ completion_criterion = "Keep ingress_blocked until a secure non-lossy contributo
 candidate_id = "rows.withholding296"
 disposition = "registry_blocked"
 owner = "source-connectivity-campaign"
-review_condition = "The worksheet pull has a typed Modelo 296 withholding assembler and the source taxonomy is explicitly deferred, but the current Modelo 296 registry declares relation-prefill bindings only and no binding whose source is withholding296. Registry authoring must be officially grounded before durable ingress or resolver work can connect it."
+review_condition = "Manual M296 box/direct caller paths are not canonical recipient sources; M180/M193 withholding storage is separate. Reopen only when a secure non-lossy M296 repository retains declarant-owned recipient, representative, Annex and conditional-field identity/fingerprint/provenance, a row-preserving withholding296 resolver proves encrypted persistence/replay, diagnostics, review, and source-owned repeated-record export."
 expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/application/calculations/_row_set_assembly.py:180",
@@ -353,8 +353,9 @@ summary = "Worksheet rows already dispatch to a typed Withholding296 observation
 
 [entries.bounded_follow_up]
 action_id = "source-casilla.rows-withholding296-registry"
+owner = "source-connectivity-campaign"
 deadline = 2026-11-30
-completion_criterion = "Official-source adjudication authors or rejects the Modelo 296 withholding row bindings before a bounded secure-ingress and resolver slice proceeds."
+completion_criterion = "Keep registry_blocked until official M296 bindings and the complete secure row-preserving lifecycle/export proof exist."
 
 [[entries]]
 candidate_id = "coverage.remaining-calculation-helpers"
