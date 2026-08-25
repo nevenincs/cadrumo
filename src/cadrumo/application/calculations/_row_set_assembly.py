@@ -62,6 +62,7 @@ from ...domain.calculations.registry import (
     Modelo720RowObservation,
     ModeloRevision,
     RefundOperationObservation,
+    RegistrySnapshot,
     RegistryValidationError,
     RelatedPartyOperationObservation,
     Withholding296Observation,
@@ -77,6 +78,7 @@ __all__ = [
     "assemble_foreign_asset_observations",
     "assemble_gasto193_observations",
     "assemble_observations_for_grouping",
+    "assemble_observations_for_snapshot",
     "assemble_refund_observations",
     "assemble_related_party_observations",
     "assemble_withholding296_observations",
@@ -183,6 +185,48 @@ def assemble_observations_for_grouping(
     raise RegistryValidationError(
         translated_message="application.calculations.row_set.errors.grouping_dispatch_fell_through",
         context={"grouping": str(grouping)},
+    )
+
+
+def assemble_observations_for_snapshot(
+    grouping: str,
+    cells: Iterable[_RowCellShape],
+    snapshot: RegistrySnapshot,
+) -> AssembledObservations:
+    """Assemble one row set against the authoritative selected registry snapshot.
+
+    This is the application command at the row-observation boundary.  It
+    deliberately accepts a :class:`~domain.calculations.registry.RegistrySnapshot`
+    rather than a caller-selected ``ModeloRevision`` so its assembly uses the
+    same law-selected revision and filing year as calculation.  It delegates
+    all grouping and row validation to the closed dispatcher.
+
+    The returned typed observations are an input to a source-specific resolver
+    or handoff.  This command does not infer source ownership, construct row
+    identities or provenance, choose a row-to-casilla materialisation, or write
+    a calculation revision; those facts remain owned by the applicable source
+    slice and the existing calculation source mesh.
+
+    Args:
+        grouping: Registry-authored row-set grouping token.
+        cells: Cells captured by an inbound surface or another application
+            caller.  The command does not claim that any particular adapter is
+            a calculation ingress.
+        snapshot: The validated registry snapshot selected for the work
+            context.
+
+    Returns:
+        The closed typed observation union produced by the grouping dispatcher.
+
+    Raises:
+        RegistryValidationError: If the grouping is not assembled by the
+            application or any supplied row is invalid.
+    """
+    return assemble_observations_for_grouping(
+        grouping,
+        cells,
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
     )
 
 
