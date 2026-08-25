@@ -4,7 +4,7 @@ tags:
   - '#registry-temporal-coverage'
 date: '2026-08-14'
 modified: '2026-08-25'
-body_hash: 'sha256:e9fbd7b1fd9df2b96f3f0a71d279027f0da584d6689088e0840ddfa81c219557'
+body_hash: 'sha256:72fb83f5b297ef8e7a83e4b641ed01b41d62bc726c59723ef23fa6bc0aea0985'
 tier: L3
 related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
@@ -104,7 +104,7 @@ Refuse or advise at the authority and snapshot resolution boundary, which execut
 - [x] `W02.P05.S46` - Acquire and hash-pin exact official Modelo 188 design authority for 2019 through 2022, then split or constrain law-selected revision scope without backdating the 2023 source or promoting authority grade.; `src/cadrumo/_data/registry/aeat/modelos/188/; src/cadrumo/_data/registry/aeat/legal/; src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_188/; src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W02.P05.S47` - Acquire and hash-pin Modelo 194 design authority for 2019 through 2022, preserve the 2023 and 2024 successors as distinct source eras, and constrain any open horizon to publication-backed evidence without promoting authority grade.; `src/cadrumo/_data/registry/aeat/modelos/194/; src/cadrumo/_data/registry/aeat/legal/; src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_194/; src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W02.P05.S48` - Constrain Modelo 220 2025 source and selection scope to 2025 authority, remove or replace the 2026 publication-bound exception, and admit a 2026 successor only from hash-pinned exact authority without promoting authority grade.; `src/cadrumo/_data/registry/aeat/modelos/220/; src/cadrumo/_data/registry/aeat/legal/; src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/; src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W02.P05.S49` - Acquire and hash-pin distinct Modelo 721 2023 and 2024 technical contract packages with exact exercise applicability, then split or constrain law-selected revision scope without claiming unbounded technical-layout authority or promoting authority grade.; `src/cadrumo/_data/registry/aeat/modelos/721/; src/cadrumo/_data/registry/aeat/legal/; src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_721/; src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W02.P05.S49` - Acquire and hash-pin distinct Modelo 721 2023 and 2024 technical contract packages with exact exercise applicability, then split or constrain law-selected revision scope without claiming unbounded technical-layout authority or promoting authority grade.; `src/cadrumo/_data/registry/aeat/modelos/721/; src/cadrumo/_data/registry/aeat/legal/; src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_721/; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W02.P05.S50` - Acquire Modelo 763 opening-period and design-era authority, then split the revision at the evidenced 2012, 2015, and 4T-2018 boundaries with period-aware selectors and complete deadlines without inventing unsupported windows or promoting authority grade.; `src/cadrumo/_data/registry/aeat/modelos/763/; src/cadrumo/_data/registry/aeat/legal/; src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_763/; src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `W02.P06` - coverage ledger reconciliation

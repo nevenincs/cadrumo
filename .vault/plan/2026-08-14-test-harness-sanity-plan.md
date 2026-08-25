@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#test-harness-sanity'
 date: '2026-08-14'
-modified: '2026-08-15'
-body_hash: 'sha256:654b257c8d5149fdfb994f17f2d0c1109eaa359b5a16daa7f6251d3ba52c2b1a'
 tier: L3
 related:
   - '[[2026-08-14-test-harness-sanity-successor-adr]]'
@@ -12,9 +10,11 @@ related:
   - '[[2026-07-25-test-harness-honesty-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-adr]]'
   - '[[2026-08-14-test-harness-sanity-two-lane-campaign-research]]'
+modified: '2026-08-25'
+body_hash: 'sha256:3f4a6f16361ab631b31dc674e762c8845f5cb5ef3721d080b020f10435c9cfd5'
 ---
 
-<!-- RETIRED: W01, W02, W03, W04, W05, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46 -->
+<!-- RETIRED: W01, W02, W03, W04, W05, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S111, S121, S122, S138 -->
 
 # `test-harness-sanity` plan
 
@@ -190,7 +190,6 @@ A second team re-scanned the test corpus after W08 closed and found duplication 
 
 Twenty-five file-disjoint batches of byte-identical helper bodies, partitioned by union-find over the task-to-file graph so no two workers touch one file. Each slice consolidates at the narrowest common owner, deletes every redundant definition outright with no bridge or alias, and compares failures as a set rather than a count because parts of this tree are deliberately red.
 
-- [x] `W09.P29.S111` - Partition the body-keyed rescan into file-disjoint batches by union-find over the task-to-file graph and assert no file appears in two batches; `scratchpad census artefacts`.
 - [x] `W09.P29.S112` - Consolidate the thirteen observation-lookup helpers into one narrowest-owner helper carrying the return annotation every original lacked; `src/cadrumo/application/calculations/tests/_observation_lookup_support.py`.
 - [x] `W09.P29.S113` - Consolidate the ten attribute-replacement context managers onto the documented submodule-direct convention and preserve the monkeypatch-ban rationale; `src/cadrumo/tests/attribute_scope.py`.
 - [x] `W09.P29.S114` - Consolidate the twelve convenio rate resolvers and prove every per-country treaty rate and legal citation stayed in its own file; `src/cadrumo/application/calculations/tests/_convenio_rate_support.py`.
@@ -198,15 +197,13 @@ Twenty-five file-disjoint batches of byte-identical helper bodies, partitioned b
 - [x] `W09.P29.S116` - Consolidate the five docs HTTP server helpers to the strictest cleanup form and close the listening socket every copy leaked; `dev/docs/tests/_http_serve_support.py`.
 - [x] `W09.P29.S117` - Collapse the sixty-six structurally identical modelo 131 modulos tests into parametrized cases without losing a single expected value or IAE citation; `src/cadrumo/domain/calculations/registry/tests/test_modelo_131_modulos_engine*.py`.
 - [x] `W09.P29.S118` - Consolidate the ledger corpus match and oracle-rule helpers and upgrade the existing shared copies to the stricter guarded variant; `src/cadrumo/entrypoints/cli/tests/_ledger_corpus_support.py`.
-- [x] `W09.P29.S119` - Consolidate the remaining digest, live-write-declaration, ephemeral-repository and fragment-writer helpers without crossing the dev and shipped-package boundary; `dev/packaging, src/cadrumo/entrypoints/mcp/tests, dev/docs/terminology_handbook/tests`.
+- [ ] `W09.P29.S119` - Consolidate duplicate secure-object ephemeral repository test helpers behind the canonical shared support owner while preserving each caller's database-path and key-lifecycle contract; `src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py; src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_write_batching.py; src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py; dev/quality/tests/test_helper_body_census.py`.
 - [x] `W09.P29.S120` - Write one census record per consolidated cluster proving substitutability and naming the canonical owner, as the fixture-deletion constraint requires; `.vault/audit`.
 
 ### Phase `W09.P30` - adjudicate drifted variants and semantically mirrored reimplementations
 
 The classes the name-keyed census cannot reach. Drift is scored by structural similarity over normalised AST node sequences; semantic mirrors are found only by meaning-based search, since they share neither name nor structure. Both are adjudicated before any edit: a copy that looks interchangeable and silently is not is more dangerous than an honest duplicate.
 
-- [x] `W09.P30.S121` - Score name-grouped helper clusters by structural similarity over normalised AST node sequences to separate genuine drift from name collision; `scratchpad census artefacts`.
-- [x] `W09.P30.S122` - Adjudicate every drifted cluster above the similarity threshold as real drift, deliberate variant, or false positive before any edit; `src/cadrumo, dev`.
 - [x] `W09.P30.S123` - Migrate the under-adopted canonical locale and loader-directory fixture homes onto their existing owners rather than creating new ones; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `W09.P30.S124` - Sweep the corpus by meaning for reimplementations sharing neither name nor structure and record which could not have been reached by name or grep; `src/cadrumo, dev`.
 - [x] `W09.P30.S125` - Re-key the duplication gate on body rather than name so a renamed twin cannot sit outside its own comparison; `dev/quality`.
@@ -222,7 +219,6 @@ The classes the name-keyed census cannot reach. Drift is scored by structural si
 - [x] `W09.P30.S135` - Move the in-memory engine disposal in the hash-column-width test inside a finally so a failing assertion cannot skip it; `src/cadrumo/adapters/persistence/storage/sql/tests/test_hash_column_widths.py`.
 - [x] `W09.P30.S136` - Close the live-write declaration helper still duplicated in the evaluation tree, or record the cross-tree import direction as the standing reason it cannot move; `dev/agent_eval/tests/test_confirmation_gate_golden.py`.
 - [x] `W09.P30.S137` - Sweep key providers and encrypted sessions for guaranteed teardown, the one resource class left unexamined, adjudicating each of the 15 EphemeralMasterKeyProvider constructions that are assigned without ever being context-managed as helper-managed or leaking; `15 EphemeralMasterKeyProvider constructions are assigned without ever being context-managed and each needs adjudicating as helper-managed or leaking; `src/cadrumo/adapters/persistence/storage`.
-- [ ] `W09.P30.S138` - Re-run the registry-tests failure-set diff once the registry VALIDATES (not merely once collection succeeds) so the consolidation pair is cleared on evidence rather than on zero-overlap reasoning, gating the run on a single authority-loading test because the authority-grade sweep currently leaves 1704 tests failing on one shared RegistryValidationError; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `W09.P30.S139` - Migrate the CLI-surface workflow tests off application-layer profile seeding onto the credential-registering door so the custody envelope opens under the configured passphrase; `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`.
 - [x] `W09.P30.S140` - Record the fourth storage-plus-auth isolation composition in the isolated-backend cluster census so the cluster count reflects every known site; `src/cadrumo/entrypoints/cli/tests/_cli_surface_support.py`.
 - [x] `W09.P30.S141` - Treat a body-duplicate that closes over a same-named module constant as its own triage bucket, since the safe fix is to parameterise the constant rather than delete the duplicate; `dev/quality/helper_body_census.py`.
