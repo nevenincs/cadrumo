@@ -118,7 +118,86 @@ under ``aeat-registry-authority-flow``, and is recorded as its own finding rathe
 than adjudicated away here.
 """
 
+[[group]]
+id = "payload-scope-guard"
+classification = "orchestration_routing"
+justification = """
+The branch refuses a modelo-specific PAYLOAD riding a coordinate of another
+modelo: typed filing facts on a snapshot of a different modelo, a censo
+event-kind period on a non-036 destination. A carrier named for one modelo may
+only ride that modelo's coordinate -- and no provision says so, the TYPE does,
+which is what separates this from a regulatory claim.
+
+It is deliberately neither of its neighbours. It is not ``modelo-path-routing``:
+there is no per-modelo implementation on the other side, so the branch selects
+nothing. It is not ``modelo-scope-guard``: the function it sits in is generic
+and serves every modelo, so there is no modelo-named function being guarded.
+What it decides is whether a type shape is admissible where it was supplied,
+which is a statement about this codebase's own payload contracts.
+
+The citation names the refusal the branch raises, because that refusal IS the
+thing selected.
+"""
+
 # -- Adjudicated branches ----------------------------------------------------
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_binding_prefill.py"
+enclosing_symbol = "_observation_from_iva_compensation_history"
+modelo_codes = "M303"
+group = "casilla-target-selection"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_m303_carry_ingress.py"
+enclosing_symbol = "_normalize_carry_observation"
+modelo_codes = "M303"
+group = "casilla-target-selection"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_projection.py"
+enclosing_symbol = "_validate_m303_projection_request"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_validate_m303_projection_request"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export_parity.py"
+enclosing_symbol = "_m303_nota_three_requires_bank_account"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_m303_nota_three_requires_bank_account"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_record_field_renderer.py"
+enclosing_symbol = "_draft_period_code"
+modelo_codes = "M369"
+group = "official-design-convention"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_record_field_renderer.py"
+enclosing_symbol = "_m369_period_binding_value"
+modelo_codes = "M369"
+group = "official-design-convention"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export.py"
+enclosing_symbol = "_projection_plan_for_layout"
+modelo_codes = "M200"
+group = "modelo-path-routing"
+selects = "build_m200_filing_projection_plan"
+
+[[branch]]
+path = "src/cadrumo/application/registry/source_connectivity.py"
+enclosing_symbol = "_require_kind_payload"
+modelo_codes = "M036"
+group = "payload-scope-guard"
+selects = "censo event destination coordinates are reserved for canonical Modelo 036"
+
+[[branch]]
+path = "src/cadrumo/application/user_profile/preflight.py"
+enclosing_symbol = "report"
+modelo_codes = "M111"
+group = "obligation-condition"
 
 [[branch]]
 path = "src/cadrumo/application/aggregation/_inventory.py"
@@ -1073,23 +1152,8 @@ selects = "build_m296_filing_projection_plan"
 path = "src/cadrumo/application/filing/_producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M390"
-classification = "orchestration_routing"
+group = "payload-scope-guard"
 selects = "ValueError"
-justification = """
-A payload-scope guard, and deliberately NOT the modelo-path-routing group its
-siblings in this function carry. The M111, M202, M296, M303 and M353 arms each
-select a per-modelo validator; this one selects nothing -- there is no
-_validate_modelo_390_snapshot -- it refuses M390FilingFacts attached to a
-snapshot of any other modelo.
-
-What it decides is that a typed carrier named for one modelo may only ride that
-modelo's snapshot. That is a fact about this codebase's payload shape, not about
-IVA: no provision says an annual-summary fact set cannot travel on a quarterly
-snapshot, the TYPE says so by being named for its modelo and being a distinct
-field. The citation names the refusal the branch raises, which is the only code token
-inside the guarded body -- the carrier's name lives in the message string, and
-the checker reads tokens rather than prose, correctly.
-"""
 
 [[branch]]
 path = "src/cadrumo/application/modelo/_work_plazo.py"
