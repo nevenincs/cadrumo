@@ -20,7 +20,7 @@
     "src/cadrumo/entrypoints/cli/_modelo_payloads.py": "The bindings list/resolve payload family was extracted to _modelo_bindings_payloads.py, following the split pattern of _modelo_aux_payloads.py and _modelo_revision_payload_parts.py."
   },
   "modules": {
-    "src/cadrumo/adapters/inbound/tui/tests/test_flow_tui_app.py": 1441,
+    "src/cadrumo/entrypoints/tui/tests/test_flow_tui_app.py": 1441,
     "src/cadrumo/adapters/outbound/aeat/sede/_declarations.py": 1535,
     "src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py": 1432,
     "src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py": 1422,

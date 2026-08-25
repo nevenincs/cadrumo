@@ -381,7 +381,7 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         #
         # The enforced guarantee is the outcome, not the means:
         # ``test_the_chosen_language_does_not_outlive_the_screen`` in
-        # ``adapters/inbound/tui/tests/test_registration_language_switch.py``
+        # ``entrypoints/tui/tests/test_registration_language_switch.py``
         # drives the real screen and fails if the caller's rendering
         # language moved. Swapping this site to a process-global mechanism
         # (an env var plus a settings-cache reset) reds it - that is the
