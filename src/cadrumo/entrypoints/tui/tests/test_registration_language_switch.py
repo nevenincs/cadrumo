@@ -25,6 +25,7 @@ from textual.widgets._select import SelectOverlay
 from ....application.user_profile import login_profile
 from ....core import assess_profile_password, require_active_bucket_id
 from ....core.i18n import output_language, tr
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.cli import attempt_registration
 from ....entrypoints.tui.secret.app import RecoveryWordsScreen, RegistrationApp
 from ....tests.profile_capsule import load_test_profile_record
@@ -39,10 +40,6 @@ _TERMINAL_SIZE = (140, 60)
 _PASSWORD = "registration-language-operator-secret"  # noqa: S105 - synthetic test fixture
 _STARTING_LANGUAGE = "en"
 _TARGET_LANGUAGE = "hu"
-
-_OUTPUT_LANGUAGE_PATH = "preferences.output_language"
-"""Where the created profile keeps the language chosen on this screen."""
-
 
 def _screen() -> RegistrationApp:
     """The production composition, wired to the doors the CLI gives it."""
@@ -224,7 +221,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
         login_profile(name="Language Subject", passphrase_callback=lambda: _PASSWORD)
         record = load_test_profile_record(require_active_bucket_id())
         stored = {fact.path: fact.value for fact in record.facts}
-        assert stored.get(_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
+        assert stored.get(PROFILE_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
             "the profile must be created in the language the chooser was left on"
         )
 

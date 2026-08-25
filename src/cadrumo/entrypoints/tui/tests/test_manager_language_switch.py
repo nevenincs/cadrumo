@@ -28,9 +28,9 @@ from ....application.user_profile import (
     login_profile,
     register_profile_with_credentials,
 )
-from ....application.user_profile.profile_fields import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....core import require_active_bucket_id
 from ....core.i18n import tr
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.cli import persist_active_profile_field
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root

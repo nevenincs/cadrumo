@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Final, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
@@ -218,6 +218,10 @@ class SetupFieldSpec:
     """
 
 
+PROFILE_OUTPUT_LANGUAGE_PATH: Final[str] = "preferences.output_language"
+"""Dotted profile-record path for the setup flow's output-language answer."""
+
+
 SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
     "activity": SetupFieldSpec("activities.description", str),
     "activity_start_date": SetupFieldSpec("censo.activity_start_date", str),
@@ -318,7 +322,7 @@ SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
         "irpf.objective_estimation_modulos_module_7_units",
         str,
     ),
-    "output_language": SetupFieldSpec("preferences.output_language", str, "es"),
+    "output_language": SetupFieldSpec(PROFILE_OUTPUT_LANGUAGE_PATH, str, "es"),
     "pays_capital_income_with_retencion": SetupFieldSpec(
         "withholding.pays_capital_income_with_retencion",
         bool,
@@ -1008,6 +1012,7 @@ class SetupAnswers(BaseModel):
 
 
 __all__ = [
+    "PROFILE_OUTPUT_LANGUAGE_PATH",
     "SETUP_ANSWER_FIELDS",
     "ProfileAnswerTypeError",
     "ProjectAnswersFn",

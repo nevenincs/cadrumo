@@ -18,6 +18,7 @@ from ....application.modelo import ensure_modelo_work_unit_for_active_target
 from ....application.modelo.work_wizard import ModeloWorkWizardRun, open_modelo_work_wizard
 from ....core import Period
 from ....core.flows import FlowMode
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile import UserProfileFact
 from ..flows.app import FlowTuiApp
 from .fixture import harness_storage, passphrase
@@ -30,7 +31,7 @@ _FILING_YEAR = 2025
 _PERIOD_CODE = "1T"
 _PROFILE_LABEL = "Modelo Work Wizard fixture"
 _MODEL_WORK_PROFILE_FACTS = (
-    UserProfileFact(path="preferences.output_language", value="es"),
+    UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="es"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="identity.tax_id", value="12345678Z"),

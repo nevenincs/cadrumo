@@ -12,6 +12,7 @@ import pytest
 
 from ....core import pointer_path
 from ....core.i18n import clear_output_language_cache, tr
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 
@@ -72,7 +73,7 @@ def test_malformed_active_pointer_error_documents_spanish_pre_profile_fallback(t
                 "identity.name": "Catala",
                 "identity.surnames": "Test",
                 "activities.description": "Serveis",
-                "preferences.output_language": "ca",
+                PROFILE_OUTPUT_LANGUAGE_PATH: "ca",
             },
         )
         pointer_path(storage_root).write_text("schema_version = 1\n", encoding="utf-8")

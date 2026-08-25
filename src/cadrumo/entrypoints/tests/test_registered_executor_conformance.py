@@ -62,6 +62,7 @@ from ...application.user_profile import (
     register_profile_with_credentials,
 )
 from ...core import AuthProviderKind, OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...core.time import now
 from ...domain.user_profile import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
@@ -299,7 +300,7 @@ def _payload(
         case "auth.session.logout" | "auth.session.reset":
             values = {"all_providers": True}
         case "user-profile.field-mutation":
-            values = {"profile_id": profile_id, "path": "preferences.output_language", "value": "es"}
+            values = {"profile_id": profile_id, "path": PROFILE_OUTPUT_LANGUAGE_PATH, "value": "es"}
         case "user-profile.repeatable-row-mutation":
             values = {
                 "profile_id": profile_id,

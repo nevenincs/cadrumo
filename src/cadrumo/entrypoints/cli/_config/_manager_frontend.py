@@ -149,11 +149,7 @@ def _profile_next_action_notice(record: UserProfileRecord) -> Notice | None:
     return Notice(
         severity=NoticeSeverity.INFO,
         code="config.profile.manager.next_step_modelo",
-        message=tr(
-            "flows.manager.next_step_modelo",
-            default="This profile's declared facts route it to Modelo {modelo}.",
-            modelo=modelo,
-        ),
+        message=tr("flows.manager.next_step_modelo", modelo=modelo),
         context={"modelo": modelo},
     )
 
@@ -443,6 +439,7 @@ def attempt_registration(
         ProfileRegistrationError,
         register_profile_with_credentials,
     )
+    from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
     from ....domain.user_profile import UserProfileFact
     from ....entrypoints.tui.secret.app import (
         RecoveryHandoverCancelledError,
@@ -456,7 +453,7 @@ def attempt_registration(
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=passphrase,
-            facts=(UserProfileFact(path="preferences.output_language", value=output_language),),
+            facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
             recovery_handover=recovery_handover,
         )
     except RecoveryHandoverCancelledError:

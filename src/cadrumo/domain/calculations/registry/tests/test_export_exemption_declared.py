@@ -408,9 +408,17 @@ def test_a_form_spec_citation_is_not_a_record_design() -> None:
     under an id ending ``-layout``. If the predicate keyed on either signal it
     would read True here, the refusal would return for 721, and the distinction
     this gate rests on would be fictional.
+
+    Read over the modelo AND its revisions, exactly as the predicate does. The
+    citation lives at whichever level the registry happens to declare it -- the
+    721 revision split moved it from the modelo down to each revision -- so a
+    modelo-only read proves nothing about the predicate it mirrors.
     """
     modelo, catalogues = _committed_modelo("721")
-    cited = {ref: catalogues.sources[ref] for ref in modelo.source_refs if ref in catalogues.sources}
+    refs = set(modelo.source_refs)
+    for revision in modelo.revisions.values():
+        refs |= set(revision.source_refs)
+    cited = {ref: catalogues.sources[ref] for ref in refs if ref in catalogues.sources}
 
     assert cited, "fixture drift: modelo 721 should cite resolvable sources"
     assert any(source.evidence_tier == "layout_authority" for source in cited.values())

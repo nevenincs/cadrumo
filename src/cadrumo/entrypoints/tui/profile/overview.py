@@ -43,9 +43,9 @@ from textual.worker import Worker, WorkerState
 
 from ....application.operations import ManagerAction, ManagerActionDisposition, ManagerActionOutcome
 from ....application.user_profile import notice_presentation, profile_field_shape_hint
-from ....application.user_profile.profile_fields import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....core import OperatorProgress
 from ....core.i18n import tr
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.tui.components.form_screen import FormScreen, presenting_forms_through
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import (

@@ -147,6 +147,52 @@ def test_relocated_symbols_have_single_canonical_defining_modules_and_inert_faca
         assert not imports, f"{namespace_name} is a forwarding facade: {imports}"
 
 
+def test_manager_pilot_has_one_canonical_home_and_exactly_seven_direct_consumers() -> None:
+    """The settling barrier lives in the TUI test package, not the old root."""
+    old_home = _TUI_ROOT.parents[1] / "tests" / "manager_pilot.py"
+    canonical_home = _TUI_ROOT / "tests" / "manager_pilot.py"
+    assert not old_home.exists()
+    assert canonical_home.is_file()
+
+    canonical_tree = ast.parse(canonical_home.read_text(encoding="utf-8"), filename=str(canonical_home))
+    definitions = [
+        node
+        for node in ast.walk(canonical_tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "wait_until_settled"
+    ]
+    assert len(definitions) == 1
+
+    expected_consumers = {
+        "test_manager_field_editors.py",
+        "test_manager_language_switch.py",
+        "test_manager_masked_field_preservation.py",
+        "test_manager_masked_required_field.py",
+        "test_manager_required_field_refusal.py",
+        "test_manager_screen.py",
+        "test_visual_verification.py",
+    }
+    consumers: set[str] = set()
+    for path in (_TUI_ROOT / "tests").glob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        if any(
+            isinstance(node, ast.ImportFrom)
+            and node.level == 1
+            and node.module == "manager_pilot"
+            and any(alias.name == "wait_until_settled" for alias in node.names)
+            for node in ast.walk(tree)
+        ):
+            consumers.add(path.name)
+    assert consumers == expected_consumers
+
+    tests_init = _TUI_ROOT / "tests" / "__init__.py"
+    tests_init_tree = ast.parse(tests_init.read_text(encoding="utf-8"), filename=str(tests_init))
+    assert not [
+        node
+        for node in ast.walk(tests_init_tree)
+        if isinstance(node, (ast.Import, ast.ImportFrom)) and not (isinstance(node, ast.ImportFrom) and node.module == "__future__")
+    ]
+
+
 @pytest.mark.asyncio
 async def test_profile_and_secret_apps_preserve_the_real_custody_path(tmp_path: Path) -> None:
     """Register, unlock, and render an actual encrypted profile through relocated apps."""

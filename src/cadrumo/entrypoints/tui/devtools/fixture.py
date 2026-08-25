@@ -21,6 +21,7 @@ from pathlib import Path
 
 from ....application.user_profile import logout_active_profile
 from ....core.config import load_settings
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
 WORKSPACE_ENV_VAR = "CADRUMO_TUI_WORKSPACE"
 
@@ -98,7 +99,7 @@ def ensure_profile() -> str:
     outcome = register_profile_with_credentials(
         label=PROFILE_LABEL,
         passphrase=passphrase(),
-        facts=(UserProfileFact(path="preferences.output_language", value="es"),),
+        facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="es"),),
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
     )
     logout_active_profile()
@@ -124,7 +125,7 @@ def registration_attempt(
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=candidate_passphrase,
-            facts=(UserProfileFact(path="preferences.output_language", value=output_language),),
+            facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
             recovery_handover=recovery_handover,
         )
     except RecoveryHandoverCancelledError:
