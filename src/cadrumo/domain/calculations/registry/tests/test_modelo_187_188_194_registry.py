@@ -25,7 +25,7 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
 from .._corpus_catalogue import resolve_record_design_binary
-from .._errors import NoRevisionForPeriodError
+from .._errors import NoRevisionForPeriodError, RegistryValidationError
 from .._temporal import select_revision
 from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
@@ -182,9 +182,17 @@ def test_modelo_194_refuses_a_mutated_2024_selector_past_its_source_window() -> 
         },
     )
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2024": expanded}})
+    selected = select_revision(mutated_modelo, filing_year=2025, period="0A", on=date(2025, 12, 31))
+    (source_ref,) = (ref for ref in selected.source_refs if ref.startswith("aeat-dr-194-"))
 
-    with pytest.raises(RegistryValidationError, match="aeat-dr-194-2024"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+    with pytest.raises(RegistryValidationError, match="does not apply to filing year 2025"):
+        resolve_record_design_binary(
+            bundled_path(),
+            catalogues.sources,
+            source_ref=source_ref,
+            filing_year=2025,
+            design_epoch="2024",
+        )
 
 
 def test_modelo_194_refuses_a_mutated_record_design_hash() -> None:

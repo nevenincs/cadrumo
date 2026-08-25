@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:44c2eb8984dfd81254b694a53fb3d56c214b2eeb71c839bd2e22d355687dcdf5'
+body_hash: 'sha256:6cbfaf42b826dade01fd63ba2ed5d2bbf050c09eae70eed984e003c41b8de38c'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -30,6 +30,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S44]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S45]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S46]]'
+  - '[[2026-08-14-registry-temporal-coverage-W02-P05-S47]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S48]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P06-S13]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P06-S14]]'
@@ -110,6 +111,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S44` - Acquire and hash-pin exact official Modelo 182 design eras and amendment authority
 - `2026-08-14-registry-temporal-coverage-W02-P05-S45` - Acquire and hash-pin exact official Modelo 187 designs or amendment tables for 2019 through 2021, then split or constrain law-selected revision scope without backdating the post-2022 source or promoting authority grade.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S46` - Acquire and hash-pin exact official Modelo 188 design authority for 2019 through 2022, then split or constrain law-selected revision scope without backdating the 2023 source or promoting authority grade.
+- `2026-08-14-registry-temporal-coverage-W02-P05-S47` - Acquire and hash-pin Modelo 194 design authority for 2019 through 2022, preserve the 2023 and 2024 successors as distinct source eras, and constrain any open horizon to publication-backed evidence without promoting authority grade.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S48` - Constrain Modelo 220 2025 source and selection scope to 2025 authority, remove or replace the 2026 publication-bound exception, and admit a 2026 successor only from hash-pinned exact authority without promoting authority grade.
 - `2026-08-14-registry-temporal-coverage-W02-P06-S13` - Replace the single-representative-year assessment with a derived modelo, filing-year, period and schema-family matrix over the validated authority that assesses every claimed year up to the assessment horizon, proven by property on a real long-span open revision
 - `2026-08-14-registry-temporal-coverage-W02-P06-S14` - Collapse the duplicated filing-eligibility predicate onto the snapshot-owned check and delete the coverage-ledger duplicate and the by-construction-empty filing gap surface outright, replacing them with matrix-derived gaps proven non-vacuous on a synthetic reviewed corpus, with no superseded ledger surface retained beside the matrix
