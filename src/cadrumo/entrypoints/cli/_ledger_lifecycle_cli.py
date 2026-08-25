@@ -13,10 +13,17 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import ValidationError
 
-from ...application.ledger.models import SplitChildCommand
-from ...application.ledger.actions_lifecycle import archive_manual_transaction, mark_transaction_reviewed_excluded, remove_manual_transaction, reset_ledger_catalogue, restore_manual_transaction, stash_manual_transaction
-from ...application.ledger.id_resolution import compute_display_id_width
+from ...application.ledger.actions_lifecycle import (
+    archive_manual_transaction,
+    mark_transaction_reviewed_excluded,
+    remove_manual_transaction,
+    reset_ledger_catalogue,
+    restore_manual_transaction,
+    stash_manual_transaction,
+)
 from ...application.ledger.actions_split_merge import merge_transactions, split_transaction
+from ...application.ledger.id_resolution import compute_display_id_width
+from ...application.ledger.models import SplitChildCommand
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
@@ -889,8 +896,12 @@ def _ledger_split_llm(
     ``--child-description`` flags are the explicit operator override and cannot be
     combined with ``--llm``.
     """
-    from ...application.ledger.llm_review_workflow import LlmReviewDecision, LlmReviewInvocationOrigin, execute_reviewed_decision
     from ...application.ledger.llm_classification import suggest_evidence_split
+    from ...application.ledger.llm_review_workflow import (
+        LlmReviewDecision,
+        LlmReviewInvocationOrigin,
+        execute_reviewed_decision,
+    )
 
     _validate_split_llm_options(
         child_amount=child_amount,
