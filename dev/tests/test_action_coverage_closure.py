@@ -15,8 +15,12 @@ import pytest
 
 from cadrumo.application.modelo import MODELO_PRECONDITION_PROFILES
 from cadrumo.application.modelo._preconditions import build_modelo_precondition_failure_for_scenario
-from cadrumo.application.operator_actions import ActionCatalogue, OPERATOR_ACTION_CATALOGUE
-from cadrumo.application.operator_surface import ManifestActionResolution, resolve_manifest_action_profiles
+from cadrumo.application.operator_actions import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
+from cadrumo.application.operator_surface import (
+    ManifestActionResolution,
+    OperatorSurfaceContractError,
+    resolve_manifest_action_profiles,
+)
 from cadrumo.core import ActionEvidenceProvenance
 from cadrumo.entrypoints.cli import current_operator_surface_reconciliation
 from dev.agent_eval._action_coverage import LeafConditionScenario, leaf_condition_scenario_matrix
@@ -112,8 +116,7 @@ def _assert_resolved_actions(resolution: ManifestActionResolution) -> None:
             continue
         assert profile.resolved_action is not None, f"{declaration.identity} has an unresolved action"
         assert profile.resolved_action.action_id == declaration.action.action_id, (
-            f"{declaration.identity} resolved {profile.resolved_action.action_id}, "
-            f"not {declaration.action.action_id}"
+            f"{declaration.identity} resolved {profile.resolved_action.action_id}, not {declaration.action.action_id}"
         )
 
 
@@ -219,7 +222,9 @@ def test_action_coverage_closure_rejects_unresolved_action_and_insufficient_bind
         ),
     )
     unresolved_catalogue = ActionCatalogue(
-        entries=tuple(unresolved if entry == resolved.declaration else entry for entry in OPERATOR_ACTION_CATALOGUE.entries),
+        entries=tuple(
+            unresolved if entry == resolved.declaration else entry for entry in OPERATOR_ACTION_CATALOGUE.entries
+        ),
     )
     reconciliation = current_operator_surface_reconciliation()
 
@@ -229,7 +234,7 @@ def test_action_coverage_closure_rejects_unresolved_action_and_insufficient_bind
             catalogue=insufficient_catalogue,
             reconciliation=reconciliation,
         )
-    with pytest.raises(ValueError, match="orphan action target command identity"):
+    with pytest.raises(OperatorSurfaceContractError, match="orphan action target command identity"):
         resolve_manifest_action_profiles(
             profiles=MODELO_PRECONDITION_PROFILES,
             catalogue=unresolved_catalogue,
