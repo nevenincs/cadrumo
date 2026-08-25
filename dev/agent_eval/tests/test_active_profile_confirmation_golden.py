@@ -27,7 +27,6 @@ from pathlib import Path
 import pytest
 from cadrumo_harness.mcp import ConfirmationPolicy, build_tool_descriptors, confirmation_for_tool
 
-from cadrumo.application.operator_surface import command_classification
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
@@ -46,9 +45,9 @@ _REVISION = "2008-2024"
 _CONFIRMATION_COMMAND = "config.profile.status"
 # Command keys this scenario treats as a mutating attempt on the active profile's
 # state. Declared scenario data (mirrors `ContradictionScenario.mutating_commands`),
-# cross-checked below against the live MCP tool-descriptor mutability classification
-# (`cadrumo_harness.mcp._tools.build_tool_descriptors`, the same classification the
-# PreToolUse confirmation gate reads) so the declared set is not a hand-wavy guess.
+# cross-checked below against the live MCP tool-descriptor command-policy projection
+# (the same classification the PreToolUse confirmation gate reads) so the declared
+# set is not a hand-wavy guess.
 _MUTATING_COMMANDS = (
     "modelo.work.create",
     "modelo.work.calculate",
@@ -149,8 +148,8 @@ def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_o
 
     for command in _MUTATING_COMMANDS:
         assert command in by_key, f"'{command}' is not an exposed MCP tool"
-        assert not command_classification(command).read_only, (
-            f"'{command}' is declared mutating in this scenario but the live manifest classifies it read-only"
+        assert not by_key[command].annotations.read_only_hint, (
+            f"'{command}' is declared mutating in this scenario but the live command policy classifies it read-only"
         )
 
 
