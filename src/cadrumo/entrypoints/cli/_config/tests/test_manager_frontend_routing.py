@@ -81,15 +81,8 @@ def test_cli_profile_modules_do_not_import_or_construct_the_tui() -> None:
         source = (config_root / module_name).read_text(encoding="utf-8")
         tree = ast.parse(source)
         imported_modules = {
-            alias.name
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Import)
-            for alias in node.names
-        } | {
-            node.module or ""
-            for node in ast.walk(tree)
-            if isinstance(node, ast.ImportFrom)
-        }
+            alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
+        } | {node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
         assert not any("entrypoints.tui" in module for module in imported_modules), module_name
 
 
