@@ -27,7 +27,7 @@ See Also:
         provisions the key material, and leaves the session unlocked.
     :func:`~cadrumo.core.assess_profile_password`
         The canonical assessment behind validation and the live strength line.
-    :class:`~cadrumo.adapters.inbound.tui.LoginApp`
+    :class:`~cadrumo.entrypoints.tui.secret.login.LoginApp`
         The other credential surface; the two share their attempt
         lifecycle and panel layout through ``CredentialApp``.
 """
@@ -38,16 +38,16 @@ from contextlib import ExitStack
 from contextvars import copy_context
 from dataclasses import dataclass
 from threading import Event
-from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast, override
+from typing import TYPE_CHECKING, ClassVar, cast, override
 
+from textual import on
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Container, Vertical
+from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, Label, Select, Static
 
 from ....core import (
     PROFILE_PASSWORD_MIN_SCALARS,
-    PassphraseStrength,
-    ProfilePasswordRefusalReason,
 )
 from ....core.config import override_settings
 from ....core.external_constants import UTF_8_ENCODING
@@ -55,53 +55,18 @@ from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes
 from ....entrypoints.tui.components.widgets import ContentScroll
-from ._credential_screen import (
+from .credentials import (
     CREDENTIAL_PANEL_CSS,
     CredentialApp,
     run_credential_app,
 )
+from .passphrase import ProfilePasswordVerdict, assessment_copy, assessment_css_class
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ....application.user_profile import ProfileRecoveryEnrollment, ProfileRegistrationOutcome
-    from ....core import ProfilePasswordAssessment
-    from ._credential_screen import CredentialAttempt
-
-
-class ProfilePasswordVerdict(Protocol):
-    """What the screen needs to know about a candidate profile password.
-
-    Structural rather than concrete: the application's assessment already
-    has this shape, so it satisfies the protocol without the screen
-    importing it. The strength banding itself stays where the policy lives
-    — this surface only renders the verdict.
-    """
-
-    @property
-    def strength(self) -> PassphraseStrength:
-        """Advisory band the candidate falls in."""
-        ...  # pragma: no cover
-
-    @property
-    def reason(self) -> ProfilePasswordRefusalReason | None:
-        """Typed refusal reason, or ``None`` when accepted."""
-        ...  # pragma: no cover
-
-    @property
-    def accepted(self) -> bool:
-        """Whether a profile can be created with this passphrase."""
-        ...  # pragma: no cover
-
-    @property
-    def scalar_count(self) -> int:
-        """Safe number of Unicode scalars observed."""
-        ...  # pragma: no cover
-
-    @property
-    def utf8_byte_count(self) -> int | None:
-        """Safe strict UTF-8 size, absent when encoding is invalid."""
-        ...  # pragma: no cover
+    from .credentials import CredentialAttempt
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,50 +111,6 @@ class RegistrationAttempt:
     def refusal(self) -> str | None:
         """Render expected refusal data only at the presentation boundary."""
         return self.expected_refusal.render() if self.expected_refusal is not None else None
-
-
-def assessment_refusal(assessment: ProfilePasswordVerdict) -> RegistrationRefusal | None:
-    """Project a canonical verdict through the application presentation authority."""
-    from ....application.user_profile import prospective_profile_password_refusal
-
-    refusal = prospective_profile_password_refusal(cast("ProfilePasswordAssessment", assessment))
-    if refusal is None:
-        return None
-    return RegistrationRefusal(
-        message_key=refusal.translated_message,
-        context=tuple(refusal.context.items()),
-    )
-
-
-def assessment_copy(assessment: ProfilePasswordVerdict) -> str:
-    """Resolve localized validation or advisory copy for one assessment.
-
-    Every key is written as a literal ``tr(...)`` argument rather than
-    looked up through a mapping. That is not style: the locale scaffolder
-    finds keys by static scan, so a key reached through a variable is
-    invisible to it and silently never lands in the catalogues. Spelling
-    them out here keeps the copy scaffoldable and greppable, and the
-    exhaustive match means a new band cannot ship without its own line.
-    """
-    refusal = assessment_refusal(assessment)
-    if refusal is not None:
-        return refusal.render()
-    match assessment.strength:
-        case PassphraseStrength.WEAK:
-            return tr("flows.registration.strength.weak")
-        case PassphraseStrength.FAIR:
-            return tr("flows.registration.strength.fair")
-        case PassphraseStrength.STRONG:
-            return tr("flows.registration.strength.strong")
-
-
-_STRENGTH_CLASSES: Final[dict[PassphraseStrength, str]] = {
-    PassphraseStrength.WEAK: "strength-weak",
-    PassphraseStrength.FAIR: "strength-fair",
-    PassphraseStrength.STRONG: "strength-strong",
-}
-"""CSS class per band. Colour is never the sole signal — the band's own
-words carry the meaning, and the class only reinforces it."""
 
 
 def _language_options() -> list[tuple[str, str]]:
@@ -238,6 +159,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         ],
         suggested_name: str | None = None,
     ) -> None:
+        """Bind the password assessment and registration presentation callbacks."""
         super().__init__()
         self._assess_profile_password = assess
         """Passphrase banding, injected rather than imported.
@@ -316,6 +238,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         yield Footer()
 
     def on_mount(self) -> None:
+        """Install the theme, render copy, and focus profile-name entry."""
         install_cadrumo_themes(self)
         self._render_localised_copy()
         self.query_one("#field-username", Input).focus()
@@ -414,12 +337,12 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     def _render_strength(self, candidate: str) -> None:
         """Update the band line, or clear it while the field is empty."""
         line = self.query_one("#strength-line", Static)
-        line.remove_class("strength-refused", *_STRENGTH_CLASSES.values())
+        line.remove_class("strength-refused", "strength-weak", "strength-fair", "strength-strong")
         if not candidate:
             line.update("")
             return
         assessment = self._assess_profile_password(candidate)
-        line.add_class("strength-refused" if not assessment.accepted else _STRENGTH_CLASSES[assessment.strength])
+        line.add_class(assessment_css_class(assessment))
         line.update(assessment_copy(assessment))
 
     def selected_output_language(self) -> str:
@@ -430,6 +353,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     # ── intents ─────────────────────────────────────────────────────────
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Route the create-profile button intent."""
         if event.button.id == "btn-create":
             self.action_create()
 
@@ -516,8 +440,6 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
             resolved.set()
 
         def _show() -> None:
-            from ._recovery_words_screen import RecoveryWordsScreen
-
             self.push_screen(
                 RecoveryWordsScreen(
                     enrollment=enrollment,
@@ -565,6 +487,89 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         self.query_one("#btn-create", Button).disabled = busy
 
 
+class RecoveryWordsScreen(Screen[None]):
+    """Show the mnemonic once and return masked exact re-entry proof."""
+
+    DEFAULT_CSS = """
+    RecoveryWordsScreen {
+        align: center middle;
+    }
+    #words-panel {
+        width: 100%;
+        height: auto;
+        border: round $primary;
+        padding: 1 2;
+    }
+    #words-heading { text-style: bold; margin-bottom: 1; }
+    #words-value { color: $warning; margin-bottom: 1; }
+    #words-warning { color: $text-muted; margin-bottom: 1; }
+    #words-actions { height: auto; align-horizontal: right; }
+    """
+
+    def __init__(
+        self,
+        *,
+        enrollment: ProfileRecoveryEnrollment,
+        on_confirm: Callable[[str], None],
+        on_cancel: Callable[[], None],
+    ) -> None:
+        """Bind one ephemeral recovery enrollment and its terminal callbacks."""
+        super().__init__()
+        self._enrollment = enrollment
+        self._on_confirm = on_confirm
+        self._on_cancel = on_cancel
+        self._resolved = False
+
+    @override
+    def compose(self) -> ComposeResult:
+        with Container(id="words-panel"):
+            yield Static(tr("cli.config.custody.recovery_words_heading"), id="words-heading")
+            yield Static(self._enrollment.recovery_key.mnemonic, id="words-value")
+            yield Static(tr("cli.config.custody.recovery_words_warning"), id="words-warning")
+            yield Input(
+                password=True,
+                placeholder=tr("cli.config.profile.create_recovery_verification_prompt"),
+                id="field-recovery-verification",
+            )
+            with Container(id="words-actions"):
+                yield Button(tr("cli.config.custody.recovery_words_cancel"), id="btn-cancel-words")
+                yield Button(tr("cli.config.custody.recovery_words_confirm"), id="btn-confirm-words")
+
+    @on(Button.Pressed, "#btn-confirm-words")
+    def _confirm(self) -> None:
+        if self._resolved:
+            return
+        supplied = self.query_one("#field-recovery-verification", Input).value
+        expected = self._enrollment.recovery_key.mnemonic
+        try:
+            if supplied != expected:
+                self._refuse_once()
+                self.dismiss(None)
+                return
+        finally:
+            self.query_one("#field-recovery-verification", Input).value = ""
+            del expected
+        self._resolved = True
+        self.dismiss(None)
+        self._on_confirm(supplied)
+
+    @on(Button.Pressed, "#btn-cancel-words")
+    def _cancel(self) -> None:
+        self._refuse_once()
+        self.dismiss(None)
+
+    def on_unmount(self) -> None:
+        """Treat escape, shutdown, and every non-confirm exit as refusal."""
+        self._refuse_once()
+
+    def _refuse_once(self) -> None:
+        if self._resolved:
+            return
+        self._resolved = True
+        self._enrollment.recovery_key.wipe()
+        self._on_cancel()
+
+
 def run_registration_tui(
     *,
     assess: Callable[[str], ProfilePasswordVerdict],
@@ -586,8 +591,8 @@ def run_registration_tui(
 
 
 __all__ = [
-    "ProfilePasswordVerdict",
     "RecoveryHandoverCancelledError",
+    "RecoveryWordsScreen",
     "RegistrationApp",
     "RegistrationAttempt",
     "RegistrationRefusal",

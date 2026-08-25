@@ -48,8 +48,8 @@ from .._common import _format_of
 if TYPE_CHECKING:
     import typer
 
-    from ....adapters.inbound.tui import LoginAttempt, LoginChoice
     from ....application.user_profile import ProfileLoginOutcome
+    from ....entrypoints.tui.secret.login import LoginAttempt, LoginChoice
 
 
 def login_tui_is_the_right_frontend(
@@ -141,8 +141,8 @@ def _login_choices() -> tuple[LoginChoice, ...]:
     available before anything is unlocked — the whole point of this screen
     is that no bucket is open yet.
     """
-    from ....adapters.inbound.tui import LoginChoice
     from ....application.workflow import list_profile_buckets
+    from ....entrypoints.tui.secret.login import LoginChoice
 
     return tuple(
         LoginChoice(profile_id=pointer.bucket_id, label=pointer.label)
@@ -163,7 +163,6 @@ def attempt_login(profile_id: str, passphrase: str) -> LoginAttempt:
     outside that family is a defect, not an operator state, and is left to
     propagate so it is not laundered into a refusal line.
     """
-    from ....adapters.inbound.tui import LoginAttempt
     from ....adapters.persistence.storage import SecretStoreError
     from ....application.user_profile import (
         ProfileLoginThrottledError,
@@ -171,6 +170,7 @@ def attempt_login(profile_id: str, passphrase: str) -> LoginAttempt:
     )
     from ....core.errors import resolve_error_message
     from ....domain.user_profile import ProfileNotFoundError
+    from ....entrypoints.tui.secret.login import LoginAttempt
 
     try:
         outcome = login_profile(name=profile_id, passphrase_callback=lambda: passphrase)
@@ -197,7 +197,7 @@ def present_login(*, preselected: str | None) -> ProfileLoginOutcome | None:
     target and land on the active profile instead — the exact misroute
     :func:`preselected_profile_id` exists to prevent.
     """
-    from ....adapters.inbound.tui import run_login_tui
+    from ....entrypoints.tui.secret.login import run_login_tui
 
     return run_login_tui(
         choices=_login_choices(),

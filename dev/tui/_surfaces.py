@@ -49,20 +49,20 @@ class Surface:
 
 
 def _registration() -> App:
-    from cadrumo.adapters.inbound.tui import RegistrationApp
     from cadrumo.application.user_profile import assess_passphrase
     from cadrumo.entrypoints.cli._config._manager_frontend import attempt_registration
+    from cadrumo.entrypoints.tui.secret.registration import RegistrationApp
 
     return RegistrationApp(assess=assess_passphrase, register=attempt_registration)
 
 
 def _login() -> App:
-    from cadrumo.adapters.inbound.tui import LoginApp
     from cadrumo.entrypoints.cli._config._login_frontend import (
         _login_choices,
         attempt_login,
         preselected_profile_id,
     )
+    from cadrumo.entrypoints.tui.secret.login import LoginApp
 
     # ``present_login`` is the real production entry point and always
     # supplies BOTH of these -- neither is a defaulted convenience the

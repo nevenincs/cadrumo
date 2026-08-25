@@ -81,6 +81,7 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
     """Worker name, and the subject named in an unexpected-failure message."""
 
     def __init__(self) -> None:
+        """Initialise an empty ephemeral attempt result."""
         super().__init__()
         self.outcome: OutcomeT | None = None
         """What the screen achieved, or ``None`` when the operator left
@@ -225,6 +226,7 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
         self.leave(None)
 
     def action_toggle_appearance(self) -> None:
+        """Switch the rendered terminal appearance."""
         toggle_appearance(self)
 
 

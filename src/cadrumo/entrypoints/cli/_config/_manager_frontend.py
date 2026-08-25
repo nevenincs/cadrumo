@@ -25,11 +25,11 @@ from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-    from ....adapters.inbound.tui import RegistrationAttempt
     from ....application.user_profile import ProfileOverview, ProfileRecoveryEnrollment, ProfileRegistrationOutcome
     from ....core.json_contract import Notice
     from ....domain.user_profile import ProfileFieldDefinition, ProfileValueRefusalKind, UserProfileRecord
     from ....entrypoints.tui.components.forms import FormPage
+    from ....entrypoints.tui.secret.registration import RegistrationAttempt
 
 
 _ROUTING_META_KEYS = frozenset(
@@ -437,13 +437,18 @@ def attempt_registration(
     what keeps the screen from having to import — and recognise — the
     application's exception types.
     """
-    from ....adapters.inbound.tui import RecoveryHandoverCancelledError, RegistrationRefusal
-    from ....adapters.inbound.tui import RegistrationAttempt as _Attempt
     from ....application.user_profile import (
         ProfileRegistrationError,
         register_profile_with_credentials,
     )
     from ....domain.user_profile import UserProfileFact
+    from ....entrypoints.tui.secret.registration import (
+        RecoveryHandoverCancelledError,
+        RegistrationRefusal,
+    )
+    from ....entrypoints.tui.secret.registration import (
+        RegistrationAttempt as _Attempt,
+    )
 
     try:
         outcome = register_profile_with_credentials(
@@ -482,8 +487,8 @@ def present_registration(*, suggested_name: str | None = None) -> ProfileRegistr
     creating one — an ordinary outcome the caller reports as a no-op rather
     than an error.
     """
-    from ....adapters.inbound.tui import run_registration_tui
     from ....core import assess_profile_password
+    from ....entrypoints.tui.secret.registration import run_registration_tui
 
     return run_registration_tui(
         assess=assess_profile_password,

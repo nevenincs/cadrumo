@@ -40,7 +40,7 @@ from cadrumo.entrypoints.tui.components.theme import (
 from .....core import scan_directory
 from .....core.config import TuiAppearance
 from .....entrypoints.tui.profile.status import StatusApp, StatusPageData
-from .. import RegistrationApp
+from .....entrypoints.tui.secret.registration import RegistrationApp
 
 pytestmark = [
     pytest.mark.unit,

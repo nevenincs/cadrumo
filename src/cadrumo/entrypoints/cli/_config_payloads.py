@@ -1001,7 +1001,7 @@ class ConfigProfileDeleteResult(OutputSchema):
 
 
 class ConfigProfileRenameResult(OutputSchema):
-    """JSON envelope for ``aeat config profile rename``.
+    """JSON envelope retained for profile-label-change evidence.
 
     Reports the immutable profile id plus the previous and new display labels;
     profile identity and bucket storage remain unchanged.
@@ -1013,7 +1013,7 @@ class ConfigProfileRenameResult(OutputSchema):
 
 
 class ConfigProfileExportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile export``.
+    """JSON envelope retained for profile-bundle export evidence.
 
     Projects :class:`~cadrumo.application.user_profile.ProfileBundleExportResult`:
     the exported profile id, display label, output path, portable bundle
@@ -1038,10 +1038,10 @@ class ConfigProfileExportResult(OutputSchema):
 
 
 class ConfigProfileSubjectAccessRequestResult(OutputSchema):
-    """JSON envelope for ``aeat config profile subject-access-request``.
+    """JSON envelope retained for a profile subject-access archive.
 
-    A GDPR right-of-access export: the same portable bundle
-    ``config profile export`` produces, framed as the operator's own
+    A GDPR right-of-access export: the same portable bundle produced by the
+    retired profile-bundle export surface, framed as the operator's own
     personal-data archive. Reports the profile identity, output path, bundle
     schema version, operator purpose, wire transport, the machine-readable
     catalogue of the personal-data categories the archive carries so the
@@ -1067,7 +1067,7 @@ class ConfigProfileSubjectAccessRequestResult(OutputSchema):
 
 
 class ConfigProfileImportResult(OutputSchema):
-    """JSON envelope for ``aeat config profile import``.
+    """JSON envelope retained for profile-bundle import evidence.
 
     Projects :class:`ProfileImportResult` down to
     the imported profile identity, label, and bundle schema version.

@@ -23,7 +23,7 @@ See Also:
         The application door this screen drives; it owns selection, the
         failed-attempt backoff, the unwrap that IS the authentication,
         and the session it mints.
-    :class:`~cadrumo.adapters.inbound.tui.RegistrationApp`
+    :class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationApp`
         The other credential surface, sharing this one's attempt
         lifecycle and panel layout.
 """
@@ -43,7 +43,7 @@ from ....core.i18n import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes
 from ....entrypoints.tui.components.widgets import ContentScroll
-from ._credential_screen import (
+from .credentials import (
     CREDENTIAL_PANEL_CSS,
     CredentialApp,
     CredentialAttempt,
@@ -100,6 +100,7 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
         authenticate: Callable[[str, str], LoginAttempt],
         preselected: str | None = None,
     ) -> None:
+        """Bind the supplied profile choices and authentication callback."""
         super().__init__()
         if not choices:
             # A chooser with no rows is not a page an operator can act on,
@@ -151,6 +152,7 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
         yield Footer()
 
     def on_mount(self) -> None:
+        """Install the theme, render copy, and focus password entry."""
         install_cadrumo_themes(self)
         self._render_localised_copy()
         # Focus the password rather than the chooser: the profile is
@@ -177,6 +179,7 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
     # ── intents ─────────────────────────────────────────────────────────
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Route an unlock or cancellation button intent."""
         if event.button.id == "btn-unlock":
             self.action_unlock()
         elif event.button.id == "btn-cancel":
