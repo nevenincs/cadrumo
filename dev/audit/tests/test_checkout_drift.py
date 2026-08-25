@@ -23,8 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import UTF_8 as _UTF_8
-
+from ..._paths import UTF_8 as _UTF_8
 from ..checkout_drift import (
     blob_hash,
     growth_against_ceiling,

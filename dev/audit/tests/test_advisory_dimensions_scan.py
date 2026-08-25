@@ -16,8 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..advisory import audit_checkout_drift, audit_dead_code
 from ..report import Status
 

@@ -30,6 +30,7 @@ from ..cli import app
 from ..closure import (
     build_registry_closure_report,
     check_registry_closure_release,
+    load_registry_closure_report,
     render_registry_closure_report,
 )
 
@@ -152,6 +153,26 @@ def test_exact_three_limb_join_satisfies_the_blocking_release_predicate() -> Non
     assert "closure_row modelo=303 revision=2026 predicate_outcome=satisfied" in rendered
 
 
+def test_renderer_revision_denominator_follows_its_temporal_rows() -> None:
+    """A second temporal coordinate must change the rendered revision denominator."""
+    report = _report(
+        temporal=(
+            _temporal(modelo="303", revision="2026"),
+            _temporal(modelo="304", revision="2026"),
+        ),
+        source=(
+            _limb(modelo="303", revision="2026", name="source_connectivity"),
+            _limb(modelo="304", revision="2026", name="source_connectivity"),
+        ),
+        filing=(
+            _limb(modelo="303", revision="2026", name="filing_export"),
+            _limb(modelo="304", revision="2026", name="filing_export"),
+        ),
+    )
+
+    assert f"revisions={len(report.rows)}" in render_registry_closure_report(report)
+
+
 def test_typed_temporal_failure_is_retained_as_an_owned_release_refusal() -> None:
     """The release renderer must not collapse a grade-snapshot failure to incomplete."""
     report = _report(
@@ -221,11 +242,13 @@ def test_row_constructor_refuses_a_present_limb_at_a_different_coordinate() -> N
 
 def test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_proof() -> None:
     """Live canonical loading cannot infer filing proof from an unenrolled layout."""
+    canonical_report = load_registry_closure_report(as_of=_AS_OF, registry_authority=bundled_authority())
+
     result = CliRunner().invoke(app, ["closure", "--check", "--as-of", _AS_OF.isoformat()])
 
     assert result.exit_code == 1, result.output
     assert "release_eligible=false" in result.output
-    assert "revisions=102" in result.output
+    assert f"revisions={len(canonical_report.rows)}" in result.output
     assert "canonical generation or successful production emitted-byte evidence is absent" in result.output
     assert "no canonical generation and production emitted-byte proof authority was supplied" not in result.output
 

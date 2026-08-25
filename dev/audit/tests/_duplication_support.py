@@ -13,8 +13,7 @@ import tomllib
 from collections import Counter
 from collections.abc import Sequence
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..duplication import (
     CloneGroup,
 )

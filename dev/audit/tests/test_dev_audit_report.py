@@ -24,8 +24,8 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-from dev.audit.report import (
+from ..._paths import REPO_ROOT
+from ..report import (
     DimensionReport,
     HealthReport,
     Status,
