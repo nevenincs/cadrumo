@@ -20,7 +20,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..active_profile import active_transaction_catalogue_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -64,30 +64,48 @@ def _transaction(provider_id: str) -> Transaction:
 
 
 def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket(
-    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
 ) -> None:
     """The ACTIVE PROFILE decides which bucket the catalogue resolves to.
 
-    Driven through ``override_settings``, the declared seam for a deployment
-    setting, so the routing under test is the real
-    ``require_active_profile_bucket_id`` chain: setting -> active selector ->
-    committed bucket pointer -> bucket id. An earlier version patched that name
-    into the function's ``__globals__`` with an iterator of three ids, which
-    proved only that the function consumed whatever the lambda returned, in the
-    order it happened to call it -- the active profile was not involved anywhere,
-    and caching the lookup would have broken the test while the behaviour stayed
-    correct.
-    """
-    from ....core.config import override_settings
+    Two REAL committed capsules, switched through the active-profile setting,
+    because the resolution chain now runs setting -> active selector ->
+    committed bucket pointer -> bucket id. That last hop is why a synthetic id
+    no longer routes: ``resolve_profile_bucket`` returns nothing for a bucket
+    no capsule was ever published for, so the seam needs provisioned buckets
+    rather than invented identifiers.
 
+    An earlier version patched ``require_active_profile_bucket_id`` into this
+    function's ``__globals__`` with an iterator of three ids. That proved only
+    that the function consumed whatever the lambda returned, in the order it
+    happened to call it: the active profile was not involved anywhere, so the
+    test no longer tested its own name, and caching the lookup would have broken
+    it while the behaviour stayed correct.
+    """
     first_transaction = _transaction("same-provider-row")
 
-    def factory(bucket_id: str) -> TransactionCatalogueRepository:
-        return TransactionCatalogueRepository(bucket_id=bucket_id, objects=secure_objects)
+    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
 
-    with override_settings(cadrumo_active_profile=_FIRST_BUCKET_ID):
+        def factory(bucket_id: str) -> TransactionCatalogueRepository:
+            objects = (
+                runtime.primary.repository if bucket_id == runtime.primary.bucket_id else runtime.secondary.repository
+            )
+            return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
+
         active_transaction_catalogue_repository(repository_factory=factory).save(
             TransactionCatalogue.from_transactions((first_transaction,)),
         )
         first_catalogue = active_transaction_catalogue_repository(repository_factory=factory).load()
-    with overri
+        with runtime.switch_to_secondary():
+            second_catalogue = active_transaction_catalogue_repository(repository_factory=factory).load()
+
+    assert tuple(first_catalogue.transactions) == (first_transaction.transaction_id,)
+    assert second_catalogue.transactions == {}
+
+
+def test_active_transaction_catalogue_repository_rejects_missing_active_bucket() -> None:
+    with pytest.raises(LedgerNoActiveBucketError) as raised:
+        active_transaction_catalogue_repository(
+            repository_factory=lambda bucket_id: TransactionCatalogueRepository(bucket_id=bucket_id),
+        )
+    assert raised.value.translated_message == "application.workflow.errors.no_active_profile_bucket"
