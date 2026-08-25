@@ -64,7 +64,7 @@ the files remain uncommitted.
 inspecting the index does not reach them and **no index-based inventory will ever show them.** They
 remain the only unrecoverable content in the whole change: every other part was a modification or
 deletion of a tracked file and is recoverable per-file from git. A backup exists outside the
-repository at `C:/Users/hello/aeat-freeze-backup/untracked-registry-records`. **Nobody has claimed
+repository at `C:/Users/<operator>/aeat-freeze-backup/untracked-registry-records`. **Nobody has claimed
 them, and now that the landing is done and attention has moved on, they are the item most likely to
 be lost.**
 

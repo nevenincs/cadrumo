@@ -67,7 +67,7 @@ Publication status of the originating commit, and the token's presence there ver
 
     git grep -F -l -- 'C:\Users\hello' e0cc5219a8   -> 1 file
     git grep -F -c -- 'C:\Users\hello' HEAD         -> 0 files
-    git grep -F -c -- 'C:/Users/hello' HEAD         -> 0 files
+    git grep -F -c -- 'C:/Users/<operator>' HEAD         -> 0 files
 
 Both path-escaping forms are absent from the current tree while the backslash form is
 present in the published commit, which is the exact split the scrub commit's message
