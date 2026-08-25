@@ -270,6 +270,10 @@ class AuthoredErrorMessageCensusError(ValueError):
     """Raised when the live source tree cannot be scanned as one whole input."""
 
 
+class CurrentTreeCensusError(ValueError):
+    """Raised when the current production tree cannot be scanned as one whole input."""
+
+
 @dataclass(frozen=True, slots=True)
 class CandidateRecord:
     """One mechanically observed action-guidance candidate.
@@ -329,6 +333,63 @@ def production_sources(revision: str) -> tuple[tuple[str, str], ...]:
         for path, source in repository_sources(revision)
         if path.endswith(".py") and "/tests/" not in path and not Path(path).name.startswith("test_")
     )
+
+
+def _current_tree_sources(
+    *,
+    root: Path,
+    suffixes: frozenset[str],
+) -> tuple[tuple[str, str], ...]:
+    """Read one complete production source scope from the current worktree.
+
+    This is intentionally distinct from :func:`repository_sources`: a pinned
+    revision remains the reproducible campaign baseline, while S46 needs a
+    fail-closed mechanical reading of concurrent work before it can claim that
+    no action site or direct alias has appeared.
+    """
+    source_root = root / SOURCE_ROOT
+    if not source_root.is_dir():
+        raise CurrentTreeCensusError(f"current-tree census source root is absent: {source_root}")
+
+    sources: list[tuple[str, str]] = []
+    for source_path in scan_directory(
+        source_root,
+        pattern="*",
+        recursive=True,
+        prune_directories=("__pycache__",),
+    ):
+        if source_path.suffix not in suffixes:
+            continue
+        relative = source_path.relative_to(root)
+        if "tests" in relative.parts or source_path.name.startswith("test_"):
+            continue
+        path = relative.as_posix()
+        try:
+            source = source_path.read_text(encoding=_UTF_8)
+        except OSError as error:
+            raise CurrentTreeCensusError(
+                f"current-tree census cannot read {path}: {type(error).__name__}",
+            ) from error
+        except UnicodeDecodeError as error:
+            raise CurrentTreeCensusError(
+                f"current-tree census cannot decode {path}: {type(error).__name__}",
+            ) from error
+        if source_path.suffix == ".py":
+            try:
+                ast.parse(source, filename=path)
+            except SyntaxError as error:
+                raise CurrentTreeCensusError(
+                    f"current-tree census cannot parse {path}: {type(error).__name__}",
+                ) from error
+        sources.append((path, source))
+    if not sources:
+        raise CurrentTreeCensusError(f"current-tree census found no production sources: {source_root}")
+    return tuple(sorted(sources))
+
+
+def current_production_sources(*, root: Path = REPO_ROOT) -> tuple[tuple[str, str], ...]:
+    """Return the complete non-test production Python tree at its live filesystem state."""
+    return _current_tree_sources(root=root, suffixes=frozenset({".py"}))
 
 
 def fixed_point_production_sources(revision: str) -> tuple[tuple[str, str], ...]:
@@ -488,6 +549,11 @@ def census(revision: str) -> tuple[CandidateRecord, ...]:
     a blast-radius number that has never existed at one revision.
     """
     return _census_sources(production_sources(revision), INITIAL_ACTION_ALIASES)
+
+
+def current_census(*, root: Path = REPO_ROOT) -> tuple[CandidateRecord, ...]:
+    """Return the mechanically complete action-candidate census for the current tree."""
+    return _census_sources(current_production_sources(root=root), INITIAL_ACTION_ALIASES)
 
 
 type SourceEntry = tuple[str, str]

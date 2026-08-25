@@ -12,13 +12,15 @@ registry referential-integrity gate over the bundled production authority.
 from __future__ import annotations
 
 import sys
+from dataclasses import replace
+from datetime import date
 from pathlib import Path
 
 import pytest
 from pydantic import SecretStr
 
 from ...adapters.outbound.storage import windows_worst_case_object_path_suffix_length
-from ...core import AuthProviderKind
+from ...core import AuthProviderKind, RegistryAuthorityGrade
 from ...core.config import override_settings
 from ..auth import ProviderProbeResult
 from ..preflight import (
@@ -194,6 +196,118 @@ def test_registry_row_healthy_when_all_references_resolve() -> None:
     assert row.check == "registry:referential-integrity"
     assert row.healthy is True
     assert row.severity is HealthSeverity.OK
+
+
+def test_registry_probe_snapshots_every_real_revision_at_its_declared_grade(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Bundled applicability, calculation, and filing revisions retain their exact grade."""
+    from ...domain.calculations.registry import (
+        RegistrySnapshot,
+        RevisionId,
+        ValidatedRegistryAuthority,
+        bundled_authority,
+    )
+
+    authority = bundled_authority()
+    expected = {
+        (modelo.id, revision.id): revision.effective_authority_grade
+        for modelo in authority.modelos
+        for revision in modelo.revisions.values()
+        if _representative_context_exists(revision)
+    }
+    observed: dict[tuple[str, str], RegistryAuthorityGrade] = {}
+    original = ValidatedRegistryAuthority.snapshot
+
+    def tracking_snapshot(
+        self: ValidatedRegistryAuthority,
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        revision_id: RevisionId | None = None,
+        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    ) -> RegistrySnapshot:
+        assert revision_id is not None
+        observed[(modelo_id, revision_id)] = grade
+        return original(
+            self,
+            modelo_id,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+            grade=grade,
+        )
+
+    monkeypatch.setattr(ValidatedRegistryAuthority, "snapshot", tracking_snapshot)
+    row = probe_registry_referential_integrity()
+
+    assert row.healthy is True
+    assert observed == expected
+    assert set(observed.values()) == set(RegistryAuthorityGrade)
+
+
+def test_registry_probe_still_reports_real_dangling_references(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Removing the real legal catalogue makes snapshot reference validation red."""
+    from ...domain.calculations import registry as registry_module
+
+    authority = registry_module.bundled_authority()
+    broken = replace(
+        authority,
+        catalogues=authority.catalogues.model_copy(update={"legal": {}}),
+        _snapshots={},
+    )
+    monkeypatch.setattr(registry_module, "bundled_authority", lambda: broken)
+
+    row = probe_registry_referential_integrity()
+
+    assert row.healthy is False
+    assert row.severity is HealthSeverity.ERROR
+    assert int(row.facts["failure_count"]) > 0
+
+
+def test_registry_probe_keeps_an_ungraded_revision_fail_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Passing the effective floor never turns an absent grade into a declaration."""
+    from ...domain.calculations import registry as registry_module
+    from ...domain.calculations.registry._snapshot import _check_snapshot_authority_grade
+
+    authority = registry_module.bundled_authority()
+    source_modelo = authority.modelos[0]
+    source_revision = next(iter(source_modelo.revisions.values()))
+    ungraded = source_revision.model_copy(update={"authority_grade": None})
+    modelo = source_modelo.model_copy(update={"revisions": {ungraded.id: ungraded}})
+
+    class UngradedAuthority:
+        modelos = (modelo,)
+
+        @staticmethod
+        def snapshot(
+            modelo_id: str,
+            *,
+            filing_year: int,
+            period: str,
+            revision_id: str,
+            grade: RegistryAuthorityGrade,
+        ) -> None:
+            del modelo_id, filing_year, period, revision_id
+            _check_snapshot_authority_grade(modelo, ungraded, requested_grade=grade)
+
+    monkeypatch.setattr(registry_module, "bundled_authority", UngradedAuthority)
+
+    row = probe_registry_referential_integrity()
+
+    assert row.healthy is False
+    assert row.facts == {"revisions_checked": 1, "failure_count": 1}
+
+
+def _representative_context_exists(revision: object) -> bool:
+    """Mirror only the probe's inclusion boundary, not its grade decision."""
+    from ..preflight import _representative_filing_context
+
+    year, period = _representative_filing_context(revision)
+    return year is not None and period is not None
 
 
 # ── Aggregate ────────────────────────────────────────────────────────────────
