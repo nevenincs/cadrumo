@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:b4ada917b9d5be9869eaff728d5bb55971fa3656a8d564d76c03934a84570b34'
+body_hash: 'sha256:562a35ac4ff1b9bb61faee72982de46da48f89015db0664ccc5d319e9301fa23'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-adr]]"
@@ -114,3 +114,60 @@ registry regression, and contract test.
 **FAIL at MEDIUM** pending a real source-pinned emitted-byte comparison. The
 previous two HIGH findings and the legacy plaintext-temporary MEDIUM are
 resolved. This review does not promote S84, S33, S85, or S86 to complete.
+
+## Final residual-fix re-review - 2026-08-25
+
+### Scope
+
+Read-only final review of `dba75ffaa9` against the original findings in
+`8fd32b7853`, the remediation review in `e738673a8d`, the accepted S33
+ADR, the S84 execution record, and the canonical source surfaces. The review
+uses the committed S84 snapshot. Later shared-worktree changes outside the
+reviewed paths are not attributed to this result.
+
+### Findings
+
+### residual-probe-byte-verification | low | The previous MEDIUM is resolved by source-owned typed expectations before custody persistence
+
+`FilingExportSourcePinnedProbeExpectation` is hidden typed source evidence:
+it binds one `FilingExportOfficialProbe` to non-empty expected bytes with an
+exact span-length validator. `FilingExportSecureReplayEvidence` requires its
+ordered expectation probes to exactly equal the complete public provenance
+probe tuple, whose existing validator already requires distinct,
+non-overlapping spans. The expectation bytes exist only in the source-owned
+replay evidence; the public request rejects their injection, and the public
+receipt and encrypted custody record have no expectation field.
+
+`FilingExportReplayCustodyRepository.persist_secure_replay` compares every
+emitted byte slice with those typed expectations before constructing or saving
+the all-true encrypted custody record. The same-length substitution regression
+refuses `ABC` versus `ABD`. The exact proof, request, receipt, record, and
+adapter sweep finds no path that serializes expected bytes to a public receipt,
+request, log, or repository record.
+
+The earlier caller-receipt HIGH, taxpayer-capable public-vector HIGH, legacy
+plaintext-temporary MEDIUM, and residual source-pinned-probe MEDIUM remain
+resolved. RAG discovery, whole-file review, and exact-symbol confirmation
+continue to find one canonical `export_draft` writer route, the typed in-memory
+secure destination, one encrypted replay-custody implementation, no accepted
+caller receipt parameter, and no competing proof authority. Empty conformance
+and secure-replay enrollment still refuses dynamically; S33, S85, and S86
+remain open.
+
+### Recommendations
+
+PASS. Retain the exact ordered expectation coverage and same-length corruption
+regression whenever a real source authority is enrolled. Do not expose expected
+bytes outside source-owned transient evidence or treat S84 as S33/S85/S86
+completion.
+
+### Verification
+
+- Focused proof corpus: 9 selected unit tests passed and 2 integration tests
+  passed, for 11 proof tests.
+- Encrypted storage namespace and taxonomy-lineage corpus: 49 passed.
+- Scoped Ruff passed for the application proof, encrypted custody adapter,
+  registry authority, and their focused tests.
+- The final committed S84 source paths remained unchanged after
+  `dba75ffaa9` during this review; concurrent profile/configuration WIP was
+  preserved.
