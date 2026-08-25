@@ -48,7 +48,6 @@ from pathlib import Path
 
 import mcp.types as mcp_types
 import pytest
-from cadrumo.tests.declared_command_risk import declared_live_write
 from cadrumo_harness.mcp import (
     ConfirmationPolicy,
     McpToolDescriptor,
@@ -56,8 +55,7 @@ from cadrumo_harness.mcp import (
     build_tool_descriptors,
     confirmation_for_tool,
 )
-
-from cadrumo.tests import connected_server_and_client_session as connect
+from cadrumo_harness.mcp.tests._session import connected_server_and_client_session as connect
 
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands
@@ -71,11 +69,6 @@ _SCENARIO_PATH = _SCENARIOS_DIR / "modelo_130.toml"
 # ("modelo.export") and a real routine calculate step ("modelo.work.calculate").
 _EXPORT_STEP = "modelo.export"
 _CALCULATE_STEP = "modelo.work.calculate"
-# Not an exposed tool anywhere in the command set (the live tree is read-only and
-# live submission is permanently forbidden) - a hypothetical live-write leaf, kept
-# consistent with cadrumo_harness/mcp/tests/test_hitl_and_live_write.py's own
-# defensive proof.
-_HYPOTHETICAL_LIVE_WRITE_STEP = "modelo.work.submit"
 
 
 def _descriptors_by_command_key() -> dict[str, McpToolDescriptor]:
@@ -165,23 +158,8 @@ def test_read_step_auto_approves() -> None:
     assert decision is ConfirmationPolicy.AUTO_APPROVE
 
 
-def test_hypothetical_live_write_leaf_blocks_unconditionally() -> None:
-    """A declared live-write command resolves BLOCK regardless of its family mutability.
-
-    If a live-write verb ever entered the
-    exposed command set, the gate refuses it outright rather than falling through
-    to CONFIRM - the strongest tier, requiring no human approval loop to bypass.
-    The BLOCK derives from the DECLARED ``live_write`` axis, which forces the command non-read-only
-    whatever its family mutability, so the outcome does not depend on getting the
-    mutability classification right.
-    """
-    with declared_live_write(_HYPOTHETICAL_LIVE_WRITE_STEP):
-        decision = confirmation_for_tool(command_key=_HYPOTHETICAL_LIVE_WRITE_STEP)
-        assert decision is ConfirmationPolicy.BLOCK
-
-
 def test_confirmation_gate_wired_into_golden_scenario_passes_when_tiers_match() -> None:
-    """All three confirmation-gate checks wired into a real M130 golden run pass together.
+    """Both descriptor-backed confirmation checks wired into a real M130 golden run pass.
 
     Mirrors ``test_faithfulness_golden.py``'s wiring pattern: the real
     ``confirmation_for_tool`` decisions are resolved here (the test), packaged as
@@ -191,9 +169,6 @@ def test_confirmation_gate_wired_into_golden_scenario_passes_when_tiers_match() 
     """
     export_descriptor = _descriptors_by_command_key()[_EXPORT_STEP]
     calculate_descriptor = _descriptors_by_command_key()[_CALCULATE_STEP]
-
-    with declared_live_write(_HYPOTHETICAL_LIVE_WRITE_STEP):
-        live_write_tier = _tier(confirmation_for_tool(command_key=_HYPOTHETICAL_LIVE_WRITE_STEP))
 
     checks = (
         ConfirmationGateCheck(
@@ -205,11 +180,6 @@ def test_confirmation_gate_wired_into_golden_scenario_passes_when_tiers_match() 
             step=_CALCULATE_STEP,
             expected_tier=ConfirmationTier.AUTO_APPROVE,
             actual_tier=_tier(confirmation_for_tool(command_key=calculate_descriptor.command_key)),
-        ),
-        ConfirmationGateCheck(
-            step=_HYPOTHETICAL_LIVE_WRITE_STEP,
-            expected_tier=ConfirmationTier.BLOCK,
-            actual_tier=live_write_tier,
         ),
     )
     for check in checks:
