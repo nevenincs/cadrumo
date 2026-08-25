@@ -25,14 +25,14 @@ from ...domain.transactions import (
     LLMClassificationResponse,
     prompt_spec_with_saturation_fields,
 )
-from ...tests._llm_vision_evidence_support import (
+from ...tests.llm_vision_evidence_support import (
     _json_array,
     _json_object,
     _png_image,
     _run_against_loopback_ollama,
     _transaction,
 )
-from ...tests._llm_vision_evidence_support import (
+from ...tests.llm_vision_evidence_support import (
     profile as profile,
 )
 from ...tests.secure_sql import TestRuntimeProfile

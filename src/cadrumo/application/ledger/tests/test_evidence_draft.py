@@ -43,7 +43,7 @@ from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests._llm_vision_evidence_support import _json_array, _run_against_loopback_ollama
+from ....tests.llm_vision_evidence_support import _json_array, _run_against_loopback_ollama
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.profile_capsule import seed_test_profile_record
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
