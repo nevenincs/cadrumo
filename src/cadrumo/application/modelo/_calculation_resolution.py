@@ -29,7 +29,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core import CasillaId, Period, validated_casilla_id
-from ...domain import canonical_decimal_string as _canonical_decimal_str
+from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.calculations.registry import (
     BindingId,
     ModeloRevision,

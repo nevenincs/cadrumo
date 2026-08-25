@@ -16,7 +16,6 @@ See Also:
 
 from __future__ import annotations
 
-from ....domain import canonical_decimal_string as canonical_decimal
 from .providers import (
     AmbiguousRole,
     BankStatementParseError,
@@ -63,7 +62,6 @@ __all__ = [
     "UnmappedColumn",
     "UnsupportedFinancialSourceError",
     "XlsxProvider",
-    "canonical_decimal",
     "detect_provider",
     "project_table",
 ]

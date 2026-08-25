@@ -104,7 +104,7 @@ _MIGRATED_KEYS: tuple[str, ...] = (
 #: Modules whose refusals this gate covers. Anchored so a rename cannot let the
 #: static sweep pass vacuously over a package that no longer contains them.
 _COVERED_MODULES: tuple[str, ...] = (
-    "_errors.py",
+    "errors.py",
     "_invoice_retencion.py",
     "_iva_ledger.py",
     "_m303_arrivals.py",

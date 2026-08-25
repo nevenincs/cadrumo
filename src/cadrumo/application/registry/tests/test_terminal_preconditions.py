@@ -432,7 +432,7 @@ def test_all_twelve_registry_refusals_delegate_to_the_canonical_no_action_helper
 def test_registry_refusal_sources_do_not_construct_verdict_models_directly() -> None:
     direct_constructors: list[str] = []
     canonical_helper_calls: dict[str, int] = {}
-    for path in (*_REFUSAL_SOURCES, _REGISTRY_ROOT / "_errors.py"):
+    for path in (*_REFUSAL_SOURCES, _REGISTRY_ROOT / "errors.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name):
@@ -443,4 +443,4 @@ def test_registry_refusal_sources_do_not_construct_verdict_models_directly() -> 
                 canonical_helper_calls[path.name] = canonical_helper_calls.get(path.name, 0) + 1
 
     assert direct_constructors == []
-    assert canonical_helper_calls == {"_errors.py": 1}
+    assert canonical_helper_calls == {"errors.py": 1}

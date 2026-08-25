@@ -226,7 +226,7 @@ _FREE_TEXT_POPULATIONS: Final[tuple[_FreeTextPopulation, ...]] = (
 #: standing as a stale carve-out.
 _FREE_TEXT_ANCHORS: Final[tuple[tuple[str, str, str], ...]] = (
     ("src/cadrumo/adapters/outbound/aeat/sede/_declarations_schema.py", "Declaracion", "estado"),
-    ("src/cadrumo/adapters/outbound/aeat/sede/_deudas.py", "Deuda", "situacion"),
+    ("src/cadrumo/adapters/outbound/aeat/sede/deudas.py", "Deuda", "situacion"),
 )
 
 

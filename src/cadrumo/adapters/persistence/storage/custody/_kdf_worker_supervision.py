@@ -71,7 +71,7 @@ class _SupervisedKdfWorker:
     def __enter__(self) -> _SupervisedKdfWorker:
         try:
             self._start()
-            self.verify_ready_attestation(self._read_response_frame())
+            self._verify_ready_attestation(self._read_response_frame())
             return self
         except BaseException:
             self._close(failed=True)

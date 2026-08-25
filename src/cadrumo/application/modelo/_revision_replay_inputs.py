@@ -27,7 +27,7 @@ from decimal import Decimal
 from ...core import CasillaId, Modelo
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.resources import resources
-from ...domain import canonical_decimal_string
+from ...domain.identifiers import canonical_decimal_string
 from ...domain import filing as filing_domain
 from ...domain.calculations.registry import (
     ApplicabilityVerdict,

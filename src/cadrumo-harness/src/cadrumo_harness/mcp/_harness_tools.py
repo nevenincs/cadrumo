@@ -280,7 +280,7 @@ def build_whoami_identity() -> WhoamiIdentity:
 
     The health assessment counts the process-global profile-key registry, which
     the domain layer cannot seed for itself, so this function seeds it through
-    :func:`~application.wizard.ensure_profile_keys_registered` before reading.
+    :func:`~application.wizard.compiler.ensure_profile_keys_registered` before reading.
     The call is idempotent and deliberately made here rather than left to the
     caller: this probe is reached both through the server handlers and directly,
     so depending on an initialisation order the caller must remember is what

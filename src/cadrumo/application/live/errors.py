@@ -118,6 +118,7 @@ class LiveApplicationError(TerminalPreconditionErrorMixin, CadrumoError):
         translated_message: str | None = None,
         precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
+        """Initialize this public contract."""
         super().__init__(
             message,
             context=context,
@@ -141,6 +142,7 @@ class LiveIvaSurfaceTimeoutError(LiveApplicationError):
         timeout_ms: int,
         progress_context: Mapping[str, object] | None = None,
     ) -> None:
+        """Initialize this public contract."""
         context: dict[str, object] = {"surface": surface, "timeout_ms": timeout_ms}
         if progress_context:
             context["progress"] = dict(progress_context)

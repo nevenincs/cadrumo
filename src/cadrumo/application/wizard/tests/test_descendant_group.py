@@ -6,7 +6,7 @@ pure flow engine over the production
 :data:`~cadrumo.application.wizard.descendant_group.DESCENDANT_GROUP`
 and count page: the count answer gates the instance pages, the instance
 answers project through
-:func:`~cadrumo.application.wizard.descendant_facts_from_answers`, and the
+:func:`~cadrumo.application.wizard.persistence.descendant_facts_from_answers`, and the
 NIF page validates through the canonical identity authority. Expected
 fact keys and values are the documented ``renta_family.descendiente.{n}.*``
 shape, derived from the specification, never from running the projection
@@ -29,7 +29,6 @@ from ....domain.deadlines import EntityType
 from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import FlowState, answer, start_flow, visible_sequence
 from ...flows.validators import resolve_cross_field_validator
-from .. import attach_descendant_group, descendant_facts_from_answers
 from ..descendant_group import (
     _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,
     _ENTRY_BEFORE_BIRTH_LOCALE_KEY,
@@ -44,7 +43,9 @@ from ..descendant_group import (
     DESCENDANT_GROUP,
     DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID,
     DESCENDANTS_COUNT_PAGE,
+    attach_descendant_group,
 )
+from ..persistence import descendant_facts_from_answers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

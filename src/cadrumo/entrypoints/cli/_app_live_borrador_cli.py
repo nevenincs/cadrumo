@@ -14,8 +14,8 @@ from typing import Literal, TypedDict
 
 import typer
 
-from ...application.live import (
-    Borrador100SnapshotService,
+from ...application.live.borrador_100 import Borrador100SnapshotService
+from ...application.live.snapshot_base import (
     SnapshotLifecycleState,
     SnapshotStateFilter,
 )

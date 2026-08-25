@@ -33,18 +33,10 @@ from typing import TYPE_CHECKING, Any, Final
 import typer
 
 from ...adapters.persistence.profile.sync_runs import SyncRunRecordRepository
-from ...application.live import (
-    BulkFiledDataCaptureReport,
-    FiledCasillaSkipRow,
-    FiledDataCaptureFailureRow,
-    FiledDataCaptureReport,
-    FiledDataListingRow,
+from ...application.live.filed_data import FiledDataListingRow
+from ...application.live.filed_data_capture import (
     FiledHistoryDiscoveryReport,
     FiledHistoryOnboardingRun,
-    IvaCompensationHistoryReport,
-    IvaRemoteStateAcquisitionReport,
-    IvaWalletCaptureReport,
-    SourceFiledDataCaptureReport,
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
@@ -54,6 +46,16 @@ from ...application.live import (
     list_filed_data,
     list_filed_data_bulk,
     pull_filed_history,
+)
+from ...application.live.remote_state_models import (
+    BulkFiledDataCaptureReport,
+    FiledCasillaSkipRow,
+    FiledDataCaptureFailureRow,
+    FiledDataCaptureReport,
+    IvaCompensationHistoryReport,
+    IvaRemoteStateAcquisitionReport,
+    IvaWalletCaptureReport,
+    SourceFiledDataCaptureReport,
 )
 from ...application.operator_actions import ActionReference
 from ...core import Period, PeriodError
@@ -72,7 +74,7 @@ from ._common import (
 )
 
 if TYPE_CHECKING:
-    from ...application.live import VerifyVerdict
+    from ...application.live.verify import VerifyVerdict
     from ...domain.deadlines import TaxpayerProfile
 
 
@@ -166,7 +168,7 @@ def iva_wallet_pull_cmd(
     remote action is the guarded wallet read query; reconciliation and blocking
     decisions are profile-local evidence.
     """
-    from ...application.live import capture_iva_compensation_wallet
+    from ...application.live.iva_remote_state import capture_iva_compensation_wallet
 
     _emit_live_auth_preflight()
     report = asyncio.run(
@@ -227,7 +229,7 @@ def iva_wallet_history_cmd(
     history, carry-forward lots, and wallet authority decisions from secure
     profile storage without contacting AEAT.
     """
-    from ...application.live import list_iva_compensation_history
+    from ...application.live.iva_remote_state import list_iva_compensation_history
 
     report = list_iva_compensation_history(as_of_year=as_of_year)
     result = _iva_wallet_history_result(report)
@@ -454,7 +456,7 @@ def iva_wallet_pull_history_cmd(
     profile-local reload count. It does not query the wallet/cartera surface or
     submit AEAT form choices.
     """
-    from ...application.live import capture_iva_compensation_history
+    from ...application.live.iva_remote_state import capture_iva_compensation_history
     from ...core.config import load_settings
 
     _emit_live_auth_preflight()
@@ -516,7 +518,7 @@ def iva_wallet_pull_evidence_cmd(
     can therefore survive a wallet/cartera failure and vice versa. The command
     never performs AEAT filing, payment, or representative submission actions.
     """
-    from ...application.live import capture_iva_remote_state
+    from ...application.live.iva_remote_state import capture_iva_remote_state
     from ...core.config import load_settings
 
     resolved_target_period = _required_live_period_option(target_period, year=target_year)
@@ -632,7 +634,8 @@ async def _run_live_iva_evidence_pull_command[T](
     timeout_ms: int | None = None,
 ) -> T:
     """Run the combined IVA evidence pull under a CLI-level watchdog."""
-    from ...application.live import LiveIvaReadSurface, LiveIvaSurfaceTimeoutError
+    from ...application.live.errors import LiveIvaSurfaceTimeoutError
+    from ...application.live.remote_state_models import LiveIvaReadSurface
     from ...core.config import load_settings
 
     resolved_timeout_ms = (
@@ -1023,8 +1026,9 @@ def _active_taxpayer_profile_or_none() -> TaxpayerProfile | None:
     than refusing the verb. What it must NOT do is silently look like a complete
     answer, which is what the caveat notices exist to prevent.
     """
-    from ...application.wizard import load_active_taxpayer_profile
     from cadrumo.application.workflow.persistence import workflow_state_repository
+
+    from ...application.wizard.status import load_active_taxpayer_profile
 
     try:
         return load_active_taxpayer_profile(workflow_state_repository().load())

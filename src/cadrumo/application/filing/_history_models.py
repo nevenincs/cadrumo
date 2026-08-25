@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
-from ...domain import ModeloIdentifier
+from ...domain.identifiers import ModeloIdentifier
 
 
 class ModeloHistoryEntry(BaseModel):

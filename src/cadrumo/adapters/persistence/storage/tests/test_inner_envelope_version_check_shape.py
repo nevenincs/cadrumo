@@ -18,7 +18,7 @@ through those same bindings.
 Alias resolution must never NARROW what a gate governs, so the bare
 conventional handle name is seeded unconditionally
 (:data:`_SEEDED_ENVELOPE_HANDLE_NAMES`). That seed is load-bearing rather than
-belt-and-braces: ``application/live/_snapshot_base.py`` builds its envelope
+belt-and-braces: ``application/live/snapshot_base.py`` builds its envelope
 through ``self._envelope_cls()``, whose base name is ``self``, so binding
 resolution alone cannot see it and the seed is what actually covers that site.
 

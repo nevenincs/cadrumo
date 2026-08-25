@@ -8,8 +8,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from playwright._impl.errors import Error as PlaywrightError
-from playwright._impl.errors import TargetClosedError
+from playwright._impl._errors import Error as PlaywrightError
+from playwright._impl._errors import TargetClosedError
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
@@ -24,30 +24,32 @@ from ....core.config import Settings
 from ....core.identity import nif_check_letter
 from ....tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root, read_db_at_rest_bytes
 from ...auth.sessions import AuthenticatedAeatSessionResult
-from .. import (
-    IvaCompensationHistoryCaptureReport,
-    IvaRemoteStateAcquisitionManifest,
-    IvaRemoteStateAcquisitionManifestRepository,
-    IvaRemoteStateAcquisitionReport,
+from ..errors import (
     LiveIvaAcquisitionFailureMode,
-    LiveIvaReadStatus,
-    LiveIvaReadSurface,
     LiveIvaSurfaceTimeoutError,
+    classify_live_iva_acquisition_failure,
+)
+from ..iva_remote_state import (
+    IvaRemoteStateAcquisitionManifestRepository,
+    _aggregate_iva_compensation_history_reports,
+    _await_live_iva_surface,
+    _filed_history_surface_timeout_ms,
+    _suppress_live_iva_playwright_cancellation_noise,
     build_iva_remote_state_acquisition_report,
     capture_iva_compensation_history,
     capture_iva_compensation_wallet,
     capture_iva_remote_state,
-    classify_live_iva_acquisition_failure,
     list_iva_remote_state_acquisition_manifests,
     load_iva_remote_state,
     load_iva_remote_state_acquisition_manifest,
     persist_iva_remote_state_acquisition_report,
 )
-from ..iva_remote_state import (
-    _aggregate_iva_compensation_history_reports,
-    _await_live_iva_surface,
-    _filed_history_surface_timeout_ms,
-    _suppress_live_iva_playwright_cancellation_noise,
+from ..remote_state_models import (
+    IvaCompensationHistoryCaptureReport,
+    IvaRemoteStateAcquisitionManifest,
+    IvaRemoteStateAcquisitionReport,
+    LiveIvaReadStatus,
+    LiveIvaReadSurface,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

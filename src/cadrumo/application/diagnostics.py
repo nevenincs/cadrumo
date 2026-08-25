@@ -7,7 +7,7 @@ caller requests registry detail.
 :func:`build_config_repair_report` composes environment checks,
 :class:`~application.workflow.WorkflowState` loading,
 :class:`~application.workflow.ActiveProfileHealth` profile storage
-verdicts, :class:`~application.wizard.WizardStatusReport`
+verdicts, :class:`~application.wizard.status.WizardStatusReport`
 readiness, registry summaries, and secure-object decryptability into a
 :class:`ConfigRepairReport` of :class:`DiagnosticCheck` rows. The full registry
 integrity probe is intentionally opt-in through :class:`RegistryIntegrityReport`;
@@ -36,7 +36,7 @@ See Also:
     :mod:`application.workflow.profile_health` supplies the redacted
     active-profile health verdict when secure workflow state is readable or
     degraded.
-    :mod:`application.wizard._status` supplies semantic profile/auth
+    :mod:`application.wizard.status` supplies semantic profile/auth
     readiness once the workflow state has loaded.
     :mod:`entrypoints.cli._config._repair_cli` wires these reports into
     ``aeat config repair`` commands.
@@ -313,7 +313,7 @@ class ConfigRepairReport(BaseModel):
     secure-object :class:`SecureObjectIntegrityReport`, and ordered
     :class:`DiagnosticCheck` rows into one operator-facing health payload.
     ``setup`` is a redacted
-    :class:`~application.wizard.WizardStatusReport` when
+    :class:`~application.wizard.status.WizardStatusReport` when
     :class:`~application.workflow.WorkflowState` can be loaded.
     :func:`build_config_repair_report` is the producer, and
     :func:`render_config_repair_text` is the compact text renderer.
@@ -424,7 +424,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     The secure-state branch reads
     :class:`~application.workflow.WorkflowState`, derives
     :class:`~application.workflow.ActiveProfileHealth`, and builds a
-    :class:`~application.wizard.WizardStatusReport`. If that load
+    :class:`~application.wizard.status.WizardStatusReport`. If that load
     fails, the report still emits profile and auth rows from the redacted health
     verdict so repair remains usable on a cold or degraded storage root.
     Each emitted warning/failure row is validated by :class:`DiagnosticCheck` so
@@ -1016,7 +1016,7 @@ def _profile_check(
     """Render semantic profile readiness from wizard status plus workflow state.
 
     ``report`` supplies the
-    :class:`~application.wizard.WizardStatusReport` counters and
+    :class:`~application.wizard.status.WizardStatusReport` counters and
     next action. ``profile_health`` can override the row when
     :class:`~application.workflow.ActiveProfileHealth` says the active
     profile bucket is unavailable. ``state`` lets the check expand missing

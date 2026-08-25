@@ -28,9 +28,10 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from ....core.i18n import Translatable as tr
 from cadrumo.application.workflow.errors import WorkflowInputMismatchError
 from cadrumo.application.workflow.state_models import WorkflowState
+
+from ....core.i18n import Translatable as tr
 from ..models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from ..persistence import _canonicalise, _resolve_canonical, parse_canonical, persist_patch
 

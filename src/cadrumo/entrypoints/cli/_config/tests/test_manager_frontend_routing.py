@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 import typer
 
-from .....application.wizard import build_wizard_command
+from .....application.wizard.commands import build_wizard_command
 from .....core.wizard_catalogue import get_setup_flow
 from .._manager_dispatch import with_profile_cli_projection
 from .._manager_frontend import has_explicit_profile_fields

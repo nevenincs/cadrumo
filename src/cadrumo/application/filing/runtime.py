@@ -27,7 +27,7 @@ a :class:`~domain.calculations.registry.ValidatedRegistryAuthority` loaded
 from the configured registry root.
 
 See Also:
-    :func:`application.wizard._status.load_active_taxpayer_profile`
+    :func:`application.wizard.status.load_active_taxpayer_profile`
         Active-profile bridge that supplies the
         :class:`domain.deadlines.TaxpayerProfile` projected here.
     :mod:`application.modelo._workflow_gate`

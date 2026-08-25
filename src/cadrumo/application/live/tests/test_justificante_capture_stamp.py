@@ -23,7 +23,7 @@ from ....domain.modelos import (
 from ....domain.user_profile.values import UserProfileFact
 from ..justificante import register_capture_as_filing_evidence
 from ..snapshot_base import SnapshotLifecycleState
-from .justificante_reconcile_support import (
+from ._justificante_reconcile_support import (
     MODELO_130_FIXTURE,
     _active_bucket_id,
     _persist_capture,

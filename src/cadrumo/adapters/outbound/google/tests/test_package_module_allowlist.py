@@ -44,12 +44,12 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
         "_drive_entries.py",  # shared Drive owned-entry query escaping, lookup/backfill policy, and id validation
         "drive_media_server.py",  # contract: real local Drive media endpoint for resolver roundtrips
-        "_errors.py",
+        "errors.py",
         "_impersonation.py",  # service-account impersonation credential source
         "_oauth_flow.py",
         "_active_profile.py",
         "_records.py",
-        "_session_store.py",
+        "session_store.py",
         "test_session_store_logout_atomicity.py",  # contract: logout removes the token and its companion metadata, or neither
         "test_session_store_namespace_binding.py",  # contract: session-store secure-object namespace-binding roundtrip
         "test_api.py",  # contract: execute_request typed response + error-translation contract

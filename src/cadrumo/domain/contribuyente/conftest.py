@@ -10,7 +10,7 @@ through :func:`domain.contribuyente.register_profile_keys`.
 
 from __future__ import annotations
 
-from ...application import wizard as _wizard
+from ...application.wizard import compiler as _wizard
 
 # Importing the wizard module registers the real profile-key catalogue; retain
 # that side effect while making the intentionally unused binding explicit.

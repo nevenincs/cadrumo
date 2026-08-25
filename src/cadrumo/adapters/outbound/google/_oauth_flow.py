@@ -36,6 +36,7 @@ from ....core.config import SecretStoreBackend, load_settings
 from ....core.time import now
 from ....core.tty import stdin_is_tty
 from ....domain.user_profile.errors import ProfileNotFoundError
+from ._records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
 from .errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthLoopbackBindError,
@@ -47,7 +48,6 @@ from .errors import (
     GoogleAuthUnsecuredModeRefusedError,
     google_auth_no_action_verdict,
 )
-from ._records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
 
 # Upper bound (seconds) on how long the loopback consent receiver blocks
 # waiting for the operator to complete the browser flow. Defence in depth

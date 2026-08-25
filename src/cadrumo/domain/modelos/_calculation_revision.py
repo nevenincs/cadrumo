@@ -70,7 +70,6 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.time import validate_utc_aware
-from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations import DirectRowMaterializationProvenance, RowBindingKey, RowCasillaKey, RowSourceIdentity
 from ..calculations.registry import (
     BindingId,
@@ -78,6 +77,7 @@ from ..calculations.registry import (
     RegistryCalculationUnresolvedOutcome,
     RelationId,
 )
+from ..identifiers import canonical_decimal_string as _canonical_decimal
 from ._calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
@@ -102,7 +102,6 @@ from ._calculation_revision_m303_handoff import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
     M303RegimenSimplificadoFilingEvidence,
 )
-from .errors import ModeloError, ModeloValidationError
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ._row_models import (
     Modelo210AgrupacionRentaRow,
@@ -110,6 +109,7 @@ from ._row_models import (
     Modelo349RectificacionRow,
     ModeloDetailRow,
 )
+from .errors import ModeloError, ModeloValidationError
 
 
 class CalculationRevisionState(StrEnum):

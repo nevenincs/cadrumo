@@ -268,7 +268,7 @@ _LIVE_TEST_OPT_IN_AUTHORITY_FILES = frozenset(
         Path("src/cadrumo/core/_config_live_tests.py"),
         Path("src/cadrumo/core/config.py"),
         Path("src/cadrumo/core/access_gate/__init__.py"),
-        Path("src/cadrumo/core/access_gate/_errors.py"),
+        Path("src/cadrumo/core/access_gate/errors.py"),
     },
 )
 _LIVE_TEST_OPT_IN_SCAN_ROOTS = (

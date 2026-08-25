@@ -95,3 +95,16 @@ class WizardAnswerTypeError(ProfileAnswerTypeError):
     with pydantic's field-validator contract while exposing a typed exception in
     the error registry.
     """
+
+
+__all__ = [
+    "WizardAnswerTypeError",
+    "WizardCompileError",
+    "WizardEditUnsupportedConsoleError",
+    "WizardError",
+    "WizardMissingFlagError",
+    "WizardPreconditionCondition",
+    "WizardUnsupportedConsoleError",
+    "WizardValidationError",
+    "wizard_no_action_verdict",
+]

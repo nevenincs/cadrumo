@@ -3,7 +3,6 @@ cadrumo.core.setup_answers.SetupAnswers and the project_answers registration slo
 
 These tests verify:
 - SetupAnswers is defined in cadrumo.core.setup_answers (not cadrumo.application.wizard).
-- cadrumo.application.wizard._setup_answers.SetupAnswers is the same class object.
 - cadrumo.domain.deadlines._profiles projects through the core answer table and
   loads no application wizard module at all.
 - The project_answers registration slot raises before registration and
@@ -61,7 +60,7 @@ def test_setup_answers_catalogue_uses_core_class() -> None:
     can check with ``isinstance(typed, SetupAnswers)`` where SetupAnswers is the
     core class.
     """
-    from ...application.wizard import _catalogue as catalogue
+    import cadrumo.application.wizard.catalogue as catalogue
     from ..setup_answers import SetupAnswers
     from ..wizard_catalogue import get_setup_flow
 
@@ -227,8 +226,8 @@ def test_project_answers_refuses_distinct_second_projector() -> None:
 
 def test_project_answers_registered_after_persistence_import() -> None:
     """Importing _persistence registers project_answers in the core slot."""
-    # Importing _persistence triggers the module-level registration call.
-    importlib.import_module("cadrumo.application.wizard._persistence")
+    # Importing persistence triggers the module-level registration call.
+    importlib.import_module("cadrumo.application.wizard.persistence")
 
     from ..setup_answers import _PROJECT_ANSWERS_SLOT, get_project_answers
 

@@ -15,7 +15,7 @@ from typing import Protocol, TypedDict
 
 import typer
 
-from ...application.live import capture_expedientes_bulk
+from ...application.live.expedientes import capture_expedientes_bulk
 from ._app_live_auth_preflight import _emit_live_auth_preflight, _metric_line
 from ._common import active_bucket_id_or_refuse, emit_envelope, resolve_pull_year_range
 
@@ -63,7 +63,7 @@ def expedientes_pull(
     :class:`ExpedientesCaptureResult`, while failed rows are rendered as
     :class:`ExpedientesCaptureFailurePayload`.
     """
-    from ...application.live import capture_expedientes
+    from ...application.live.expedientes import capture_expedientes
     from ._app_live_expedientes_payloads import ExpedientesCaptureFailurePayload, ExpedientesCaptureResult
 
     bucket_id = _bucket_id()
@@ -145,7 +145,7 @@ def expedientes_list(ctx: typer.Context) -> None:
     :class:`ExpedientesListResult` summary rows; per-declaration fields remain
     on :class:`ExpedientesViewResult`.
     """
-    from ...application.live import ExpedientesService
+    from ...application.live.expedientes import ExpedientesService
     from ._app_live_expedientes_payloads import ExpedientesListResult, ExpedienteSnapshotSummaryPayload
 
     bucket_id = _bucket_id()
@@ -172,7 +172,7 @@ def expedientes_show(
     :class:`ExpedientesViewResult` with :class:`ExpedienteDeclarationPayload`
     rows, preserving the read-only live-observation boundary.
     """
-    from ...application.live import ExpedientesService
+    from ...application.live.expedientes import ExpedientesService
     from ._app_live_expedientes_payloads import ExpedienteDeclarationPayload, ExpedientesViewResult
 
     bucket_id = _bucket_id()
@@ -226,7 +226,7 @@ def expedientes_latest(ctx: typer.Context) -> None:
     emits :class:`ExpedientesLatestResult` with ``snapshot_id=None`` rather than
     attempting a live pull.
     """
-    from ...application.live import ExpedientesService
+    from ...application.live.expedientes import ExpedientesService
     from ._app_live_expedientes_payloads import ExpedientesLatestResult
 
     bucket_id = _bucket_id()

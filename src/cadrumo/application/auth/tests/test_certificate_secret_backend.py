@@ -44,7 +44,7 @@ from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore
 from ....tests.master_key import EphemeralMasterKeyProvider
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
-from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
+from ...wizard import compiler as _wizard  # noqa: F401  (compiler import seeds the ProfileKey registry)
 from ..certificate_secret_backend import CertificateSecretBackend, SecureStorageCertificateSecretBackend
 from ..certificate_source_operations import (
     register_operator_certificate_source,

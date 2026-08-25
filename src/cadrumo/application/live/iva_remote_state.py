@@ -67,9 +67,9 @@ from ...application.calculations import IvaWalletDecisionRepository as _IvaWalle
 from ...application.calculations import iva_wallet_decision_key as _iva_wallet_decision_key
 from ...application.calculations import reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation
 from ...core import Modelo, Period, StorageCategory
-from ...core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core import storage_location as _storage_location
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
+from ...core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
 from ...core.errors import CadrumoError as _CadrumoError

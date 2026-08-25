@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 from typing import ClassVar
 
-from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
+from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period, RegistryAuthorityGrade
 from ...core.errors import CoreValidationError
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import (
@@ -423,10 +423,18 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
 ) -> None:
     """Fail closed when a persisted M390 handoff no longer re-resolves exactly."""
+    # The calculation rung, not the filing rung. This precondition asks the
+    # revision whether it DECLARES the annual-summary requirement and, when it
+    # does, re-resolves the sources behind the persisted handoff. It renders no
+    # fichero and reads no export layout, so demanding filing authority refuses
+    # a calculation-grade modelo before the registry can answer "this
+    # requirement does not apply to you" -- and the check still runs, still
+    # reads the requirement, and still raises on a handoff present without one.
     snapshot = resources().modelos.authority.snapshot(
         target_work_unit.modelo,
         filing_year=target_work_unit.filing_year,
         period=target_work_unit.period.registry_token,
+        grade=RegistryAuthorityGrade.CALCULATION,
     )
     M303RegimenSimplificadoAnnualSummarySourceResolver(
         registry_snapshot=snapshot,

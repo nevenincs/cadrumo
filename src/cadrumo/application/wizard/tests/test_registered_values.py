@@ -36,10 +36,10 @@ from ....core.i18n import Translatable as tr
 from ....core.i18n import tr as _tr
 from ....domain.deadlines import IVARegime
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord, new_profile_id
-from ..catalogue import SETUP_FLOW
 from .._format_hints import REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY
-from ..models import WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from .._registered_values import project_registered_values
+from ..catalogue import SETUP_FLOW
+from ..models import WizardFlow, WizardQuestion, WizardSection, WizardWidget
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

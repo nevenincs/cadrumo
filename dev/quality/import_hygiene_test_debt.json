@@ -69,7 +69,7 @@
             {
                 "importer_path": "src/cadrumo/application/flows/tests/test_validation_context_redaction.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.application.wizard._widgets",
+                "target_mod": "cadrumo.application.wizard.widgets",
                 "imported_names": ["_redact_validation_context"],
                 "reason": "White-box test of the wizard widgets' private validation-context redaction helper. Internal privacy-redaction helper with no consumer outside the wizard package; promoting it would expose an internal implementation detail as public API."
             },
@@ -97,7 +97,7 @@
             {
                 "importer_path": "src/cadrumo/application/modelo/tests/test_actions.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.application.wizard._commands",
+                "target_mod": "cadrumo.application.wizard.commands",
                 "imported_names": ["_IVA_REGIME_CHOICE_VALUES"],
                 "reason": "White-box test cross-checking the private CLI IVA-regime choice set against the wizard's operator-selectable values. Internal CLI choice-enumeration constant, not a public contract."
             },

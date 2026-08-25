@@ -722,7 +722,7 @@ def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -
             "'cadrumo.adapters.outbound.aeat.browser', "
             "'cadrumo.domain.calculations.registry', "
             "'cadrumo.application.workflow', "
-            "'cadrumo.application.wizard._status') if m in sys.modules))",
+            "'cadrumo.application.wizard.status') if m in sys.modules))",
         ],
         capture_output=True,
         text=True,

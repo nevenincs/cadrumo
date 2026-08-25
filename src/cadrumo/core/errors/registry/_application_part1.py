@@ -758,7 +758,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._status.WizardStatusError",
+        "cadrumo.application.wizard.status.WizardStatusError",
         ErrorCode(
             code="REFUSED_WIZARD_STATUS",
             category=ErrorCategory.REFUSED,

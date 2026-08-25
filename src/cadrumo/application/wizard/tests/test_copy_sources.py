@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import resources
-from .. import (
+from ..copy_sources import (
     register_profile_copy_sources,
     resolve_profile_schema_copy,
     resolve_profile_terminology_copy,

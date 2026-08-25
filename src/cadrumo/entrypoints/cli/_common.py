@@ -718,7 +718,7 @@ def emit_envelope(
     real profile. The indicator is resolved by
     :func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`,
     shared with the setup wizard's own success emitters
-    (:mod:`cadrumo.application.wizard._commands`), which sit below this CLI
+    (:mod:`cadrumo.application.wizard.commands`), which sit below this CLI
     package and route through the same funnel rather than a second
     implementation.
 

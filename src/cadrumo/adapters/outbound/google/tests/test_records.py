@@ -16,6 +16,15 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import ValidationError
 
+from .._records import (
+    DRIVE_FILE_SCOPE,
+    REQUIRED_SCOPES,
+    SHEETS_SCOPE,
+    DriveAppProperties,
+    OAuthClient,
+    OAuthMetadata,
+    OAuthToken,
+)
 from ..errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthClientNotRegisteredError,
@@ -30,15 +39,6 @@ from ..errors import (
     GoogleAuthScopeInsufficientError,
     GoogleAuthUnsecuredModeRefusedError,
     GoogleAuthValidationError,
-)
-from .._records import (
-    DRIVE_FILE_SCOPE,
-    REQUIRED_SCOPES,
-    SHEETS_SCOPE,
-    DriveAppProperties,
-    OAuthClient,
-    OAuthMetadata,
-    OAuthToken,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

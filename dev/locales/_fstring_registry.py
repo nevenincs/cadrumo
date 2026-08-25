@@ -58,7 +58,7 @@ def _hyphen(v: str) -> str:
 
 
 # The service-capability CONFIRM question ids (hyphenated, matching the catalogue
-# question ids in :mod:`application.wizard._catalogue`). Their prompt and
+# question ids in :mod:`application.wizard.catalogue`). Their prompt and
 # CLI-flag-help keys are f-string-built, so they are enumerated here for scaffold.
 _CAPABILITY_QUESTION_IDS: tuple[str, ...] = (
     "cloud-evidence-upload",

@@ -67,6 +67,7 @@ from ..flows.engine import start_flow, visible_sequence
 from ..flows.errors import FlowAnswerError, FlowSubmitError
 from ..flows.scripted import run_scripted_flow
 from ..flows.wizard_projection import flow_definition_from_wizard_flow
+from ._format_hints import attach_format_hints
 from .catalogue import SETUP_FLOW
 from .descendant_group import attach_descendant_group
 from .errors import (
@@ -75,7 +76,6 @@ from .errors import (
     WizardValidationError,
     wizard_no_action_verdict,
 )
-from ._format_hints import attach_format_hints
 from .models import WizardFlow, WizardQuestion, WizardWidget
 from .persistence import WizardPersistMode
 from .setup_legal_validators import attach_setup_legal_validators
@@ -1991,7 +1991,6 @@ def build_wizard_command(
 
 __all__ = [
     "DEFAULT_PROFILE_NEXT_COMMAND",
-    "SETUP_FLOW",
     "SETUP_OPTION_INFOS",
     "build_wizard_command",
     "next_step_command_for_profile_values",

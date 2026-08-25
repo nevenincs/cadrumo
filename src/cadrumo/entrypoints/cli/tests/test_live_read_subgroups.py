@@ -17,15 +17,19 @@ from typing import cast
 import pytest
 
 from ....application.auth.operator_results import LiveAuthPreflightReport
-from ....application.live import (
-    Borrador100SnapshotService,
-    IvaRemoteStateAcquisitionReport,
+from ....application.live.borrador_100 import Borrador100SnapshotService
+from ....application.live.errors import (
     LiveIvaAcquisitionFailureMode,
+    LiveIvaSurfaceTimeoutError,
+)
+from ....application.live.remote_state_models import (
+    IvaRemoteStateAcquisitionReport,
     LiveIvaAuthOutcome,
     LiveIvaReadOutcome,
     LiveIvaReadStatus,
     LiveIvaReadSurface,
-    LiveIvaSurfaceTimeoutError,
+)
+from ....application.live.verify import (
     VerifyService,
     VerifySurface,
 )
@@ -381,7 +385,7 @@ class TestIvaRemoteStateCliSurface:
             import asyncio
             import sys
 
-            from cadrumo.application.live import LiveIvaSurfaceTimeoutError
+            from cadrumo.application.live.errors import LiveIvaSurfaceTimeoutError
             from cadrumo.entrypoints.cli._app_live import _run_live_iva_evidence_pull_command
 
             async def slow_read():

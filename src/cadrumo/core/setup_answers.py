@@ -98,7 +98,7 @@ class ProjectAnswersNotRegisteredError(CoreError):
 class ProjectAnswersFn(Protocol):
     """Structural type for the project_answers callable.
 
-    Satisfied by ``cadrumo.application.wizard._persistence.project_answers``.
+    Satisfied by ``cadrumo.application.wizard.persistence.project_answers``.
     Domain code depends only on this protocol.
     """
 
@@ -117,7 +117,7 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
     """Register the concrete project_answers implementation from the application layer.
 
     Call exactly once at application startup (e.g. in
-    ``cadrumo.application.wizard._persistence`` module body after the function is
+    ``cadrumo.application.wizard.persistence`` module body after the function is
     defined). A second call with an identical callable is a no-op; a second
     call with a different callable raises :class:`ProjectAnswersRegistrationError`.
     Domain code should depend on :func:`project_answers`, not on the
@@ -158,7 +158,7 @@ def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
     Delegates to the application-layer function registered via
     :func:`register_project_answers`.  Domain callers import this function from
     ``cadrumo.core.setup_answers`` so they never acquire a direct dependency on
-    ``cadrumo.application.wizard._persistence``.
+    ``cadrumo.application.wizard.persistence``.
 
     Args:
         flow: The wizard flow descriptor identifying which flow to

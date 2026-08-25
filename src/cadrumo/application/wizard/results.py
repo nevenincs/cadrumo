@@ -2,7 +2,7 @@
 
 These two classes are the actual runtime payload the wizard's success
 emitters build and validate (see
-:mod:`application.wizard._commands`). Each is a strict
+:mod:`application.wizard.commands`). Each is a strict
 :class:`~cadrumo.core.json_contract.OutputSchema` subclass at its true owner —
 the wizard, not the CLI transport — because the CLI package sits above
 :mod:`application.wizard` in the accepted hexagonal direction and the wizard

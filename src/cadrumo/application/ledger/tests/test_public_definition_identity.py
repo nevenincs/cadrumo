@@ -155,6 +155,21 @@ def test_retired_ledger_modules_and_package_facade_imports_have_zero_remnants() 
     assert source_remnants == []
 
 
+def test_every_ledger_sibling_import_targets_a_public_defining_module() -> None:
+    """Ledger internals cannot keep a deleted/private sibling import alive."""
+    sibling_import_remnants: list[str] = []
+    for path in _PACKAGE_ROOT.glob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom) or node.level != 1 or not node.module:
+                continue
+            sibling_name = node.module.split(".", 1)[0]
+            if sibling_name not in _PUBLIC_MODULE_NAMES:
+                sibling_import_remnants.append(f"{path}: {node.module}")
+
+    assert sibling_import_remnants == []
+
+
 @pytest.mark.parametrize("module", _PUBLIC_DEFINING_MODULES, ids=lambda module: module.__name__)
 def test_every_public_ledger_export_is_owned_by_its_defining_module(module: ModuleType) -> None:
     """Exports are local definitions, never imports, aliases, or re-exports."""

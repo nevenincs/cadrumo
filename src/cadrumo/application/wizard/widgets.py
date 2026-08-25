@@ -239,7 +239,6 @@ def validate_widget_answer(question: WizardQuestion, raw: str) -> str:
 
 
 __all__ = [
-    "WizardWidget",
     "validate_checkbox",
     "validate_confirm",
     "validate_integer",

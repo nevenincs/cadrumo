@@ -13,6 +13,8 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
+from cadrumo.application.workflow.state_models import WorkflowState
+
 from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...domain.deadlines import TaxpayerProfile
@@ -21,7 +23,6 @@ from ..state_projection import build_auth_readiness
 from ..user_profile.completeness import iva_regime_required
 from ..user_profile.keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
-from cadrumo.application.workflow.state_models import WorkflowState
 from .compiler import ensure_profile_keys_registered
 from .errors import WizardError, WizardPreconditionCondition, wizard_no_action_verdict
 

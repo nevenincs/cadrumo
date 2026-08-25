@@ -378,7 +378,7 @@ class _ProfileCustodyTransactionCapability:
             )
         except Exception as exc:
             raise ProfileCustodyTransactionConflictError("create stage cannot be verified for recovery") from exc
-        self.verify_staged_create_label(journal)
+        self._verify_staged_create_label(journal)
         verified = journal.with_update(
             state=ProfileCustodyTransactionState.STAGE_VERIFIED,
             proposed_custody_digest=inventory.digest,
@@ -418,7 +418,7 @@ class _ProfileCustodyTransactionCapability:
             )
             if inventory.digest != journal.proposed_custody_digest:
                 raise ProfileCustodyTransactionConflictError("verified create stage differs from its journal")
-            self.verify_staged_create_label(journal)
+            self._verify_staged_create_label(journal)
             self._adapters.publish_staged(
                 profile_id=journal.profile_id, transaction_id=journal.transaction_id, root=self._root
             )
@@ -744,7 +744,7 @@ class _ProfileCustodyTransactionCapability:
         """Run one idempotent owner step and persist its next journal state."""
         if journal.state is not expected:
             return journal
-        self.verify_source_delete_marker(journal)
+        self._verify_source_delete_marker(journal)
         action(journal, instant)
         advanced = journal.with_update(state=next_state, updated_at=instant)
         self._repository.save_journal(advanced)
@@ -762,7 +762,7 @@ class _ProfileCustodyTransactionCapability:
         """
         if journal.state is not ProfileCustodyTransactionState.SESSION_ACCELERATION_DELETED:
             return journal
-        self.verify_source_delete_marker(journal)
+        self._verify_source_delete_marker(journal)
         replacement_bucket_id = self._pointer_replacement(journal.pointer_before, journal.profile_id)
         replacement_record = (
             journal.pointer_before.absent(
@@ -812,7 +812,7 @@ class _ProfileCustodyTransactionCapability:
                 root=self._root,
             )
         else:
-            self.verify_source_delete_marker(journal)
+            self._verify_source_delete_marker(journal)
             tombstone = self._adapters.rename_capsule_for_deletion(
                 profile_id=journal.profile_id,
                 transaction_id=journal.transaction_id,

@@ -14,12 +14,6 @@ from pydantic import ValidationError
 from .....application.user_profile.capsule_record import ProfileRecordIntegrityError
 from .....core.config import override_settings
 from .....tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
-from ..errors import (
-    GoogleAuthBrowserOpenError,
-    GoogleAuthNetworkError,
-    GoogleAuthNonInteractiveError,
-    GoogleAuthProfileUnboundError,
-)
 from .._oauth_flow import (
     _raise_local_server_error,
     credentials_to_records,
@@ -28,6 +22,12 @@ from .._oauth_flow import (
     run_login_flow,
 )
 from .._records import REQUIRED_SCOPES, OAuthClient
+from ..errors import (
+    GoogleAuthBrowserOpenError,
+    GoogleAuthNetworkError,
+    GoogleAuthNonInteractiveError,
+    GoogleAuthProfileUnboundError,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

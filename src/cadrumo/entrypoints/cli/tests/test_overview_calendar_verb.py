@@ -18,7 +18,11 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....application.live import ExpedientesCapture, ExpedientesService, NotificationsService
+from ....application.live.expedientes import (
+    ExpedientesCapture,
+    ExpedientesService,
+)
+from ....application.live.notifications import NotificationsService
 from ....application.overview import OverviewCalendarRange, build_overview_calendar
 from ....application.user_profile.projections import record_to_values
 from ....core import Period

@@ -146,6 +146,7 @@ class VerifyObservationRepository:
     """Secure-object repository for bucket-scoped verify observations."""
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
+        """Initialize this public contract."""
         trimmed = bucket_id.strip()
         if not trimmed:
             raise LiveApplicationInputError(
@@ -156,6 +157,7 @@ class VerifyObservationRepository:
 
     @property
     def bucket_id(self) -> str:
+        """Execute this public contract operation."""
         return self._bucket_id
 
     def load(self, observation_id: str) -> VerifyObservation | None:
@@ -324,6 +326,7 @@ class VerifyService:
     """
 
     def __init__(self, settings: Settings | None = None) -> None:
+        """Initialize this public contract."""
         self._settings = settings or load_settings()
 
     def _repository_for(self, bucket_id: str) -> VerifyObservationRepository:

@@ -32,7 +32,7 @@ from ..application.export import (
     build_google_sheets_export_operation_registration,
     build_google_sheets_export_service,
 )
-from ..application.live import (
+from ..application.live.filed_history_operation import (
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,
 )

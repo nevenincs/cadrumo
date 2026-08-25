@@ -246,7 +246,7 @@ def test_reviewed_helpers_have_no_new_connectivity_candidate_or_connected_outcom
     assignments = assign_capabilities_to_census(discovered_source_capability_ids(REPO_ROOT), manifest)
     helper_ids = {
         "calculation_helper:src/cadrumo/domain/calculations/registry/_temporal.py:revision_selection_coordinates",
-        "calculation_helper:src/cadrumo/domain/portals/_errors.py:portal_integrity_error",
+        "calculation_helper:src/cadrumo/domain/portals/errors.py:portal_integrity_error",
     }
     census_claims = {
         capability_id

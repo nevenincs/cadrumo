@@ -19,32 +19,48 @@ class NotificationRowProtocol(Protocol):
     """The notification-row facts needed by the custody use case."""
 
     @property
-    def certificado_id(self) -> AeatCertificadoId: ...
+    def certificado_id(self) -> AeatCertificadoId:
+        """Execute this public contract operation."""
+        ...
 
     @property
-    def tipo(self) -> str: ...
+    def tipo(self) -> str:
+        """Execute this public contract operation."""
+        ...
 
     @property
-    def fecha_emision(self) -> date: ...
+    def fecha_emision(self) -> date:
+        """Execute this public contract operation."""
+        ...
 
     @property
-    def leida(self) -> bool | None: ...
+    def leida(self) -> bool | None:
+        """Execute this public contract operation."""
+        ...
 
 
 class NotificationDocumentProtocol(Protocol):
     """The in-memory document facts needed by the custody use case."""
 
     @property
-    def certificado_id(self) -> AeatCertificadoId: ...
+    def certificado_id(self) -> AeatCertificadoId:
+        """Execute this public contract operation."""
+        ...
 
     @property
-    def pdf_bytes(self) -> bytes: ...
+    def pdf_bytes(self) -> bytes:
+        """Execute this public contract operation."""
+        ...
 
     @property
-    def pdf_sha256(self) -> str: ...
+    def pdf_sha256(self) -> str:
+        """Execute this public contract operation."""
+        ...
 
     @property
-    def source_url(self) -> object: ...
+    def source_url(self) -> object:
+        """Execute this public contract operation."""
+        ...
 
 
 class NotificationDocumentReaderProtocol(Protocol):
@@ -53,7 +69,9 @@ class NotificationDocumentReaderProtocol(Protocol):
     def read(
         self,
         document: NotificationDocumentProtocol,
-    ) -> tuple[SancionLiquidacion | None, str | None]: ...
+    ) -> tuple[SancionLiquidacion | None, str | None]:
+        """Execute this public contract operation."""
+        ...
 
 
 # The adapter signatures carry concrete session/row types. ``...`` keeps the

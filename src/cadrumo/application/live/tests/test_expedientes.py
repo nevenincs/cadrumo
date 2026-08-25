@@ -36,9 +36,9 @@ from ....adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
-from .. import LIVE_EXPEDIENTES_READ_OPERATION
 from ..errors import LiveApplicationInputError
 from ..expedientes import (
+    LIVE_EXPEDIENTES_READ_OPERATION,
     ExpedientesCapture,
     ExpedientesService,
     ExpedientesSnapshotNotFoundError,

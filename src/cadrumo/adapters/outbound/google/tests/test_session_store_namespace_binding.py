@@ -36,7 +36,7 @@ from ....persistence.storage import (
 )
 from ....persistence.storage.sql import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
-from .. import _session_store
+from .. import session_store
 from .._impersonation import GoogleCredentialSourceSelection
 from .._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
@@ -73,11 +73,11 @@ def test_session_store_rows_carry_registry_declared_metadata(tmp_path: Path) -> 
     selection = GoogleCredentialSourceSelection(kind=GoogleCredentialSourceKind.OAUTH_DESKTOP)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _session_store.save_client(_PROFILE, client)
-        _session_store.save_token(_PROFILE, token)
-        _session_store.save_metadata(_PROFILE, metadata)
-        _session_store.save_drive_config(_PROFILE, drive_config)
-        _session_store.save_credential_source_selection(_PROFILE, selection)
+        session_store.save_client(_PROFILE, client)
+        session_store.save_token(_PROFILE, token)
+        session_store.save_metadata(_PROFILE, metadata)
+        session_store.save_drive_config(_PROFILE, drive_config)
+        session_store.save_credential_source_selection(_PROFILE, selection)
 
         with session_scope(profile.repository._engine) as session:
             rows = {row.namespace: row for row in session.execute(select(SecureObjectRow)).scalars().all()}

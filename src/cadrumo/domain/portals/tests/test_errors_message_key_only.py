@@ -40,7 +40,7 @@ from ..errors import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ERRORS_MODULE = Path(__file__).resolve().parent.parent / "_errors.py"
+_ERRORS_MODULE = Path(__file__).resolve().parent.parent / "errors.py"
 
 #: The registered locale key for the unknown-portal refusal, written out rather
 #: than read back from the registry the constructor itself consults. Deriving it

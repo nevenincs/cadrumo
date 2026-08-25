@@ -18,14 +18,12 @@ import pytest
 from ....core import Period
 from ....core.bucket_pointer import require_active_bucket_id
 from ....tests.live_gate import requires_live_enabled
-from .. import (
-    capture_expedientes,
-    capture_justificante_snapshot,
-)
 from ..errors import LiveApplicationInputError
+from ..expedientes import capture_expedientes
 from ..justificante import (
     JustificanteCaptureSnapshotService,
     SnapshotLifecycleState,
+    capture_justificante_snapshot,
 )
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]

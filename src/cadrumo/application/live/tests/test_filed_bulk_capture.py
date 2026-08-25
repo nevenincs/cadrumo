@@ -10,15 +10,18 @@ import pytest
 
 from ....adapters.outbound.aeat.sede import Declaracion, SedeParseError
 from ....core import Period
-from .. import (
-    BulkFiledDataCaptureReport,
-    FiledDataCaptureFailureRow,
+from ..errors import LiveIvaSurfaceTimeoutError
+from ..filed_data_capture import (
+    _await_filed_register_walk,
+    _walk_or_failure_row,
     capture_filed_data_bulk,
     filed_data_capture_failure_row,
     list_filed_data_bulk,
 )
-from ..errors import LiveIvaSurfaceTimeoutError
-from ..filed_data_capture import _await_filed_register_walk, _walk_or_failure_row
+from ..remote_state_models import (
+    BulkFiledDataCaptureReport,
+    FiledDataCaptureFailureRow,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

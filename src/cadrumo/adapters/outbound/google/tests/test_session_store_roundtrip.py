@@ -9,7 +9,7 @@ import pytest
 
 from .....core import GoogleCredentialSourceKind
 from .....tests.secure_sql import isolated_runtime_profile
-from .. import _session_store
+from .. import session_store
 from .._impersonation import GoogleCredentialSourceSelection, GoogleImpersonationConfig
 from .._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
@@ -43,28 +43,28 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
     drive_config = DriveConfig(root_folder_id="drive-folder-id")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        _session_store.save_client(profile, client)
-        _session_store.save_token(profile, token)
-        _session_store.save_metadata(profile, metadata)
-        _session_store.save_drive_config(profile, drive_config)
+        session_store.save_client(profile, client)
+        session_store.save_token(profile, token)
+        session_store.save_metadata(profile, metadata)
+        session_store.save_drive_config(profile, drive_config)
 
-        assert _session_store.load_client(profile) == client
-        loaded_token = _session_store.load_token(profile)
+        assert session_store.load_client(profile) == client
+        loaded_token = session_store.load_token(profile)
         assert loaded_token == token
         assert loaded_token is not None
         assert loaded_token.refresh_token == opaque_refresh_token
-        loaded_metadata = _session_store.load_metadata(profile)
+        loaded_metadata = session_store.load_metadata(profile)
         assert loaded_metadata == metadata
         assert loaded_metadata is not None
         assert loaded_metadata.issued_at.isoformat() == "2026-05-26T09:00:00+00:00"
         assert loaded_metadata.last_refresh_at.isoformat() == "2026-05-26T09:00:00+00:00"
-        assert _session_store.load_drive_config(profile) == drive_config
+        assert session_store.load_drive_config(profile) == drive_config
 
-        assert _session_store.delete_session(profile) == (True, True)
-        assert _session_store.load_token(profile) is None
-        assert _session_store.load_metadata(profile) is None
-        assert _session_store.load_client(profile) == client
-        assert _session_store.load_drive_config(profile) == drive_config
+        assert session_store.delete_session(profile) == (True, True)
+        assert session_store.load_token(profile) is None
+        assert session_store.load_metadata(profile) is None
+        assert session_store.load_client(profile) == client
+        assert session_store.load_drive_config(profile) == drive_config
 
 
 def test_credential_source_selection_defaults_to_none_when_never_persisted(tmp_path: Path) -> None:
@@ -75,7 +75,7 @@ def test_credential_source_selection_defaults_to_none_when_never_persisted(tmp_p
     """
     profile = "operator-no-selection"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1bf98a9a-4323-4b10-bcfb-55ba9fd13edc"):
-        assert _session_store.load_credential_source_selection(profile) is None
+        assert session_store.load_credential_source_selection(profile) is None
 
 
 def test_credential_source_selection_oauth_desktop_roundtrips(tmp_path: Path) -> None:
@@ -83,9 +83,9 @@ def test_credential_source_selection_oauth_desktop_roundtrips(tmp_path: Path) ->
     selection = GoogleCredentialSourceSelection()
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="76d277c7-f5f3-4d6a-923e-c8daeeabd36c"):
-        _session_store.save_credential_source_selection(profile, selection)
+        session_store.save_credential_source_selection(profile, selection)
 
-        reloaded = _session_store.load_credential_source_selection(profile)
+        reloaded = session_store.load_credential_source_selection(profile)
 
     assert reloaded == selection
     assert reloaded is not None
@@ -115,9 +115,9 @@ def test_credential_source_selection_impersonation_roundtrips_without_a_secret(t
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="6e5dd772-a3e1-41d8-b135-7fe8182f9eae"):
-        _session_store.save_credential_source_selection(profile, selection)
+        session_store.save_credential_source_selection(profile, selection)
 
-        reloaded = _session_store.load_credential_source_selection(profile)
+        reloaded = session_store.load_credential_source_selection(profile)
 
     assert reloaded == selection
     assert reloaded is not None

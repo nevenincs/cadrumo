@@ -69,7 +69,7 @@ from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TY
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import now as _utc_now
-from ...domain import canonical_decimal_string
+from ...domain.identifiers import canonical_decimal_string
 from ...domain.attachments import (
     AttachmentFileContent,
     AttachmentIngestionRequest,

@@ -153,6 +153,7 @@ class Borrador100SnapshotRepository:
     """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
+        """Initialize this public contract."""
         trimmed = bucket_id.strip()
         if not trimmed:
             raise LiveApplicationInputError(
@@ -178,23 +179,29 @@ class Borrador100SnapshotRepository:
 
     @property
     def bucket_id(self) -> str:
+        """Execute this public contract operation."""
         return self._delegate.bucket_id
 
     def exists(self, snapshot_id: str) -> bool:
+        """Execute this public contract operation."""
         return self._delegate.exists(snapshot_id)
 
     def load(self, snapshot_id: str) -> Borrador100Snapshot:
+        """Execute this public contract operation."""
         return self._delegate.load(snapshot_id)
 
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
+        """Execute this public contract operation."""
         return tuple(
             sorted(self._delegate.list_snapshots(), key=lambda item: (item.captured_at, item.snapshot_id)),
         )
 
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
+        """Execute this public contract operation."""
         return self._delegate.resolve(snapshot_id)
 
     def save(self, snapshot: Borrador100Snapshot) -> None:
+        """Execute this public contract operation."""
         self._delegate.save(snapshot)
 
 
@@ -217,6 +224,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         bucket_id: str,
         repository: Borrador100SnapshotRepository | None = None,
     ) -> None:
+        """Initialize this public contract."""
         resolved_repository = repository or Borrador100SnapshotRepository(bucket_id=bucket_id)
         super().__init__(bucket_id=bucket_id, repository=resolved_repository)
 
@@ -229,6 +237,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         source_url: str,
         binding_values: Mapping[BindingId, _BorradorValue],
     ) -> Borrador100Snapshot:
+        """Execute this public contract operation."""
         return self._capture_with_lifecycle(
             _Borrador100CaptureRequest(
                 filing_year=filing_year,
@@ -257,9 +266,11 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         return snapshots
 
     def show(self, snapshot_id: str) -> Borrador100Snapshot:
+        """Execute this public contract operation."""
         return self.resolve_snapshot(snapshot_id)
 
     def latest_for_year(self, *, filing_year: int, period: Period | None = None) -> Borrador100Snapshot | None:
+        """Execute this public contract operation."""
         snapshots = [
             snapshot
             for snapshot in self.list_snapshots(filing_year=filing_year)

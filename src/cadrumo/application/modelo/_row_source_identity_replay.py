@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, BindingSourceKind
 from ...core.identity import ContentDigest
-from ...domain import canonical_decimal_string
+from ...domain.identifiers import canonical_decimal_string
 from ...domain.calculations import RowBindingKey
 from ...domain.calculations.registry import BindingId
 from ...domain.filing import ModeloBindingValue, ModeloDraft, compute_modelo_draft_id

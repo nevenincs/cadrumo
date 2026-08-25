@@ -16,13 +16,13 @@ from pathlib import Path
 import pytest
 
 from ....core.i18n import Translatable as tr
-from ..models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from .._translations import (
     _FIXED_RUNTIME_KEYS,
     _resolves_in,
     _walk_keys,
     cli_keys_referenced_in_source,
 )
+from ..models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from ._support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

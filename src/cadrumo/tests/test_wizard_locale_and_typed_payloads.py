@@ -42,7 +42,7 @@ _SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 
 def _wizard_descriptor_translation_keys() -> set[str]:
-    from ..application.wizard import WIZARD_FLOWS
+    from ..application.wizard.catalogue import WIZARD_FLOWS
 
     keys: set[str] = set()
     for flow in WIZARD_FLOWS:

@@ -39,7 +39,7 @@ from ...core.hashing import content_hash_hex
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain import canonical_decimal_string
+from ...domain.identifiers import canonical_decimal_string
 from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.categories import CategoryProfile, SpendingCategory, resolve_category_profiles
 from ...domain.filing import (

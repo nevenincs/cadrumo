@@ -22,7 +22,7 @@ from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import RepositoryError
 from ....adapters.persistence.storage.bucket import bucket_paths
-from ....application.wizard import WIZARD_FLOWS
+from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core import AuthProviderKind
 from ....core.config import load_settings
 from ....domain.buckets import BucketEvent, BucketEventType

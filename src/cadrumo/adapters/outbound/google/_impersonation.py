@@ -77,8 +77,8 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, GoogleCredentialSourceKind, NoRecoveryOutcome
-from .errors import GoogleAuthError, GoogleAuthPreconditionCondition, google_auth_no_action_verdict
 from ._records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
+from .errors import GoogleAuthError, GoogleAuthPreconditionCondition, google_auth_no_action_verdict
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials

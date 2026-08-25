@@ -41,6 +41,16 @@ class ProfileCustodyCommitPort(Protocol):
         """The transaction that durably published this capsule."""
         ...
 
+    @property
+    def publication_kind(self) -> Literal["enroll", "restore"]:
+        """Whether this capsule was enrolled locally or restored."""
+        ...
+
+    @property
+    def published_at(self) -> str:
+        """The canonical UTC instant recorded by the publication marker."""
+        ...
+
 
 class ProfileCustodyCapsuleLabelPort(Protocol):
     """Canonical label provenance exposed by physical custody storage."""
@@ -67,6 +77,30 @@ class ProfileCustodyCapsuleLabelPort(Protocol):
 
     def canonical_json_bytes(self) -> bytes:
         """Return the canonical bytes committed into the capsule inventory."""
+        ...
+
+
+class ProfileCustodyLabelHeadPort(Protocol):
+    """Authenticated head of one committed profile-label lineage."""
+
+    @property
+    def label_revision(self) -> int:
+        """The latest authenticated label revision."""
+        ...
+
+    @property
+    def label_content_digest(self) -> str:
+        """The content digest of the latest authenticated label."""
+        ...
+
+    @property
+    def label_self_digest(self) -> str:
+        """The self-digest of the latest authenticated label."""
+        ...
+
+    @property
+    def self_digest(self) -> str:
+        """The self-digest authenticating this lineage head."""
         ...
 
 
@@ -402,6 +436,10 @@ class ProfileRecordCryptoError(CoreError, RuntimeError):
     handler — a broadening, not a re-root. :exc:`RuntimeError` is retained so
     the ancestry every existing caller was written against is unchanged.
     """
+
+
+class ProfileCustodyRecordIntegrityError(CoreError, ValueError):
+    """The persistence provider refused a malformed or altered custody record."""
 
 
 class ProfileRecordEncryptedBlob(BaseModel):
@@ -836,6 +874,16 @@ class ProfileCustodyPort(Protocol):
 
     def load_committed_capsule_label(self, profile_id: UUID, *, root: Path) -> ProfileCustodyCapsuleLabelPort:
         """Load the authenticated label from one committed capsule."""
+        ...
+
+    def verify_or_recover_initial_label_head(
+        self,
+        *,
+        label: ProfileCustodyCapsuleLabelPort,
+        source_witness: str,
+        root: Path,
+    ) -> ProfileCustodyLabelHeadPort:
+        """Verify the label head or recover its initial committed witness."""
         ...
 
     def load_staged_capsule_label(
@@ -1378,10 +1426,12 @@ __all__ = [
     "ProfileCustodyCapsuleLabelPort",
     "ProfileCustodyCommitPort",
     "ProfileCustodyEnvelopePort",
+    "ProfileCustodyLabelHeadPort",
     "ProfileCustodyLocalRecordStore",
     "ProfileCustodyPasswordMaterialPort",
     "ProfileCustodyPasswordProofMaterialPort",
     "ProfileCustodyPort",
+    "ProfileCustodyRecordIntegrityError",
     "ProfileCustodyRecordSessionMaterial",
     "ProfileCustodyRecoveryArtifactExportReceiptPort",
     "ProfileCustodyRecoveryArtifactPort",

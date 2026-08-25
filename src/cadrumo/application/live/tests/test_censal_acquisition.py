@@ -21,7 +21,10 @@ import inspect
 import pytest
 
 from ....core.access_gate import AeatLiveReadNotEnabledError
-from .. import LIVE_CENSAL_READ_OPERATION, pull_censal_datos
+from ..censo import (
+    LIVE_CENSAL_READ_OPERATION,
+    pull_censal_datos,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

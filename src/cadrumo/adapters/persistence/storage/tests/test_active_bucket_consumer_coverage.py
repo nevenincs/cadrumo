@@ -55,7 +55,7 @@ _COVERED_BY_REFUSAL_TABLE: dict[str, str] = {
     "src/cadrumo/adapters/persistence/storage/envelope/_secure_repository.py": "justificante",
     "src/cadrumo/adapters/outbound/aeat/auth/session_store.py": "auth_session",
     "src/cadrumo/adapters/outbound/aeat/sede/_observation_store.py": "observation",
-    "src/cadrumo/adapters/outbound/google/_session_store.py": "google_oauth_token",
+    "src/cadrumo/adapters/outbound/google/session_store.py": "google_oauth_token",
     "src/cadrumo/adapters/outbound/llm/_cache.py": "llm_cache_stats",
     "src/cadrumo/adapters/outbound/llm/_usage.py": "llm_usage_load",
     "src/cadrumo/adapters/outbound/llm/_consent_ledger.py": "llm_consent_ledger",

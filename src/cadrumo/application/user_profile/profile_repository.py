@@ -13,21 +13,17 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-from ...adapters.persistence.storage.custody import (
-    ProfileCustodyCapsuleLabel,
-    ProfileCustodyPasswordMaterial,
-    ProfileCustodyRecordError,
-    ProfileLabelHead,
-    ProfileLabelHeadRepository,
-    list_current_profile_custody_capsule_ids,
-    load_committed_profile_custody_label_record,
-    load_committed_profile_password_material,
-    recognize_current_profile_capsule,
-)
 from ...core.identity import ProfileId, ProfileLabel
 from ...core.paths import effective_storage_root
 from ...domain.user_profile.errors import ProfileNotFoundError
 from .aggregate import CommittedProfileView, UnlockedProfileFactSummary
+from .custody_ports import (
+    ProfileCustodyCapsuleLabelPort,
+    ProfileCustodyLabelHeadPort,
+    ProfileCustodyPasswordMaterialPort,
+    ProfileCustodyRecordIntegrityError,
+    profile_custody_port,
+)
 from .custody_repository import ProfileCustodyTransactionRepository, profile_custody_transaction_lock
 from .custody_transactions import (
     ProfileCustodyTransactionConflictError,
@@ -55,7 +51,7 @@ def _require_initial_label_witness(
 
 
 def _require_initial_label_match(
-    label_record: ProfileCustodyCapsuleLabel,
+    label_record: ProfileCustodyCapsuleLabelPort,
     journal: ProfileCustodyTransactionJournal,
 ) -> None:
     if label_record.label_revision != 1:
@@ -73,15 +69,16 @@ def _require_initial_label_match(
 def _verify_label_head(
     *,
     root: Path,
-    label_record: ProfileCustodyCapsuleLabel,
+    label_record: ProfileCustodyCapsuleLabelPort,
     source_witness: str,
-) -> ProfileLabelHead:
+) -> ProfileCustodyLabelHeadPort:
     try:
-        return ProfileLabelHeadRepository(root=root).verify_or_recover_initial(
+        return profile_custody_port().verify_or_recover_initial_label_head(
             label=label_record,
             source_witness=source_witness,
+            root=root,
         )
-    except ProfileCustodyRecordError as exc:
+    except ProfileCustodyRecordIntegrityError as exc:
         raise ProfileCustodyTransactionConflictError(str(exc)) from exc
 
 
@@ -89,10 +86,11 @@ def _load_current_custody_state(
     *,
     root: Path,
     profile_id: UUID,
-) -> tuple[ProfileCustodyPasswordMaterial, ProfileCustodyCapsuleLabel, ProfileLabelHead]:
+) -> tuple[ProfileCustodyPasswordMaterialPort, ProfileCustodyCapsuleLabelPort, ProfileCustodyLabelHeadPort]:
     with profile_custody_transaction_lock(root, profile_id):
-        material = load_committed_profile_password_material(profile_id, root=root)
-        label_record = load_committed_profile_custody_label_record(profile_id, root=root)
+        custody = profile_custody_port()
+        material = custody.load_password_material(profile_id, root=root)
+        label_record = custody.load_committed_capsule_label(profile_id, root=root)
         journal = ProfileCustodyTransactionRepository(root=root).load_journal(material.commit.transaction_id)
         _require_initial_label_witness(profile_id, journal)
         _require_initial_label_match(label_record, journal)
@@ -100,7 +98,7 @@ def _load_current_custody_state(
     return material, label_record, head
 
 
-def _published_at(material: ProfileCustodyPasswordMaterial) -> datetime:
+def _published_at(material: ProfileCustodyPasswordMaterialPort) -> datetime:
     return datetime.fromisoformat(material.commit.published_at.replace("Z", "+00:00")).astimezone(UTC)
 
 
@@ -117,13 +115,16 @@ class CommittedProfileRepository:
     """Resolve labels and UUIDs only for validated committed capsules."""
 
     def __init__(self, *, root: Path | None = None) -> None:
+        """Bind committed-capsule discovery to the effective storage root."""
         self._root = effective_storage_root(root)
 
     @property
     def root(self) -> Path:
+        """Return the storage root used for committed-capsule discovery."""
         return self._root
 
     def load(self, profile_id: str | UUID) -> CommittedProfileView:
+        """Load one validated committed capsule by canonical UUID."""
         try:
             identity = UUID(str(profile_id))
         except ValueError as exc:
@@ -144,7 +145,7 @@ class CommittedProfileRepository:
     def list(self) -> tuple[CommittedProfileView, ...]:
         """Project only current capsules recognized by the custody adapter."""
         result: list[CommittedProfileView] = []
-        for profile_id in list_current_profile_custody_capsule_ids(root=self._root):
+        for profile_id in profile_custody_port().list_committed_profile_ids(root=self._root):
             try:
                 result.append(self._aggregate_for(profile_id))
             except ProfileNotFoundError:
@@ -152,6 +153,7 @@ class CommittedProfileRepository:
         return tuple(sorted(result, key=lambda item: item.profile_id))
 
     def summaries(self) -> tuple[ProfileSummary, ...]:
+        """Return the public identity and label projection for every capsule."""
         return tuple(ProfileSummary(profile_id=item.profile_id, label=item.label) for item in self.list())
 
     def load_unlocked(self, profile_id: str | UUID) -> CommittedProfileView:
@@ -174,7 +176,7 @@ class CommittedProfileRepository:
         )
 
     def _aggregate_for(self, profile_id: UUID, *, label_override: str | None = None) -> CommittedProfileView:
-        if recognize_current_profile_capsule(profile_id, root=self._root) is None:
+        if profile_custody_port().committed_capsule_path(profile_id, root=self._root) is None:
             raise ProfileNotFoundError("profile has no validated committed custody capsule")
         material, label_record, head = _load_current_custody_state(root=self._root, profile_id=profile_id)
         if label_override is not None and label_override != label_record.label:

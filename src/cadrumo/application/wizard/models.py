@@ -26,7 +26,7 @@ class WizardWidget(StrEnum):
     """Closed taxonomy of input primitives the wizard runtime supports."""
 
     TEXT = "text"
-    SECRET = "secret"
+    SECRET = "secret"  # noqa: S105 - this is the public widget-kind token, not a credential
     CONFIRM = "confirm"
     SELECT = "select"
     CHECKBOX = "checkbox"
@@ -169,7 +169,7 @@ class WizardFlow(BaseModel):
         visibility.
 
         This invariant is enforced a second time, over a different model, by
-    :meth:`~application.flows.definition.FlowDefinition._validate_visible_when_targets`.
+        :meth:`~application.flows.definition.FlowDefinition._validate_visible_when_targets`.
         The two exist because the models differ, not by oversight: every
         ``WizardFlow`` is bridged into a ``FlowDefinition``, but
         ``attach_descendant_group`` then splices in pages authored directly in
@@ -243,3 +243,15 @@ def _walk_translatables(flow: WizardFlow) -> list[tuple[tr, str]]:
                         ),
                     )
     return result
+
+
+__all__ = [
+    "WizardChoice",
+    "WizardCondition",
+    "WizardFlow",
+    "WizardQuestion",
+    "WizardSection",
+    "WizardVisibility",
+    "WizardWidget",
+    "iter_conditions",
+]

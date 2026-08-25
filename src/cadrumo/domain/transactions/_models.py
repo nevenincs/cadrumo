@@ -35,7 +35,7 @@ from ...core.identity import BucketId, TransactionId
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, parse_iso8601_date
 from ...core.time import now, parse_iso_datetime
-from .._identifiers import canonical_decimal_string
+from ..identifiers import canonical_decimal_string
 from ..iva import (
     EUMemberState,
     InputClassification,
@@ -46,7 +46,6 @@ from ..iva import (
     IvaExemptionArticle,
 )
 from ._enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from .errors import TransactionValidationError
 from ._irpf_categories import (
     PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
     RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
@@ -77,6 +76,7 @@ from ._model_validation import (
 )
 from ._raw_transaction import RawTransaction
 from ._retencion_parameters import maximum_supported_activity_retencion_rate
+from .errors import TransactionValidationError
 
 __all__ = ["DecisionProvenance", "derive_split_group_id"]
 

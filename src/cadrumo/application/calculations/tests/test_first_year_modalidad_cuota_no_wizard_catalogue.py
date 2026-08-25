@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 # Child process: does its own isolated setup + full M200/2025 first-year calculate
-# WITHOUT ever importing cadrumo.application.wizard._catalogue, so the wizard SETUP_FLOW
+# WITHOUT ever importing cadrumo.application.wizard.catalogue, so the wizard SETUP_FLOW
 # catalogue is unregistered in this process. argv[1] is a tmp dir for the bucket.
 _CHILD_SCRIPT = r"""
 import sys

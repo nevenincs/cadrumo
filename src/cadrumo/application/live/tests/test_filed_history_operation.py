@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import asyncio
 import importlib
 import subprocess
@@ -583,14 +584,15 @@ def test_live_package_is_inert_and_public_leaves_have_no_private_remnants() -> N
     root = Path(__file__).resolve().parents[5]
     live_root = root / "src" / "cadrumo" / "application" / "live"
 
-    assert not tuple(live_root.glob("_*.py"))
+    assert not tuple(path for path in live_root.glob("_*.py") if path.name != "__init__.py")
     for source_path in (root / "src").rglob("*.py"):
         source = source_path.read_text(encoding="utf-8")
         assert "cadrumo.application.live._" not in source, source_path
-        assert "from cadrumo.application.live import" not in source, source_path
-        assert "from ...application.live import" not in source, source_path
-        assert "from ....application.live import" not in source, source_path
-        assert "from .....application.live import" not in source, source_path
+        tree = ast.parse(source, filename=str(source_path))
+        assert not any(
+            isinstance(node, ast.ImportFrom) and node.module in {"cadrumo.application.live", "application.live"}
+            for node in ast.walk(tree)
+        ), source_path
 
 
 def test_importing_live_keeps_the_package_boundary_inert() -> None:

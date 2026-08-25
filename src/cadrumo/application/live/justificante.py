@@ -59,13 +59,13 @@ if TYPE_CHECKING:
     from ...domain.modelos import ModeloRecord
     from ..modelo import ModeloReconciliationReport
 
-from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.outbound.aeat.sede import (
     capture_justificante,
     open_declarations_register,
     shared_playwright,
     walk_expedientes_tree,
 )
+from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE as JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE,
 )
@@ -86,13 +86,13 @@ from .errors import (
     LiveReadPrecondition,
     live_read_no_recovery_verdict,
 )
+from .session import active_verified_session
 from .snapshot_base import (
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotService,
     enforce_snapshot_state_invariants,
 )
-from .session import active_verified_session
 
 JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.namespace
 _JUSTIFICANTE_CAPTURE_SNAPSHOT_VERSION = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.schema_version
@@ -316,6 +316,7 @@ class JustificanteCaptureSnapshotRepository:
     """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
+        """Initialize this public contract."""
         trimmed = bucket_id.strip()
         if not trimmed:
             raise LiveApplicationInputError(
@@ -343,23 +344,29 @@ class JustificanteCaptureSnapshotRepository:
 
     @property
     def bucket_id(self) -> str:
+        """Execute this public contract operation."""
         return self._bucket_id
 
     def exists(self, snapshot_id: str) -> bool:
+        """Execute this public contract operation."""
         return self._delegate.exists(snapshot_id)
 
     def load(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
+        """Execute this public contract operation."""
         return self._delegate.load(snapshot_id)
 
     def list_snapshots(self) -> tuple[JustificanteCaptureSnapshot, ...]:
+        """Execute this public contract operation."""
         return tuple(
             sorted(self._delegate.list_snapshots(), key=lambda item: (item.captured_at, item.snapshot_id)),
         )
 
     def resolve(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
+        """Execute this public contract operation."""
         return self._delegate.resolve(snapshot_id)
 
     def save(self, snapshot: JustificanteCaptureSnapshot) -> None:
+        """Execute this public contract operation."""
         if snapshot.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
                 translated_message="application.live.justificante.errors.snapshot_bucket_mismatch",
@@ -408,6 +415,7 @@ class JustificanteCaptureSnapshotService(
         bucket_id: str,
         repository: JustificanteCaptureSnapshotRepository | None = None,
     ) -> None:
+        """Initialize this public contract."""
         resolved_repository = repository or JustificanteCaptureSnapshotRepository(bucket_id=bucket_id)
         super().__init__(bucket_id=bucket_id, repository=resolved_repository)
 
@@ -463,6 +471,7 @@ class JustificanteCaptureSnapshotService(
         return snapshots
 
     def show(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
+        """Execute this public contract operation."""
         return self.resolve_snapshot(snapshot_id)
 
     def latest_for_work_unit(
@@ -472,6 +481,7 @@ class JustificanteCaptureSnapshotService(
         filing_year: int,
         period: Period,
     ) -> JustificanteCaptureSnapshot | None:
+        """Execute this public contract operation."""
         snapshots = [
             snapshot
             for snapshot in self.list_snapshots(filing_year=filing_year)
@@ -1033,11 +1043,11 @@ async def capture_justificante_snapshot_outcome(
 __all__ = [
     "JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
     "JUSTIFICANTE_CAPTURE_SOURCE_KIND",
+    "JustificanteCaptureOutcome",
     "JustificanteCaptureSnapshot",
     "JustificanteCaptureSnapshotNotFoundError",
     "JustificanteCaptureSnapshotRepository",
     "JustificanteCaptureSnapshotService",
-    "JustificanteCaptureOutcome",
     "capture_justificante_snapshot",
     "capture_justificante_snapshot_outcome",
     "derive_justificante_capture_snapshot_id",

@@ -37,7 +37,10 @@ from ...calculations import (
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from .. import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet
+from ..iva_remote_state import (
+    load_iva_remote_state,
+    persist_and_reconcile_iva_compensation_wallet,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

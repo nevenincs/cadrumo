@@ -47,7 +47,7 @@ related:
 
 ## Outcome
 
-Shared commit `49577a525c` delivered the principal hard move, both singleton-kernel changes, the work-unit decoder collapse, and the replay-guard relocation. This S169 closure commit carries the remaining integrity-context preservation, stale documentation correction, relocation-accounting changes, and encrypted-SQL observation tests.
+Shared commit `49577a525c` delivered the principal hard move, both singleton-kernel changes, the work-unit decoder collapse, and the replay-guard relocation. Remediation commit `a20e0b4ce2` replaces the repository-call counters with exact live SQL statement evidence while retaining the encrypted-SQL interleaving tests.
 
 The one-record proofs run against real encrypted SQL for both wire shapes. Each present-row interleaving returns the first payload with its own revision despite a write after the read; each absent-row read reports the absent sentinel after exactly one secure-object `SELECT`. The event gate counts the actual driver cursor statement and does not replace, wrap, or mock the repository. Existing encrypted roundtrip, CAS, and lineage coverage remains on the same governed secure-object routes.
 
@@ -63,4 +63,4 @@ The shared index contained an unrelated staged quality configuration file before
 
 Formal-review remediation replaces the four monkeypatch/call-count probes with SQLAlchemy `before_cursor_execute` and `after_cursor_execute` listeners. The present-row listener suppresses only the nested independent writer's own statements, so any later reader query remains visible and fails the exact one-SELECT assertion. Ruff and compilation pass; exact source census finds no mocked `load`, monkeypatch, call counter, or wrapper remnant.
 
-The focused real-SQL suite is temporarily blocked before the test bodies by the concurrent custody relocation: `_ProfileCustodyTransactionCapability._publish_verified_create` calls the absent `verify_staged_create_label` method while provisioning an isolated profile. No custody code is changed here; retry after the shared tree advances. The plan remains open pending that rerun and independent review.
+The first remediation run was temporarily blocked before the test bodies by the concurrent custody relocation: `_ProfileCustodyTransactionCapability._publish_verified_create` called the absent `verify_staged_create_label` method while provisioning an isolated profile. No custody code changed here. After shared HEAD corrected that call to `_verify_staged_create_label`, the focused real encrypted-SQL suite passed all nine tests in 15.39 seconds. The plan remains open pending independent review.

@@ -34,7 +34,7 @@ def deudas_list(ctx: typer.Context) -> None:
     :class:`DeudasListResult` summary rows; per-liability fields remain on
     :class:`DeudasViewResult`.
     """
-    from ...application.live import DeudasService
+    from ...application.live.deudas import DeudasService
     from ._app_live_deudas_payloads import DeudasListResult, DeudaSnapshotSummaryPayload
 
     bucket_id = _bucket_id()
@@ -70,7 +70,7 @@ def deudas_view(
     the persisted ``Decimal`` scale survives the JSON boundary, and direction
     is reported on its own field rather than as a sign.
     """
-    from ...application.live import DeudasService
+    from ...application.live.deudas import DeudasService
     from ._app_live_deudas_payloads import DeudaRowPayload, DeudasViewResult
 
     bucket_id = _bucket_id()
@@ -117,7 +117,7 @@ def deudas_latest(ctx: typer.Context) -> None:
     :class:`DeudasLatestResult` with ``snapshot_id=None`` rather than
     attempting a live pull.
     """
-    from ...application.live import DeudasService
+    from ...application.live.deudas import DeudasService
     from ._app_live_deudas_payloads import DeudasLatestResult
 
     bucket_id = _bucket_id()

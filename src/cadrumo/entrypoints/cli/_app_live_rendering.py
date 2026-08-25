@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ...application.live import (
+from ...application.live.remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
     FiledDataCaptureReport,

@@ -20,7 +20,7 @@ from ....adapters.persistence.storage.bucket import (
     release_lock,
 )
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
-from ....application.wizard import WIZARD_FLOWS
+from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core import AuthProviderKind
 from ....core.config import load_settings, override_settings
 from ....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message

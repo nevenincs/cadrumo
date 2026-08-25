@@ -48,11 +48,11 @@ from ...core.identity import BucketId, SnapshotId
 from ...core.time import now
 from .errors import LiveApplicationInputError
 from .notification_documents import NotificationDocumentService
+from .session import active_verified_session
 from .snapshot_base import (
     SnapshotNotFoundError,
     StatelessSnapshotService,
 )
-from .session import active_verified_session
 
 
 class NotificationsSnapshotNotFoundError(SnapshotNotFoundError):
@@ -101,6 +101,7 @@ def _derive_snapshot_id(
 
 
 def notifications_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
+    """Execute this public contract operation."""
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
@@ -160,6 +161,7 @@ class NotificationsService(
     """
 
     def __init__(self, settings: Settings | None = None) -> None:
+        """Initialize this public contract."""
         self._settings = settings or load_settings()
         super().__init__(repository_factory=lambda bucket_id: _notifications_repository(self._settings, bucket_id))
 

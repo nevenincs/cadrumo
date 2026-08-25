@@ -16,7 +16,7 @@ from ....core import Modelo
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.resources import resources
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
-from .. import PageLegalZone, build_flow_legal_zones
+from ..legal_zone import PageLegalZone, build_flow_legal_zones
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

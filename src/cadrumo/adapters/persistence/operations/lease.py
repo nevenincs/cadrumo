@@ -20,7 +20,7 @@ from cadrumo.application.operations.persistence.leases import (
     OperationOwnerLease,
 )
 
-from ....application import JournalRepositoryBase
+from ....application.journal_repository import JournalRepositoryBase
 from ....core import STRICT_FROZEN_CONFIG, StorageCategory, exclusive_file_lock, is_link_like, storage_location
 from ....core.time import validate_utc_aware
 from ..storage import RepositoryError

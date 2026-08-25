@@ -1,7 +1,7 @@
 """The wizard-to-flow bridge over the real setup catalogue.
 
 Every scenario projects the real one-shot wizard catalogue
-(:data:`cadrumo.application.wizard.WIZARD_FLOWS`) into a substrate
+(:data:`cadrumo.application.wizard.catalogue.WIZARD_FLOWS`) into a substrate
 :class:`FlowDefinition` through its defining modules, then asserts the mechanical mapping
 holds one-to-one: id and section count, every question id becoming a page
 with its ``profile_key`` as ``domain_key``, widget identity with the

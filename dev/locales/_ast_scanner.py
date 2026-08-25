@@ -105,7 +105,7 @@ _DYNAMIC_TRANSLATION_ROOTS = frozenset(
 
 Documented dynamic-dispatch survivors
 --------------------------------------
-The following f-string patterns in :mod:`application.wizard._catalogue`
+The following f-string patterns in :mod:`application.wizard.catalogue`
 produce dynamic translation keys. They are bounded (not open-ended) because
 the tail is always an enum member value or a flow-registered question ID —
 the set of runtime keys is fully enumerable from the domain model. They are

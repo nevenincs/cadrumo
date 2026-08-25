@@ -3,8 +3,8 @@
 A dedicated, descendant-only :class:`~cadrumo.application.flows.definition.FlowDefinition`
 that hosts the exact count page and
 :class:`~cadrumo.application.flows.definition.FlowRepeatingGroup` the full setup flow uses
-(:data:`~cadrumo.application.wizard._descendant_group.DESCENDANTS_COUNT_PAGE`,
-:data:`~cadrumo.application.wizard._descendant_group.DESCENDANT_GROUP`, and the
+(:data:`~cadrumo.application.wizard.descendant_group.DESCENDANTS_COUNT_PAGE`,
+:data:`~cadrumo.application.wizard.descendant_group.DESCENDANT_GROUP`, and the
 entry-event cross-field validator id) — the pages and validators are *adopted*, not
 re-authored, so the door and the setup flow can never diverge on the descendant
 surface.
@@ -23,12 +23,12 @@ Lifecycle of one door invocation:
 * **seed** — :func:`build_descendant_door` reads the active
   :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`, re-projects its
   ``renta_family.descendiente.{n}.*`` facts to a page-keyed answer map through
-  :func:`~cadrumo.application.wizard._persistence.descendant_answers_from_record`,
+  :func:`~cadrumo.application.wizard.persistence.descendant_answers_from_record`,
   and resumes a MODIFY-mode :class:`~cadrumo.application.flows.engine.FlowState` over the
   door definition so the operator opens on their existing descendants.
 * **commit** — :func:`persist_descendant_door_answers` projects the submitted
   answers back through
-  :func:`~cadrumo.application.wizard._persistence.descendant_facts_from_answers`
+  :func:`~cadrumo.application.wizard.persistence.descendant_facts_from_answers`
   and clears the orphaned rows a shrunk count leaves behind through
   :func:`~cadrumo.application.wizard._checkpoint_store.descendant_clearing_facts`,
   in one revision-bound record command. The door only commits to an
@@ -90,7 +90,7 @@ class DescendantDoorAnswers(BaseModel):
     key the canonical map as ``descendientes#<index>.<page-id>`` — none is a
     top-level model field — so the door's typed answer model is empty. The commit
     path reads the engine's committed page-keyed answer map directly (through
-    :func:`~cadrumo.application.wizard._persistence.descendant_facts_from_answers`),
+    :func:`~cadrumo.application.wizard.persistence.descendant_facts_from_answers`),
     never a projection through this model; it exists only to satisfy the
     :class:`~cadrumo.application.flows.definition.FlowDefinition` contract.
     """
@@ -105,8 +105,8 @@ def _locale_ref(key: str) -> CopyRef:
 def build_descendant_door_definition() -> FlowDefinition:
     """Return the descendant-only door :class:`FlowDefinition`.
 
-    Adopts :data:`~cadrumo.application.wizard._descendant_group.DESCENDANTS_COUNT_PAGE`
-    and :data:`~cadrumo.application.wizard._descendant_group.DESCENDANT_GROUP`
+    Adopts :data:`~cadrumo.application.wizard.descendant_group.DESCENDANTS_COUNT_PAGE`
+    and :data:`~cadrumo.application.wizard.descendant_group.DESCENDANT_GROUP`
     verbatim into a single familia section, and names the entry-event
     cross-field validator on the definition so a bad entry date — or one the
     declared relación cannot carry — blocks submit — the same
@@ -141,7 +141,7 @@ def build_descendant_door(record: UserProfileRecord | None) -> tuple[FlowDefinit
 
     Re-projects the record's ``renta_family.descendiente.{n}.*`` facts into the
     page-keyed answer map through
-    :func:`~cadrumo.application.wizard._persistence.descendant_answers_from_record`,
+    :func:`~cadrumo.application.wizard.persistence.descendant_answers_from_record`,
     then resumes a fresh :class:`~cadrumo.application.flows.engine.FlowState` over the
     door definition: :func:`~cadrumo.application.flows.resume.resume_flow` commits the
     seeded count answer first (revealing the instance pages) and then seeds each
@@ -177,7 +177,7 @@ def persist_descendant_door_answers(
 
     Projects the committed page-keyed answers into the canonical
     ``renta_family.descendiente.{n}.*`` facts and aggregates through
-    :func:`~cadrumo.application.wizard._persistence.descendant_facts_from_answers`,
+    :func:`~cadrumo.application.wizard.persistence.descendant_facts_from_answers`,
     and clears every on-record descendant path the fresh projection no longer
     covers (a shrunk count, a removed optional field) through
     :func:`~cadrumo.application.wizard._checkpoint_store.descendant_clearing_facts`,

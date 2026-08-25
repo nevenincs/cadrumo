@@ -627,7 +627,7 @@ def build_server(
     ``execute`` applies the persona gate internally.
 
     Seeds the process-global profile-key registry through
-    :func:`~application.wizard.ensure_profile_keys_registered` before any
+    :func:`~application.wizard.compiler.ensure_profile_keys_registered` before any
     handler is registered. This is the server's initialisation point, the
     counterpart of the CLI root callback's own registration step: the domain
     registry cannot seed itself and every production reader of it sits

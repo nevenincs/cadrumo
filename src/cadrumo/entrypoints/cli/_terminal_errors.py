@@ -426,7 +426,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
         # without this the isolated-run log carried two DEBUG lines and nothing
         # else, and triage had to patch the emitter in-process to see the crash.
         # Logged only for the untyped case, mirroring the command boundary in
-        # `_errors.py`: a typed CadrumoError is an expected, already-classified
+        # `errors.py`: a typed CadrumoError is an expected, already-classified
         # refusal, and writing its traceback would make `aeat config repair
         # logs` echo an operator-actionable condition back as a live crash.
         #

@@ -23,9 +23,8 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.hashing import sha256_hex
 from ...core.identity import TransactionId
 from ...core.time import parse_iso_datetime
-from .._identifiers import canonical_decimal_string
+from ..identifiers import canonical_decimal_string
 from ._enums import BusinessClassification, SplitRole, TransactionLifecycleState
-from .errors import TransactionValidationError
 from ._model_validation import (
     parse_required_aware_datetime,
     require_aware_datetime,
@@ -34,6 +33,7 @@ from ._model_validation import (
     validate_classified_by_shape,
     validate_confidence_range,
 )
+from .errors import TransactionValidationError
 
 _STRING_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
     dict[str, object],

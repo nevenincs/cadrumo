@@ -23,7 +23,7 @@ who thought a private two-member enum was tidier.
 Model-free and network-free: typed construction and one pure assembly call.
 
 See Also:
-    :class:`~application.ledger.ClassifierInputFact`
+    :class:`~application.ledger.classifier_inputs.ClassifierInputFact`
         The audit envelope that speaks the same source vocabulary.
 """
 

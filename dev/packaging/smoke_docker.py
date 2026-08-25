@@ -317,7 +317,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from cadrumo.adapters.outbound.llm._client import LLMClient
-from cadrumo.adapters.outbound.llm._errors import LLMConfigError
+from cadrumo.adapters.outbound.llm.errors import LLMConfigError
 from cadrumo.adapters.outbound.llm._models import LLMProvider
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.master_key import activate_session

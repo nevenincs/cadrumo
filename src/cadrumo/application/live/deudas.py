@@ -90,6 +90,7 @@ def _derive_snapshot_id(capture: DeudasCapture) -> str:
 
 
 def deudas_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
+    """Execute this public contract operation."""
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
@@ -136,6 +137,7 @@ class DeudasService(StatelessSnapshotService[PersistedDeudasSnapshot, DeudasCapt
     """
 
     def __init__(self, settings: Settings | None = None) -> None:
+        """Initialize this public contract."""
         self._settings = settings or load_settings()
         super().__init__(repository_factory=lambda bucket_id: _deudas_repository(self._settings, bucket_id))
 
@@ -145,6 +147,7 @@ class DeudasService(StatelessSnapshotService[PersistedDeudasSnapshot, DeudasCapt
         bucket_id: str,
         capture: DeudasCapture,
     ) -> PersistedDeudasSnapshot:
+        """Execute this public contract operation."""
         return self._capture_stateless(bucket_id=bucket_id, capture=capture)
 
     def show(
@@ -153,6 +156,7 @@ class DeudasService(StatelessSnapshotService[PersistedDeudasSnapshot, DeudasCapt
         bucket_id: str,
         snapshot_id: str,
     ) -> PersistedDeudasSnapshot:
+        """Execute this public contract operation."""
         return self.resolve_snapshot(bucket_id=bucket_id, snapshot_id=snapshot_id)
 
     def latest(
@@ -160,6 +164,7 @@ class DeudasService(StatelessSnapshotService[PersistedDeudasSnapshot, DeudasCapt
         *,
         bucket_id: str,
     ) -> PersistedDeudasSnapshot | None:
+        """Execute this public contract operation."""
         snapshots = self.list_snapshots(bucket_id=bucket_id)
         if not snapshots:
             return None

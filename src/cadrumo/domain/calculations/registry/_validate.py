@@ -27,7 +27,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ._corpus_catalogue import verify_source_catalogue
-from .errors import RegistryValidationError
 from ._legal import verify_legal_catalogue_grounding
 from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ._source_evidence_fingerprint import (
@@ -59,6 +58,7 @@ from ._validation_memoization import (
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
+from .errors import RegistryValidationError
 
 if TYPE_CHECKING:
     from ...user_profile import ProfileSchemaDefinition
@@ -106,7 +106,7 @@ class RegistryValidator:
         # checkout -- a question a tax-filing product has no business asking.
         # Unsupplied means the gate does not run, which is the correct and only
         # outcome for every installed run.
-        self.justificante_corpus_root: Path | None = justificante_corpus_root
+        self._justificante_corpus_root: Path | None = justificante_corpus_root
         self._source_evidence_fingerprint = (
             source_evidence_fingerprint
             if source_evidence_fingerprint is not None
@@ -131,7 +131,8 @@ class RegistryValidator:
 
     @property
     def justificante_corpus_root(self) -> Path | None:
-        return self.justificante_corpus_root
+        """Return the explicitly supplied authoring corpus root."""
+        return self._justificante_corpus_root
 
     def _source_root_key(self) -> str | None:
         return str(self._source_root.expanduser().resolve()) if self._source_root is not None else None

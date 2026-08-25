@@ -7,7 +7,7 @@ from datetime import datetime
 from pydantic import Field
 
 from ...application.calculations import ObservationSourceKind
-from ...application.live import SnapshotLifecycleState
+from ...application.live.snapshot_base import SnapshotLifecycleState
 from ...core import Modelo
 from ...core.identity import (
     AeatCsv,

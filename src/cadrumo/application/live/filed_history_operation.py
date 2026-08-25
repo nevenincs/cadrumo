@@ -183,6 +183,7 @@ class FiledHistoryOperationExecutor:
         pull: FiledHistoryPull = _pull_recorded_filed_history,
         profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
     ) -> None:
+        """Initialize this public contract."""
         self._sync_run_repository = sync_run_repository
         self._pull = pull
         self._profile_resolver = profile_resolver
@@ -192,6 +193,7 @@ class FiledHistoryOperationExecutor:
         request: OperationRequest[FiledHistoryOperationRequest],
         context: OperationExecutorContext,
     ) -> str | None:
+        """Execute this public contract operation."""
         if require_active_bucket_id() != request.subject_ref:
             raise ValueError("filed-history operation subject must identify the active profile")
         profile = self._profile_resolver()

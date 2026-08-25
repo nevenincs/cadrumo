@@ -26,7 +26,7 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Final
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
@@ -117,7 +117,7 @@ class LedgerPreflightIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: TransactionId
+    transaction_id: TransactionId | Literal["__period__"]
     reason: LedgerPreflightIssueReason
     detail: _IssueDetail
 

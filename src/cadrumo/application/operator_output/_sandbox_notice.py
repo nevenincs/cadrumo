@@ -2,7 +2,7 @@
 
 Any command surface that renders a success envelope or text line for the
 operator — the CLI transport (:mod:`entrypoints.cli._common`) and the setup
-wizard (:mod:`application.wizard._commands`) alike — must be able to warn the
+wizard (:mod:`application.wizard.commands`) alike — must be able to warn the
 operator that the active profile bucket is a discardable sandbox rather than
 their real profile. Both surfaces need the SAME check, so it lives here,
 below both of them, rather than duplicated per surface.

@@ -54,7 +54,6 @@ from .....application.repair_integrity import (
 from .....core import CasillaId, IvaCompensationStateProvenance, validated_casilla_id
 from .....core import Period as _Period
 from .....core.config import override_settings
-from .....domain import ModeloIdentifier
 from .....domain.attachments import AttachmentNotFoundError
 from .....domain.buckets import (
     BucketEvent,
@@ -82,6 +81,7 @@ from .....domain.filing import (
     make_amendment_id,
     registry_schema_version,
 )
+from .....domain.identifiers import ModeloIdentifier
 from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
 from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
@@ -141,7 +141,7 @@ from ....outbound.google import (
     OAuthMetadata,
     OAuthToken,
 )
-from ....outbound.google import _session_store as google_session_store
+from ....outbound.google import session_store as google_session_store
 from ....outbound.llm import EvidenceConsentLedger, LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory

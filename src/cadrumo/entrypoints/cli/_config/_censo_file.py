@@ -111,7 +111,7 @@ def censo_pull(
     """Preview the censal consulta, refusing legacy direct apply before acquisition."""
     import asyncio
 
-    from ....application.live import pull_censal_datos
+    from ....application.live.censo import pull_censal_datos
     from ....application.user_profile.censal_operation import CensalFieldIntent
     from ....application.user_profile.censo_sync import (
         CENSAL_ADOPTABLE_PATHS,

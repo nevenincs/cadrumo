@@ -37,7 +37,7 @@ from ...core.identity import (
 from ...core.money import CENT, round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
-from .. import canonical_decimal_string
+from ..identifiers import canonical_decimal_string
 from ..iva import (
     EUMemberState,
     InvoiceKind,

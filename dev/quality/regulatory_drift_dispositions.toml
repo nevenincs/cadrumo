@@ -812,22 +812,22 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/live/_filed_data_capture.py"
+path = "src/cadrumo/application/live/filed_data_capture.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/live/_filed_data_capture.py"
+path = "src/cadrumo/application/live/filed_data_capture.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/application/live/_filed_observation_persistence.py"
+path = "src/cadrumo/application/live/filed_observation_persistence.py"
 kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/live/_iva_remote_state.py"
+path = "src/cadrumo/application/live/iva_remote_state.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 

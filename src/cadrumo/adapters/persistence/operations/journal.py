@@ -31,7 +31,7 @@ from cadrumo.application.operations.persistence.replay import (
     OperationReplayStatus,
 )
 
-from ....application import JournalRepositoryBase
+from ....application.journal_repository import JournalRepositoryBase
 from ....core import (
     STRICT_FROZEN_CONFIG,
     StorageCategory,

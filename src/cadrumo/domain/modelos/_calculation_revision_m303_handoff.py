@@ -12,9 +12,9 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, Period
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
-from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import M303RegimenSimplificadoSnapshot, RevisionId
 from ..filing_evidence import FilingEvidenceReference
+from ..identifiers import canonical_decimal_string as _canonical_decimal
 from ..iva import (
     ActividadNoAgricolaSimplificado,
     M303RegimenSimplificadoScopeDecision,

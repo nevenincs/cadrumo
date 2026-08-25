@@ -31,13 +31,13 @@ from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import SECTION_VERDICT_PREFIX, answer, next_page, start_flow
 from ...flows.validators import ValidationVerdict, resolve_cross_field_validator
 from ...flows.wizard_projection import flow_definition_from_wizard_flow
-from .. import (
+from ..catalogue import SETUP_FLOW
+from ..commands import _SETUP_CHECKPOINT
+from ..setup_legal_validators import (
     SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID,
     attach_setup_legal_validators,
     validate_unidad_familiar_conjunta,
 )
-from ..catalogue import SETUP_FLOW
-from ..commands import _SETUP_CHECKPOINT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

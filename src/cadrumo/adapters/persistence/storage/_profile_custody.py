@@ -20,10 +20,12 @@ from ....application.user_profile.custody_ports import (
     ProfileCustodyCapsuleSourceMaterial,
     ProfileCustodyEnvelopePort,
     ProfileCustodyInventoryPort,
+    ProfileCustodyLabelHeadPort,
     ProfileCustodyLocalRecordStore,
     ProfileCustodyPasswordMaterialPort,
     ProfileCustodyPasswordProofMaterialPort,
     ProfileCustodyPort,
+    ProfileCustodyRecordIntegrityError,
     ProfileCustodyRecoveryArtifactExportReceiptPort,
     ProfileCustodyRecoveryEnrollmentMaterial,
     ProfileCustodyRecoveryEnvelopePort,
@@ -305,6 +307,21 @@ class _PersistenceProfileCustody:
 
     def load_committed_capsule_label(self, profile_id: UUID, *, root: Path) -> ProfileCustodyCapsuleLabelPort:
         return custody.load_committed_profile_custody_label_record(profile_id, root=root)
+
+    def verify_or_recover_initial_label_head(
+        self,
+        *,
+        label: ProfileCustodyCapsuleLabelPort,
+        source_witness: str,
+        root: Path,
+    ) -> ProfileCustodyLabelHeadPort:
+        try:
+            return custody.ProfileLabelHeadRepository(root=root).verify_or_recover_initial(
+                label=_substrate_handle(label, custody.ProfileCustodyCapsuleLabel, "capsule label"),
+                source_witness=source_witness,
+            )
+        except custody.ProfileCustodyRecordError as exc:
+            raise ProfileCustodyRecordIntegrityError(str(exc)) from exc
 
     def load_staged_capsule_label(
         self,

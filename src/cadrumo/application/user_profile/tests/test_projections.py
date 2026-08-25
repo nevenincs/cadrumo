@@ -20,7 +20,7 @@ from ....domain.deadlines import (
     IVARegime,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ...wizard import catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
+import cadrumo.application.wizard.catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

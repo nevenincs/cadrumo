@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period, StorageCategory, storage_path
-from ....domain import ModeloIdentifier
+from ....domain.identifiers import ModeloIdentifier
 from ....tests.secure_sql import isolated_runtime_profile
 from .._history_models import ModeloHistory, ModeloHistoryEntry
 from .._history_repository import ModeloHistoryRepository

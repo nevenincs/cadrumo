@@ -34,8 +34,8 @@ from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT
 from ....core.hashing import content_hash_hex as _content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.money import round_to_cents as _quantize
-from ..._identifiers import canonical_decimal_string as _canonical_decimal_string
 from ...filing_evidence import FilingEvidenceReference
+from ...identifiers import canonical_decimal_string as _canonical_decimal_string
 
 
 class AmortizacionLedgerError(_CadrumoError):

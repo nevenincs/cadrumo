@@ -11,8 +11,8 @@ from ...flows.copy import assemble_page_copy
 from ...flows.definition import FlowPage
 from ...flows.engine import answer, start_flow
 from ...flows.wizard_projection import flow_definition_from_wizard_flow
-from ..catalogue import SETUP_FLOW
 from .._format_hints import PAGE_FORMAT_HINTS, PAGE_WIDGET_KINDS, attach_format_hints
+from ..catalogue import SETUP_FLOW
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

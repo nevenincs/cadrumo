@@ -696,7 +696,7 @@ def test_former_authority_edges_are_absent_and_detector_bites() -> None:
             _assert_no_forbidden_authority(
                 source,
                 runtime_projection=path.name == "_command_runtime.py",
-                callback_wrapper_projection=path.name == "_errors.py",
+                callback_wrapper_projection=path.name == "errors.py",
                 spec_declaration=bool(_locally_authored_export_names(source)),
             )
 

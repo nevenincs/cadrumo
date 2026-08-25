@@ -31,8 +31,8 @@ from ....adapters.persistence.storage import (
 )
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
-from ....application.live import (
-    LiveApplicationInputError,
+from ....application.live.errors import LiveApplicationInputError
+from ....application.live.notification_documents import (
     NotificationDocumentNotFoundError,
     NotificationDocumentRecord,
     NotificationDocumentService,

@@ -18,7 +18,6 @@ from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ....domain.deadlines import LegalEntityForm
 from ...flows.errors import FlowAnswerError
 from ...flows.scripted import run_scripted_flow
-from .. import DESCENDANTS_COUNT_PAGE_ID
 from ..catalogue import SETUP_FLOW
 from ..commands import (
     _answers_model_from_canonical,
@@ -26,6 +25,7 @@ from ..commands import (
     _project_scripted_answers,
     setup_flow_definition,
 )
+from ..descendant_group import DESCENDANTS_COUNT_PAGE_ID
 from ..models import WizardWidget
 from ..persistence import project_answers, serialise_answers
 

@@ -948,7 +948,7 @@ class ApoderadoCheckResult(OutputSchema):
 # Profile wizard / lifecycle verb result schemas
 #
 # ``config.profile.create`` / ``config.profile.edit`` are declared at their real
-# producer in :mod:`application.wizard._results`, which sits below this package in
+# producer in :mod:`application.wizard.results`, which sits below this package in
 # the hexagonal direction and cannot construct a class defined up here. They
 # are referenced there by production CommandSpec. There is NO wizard import HERE:
 # the ``config`` group must not pull the wizard dependency tail into every

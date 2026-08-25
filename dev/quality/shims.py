@@ -46,7 +46,7 @@ def _module_failures(module_name: str) -> list[str]:
 
 def main() -> int:
     """Run the documented lazy re-export verification."""
-    importlib.import_module("cadrumo.application.wizard._compiler")
+    importlib.import_module("cadrumo.application.wizard.compiler")
     failures: list[str] = []
     for module_name in _LAZY_REEXPORT_MODULES:
         failures.extend(_module_failures(module_name))

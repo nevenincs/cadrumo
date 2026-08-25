@@ -136,7 +136,7 @@ def test_ast_join_resolves_a_registered_error_through_nested_source_facade_reexp
         tmp_path,
         "src/cadrumo/facade/_reexport.py",
         """
-        from cadrumo._errors import FacadeError
+        from cadrumo.errors import FacadeError
         """,
     )
     _write_source(
@@ -159,11 +159,11 @@ def test_ast_join_resolves_a_registered_error_through_nested_source_facade_reexp
 
     join = authored_error_message_join(
         root=tmp_path,
-        codes=(_code("cadrumo._errors.FacadeError", "REFUSED_FACADE"),),
+        codes=(_code("cadrumo.errors.FacadeError", "REFUSED_FACADE"),),
     )
 
     (site,) = join.singly_owned_sites
-    assert site.owner_qualnames == ("cadrumo._errors.FacadeError",)
+    assert site.owner_qualnames == ("cadrumo.errors.FacadeError",)
 
 
 def test_join_fails_closed_when_a_facade_import_looks_like_a_registered_error_but_cannot_resolve(
@@ -206,7 +206,7 @@ def test_join_fails_closed_when_a_facade_import_looks_like_a_registered_error_bu
     with pytest.raises(AuthoredErrorMessageCensusError, match=r"facade import cadrumo\.facade\.FacadeError"):
         authored_error_message_join(
             root=tmp_path,
-            codes=(_code("cadrumo._errors.FacadeError", "REFUSED_FACADE"),),
+            codes=(_code("cadrumo.errors.FacadeError", "REFUSED_FACADE"),),
         )
 
 
@@ -235,7 +235,7 @@ def test_live_join_is_exhaustively_partitioned_by_the_current_registry_and_exact
         sum(
             site.path == "src/cadrumo/adapters/persistence/profile/transactions.py"
             and site.callee == "LedgerStorageError"
-            and site.owner_qualnames == ("cadrumo.domain.transactions._errors.LedgerStorageError",)
+            and site.owner_qualnames == ("cadrumo.domain.transactions.errors.LedgerStorageError",)
             for site in partition.owned_sites
         )
         == 12

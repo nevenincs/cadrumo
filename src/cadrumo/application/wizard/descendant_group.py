@@ -1,7 +1,7 @@
 """The descendant repeating group for the setup flow's familia phase.
 
 Descendant collection is a genuinely new wizard surface: the one-shot
-:class:`~cadrumo.application.wizard.WizardFlow` catalogue carries no
+:class:`~cadrumo.application.wizard.models.WizardFlow` catalogue carries no
 repeating-group primitive, so the group is authored directly in the
 substrate's :class:`~cadrumo.application.flows.definition.FlowRepeatingGroup`
 vocabulary and spliced into the bridged
@@ -16,7 +16,7 @@ answer, so ``count = 0`` hides every instance page and a positive count
 exposes one page set per descendant. Instance answers key the canonical
 answer map as ``descendientes#<index>.<page-id>``; the commit path
 projects them through
-:func:`~cadrumo.application.wizard._persistence.descendant_facts_from_answers`
+:func:`~cadrumo.application.wizard.persistence.descendant_facts_from_answers`
 into the exact ``renta_family.descendiente.{n}.*`` fact shape the
 ``_minimo_descendientes_facts`` injector and the registry selectors
 consume.

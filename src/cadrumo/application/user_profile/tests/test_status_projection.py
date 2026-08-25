@@ -12,10 +12,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-import cadrumo.application.user_profile.status_projection as status_projection
-
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
+from .. import status_projection
 
 __all__ = ["profile_storage_root_fixture"]
 
@@ -46,9 +45,8 @@ def test_projection_module_exposes_only_status_projection_symbols() -> None:
 
 
 def test_secret_classed_field_is_masked() -> None:
-    from cadrumo.application.user_profile.overview import mask_profile_field
-
     from ....core.classification import SensitivityClass
+    from ..overview import mask_profile_field
 
     assert mask_profile_field(
         path="identity.tax_id",
@@ -66,15 +64,14 @@ def test_secret_classed_field_is_masked() -> None:
     ],
 )
 def test_password_or_key_like_field_is_masked(path: str, label: str) -> None:
-    from cadrumo.application.user_profile.overview import mask_profile_field
+    from ..overview import mask_profile_field
 
     assert mask_profile_field(path=path, label=label, sensitivity=None)
 
 
 def test_plain_identity_field_is_not_masked() -> None:
-    from cadrumo.application.user_profile.overview import mask_profile_field
-
     from ....core.classification import SensitivityClass
+    from ..overview import mask_profile_field
 
     assert not mask_profile_field(
         path="identity.tax_id",
@@ -133,9 +130,8 @@ def test_clave_credential_inputs_mask_on_the_real_shipped_schema(path: str) -> N
     from the schema instead would make the gate read its expectation off
     the thing it checks, and it could then never fail.
     """
-    from cadrumo.application.user_profile.overview import mask_profile_field
-
     from ....domain.user_profile.loader import load_user_profile_schema
+    from ..overview import mask_profile_field
 
     field_def = load_user_profile_schema().field(path)
     label = field_def.description or path
@@ -166,9 +162,8 @@ def test_every_shipped_schema_field_masks_the_same_under_either_callers_label() 
     It walks every field the real schema declares rather than a sample,
     so a field added later is covered without touching this test.
     """
-    from cadrumo.application.user_profile.overview import mask_profile_field
-
     from ....domain.user_profile.loader import load_user_profile_schema
+    from ..overview import mask_profile_field
 
     schema = load_user_profile_schema()
     divergent: list[str] = []
@@ -193,7 +188,7 @@ def test_unknown_field_falls_back_to_the_keyword_policy() -> None:
     fact and the screen. The negative case (``unknown.city``) is
     supporting: it pins that the policy is not simply mask-everything.
     """
-    from cadrumo.application.user_profile.overview import mask_profile_field
+    from ..overview import mask_profile_field
 
     assert mask_profile_field(path="unknown.api_credential", label="unknown.api_credential", sensitivity=None)
     assert mask_profile_field(path="unknown.private_key", label="unknown.private_key", sensitivity=None)
@@ -214,7 +209,7 @@ def test_bare_key_keyword_still_subsumes_the_compound_key_names(fragment: str) -
     listed the compounds explicitly, so consolidating onto bare ``key``
     silently relies on it -- and is pinned here rather than assumed.
     """
-    from cadrumo.application.user_profile.overview import mask_profile_field
+    from ..overview import mask_profile_field
 
     assert mask_profile_field(path=f"vault.{fragment}", label=fragment, sensitivity=None)
 
@@ -251,9 +246,8 @@ _AUTH_PROVIDER_VALUE = "clave_movil"
 
 def _auth_provider_display() -> str:
     """The text the surface renders for the stored ``auth.provider`` token."""
-    from cadrumo.application.user_profile.overview import profile_field_choices
-
     from ....domain.user_profile.loader import load_user_profile_schema
+    from ..overview import profile_field_choices
 
     field = load_user_profile_schema().field(_AUTH_PROVIDER_PATH)
     return next(
@@ -304,8 +298,8 @@ def _fact_rows_over_a_real_profile() -> tuple[tuple[StatusFactRow, ...], UserPro
     The record is returned alongside its rows so a caller can project the
     SAME record through another surface and compare the two readings.
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from ...workflow.persistence import workflow_state_repository
+    from ...workflow.profile_bucket_scan import read_profile_bucket
 
     _create_profile()
     pointer = read_profile_bucket("operator")
@@ -328,7 +322,7 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
     decision tested here is byte-for-byte the one the operator's screen
     gets.
     """
-    from cadrumo.application.user_profile.overview import mask_profile_field
+    from ..overview import mask_profile_field
 
     rows, _record = _fact_rows_over_a_real_profile()
 
@@ -412,9 +406,8 @@ def test_an_unindexed_row_carries_the_label_the_manager_carries() -> None:
     sentences of authority prose. A row that still equals the description
     is a row that never reached the catalogue.
     """
-    from cadrumo.application.user_profile.overview import build_profile_overview
-
     from ....domain.user_profile.loader import load_user_profile_schema
+    from ..overview import build_profile_overview
 
     rows, record = _fact_rows_over_a_real_profile()
 

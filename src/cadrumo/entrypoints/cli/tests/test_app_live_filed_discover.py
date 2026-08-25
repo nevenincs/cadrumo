@@ -27,7 +27,7 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
 )
-from ....application.live import (
+from ....application.live.filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryReport,
     filed_history_discovery_report,

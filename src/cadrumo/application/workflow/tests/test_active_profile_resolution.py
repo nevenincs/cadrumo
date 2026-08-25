@@ -37,7 +37,7 @@ from ....core.config import override_settings
 from ....core.errors import NoActiveProfileError, get_registered_error_code
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
-from ... import wizard as _wizard  # noqa: F401
+from ...wizard import compiler as _wizard  # noqa: F401
 from ..active_profile import resolve_active_profile_record
 from ..profile_bucket_scan import resolve_profile_bucket
 from ..profile_health import assess_active_profile_health, repair_active_profile_pointer

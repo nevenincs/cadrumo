@@ -119,17 +119,29 @@ class SnapshotRepository[TPayload: BaseModel](Protocol):
     """
 
     @property
-    def bucket_id(self) -> str: ...
+    def bucket_id(self) -> str:
+        """Execute this public contract operation."""
+        ...
 
-    def exists(self, snapshot_id: str) -> bool: ...
+    def exists(self, snapshot_id: str) -> bool:
+        """Execute this public contract operation."""
+        ...
 
-    def load(self, snapshot_id: str) -> TPayload: ...
+    def load(self, snapshot_id: str) -> TPayload:
+        """Execute this public contract operation."""
+        ...
 
-    def list_snapshots(self) -> tuple[TPayload, ...]: ...
+    def list_snapshots(self) -> tuple[TPayload, ...]:
+        """Execute this public contract operation."""
+        ...
 
-    def resolve(self, snapshot_id: str) -> TPayload: ...
+    def resolve(self, snapshot_id: str) -> TPayload:
+        """Execute this public contract operation."""
+        ...
 
-    def save(self, snapshot: TPayload) -> None: ...
+    def save(self, snapshot: TPayload) -> None:
+        """Execute this public contract operation."""
+        ...
 
 
 def enforce_snapshot_state_invariants(
@@ -209,6 +221,7 @@ class SnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
     """
 
     def __init__(self, *, bucket_id: str, repository: SnapshotRepository[TPayload]) -> None:
+        """Initialize this public contract."""
         if repository.bucket_id != bucket_id.strip():
             raise LiveApplicationInputError(
                 translated_message="application.live.snapshot_base.errors.service_bucket_mismatch",
@@ -279,9 +292,11 @@ class SnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
         return candidate
 
     def list_snapshots(self) -> tuple[TPayload, ...]:
+        """Execute this public contract operation."""
         return self._repository.list_snapshots()
 
     def resolve_snapshot(self, snapshot_id: str) -> TPayload:
+        """Execute this public contract operation."""
         return self._repository.resolve(snapshot_id)
 
     # ---- supersession helpers ---------------------------------------------
@@ -341,6 +356,7 @@ class StatelessSnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
         *,
         repository_factory: Callable[[str], SnapshotRepository[TPayload]],
     ) -> None:
+        """Initialize this public contract."""
         self._repository_factory = repository_factory
 
     def _repository_for(self, bucket_id: str) -> SnapshotRepository[TPayload]:
@@ -371,9 +387,11 @@ class StatelessSnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
         return payload
 
     def list_snapshots(self, *, bucket_id: str) -> tuple[TPayload, ...]:
+        """Execute this public contract operation."""
         return self._repository_for(bucket_id).list_snapshots()
 
     def resolve_snapshot(self, *, bucket_id: str, snapshot_id: str) -> TPayload:
+        """Execute this public contract operation."""
         return self._repository_for(bucket_id).resolve(snapshot_id)
 
 
@@ -381,8 +399,8 @@ __all__ = [
     "SnapshotLifecycleState",
     "SnapshotNotFoundError",
     "SnapshotRepository",
-    "SnapshotStateFilter",
     "SnapshotService",
+    "SnapshotStateFilter",
     "StatelessSnapshotService",
     "enforce_snapshot_state_invariants",
 ]

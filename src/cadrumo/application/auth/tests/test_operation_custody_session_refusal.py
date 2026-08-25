@@ -25,7 +25,7 @@ from ....core.errors import get_registered_error_code, resolve_error_message
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
+from ...wizard import compiler as _wizard  # noqa: F401  (compiler import seeds the ProfileKey registry)
 from ..operator import build_live_auth_preflight_report
 from ..operator import test_operator_auth as run_operator_auth_test
 from ..operator_probes import probe_local_session
