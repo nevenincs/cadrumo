@@ -51,6 +51,7 @@ from ...application.auth.providers import select_provider
 from ...core import AuthProviderKind, Period
 from ...core.config import Settings, load_settings
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile, resolve_filing_window
+from ...domain.filing import ModeloInputs
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.submission import DeadlineWindowChecker, ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue
@@ -61,12 +62,11 @@ from ..filing import (
     filing_profile_from_taxpayer,
 )
 from ..workflow.adapters import DeadlineEngineAdapter
-from ...domain.filing import ModeloInputs
-from ..workflow.protocols import RegistryModeloDraftProtocol
 from ..workflow.engine import WorkflowEngine
 from ..workflow.errors import WorkflowInputMismatchError
-from ..workflow.run_models import WorkflowPurpose, WorkflowResult, WorkflowStage
 from ..workflow.persistence import WorkflowRunRepository
+from ..workflow.protocols import RegistryModeloDraftProtocol
+from ..workflow.run_models import WorkflowPurpose, WorkflowResult, WorkflowStage
 from ._action_errors import ModeloWorkflowGateError
 from ._revision_replay_inputs import revision_filing_replay_inputs
 from ._row_source_identity_replay import attach_revision_row_source_identities
