@@ -386,10 +386,9 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # (an env var plus a settings-cache reset) reds it - that is the
         # substitution that would genuinely leak, and the one worth
         # catching.
-        ("entrypoints/tui/secret/app.py", "_activate_output_language"),
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
-        ("entrypoints/cli/__init__.py", "_root"),
+        ("entrypoints/cli/_root_cli.py", "root_command"),
         ("entrypoints/cli/_common.py", "activate_subcommand_output_language"),
         ("entrypoints/cli/_config/_custody.py", "_pin_render_language_to_target_bucket"),
     },
@@ -404,7 +403,7 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
 #: this gate exists to catch.
 _CTX_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     {
-        ("entrypoints/cli/__init__.py", "_root"),
+        ("entrypoints/cli/_root_cli.py", "root_command"),
         ("entrypoints/cli/_common.py", "activate_subcommand_output_language"),
         ("entrypoints/cli/_config/_custody.py", "_pin_render_language_to_target_bucket"),
     },
