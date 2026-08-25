@@ -5,45 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:79fa0e2fafd471d558a91e6e5f80d86c9d11a24cf099578a69de29124ac0f149'
+body_hash: 'sha256:908557606f044a0db5047931c1fdc7568f265750fd1c1801eb0461528c38045f'
 step_id: 'S125'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S125 and 2026-08-11-tui-architecture-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Define strict Workspace V1 version headers, visible and exact target admission, inspection and graded result arms, projection, bounded facets, schema and provenance records, capability and refusal families, locale summary, and safe read baseline without mutation authority and ## Scope
-
-- `src/cadrumo/application/modelo/_workspace_models.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Define strict Workspace V1 version headers, visible and exact target admission, inspection and graded result arms, projection, bounded facets, schema and provenance records, capability and refusal families, locale summary, and safe read baseline without mutation authority
 
 ## Scope
@@ -52,10 +18,19 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Grounded the Workspace V1 boundary in the approved plan, workspace and registry ADRs, audit corpus, and semantic code census before declaring its model family.
+- Reused canonical `ModeloVisibleFilingTarget`, `ModeloExactWorkUnitTarget`, `ModeloWorkReview`, core identity and authority values, registry identifiers, filing scalar, locale, lineage, and operator-action reference rather than redeclaring equivalent concepts.
+- Defined strict frozen V1 request, admission, projection, bounded facet, schema, provenance, capability, refusal, locale, and baseline records in the owning `application.modelo` module.
+- Separated static inspection from graded snapshots, prohibited static materialization and review disclosure, and required the closed producer-declared capability denominator on successful projections.
+- Added focused contract tests for canonical target wire adaptation, strict/frozen request behavior, discriminated version refusal handling, and unavailable bounded facets.
+- Ran focused static and integration gates and checked whitespace errors for owned paths.
 
 ## Outcome
 
+Implementation is review-ready. The S125 checkbox remains open pending independent review. The public application facade and executable workspace service are deferred to their separately owned plan steps; this step adds neither a shim nor a cross-owner private import.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+Semantic RAG returned an incomplete code index warning for absent-result searches, so exact source census was used alongside positive semantic findings. The adjudicated existing owners were `ModeloWorkReview` for the review facet, `_work_addressing` for request targets, core for identity/authority/locale/provenance primitives, `domain.calculations.registry` for registry identifiers, `domain.filing` for materialized scalar values, and `application.operator_actions` for recovery references. No duplicate Workspace V1 model family was found in production `application.modelo` sources.
+
+Focused evidence: `uv run ruff check` passed; `uv run ty check` passed; `uv run pytest -q -o addopts='' -m integration src/cadrumo/application/modelo/tests/test_workspace_models.py` passed with 3 tests; `git diff --check` passed for owned paths.
