@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:2396d6ec2c0f6e47374a66991dd4e8d23d0c7e26853b4f5255c531f111c364fa'
+body_hash: 'sha256:0b8e6ff3d29d320cf76d7042b108feede9107b45fad4b01f780bf6ff5e16a1a7'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -27,7 +27,7 @@ Start the recursive type walk from the concrete public `RegistrySnapshot` class,
 
 Use `model_fields` and resolved annotations. Unwrap `Annotated`; visit `BaseModel` subclasses; visit all arms of `Union` and `Optional`; record each discriminated-union arm by its discriminator literal; descend tuple/list/set/frozenset/sequence element types and mapping value types; treat `Literal`, scalar aliases, enums, date/decimal/str/bool, and opaque typed IDs as leaves. A path must encode model-field segments plus stable union-arm discriminator coordinates, not Python private module names, display labels, collection indexes, or data values. Sort paths lexicographically before digesting and keep a visited `(model class, canonical path)` guard so reused models are represented at each reachable public path while recursive structures terminate.
 
-`DataBindingDefinition.selector` is the non-negotiable annotation hole: it is declared as `BaseModel`. Add the canonical registry selector-table accessor as a second derived root and walk every registered concrete selector model. The existing loader-fingerprint test proves that annotations alone miss selector-only types, including IVA category vocabulary. The S127 fixed-point test must carry the same anti-vacuity property: removing the selector-table roots yields a strictly smaller universe, and no concrete registered selector branch is absent from the manifest. Do not create a Workspace-owned selector table or duplicate registry dispatch grammar.
+`DataBindingDefinition.selector` is the non-negotiable annotation hole: it is declared as `BaseModel`. Add the public registry-facade `selector_model_for_source` accessor, iterated over the canonical `BindingSourceKind` taxonomy, as a second derived root and walk every registered concrete selector model. The existing loader-fingerprint test proves that annotations alone miss selector-only types, including IVA category vocabulary. The S127 fixed-point test must carry the same anti-vacuity property: removing the selector-table roots yields a strictly smaller universe, and no concrete registered selector branch is absent from the manifest. Do not create a Workspace-owned selector table or duplicate registry dispatch grammar.
 
 Do not treat Pydantic JSON Schema output as the denominator: `$ref` naming and schema generation ordering are implementation details and JSON Schema cannot close the selector hole. The denominator is the ordered typed traversal; a digest may use canonical primitive records containing only stable public type labels, canonical field paths, discriminator coordinates, and classification metadata.
 
@@ -61,4 +61,5 @@ No compatibility alias, re-export bridge, fallback traversal, duplicate enum, pa
 
 ### Current blockers and next actions
 
-There is no design blocker to implement S127. The operational prerequisite is only that the implementer first scaffold the missing S127 Step Record, then use the public facade and the canonical selector-table accessor identified above. Before implementation, identify the exact accessor name from the live registry facade rather than copying a private table; if it is not publicly exposed, promote a narrow public accessor at its owning registry package in the same atomic change, with every consumer updated and no bridge. S127 must retain the production boundary even if a test helper can see private schema modules.
+There is no design blocker to implement S127. The operational prerequisite is only that the implementer first scaffold the missing S127 Step Record, then use the public registry facade, `RegistrySnapshot`, and its exported `selector_model_for_source` accessor iterated over `BindingSourceKind`. S127 must retain that production boundary even if a test helper can see private schema modules.
+
