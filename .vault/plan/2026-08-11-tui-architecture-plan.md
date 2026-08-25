@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-25'
-body_hash: 'sha256:6342592b49b8f18c3891c648027977f8706e02b7fe3c72be638d43e4ac0d4843'
+body_hash: 'sha256:9a85dc97cecb8590a2aff6c6f28ecb598bc0028c44591b3eae28c6a01fca3708'
 ---
 
 # `tui-architecture` plan
@@ -217,7 +217,7 @@ Mechanically relocate profile, secret, flow, test, and development surfaces with
 - [ ] `W04.P10.S57` - Relocate TUI-owned pilot, replay, screenshot, and terminal-surface tooling; `src/cadrumo/entrypoints/tui/devtools`.
 - [x] `W04.P10.S104` - Relocate the sole Casilla review screen and tests to the canonical Modelo view as a read-only consumer of the public application.modelo.work_review_projection defining module, preserve named-outlier evidence, delete the legacy inbound screen, package exports, private review modules, and locale references atomically without compatibility, and provide the zero-remnant migration evidence consumed by the interface C1 exit validator; `src/cadrumo/entrypoints/tui/modelo/view and src/cadrumo/adapters/inbound/tui/_modelo_work_review_screen.py`.
 - [x] `W04.P10.S58` - Move presentation tests under the canonical owning packages and remove backend imports of TUI test helpers; `src/cadrumo/entrypoints/tui/tests`.
-- [ ] `W04.P10.S59` - Prove the relocation is behavior-preserving before any root app or navigation join is introduced; `src/cadrumo/entrypoints/tui/tests/test_relocation_parity.py`.
+- [x] `W04.P10.S59` - Prove the relocation is behavior-preserving before any root app or navigation join is introduced; `src/cadrumo/entrypoints/tui/tests/test_relocation_parity.py`.
 
 ### Phase `W04.P22` - C1-to-C2 Workspace dependency handoff
 

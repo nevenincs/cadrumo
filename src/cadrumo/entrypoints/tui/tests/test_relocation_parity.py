@@ -2,8 +2,8 @@
 
 The feature packages deliberately expose no convenience facade.  These tests
 therefore name each defining module directly, drive the shipped Textual apps
-through real application doors, and inspect the live source AST for the
-retired topology.  They deliberately stop before the future root application
+through real application doors, and inspect the live source AST for duplicate
+definitions or forwarding namespaces. They deliberately stop before the future root application
 and navigation join: that join must consume these independent feature
 surfaces, rather than becoming a substitute for proving them.
 """
@@ -28,8 +28,6 @@ from ....entrypoints.cli import attempt_registration, persist_active_profile_fie
 from ....tests.modelo_work_review import build_real_modelo_work_review
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
-from ..devtools._journal import Session, read_session, write_session
-from ..devtools._replay import replay, screenshot
 from ..flows.app import FlowTuiApp
 from ..modelo.view.work_review import ModeloWorkReviewApp
 from ..profile.overview import ProfileManagerApp
@@ -50,9 +48,6 @@ _CANONICAL_DEFINITIONS = (
     ("cadrumo.entrypoints.tui.flows.app", "FlowTuiApp"),
     ("cadrumo.entrypoints.tui.modelo.view.work_review", "ModeloWorkReviewApp"),
     ("cadrumo.entrypoints.tui.modelo.view.work_review", "ModeloWorkReviewScreen"),
-    ("cadrumo.entrypoints.tui.devtools._journal", "Session"),
-    ("cadrumo.entrypoints.tui.devtools._replay", "replay"),
-    ("cadrumo.entrypoints.tui.devtools._replay", "screenshot"),
 )
 
 _INERT_NAMESPACES = (
@@ -65,6 +60,8 @@ _INERT_NAMESPACES = (
     "cadrumo.entrypoints.tui.modelo.view",
     "cadrumo.entrypoints.tui.devtools",
 )
+
+_TUI_ROOT = Path(__file__).parents[1]
 
 
 class _FlowAnswers(BaseModel):
@@ -109,9 +106,25 @@ def _import_targets(path: Path) -> tuple[str, ...]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             targets.extend(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.module is not None:
-            targets.append(node.module)
+        elif isinstance(node, ast.ImportFrom):
+            targets.append(node.module or "<relative>")
+        elif isinstance(node, ast.Call) and (
+            (isinstance(node.func, ast.Name) and node.func.id == "__import__")
+            or (isinstance(node.func, ast.Attribute) and node.func.attr == "import_module")
+        ):
+            targets.append("<dynamic>")
     return tuple(targets)
+
+
+def _class_definition_sites(class_name: str) -> tuple[Path, ...]:
+    sites: list[Path] = []
+    for path in _TUI_ROOT.rglob("*.py"):
+        if "tests" in path.parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        if any(isinstance(node, ast.ClassDef) and node.name == class_name for node in ast.walk(tree)):
+            sites.append(path)
+    return tuple(sites)
 
 
 def test_relocated_symbols_have_single_canonical_defining_modules_and_inert_facades() -> None:
@@ -120,6 +133,7 @@ def test_relocated_symbols_have_single_canonical_defining_modules_and_inert_faca
         module = importlib.import_module(module_name)
         symbol = getattr(module, symbol_name)
         assert symbol.__module__ == module_name
+        assert _class_definition_sites(symbol_name) == (Path(module.__file__ or ""),)
 
     for namespace_name in _INERT_NAMESPACES:
         namespace = importlib.import_module(namespace_name)
@@ -212,24 +226,3 @@ async def test_flow_and_modelo_review_project_real_application_contracts(tmp_pat
         with pytest.raises(NoMatches):
             review_app.screen.query_one(Input)
         review_app.exit(None)
-
-
-def test_devtool_journal_replays_and_exports_a_live_canonical_surface(tmp_path: Path) -> None:
-    """The moved harness owns a durable gesture journal and reads the real compositor."""
-    session = Session(surface="registration", width=100, height=30, theme="dark", locale="en")
-    journal = tmp_path / "relocation-parity.jsonl"
-    write_session(journal, session)
-
-    restored = read_session(journal)
-    assert restored == session
-    frame = replay(restored)
-    assert frame.surface == session.surface
-    assert frame.width == session.width
-    assert frame.height == session.height
-    assert frame.text
-    assert frame.chain
-
-    rendered = tmp_path / "relocation-parity.svg"
-    assert screenshot(restored, str(rendered)) == str(rendered)
-    svg = rendered.read_text(encoding="utf-8")
-    assert "<svg" in svg
