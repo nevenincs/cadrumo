@@ -78,9 +78,8 @@ def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_own
         )
     with pytest.raises(AggregationValidationError):
         validate_calculation_route_resolver_ownership(CALCULATION_ROUTE_RESOLVER_OWNERSHIP[:-1])
-    invented = CalculationRouteManualOwnership(
-        stage="manual",
-        resolver_type=None,
+    invented = replace(
+        CALCULATION_ROUTE_RESOLVER_OWNERSHIP[-1],
         resolver_id="invented-deferred-owner",
         owned_sources=(BindingSourceKind.RELATED_PARTY_OPERATION,),
     )

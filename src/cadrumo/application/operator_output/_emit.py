@@ -4,7 +4,7 @@
 :mod:`core.json_contract` itself that may call
 :func:`~cadrumo.core.json_contract.emit_json_success` directly for an
 operator-facing command result. Every JSON-emitting command surface —
-the CLI transport's :func:`~cadrumo.entrypoints.cli._common._emit_envelope`
+the CLI transport's :func:`~cadrumo.entrypoints.cli._common.emit_envelope`
 and the setup wizard's success/save-exit emitters — routes through this
 function so the sandbox-active indicator cannot be dropped by a caller that
 forgets to ask for it: there is no other way to reach

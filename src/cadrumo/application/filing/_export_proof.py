@@ -9,6 +9,7 @@ from enum import StrEnum
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Annotated, Literal, Protocol, runtime_checkable
+from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -118,27 +119,43 @@ class FilingExportDictionaryValue(BaseModel):
 
 
 class FilingExportConformanceRequest(BaseModel):
-    """Explicitly non-sensitive writer-mechanism vector.
+    """Public request carrying no filing values or producer identity."""
 
-    The draft and producer snapshot are declarative boundary values only.  This
-    channel cannot claim that they are taxpayer truth or source-owned evidence.
-    """
+    model_config = STRICT_FROZEN_CONFIG
+
+    coordinate: FilingExportProofCoordinate
+
+
+class FilingExportConformanceVectorEvidence(BaseModel):
+    """Authority-resolved public mechanism-vector identity and provenance."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    authority_id: _Token
+    coordinate: FilingExportProofCoordinate
+    filing_year: int = Field(ge=2000, le=2099)
+    period: Period
+    mechanism_source_ref: _Token
+    mechanism_source_sha256: ContentDigest
+    provenance: FilingExportPublicProvenance
+
+
+class FilingExportConformanceRenderInputs(BaseModel):
+    """Transient render inputs materialised by the canonical vector builder."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     coordinate: FilingExportProofCoordinate
-    classification: Literal["non_sensitive_mechanism_vector"]
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
     draft: ModeloDraft
     producer_snapshot: FilingProducerSnapshot
-    provenance: FilingExportPublicProvenance
     dictionary_values: tuple[FilingExportDictionaryValue, ...] = ()
     prior_domiciliation_election: PriorDomiciliationElection | None = None
     product_software_identity: AeatProductSoftwareIdentity | None = None
 
     @model_validator(mode="after")
-    def _bind_vector_to_coordinate(self) -> FilingExportConformanceRequest:
+    def _bind_vector_to_coordinate(self) -> FilingExportConformanceRenderInputs:
         _require_export_inputs_match(
             self.coordinate,
             self.draft,
@@ -176,10 +193,33 @@ class FilingExportConformanceReceipt(BaseModel):
 class FilingExportConformanceAuthority(Protocol):
     """Official-layout authority that adjudicates one non-sensitive render."""
 
+    @property
+    def authority_id(self) -> str:
+        """Return the stable canonical conformance authority identity."""
+
+    def resolve_conformance_vector(
+        self,
+        request: FilingExportConformanceRequest,
+    ) -> FilingExportConformanceVectorEvidence | None:
+        """Resolve a repository-owned mechanism vector without caller values."""
+
+    def schema_provider_for_conformance(
+        self,
+        evidence: FilingExportConformanceVectorEvidence,
+    ) -> RegistrySchemaAccessor:
+        """Return the law-selection provider for the resolved vector."""
+
+    def materialize_conformance_inputs(
+        self,
+        evidence: FilingExportConformanceVectorEvidence,
+    ) -> FilingExportConformanceRenderInputs:
+        """Build transient writer inputs from the authority-owned public vector."""
+
     def verify_conformance(
         self,
         *,
         request: FilingExportConformanceRequest,
+        evidence: FilingExportConformanceVectorEvidence,
         export_result: DeclaracionExportResult,
         payload: bytes,
     ) -> FilingExportConformanceReceipt:
@@ -231,11 +271,21 @@ class FilingExportSecureReplayEvidence(BaseModel):
 class FilingExportSecureReplaySourceAuthority(Protocol):
     """Resolve approved draft inputs only from the source-owned workflow."""
 
+    @property
+    def authority_id(self) -> str:
+        """Return the stable source-owned calculation authority identity."""
+
     def resolve_secure_replay(
         self,
         request: FilingExportSecureReplayRequest,
     ) -> FilingExportSecureReplayEvidence:
         """Return the exact approved calculation revision and filing inputs."""
+
+    def schema_provider_for_secure_replay(
+        self,
+        evidence: FilingExportSecureReplayEvidence,
+    ) -> RegistrySchemaAccessor:
+        """Return the law-selection provider for the resolved source evidence."""
 
 
 class FilingExportSecureCustodyRecord(BaseModel):
@@ -243,6 +293,7 @@ class FilingExportSecureCustodyRecord(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
+    receipt_id: UUID
     coordinate: FilingExportProofCoordinate
     source_authority_id: _Token
     custody_authority_id: _Token
@@ -273,6 +324,10 @@ class FilingExportSecureCustodyRecord(BaseModel):
 @runtime_checkable
 class FilingExportSecureReplayCustody(Protocol):
     """Persist replay acceptance only in encrypted operator custody."""
+
+    @property
+    def authority_id(self) -> str:
+        """Return the stable encrypted operator-custody authority identity."""
 
     def persist_secure_replay(
         self,
@@ -400,15 +455,32 @@ def prove_export_conformance(
     request: FilingExportConformanceRequest,
     *,
     authority: FilingExportConformanceAuthority,
-    schema_provider: RegistrySchemaAccessor,
 ) -> FilingExportConformanceReceipt:
-    """Run a non-sensitive vector through the sole canonical export writer."""
+    """Resolve and run a non-sensitive vector through the canonical writer."""
+    evidence = authority.resolve_conformance_vector(request)
+    if evidence is None:
+        raise ValueError("conformance authority has no mechanism vector for the requested coordinate")
+    if evidence.coordinate != request.coordinate or evidence.authority_id != authority.authority_id:
+        raise ValueError("conformance authority returned evidence for another request")
+    schema_provider = authority.schema_provider_for_conformance(evidence)
+    render_inputs = authority.materialize_conformance_inputs(evidence)
+    if (
+        render_inputs.coordinate != evidence.coordinate
+        or render_inputs.filing_year != evidence.filing_year
+        or render_inputs.period != evidence.period
+    ):
+        raise ValueError("conformance vector builder returned inputs for another coordinate")
     with TemporaryDirectory(prefix="cadrumo-export-conformance-") as temporary:
         output_path = Path(temporary) / "proof-output"
-        result = _export(request, output_path=output_path, schema_provider=schema_provider)
+        result = _export(render_inputs, output_path=output_path, schema_provider=schema_provider)
         payload = output_path.read_bytes()
-        receipt = authority.verify_conformance(request=request, export_result=result, payload=payload)
-        _require_conformance_receipt(request, result, receipt)
+        receipt = authority.verify_conformance(
+            request=request,
+            evidence=evidence,
+            export_result=result,
+            payload=payload,
+        )
+        _require_conformance_receipt(request, evidence, result, receipt, authority_id=authority.authority_id)
     return receipt
 
 
@@ -417,11 +489,15 @@ def prove_secure_export_replay(
     *,
     source_authority: FilingExportSecureReplaySourceAuthority,
     custody: FilingExportSecureReplayCustody,
-    schema_provider: RegistrySchemaAccessor,
 ) -> FilingExportSecureReplayReceipt:
     """Resolve source-owned inputs, export, seal evidence, then publish no secrets."""
+    if request.source_authority_id != source_authority.authority_id:
+        raise ValueError("secure replay request names another source authority")
+    if request.custody_authority_id != custody.authority_id:
+        raise ValueError("secure replay request names another custody authority")
     evidence = source_authority.resolve_secure_replay(request)
     _require_source_evidence(request, evidence)
+    schema_provider = source_authority.schema_provider_for_secure_replay(evidence)
     consumer = _SecureReplayConsumer(request=request, evidence=evidence, custody=custody)
     result = _export_to_consumer(evidence, payload_consumer=consumer, schema_provider=schema_provider)
     record = consumer.record
@@ -464,7 +540,7 @@ class _SecureReplayConsumer:
 
 
 def _export(
-    proof_input: FilingExportConformanceRequest | FilingExportSecureReplayEvidence,
+    proof_input: FilingExportConformanceRenderInputs | FilingExportSecureReplayEvidence,
     *,
     output_path: Path,
     schema_provider: RegistrySchemaAccessor,
@@ -533,12 +609,19 @@ def _require_unique_dictionary_fields(values: tuple[FilingExportDictionaryValue,
 
 def _require_conformance_receipt(
     request: FilingExportConformanceRequest,
+    evidence: FilingExportConformanceVectorEvidence,
     result: DeclaracionExportResult,
     receipt: FilingExportConformanceReceipt,
+    *,
+    authority_id: str,
 ) -> None:
-    if receipt.coordinate != request.coordinate or receipt.provenance != request.provenance:
+    if (
+        receipt.coordinate != request.coordinate
+        or receipt.provenance != evidence.provenance
+        or receipt.authority_id != authority_id
+    ):
         raise ValueError("conformance authority receipt conflicts with the requested official identity")
-    if result.modelo != request.coordinate.modelo or result.period != request.period:
+    if result.modelo != request.coordinate.modelo or result.period != evidence.period:
         raise ValueError("canonical export receipt conflicts with the conformance coordinate")
     if receipt.emitted_bytes != result.byte_size:
         raise ValueError("conformance extent must match the canonical export receipt")
@@ -585,7 +668,9 @@ def _require_custody_record(
 __all__ = [
     "FilingExportConformanceAuthority",
     "FilingExportConformanceReceipt",
+    "FilingExportConformanceRenderInputs",
     "FilingExportConformanceRequest",
+    "FilingExportConformanceVectorEvidence",
     "FilingExportDictionaryValue",
     "FilingExportGeneratedOutput",
     "FilingExportOfficialProbe",

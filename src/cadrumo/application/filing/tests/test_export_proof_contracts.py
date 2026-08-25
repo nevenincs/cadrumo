@@ -11,6 +11,8 @@ from ....core import sha256_hex
 from ....core.time import now
 from ....domain.filing import FilingExportValidationError
 from .. import (
+    FilingExportConformanceRequest,
+    FilingExportConformanceVectorEvidence,
     FilingExportConsumedResult,
     FilingExportGeneratedOutput,
     FilingExportOfficialProbe,
@@ -118,6 +120,24 @@ def test_secure_request_cannot_carry_caller_supplied_secret_inputs() -> None:
         FilingExportSecureReplayRequest.model_validate(
             {**request.model_dump(), "draft": _approved_modelo_111_registry_draft()},
         )
+
+
+def test_conformance_request_cannot_carry_caller_supplied_filing_inputs() -> None:
+    request = FilingExportConformanceRequest(coordinate=_coordinate())
+
+    assert "draft" not in type(request).model_fields
+    assert "producer_snapshot" not in type(request).model_fields
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        FilingExportConformanceRequest.model_validate(
+            {**request.model_dump(), "draft": _approved_modelo_111_registry_draft()},
+        )
+    assert not {
+        "draft",
+        "producer_snapshot",
+        "dictionary_values",
+        "prior_domiciliation_election",
+        "product_software_identity",
+    }.intersection(FilingExportConformanceVectorEvidence.model_fields)
 
 
 def test_public_replay_receipt_excludes_secret_payload_facts() -> None:

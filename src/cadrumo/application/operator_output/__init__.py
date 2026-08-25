@@ -2,7 +2,7 @@
 
 The CLI's ``--json`` transport (:mod:`entrypoints.cli._common`) sits ABOVE the
 setup wizard (:mod:`application.wizard`) in the accepted hexagonal direction,
-so the wizard cannot import :func:`entrypoints.cli._common._emit_envelope`.
+so the wizard cannot import :func:`entrypoints.cli._common.emit_envelope`.
 Both surfaces nonetheless owe the operator the same guarantee: a persistent
 sandbox-active :class:`~cadrumo.core.json_contract.Notice` on every command
 result while the active profile bucket is a discardable sandbox, in both JSON
@@ -16,7 +16,7 @@ command result; :func:`sandbox_notice_for_active_bucket` and
 render lines directly rather than through the JSON envelope.
 
 See Also:
-    :func:`~cadrumo.entrypoints.cli._common._emit_envelope`
+    :func:`~cadrumo.entrypoints.cli._common.emit_envelope`
         CLI transport funnel; delegates its JSON branch here and reuses
         :func:`sandbox_notice_for_active_bucket` for its text-mode banner.
     :mod:`application.wizard._commands`

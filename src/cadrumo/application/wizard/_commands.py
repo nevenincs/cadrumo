@@ -1707,7 +1707,7 @@ def _emit_wizard_success(
         ccaa_message=ccaa_message,
     )
     # Populate the envelope-spine active_profile identity anchor. The wizard
-    # sits below the CLI transport's _emit_envelope funnel (it cannot import
+    # sits below the CLI transport's emit_envelope funnel (it cannot import
     # it — layering), so it must resolve the label itself. On create the
     # newly-created profile IS the active one, so its name is the label; on
     # edit the active profile is not necessarily the edited one, so the

@@ -7,7 +7,7 @@ Defines the strict pydantic v2 bases (:class:`OutputSchema`,
 the emit helpers (:func:`emit_json_document`, :func:`emit_json_success`)
 used by every authored machine-output path. CLI payload modules import
 these primitives directly from this module and route JSON mode through
-:func:`entrypoints.cli._common._emit_envelope`.
+:func:`entrypoints.cli._common.emit_envelope`.
 
 :func:`emit_json_success` derives :class:`EnvelopeStatus` from supplied
 :class:`Notice` values via :func:`derive_status` and applies
@@ -240,7 +240,7 @@ class Notice(BaseModel):
     ``ModeloFinding``, source-resolution advisories) are projected into
     this shape rather than re-modelled as bespoke per-command payload
     fields.  CLI helpers such as
-    :func:`entrypoints.cli._common._emit_envelope` pass these values
+    :func:`entrypoints.cli._common.emit_envelope` pass these values
     to :func:`emit_json_success`, while text renderers fold equivalent
     prose into their line output.
 

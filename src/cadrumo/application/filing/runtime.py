@@ -525,8 +525,15 @@ def _build_runtime_schema_provider_cached(
                 period=period,
             )
         except (RegistrySnapshotError, RegistryValidationError) as exc:
-            if selected_tuple is None and _is_below_filing_authority(exc):
-                continue
+            if _is_below_filing_authority(exc):
+                if selected_tuple is None:
+                    continue
+                # The caller NAMED this modelo, so silently dropping it and then
+                # reporting an empty registry describes the wrong problem: the
+                # registry holds the modelo, it just declares a lower rung than
+                # a filing draft needs. Propagating the registry's own refusal
+                # keeps the modelo, its revision and both grades in the message.
+                raise
             if filing_year is None or period is None:
                 raise _registry_snapshot_unavailable_error(
                     modelo=modelo,
