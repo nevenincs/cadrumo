@@ -1088,7 +1088,10 @@ def write_current_dispositions(
     candidates = current_census(root=root)
     rows = current_tree_dispositions(candidates)
     exclusions = load_authored_message_exclusions(path)
-    path.write_text(render_dispositions(rows, authored_message_exclusions=exclusions), encoding=_UTF_8, newline="\n")
+    path.write_text(
+        render_dispositions(rows, authored_message_exclusions=exclusions),
+        encoding=_UTF_8,
+    )
     return rows
 
 

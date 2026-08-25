@@ -192,7 +192,8 @@ def run_mcpb_smoke(
     poison = run_root / "poison-ambient-editable"
     (poison / "cadrumo_harness").mkdir(parents=True)
     (poison / "cadrumo_harness" / "__init__.py").write_text(
-        "raise RuntimeError('ambient editable Cadrumo harness was imported')\n", encoding=_UTF_8, newline="\n"
+        "raise RuntimeError('ambient editable Cadrumo harness was imported')\n",
+        encoding=_UTF_8,
     )
     environment["PYTHONPATH"] = str(poison)
     environment["UV_CACHE_DIR"] = str(run_root / "empty-uv-cache")

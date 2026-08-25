@@ -160,12 +160,12 @@ class TestRuntimeFacade:
 
     def test_bucket_wrappers_fail_closed_for_inactive_runtime_bucket(self, tmp_path: Path) -> None:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        with pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"):
+            with pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"):
                 set_usage_ratio(
                     bucket_id=_OTHER_BUCKET_ID,
                     category=SpendingCategory.TELEFONIA_MOVIL,
                     ratio=Decimal("0.42"),
                 )
 
-            with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
+            with pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"):
                 validate_ratios_for_bucket(bucket_id=_OTHER_BUCKET_ID)

@@ -453,7 +453,6 @@ def _run_child(
                 }
             ),
             encoding="utf-8",
-            newline="\n",
         )
         request_path.chmod(0o600)
         env_extra = {
@@ -692,7 +691,7 @@ def _child_main(payload: Mapping[str, Any]) -> int:
             "exit_code": exit_code,
             "failure_kind": "child-exception" if child_exception else "none",
         }
-        result_path.write_text(json.dumps(observation, sort_keys=True), encoding="utf-8", newline="\n")
+        result_path.write_text(json.dumps(observation, sort_keys=True), encoding="utf-8")
     return exit_code
 
 
@@ -744,7 +743,7 @@ def _run_instrumentation_probe(storage_root: Path) -> None:
     ProbeModel(value=1)
     ProbeModel.model_validate({"value": 2})
     aliased_storage_call("probe", context="cli_performance")
-    AliasedPath(storage_root / "aliased-pathlib.txt").write_text("probe", encoding="utf-8", newline="\n")
+    AliasedPath(storage_root / "aliased-pathlib.txt").write_text("probe", encoding="utf-8")
     descriptor = aliased_open(storage_root / "aliased-native.bin", os.O_CREAT | os.O_WRONLY, 0o600)
     aliased_close(descriptor)
 

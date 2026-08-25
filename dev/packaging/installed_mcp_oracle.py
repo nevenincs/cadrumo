@@ -568,7 +568,8 @@ def run_installed_mcp_oracle(
         raise InstalledMcpOracleError("local machine-secret profile provisioning failed")
     secret_file = resolved_work_dir / ".cadrumo-mcp-profile-secret.json"
     secret_file.write_text(
-        json.dumps({"profile_passphrase": passphrase}, separators=(",", ":")), encoding=_UTF_8, newline="\n"
+        json.dumps({"profile_passphrase": passphrase}, separators=(",", ":")),
+        encoding=_UTF_8,
     )
     secret_file.chmod(0o600)
     effective_server_args = (*effective_server_args, "--profile-secrets-file", str(secret_file))

@@ -129,7 +129,7 @@ def write_generated_casilla_export_refs(
             lines.insert(anchor + 1, _render(expected) + ending)
             changed = True
         if changed:
-            path.write_text("".join(lines), encoding="utf-8", newline="\n")
+            path.write_text("".join(lines), encoding="utf-8")
             written.append(path)
 
     missing = sorted(set(export_refs_by_casilla) - seen)

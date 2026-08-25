@@ -596,7 +596,7 @@ def trace_regime(regime: str) -> frozenset[str]:
         area = Path(workspace)
         output = area / "executed.json"
         script = area / "trace.py"
-        script.write_text(_trace_script(regime), encoding="utf-8", newline="\n")
+        script.write_text(_trace_script(regime), encoding="utf-8")
         environment = None
         if regime == "cold":
             import os
