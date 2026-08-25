@@ -183,36 +183,6 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
-                  "value": "121"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "121",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 121 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
                   "value": "122"
                 }
               ]
@@ -400,69 +370,9 @@
             "code": "overview.coverage.incomplete",
             "context": {
               "modelo": "136",
-              "reason": "applicability_undetermined"
+              "reason": "applicable_window_missing"
             },
             "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "140"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "140",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 140 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "143"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "143",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 143 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -523,36 +433,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "179"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "179",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 179 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -673,36 +553,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "186"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "186",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 186 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -903,36 +753,6 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
-                  "value": "210"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "210",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 210 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
                   "value": "216"
                 }
               ]
@@ -1023,156 +843,6 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
-                  "value": "231"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "231",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 231 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "232"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "232",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 232 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "233"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "233",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 233 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "234"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "234",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 234 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "238"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "238",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 238 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
                   "value": "270"
                 }
               ]
@@ -1213,36 +883,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "289"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "289",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 289 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -1570,39 +1210,9 @@
             "code": "overview.coverage.incomplete",
             "context": {
               "modelo": "360",
-              "reason": "applicability_undetermined"
+              "reason": "applicable_window_missing"
             },
             "message": "The filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "361"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "361",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 361 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -1633,66 +1243,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "379"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "379",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 379 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "380"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "380",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 380 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -1783,36 +1333,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "592"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "592",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 592 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -1934,36 +1454,6 @@
             },
             "message": "The filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "848"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "848",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 848 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
           }
         ],
         "result": {
@@ -1997,10 +1487,6 @@
                 "reason": "applicability_undetermined"
               },
               {
-                "modelo": "121",
-                "reason": "applicability_undetermined"
-              },
-              {
                 "modelo": "122",
                 "reason": "applicability_undetermined"
               },
@@ -2026,15 +1512,7 @@
               },
               {
                 "modelo": "136",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "140",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "143",
-                "reason": "applicability_undetermined"
+                "reason": "applicable_window_missing"
               },
               {
                 "modelo": "156",
@@ -2042,10 +1520,6 @@
               },
               {
                 "modelo": "165",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "179",
                 "reason": "applicability_undetermined"
               },
               {
@@ -2062,10 +1536,6 @@
               },
               {
                 "modelo": "185",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "186",
                 "reason": "applicability_undetermined"
               },
               {
@@ -2093,10 +1563,6 @@
                 "reason": "applicability_undetermined"
               },
               {
-                "modelo": "210",
-                "reason": "applicability_undetermined"
-              },
-              {
                 "modelo": "216",
                 "reason": "applicability_undetermined"
               },
@@ -2109,35 +1575,11 @@
                 "reason": "applicability_undetermined"
               },
               {
-                "modelo": "231",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "232",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "233",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "234",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "238",
-                "reason": "applicability_undetermined"
-              },
-              {
                 "modelo": "270",
                 "reason": "applicability_undetermined"
               },
               {
                 "modelo": "280",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "289",
                 "reason": "applicability_undetermined"
               },
               {
@@ -2182,22 +1624,10 @@
               },
               {
                 "modelo": "360",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "361",
-                "reason": "applicability_undetermined"
+                "reason": "applicable_window_missing"
               },
               {
                 "modelo": "369",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "379",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "380",
                 "reason": "applicability_undetermined"
               },
               {
@@ -2210,10 +1640,6 @@
               },
               {
                 "modelo": "576",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "592",
                 "reason": "applicability_undetermined"
               },
               {
@@ -2231,22 +1657,23 @@
               {
                 "modelo": "763",
                 "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "848",
-                "reason": "applicability_undetermined"
               }
             ],
             "confidently_excluded": [
               "184",
               "200",
-              "202"
+              "202",
+              "210",
+              "232"
             ],
             "out_of_scope": [
               "030",
               "035",
               "036",
               "043",
+              "121",
+              "140",
+              "143",
               "145",
               "149",
               "150",
@@ -2256,23 +1683,32 @@
               "171",
               "172",
               "173",
+              "186",
               "192",
               "196",
               "198",
               "218",
               "221",
+              "231",
+              "233",
+              "234",
               "235",
               "236",
+              "238",
               "240",
               "241",
               "242",
+              "289",
               "290",
               "291",
               "294",
               "295",
+              "361",
               "362",
               "363",
               "368",
+              "379",
+              "380",
               "430",
               "480",
               "510",
@@ -2312,6 +1748,7 @@
               "589",
               "590",
               "591",
+              "592",
               "593",
               "595",
               "596",
@@ -2322,6 +1759,7 @@
               "797",
               "798",
               "840",
+              "848",
               "993"
             ],
             "surfaced": []
@@ -2530,36 +1968,6 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
-                  "value": "121"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "121",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 121 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
                   "value": "122"
                 }
               ]
@@ -2747,69 +2155,9 @@
             "code": "overview.coverage.incomplete",
             "context": {
               "modelo": "136",
-              "reason": "applicability_undetermined"
+              "reason": "applicable_window_missing"
             },
             "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "140"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "140",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 140 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "143"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "143",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 143 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -2870,36 +2218,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "179"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "179",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 179 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -3020,36 +2338,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "186"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "186",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 186 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -3250,36 +2538,6 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
-                  "value": "210"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "210",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 210 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
                   "value": "216"
                 }
               ]
@@ -3370,156 +2628,6 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
-                  "value": "231"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "231",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 231 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "232"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "232",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 232 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "233"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "233",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 233 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "234"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "234",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 234 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "238"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "238",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 238 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
                   "value": "270"
                 }
               ]
@@ -3560,36 +2668,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "289"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "289",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 289 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -3917,39 +2995,9 @@
             "code": "overview.coverage.incomplete",
             "context": {
               "modelo": "360",
-              "reason": "applicability_undetermined"
+              "reason": "applicable_window_missing"
             },
             "message": "The filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "361"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "361",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 361 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -3980,66 +3028,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "379"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "379",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 379 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "380"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "380",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 380 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -4130,36 +3118,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "592"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "592",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 592 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -4281,36 +3239,6 @@
             },
             "message": "The filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "848"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "848",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 848 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
           }
         ],
         "result": {
@@ -4344,10 +3272,6 @@
                 "reason": "applicability_undetermined"
               },
               {
-                "modelo": "121",
-                "reason": "applicability_undetermined"
-              },
-              {
                 "modelo": "122",
                 "reason": "applicability_undetermined"
               },
@@ -4373,15 +3297,7 @@
               },
               {
                 "modelo": "136",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "140",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "143",
-                "reason": "applicability_undetermined"
+                "reason": "applicable_window_missing"
               },
               {
                 "modelo": "156",
@@ -4389,10 +3305,6 @@
               },
               {
                 "modelo": "165",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "179",
                 "reason": "applicability_undetermined"
               },
               {
@@ -4409,10 +3321,6 @@
               },
               {
                 "modelo": "185",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "186",
                 "reason": "applicability_undetermined"
               },
               {
@@ -4440,10 +3348,6 @@
                 "reason": "applicability_undetermined"
               },
               {
-                "modelo": "210",
-                "reason": "applicability_undetermined"
-              },
-              {
                 "modelo": "216",
                 "reason": "applicability_undetermined"
               },
@@ -4456,35 +3360,11 @@
                 "reason": "applicability_undetermined"
               },
               {
-                "modelo": "231",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "232",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "233",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "234",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "238",
-                "reason": "applicability_undetermined"
-              },
-              {
                 "modelo": "270",
                 "reason": "applicability_undetermined"
               },
               {
                 "modelo": "280",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "289",
                 "reason": "applicability_undetermined"
               },
               {
@@ -4529,22 +3409,10 @@
               },
               {
                 "modelo": "360",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "361",
-                "reason": "applicability_undetermined"
+                "reason": "applicable_window_missing"
               },
               {
                 "modelo": "369",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "379",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "380",
                 "reason": "applicability_undetermined"
               },
               {
@@ -4557,10 +3425,6 @@
               },
               {
                 "modelo": "576",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "592",
                 "reason": "applicability_undetermined"
               },
               {
@@ -4578,22 +3442,23 @@
               {
                 "modelo": "763",
                 "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "848",
-                "reason": "applicability_undetermined"
               }
             ],
             "confidently_excluded": [
               "184",
               "200",
-              "202"
+              "202",
+              "210",
+              "232"
             ],
             "out_of_scope": [
               "030",
               "035",
               "036",
               "043",
+              "121",
+              "140",
+              "143",
               "145",
               "149",
               "150",
@@ -4603,23 +3468,32 @@
               "171",
               "172",
               "173",
+              "186",
               "192",
               "196",
               "198",
               "218",
               "221",
+              "231",
+              "233",
+              "234",
               "235",
               "236",
+              "238",
               "240",
               "241",
               "242",
+              "289",
               "290",
               "291",
               "294",
               "295",
+              "361",
               "362",
               "363",
               "368",
+              "379",
+              "380",
               "430",
               "480",
               "510",
@@ -4659,6 +3533,7 @@
               "589",
               "590",
               "591",
+              "592",
               "593",
               "595",
               "596",
@@ -4669,6 +3544,7 @@
               "797",
               "798",
               "840",
+              "848",
               "993"
             ],
             "surfaced": []
@@ -4879,36 +3755,6 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
-                  "value": "121"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "121",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 121 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
                   "value": "122"
                 }
               ]
@@ -5096,69 +3942,9 @@
             "code": "overview.coverage.incomplete",
             "context": {
               "modelo": "136",
-              "reason": "applicability_undetermined"
+              "reason": "applicable_window_missing"
             },
             "message": "The filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "140"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "140",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 140 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "143"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "143",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 143 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -5219,36 +4005,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "179"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "179",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 179 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -5369,36 +4125,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "186"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "186",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 186 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -5599,36 +4325,6 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
-                  "value": "210"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "210",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 210 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
                   "value": "216"
                 }
               ]
@@ -5719,156 +4415,6 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
-                  "value": "231"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "231",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 231 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "232"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "232",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 232 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "233"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "233",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 233 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "234"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "234",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 234 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "238"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "238",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 238 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
                   "value": "270"
                 }
               ]
@@ -5909,36 +4455,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "289"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "289",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 289 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -6266,39 +4782,9 @@
             "code": "overview.coverage.incomplete",
             "context": {
               "modelo": "360",
-              "reason": "applicability_undetermined"
+              "reason": "applicable_window_missing"
             },
             "message": "The filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "361"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "361",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 361 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -6329,66 +4815,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "379"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "379",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 379 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "380"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "380",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 380 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -6479,36 +4905,6 @@
               "reason": "applicability_undetermined"
             },
             "message": "The filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "592"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "592",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 592 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
           },
           {
@@ -6630,36 +5026,6 @@
             },
             "message": "The filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
             "severity": "warning"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.overview.explain",
-                "cli_path": [
-                  "app",
-                  "overview",
-                  "explain"
-                ],
-                "target_command_key": "overview.explain"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "848"
-                }
-              ]
-            },
-            "code": "overview.coverage.incomplete",
-            "context": {
-              "modelo": "848",
-              "reason": "applicability_undetermined"
-            },
-            "message": "The filing obligation 848 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
-            "severity": "warning"
           }
         ],
         "result": {
@@ -6693,10 +5059,6 @@
                 "reason": "applicability_undetermined"
               },
               {
-                "modelo": "121",
-                "reason": "applicability_undetermined"
-              },
-              {
                 "modelo": "122",
                 "reason": "applicability_undetermined"
               },
@@ -6722,15 +5084,7 @@
               },
               {
                 "modelo": "136",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "140",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "143",
-                "reason": "applicability_undetermined"
+                "reason": "applicable_window_missing"
               },
               {
                 "modelo": "156",
@@ -6738,10 +5092,6 @@
               },
               {
                 "modelo": "165",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "179",
                 "reason": "applicability_undetermined"
               },
               {
@@ -6758,10 +5108,6 @@
               },
               {
                 "modelo": "185",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "186",
                 "reason": "applicability_undetermined"
               },
               {
@@ -6789,10 +5135,6 @@
                 "reason": "applicability_undetermined"
               },
               {
-                "modelo": "210",
-                "reason": "applicability_undetermined"
-              },
-              {
                 "modelo": "216",
                 "reason": "applicability_undetermined"
               },
@@ -6805,35 +5147,11 @@
                 "reason": "applicability_undetermined"
               },
               {
-                "modelo": "231",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "232",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "233",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "234",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "238",
-                "reason": "applicability_undetermined"
-              },
-              {
                 "modelo": "270",
                 "reason": "applicability_undetermined"
               },
               {
                 "modelo": "280",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "289",
                 "reason": "applicability_undetermined"
               },
               {
@@ -6878,22 +5196,10 @@
               },
               {
                 "modelo": "360",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "361",
-                "reason": "applicability_undetermined"
+                "reason": "applicable_window_missing"
               },
               {
                 "modelo": "369",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "379",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "380",
                 "reason": "applicability_undetermined"
               },
               {
@@ -6906,10 +5212,6 @@
               },
               {
                 "modelo": "576",
-                "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "592",
                 "reason": "applicability_undetermined"
               },
               {
@@ -6927,22 +5229,23 @@
               {
                 "modelo": "763",
                 "reason": "applicability_undetermined"
-              },
-              {
-                "modelo": "848",
-                "reason": "applicability_undetermined"
               }
             ],
             "confidently_excluded": [
               "184",
               "200",
-              "202"
+              "202",
+              "210",
+              "232"
             ],
             "out_of_scope": [
               "030",
               "035",
               "036",
               "043",
+              "121",
+              "140",
+              "143",
               "145",
               "149",
               "150",
@@ -6952,23 +5255,32 @@
               "171",
               "172",
               "173",
+              "186",
               "192",
               "196",
               "198",
               "218",
               "221",
+              "231",
+              "233",
+              "234",
               "235",
               "236",
+              "238",
               "240",
               "241",
               "242",
+              "289",
               "290",
               "291",
               "294",
               "295",
+              "361",
               "362",
               "363",
               "368",
+              "379",
+              "380",
               "430",
               "480",
               "510",
@@ -7008,6 +5320,7 @@
               "589",
               "590",
               "591",
+              "592",
               "593",
               "595",
               "596",
@@ -7018,6 +5331,7 @@
               "797",
               "798",
               "840",
+              "848",
               "993"
             ],
             "surfaced": []

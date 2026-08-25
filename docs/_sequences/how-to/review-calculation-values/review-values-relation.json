@@ -123,10 +123,61 @@
             "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
+              "binding_source": "inventory",
+              "reason": "source_domain_not_ready",
+              "resolver_id": "inventory",
+              "source_kind": "inventory"
+            },
+            "message": "inventory source missing_activity_ledgers: no complete 2025 inventory activity ledger is available",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_id": "renta-2025-inventory-activity-closing-increase-0177",
+              "binding_source": "inventory",
+              "casilla_id": "0177",
+              "reason": "unresolved_binding",
+              "source_kind": "inventory"
+            },
+            "message": "binding 'renta-2025-inventory-activity-closing-increase-0177' (casilla '0177') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_id": "renta-2025-inventory-activity-acquisition-cost-0181",
+              "binding_source": "inventory",
+              "casilla_id": "0181",
+              "reason": "unresolved_binding",
+              "source_kind": "inventory"
+            },
+            "message": "binding 'renta-2025-inventory-activity-acquisition-cost-0181' (casilla '0181') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "binding_id": "renta-2025-inventory-activity-closing-decrease-0182",
+              "binding_source": "inventory",
+              "casilla_id": "0182",
+              "reason": "unresolved_binding",
+              "source_kind": "inventory"
+            },
+            "message": "binding 'renta-2025-inventory-activity-closing-decrease-0182' (casilla '0182') declares present source <BindingSourceKind.INVENTORY: 'inventory'> whose resolver produced no value; the bound casilla would otherwise default to a silent zero. Supply the source records before filing.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
               "casilla_id": "0513",
               "legal_refs": "ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3",
               "reason": "source_issue",
-              "remedy": "Declare each descendant on the active profile, with its date of birth, before filing.",
+              "remedy": "Declare each descendant with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`, before filing.",
               "source_kind": "minimo_descendientes_undeclared"
             },
             "message": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero because the active profile declares no renta_family.descendiente facts. If you have children or other eligible descendants, the Art. 58 LIRPF allowance is being silently omitted",
@@ -168,7 +219,7 @@
             "renta-2025-profile-taxpayer-birth-date": "1985-06-15",
             "renta-2025-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "8a4112bbfd37052fbfdeea08a228d06dabe693beea27dc6f48c61211e38bf14a",
+          "calculation_revision_id": "6f0f5d78d44eba9be0ca19476f15d9f364aa2ba583024f88600c43950df5ffe3",
           "casilla_values": {
             "0001": "0",
             "0002": "0",
@@ -228,7 +279,6 @@
             "0056": "0.00",
             "0057": "0",
             "0058": "0",
-            "0059": "0",
             "0060": "0.00",
             "0062": "0",
             "0063": "0",
@@ -2376,11 +2426,14 @@
             "2246": "0",
             "2247": "0",
             "2248": "0",
+            "A": "0",
             "AJ": "0",
             "ANOASDLG": "0",
             "APENOMDLG": "0",
             "APENOMDLG_ASC": "0",
+            "C": "0",
             "CONVASDLG": "0",
+            "D": "0",
             "DECFAL": "0",
             "DNIASDLG": "0",
             "DPFNAC_C": "0",
@@ -2391,11 +2444,18 @@
             "DPNIF_D": "0",
             "DP_APENOM_C": "0",
             "DP_APENOM_D": "0",
+            "E": "0",
             "ECIVIL": "0",
+            "F": "0",
             "FALLASDLG": "0",
             "FALLDLG": "0",
             "FNACDLG": "0",
+            "G": "0",
+            "H": "0",
             "HIJOSUE": "0",
+            "I": "0",
+            "J": "0",
+            "M": "0",
             "MINUSDLG": "0",
             "NIFDLG": "0",
             "NORESIDENTE": "0",
@@ -2408,7 +2468,8 @@
             "ZCCAD": "0",
             "ZRUE2": "0",
             "base-liq-neg-general-2024-aplicada-maxima": "0.00",
-            "eo-agraria-reduccion-irregularidad-base": "0"
+            "eo-agraria-reduccion-irregularidad-base": "0",
+            "prestacion-inss-maternidad-paternidad-exenta": "0"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
@@ -2678,7 +2739,7 @@
                 "0009",
                 "0010",
                 "0011",
-                "0059"
+                "prestacion-inss-maternidad-paternidad-exenta"
               ],
               "operand_refs": [
                 "0003",
@@ -2688,7 +2749,7 @@
                 "0009",
                 "0010",
                 "0011",
-                "0059"
+                "prestacion-inss-maternidad-paternidad-exenta"
               ],
               "operand_values": [
                 "24000",
@@ -3683,23 +3744,6 @@
               "formula_id": null,
               "legal_refs": [
                 "ley-35-2006:da-60"
-              ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-renta-2025-manual-parte1"
-              ],
-              "value": "0"
-            },
-            {
-              "absent_by_design": false,
-              "casilla_id": "0059",
-              "formula_id": null,
-              "legal_refs": [
-                "ley-35-2006:art-7-h"
               ],
               "op": null,
               "operand_casilla_refs": [],
@@ -17258,7 +17302,7 @@
               "value": "2400"
             },
             {
-              "absent_by_design": false,
+              "absent_by_design": true,
               "casilla_id": "0597",
               "formula_id": null,
               "legal_refs": [
@@ -40970,7 +41014,7 @@
               "value": "0"
             },
             {
-              "absent_by_design": false,
+              "absent_by_design": true,
               "casilla_id": "1577",
               "formula_id": null,
               "legal_refs": [
@@ -57219,6 +57263,27 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "A",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-35-2006:dt-18",
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "AJ",
               "formula_id": null,
               "legal_refs": [
@@ -57292,6 +57357,27 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "C",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-35-2006:dt-18",
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "CONVASDLG",
               "formula_id": null,
               "legal_refs": [
@@ -57305,6 +57391,27 @@
                 "aeat-dr-100-2025-dictionary",
                 "aeat-dr-100-2025-xsd",
                 "boe-modelo-100-2025-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "D",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-35-2006:art-68",
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
               ],
               "value": "0"
             },
@@ -57493,6 +57600,27 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "E",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-35-2006:dt-18",
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "ECIVIL",
               "formula_id": null,
               "legal_refs": [
@@ -57506,6 +57634,27 @@
                 "aeat-dr-100-2025-dictionary",
                 "aeat-dr-100-2025-xsd",
                 "boe-modelo-100-2025-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "F",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-35-2006:dt-15",
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
               ],
               "value": "0"
             },
@@ -57565,6 +57714,48 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "G",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-49-2002:art-19",
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "H",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-49-2002:art-19",
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "HIJOSUE",
               "formula_id": null,
               "legal_refs": [
@@ -57578,6 +57769,69 @@
                 "aeat-dr-100-2025-dictionary",
                 "aeat-dr-100-2025-xsd",
                 "boe-modelo-100-2025-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "I",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-35-2006:art-68",
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "J",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-49-2002:art-19",
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "M",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-35-2006:art-68",
+                "orden-hac-277-2026:art-3"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure"
               ],
               "value": "0"
             },
@@ -57829,6 +58083,22 @@
                 "aeat-renta-2025-manual-parte1"
               ],
               "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "prestacion-inss-maternidad-paternidad-exenta",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-35-2006:art-7-h"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "value": "0"
             }
           ],
           "operation": "modelo.work.calculate",
@@ -57953,23 +58223,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 8a4112bbfd37052fbfdeea08a228d06dabe693beea27dc6f48c61211e38bf14a (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 100 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision 8a4112bbfd37052fbfdeea08a228d06dabe693beea27dc6f48c61211e38bf14a`.",
-          "source_provenance": [
-            {
-              "binding_source": "relation_prefill",
-              "dependency_treatment": "direct_annual_settlement",
-              "fingerprint": null,
-              "source_kind": "relation_prefill",
-              "source_ref": "renta-2025-rel-130-pagos-fraccionados:130:2025:1T,2T,3T,4T:19"
-            },
-            {
-              "binding_source": "relation_prefill",
-              "dependency_treatment": "direct_annual_settlement",
-              "fingerprint": null,
-              "source_kind": "relation_prefill",
-              "source_ref": "renta-2025-rel-131-pagos-fraccionados:131:2025:1T,2T,3T,4T:15"
-            }
-          ],
+          "saved_confirmation": "Saved as draft calculation revision 6f0f5d78d44eba9be0ca19476f15d9f364aa2ba583024f88600c43950df5ffe3 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 100 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision 6f0f5d78d44eba9be0ca19476f15d9f364aa2ba583024f88600c43950df5ffe3`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

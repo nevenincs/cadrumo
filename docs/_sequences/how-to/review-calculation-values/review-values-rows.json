@@ -35,13 +35,13 @@
         "--period",
         "0A",
         "--revision",
-        "2015-y-siguientes"
+        "2015-2024"
       ],
       "captures": [
         {
           "json_path": "result.work_unit_id",
           "name": "work_unit_id",
-          "value": "e6d37b4817a7a146c0e75f2c69fe7b705a747befdd63692d7e6a31c6fc5b7cbd"
+          "value": "32bd2348bbc6979569517e1e19066c1a7a7c7e724b70e9ec6486aedbe7280b20"
         }
       ],
       "envelope": {
@@ -68,15 +68,15 @@
             "code": "0A",
             "filing_year": 2024
           },
-          "revision_id": "2015-y-siguientes",
+          "revision_id": "2015-2024",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "31c6fc5b7cbd",
+          "short_work_unit_id": "aedbe7280b20",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "e6d37b4817a7a146c0e75f2c69fe7b705a747befdd63692d7e6a31c6fc5b7cbd"
+          "work_unit_id": "32bd2348bbc6979569517e1e19066c1a7a7c7e724b70e9ec6486aedbe7280b20"
         },
         "schema_version": "2",
         "status": "success"
@@ -96,7 +96,7 @@
         "modelo",
         "work",
         "calculate",
-        "e6d37b4817a7a146c0e75f2c69fe7b705a747befdd63692d7e6a31c6fc5b7cbd",
+        "32bd2348bbc6979569517e1e19066c1a7a7c7e724b70e9ec6486aedbe7280b20",
         "--row",
         "miembro nif=45678912S porcentaje=60 importe=10000",
         "--row",
@@ -127,14 +127,94 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {},
-          "calculation_revision_id": "2b12750373422e1066646eefcc8267be09804726ab0936c98be56c205f67f9f6",
+          "calculation_revision_id": "5c262f6ce7bce56b48038266e8350e054a52a3b2a0beb619e3ed5341d6210185",
           "casilla_values": {
+            "decl.complementaria-sustitutiva": "0",
             "decl.ejercicio": "2024",
+            "decl.entidad-espanola.actividad-principal": "0",
+            "decl.entidad-espanola.tipo-entidad": "0",
+            "decl.entidad-extranjera.clave-pais": "0",
+            "decl.entidad-extranjera.objeto": "0",
+            "decl.entidad-extranjera.porcentaje-renta-residentes": "0",
+            "decl.entidad-extranjera.tipo-entidad": "0",
+            "decl.importe-neto-cifra-negocios": "0",
+            "decl.numero-justificante": "0",
+            "decl.persona-relacion": "0",
+            "decl.representante-nif": "0",
+            "decl.representante-nombre": "0",
             "decl.tipo-declaracion": "0",
+            "decl.tipo-soporte": "0",
+            "decl.total-socios": "0",
+            "decl.tributacion-impuesto-sociedades": "0",
+            "tipo2.base-deduccion": "0",
+            "tipo2.cesionario-denominacion": "0",
+            "tipo2.cesionario-nif": "0",
             "tipo2.clave": "0",
-            "tipo2.miembro-nif": "0",
+            "tipo2.clave-pais": "0",
+            "tipo2.criterio-cobros-pagos": "0",
+            "tipo2.dias-arrendamiento": "0",
+            "tipo2.epigrafe-iae": "0",
+            "tipo2.fecha-adquisicion": "0",
+            "tipo2.ganancias-perdidas": "0",
+            "tipo2.gastos": "0",
+            "tipo2.gastos-actividad.amortizaciones": "0",
+            "tipo2.gastos-actividad.arrendamientos-canones": "0",
+            "tipo2.gastos-actividad.consumos-explotacion": "0",
+            "tipo2.gastos-actividad.gastos-financieros": "0",
+            "tipo2.gastos-actividad.gastos-personal": "0",
+            "tipo2.gastos-actividad.otros-gastos-deducibles": "0",
+            "tipo2.gastos-actividad.provisiones": "0",
+            "tipo2.gastos-actividad.reparaciones-conservacion": "0",
+            "tipo2.gastos-actividad.servicios-profesionales": "0",
+            "tipo2.gastos-actividad.suministros": "0",
+            "tipo2.gastos-actividad.tributos-deducibles": "0",
+            "tipo2.gastos-inmobiliario.amortizacion-bienes-muebles": "0",
+            "tipo2.gastos-inmobiliario.amortizacion-inmueble": "0",
+            "tipo2.gastos-inmobiliario.cantidades-devengadas-terceros": "0",
+            "tipo2.gastos-inmobiliario.conservacion-reparacion": "0",
+            "tipo2.gastos-inmobiliario.intereses-financiacion": "0",
+            "tipo2.gastos-inmobiliario.intereses-gastos-reparacion": "0",
+            "tipo2.gastos-inmobiliario.otros-gastos-deducibles": "0",
+            "tipo2.gastos-inmobiliario.primas-seguros": "0",
+            "tipo2.gastos-inmobiliario.saldos-dudoso-cobro": "0",
+            "tipo2.gastos-inmobiliario.tributos-recargos": "0",
+            "tipo2.ingresos-integros": "0",
+            "tipo2.porcentaje-reduccion": "0",
+            "tipo2.referencia-catastral": "0",
+            "tipo2.regimen-determinacion-rendimientos": "0",
+            "tipo2.renta-atribuible-con-reduccion": "0",
             "tipo2.renta-atribuible-importe": "0",
-            "tipo2.subclave": "0"
+            "tipo2.retenciones": "0",
+            "tipo2.situacion-inmueble": "0",
+            "tipo2.subclave": "0",
+            "tipo2.tipo-actividad": "0",
+            "tipo2.tipo-hoja": "0",
+            "tipo2.valor-adquisicion": "0",
+            "tipo2.valor-liquidativo": "0",
+            "tipo3.clave": "0",
+            "tipo3.clave-declarado": "0",
+            "tipo3.clave-pais": "0",
+            "tipo3.clave-tipo-participe": "0",
+            "tipo3.codigo-provincia": "0",
+            "tipo3.dias-arrendamiento": "0",
+            "tipo3.dias-miembro": "0",
+            "tipo3.domicilio-fiscal": "0",
+            "tipo3.importe": "0",
+            "tipo3.miembro-a-31-diciembre": "0",
+            "tipo3.miembro-nif": "0",
+            "tipo3.miembro-nombre": "0",
+            "tipo3.naturaleza-inmueble": "0",
+            "tipo3.porcentaje-participacion": "0",
+            "tipo3.porcentaje-titularidad-inmueble": "0",
+            "tipo3.provisiones-gastos-dificil-justificacion": "0",
+            "tipo3.reduccion": "0",
+            "tipo3.referencia-catastral": "0",
+            "tipo3.rendimiento-neto-minorado-agricola-eo": "0",
+            "tipo3.rendimiento-neto-previo-eo": "0",
+            "tipo3.representante-fiscal-nif": "0",
+            "tipo3.situacion-inmueble": "0",
+            "tipo3.subclave": "0",
+            "tipo3.tipo-hoja": "0"
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
@@ -184,6 +264,23 @@
           "observations": [
             {
               "absent_by_design": false,
+              "casilla_id": "decl.complementaria-sustitutiva",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "decl.ejercicio",
               "formula_id": null,
               "legal_refs": [
@@ -195,9 +292,203 @@
               "operand_refs": [],
               "operand_values": [],
               "source_refs": [
-                "aeat-dr-184-2025"
+                "aeat-dr-184-2023-2024"
               ],
               "value": "2024"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.entidad-espanola.actividad-principal",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-35-2006:art-87",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.entidad-espanola.tipo-entidad",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-35-2006:art-87",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.entidad-extranjera.clave-pais",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-35-2006:art-87",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.entidad-extranjera.objeto",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-35-2006:art-87",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.entidad-extranjera.porcentaje-renta-residentes",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-35-2006:art-87",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.entidad-extranjera.tipo-entidad",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-35-2006:art-87",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.importe-neto-cifra-negocios",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.numero-justificante",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.persona-relacion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.representante-nif",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.representante-nombre",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
             },
             {
               "absent_by_design": false,
@@ -212,7 +503,116 @@
               "operand_refs": [],
               "operand_values": [],
               "source_refs": [
-                "aeat-dr-184-2025"
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.tipo-soporte",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.total-socios",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "orden-hap-2250-2015:art-3",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.tributacion-impuesto-sociedades",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-1",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.base-deduccion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.cesionario-denominacion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.cesionario-nif",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
               ],
               "value": "0"
             },
@@ -230,19 +630,18 @@
               "operand_refs": [],
               "operand_values": [],
               "source_refs": [
-                "aeat-dr-184-2025",
+                "aeat-dr-184-2023-2024",
                 "boe-modelo-184-2015-form"
               ],
               "value": "0"
             },
             {
               "absent_by_design": false,
-              "casilla_id": "tipo2.miembro-nif",
+              "casilla_id": "tipo2.clave-pais",
               "formula_id": null,
               "legal_refs": [
                 "orden-hap-2250-2015:art-3",
-                "ley-35-2006:art-86",
-                "ley-35-2006:art-87",
+                "ley-35-2006:art-89",
                 "ley-58-2003:art-93"
               ],
               "op": null,
@@ -250,7 +649,615 @@
               "operand_refs": [],
               "operand_values": [],
               "source_refs": [
-                "aeat-dr-184-2025",
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.criterio-cobros-pagos",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.dias-arrendamiento",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.epigrafe-iae",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.fecha-adquisicion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.ganancias-perdidas",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.amortizaciones",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.arrendamientos-canones",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.consumos-explotacion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.gastos-financieros",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.gastos-personal",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.otros-gastos-deducibles",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.provisiones",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.reparaciones-conservacion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.servicios-profesionales",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.suministros",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-actividad.tributos-deducibles",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-inmobiliario.amortizacion-bienes-muebles",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-inmobiliario.amortizacion-inmueble",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-inmobiliario.cantidades-devengadas-terceros",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-inmobiliario.conservacion-reparacion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-inmobiliario.intereses-financiacion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-inmobiliario.intereses-gastos-reparacion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-inmobiliario.otros-gastos-deducibles",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-inmobiliario.primas-seguros",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-inmobiliario.saldos-dudoso-cobro",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.gastos-inmobiliario.tributos-recargos",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.ingresos-integros",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.porcentaje-reduccion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.referencia-catastral",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.regimen-determinacion-rendimientos",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.renta-atribuible-con-reduccion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
                 "boe-modelo-184-2015-form"
               ],
               "value": "0"
@@ -272,7 +1279,45 @@
               "operand_refs": [],
               "operand_values": [],
               "source_refs": [
-                "aeat-dr-184-2025",
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.retenciones",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.situacion-inmueble",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
                 "boe-modelo-184-2015-form"
               ],
               "value": "0"
@@ -291,7 +1336,539 @@
               "operand_refs": [],
               "operand_values": [],
               "source_refs": [
-                "aeat-dr-184-2025",
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.tipo-actividad",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.tipo-hoja",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.valor-adquisicion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo2.valor-liquidativo",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.clave",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.clave-declarado",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.clave-pais",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.clave-tipo-participe",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.codigo-provincia",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.dias-arrendamiento",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.dias-miembro",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.domicilio-fiscal",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.importe",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.miembro-a-31-diciembre",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.miembro-nif",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.miembro-nombre",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.naturaleza-inmueble",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.porcentaje-participacion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.porcentaje-titularidad-inmueble",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.provisiones-gastos-dificil-justificacion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.reduccion",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.referencia-catastral",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.rendimiento-neto-minorado-agricola-eo",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.rendimiento-neto-previo-eo",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.representante-fiscal-nif",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.situacion-inmueble",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-89",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.subclave",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
+                "boe-modelo-184-2015-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "tipo3.tipo-hoja",
+              "formula_id": null,
+              "legal_refs": [
+                "orden-hap-2250-2015:art-3",
+                "ley-35-2006:art-88",
+                "ley-58-2003:art-93"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-184-2023-2024",
                 "boe-modelo-184-2015-form"
               ],
               "value": "0"
@@ -325,12 +1902,6 @@
               "value": "0"
             },
             {
-              "casilla_id": "tipo2.miembro-nif",
-              "label": "NIF of the entity member to whom the income is attributed (partner, co-owner, heir, participant)",
-              "role": "key_figure",
-              "value": "0"
-            },
-            {
               "casilla_id": "tipo2.renta-atribuible-importe",
               "label": "Amount of income attributable / net return attributable to the entity member (unsigned, no decimal comma, in euros)",
               "role": "key_figure",
@@ -338,14 +1909,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 2b12750373422e1066646eefcc8267be09804726ab0936c98be56c205f67f9f6 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 184 --year 2024 --period 0A` and re-inspect this one with `aeat app modelo work revision 2b12750373422e1066646eefcc8267be09804726ab0936c98be56c205f67f9f6`.",
-          "source_provenance": [],
+          "saved_confirmation": "Saved as draft calculation revision 5c262f6ce7bce56b48038266e8350e054a52a3b2a0beb619e3ed5341d6210185 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 184 --year 2024 --period 0A` and re-inspect this one with `aeat app modelo work revision 5c262f6ce7bce56b48038266e8350e054a52a3b2a0beb619e3ed5341d6210185`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "e6d37b4817a7a146c0e75f2c69fe7b705a747befdd63692d7e6a31c6fc5b7cbd"
+          "work_unit_id": "32bd2348bbc6979569517e1e19066c1a7a7c7e724b70e9ec6486aedbe7280b20"
         },
         "schema_version": "2",
         "status": "warning"

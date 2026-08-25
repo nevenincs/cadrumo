@@ -271,7 +271,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9",
+          "calculation_revision_id": "b94a7a72d60831f7f008e48a7ea62bfb3a155a8043b6e5ddc8353be78faf228f",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -886,30 +886,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9`.",
-          "source_provenance": [
-            {
-              "binding_source": "ledger_renta_income_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_renta_income_aggregation",
-              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
-            },
-            {
-              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
-            },
-            {
-              "binding_source": "previous_filing",
-              "dependency_treatment": "factual_evidence",
-              "fingerprint": null,
-              "source_kind": "previous_filing",
-              "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
-            }
-          ],
+          "saved_confirmation": "Saved as draft calculation revision b94a7a72d60831f7f008e48a7ea62bfb3a155a8043b6e5ddc8353be78faf228f (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision b94a7a72d60831f7f008e48a7ea62bfb3a155a8043b6e5ddc8353be78faf228f`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
