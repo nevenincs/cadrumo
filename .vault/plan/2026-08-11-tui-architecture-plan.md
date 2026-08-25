@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-25'
-body_hash: 'sha256:cc0f88b7577925842dd41510289b1b22693d3164da4dfde18022d53401faae82'
+body_hash: 'sha256:0bb572bf31d46483696535e142c601caf58164b37b4d81f520b609ac9a5d7664'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -204,7 +204,7 @@ Create the canonical TUI entrypoint packages and relocate presentation-only them
 - [x] `W04.P09.S49` - Relocate immutable form presentation contracts and widgets without orchestration or backend validation; `src/cadrumo/entrypoints/tui/components/forms.py`.
 - [x] `W04.P09.S50` - Relocate generic dialogs while keeping approval and operation lifecycle out of component state; `src/cadrumo/entrypoints/tui/components/dialogs.py`.
 - [x] `W04.P09.S51` - Relocate status and busy presentation so it renders supplied operation state rather than owning timers or work; `src/cadrumo/entrypoints/tui/components/status.py`.
-- [ ] `W04.P09.S52` - Implement safe error and bounded log renderers without accepting raw exceptions or retaining lifecycle authority; `src/cadrumo/entrypoints/tui/components`.
+- [x] `W04.P09.S52` - Implement safe error and bounded log renderers without accepting raw exceptions or retaining lifecycle authority; `src/cadrumo/entrypoints/tui/components`.
 - [ ] `W04.P09.S53` - Prove components contain presentation mechanics only and import no feature, application-private, adapter, CLI, or repository modules; `src/cadrumo/entrypoints/tui/components/tests`.
 
 ### Phase `W04.P10` - Feature presentation relocation
