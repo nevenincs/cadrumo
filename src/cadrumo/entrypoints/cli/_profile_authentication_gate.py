@@ -30,7 +30,7 @@ from ._profile_authentication_contract import (
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
+    from ...application.workflow.profile_bucket_models import ProfileBucketPointer
 
 
 _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
@@ -118,13 +118,12 @@ def _resolve_login_target_or_refuse(raw: str):
     after that fix, and it did not carry the conversion, so the escape returned
     on `config profile show <label>` and `config profile validate <label>`.
     """
-    from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
-
     from ...application.profile_preconditions import (
         ProfileSelectionFailure,
         profile_selection_failure_verdict,
     )
     from ...application.user_profile.login_session import resolve_login_target
+    from ...application.workflow.errors import ProfileLabelAmbiguousError
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ._common import attach_cli_policy_verdict
     from .errors import CliRefusedBoundaryError
@@ -223,8 +222,7 @@ def preflight_parsed_leaf(
         )
 
     if spec.allow_unregistered_profile_diagnostic:
-        from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-
+        from ...application.workflow.profile_bucket_scan import read_profile_bucket_by_id
         from ...core.bucket_pointer import resolve_active_bucket_id
 
         active = resolve_active_bucket_id()
@@ -276,7 +274,7 @@ def resolved_command_profile_target(ctx: typer.Context) -> ProfileBucketPointer 
     value = cast("dict[str, object]", ctx.find_root().ensure_object(dict)).get(_RESOLVED_PROFILE_TARGET_KEY)
     if value is None:
         return None
-    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
+    from ...application.workflow.profile_bucket_models import ProfileBucketPointer
 
     if not isinstance(value, ProfileBucketPointer):
         raise TypeError("resolved command profile target has an invalid type")
