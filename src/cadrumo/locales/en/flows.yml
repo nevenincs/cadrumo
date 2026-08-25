@@ -37,67 +37,17 @@ flows:
     unlock_button: Log in
   manager:
     action:
-      abandoned: No changes made.
-      add_row: Add a row
-      add_row_done: Added %{section} row %{index}.
-      add_row_incomplete: The row is missing required data, so nothing was saved.
-      add_row_none: This profile schema declares no section that holds rows.
-      add_row_required: This is required; the row cannot be added without it.
-      add_row_section: Which section to add to
-      auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
       auth_clave_movil_route_app_request: Request in app
       auth_clave_movil_route_qr: QR code
-      auth_contraste_missing: 'Cl@ve Móvil Request in app needs one document contrast:
-        %{nie_field} for a NIE, or %{dni_field} for a DNI. Open Identification, fill
-        the applicable field, and retry sync.'
-      auth_fecha_validez_invalid: Enter the validity date as YYYY-MM-DD, for example
-        1990-01-31.
-      auth_tax_id_invalid: That is not a valid NIF or NIE. Check the letter at the
-        end and enter it as it appears on your document, for example 12345678Z.
       busy: Another operation is still running. Wait for it to finish.
-      censal_pull: Fill in from AEAT censal data
-      censal_pull_auth_incomplete: Your identification is incomplete, so AEAT cannot
-        be read yet. Complete it first.
-      censal_pull_no_provider: Choose how you identify to AEAT before reading your
-        censal data.
-      censal_pull_review_applied: The exact reviewed AEAT censal proposal was applied.
-      censal_pull_review_rejected: The reviewed AEAT censal proposal was rejected;
-        the profile was not changed.
-      certificate: Certificate
-      certificate_active: Active certificate
-      certificate_done: 'Identification: %{provider}; active certificate: %{name}.'
-      export: Export a copy
-      export_destination: Destination file path
-      export_done: Encrypted copy written to %{destination}. This product cannot import
-        it back; use 'aeat config profile archive export' for a restorable backup.
-      export_passphrase: Passphrase that will protect the copy
       failed: The operation did not finish.
-      filed_history_pull_all: Pull AEAT filing history
-      filed_history_pull_all_done: '{captured} filing(s) captured, {refused} refused;
-        IVA wallet: {iva_wallet_status}; notificaciones: {notificaciones_status}.'
-      filed_history_pull_all_refused: 'These pairs could not be read and were NOT
-        reported as empty: {pairs}. Re-run to retry.'
-      google_export: Export to Google Sheets
-      google_export_done: Exported Modelo %{modelo} to %{spreadsheet_url}.
-      google_export_modelo: Modelo
-      google_export_period: Period
-      google_export_year: Year
-      google_export_year_invalid: Enter a year between 2000 and 2099.
       logout: Log out
       logout_done: Logged out.
-      provider:
-        certificate: Electronic certificate
-        clave_movil: Cl@ve Móvil
-        clave_permanente: Cl@ve Permanente
       working: Running {action}...
     actions:
       section: Actions
     censal_review:
       apply: Apply this exact proposal
-      decision: Decision
-      reject: Reject without changing the profile
-      required: Choose apply or reject.
-      title: Review the exact AEAT censal proposal
     choice_unavailable: Unavailable choice
     column:
       field: Field
@@ -108,14 +58,6 @@ flows:
       clear: Clear
       masked_kept: This value is hidden, so the box starts empty. Leave it empty to
         keep the value on record, or type a new one to replace it.
-      refused:
-        boolean: '''%{value}'' is not a yes or no answer. Answer Yes or No.'
-        date: '''%{value}'' is not a date. Use the format YYYY-MM-DD - for example
-          1978-03-15.'
-        email: '''%{value}'' is not an email address. Enter one in the form name@example.com.'
-        enum: '''%{value}'' is not accepted here. Choose one of: %{accepted}.'
-        numeric: '''%{value}'' is not a number this field accepts%{accepted}. Enter
-          a number, using a point for decimals.'
       required_blank: '{field} is required, so it cannot be left blank. Enter a value,
         or cancel to leave it unchanged.'
       save: Save
@@ -132,7 +74,6 @@ flows:
     language:
       unavailable: This profile does not offer a language setting.
     namespace_detail: detail {number}
-    next_step_modelo: This profile's declared facts route it to Modelo {modelo}.
     required_field_unavailable: Required profile field
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'

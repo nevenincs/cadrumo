@@ -2057,6 +2057,14 @@ cli:
       no_active_profile: No hi ha cap perfil actiu. Inicia la sessió amb 'aeat config
         login NOM' abans de canviar-ne la contrasenya.
     profile:
+      add_row:
+        duplicate_field: El camp %{field} s'ha indicat més d'una vegada; no s'ha escrit
+          res.
+        help: Afegiu una fila a una secció repetible declarada per l'esquema del perfil.
+        invalid_value: Cada --value ha d'usar la sintaxi CAMP=VALOR; no s'ha escrit
+          res.
+        section_help: Clau de la secció repetible del perfil.
+        value_help: Camp de la fila com CAMP=VALOR; repetiu-lo per cada camp informat.
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
       archive:
@@ -2224,12 +2232,6 @@ cli:
         remove_index_help: Índex (base 0) del descendent a eliminar.
       duplicate_display_name_help: Nom visible del nou perfil (per defecte l'id de
         destinació)
-      add_row:
-        help: Afegiu una fila a una secció repetible declarada per l'esquema del perfil.
-        section_help: Clau de la secció repetible del perfil.
-        value_help: Camp de la fila com CAMP=VALOR; repetiu-lo per cada camp informat.
-        invalid_value: Cada --value ha d'usar la sintaxi CAMP=VALOR; no s'ha escrit res.
-        duplicate_field: El camp %{field} s'ha indicat més d'una vegada; no s'ha escrit res.
       duplicate_help: Copiar un perfil sota un id i nom visibles nous
       duplicate_source_help: Id del perfil d'origen a duplicar
       duplicate_target_help: Id del perfil de destinació per al duplicat
