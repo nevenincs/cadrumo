@@ -807,8 +807,8 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         "aeat-dr-303-2019-2020": "held by the in-flight M303 generator-authority campaign",
         "aeat-dr-390-2015": "held by the in-flight M390 generator-authority campaign",
         "aeat-dr-390-2016": "held by the in-flight M390 generator-authority campaign",
-        # S109 registers every official manifest artefact so the corpus and
-        # catalogue agree, but does not invent selection windows. These source
+        # Every official manifest artefact is registered so the corpus and
+        # catalogue agree, but this map does not invent selection windows. These source
         # titles describe versions/updates (or an ATF translation), not a
         # non-conflicting filing period relative to the actively selected
         # design. The source rows deliberately remain resolver-unreachable
