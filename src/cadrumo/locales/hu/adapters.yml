@@ -55,10 +55,12 @@ adapters:
         api_target_not_found: A Google {action} célpontja nem található.
         conflicting_duplicate_metadata: A Google-táblázat ellentmondó, duplikált AEAT-metaadatokat
           tartalmaz.
+        developer_metadata_invalid: A munkalap fejlesztői metaadatai érvénytelenek.
         foreign_spreadsheet_not_owned: A Google-táblázat nincs ennek az AEAT-profilnak
           a tulajdonaként megjelölve.
         googleapiclient_not_importable: A googleapiclient nem importálható; a Google-adapter
           nem tud kapcsolódni az API-hoz.
+        ownership_metadata_invalid: A munkalap tulajdonosi metaadatai érvénytelenek.
         spreadsheet_id_blank: A Google-táblázat azonosítója nem lehet üres.
         workbook_snapshot_mismatch: A Google-táblázat metaadatai nem egyeznek a számítási
           pillanatképpel.

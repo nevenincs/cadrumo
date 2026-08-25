@@ -391,12 +391,6 @@ application:
           megadott adattípusnak.
         text_casilla_not_string: A casilla szöveges bemenetének szöveges értéknek
           kell lennie.
-    calculate:
-      errors:
-        repair_hints_forbidden: Javítási javaslatok csak akkor fogadhatók el, ha feloldandó
-          blokkolók vannak.
-        repair_hints_required: Javítási javaslatok szükségesek, ha feloldandó blokkolók
-          vannak.
     complementaria:
       errors:
         justificante_csv_absent: A complementaria a benyújtott eredeti bevallás justificante

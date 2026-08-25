@@ -480,18 +480,17 @@ cli:
           No està confirmat si aquesta llista es limita al NIF autenticat, per la
           qual cosa només amplia el recorregut: un parell absent no prova que no es
           presentés res.'
-        limit_reached: 'La passada s''ha aturat en el --limit de {limit} després d''assolir
-          {reached} declaració(ns); els parells posteriors no s''han recorregut. L''absència
-          d''un parell no prova que no es presentés res: torneu a executar l''ordre
-          amb un --limit més alt o sense.'
+        limit_reached_factual: L'exploració s'ha aturat al --limit de {limit} després
+          d'arribar a {reached} declaració(ns); els parells posteriors no s'han recorregut.
+          L'absència d'un parell no demostra que no s'hagi presentat res.
         list_help: Llistar declaracions presentades sense descarregar artefactes
         pull_all_help: Baixa en una sola passada l'historial de declaracions presentades
           a l'AEAT i detalla el que ha trobat.
         pull_all_limit_help: Nombre màxim de parells de model i exercici que es recorreran
           en aquesta passada.
-        pull_all_pairs_refused: 'No s''han pogut llegir {count} parell(s) de model
-          i exercici i NO s''han declarat buits: {pairs}. Torneu a executar l''ordre
-          per reintentar-ho; una negativa no prova que no es presentés res.'
+        pull_all_pairs_refused_factual: 'No s''han pogut llegir {count} parell(s)
+          model/exercici i NO s''han declarat buits: {pairs}. Un rebuig no demostra
+          que no s''hagi presentat res.'
         pull_dry_run_help: Mostra que capturaria aquesta descarrega massiva sense
           escriure res. Nomes en mode massiu.
         pull_dry_run_single_mode_error: --dry-run nomes es valid per a una descarrega
@@ -1353,6 +1352,8 @@ cli:
           d''atribució (activitat econòmica) del seu Model 100 (arts. 86-89 LIRPF).'
         m210_gross_income_source_help: 'Autoritat de la [5] del Model 210: manual
           (predeterminada) o agregació de llibre major de font espanyola.'
+        m210_plazo_resolved: 'S''ha resolt el termini de presentació del Model 210:
+          la presentació voluntària finalitza el %{closes_on}.'
         m303_filing_evidence_help: Camí al document JSON complet d'evidències de presentació
           del model 303.
         m303_rectificativa_motive_help: 'Obligatori per a una rectificativa aplicable
@@ -2113,15 +2114,17 @@ cli:
         non_official_notice: Les dades derivades del certificat són evidència aportada
           per l'operador, mai verificada per l'AEAT; l'alta censal es manté al nivell
           no oficial.
+        pull_apply_help: Adquireix una vegada i obre la proposta censal exacta revisada
+          abans d'aplicar-la.
         pull_cleared_notice: 'L''autoritat censal encara conserva un valor per a {count}
           camp(s) que vas esborrar: {axes}. S''han deixat buits; esborrar-los aquí
           no canvia el registre de l''autoritat.'
         pull_divergences_notice: 'L''autoritat censal informa de {count} camp(s) amb
           valors diferents dels que has declarat: {axes}. La teva resposta es manté;
           resol cada discrepància tu mateix.'
-        pull_apply_help: Adquireix una vegada i obre la proposta censal exacta revisada abans d'aplicar-la.
-        pull_help: Previsualitza la identitat i el domicili de les dades censals de l'AEAT,
-          o revisa i aplica una proposta exacta mitjançant l'operació canònica reanudable.
+        pull_help: Previsualitza la identitat i el domicili de les dades censals de
+          l'AEAT, o revisa i aplica una proposta exacta mitjançant l'operació canònica
+          reanudable.
         pull_preview_notice: 'Només previsualització: no s''ha escrit res al perfil.'
         pull_verified_tier_notice: Aquests fets s'han llegit directament de l'autoritat
           censal, de manera que la incorporació al cens compta com a verificada.
@@ -2609,6 +2612,8 @@ cli:
         LLM.
       until_help: Límit superior inclusiu (AAAA-MM-DD) en els registres d'execucions
         LLM.
+    llm_run_data_observed: No s'ha registrat telemetria d'execució de l'LLM per a
+      aquest informe.
     llm_usage:
       header: 'Ús d''execucions LLM:'
       help: Informa dels totals d'ús d'execucions LLM (recomptes, durades, taxa d'èxit)

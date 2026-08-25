@@ -438,18 +438,17 @@ cli:
           offers, not a confirmed filing history for this NIF. Whether that list is
           scoped to the authenticated NIF is unconfirmed, so it only widens the walk:
           a pair absent from it is no proof that nothing was filed.'
-        limit_reached: The sweep stopped at the --limit of {limit} after reaching
+        limit_reached_factual: The sweep stopped at the --limit of {limit} after reaching
           {reached} declaration(s); pairs beyond that point were not walked. A missing
-          pair is not evidence that nothing was filed -- re-run with a higher --limit
-          or none.
+          pair is not evidence that nothing was filed.
         list_help: List filed declaration rows without downloading artefacts
         pull_all_help: Pull this taxpayer's AEAT filed-declaration history in one
           sweep and report what it found.
         pull_all_limit_help: Maximum number of modelo and ejercicio pairs to walk
           in this sweep.
-        pull_all_pairs_refused: '{count} modelo/ejercicio pair(s) could not be read
-          and were NOT reported as empty: {pairs}. Re-run to retry; a refusal is not
-          evidence that nothing was filed.'
+        pull_all_pairs_refused_factual: '{count} modelo/ejercicio pair(s) could not
+          be read and were NOT reported as empty: {pairs}. A refusal is not evidence
+          that nothing was filed.'
         pull_dry_run_help: Report what a bulk pull would capture without writing anything.
           Bulk mode only.
         pull_dry_run_single_mode_error: --dry-run is only valid for a bulk pull with
@@ -1265,6 +1264,8 @@ cli:
           económica) casilla %{casilla} (LIRPF arts. 86-89).'
         m210_gross_income_source_help: 'Modelo 210 [5] authority: manual (default)
           or Spanish-source ledger aggregation.'
+        m210_plazo_resolved: 'Modelo 210 filing window resolved: voluntary filing
+          closes on %{closes_on}.'
         m303_filing_evidence_help: Path to the complete typed Modelo 303 filing-evidence
           JSON document.
         m303_rectificativa_motive_help: 'Required for an applicable Modelo 303 rectificativa:
@@ -1970,15 +1971,16 @@ cli:
         help: Censal artefact ingestion for the active profile.
         non_official_notice: Certificate-derived facts are operator-supplied evidence,
           never AEAT-verified; the censo enrolment stays at the non-official tier.
+        pull_apply_help: Acquire once and open the exact reviewed censo proposal before
+          applying.
         pull_cleared_notice: 'The census authority still holds a value for {count}
           field(s) you cleared: {axes}. They were left empty; clearing them here does
           not change the authority''s record.'
         pull_divergences_notice: 'The census authority reports {count} field(s) differently
           from your declared answer: {axes}. Your answer stands; resolve each one
           yourself.'
-        pull_apply_help: Acquire once and open the exact reviewed censo proposal before applying.
-        pull_help: Preview your identity and address from AEAT's censal record, or review
-          and apply one exact proposal through the canonical resumable operation.
+        pull_help: Preview your identity and address from AEAT's censal record, or
+          review and apply one exact proposal through the canonical resumable operation.
         pull_preview_notice: 'Preview only: nothing was written to the profile.'
         pull_verified_tier_notice: These facts were read from the census authority
           itself, so the censo enrolment counts as verified.
@@ -2442,6 +2444,7 @@ cli:
         codex).
       since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on LLM run records.
       until_help: Inclusive upper ISO date (YYYY-MM-DD) bound on LLM run records.
+    llm_run_data_observed: No LLM run telemetry was recorded for this report.
     llm_usage:
       header: 'LLM run usage:'
       help: Report LLM run-usage totals (counts, durations, success rate) by provider

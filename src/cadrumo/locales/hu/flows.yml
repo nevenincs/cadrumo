@@ -41,7 +41,6 @@ flows:
       abandoned: Nem történt változás.
       add_row: Sor hozzáadása
       add_row_done: A(z) %{section} %{index}. sora hozzáadva.
-      add_row_empty: Semmi sem lett kitöltve, ezért nem jött létre új sor.
       add_row_incomplete: A sorból kötelező adatok hiányoznak, ezért semmi sem lett
         mentve.
       add_row_none: Ez a profilséma nem tartalmaz sorokat kezelő szakaszt.
@@ -62,16 +61,12 @@ flows:
       censal_pull: Kitöltés az AEAT nyilvántartási adataiból
       censal_pull_auth_incomplete: Az azonosítása hiányos, ezért az AEAT még nem olvasható.
         Előbb egészítse ki.
-      censal_pull_cleared: 'Az AEAT-nál még szerepel érték az Ön által kiürített mezőkhöz:
-        %{paths}. Ezek üresen maradtak; a kiürítés itt nem módosítja az AEAT nyilvántartását.'
-      censal_pull_contested: 'Az AEAT eltér az Ön bevallásától itt: %{paths}. Az Ön
-        válasza marad érvényben; oldja meg egyenként.'
-      censal_pull_done: 'AEAT nyilvántartási adatok beolvasva: %{adopted} mező kitöltve,
-        %{unchanged} már egyezett, %{diverging} eltér.'
       censal_pull_no_provider: A nyilvántartási adatok beolvasása előtt válassza ki,
         hogyan azonosítja magát az AEAT felé.
-      censal_pull_review_applied: Az AEAT pontosan ellenőrzött nyilvántartási javaslata alkalmazva lett.
-      censal_pull_review_rejected: Az ellenőrzött AEAT-javaslat elutasítva; a profil nem változott.
+      censal_pull_review_applied: Az AEAT pontosan ellenőrzött nyilvántartási javaslata
+        alkalmazva lett.
+      censal_pull_review_rejected: Az ellenőrzött AEAT-javaslat elutasítva; a profil
+        nem változott.
       certificate: Tanúsítvány
       certificate_active: Aktív tanúsítvány
       certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'

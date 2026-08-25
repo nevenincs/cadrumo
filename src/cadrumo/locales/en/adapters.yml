@@ -52,10 +52,12 @@ adapters:
         api_target_not_found: Google {action} target was not found.
         conflicting_duplicate_metadata: The Google Sheet carries conflicting duplicate
           AEAT metadata.
+        developer_metadata_invalid: Spreadsheet developer metadata is invalid.
         foreign_spreadsheet_not_owned: The Google Sheet is not marked as owned by
           this Cadrumo profile.
         googleapiclient_not_importable: googleapiclient is not importable; the Google
           adapter cannot reach the API.
+        ownership_metadata_invalid: Spreadsheet ownership metadata is invalid.
         spreadsheet_id_blank: Google spreadsheet id must not be blank.
         workbook_snapshot_mismatch: The Google Sheet metadata does not match the calculation
           snapshot.

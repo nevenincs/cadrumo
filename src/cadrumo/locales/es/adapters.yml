@@ -55,10 +55,14 @@ adapters:
         api_target_not_found: El destino de Google {action} no se encontró.
         conflicting_duplicate_metadata: La hoja de Google contiene metadatos AEAT
           duplicados y contradictorios.
+        developer_metadata_invalid: Los metadatos de desarrollador de la hoja de cálculo
+          no son válidos.
         foreign_spreadsheet_not_owned: La hoja de Google no está marcada como propiedad
           de este perfil AEAT.
         googleapiclient_not_importable: googleapiclient no se puede importar; el adaptador
           de Google no puede acceder a la API.
+        ownership_metadata_invalid: Los metadatos de propiedad de la hoja de cálculo
+          no son válidos.
         spreadsheet_id_blank: El id de la hoja de cálculo de Google no puede estar
           vacío.
         workbook_snapshot_mismatch: Los metadatos de la hoja de Google no coinciden

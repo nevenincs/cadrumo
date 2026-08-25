@@ -41,7 +41,6 @@ flows:
       abandoned: No changes made.
       add_row: Add a row
       add_row_done: Added %{section} row %{index}.
-      add_row_empty: Nothing was filled in, so no row was added.
       add_row_incomplete: The row is missing required data, so nothing was saved.
       add_row_none: This profile schema declares no section that holds rows.
       add_row_required: This is required; the row cannot be added without it.
@@ -60,12 +59,6 @@ flows:
       censal_pull: Fill in from AEAT censal data
       censal_pull_auth_incomplete: Your identification is incomplete, so AEAT cannot
         be read yet. Complete it first.
-      censal_pull_cleared: 'AEAT still holds a value for the fields you cleared: %{paths}.
-        They were left empty; clearing here does not change AEAT''s record.'
-      censal_pull_contested: 'AEAT differs from what you declared at: %{paths}. Your
-        answer stands; resolve each one yourself.'
-      censal_pull_done: 'AEAT censal data read: %{adopted} field(s) filled in, %{unchanged}
-        already matching, %{diverging} differing.'
       censal_pull_no_provider: Choose how you identify to AEAT before reading your
         censal data.
       censal_pull_review_applied: The exact reviewed AEAT censal proposal was applied.

@@ -474,18 +474,17 @@ cli:
           Nincs megerősítve, hogy a lista a hitelesített NIF-re szűkül, ezért csak
           szélesíti a bejárást: egy hiányzó pár nem bizonyítja, hogy semmit sem nyújtottak
           be.'
-        limit_reached: A menet a(z) {limit} értékű --limit elérésekor leállt, miután
-          {reached} bevallást ért el; az azon túli párokat nem járta be. Egy hiányzó
-          pár nem bizonyítja, hogy semmit sem nyújtottak be – futtassa újra magasabb
-          --limit értékkel vagy anélkül.
+        limit_reached_factual: A vizsgálat a(z) {limit} értékű --limit elérésekor,
+          {reached} bevallás után leállt; az ezután következő párokat nem járta be.
+          Egy pár hiánya nem bizonyítja, hogy nem nyújtottak be semmit.
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
         pull_all_help: Egyetlen menetben letölti az adózó AEAT-nál benyújtott bevallási
           előzményét, és jelenti a találtakat.
         pull_all_limit_help: A menetben bejárandó modelo- és adóévpárok legnagyobb
           száma.
-        pull_all_pairs_refused: '{count} modelo/adóév pár nem volt olvasható, és NEM
-          üresként lett jelentve: {pairs}. Futtassa újra az újrapróbálkozáshoz; az
-          elutasítás nem bizonyítja, hogy semmit sem nyújtottak be.'
+        pull_all_pairs_refused_factual: '{count} modell/év pár nem volt olvasható,
+          és a rendszer NEM jelentette üresnek: {pairs}. Az elutasítás nem bizonyítja,
+          hogy nem nyújtottak be semmit.'
         pull_dry_run_help: Megmutatja, mit toltene le ez a tomeges letoltes, anelkul
           hogy barmit irna. Csak tomeges modban.
         pull_dry_run_single_mode_error: A --dry-run csak tomeges letoltesnel ervenyes
@@ -1349,6 +1348,8 @@ cli:
           %{casilla} rovatába (LIRPF 86-89. cikk).'
         m210_gross_income_source_help: 'Az M210-es modell [5] mezőjének forrása: kézi
           (alapértelmezett) vagy spanyol forrású főkönyvi összesítés.'
+        m210_plazo_resolved: 'A 210-es modell benyújtási időszaka meghatározva: az
+          önkéntes benyújtás határideje %{closes_on}.'
         m303_filing_evidence_help: A teljes, típusos Modelo 303 bevallási bizonyíték
           JSON-dokumentumának elérési útja.
         m303_rectificativa_motive_help: 'Alkalmazható 303-as rectificativa esetén
@@ -2107,15 +2108,17 @@ cli:
         non_official_notice: A tanúsítványból származó adatok az operátor által szolgáltatott
           bizonyítékok, sosem AEAT által ellenőrzöttek; a censal nyilvántartás nem
           hivatalos szinten marad.
+        pull_apply_help: Egyszer olvas, majd alkalmazás előtt megnyitja a pontos ellenőrzött
+          javaslatot.
         pull_cleared_notice: 'A népesség-nyilvántartó hatóság továbbra is tartalmaz
           értéket {count} általad törölt mezőhöz: {axes}. Üresen maradtak; az itt
           végzett törlés nem módosítja a hatóság nyilvántartását.'
         pull_divergences_notice: 'A népesség-nyilvántartó hatóság {count} mezőnél
           eltérő értéket jelez a megadott válaszodhoz képest: {axes}. A válaszod változatlan
           marad; minden eltérést neked kell rendezni.'
-        pull_apply_help: Egyszer olvas, majd alkalmazás előtt megnyitja a pontos ellenőrzött javaslatot.
         pull_help: Előnézetet ad az AEAT nyilvántartási személyazonosságáról és címéről,
-          vagy a kanonikus folytatható művelettel ellenőriz és alkalmaz egy pontos javaslatot.
+          vagy a kanonikus folytatható művelettel ellenőriz és alkalmaz egy pontos
+          javaslatot.
         pull_preview_notice: 'Csak előnézet: a profilba semmi nem került.'
         pull_verified_tier_notice: Ezeket a tényeket közvetlenül a népesség-nyilvántartó
           hatóságtól olvastuk, ezért a censo felvétele ellenőrzöttnek számít.
@@ -2606,6 +2609,7 @@ cli:
         antigravity, codex).
       since_help: Az LLM futtatási rekordok alsó (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
       until_help: Az LLM futtatási rekordok felső (befoglaló) ISO dátumhatára (ÉÉÉÉ-HH-NN).
+    llm_run_data_observed: Ehhez a jelentéshez nem rögzítettek LLM-futtatási telemetriát.
     llm_usage:
       header: 'LLM-futtatások felhasználása:'
       help: LLM-futtatási felhasználási összesítők jelentése (darabszám, időtartam,

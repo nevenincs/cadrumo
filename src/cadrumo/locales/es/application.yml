@@ -405,12 +405,6 @@ application:
           de dato declarado en el registro.
         text_casilla_not_string: La entrada de texto de la casilla debe ser un valor
           de texto.
-    calculate:
-      errors:
-        repair_hints_forbidden: Las indicaciones de corrección solo se aceptan cuando
-          hay bloqueos que resolver.
-        repair_hints_required: Se requieren indicaciones de corrección cuando hay
-          bloqueos que resolver.
     complementaria:
       errors:
         justificante_csv_absent: La complementaria requiere el CSV del justificante

@@ -844,48 +844,6 @@ modelo:
             help: null
             label: Cuotas deducibles en virtud de resolución administrativa o sentencia
               firmes con tipos no vigentes - Cuota deducible
-          iva-operaciones-especificas-adquisiciones-interiores-exentas:
-            help: null
-            label: Operaciones específicas - Adquisiciones interiores exentas [230]
-          iva-operaciones-especificas-adquisiciones-intracomunitarias-exentas:
-            help: null
-            label: Operaciones específicas - Adquisiciones intracomunitarias exentas
-              [109]
-          iva-operaciones-especificas-base-iva-soportado-no-deducible:
-            help: null
-            label: Operaciones específicas - Bases imponibles del IVA soportado no
-              deducible [232]
-          iva-operaciones-especificas-criterio-caja-adquisiciones-base:
-            help: null
-            label: Operaciones específicas - Adquisiciones de bienes en régimen especial
-              del criterio de caja - Base imponible [656]
-          iva-operaciones-especificas-criterio-caja-adquisiciones-cuota:
-            help: null
-            label: Operaciones específicas - Adquisiciones de bienes en régimen especial
-              del criterio de caja - Cuota [657]
-          iva-operaciones-especificas-criterio-caja-entregas-base:
-            help: null
-            label: Operaciones específicas - Entregas de bienes en régimen especial
-              del criterio de caja - Base imponible [654]
-          iva-operaciones-especificas-criterio-caja-entregas-cuota:
-            help: null
-            label: Operaciones específicas - Entregas de bienes en régimen especial
-              del criterio de caja - Cuota [655]
-          iva-operaciones-especificas-entrega-interior-inversion-triangular:
-            help: null
-            label: Operaciones específicas - Entregas interiores de bienes devengadas
-              por inversión del sujeto pasivo en operaciones triangulares [113]
-          iva-operaciones-especificas-importaciones-exentas:
-            help: null
-            label: Operaciones específicas - Importaciones exentas [231]
-          iva-operaciones-especificas-operaciones-derecho-devolucion-mensual:
-            help: null
-            label: Operaciones específicas - Operaciones sujetas que originan el derecho
-              a la devolución mensual [111]
-          iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
-            help: null
-            label: Operaciones específicas - Servicios localizados en el territorio
-              de aplicación del impuesto por inversión del sujeto pasivo [523]
           iva-isp-interior-base:
             help: null
             label: Base imponible IVA autorepercutido en operaciones interiores con
@@ -958,6 +916,63 @@ modelo:
             help: null
             label: Modificación de bases imponibles y cuotas del recargo de equivalencia
               - Cuota
+          iva-operaciones-especificas-adquisiciones-interiores-exentas:
+            help: null
+            label: Operaciones específicas - Adquisiciones interiores exentas [230]
+          iva-operaciones-especificas-adquisiciones-intracomunitarias-exentas:
+            help: null
+            label: Operaciones específicas - Adquisiciones intracomunitarias exentas
+              [109]
+          iva-operaciones-especificas-base-iva-soportado-no-deducible:
+            help: null
+            label: Operaciones específicas - Bases imponibles del IVA soportado no
+              deducible [232]
+          iva-operaciones-especificas-criterio-caja-adquisiciones-base:
+            help: null
+            label: Operaciones específicas - Adquisiciones de bienes en régimen especial
+              del criterio de caja - Base imponible [656]
+          iva-operaciones-especificas-criterio-caja-adquisiciones-cuota:
+            help: null
+            label: Operaciones específicas - Adquisiciones de bienes en régimen especial
+              del criterio de caja - Cuota [657]
+          iva-operaciones-especificas-criterio-caja-entregas-base:
+            help: null
+            label: Operaciones específicas - Entregas de bienes en régimen especial
+              del criterio de caja - Base imponible [654]
+          iva-operaciones-especificas-criterio-caja-entregas-cuota:
+            help: null
+            label: Operaciones específicas - Entregas de bienes en régimen especial
+              del criterio de caja - Cuota [655]
+          iva-operaciones-especificas-entrega-interior-inversion-triangular:
+            help: null
+            label: Operaciones específicas - Entregas interiores de bienes devengadas
+              por inversión del sujeto pasivo en operaciones triangulares [113]
+          iva-operaciones-especificas-importaciones-exentas:
+            help: null
+            label: Operaciones específicas - Importaciones exentas [231]
+          iva-operaciones-especificas-operaciones-derecho-devolucion-mensual:
+            help: null
+            label: Operaciones específicas - Operaciones sujetas que originan el derecho
+              a la devolución mensual [111]
+          iva-operaciones-especificas-servicios-tai-inversion-sujeto-pasivo:
+            help: null
+            label: Operaciones específicas - Servicios localizados en el territorio
+              de aplicación del impuesto por inversión del sujeto pasivo [523]
+          iva-recargo-equivalencia-tipo-0-5-base:
+            help: null
+            label: Recargo de equivalencia al tipo 0,5% - Base imponible
+          iva-recargo-equivalencia-tipo-1-4-base:
+            help: null
+            label: Recargo de equivalencia al tipo 1,4% - Base imponible
+          iva-recargo-equivalencia-tipo-1-75-base:
+            help: null
+            label: Recargo de equivalencia al tipo 1,75% - Base imponible
+          iva-recargo-equivalencia-tipo-1-75-cuota:
+            help: null
+            label: Recargo de equivalencia al tipo 1,75% - Cuota
+          iva-recargo-equivalencia-tipo-5-2-base:
+            help: null
+            label: Recargo de equivalencia al tipo 5,2% - Base imponible
           iva-regularizacion-cuotas-art-80-cinco-5:
             help: null
             label: Regularización de cuotas del art. 80.Cinco.5ª LIVA
@@ -1123,21 +1138,6 @@ modelo:
           iva-repercutido-intragrupo-tipo-7-5-cuota:
             help: null
             label: IVA devengado en operaciones intragrupo al tipo 7,5% - Cuota
-          iva-recargo-equivalencia-tipo-0-5-base:
-            help: null
-            label: Recargo de equivalencia al tipo 0,5% - Base imponible
-          iva-recargo-equivalencia-tipo-1-4-base:
-            help: null
-            label: Recargo de equivalencia al tipo 1,4% - Base imponible
-          iva-recargo-equivalencia-tipo-1-75-base:
-            help: null
-            label: Recargo de equivalencia al tipo 1,75% - Base imponible
-          iva-recargo-equivalencia-tipo-1-75-cuota:
-            help: null
-            label: Recargo de equivalencia al tipo 1,75% - Cuota
-          iva-recargo-equivalencia-tipo-5-2-base:
-            help: null
-            label: Recargo de equivalencia al tipo 5,2% - Base imponible
           iva-resultado-liquidacion:
             help: null
             label: Resultado de la liquidación
