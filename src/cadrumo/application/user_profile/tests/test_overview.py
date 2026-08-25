@@ -18,8 +18,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.user_profile.overview import MASKED_PLACEHOLDER, build_profile_overview
-
 from ....core.classification import SensitivityClass
 from ....domain.user_profile.schema import (
     ProfileFieldDefinition,
@@ -30,6 +28,7 @@ from ....domain.user_profile.schema import (
     ProfileSnapshotPolicy,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ..overview import MASKED_PLACEHOLDER, build_profile_overview
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -178,9 +177,8 @@ def test_sections_keep_their_schema_declaration_order() -> None:
 
 def _shipped_decisions() -> dict[str, bool]:
     """Masking decision for every field the real shipped schema declares."""
-    from cadrumo.application.user_profile.overview import mask_profile_field
-
     from ....domain.user_profile.loader import load_user_profile_schema
+    from ..overview import mask_profile_field
 
     return {
         f"{section.key}.{field.key}": mask_profile_field(
@@ -206,9 +204,8 @@ def test_a_shipped_field_masks_exactly_when_the_schema_says_secret() -> None:
     keyword arm reading its own description. It fails again the day that
     arm is widened back over classified fields.
     """
-    from cadrumo.application.user_profile.overview import mask_profile_field
-
     from ....domain.user_profile.loader import load_user_profile_schema
+    from ..overview import mask_profile_field
 
     schema = load_user_profile_schema()
     divergent = {
@@ -228,7 +225,7 @@ def test_a_shipped_field_masks_exactly_when_the_schema_says_secret() -> None:
 
 
 def _mask_keywords() -> frozenset[str]:
-    from cadrumo.application.user_profile.overview import _MASK_KEYWORDS
+    from ..overview import _MASK_KEYWORDS
 
     return _MASK_KEYWORDS
 
@@ -252,7 +249,7 @@ def test_no_wording_can_mask_a_field_the_schema_declares_non_secret(keyword: str
     ``mask_profile_field`` that simply never masked would satisfy the
     first assertion while protecting nothing.
     """
-    from cadrumo.application.user_profile.overview import mask_profile_field
+    from ..overview import mask_profile_field
 
     label = f"mentions a {keyword} only to say that none is stored here"
 
@@ -279,8 +276,7 @@ def test_no_shipped_field_depends_on_the_keyword_arm() -> None:
     schema field declares. A fix over-applied into "never mask anything
     unclassified" would pass the first assertion and fail here.
     """
-    import cadrumo.application.user_profile.overview
-
+    from .. import overview
     from ..overview import mask_profile_field
 
     stray = "unknown.api_credential"
@@ -289,8 +285,8 @@ def test_no_shipped_field_depends_on_the_keyword_arm() -> None:
         "the keyword arm must cover an undeclared credential-shaped fact before the mutation"
     )
 
-    original_keywords = cadrumo.application.user_profile.overview._MASK_KEYWORDS
-    cadrumo.application.user_profile.overview._MASK_KEYWORDS = frozenset()
+    original_keywords = overview._MASK_KEYWORDS
+    overview._MASK_KEYWORDS = frozenset()
     try:
         changed = {path: (was, now) for path, was in before.items() if (now := _shipped_decisions()[path]) is not was}
         assert not changed, f"these shipped fields mask through the keyword arm, not their declaration: {changed}"
@@ -298,4 +294,4 @@ def test_no_shipped_field_depends_on_the_keyword_arm() -> None:
             "the keyword arm was not actually removed, so the assertion above proves nothing"
         )
     finally:
-        cadrumo.application.user_profile.overview._MASK_KEYWORDS = original_keywords
+        overview._MASK_KEYWORDS = original_keywords
