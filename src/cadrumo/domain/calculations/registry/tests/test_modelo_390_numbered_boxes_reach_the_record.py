@@ -78,6 +78,7 @@ def _written_bytes(revision, page: str) -> set[int]:
         return set()
     written: set[int] = set()
     for field in record.fields:
+        assert field.offset is not None and field.length is not None, f"unpositioned derived field {field.id}"
         written |= set(range(field.offset, field.offset + field.length))
     return written
 
@@ -123,6 +124,7 @@ def test_counting_only_casilla_fields_would_report_a_phantom_gap() -> None:
     casilla_only: set[int] = set()
     for field in record.fields:
         if field.kind == "casilla":
+            assert field.offset is not None and field.length is not None, f"unpositioned casilla field {field.id}"
             casilla_only |= set(range(field.offset, field.offset + field.length))
 
     unseen = [
