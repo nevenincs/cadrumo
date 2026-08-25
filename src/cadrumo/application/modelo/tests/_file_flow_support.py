@@ -27,6 +27,7 @@ from ....domain.buckets import (
 )
 from ....domain.calculations.registry import (
     InputKind,
+    ModeloRevision,
     RegistryModeloObservation,
     previous_filing_observation_requirements,
     relation_source_requirements,
@@ -197,7 +198,7 @@ _READY_PROFILE_FACTS = (
 )
 
 
-def _resolved_revision(*, modelo: str, filing_year: int, period: str):
+def _resolved_revision(*, modelo: str, filing_year: int, period: str) -> ModeloRevision:
     """Resolve a law-determined revision without touching the tree-wide authority.
 
     ``load_registry_tree`` compiles the tree without validating it, and
