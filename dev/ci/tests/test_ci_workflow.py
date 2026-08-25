@@ -334,6 +334,25 @@ def test_the_per_push_integration_gates_recipe_carries_the_substance_the_workflo
         assert target in body, f"the delegated lane no longer names {target}"
 
 
+def test_ci_per_push_integration_conformance_step_is_exact_and_blocking() -> None:
+    """The four-gate per-push verdict delegates once and cannot be made advisory."""
+    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    static = document["jobs"]["cadrumo-static"]
+    step = next(
+        (
+            candidate
+            for candidate in static["steps"]
+            if candidate.get("name")
+            == "Per-push integration conformance gates (rule-surface, status-frontend, self-referential-string, suggestion-command)"
+        ),
+        None,
+    )
+
+    assert step is not None, "the per-push integration conformance step is missing"
+    assert step["run"] == "CADRUMO_PYTEST_WORKERS=8 just test-per-push-integration-gates"
+    assert "continue-on-error" not in step
+
+
 def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
     """Ten-minute-wall discipline: hard job ceilings so a wedge dies in minutes.
 

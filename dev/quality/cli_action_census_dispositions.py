@@ -18,7 +18,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, cast
+from typing import Final, cast, override
 
 from cadrumo.core import scan_directory
 from dev._paths import UTF_8
@@ -544,6 +544,7 @@ class _ExceptionOverrideVisitor(ast.NodeVisitor):
             ),
         )
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self.symbols.append(node.name)
         self.classes.append(node.name)
@@ -563,12 +564,15 @@ class _ExceptionOverrideVisitor(ast.NodeVisitor):
         self.parameters.pop()
         self.symbols.pop()
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._visit_function(node)
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._visit_function(node)
 
+    @override
     def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
         names: frozenset[str] = (
             frozenset((node.name,))
@@ -584,6 +588,7 @@ class _ExceptionOverrideVisitor(ast.NodeVisitor):
             return bool(self.parameters and value.id in self.parameters[-1])
         return isinstance(value, ast.Attribute) and value.attr == "suggestion"
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         suggestion = next((keyword.value for keyword in node.keywords if keyword.arg == "suggestion"), None)
         if suggestion is not None:
@@ -639,6 +644,7 @@ class _ExceptionOverrideVisitor(ast.NodeVisitor):
             for direct_bases in self.bases.values()
         )
 
+    @override
     def visit_Assign(self, node: ast.Assign) -> None:
         bound: frozenset[str] = frozenset(name for names in self.exception_bindings for name in names)
         for target in node.targets:

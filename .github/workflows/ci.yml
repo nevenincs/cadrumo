@@ -204,26 +204,11 @@ jobs:
         # recipe so the path set and marker expression have one declaration
         # site, same convention as the step above.
         #
-        # NON-BLOCKING ON FIRST ENROLMENT, on the same terms this repository
-        # already documents for the integration and dev-tooling steps in the
-        # full lane: their first real execution IS the backlog measurement,
-        # not a regression signal. Measured 2026-08-12: 6 of 48 selected
-        # tests failed (2 in the status-frontend gate, 4 in the
-        # suggestion-command gate), concentrated in modules an active CLI
-        # action-rendering refactor is mid-flight on
-        # (`_modelo_work_runs_cli.py`, `_overview*.py`, `_harness_tools.py`,
-        # `_tools.py`).
-        #
-        # NOT "TEMPORARY" -- A NAMED CONDITION. This flag flips OFF exactly
-        # when both are true: the in-flight action-rendering refactor above
-        # lands, AND a re-run of `just test-per-push-integration-gates`
-        # measures 0 of 48 failing. Neither alone is sufficient -- a refactor
-        # landing does not by itself prove the 6 closed, and a transient 0
-        # against a dirty tree does not prove the refactor is what closed
-        # them. Flipping this on a lower bar than both is the same
-        # decorative-non-blocking-forever decay this repository has already
-        # documented for the integration and dev-tooling steps above; a
-        # tracked follow-up row owns re-measuring and flipping it.
+        # The action-envelope campaign is audited complete. The historical
+        # first-enrolment baseline on 2026-08-12 was 6 failures among the then
+        # 48 selected tests; the current authoritative same-four-module recipe
+        # is 46/46 green. The recipe owns its live path and marker selection,
+        # so this historical count is evidence, not a future pass criterion.
         #
         # -n 8, never the recipe's local `auto` default: this machine's 24
         # logical CPUs are shared with co-resident runners from other
@@ -233,7 +218,6 @@ jobs:
         # recipe keeps a workstation-friendly default, the same split the
         # unit job already uses.
         run: CADRUMO_PYTEST_WORKERS=8 just test-per-push-integration-gates
-        continue-on-error: true
 
   cadrumo-unit:
     name: Cadrumo / unit suite / Python 3.13

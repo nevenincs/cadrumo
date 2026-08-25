@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import difflib
 import json
+from collections.abc import Mapping
 
 from cadrumo.core.observability import canonicalise, differing_paths, mask_document
 
@@ -165,6 +166,8 @@ def compare_transcript_to_golden(
                 # sentence describing the HOST drops out of both.
                 masked_expected = mask_host_conditional_details(mask_document(expected.envelope))
                 masked_actual = mask_host_conditional_details(mask_document(live_envelope))
+                assert isinstance(masked_expected, Mapping)
+                assert isinstance(masked_actual, Mapping)
                 if canonicalise(masked_expected) != canonicalise(masked_actual):
                     diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
                     problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
