@@ -146,7 +146,7 @@ def resolve_active_profile_record() -> ActiveProfileRecordResolution:
     """Read the active profile's record and name the reason when there is none.
 
     The active selector resolves via the precedence chain in
-    :func:`cadrumo.core.resolve_active_bucket_id` (env var > pointer file
+    :func:`cadrumo.core.bucket_pointer.resolve_active_bucket_id` (env var > pointer file
     fallback), then the committed-capsule projection resolves a display label
     to its immutable bucket UUID before secure storage is addressed.
 
@@ -201,7 +201,7 @@ class WorkflowState(BaseModel):
 
     The historical ``profiles`` field has retired. Consumers that
     need to enumerate registered profiles call
-    :func:`cadrumo.application.workflow._profile_bucket_scan.list_profile_buckets`
+    :func:`cadrumo.application.workflow.profile_bucket_scan.list_profile_buckets`
     or :func:`read_profile_bucket` directly; both enumerate only committed
     current-format capsules through their anchored descriptors and never
     open an encrypted database. The active profile resolves via the
@@ -226,7 +226,7 @@ class WorkflowState(BaseModel):
         """Return the active :class:`UserProfileRecord` from its secure bucket.
 
         The active selector resolves via the precedence chain in
-        :func:`cadrumo.core.resolve_active_bucket_id` (env var > pointer file
+        :func:`cadrumo.core.bucket_pointer.resolve_active_bucket_id` (env var > pointer file
         fallback), then the committed-capsule projection resolves a display
         label to its immutable bucket UUID before secure storage is addressed.
 

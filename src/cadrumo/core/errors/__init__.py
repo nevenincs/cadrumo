@@ -303,7 +303,7 @@ class NoActiveProfileError(CadrumoError):
     to operate without an active profile. The active-bucket precedence chain is
     a core concern (env var > pointer file), so the refusal that gates it lives
     in the core error taxonomy and is raised by
-    :func:`core.require_active_bucket_id`. Callers that surface this to the
+    :func:`core.bucket_pointer.require_active_bucket_id`. Callers that surface this to the
     operator map it to the standard ``cli.common.errors.no_active_profile`` message.
     """
 

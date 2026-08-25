@@ -1110,7 +1110,7 @@ def active_profile_label() -> str | None:
     """Return the active taxpayer profile's display label, or ``None``.
 
     Resolves the active bucket id through the same core precedence chain
-    every command uses (:func:`~cadrumo.core.resolve_active_bucket_id`), then
+    every command uses (:func:`~cadrumo.core.bucket_pointer.resolve_active_bucket_id`), then
     resolves its live plaintext manifest label
     (:func:`~cadrumo.application.workflow.resolve_profile_bucket`) — the
     same non-secret display name

@@ -32,7 +32,7 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.core import resolve_active_bucket_id
+from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.domain.transactions import (
     BusinessClassification,
     RawProvenance,

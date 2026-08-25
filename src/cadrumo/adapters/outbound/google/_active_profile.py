@@ -5,7 +5,7 @@ performed by :mod:`adapters.outbound.google._oauth_flow` and
 :mod:`adapters.outbound.google._session_store` is scoped to one AEAT
 profile. :func:`adapters.outbound.google.resolve_active_profile` obtains
 that profile's immutable bucket UUID through
-:func:`core.resolve_active_bucket_id`, the operator-facing precedence
+:func:`core.bucket_pointer.resolve_active_bucket_id`, the operator-facing precedence
 chain driven by :class:`core.config.Settings` and the plaintext
 active-profile pointer file.
 
@@ -31,7 +31,7 @@ def resolve_active_profile() -> str:
 
     Raises:
         :exc:`adapters.outbound.google.GoogleAuthProfileUnboundError`:
-            When the :func:`core.resolve_active_bucket_id` precedence
+            When the :func:`core.bucket_pointer.resolve_active_bucket_id` precedence
             chain resolves to no profile. The error carries factual context
             naming the failed resolution attempt for renderers.
     """

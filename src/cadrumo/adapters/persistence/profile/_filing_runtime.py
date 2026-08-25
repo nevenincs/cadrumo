@@ -11,7 +11,7 @@ repositories they serve, so the secure-object coupling is a same-layer
 ``domain -> adapters`` violation.
 
 See Also:
-    :func:`~core.resolve_repository_bucket_id`
+    :func:`~core.bucket_pointer.resolve_repository_bucket_id`
         Shared resolver for explicit-or-active profile bucket ids.
     :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`
         Runtime storage factory used after the filing bucket id is resolved.

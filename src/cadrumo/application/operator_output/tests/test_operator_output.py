@@ -2,7 +2,7 @@
 
 No mocks: every case creates a real committed custody capsule under an
 isolated storage root and drives the real
-:func:`~cadrumo.core.resolve_active_bucket_id` precedence chain through
+:func:`~cadrumo.core.bucket_pointer.resolve_active_bucket_id` precedence chain through
 :func:`~cadrumo.core.config.override_settings`.
 
 These tests pin two structural guarantees: the sandbox-active indicator is

@@ -1,6 +1,6 @@
 """Precedence-chain tests for the active-profile resolver.
 
-The resolver lives at `cadrumo.core.resolve_active_bucket_id`. It consults
+The resolver lives at `cadrumo.core.bucket_pointer.resolve_active_bucket_id`. It consults
 two precedence rungs in order:
 
 1. `Settings.cadrumo_active_profile` (`CADRUMO_ACTIVE_PROFILE` env var, or
@@ -137,7 +137,7 @@ def test_active_profile_record_names_an_absent_capsule_as_the_reason(
     bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
     write_pointer(tmp_path, BucketPointer.selected(bucket_id=bucket_id, transition_revision=1))
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
-        caplog.set_level(logging.DEBUG, logger="cadrumo.application.workflow._state_models")
+        caplog.set_level(logging.DEBUG, logger="cadrumo.application.workflow.state_models")
 
         state = WorkflowState()
         assert state.active_profile_record() is None

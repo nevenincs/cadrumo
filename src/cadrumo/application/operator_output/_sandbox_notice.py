@@ -22,7 +22,7 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
     """Return the persistent sandbox-active :class:`Notice`, or ``None``.
 
     Resolves the active bucket id through the same core precedence chain
-    every command uses (:func:`~cadrumo.core.resolve_active_bucket_id`), then
+    every command uses (:func:`~cadrumo.core.bucket_pointer.resolve_active_bucket_id`), then
     reads its committed label projection and checks it against the reserved
     sandbox label prefix
     (:data:`~cadrumo.core.external_constants.SANDBOX_LABEL_PREFIX`). Returns

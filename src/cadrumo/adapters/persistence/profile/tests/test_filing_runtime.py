@@ -7,7 +7,7 @@ to secure-object storage through the bucket runtime.
 See Also:
     :mod:`~adapters.persistence.profile._filing_runtime`
         Adapter-layer resolver and secure-object factory under test.
-    :func:`~core.resolve_repository_bucket_id`
+    :func:`~core.bucket_pointer.resolve_repository_bucket_id`
         Shared explicit-or-active bucket resolver used by filing and modelo
         repositories.
     :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`

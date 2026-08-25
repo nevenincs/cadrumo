@@ -4,13 +4,13 @@
 :class:`UserProfileRecord` from the active bucket and returns an
 :class:`ActiveProfileHealth` verdict used by every operator status surface.
 Confirmed pointer repairs coordinate mutation through the public
-:func:`~cadrumo.application.user_profile.active_profile_pointer_transaction` boundary.
+:func:`~cadrumo.application.user_profile.profile_pointer.active_profile_pointer_transaction` boundary.
 
 See Also:
     :class:`~application.workflow.ProfileBucketPointer`
         Current committed-capsule projection resolved before secure profile
         records are loaded.
-    :mod:`application.workflow._profile_bucket_scan`
+    :mod:`application.workflow.profile_bucket_scan`
         Resolves anchored current-capsule label projections without opening
         encrypted profile facts.
     :class:`~application.workflow.WorkflowState`
@@ -32,7 +32,15 @@ from pydantic import BaseModel, PrivateAttr, ValidationError
 
 from ...adapters.persistence.storage.custody import ProfileCustodyRecordError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ActionArgumentSource, ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, ProfileRecordUnavailability, ProfileSessionRefusalReason
+from ...core import (
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    NoRecoveryOutcome,
+    ProfileRecordUnavailability,
+    ProfileSessionRefusalReason,
+)
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import load_settings, override_settings
 from ...core.errors import CadrumoError

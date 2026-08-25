@@ -11,7 +11,7 @@ See Also:
         Helper under test for explicit bucket ids and active-profile fallback.
     :func:`~application.filing._runtime_repository.secure_objects_for_application_filing_bucket`
         Runtime storage factory wrapper whose unready-bucket refusal is covered.
-    :func:`~core.resolve_repository_bucket_id`
+    :func:`~core.bucket_pointer.resolve_repository_bucket_id`
         Shared resolver that normalizes explicit-or-active repository bucket ids.
     :func:`~adapters.persistence.storage.secure_object_repository_for_bucket`
         Secure-object factory reached only when runtime storage is requested.
