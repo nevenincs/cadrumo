@@ -29,15 +29,12 @@ class CertificateSessionDetail(BaseModel):
         return assert_canonical_protected_resource(value, subject="certificate session proof")
 
 
-_ClaveProviderKind = Literal[AuthProviderKind.CLAVE_MOVIL, AuthProviderKind.CLAVE_PERMANENTE]
-
-
-class _ClaveSessionDetailBase(BaseModel):
+class _ClaveSessionDetailBase[ProviderKindT: AuthProviderKind](BaseModel):
     """Identity and landing facts common to Cl@ve-backed sessions."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    kind: _ClaveProviderKind
+    kind: ProviderKindT
     dni_nie: str = Field(
         min_length=1,
         description="DNI/NIE used for the Cl@ve login (authoritative identity).",
@@ -52,7 +49,7 @@ class _ClaveSessionDetailBase(BaseModel):
     )
 
 
-class ClaveMovilSessionDetail(_ClaveSessionDetailBase):
+class ClaveMovilSessionDetail(_ClaveSessionDetailBase[Literal[AuthProviderKind.CLAVE_MOVIL]]):
     """Session facts unique to a Cl@ve Móvil authentication."""
 
     kind: Literal[AuthProviderKind.CLAVE_MOVIL] = AuthProviderKind.CLAVE_MOVIL
@@ -69,7 +66,7 @@ class ClaveMovilSessionDetail(_ClaveSessionDetailBase):
     )
 
 
-class ClavePermanenteSessionDetail(_ClaveSessionDetailBase):
+class ClavePermanenteSessionDetail(_ClaveSessionDetailBase[Literal[AuthProviderKind.CLAVE_PERMANENTE]]):
     """Session facts unique to a Cl@ve Permanente authentication."""
 
     kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE
@@ -86,12 +83,12 @@ class CertificateLoginAssertionDetail(BaseModel):
     parsed_subject: str | None = None
 
 
-class _ClaveLoginAssertionDetailBase(BaseModel):
+class _ClaveLoginAssertionDetailBase[ProviderKindT: AuthProviderKind](BaseModel):
     """Probe facts common to Cl@ve-backed login assertions."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    kind: _ClaveProviderKind
+    kind: ProviderKindT
     session_cookie_present: bool = Field(
         default=False,
         description=(
@@ -105,13 +102,17 @@ class _ClaveLoginAssertionDetailBase(BaseModel):
     )
 
 
-class ClaveMovilLoginAssertionDetail(_ClaveLoginAssertionDetailBase):
+class ClaveMovilLoginAssertionDetail(
+    _ClaveLoginAssertionDetailBase[Literal[AuthProviderKind.CLAVE_MOVIL]],
+):
     """Probe facts for a Cl@ve Móvil session."""
 
     kind: Literal[AuthProviderKind.CLAVE_MOVIL] = AuthProviderKind.CLAVE_MOVIL
 
 
-class ClavePermanenteLoginAssertionDetail(_ClaveLoginAssertionDetailBase):
+class ClavePermanenteLoginAssertionDetail(
+    _ClaveLoginAssertionDetailBase[Literal[AuthProviderKind.CLAVE_PERMANENTE]],
+):
     """Probe facts for a Cl@ve Permanente session."""
 
     kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE

@@ -1,9 +1,9 @@
 """Default Playwright browser-session factory for auth providers.
 
 Auth providers accept a
-:class:`adapters.outbound.aeat.auth.BrowserSessionFactory`: an async
+:class:`application.auth.protocols.BrowserSessionFactoryPort`: an async
 callable that returns a
-:class:`adapters.outbound.aeat.auth.BrowserSessionLike`. The default
+:class:`application.auth.protocols.BrowserSessionPort`. The default
 factory supplies that protocol with a Playwright-backed :class:`BrowserSession`,
 while :func:`adapters.outbound.aeat.auth.select_provider` still accepts
 ``browser_session_factory=None`` so tests and callers can inject their own
@@ -12,10 +12,10 @@ in-process implementations.
 This module provides:
 
 * :class:`DefaultBrowserSession`, the
-  :class:`~adapters.outbound.aeat.auth.BrowserSessionLike` wrapper that
+  :class:`~cadrumo.application.auth.protocols.BrowserSessionPort` wrapper that
   owns a ``Playwright`` runtime and :class:`BrowserSession` pair.
 * :func:`default_browser_session_factory`, the production
-  :class:`~adapters.outbound.aeat.auth.BrowserSessionFactory` entry point
+  :class:`~cadrumo.application.auth.protocols.BrowserSessionFactoryPort` entry point
   used by auth providers and diagnostics.
 * :func:`shared_playwright_runtime` and :func:`opened_browser_page`, the
   lower-level helpers used by bulk Sede readers that need to reuse one
@@ -29,7 +29,7 @@ this module carries the concrete runtime wiring.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Final
 
@@ -96,7 +96,7 @@ class _SharedPlaywrightRuntimeOwner:
 
 
 class DefaultBrowserSession:
-    """Concrete :class:`~adapters.outbound.aeat.auth.BrowserSessionLike`.
+    """Concrete :class:`~cadrumo.application.auth.protocols.BrowserSessionPort`.
 
     Auth providers depend on the protocol rather than on :class:`BrowserSession`
     or Playwright directly. ``DefaultBrowserSession`` is the production adapter
@@ -224,7 +224,7 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     """Start Playwright and return a wrapped :class:`DefaultBrowserSession`.
 
     The returned object satisfies
-    :class:`adapters.outbound.aeat.auth.BrowserSessionLike` and owns its
+    :class:`cadrumo.application.auth.protocols.BrowserSessionPort` and owns its
     Playwright runtime for the full lifetime. The :class:`Profile` name follows
     the active bucket when one exists and falls back to a diagnostic sentinel so
     browser connectivity probes can run before profile setup is complete.
@@ -277,7 +277,7 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
 
 
 @asynccontextmanager
-async def shared_playwright_runtime() -> AsyncIterator[Playwright]:
+async def shared_playwright_runtime() -> AsyncGenerator[Playwright]:
     """Yield a centrally owned Playwright runtime for bulk browser workflows.
 
     Callers that need several :class:`Profile`-scoped contexts can start
@@ -305,7 +305,7 @@ async def opened_browser_page(
     *,
     provisioner: Any | None = None,
     storage_state: dict[str, Any] | None = None,
-) -> AsyncIterator[tuple[Page, BrowserContext]]:
+) -> AsyncGenerator[tuple[Page, BrowserContext]]:
     """Yield a :class:`BrowserSession` page/context pair and close both.
 
     The helper builds a short-lived :class:`BrowserSession` around the supplied

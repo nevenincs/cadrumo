@@ -8,9 +8,9 @@ import time
 import psutil
 import pytest
 
+from ......application.auth.protocols import BrowserSessionPort
 from ......core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ......core.config import Settings
-from ...auth.authenticator_types import BrowserSessionLike
 from ...tests import wait_for_process_exit
 from .. import BrowserError, Profile, create_browser_session, opened_browser_page, shared_playwright_runtime
 from ..errors import BrowserPreconditionCondition
@@ -163,7 +163,7 @@ async def test_default_browser_session_is_protocol_complete_and_reaps_runtime() 
     """The production session owns Chromium and its Playwright driver."""
     settings = Settings()
     session = await create_browser_session(settings, _profile("protocol"))
-    assert isinstance(session, BrowserSessionLike)
+    assert isinstance(session, BrowserSessionPort)
 
     driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
     context = await session.create_context()

@@ -147,7 +147,9 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
 def compose_runtime_ports() -> Iterator[None]:
     """Compose real persistence and authentication adapters for tests."""
     from .adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
+    from .adapters.outbound.aeat.auth.session_store import build_session_store
     from .adapters.persistence.workflow import build_workflow_persistence_port
+    from .application.auth.protocols import bind_session_store
     from .application.auth.providers import bind_auth_provider_selector
     from .application.workflow.persistence import bind_workflow_persistence_port
     from .tests.profile_persistence import composed_profile_persistence_ports
@@ -156,6 +158,7 @@ def compose_runtime_ports() -> Iterator[None]:
         composed_profile_persistence_ports(),
         bind_workflow_persistence_port(build_workflow_persistence_port()),
         bind_auth_provider_selector(select_outbound_auth_provider),
+        bind_session_store(build_session_store()),
     ):
         yield
 

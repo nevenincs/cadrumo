@@ -10,7 +10,7 @@ from .....core.i18n import tr
 from .errors import SedeNavigationError
 
 if TYPE_CHECKING:
-    from ..auth.authenticator_types import AeatSession
+    from .....application.auth.session_types import AeatSession
 
 
 def storage_state_for_session(session: AeatSession) -> dict[str, object]:

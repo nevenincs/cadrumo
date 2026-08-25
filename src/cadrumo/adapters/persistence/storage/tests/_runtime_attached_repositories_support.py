@@ -132,7 +132,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .....tests.master_key import EphemeralMasterKeyProvider
-from ....outbound.aeat.auth import _session_store as _session_store
+from ....outbound.aeat.auth import session_store as _session_store
 from ....outbound.aeat.sede import ExpedienteNotFoundError, FiledDeclaracionArtefact, FiledDeclaracionObservationStore
 from ....outbound.google import (
     REQUIRED_SCOPES,

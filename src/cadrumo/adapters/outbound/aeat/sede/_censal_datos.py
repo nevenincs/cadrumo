@@ -44,7 +44,11 @@ from urllib.parse import quote, urlsplit
 
 from bs4 import Tag
 
-from .....application.user_profile.censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
+from .....application.user_profile.censal_observation import (
+    CensalObservation,
+    CensalObservationAddress,
+    CensalObservationIdentity,
+)
 from .....core import fold_diacritics
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
@@ -63,11 +67,11 @@ from ..browser import BrowserSession, DefaultBrowserSession, default_browser_ses
 from ._adapter_utils import assert_read_http_for
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
-from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._walker import assert_landed_url_readable
+from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 
 if TYPE_CHECKING:
-    from ..auth.authenticator_types import AeatSession
+    from .....application.auth.session_types import AeatSession
 
 
 log = get_logger(__name__)

@@ -105,12 +105,6 @@ from ._declarations_observations import (
 )
 from ._declarations_remote import extract_csv_from_url as _extract_csv_from_url
 from ._declarations_schema import Declaracion
-from .errors import (
-    JustificanteFetchError,
-    SedeFailureMode,
-    SedeNavigationError,
-    SedeParseError,
-)
 from ._schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
@@ -120,10 +114,16 @@ from ._schema import (
     ObservedCasillaValue,
     SedeCapture,
 )
+from .errors import (
+    JustificanteFetchError,
+    SedeFailureMode,
+    SedeNavigationError,
+    SedeParseError,
+)
 
 if TYPE_CHECKING:
+    from .....application.auth.session_types import AeatSession
     from .....domain.calculations.registry import ModeloRevision
-    from ..auth.authenticator_types import AeatSession
 
 
 log = get_logger(__name__)
