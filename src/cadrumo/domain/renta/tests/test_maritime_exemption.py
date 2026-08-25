@@ -315,6 +315,7 @@ class TestCalculateArt7pExemption:
             facts=self._BASE_FACTS,
         )
         assert isinstance(obs, CasillaObservation)
+        assert isinstance(obs.value, Decimal)
         assert obs.value < ART_7P_EXEMPTION_CAP_EUR
         assert obs.value > Decimal("0")
 
@@ -347,6 +348,7 @@ class TestCalculateArt7pExemption:
             qualifying_days=1,
             facts=self._BASE_FACTS,
         )
+        assert isinstance(obs.value, Decimal)
         assert obs.value > Decimal("0")
         assert obs.value < ART_7P_EXEMPTION_CAP_EUR
 
@@ -448,6 +450,7 @@ class TestCalculateRebecaExemption:
             facts=self._REBECA_FACTS,
         )
         assert isinstance(obs, CasillaObservation)
+        assert isinstance(obs.value, Decimal)
         assert obs.value > Decimal("0")
         assert obs.value < Decimal("30000")
 
@@ -463,6 +466,7 @@ class TestCalculateRebecaExemption:
             facts=facts,
         )
         assert isinstance(obs, CasillaObservation)
+        assert isinstance(obs.value, Decimal)
         assert obs.value > Decimal("0")
         assert obs.value < Decimal("40000")
 
@@ -478,6 +482,7 @@ class TestCalculateRebecaExemption:
             facts=facts,
         )
         assert isinstance(obs, CasillaObservation)
+        assert isinstance(obs.value, Decimal)
         assert obs.value > Decimal("0")
         assert obs.value < Decimal("50000")
 
