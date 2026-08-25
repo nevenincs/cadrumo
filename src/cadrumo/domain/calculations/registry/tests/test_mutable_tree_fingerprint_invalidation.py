@@ -31,6 +31,7 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.resources import bundled_path
+from .. import ModeloDefinition
 from .._identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 from .._loader import (
     _collect_registry_directory_fingerprints,
@@ -145,10 +146,10 @@ def _write_registry_tree(tmp_path: Path, *, number: str) -> Path:
     return registry_root
 
 
-def _casilla_number(modelos: tuple[object, ...]) -> str:
+def _casilla_number(modelos: tuple[ModeloDefinition, ...]) -> str:
     """Read the one observable field back out of the compiled registry."""
-    modelo = next(candidate for candidate in modelos if candidate.id == "999")  # type: ignore[attr-defined]
-    return modelo.revisions["2025"].casillas[0].number  # type: ignore[attr-defined]
+    modelo = next(candidate for candidate in modelos if candidate.id == "999")
+    return modelo.revisions["2025"].casillas[0].number
 
 
 def test_a_mutable_authoring_tree_leaves_no_fingerprint_cache_entry(tmp_path: Path) -> None:
@@ -266,7 +267,7 @@ def test_a_mutable_tree_edit_is_seen_in_the_production_disk_cache_regime(tmp_pat
     isolated_cache_dir = tmp_path / "registry-disk-cache"
     isolated_cache_dir.mkdir()
 
-    env = {
+    env: dict[str, str] = {
         **os.environ,
         REGISTRY_DISK_CACHE_DIR_ENV_VAR: str(isolated_cache_dir),
         _CHILD_REGISTRY_ROOT_ENV_VAR: str(registry_root),
