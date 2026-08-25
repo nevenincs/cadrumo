@@ -3,7 +3,7 @@ fragment_id = "dp200044"
 modelo = "200"
 design_epoch = "2025"
 source_ref = "aeat-dr-200-2025"
-source_sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"
+source_sha256 = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509"
 
 [[entries]]
 export_field_id = "m200-2025.dp200044.f0001"

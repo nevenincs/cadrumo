@@ -79,7 +79,7 @@ def _semantic_map_payload(
     *,
     entries: tuple[dict[str, object], ...],
     source_ref: str = "aeat-dr-200-2025",
-    source_sha256: str = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
+    source_sha256: str = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
     modelo: str = "200",
     design_epoch: str = "2025",
 ) -> dict[str, object]:
