@@ -677,7 +677,7 @@ test-per-push-integration-gates:
 [doc('Enrol the tests that query the resident vaultspec-rag search service (held out of every other lane).')]
 [group('testing')]
 test-resident-service:
-    @uv run --no-sync pytest -q -m "resident_service" dev/docs/preprocess/tests dev/docs/terminology/tests
+    @uv run --no-sync pytest -q -n0 -m "resident_service" dev/docs/preprocess/tests dev/docs/terminology/tests src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py
 
 # Run BOTH lanes in sequence and report them separately. The default pytest
 # invocation is pinned to the unit lane by addopts, so `just test-unit` green
