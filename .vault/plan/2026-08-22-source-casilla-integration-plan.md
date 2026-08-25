@@ -14,7 +14,7 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
 modified: '2026-08-25'
-body_hash: 'sha256:2188a02270e13ec4ce8e292887c062dd653b3e90fa68dc3b053f3d5321b44bc9'
+body_hash: 'sha256:38bda458c3e01055a6ed070eb1101250586e2f2adecf1b575e67314dfece7d2a'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -335,7 +335,7 @@ settles their source and record semantics.
 - [x] `W05.P17.S100` - adjudicate Modelo 182 donor-detail and Article-3 declarant/header source semantics, including type-1 nature `3` and administrator-holder identity, from official evidence; `.vault/research/2026-08-22-source-casilla-integration-m182-row-source-grounding-research.md`.
 - [x] `W05.P17.S101` - recast Modelo 182 as a bounded terminal ingress-blocked deferral pending distinct non-lossy type-1 declarant/header and type-2 donor-detail carriers, secure owner(s), durable identity/fingerprint, and S102 lifecycle/export proof; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [x] `W05.P17.S102` - prove the Modelo 182 donor source remains refused at calculation ingress and unavailable to connected encrypted persistence, provenance, replay, review, or repeated-record export until S101's reopening predicate is satisfied, while the five direct manual type-2 casillas remain available and no type-1/header support is claimed; `dev/source_connectivity/tests/test_m182_deferral.py`.
-- [ ] `W05.P17.S103` - formally close the reviewed terminal Modelo 182 ingress-blocked census disposition, retain its owner, expiry, reopening predicate, no-connected-route boundary, and reviewed S100-S102 evidence, then hand the closure to independent final review; `src/cadrumo/_data/source_connectivity/census.toml; dev/source_connectivity/tests/test_m182_deferral.py; .vault/audit/2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-followup-audit.md`.
+- [x] `W05.P17.S103` - formally close the reviewed terminal Modelo 182 ingress-blocked census disposition, retain its owner, expiry, reopening predicate, no-connected-route boundary, and reviewed S100-S102 evidence, then hand the closure to independent final review; `src/cadrumo/_data/source_connectivity/census.toml; dev/source_connectivity/tests/test_m182_deferral.py; .vault/audit/2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-followup-audit.md`.
 
 ### Phase `W05.P18` - resolve M193 contributor-expense rows
 
