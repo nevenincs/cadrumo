@@ -11,6 +11,7 @@ from ._secure_objects_fixtures import secure_objects
 
 __all__ = ["secure_objects"]
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.resources import resources
@@ -167,6 +168,7 @@ def test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_tran
         bucket_id="test",
         period=_ANNUAL_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert {o.transaction_id for o in result.observations} == {jan.transaction_id}
@@ -198,6 +200,7 @@ def test_repository_backed_m100_aggregation_partition_matches_full_scan(
         bucket_id="test",
         period=_ANNUAL_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
     full_scan = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
 
