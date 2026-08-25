@@ -26,12 +26,12 @@ from __future__ import annotations
 import pytest
 
 from .._authority import bundled_authority
-from .._coverage import audit_registry_construct_evidence
+from .._coverage import ConstructEvidenceLedger, audit_registry_construct_evidence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 
-def _audit() -> tuple[object, ...]:
+def _audit() -> tuple[ConstructEvidenceLedger, ...]:
     return audit_registry_construct_evidence(bundled_authority()).ledgers
 
 
@@ -52,9 +52,10 @@ def test_a_capability_fallback_is_recorded_rather_than_silently_demoted() -> Non
         assert ledger.authority_scope == "inspection_only", (
             f"{ledger.modelo}/{ledger.revision}: a capability fallback must not keep filing scope"
         )
-        assert "filing artifact" in ledger.authority_fallback_reason, (
-            f"{ledger.modelo}/{ledger.revision}: the recorded reason must name the refusal, "
-            f"got {ledger.authority_fallback_reason!r}"
+        reason = ledger.authority_fallback_reason
+        assert reason is not None
+        assert "filing artifact" in reason, (
+            f"{ledger.modelo}/{ledger.revision}: the recorded reason must name the refusal, got {reason!r}"
         )
 
 
