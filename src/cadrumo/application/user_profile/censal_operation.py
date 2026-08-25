@@ -10,26 +10,6 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-    operation_public_schema_reference,
-)
-
 from ...core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,
@@ -44,7 +24,26 @@ from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity import ContentDigest, ContentDigestOrAbsent, ProfileId
 from ...domain.user_profile.values import UserProfileRecord
+from ..operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
+from ..operations.registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+    OperationSchemaBindingV1,
+    operation_public_schema_reference,
+)
 from .capsule_record import ProfileRecordConflictError
 from .censal_observation import CensalObservation
 from .censo_sync import (
