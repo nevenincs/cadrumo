@@ -351,6 +351,7 @@ class CensalOperationExecutor:
         apply: Callable[[CensalReviewedOperand], None] | None = None,
         before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
+        """Initialize the executor with its acquisition, apply, and boundary hooks."""
         self._acquire = acquire or _pull_censal_datos
         self._apply = apply or _apply_reviewed_cotejo
         self._before_irreversible_section = before_irreversible_section or _ready_for_irreversible_section
@@ -360,6 +361,7 @@ class CensalOperationExecutor:
         request: OperationRequest[CensalOperationRequest],
         context: OperationExecutorContext,
     ) -> str | None:
+        """Acquire the observation and publish one durable review checkpoint."""
         if await _acknowledge_if_cancelled(context):
             return None
         await context.events.phase(CENSAL_PHASE_PREFLIGHT)
@@ -422,6 +424,7 @@ class CensalOperationExecutor:
         checkpoint: OperationResumeCheckpoint,
         context: OperationExecutorContext,
     ) -> str | None:
+        """Resume a consumed review checkpoint and apply or reject its operand."""
         del request
         if await _acknowledge_if_cancelled(context):
             return None
