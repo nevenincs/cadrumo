@@ -73,10 +73,13 @@ def _assert_no_forbidden_authority(
             left = constant_string(node.left)
             right = constant_string(node.right)
             return None if left is None or right is None else left + right
-        if isinstance(node, ast.JoinedStr) and all(
-            isinstance(value, ast.Constant) and isinstance(value.value, str) for value in node.values
-        ):
-            return "".join(value.value for value in node.values if isinstance(value, ast.Constant))
+        if isinstance(node, ast.JoinedStr):
+            parts: list[str] = []
+            for value in node.values:
+                if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
+                    return None
+                parts.append(value.value)
+            return "".join(parts)
         return None
 
     conflicting_constants: set[str] = set()
