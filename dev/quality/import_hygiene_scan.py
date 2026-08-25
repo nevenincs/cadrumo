@@ -57,7 +57,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
+
+from .._paths import REPO_ROOT, UTF_8
 
 SRC_ROOT = REPO_ROOT / "src"
 PKG_ROOT = SRC_ROOT / "cadrumo"
