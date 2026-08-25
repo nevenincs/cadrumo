@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:7985909247932c883d411fb42e919b37480bd0592aa5f913b32f9387db16bb20'
+body_hash: 'sha256:473d349ad31c256fd09b0568e18d97428a37c56ed3cf3ccdbf5757b8f3bd02f3'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -113,10 +113,12 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P15-S94]]'
   - '[[2026-08-22-source-casilla-integration-W05-P15-S95]]'
   - '[[2026-08-22-source-casilla-integration-W05-P15-summary]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P16-S96]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
   - '[[2026-08-22-source-casilla-integration-m232-row-source-grounding-research]]'
+  - '[[2026-08-22-source-casilla-integration-m360-row-source-grounding-research]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
   - '[[2026-08-22-source-casilla-integration-research]]'
   - '[[2026-08-22-source-casilla-integration-s135-phase-quality-review-audit]]'
@@ -342,6 +344,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P15-S94` - prove the M232 related-party-operation source remains refused at calculation ingress and unavailable to a connected encrypted source lifecycle, diagnostics/review, and repeated-record export while direct positional Modelo232VinculadaRow encrypted replay remains supported
 - `2026-08-22-source-casilla-integration-W05-P15-S95` - formally close the reviewed bounded M232 ingress-blocked census disposition and obtain final review
 - `2026-08-22-source-casilla-integration-W05-P15-summary` - `source-casilla-integration` `W05.P15` summary
+- `2026-08-22-source-casilla-integration-W05-P16-S96` - adjudicate M360 row semantics and source ownership from official evidence
 
 ### plan
 
@@ -351,4 +354,5 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 
 - `2026-08-22-source-casilla-integration-composite-provenance-research` - `source-casilla-integration` research: `composite calculation-source provenance`
 - `2026-08-22-source-casilla-integration-m232-row-source-grounding-research` - `source-casilla-integration` research: `m232 row source grounding`
+- `2026-08-22-source-casilla-integration-m360-row-source-grounding-research` - `source-casilla-integration` research: `m360 row source grounding`
 - `2026-08-22-source-casilla-integration-research` - `source-casilla-integration` research: `recurring discovery and enrollment of disconnected calculation sources`
