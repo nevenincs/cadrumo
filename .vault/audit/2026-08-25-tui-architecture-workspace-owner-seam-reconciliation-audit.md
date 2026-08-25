@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:5cee0b2d15a59e797e470c8a0b6b53b12cee2244224a330f8f957813fed2a1de'
+body_hash: 'sha256:a633377678b4933b26f6319a59527b1daa968488088fdbd68421550df91831f3'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -17,14 +17,17 @@ related:
 
 ## Scope
 
-Read-only reconciliation of the accepted Workspace decision, the S125-S167 and
-S128-S131 plan cohort, the S128 composition reference, the enforced layer graph,
-and the live S125-S127 implementation. Two independent Sol architecture reviews
-were combined with Vaultspec RAG semantic discovery, whole-file reads, and exact
-symbol/import census. The audit specifically tested for an implementable
-dependency direction, one canonical semantic owner per contributor, current-only
-contract topology, and absence of shims, aliases, fallbacks, bridge modules, and
-parallel Workspace authorities.
+Read-only reconciliation of the pre-amendment corpus at commit `40b2edce50`:
+the accepted Workspace decision, the S125-S167 and S128-S131 plan cohort, the
+S128 composition reference, the enforced layer graph, and the live S125-S127
+implementation. Two independent Sol architecture reviews were combined with
+Vaultspec RAG semantic discovery, whole-file reads, and exact symbol/import
+census. The findings below describe that audited pre-amendment state; their
+approved resolution lives in the amended accepted
+`2026-08-24-tui-registry-api-gate-adr` and aligned plan. The audit specifically
+tested for an implementable dependency direction, one canonical semantic owner
+per contributor, current-only contract topology, and absence of shims, aliases,
+fallbacks, bridge modules, and parallel Workspace authorities.
 
 ## Findings
 
@@ -102,14 +105,24 @@ non-`__init__` re-export bridge was found in the S125-S127 surface.
 
 ## Recommendations
 
-Amend the accepted Workspace ADR in place to establish the two-level native
-owner capture/application S126 seam; the exact contributor identity and
-admission-capture fixed points; process-incarnation invalidation; and the
-one-native-read/no-application-generation conformance rules. Amend S159-S167,
-S128-S131, and downstream receipt rows to execute and attest that decision.
+The approved remediation amended the accepted Workspace ADR in place to
+establish the two-level native owner capture/application S126 seam; the exact
+contributor identity and admission-capture fixed points; process-incarnation
+invalidation; and the one-native-read/no-application-generation conformance
+rules. S159-S167, S128-S131, and downstream receipt rows now execute and attest
+that decision.
 
-Correct the S128 reference so it records the resulting dependency map without
-owning a competing decision. Update stale S126 audit wording and the accepted
-interface-ADR status statement. Require every implementation step to repeat
-Vaultspec RAG semantic discovery plus exact source census and to delete any
-parallel implementation it finds before the step can close.
+The S128 reference now records the resulting dependency map without owning a
+competing decision; stale S126 audit wording and the accepted interface-ADR
+status statement are corrected. The amended W03.P20 phase intent now governs
+continuous Vaultspec RAG semantic discovery plus exact source census and
+requires deletion of any parallel implementation before an in-scope step can
+close; S130 and S139 carry the aggregate conformance and receipt proof.
+
+## Disposition
+
+RESOLVED. The accepted ADR, execution plan, composition references, and S126
+audit are reconciled to the legal dependency direction. Implementation remains
+open at S159; this disposition closes the architecture contradiction only and
+does not attest any native capture, S126 registration, Workspace assembler, or
+dependency receipt.

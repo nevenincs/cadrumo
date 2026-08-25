@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-registry-api-gate'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:92dcaf6d0eb5cf6847150c401d83404410096c0cd9ee26c38fbb9b1636875a6e'
+body_hash: 'sha256:58788a2b90079a2190525c60b3854074cfdd30eb1f9dfdffc14bfadd795b6d0b'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -299,7 +299,8 @@ The Workspace-specific contract remains owned exclusively by
 declares exactly one `ModeloWorkspaceProducerContractV1` and exactly one
 `ModeloWorkspaceAtomicProjectionPortV1` realization over the owner's public
 native capture surface. That realization performs exactly one native capture,
-derives the safe Workspace contribution only from the captured immutable value,
+derives the safe Workspace contribution only from the captured immutable or
+otherwise snapshot-isolated value,
 constructs `ModeloWorkspaceProducerStampV1` from the application contract, and
 preserves the owner's generation unchanged in `ModeloWorkspaceEpochV1`.
 `read_current_stamp_and_epoch` combines the same contract-derived stamp with

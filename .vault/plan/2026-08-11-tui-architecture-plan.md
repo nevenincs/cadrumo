@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-25'
-body_hash: 'sha256:1f2e6948d68a4477388acd14d680f01a0eb717c70bdf74e5c30c207f036279d2'
+body_hash: 'sha256:f1ee57e9b9c5a906c187522340dde0751c8406cb8aedca5f63f12937c6d7eb4c'
 ---
 
 # `tui-architecture` plan
@@ -159,7 +159,7 @@ Move every current manager and credential action behind registered application e
 
 ### Phase `W03.P20` - Frontend-neutral Modelo Workspace V1
 
-Implement the read-only Workspace V1 contract, stamped contributing ports, generated schema-field denominator, canonical owner projections, and live conformance without exposing registry grammar or duplicating ModeloWorkReview.
+Implement the read-only Workspace V1 contract, stamped contributing ports, generated schema-field denominator, canonical owner projections, and live conformance without exposing registry grammar or duplicating ModeloWorkReview. Every open step in this phase begins with Vaultspec RAG semantic codebase discovery and exact source census, and closes only after the same census proves one canonical home and deletion of any parallel implementation, legacy path, shim, alias, fallback, or re-export bridge found in its scope.
 
 - [x] `W03.P20.S125` - Define strict Workspace V1 version headers, visible and exact target admission, inspection and graded result arms, projection, bounded facets, schema and provenance records, capability and refusal families, locale summary, and safe read baseline without mutation authority; `src/cadrumo/application/modelo/_workspace_models.py`.
 - [x] `W03.P20.S126` - Define the application-owned ModeloWorkspaceProducerContractV1, stamped contributing projections, owner-generation-preserving epochs, structural atomic port protocol, and generated producer-contract inventory without implementing or relocating any canonical owner's native projection or generation authority; `src/cadrumo/application/modelo/_workspace_producers.py`.
@@ -175,7 +175,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [ ] `W03.P20.S167` - Register exactly one application-owned S126 port realization over each of the eight canonical native owner capture surfaces, atomically relocate the existing field-manifest contract into that sole registration inventory, and prove exact contributor identities, one native capture, contract-derived stamps, unchanged owner generations, admission-set coverage, and refusal of missing, duplicate, stale, torn, ABA, or cross-incarnation coordinates without an alternate authority, shim, alias, fallback, re-export bridge, or adapter-package implementation; `src/cadrumo/application/modelo/_workspace_producers.py and focused native-seam conformance tests`.
 - [ ] `W03.P20.S128` - Assemble static Workspace projections from exactly registry, work, locale-catalogue, and field-manifest S126 registrations and graded projections from all eight registrations, enforcing exact target admission, bounded materialization, two-pass stamp/generation validation, process-incarnation-scoped baselines and cursors, and stable safe reads without directly rereading owners or parsing registry grammar; `src/cadrumo/application/modelo/_workspace_projection.py`.
 - [ ] `W03.P20.S129` - Export the sole frontend-neutral Workspace request, projection, capability, refresh-target, refusal, and producer-contract family without exposing registry grammar or persistence types; `src/cadrumo/application/modelo/__init__.py`.
-- [ ] `W03.P20.S130` - Prove strict Workspace round trips, exhaustive manifest coverage, exact ModeloWorkReview/readiness/closure parity, admission-specific contributor sets, exact-one-native-capture behavior, immutable captures, unchanged owner generations, epoch/ABA/cross-incarnation refusal, locale behavior, bounded non-retention, forbidden lower-layer ModeloWorkspace imports, and a Vaultspec-RAG-plus-exact census that fails duplicate, legacy, shim, alias, fallback, bridge, or parallel Workspace authorities; `src/cadrumo/application/modelo/tests/test_workspace_projection.py`.
+- [ ] `W03.P20.S130` - Prove strict Workspace round trips, exhaustive manifest coverage, exact ModeloWorkReview/readiness/closure parity, admission-specific contributor sets, exact-one-native-capture behavior, immutable or snapshot-isolated captures including mutation-after-capture isolation, unchanged owner generations, epoch/ABA/cross-incarnation refusal, locale behavior, bounded non-retention, forbidden lower-layer ModeloWorkspace imports, and a Vaultspec-RAG-plus-exact census that fails duplicate, legacy, shim, alias, fallback, bridge, or parallel Workspace authorities; `src/cadrumo/application/modelo/tests/test_workspace_projection.py`.
 - [ ] `W03.P20.S131` - Implement the sole ModeloWorkspaceC2DependencyReceiptV1 validator with current-HEAD, accepted-authority, closed-predecessor, public-schema, native-owner surface inventory, native/S126 seam-conformance digest, producer inventory, field denominator, process-incarnation refusal, conformance, no-legacy, and semantic redeclaration evidence checks while leaving receipt minting to the C1 handoff phase; `src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py`.
 
 ### Phase `W03.P21` - Frontend-neutral Modelo Edit Contract V1

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:d33d2bcd5277e44335c60db8204597c0b74c9cddf01670a1a9773451d065a425'
+body_hash: 'sha256:fba0e1a24c4e4159555fbb015e4434be5edf41e762b95e3ddc3bdc33a0e4dce2'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
@@ -34,7 +34,7 @@ S128 must compose these owners only through the application-owned S126 registrat
 
 ### Two-level native-capture/S126 seam
 
-Per the amended Workspace ADR, each canonical owner supplies a native atomic projection-plus-generation capture and current-generation read. `cadrumo.application.modelo` alone supplies exactly one stateless S126 realization for each of the eight fixed contributor identities. A realization calls its native capture exactly once, projects only the captured immutable value, derives the stamp from its S126 contract, and carries the native generation unchanged. It owns no state, counter, cache, selector, join, or second owner read. S128 invokes those registrations and never mints generations, hashes payloads as epochs, or computes substitute owner stamps.
+Per the amended Workspace ADR, each canonical owner supplies a native atomic projection-plus-generation capture and current-generation read. `cadrumo.application.modelo` alone supplies exactly one stateless S126 realization for each of the eight fixed contributor identities. A realization calls its native capture exactly once, projects only the captured immutable or otherwise snapshot-isolated value, derives the stamp from its S126 contract, and carries the native generation unchanged. It owns no state, counter, cache, selector, join, or second owner read. S128 invokes those registrations and never mints generations, hashes payloads as epochs, or computes substitute owner stamps.
 
 All eight native captures and all eight S126 registrations are currently missing. This is the principal implementation blocker. A stateless S126 realization is application composition, not an adapter authority; any realization that reads a repository or loader, recomputes owner semantics, derives its own generation, or retains a cache would instead be a forbidden duplicate authority.
 
@@ -46,9 +46,9 @@ All eight native captures and all eight S126 registrations are currently missing
 4. Invoke the selected S126 registrations in deterministic `(owner, producer)` identity order. Each registration performs exactly one native capture. Validate each result against its declared S126 contract before any join.
 5. Assemble only captured safe projections. Copy `ModeloWorkReview`, readiness, closure limbs, materialization/provenance and locale data from their owners. Apply bounded schema/materialization/provenance facets, stable cursors, canonical section/row identities, and capability dispositions; do not execute formula/selector grammar.
 6. Ask every selected registration for its current contract-derived stamp and owner-native generation in the same order. Require exact equality to the captured coordinates. Unknown, changed, or cross-process-incarnation coordinates cause a bounded whole-read retry or refusal; exhaustion returns `workspace_changed` or `consistency_unavailable`. Never retain a partial facet across retries.
-7. Only after pass two succeeds, mint the opaque baseline from sorted contributor tuples/stamps, selected target/revision, Workspace V1 contract, registry schema identity/fingerprint, locale catalogue digest, field-manifest digest, and safe request coordinate. No raw value, secret, source identity, repository key, or authorization enters the token.
+7. Only after pass two succeeds, mint the opaque baseline from the application process-incarnation coordinate, sorted contributor tuples/stamps, selected target/revision, Workspace V1 contract, registry schema identity/fingerprint, locale catalogue digest, field-manifest digest, and safe request coordinate. No raw value, secret, source identity, repository key, or authorization enters the token.
 
-Pagination and expansion re-present the baseline, selected revision, schema identity, contract version and sorted contributor tuple. A cursor is bounded and opaque; it cannot select a new revision, requery an unpinned owner, or retain an unbounded collection. Locale-only refresh may reuse canonical identity only if the locale producer proves identical non-localized content and coordinates.
+Pagination and expansion re-present and revalidate the baseline, application process incarnation, selected revision, schema identity, contract version, and sorted contributor tuple. A cursor minted by another process incarnation refuses as `workspace_changed`; a bounded opaque cursor cannot select a new revision, requery an unpinned owner, or retain an unbounded collection. Locale-only refresh may reuse canonical identity only if the locale producer proves identical non-localized content and coordinates within the same process incarnation.
 
 ### Safe projection rules
 

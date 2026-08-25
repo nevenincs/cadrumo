@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:3b88f8b5afab20fdade99ad9e61af9006af8f453899799e3f907ca76fd5aad5e'
+body_hash: 'sha256:0c59fb4314da7f2164306d183b64ce8e1d985e32dc1cc0b0a2627e202f7abb08'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -292,29 +292,36 @@ refresh authority.
   command prose, financial value in refusal/baseline metadata, or unsafe source
   identity. Bounded typed fact variants are required.
 
-## Exact implementation gaps after the census
+## Current implementation state after the reconciled census
 
-- The complete strict Workspace V1 header/request/result/projection/refusal/
-  baseline model family is absent from the audited HEAD.
-- Canonical target operands exist, but an explicit serialized discriminator
-  does not; solve this without redeclaring target identity.
-- Static inspection and graded snapshot owners exist, but their safe Workspace
-  DTO projections and explicit admission/result discriminators do not.
-- `ModeloWorkReview` is complete and public; only its Workspace facet
-  disposition and fixed-point embedding are missing.
-- Registry tree identity exists, but there is no public atomic schema identity
-  plus fingerprint projection suitable for Workspace capture.
-- Readiness exists, but no separately stamped per-capability verdict exists;
-  aggregate readiness must not be promoted.
-- Closure limbs exist, but the only full cross-authority join is under `dev`;
-  production closure remains `unmeasured` until its owner lands.
-- Calculation/source lineage exists, but a bounded redacted Workspace graph
-  and facet delivery contract do not.
-- Localization resolves values, but does not expose requested/resolved locale
-  and resolution disposition as a stamped public projection.
-- No Workspace safe-read baseline, bounded facet envelope, capability family,
-  domain/version refusal family, or mutation-excluding contract exists at the
-  audited HEAD.
+- S125 supplies the sole strict Workspace V1 request, admission, result,
+  projection, refusal, baseline, bounded-facet, capability, materialization,
+  provenance, readiness, and schema DTO family in `_workspace_models.py`.
+- S126 supplies the sole application-owned producer contract, stamp, epoch,
+  structural port, and fixed eight-kind inventory family in
+  `_workspace_producers.py`; it intentionally supplies no live owner surface.
+- S127 supplies the sole generated field-classification denominator in
+  `_workspace_manifest.py`. Its early field-manifest contract owner identity is
+  scheduled for correction and atomic relocation into S167's registration
+  inventory; no second manifest walker is permitted.
+- All eight canonical native atomic capture/current-generation surfaces remain
+  missing, as do their eight application-owned S126 registrations.
+- `ModeloWorkReview` is complete and public; its native capture and complete
+  Workspace fixed-point embedding remain open.
+- Registry tree identity exists, but its public native atomic inspection or
+  snapshot capture and process-incarnation-local generation remain open.
+- Readiness exists, but native capture and separately stamped per-capability
+  verdicts remain open; aggregate readiness must not be promoted.
+- Closure limbs exist, but the only full cross-authority join remains under
+  `dev`; production closure stays `unmeasured` until its canonical owner lands.
+- Calculation/source lineage exists, but its bounded redacted native projection
+  and Workspace facet delivery remain open.
+- Localization resolves values, but its native requested/resolved locale and
+  fallback/suppression projection remains open.
+- Workspace assembly, process-incarnation validation, facade export, complete
+  conformance, and dependency receipt remain open. Semantic and exact censuses
+  found no concrete Workspace assembler, compatibility reader, shim, alias,
+  fallback, re-export bridge, or parallel Workspace V1 authority.
 
 These gaps are intentionally split across the plan: S125 declares the safe
 models; S126 owns the application stamped-envelope and structural port types;
