@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#tui-architecture'
 date: '2026-08-11'
+modified: '2026-08-25'
+body_hash: 'sha256:cda2d1633f7ab555acf0ebe170cafa2302d276ad1b3abf1be8d732c59c25cb78'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -11,8 +13,6 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
-modified: '2026-08-25'
-body_hash: 'sha256:6d53c7267f1afde98e9a48c57e26b347838ecfd9aa655f6007f8071b3fcc81fa'
 ---
 
 # `tui-architecture` plan
@@ -164,7 +164,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S125` - Define strict Workspace V1 version headers, visible and exact target admission, inspection and graded result arms, projection, bounded facets, schema and provenance records, capability and refusal families, locale summary, and safe read baseline without mutation authority; `src/cadrumo/application/modelo/_workspace_models.py`.
 - [x] `W03.P20.S126` - Define the application-owned ModeloWorkspaceProducerContractV1, stamped contributing projections, owner-generation-preserving epochs, structural atomic port protocol, and generated producer-contract inventory without implementing or relocating any canonical owner's native projection or generation authority; `src/cadrumo/application/modelo/_workspace_producers.py`.
 - [x] `W03.P20.S127` - Generate the exhaustive registry model-and-field classification manifest from validated public schema types, classifying every reachable leaf and discriminator branch exactly once as projected, canonically derived, or backend-only with destination, owner, and bounded reason; `src/cadrumo/application/modelo/_workspace_manifest.py`.
-- [ ] `W03.P20.S159` - Expose through the canonical registry facade a registry-native atomic capture of the law-selected inspection or snapshot and its process-incarnation-local ABA-safe monotonic generation, plus current-generation validation, without any ModeloWorkspace dependency, alternate loader, private grammar, shim, alias, fallback, or re-export bridge; `src/cadrumo/domain/calculations/registry/_authority.py, src/cadrumo/domain/calculations/registry/__init__.py, and focused authority concurrency/reset tests`.
+- [x] `W03.P20.S159` - Expose through the canonical registry facade a registry-native atomic capture of the law-selected inspection or snapshot and its process-incarnation-local ABA-safe monotonic generation, plus current-generation validation, without any ModeloWorkspace dependency, alternate loader, private grammar, shim, alias, fallback, or re-export bridge; `src/cadrumo/domain/calculations/registry/_authority.py, src/cadrumo/domain/calculations/registry/__init__.py, and focused authority concurrency/reset tests`.
 - [ ] `W03.P20.S160` - Expose the canonical resolved-work-target native atomic capture and owner generation by delegating the existing addressing and revision-assertion authority without a second selector, repository read path, ModeloWorkspace dependency, shim, alias, fallback, or bridge; `src/cadrumo/application/modelo/_work_addressing.py and focused addressing tests`.
 - [ ] `W03.P20.S161` - Expose the canonical bounded ModeloWorkReview native atomic capture and owner generation by delegating the sole build_modelo_work_review semantic join without reconstructing any review field or retaining a parallel assembler; `src/cadrumo/application/modelo/_work_review_projection.py and focused complete-parity tests`.
 - [ ] `W03.P20.S162` - Expose the canonical ProjectionModeloReadiness native atomic capture and owner generation without inferring capability, collapsing readiness axes, or duplicating operator-state computation; `src/cadrumo/application/state_projection.py and focused readiness parity tests`.

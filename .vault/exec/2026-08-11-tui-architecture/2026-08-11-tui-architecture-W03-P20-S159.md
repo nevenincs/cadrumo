@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:128ce95b3545f985e7c990282ae647bca41b3ea87337f1ba55cb528a65682006'
+body_hash: 'sha256:492311c25505bbc90b1b74632b58262e6fdd910cc653c073704bdf7d7ba95ffe'
 step_id: 'S159'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -29,17 +29,18 @@ related:
 
 ## Outcome
 
-The registry owns one public native capture/current-generation surface. An unchanged cold identity has exactly one published authority and generation; every same-root observed transition, including restored A after B, makes prior authorities refuse and allocates a later generation. Reset cannot publish an in-flight pre-reset load after it completes, and concurrent reset writers cannot overlap. Public mutable snapshot copies cannot mutate the authority-private capture source. Independent review remains required before this Step may close.
+The registry owns one public native capture/current-generation surface. An unchanged cold identity has exactly one published authority and generation; every same-root observed transition, including restored A after B, makes prior authorities refuse and allocates a later generation. Reset cannot publish an in-flight pre-reset load after it completes, and concurrent reset writers cannot overlap. Public mutable snapshot copies cannot mutate the authority-private capture source. Fresh independent review in `10d7345861` resolved the former high and medium findings; its sole remaining low receipt is now covered by the committed two-distinct-root overlap proof below.
 
 ## Verification
 
 - `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/_authority.py src/cadrumo/domain/calculations/registry/tests/test_authority.py src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py` -- passed.
 - `uv run --no-sync basedpyright src/cadrumo/domain/calculations/registry/_authority.py src/cadrumo/domain/calculations/registry/tests/test_authority.py src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py` -- passed with zero errors and warnings.
-- `uv run --no-sync pytest -q -o addopts= src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py` -- 9 passed.
+- `uv run --no-sync pytest -q -o addopts= src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py` -- 10 passed in 76.77s.
+- `test_native_authority_construction_overlaps_for_distinct_owner_roots` -- 1 passed in 41.44s. It blocks both distinct root loads at the real `_construct_authority` boundary and releases them only after both enter, then raises a controlled test sentinel. A process-global lock covering long construction cannot admit the second root to the barrier, so this receipt fails rather than merely timing a successful load.
 - `uv run --no-sync pytest -q -o addopts= src/cadrumo/domain/calculations/registry/tests/test_authority.py` -- 10 passed.
 - `uv run --no-sync pytest -q -o addopts= src/cadrumo/domain/calculations/registry/tests/test_authority_cache_key_digest.py src/cadrumo/domain/calculations/registry/tests/test_read_parameter_authority_invalidation.py src/cadrumo/domain/calculations/registry/tests/test_validation_verdict_cache.py` -- 17 passed.
 - Final exact census: one production definition of `RegistryAuthorityCapture`, one production `capture_law_selected_projection` and `read_current_generation` home in `_authority.py`, one canonical package-facade promotion, zero `ModeloWorkspace` or producer-contract references under the registry, and no legacy global capture lock, LRU authority cache, detached failure cache, or cache-clear alias.
 
 ## Notes
 
-The shared worktree advanced while this Step was in progress. The original S159 source/facade implementation was swept into `8c845ab92f`; the remediation source and authority tests were swept into `d8d47ee410`. This executor preserves both current commits and does not amend or restage unrelated files. The Step is deliberately still open pending a fresh independent review that supersedes the earlier FAIL audit.
+The shared worktree advanced while this Step was in progress. The original S159 source/facade implementation was swept into `8c845ab92f`; the remediation source and authority tests were swept into `d8d47ee410`, with the reset-writer exclusion follow-up in `45b1948b28`. Fresh independent review is recorded in `10d7345861`; this record supplies its required durable two-root-overlap receipt. This executor preserves those current commits and does not amend or restage unrelated files.

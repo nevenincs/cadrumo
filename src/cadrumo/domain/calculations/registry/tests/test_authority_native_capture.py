@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-import shutil
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from pathlib import Path
@@ -255,10 +254,9 @@ def test_native_authority_construction_overlaps_for_distinct_owner_roots(
     root_a = registry_authority.root
     source_root = registry_authority.source_root
     root_b = tmp_path / "registry-b"
-    shutil.copytree(root_a, root_b)
+    root_b.mkdir()
     reset_registry_caches()
 
-    original_construct = authority_module._construct_authority
     first_construct_entered = Event()
     both_constructs_entered = Event()
     release_construct = Event()
@@ -267,6 +265,9 @@ def test_native_authority_construction_overlaps_for_distinct_owner_roots(
     entered_lock = Lock()
     returned: list[ValidatedRegistryAuthority] = []
     failures: list[BaseException] = []
+
+    class ConstructionReleaseError(RuntimeError):
+        """Prove the real load reached construction without compiling a second corpus."""
 
     def block_construct(*args: object, **kwargs: object) -> ValidatedRegistryAuthority:
         root, construct_source_root = args[:2]
@@ -279,7 +280,7 @@ def test_native_authority_construction_overlaps_for_distinct_owner_roots(
         construct_barrier.wait(timeout=10)
         both_constructs_entered.set()
         assert release_construct.wait(timeout=10)
-        return original_construct(*args, **kwargs)
+        raise ConstructionReleaseError("test release after the native construction boundary")
 
     monkeypatch.setattr(authority_module, "_construct_authority", block_construct)
 
@@ -301,12 +302,13 @@ def test_native_authority_construction_overlaps_for_distinct_owner_roots(
             worker.join(timeout=30)
 
     assert all(not worker.is_alive() for worker in workers)
-    assert not failures
     assert entered_scopes == {
         (root_a.resolve(), source_root.resolve()),
         (root_b.resolve(), source_root.resolve()),
     }
-    assert len(returned) == 2
+    assert not returned
+    assert len(failures) == 2
+    assert all(isinstance(failure, ConstructionReleaseError) for failure in failures)
 
 
 def test_reset_drains_an_inflight_load_before_clearing_authority_publication(
