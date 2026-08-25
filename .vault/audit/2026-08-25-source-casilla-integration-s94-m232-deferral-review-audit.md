@@ -5,49 +5,26 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:6fe93085563b8bbbee53eaa0d69ed25b0200559566cf4ba867ae4c1a64a0b573'
+body_hash: 'sha256:256b915eef421f63f69090b7bfcda0f6e19caa18eef6364ed9c52f5070c409e7'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace source-casilla-integration with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `source-casilla-integration` audit: `S94 M232 terminal deferral review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Independent review of the M232 terminal-deferral proof, its governing S92/S93 evidence, the calculation route, diagnostics, census coverage, connected-proof composition, export layout, direct M232 row replay, and the focused advisory gate.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### deferred-advisory-coverage | low | corrected for every registry-declared deferred kind
 
-       ### S94 M232 terminal deferral review | {level} | {summary}
+The advisory parametrisation omitted `gasto193_contributor` even though live Modelo 193 revisions declare it and the real diagnostic boundary emits `unhandled_binding_source`. The correction adds the 2025-y-siguientes revision and derives the completeness set from live registry declarations. `withholding296` remains deferred but has no live binding declaration, as its census row is `registry_blocked`; there is no calculate boundary from which an advisory could truthfully be asserted.
 
-     followed by a paragraph carrying the detail. S94 M232 terminal deferral review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### m232-negative-proof-scope | low | corrected to preserve direct positional replay
+
+The deferred `related_party_operation` source has no calculation-route owner, connected encrypted-proof fixture, or repeated-record projection endpoint, and the census closure limb remains refused. This does not negate the distinct direct positional `Modelo232VinculadaRow` detail-row path, which persists and replays fixed M232 casillas; the S94 execution record now states that boundary explicitly.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Keep `related_party_operation` ingress-blocked until the S93 source-owner predicate is met. Add a `withholding296` advisory case only if a validated revision first declares a binding with that source; the registry-derived completeness gate will require it then.

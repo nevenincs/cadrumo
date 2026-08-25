@@ -76,8 +76,8 @@ def test_every_registry_declared_deferred_kind_has_an_advisory_case() -> None:
     which to emit an advisory. Once it is declared by a revision, it must gain an
     explicit real-revision case here rather than silently joining the mesh.
     """
-    from ...aggregation import DEFERRED_SOURCE_KINDS
     from ....core.resources import resources
+    from ...aggregation import DEFERRED_SOURCE_KINDS
 
     covered = {deferred_kind for _modelo, _revision_id, deferred_kind in _DEFERRED_ADVISORY_CASES}
     declared = {
