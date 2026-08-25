@@ -1908,8 +1908,8 @@ def test_request_cancel_persists_an_event_free_revision_and_later_terminal_event
         assert tuple(event.revision for event in replay.events) == (1, 3)
 
 
-def test_aggregate_deadline_requests_cooperative_stop_before_cancelled_cleanup_settlement(tmp_path: Path) -> None:
-    """A real deadline request needs durable acknowledgement and terminal cleanup in that order."""
+def test_aggregate_deadline_requests_cooperative_stop_before_timed_out_cleanup_settlement(tmp_path: Path) -> None:
+    """A real deadline acknowledgement settles as timed out after owned cleanup."""
     executor = DeadlineAcknowledgingExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         journal, leases, operands = _repositories(
@@ -1939,28 +1939,18 @@ def test_aggregate_deadline_requests_cooperative_stop_before_cancelled_cleanup_s
             operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(supervisor.start(operation_id))
             await executor.started.wait()
-            settling = await start_task
-            assert settling.execution_deadline is not None
-            assert settling.cancellation_requested_at is not None
-            assert settling.cancellation_acknowledged_at is not None
-            assert settling.cleanup_deadline is not None
-            assert settling.lifecycle is OperationLifecycle.SETTLING
-            assert executor.resource.close_calls == 0
-            return await supervisor.settle(
-                operation_id,
-                OperationTerminalReceipt(
-                    identity=settling.identity,
-                    revision=settling.revision + 1,
-                    condition=OperationTerminalCondition.CANCELLED,
-                    effect=OperationEffect.NONE,
-                    settled_at=datetime.now(UTC),
-                ),
-            )
+            return await start_task
 
         terminal = asyncio.run(run_deadline_controlled_operation())
 
     assert terminal.lifecycle is OperationLifecycle.TERMINAL
-    assert terminal.terminal_condition is OperationTerminalCondition.CANCELLED
+    assert terminal.terminal_condition is OperationTerminalCondition.TIMED_OUT
+    assert terminal.effect is OperationEffect.NONE
+    assert terminal.cancellation_requested_at is not None
+    assert terminal.execution_deadline is not None
+    assert terminal.cancellation_requested_at >= terminal.execution_deadline
+    assert terminal.cancellation_acknowledged_at is not None
+    assert terminal.cleanup_deadline is not None
     assert executor.resource.close_calls == 1
 
 
@@ -2052,23 +2042,13 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
             executor.exit_requested.set()
             return await start_task
 
-        settling = asyncio.run(request_during_irreversible_section())
-        terminal = asyncio.run(
-            supervisor.settle(
-                settling.identity.operation_id,
-                OperationTerminalReceipt(
-                    identity=settling.identity,
-                    revision=settling.revision + 1,
-                    condition=OperationTerminalCondition.CANCELLED,
-                    effect=OperationEffect.NONE,
-                    settled_at=_NOW,
-                ),
-            )
-        )
+        terminal = asyncio.run(request_during_irreversible_section())
         assert not terminal.cancellation_deferred
 
-    assert settling.lifecycle is OperationLifecycle.SETTLING
-    assert settling.cancellation_acknowledged_at is not None
+    assert terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert terminal.cancellation_requested_at is not None
+    assert terminal.cancellation_acknowledged_at is not None
+    assert terminal.effect is OperationEffect.NONE
     assert terminal.terminal_condition is OperationTerminalCondition.CANCELLED
 
 

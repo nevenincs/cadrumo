@@ -23,6 +23,7 @@ from .._coverage import (
     audit_registry_model_law_coverage,
     build_model_law_coverage_ledger,
 )
+from .._errors import NoRevisionForPeriodError
 from .._legal import verify_legal_catalogue_grounding
 from .._loader import clear_fingerprint_cache
 from .._schema import filing_period_from_scope
@@ -38,11 +39,6 @@ _SUPPORTED_RECORD_DESIGN_YEARS = range(2023, 2027)
 _PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS = {
     ("184", "2025-y-siguientes", 2026): "aeat-dr-184-2025",
     ("200", "2024-y-siguientes", 2026): "aeat-dr-200-2025",
-    # Re-keyed 2026-08-22: modelo 220's span was split at the 2024/2025 re-layout,
-    # so the revision carrying aeat-dr-220-2025 is now "2025-y-siguientes". The
-    # exception is unchanged in substance -- that design is still the one a 2026
-    # filing year resolves to -- only the revision id it is keyed by moved.
-    ("220", "2025-y-siguientes", 2026): "aeat-dr-220-2025",
 }
 
 
@@ -227,11 +223,7 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
                         if filing_period is not None and filing_period.has_date_span()
                         else period_end
                     )
-                    if not any(
-                        (source.applies_from is None or source.applies_from <= evidence_date)
-                        and (source.applies_to is None or source.applies_to >= evidence_date)
-                        for source in sources
-                    ):
+                    if not _record_design_sources_cover(sources, evidence_date):
                         missing.append(
                             f"modelo {modelo_id}, revision {revision.id}, period {period}, "
                             f"uncovered {evidence_date.isoformat()}",
@@ -240,6 +232,43 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
     assert required_modelos == {modelo_id for modelo_id, _, _ in checked}
     assert resolved_exceptions == set(_PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS)
     assert not missing, "supported record-design matrix gaps:\n" + "\n".join(missing)
+
+
+def _record_design_sources_cover(sources: list[object], evidence_date: date) -> bool:
+    """Return whether a cited record-design source covers one period endpoint."""
+    return any(
+        (source.applies_from is None or source.applies_from <= evidence_date)
+        and (source.applies_to is None or source.applies_to >= evidence_date)
+        for source in sources
+    )
+
+
+def test_modelo_220_2025_scope_refuses_an_unevidenced_2026_successor() -> None:
+    """The shared source-matrix predicate must bite if M220 is widened again."""
+    modelos, catalogues = _registry_tree()
+    modelo = next(candidate for candidate in modelos if candidate.id == "220")
+    revision = modelo.revisions["2025"]
+
+    assert (revision.valid_from, revision.valid_to) == (date(2025, 1, 1), date(2025, 12, 31))
+    assert (revision.period_selector.year_from, revision.period_selector.year_to) == (2025, 2025)
+    assert select_revision(modelo, filing_year=2025, period="0A").id == "2025"
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=2026, period="0A")
+
+    widened_revision = revision.model_copy(
+        update={"period_selector": revision.period_selector.model_copy(update={"year_to": 2026})},
+    )
+    widened_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, "2025": widened_revision}})
+    sources = [
+        catalogues.sources[source_ref]
+        for source_ref in widened_revision.source_refs
+        if catalogues.sources[source_ref].kind == "record_design"
+    ]
+
+    assert tuple(source.id for source in sources) == ("aeat-dr-220-2025",)
+    assert sources[0].applies_to == date(2025, 12, 31)
+    assert select_revision(widened_modelo, filing_year=2026, period="0A").id == "2025"
+    assert not _record_design_sources_cover(sources, date(2026, 12, 31))
 
 
 def test_committed_registry_tree_has_required_model_law_coverage() -> None:

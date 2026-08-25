@@ -27,7 +27,6 @@ from ....adapters.persistence.storage import generate_recovery_key
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyRecordError,
-    ProfileCustodyRecoveryArtifactWarning,
     create_profile_custody_sentinel,
 )
 from ....core.config import override_settings
@@ -37,6 +36,7 @@ from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from .. import ProfileAuthenticationRefusedError, create_profile_custody_registration_material
 from .._capsule_record import ProfileRecordSession, ProfileRecordStore
 from .._lifecycle import ProfileCapsuleLifecycle
+from .._recovery_contracts import ProfileCustodyRecoveryArtifactWarning
 from .._recovery_custody import (
     ProfileRecoveryArtifactReceipt,
     ProfileRecoveryEnrollment,

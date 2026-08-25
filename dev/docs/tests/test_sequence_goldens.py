@@ -77,6 +77,7 @@ _SUBPROCESS_POOL_TIMEOUT = 1800
 _PAGE = "tutorials/anti-tautology-gate"
 _PROFILE_DELETE_SEQUENCE_ID = "profile-setup-delete"
 _PROFILE_DELETE_DIGEST_PATH = "result.fingerprint.digest"
+_WORKSTATION_SEQUENCE_ID = "install-confirm"
 
 #: The representative sequence: a real capture-threaded JSON read chain. The
 #: ``app diagnostics runs`` frame is deliberate: its payload is the one
@@ -168,6 +169,81 @@ def _set_delete_fingerprint_leaf(
     fingerprint = document["frames"][1]["envelope"]["result"]["fingerprint"]
     fingerprint[leaf] = replacement
     return type(value).model_validate_json(json.dumps(document))
+
+
+@pytest.fixture(scope="module")
+def workstation_double_run(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[str, SequenceTranscript, SequenceTranscript]:
+    """Execute the real workstation diagnostic contract twice in fresh sandboxes."""
+    discovered, problems = discover_sequences(sequence_id=_WORKSTATION_SEQUENCE_ID)
+    assert problems == ()
+    assert len(discovered) == 1
+    enrolled = discovered[0]
+    first = execute_sequence(enrolled.sequence, sandbox_root=tmp_path_factory.mktemp("workstation-a"))
+    second = execute_sequence(enrolled.sequence, sandbox_root=tmp_path_factory.mktemp("workstation-b"))
+    return enrolled.page, first, second
+
+
+def _set_workstation_fact(
+    transcript: SequenceTranscript,
+    *,
+    service: str,
+    fact: str,
+    replacement: object,
+) -> SequenceTranscript:
+    """Return a real workstation transcript with one dependency fact changed."""
+    document = transcript.model_dump(mode="json")
+    dependencies = document["frames"][-1]["envelope"]["result"]["dependencies"]
+    row = next(item for item in dependencies if item["service"] == service)
+    row["facts"][fact] = replacement
+    return SequenceTranscript.model_validate_json(json.dumps(document))
+
+
+def _invert_registry_health(transcript: SequenceTranscript) -> SequenceTranscript:
+    """Return a real workstation transcript with registry integrity changed."""
+    document = transcript.model_dump(mode="json")
+    checks = document["frames"][-1]["envelope"]["result"]["preflight"]
+    row = next(item for item in checks if item["check"] == "registry:referential-integrity")
+    row["healthy"] = not bool(row["healthy"])
+    return SequenceTranscript.model_validate_json(json.dumps(document))
+
+
+class TestWorkstationFreeMemoryMaskHonesty:
+    def test_two_real_runs_compare_clean_through_the_central_policy(
+        self,
+        workstation_double_run: tuple[str, SequenceTranscript, SequenceTranscript],
+    ) -> None:
+        """Fresh diagnostics remain comparable without pinning the free-RAM reading."""
+        page, first, second = workstation_double_run
+        assert compare_transcript_to_golden(second, build_golden(first), page=page) == ()
+
+    def test_only_free_memory_tampering_is_ignored_and_deterministic_facts_bite(
+        self,
+        workstation_double_run: tuple[str, SequenceTranscript, SequenceTranscript],
+    ) -> None:
+        """The real compare path masks free RAM but retains host and registry evidence."""
+        page, first, second = workstation_double_run
+        golden = build_golden(first)
+
+        volatile = _set_workstation_fact(
+            second,
+            service="local-inference-hardware",
+            fact="free_memory_bytes",
+            replacement=1,
+        )
+        assert compare_transcript_to_golden(volatile, golden, page=page) == ()
+
+        total_memory = _set_workstation_fact(
+            second,
+            service="local-inference-hardware",
+            fact="total_memory_bytes",
+            replacement=1,
+        )
+        assert compare_transcript_to_golden(total_memory, golden, page=page)
+
+        registry_changed = _invert_registry_health(second)
+        assert compare_transcript_to_golden(registry_changed, golden, page=page)
 
 
 class TestProfileDeletePathMaskHonesty:

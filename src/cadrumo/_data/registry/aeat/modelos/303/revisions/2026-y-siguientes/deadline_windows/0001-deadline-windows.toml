@@ -59,6 +59,17 @@ source_refs = [
 ]
 
 [[revisions.2026-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-12-mensual"
+filing_year = 2026
+period = "2026 12"
+period_kind = "monthly"
+opens_on = 2027-01-01
+closes_on = 2027-02-01
+payment_cutoff_on = 2027-01-27
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2026-y-siguientes.deadline_windows]]
 id = "modelo-303-2026-02-mensual"
 filing_year = 2026
 period = "2026 02"

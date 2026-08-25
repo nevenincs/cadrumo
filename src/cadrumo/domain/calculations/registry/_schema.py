@@ -669,6 +669,11 @@ class ModeloScheduleDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
+    @property
+    def is_periodic(self) -> bool:
+        """Whether this schedule requires complete recurring deadline coverage."""
+        return self.period_kind in ("monthly", "quarterly")
+
     @field_validator("periods")
     @classmethod
     def _periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:

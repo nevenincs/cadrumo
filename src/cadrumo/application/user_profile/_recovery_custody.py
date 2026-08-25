@@ -42,7 +42,6 @@ from dataclasses import dataclass
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage.custody import ProfileCustodyRecoveryArtifactWarning
 from ._authentication import ProfilePasswordProofOperation
 from ._capsule_record import ProfileRecordSession
 from ._custody_ports import (
@@ -55,6 +54,7 @@ from ._custody_ports import (
     export_profile_recovery_artifact as _export_recovery_artifact,
 )
 from ._lifecycle import ProfileCapsuleLifecycle
+from ._recovery_contracts import ProfileCustodyRecoveryArtifactWarning
 
 if TYPE_CHECKING:
     from pathlib import Path

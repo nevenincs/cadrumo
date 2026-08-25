@@ -27,7 +27,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...core import CasillaId, Period
+from ...core import CasillaId, Period, RegistryAuthorityGrade
 from ...domain.calculations.registry import (
     CasillaDefinition,
     CasillaObservation,
@@ -119,7 +119,11 @@ def assert_snapshot_matches_work_unit_revision(
     )
 
 
-def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot:
+def resolve_registry_snapshot_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+) -> RegistrySnapshot:
     """Resolve and return the :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`.
 
     After resolution the snapshot's revision id is asserted equal to the work
@@ -152,6 +156,7 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
             work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
+            grade=grade,
         )
     except RegistrySnapshotError as exc:
         raise CalculationRegistryUnavailableError(

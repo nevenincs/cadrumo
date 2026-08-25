@@ -58,6 +58,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from typing import Literal
@@ -68,6 +69,7 @@ from .....core import Modelo
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._export import derive_export_layouts_from_bindings
+from .._schema import ModeloDefinition, ModeloRevision, SourceReference
 from .test_cited_design_field_bounds_are_self_consistent import (
     _KNOWN_SELF_CONTRADICTING_DESIGN,
 )
@@ -180,7 +182,7 @@ class _FilingCapabilityBlocker:
     disposition: Literal["terminal_no_authority", "terminal_product_scope", "authorable_gap"]
     finding: str
     reconsideration: str
-    owners: tuple[_OwnerRoute, ...] = ()
+    owners: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.disposition in {"terminal_no_authority", "terminal_product_scope"} and self.owners:
@@ -222,7 +224,10 @@ def _authorable(
     )
 
 
-def _terminal_product_scope(modelo: object, revision: object) -> _FilingCapabilityBlocker | None:
+def _terminal_product_scope(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+) -> _FilingCapabilityBlocker | None:
     """Return the accepted M036 product-scope refusal for its exact revision.
 
     This is separate from :func:`_terminal_no_authority`: AEAT publishes an
@@ -248,9 +253,9 @@ def _terminal_product_scope(modelo: object, revision: object) -> _FilingCapabili
 
 
 def _terminal_no_authority(
-    modelo: object,
-    revision: object,
-    sources: object,
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    sources: Mapping[str, SourceReference],
 ) -> _FilingCapabilityBlocker | None:
     """Return Modelo 136's current evidence-bounded terminal refusal, if still true.
 
@@ -274,7 +279,11 @@ def _terminal_no_authority(
         return None
 
     source_refs = set(getattr(revision, "source_refs", ()))
-    resolved = [sources.get(ref) for ref in source_refs if sources.get(ref) is not None]
+    resolved: list[SourceReference] = []
+    for ref in source_refs:
+        source = sources.get(ref)
+        if source is not None:
+            resolved.append(source)
     kinds = {source.kind for source in resolved}
     if "manual_pdf" not in kinds or _modelo_136_has_machine_contract(revision, sources):
         return None
@@ -293,7 +302,10 @@ def _terminal_no_authority(
     )
 
 
-def _modelo_136_has_machine_contract(revision: object, sources: object) -> bool:
+def _modelo_136_has_machine_contract(
+    revision: ModeloRevision,
+    sources: Mapping[str, SourceReference],
+) -> bool:
     """Return whether this Modelo 136 revision itself cites machine authority.
 
     The scope is the revision's source references, never every source attached to
@@ -343,7 +355,11 @@ def _bundled_designs(modelo_id: str) -> tuple[str, ...]:
     return tuple(sorted(path.name for path in directory.iterdir() if path.suffix.lower() in {".pdf", ".xls", ".xlsx"}))
 
 
-def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabilityBlocker:
+def _blocker(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    sources: Mapping[str, SourceReference],
+) -> _FilingCapabilityBlocker:
     """Return what this revision actually needs before a layout can be authored.
 
     Derived on every run, never listed. The bare worklist said only "no export
@@ -526,7 +542,7 @@ def _blocker(modelo: object, revision: object, sources: object) -> _FilingCapabi
     )
 
 
-def _producer_vocabulary_gap(modelo: object) -> _FilingCapabilityBlocker | None:
+def _producer_vocabulary_gap(modelo: ModeloDefinition) -> _FilingCapabilityBlocker | None:
     """Return why this modelo cannot be exported YET, when nothing can supply its values.
 
     A record design says WHERE each value sits. It does not say where the value comes
@@ -570,7 +586,10 @@ def _producer_vocabulary_gap(modelo: object) -> _FilingCapabilityBlocker | None:
     )
 
 
-def _casilla_surface_shortfall(modelo: object, revision: object) -> _FilingCapabilityBlocker | None:
+def _casilla_surface_shortfall(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+) -> _FilingCapabilityBlocker | None:
     """Return why this revision cannot be exported YET, when its casilla surface is short.
 
     An era match says the cited design governs the years claimed. It says nothing about
@@ -616,7 +635,7 @@ def _casilla_surface_shortfall(modelo: object, revision: object) -> _FilingCapab
 _OPEN_ENDED_HORIZON = 2026
 
 
-def _uncovered_design_owners(modelo: object) -> tuple[_OwnerRoute, ...]:
+def _uncovered_design_owners(modelo: ModeloDefinition) -> tuple[_OwnerRoute, ...]:
     """Return the accepted route bundle for a live design-era shortfall.
 
     The condition is derived from the loaded revision and source catalogue.
@@ -641,7 +660,11 @@ def _uncovered_design_owners(modelo: object) -> tuple[_OwnerRoute, ...]:
     return (_TEMPORAL_OWNER, _EXPORT_OWNER)
 
 
-def _uncovered_claimed_years(revision: object, cited: tuple[str, ...], sources: object) -> list[int]:
+def _uncovered_claimed_years(
+    revision: ModeloRevision,
+    cited: tuple[str, ...],
+    sources: Mapping[str, SourceReference],
+) -> list[int]:
     """Return the ejercicios this revision claims that no cited design covers.
 
     The distinction this draws is the one that cost three modelos. A revision

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Any, NamedTuple, Protocol, cast
@@ -169,6 +169,11 @@ class SecureObjectRepository:
     _parse_revision_ancestor_ids = staticmethod(parse_revision_ancestor_ids)
     _build_revision_ancestor_ids = staticmethod(build_revision_ancestor_ids)
 
+    @staticmethod
+    def object_key_digest(object_key: str | bytes) -> bytes:
+        """Derive the stored lookup digest for one natural object key."""
+        return secure_object_key_digest(object_key)
+
     def _ensure_quarantine_table(self) -> None:
         """Create the quarantine archive table with the secure-object metadata shape."""
         ensure_quarantine_table(self._engine)
@@ -191,7 +196,7 @@ class SecureObjectRepository:
         return self._engine
 
     @contextmanager
-    def guarded_session_scope(self) -> Iterator[Session]:
+    def guarded_session_scope(self) -> Generator[Session]:
         """Yield a session over this repository's engine, session-checked first.
 
         The counterpart to :attr:`engine` for a sibling plaintext table. Taking

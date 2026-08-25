@@ -85,6 +85,7 @@ from ._records import (
     column_index_to_letters,
     column_letters_to_index,
 )
+from ._row_set_assembly import assemble_row_sets_for_snapshot
 from ._theme import (
     ROLE_STYLES,
     STYLED_RANGE_VERTICAL_ALIGN,
@@ -152,6 +153,7 @@ __all__ = [
     "StyleRole",
     "TabName",
     "TranslationError",
+    "assemble_row_sets_for_snapshot",
     "build_evidence_sidecar",
     "build_export_plan",
     "build_offline_workbook",

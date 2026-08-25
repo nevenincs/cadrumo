@@ -264,6 +264,35 @@ def test_row_source_identity_is_sorted_and_excluded_from_generic_serialization()
     assert "opaque-activity" not in resolution.model_dump_json()
 
 
+def test_row_source_identity_list_form_preserves_exact_registry_grouping() -> None:
+    key = ("modelo-190-perceptor-row-nif", 1)
+    resolution = CalculationSourceResolution.model_validate(
+        {
+            "resolver_id": "withholding",
+            "row_binding_values": [
+                {
+                    "binding_id": key[0],
+                    "row_index": key[1],
+                    "value": "1.00",
+                    "value_kind": "decimal",
+                },
+            ],
+            "row_source_identities": [
+                {
+                    "binding_id": key[0],
+                    "row_index": key[1],
+                    "source_kind": BindingSourceKind.WITHHOLDING,
+                    "source_row_identity": "perceptor-row-1",
+                    "fingerprint": "a" * 64,
+                    "row_set_grouping": "per_perceptor_clave",
+                },
+            ],
+        },
+    )
+
+    assert resolution.row_source_identities[key].row_set_grouping == "per_perceptor_clave"
+
+
 @pytest.mark.parametrize(
     ("values", "identities"),
     [

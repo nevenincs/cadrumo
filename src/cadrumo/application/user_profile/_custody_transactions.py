@@ -18,10 +18,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator, model_validator
 
-from ...adapters.persistence.storage.custody import (
-    ProfileCustodyInventory,
-    read_profile_custody_local_record,
-)
+from ...adapters.persistence.storage.custody import read_profile_custody_local_record
 from ...core import (
     STRICT_FROZEN_CONFIG,
 )
@@ -39,6 +36,7 @@ from ._custody_hold_models import (
     ProfileCustodyRetentionOverride,
 )
 from ._custody_pointer import ProfileCustodyPointerSnapshot
+from ._custody_ports import ProfileCustodyInventoryPort
 
 CUSTODY_TRANSACTION_SCHEMA_VERSION = 1
 CUSTODY_TRANSACTION_MAX_BYTES = 16 * 1024
@@ -220,7 +218,7 @@ class ProfileCustodyInventoryWitness(BaseModel):
         return validate_prefixed_digest(value, field_name="inventory digest")
 
     @classmethod
-    def from_inventory(cls, inventory: ProfileCustodyInventory) -> ProfileCustodyInventoryWitness:
+    def from_inventory(cls, inventory: ProfileCustodyInventoryPort) -> ProfileCustodyInventoryWitness:
         return cls(
             digest=inventory.digest,
             file_count=len(inventory.digest_entries),

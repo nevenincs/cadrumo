@@ -345,12 +345,11 @@ def test_committed_modelo_349_deadline_windows_cover_every_supported_period_per_
     for window in revision.deadline_windows:
         by_year.setdefault(window.filing_year, set()).add(window.period.registry_token)
 
-    assert len(revision.deadline_windows) == 78
+    assert len(revision.deadline_windows) == 80
     assert set(by_year) == {2022, 2023, 2024, 2025, 2026}
     for filing_year, periods in by_year.items():
         missing = expected_periods - periods
-        expected_missing = {"12", "4T"} if filing_year == 2026 else set()
-        assert missing == expected_missing, f"filing_year {filing_year} unexpected period coverage gap: {missing}"
+        assert not missing, f"filing_year {filing_year} unexpected period coverage gap: {missing}"
 
 
 def test_committed_modelo_349_deadline_windows_match_official_plazo_rules() -> None:
@@ -442,9 +441,11 @@ def test_committed_modelo_349_deadline_windows_match_official_plazo_rules() -> N
             ("09", date(2026, 10, 20)),
             ("10", date(2026, 11, 20)),
             ("11", date(2026, 12, 21)),
+            ("12", date(2027, 2, 1)),
             ("1T", date(2026, 4, 20)),
             ("2T", date(2026, 7, 20)),
             ("3T", date(2026, 10, 20)),
+            ("4T", date(2027, 2, 1)),
         ),
     }
     revision = _modelo_349_revision()
@@ -470,9 +471,8 @@ def test_committed_modelo_349_deadlines_have_calendar_provenance_and_canonical_p
 
     for filing_year in range(2022, 2027):
         windows = tuple(window for window in revision.deadline_windows if window.filing_year == filing_year)
-        expected_missing = {"12", "4T"} if filing_year == 2026 else set()
-        assert len(windows) == 16 - len(expected_missing)
-        assert {window.period.registry_token for window in windows} == expected_periods - expected_missing
+        assert len(windows) == 16
+        assert {window.period.registry_token for window in windows} == expected_periods
 
         for window in windows:
             assert (
@@ -487,8 +487,8 @@ def test_committed_modelo_349_deadlines_have_calendar_provenance_and_canonical_p
                 assert f"aeat-calendario-contribuyente-{window.closes_on.year}" in window.source_refs
 
         projected = bundled_authority().deadline_windows(filing_year, modelos=("349",))
-        assert len(projected) == 16 - len(expected_missing)
-        assert {window.period.registry_token for _, _, window in projected} == expected_periods - expected_missing
+        assert len(projected) == 16
+        assert {window.period.registry_token for _, _, window in projected} == expected_periods
         assert {owner.id for _, owner, _ in projected} == {revision.id}
 
     construct = revision.constructs[0]

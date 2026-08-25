@@ -49,6 +49,7 @@ from ._validate_revision_rules import (
     validate_deadline_window_uniqueness,
     validate_informative_class_invariant,
     validate_m210_tipo_renta_code_projection_parity,
+    validate_periodic_deadline_completeness,
     validate_revision_windows,
 )
 from ._validate_revision_sections import validate_revision_definition
@@ -116,6 +117,9 @@ class RegistryValidator:
     ) -> None:
         self._legal = catalogues.legal
         self._sources = catalogues.sources
+        self._supported_filing_years = (
+            () if catalogues.supported_filing_years is None else catalogues.supported_filing_years.years
+        )
         self._source_root = source_root
         self._user_profile_schema = user_profile_schema
         self._evidence = EvidenceValidator(
@@ -177,6 +181,7 @@ class RegistryValidator:
             id(modelo),
             id(self._legal),
             id(self._sources),
+            self._supported_filing_years,
             self._source_root_key(),
             self._corpus_root_key(),
             self._source_evidence_key(),
@@ -243,6 +248,12 @@ class RegistryValidator:
         failures.extend(validate_revision_windows(modelo))
         failures.extend(validate_deadline_window_ownership(modelo))
         failures.extend(validate_deadline_window_uniqueness(modelo))
+        failures.extend(
+            validate_periodic_deadline_completeness(
+                modelo,
+                supported_filing_years=self._supported_filing_years,
+            ),
+        )
         failures.extend(validate_informative_class_invariant(modelo))
         failures.extend(validate_m210_tipo_renta_code_projection_parity(modelo))
         return failures
@@ -262,6 +273,7 @@ class RegistryValidator:
             tuple(id(modelo) for modelo in modelo_tuple),
             id(self._legal),
             id(self._sources),
+            self._supported_filing_years,
             self._source_root_key(),
             self._corpus_root_key(),
             self._source_evidence_key(),

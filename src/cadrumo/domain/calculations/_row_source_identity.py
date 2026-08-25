@@ -17,10 +17,9 @@ OpaqueSourceRowIdentity = Annotated[str, StringConstraints(min_length=1, max_len
 class RowSourceIdentity(BaseModel):
     """Opaque, fingerprinted identity of a source row.
 
-    ``row_set_grouping`` retains the exact registry selector that supplied a
-    worksheet row when the identity originates at the row-set ingress.  It is
-    optional because non-worksheet sources (such as inventory activities) do
-    not have a row-set selector.
+    ``row_set_grouping`` retains the exact registry row-set selector grouping
+    when a row identity originates from that coordinate. It is optional because
+    not every row identity originates from a registry row-set selector.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG

@@ -39,6 +39,7 @@ from .._record_design import extract_record_design
 from .._record_design_schema import (
     RecordDesignExtraction,
     RecordDesignField,
+    RecordDesignNote,
     RecordDesignSheet,
     RecordDesignSkippedSheet,
 )
@@ -466,7 +467,7 @@ def _bundled_design_path(source: SourceReference):
 def _component_parents(
     modelos: tuple[ModeloDefinition, ...],
     catalogues: RegistryCatalogues,
-) -> list[tuple[RecordDesignSheet, object]]:
+) -> list[tuple[RecordDesignSheet, RecordDesignField]]:
     """Every design field AEAT desglosa into sub-fields, across the bundled tree."""
     return [
         (sheet, field)
@@ -602,7 +603,7 @@ def test_writing_a_desglosado_parent_as_one_blob_is_refused(
 def _split_constant_rows(
     modelos: tuple[ModeloDefinition, ...],
     catalogues: RegistryCatalogues,
-) -> list[tuple[RecordDesignSheet, object]]:
+) -> list[tuple[RecordDesignSheet, RecordDesignField]]:
     """Design rows declaring ``Constante`` in one cell and quoting the value in another."""
     rows = []
     for _modelo_id, _revision_id, revision in _revisions_with_fixed_width_layouts(modelos):
@@ -987,18 +988,22 @@ def test_an_eedd_delegated_position_is_excused_only_with_its_note_body(
 
     cited = next(field for field in sheet.fields if field.offset == 93)
 
-    class _NonDelegatingNote:
-        def note_body(self, ordinal: str) -> str:
-            return "Consignar el importe total de las retenciones practicadas"
+    non_delegating_sheet = RecordDesignSheet(
+        name=sheet.name,
+        fields=(),
+        notes=(
+            RecordDesignNote(
+                ordinal="1",
+                body="Consignar el importe total de las retenciones practicadas",
+            ),
+        ),
+    )
+    undefined_sheet = RecordDesignSheet(name=sheet.name, fields=(), notes=())
 
-    class _UndefinedNote:
-        def note_body(self, ordinal: str) -> None:
-            return None
-
-    assert _omissible_reason(cited, _NonDelegatingNote()) is None, (
+    assert _omissible_reason(cited, non_delegating_sheet) is None, (
         "a note body that does not delegate to the EEDD must leave the position required"
     )
-    assert _omissible_reason(cited, _UndefinedNote()) is None, (
+    assert _omissible_reason(cited, undefined_sheet) is None, (
         "a citation whose note the sheet never defined must leave the position required"
     )
 
@@ -1096,6 +1101,7 @@ def test_auxiliary_header_declaration_covers_the_header_and_its_absence_still_re
         header_sheets = [sheet for sheet in sheets if sheet.auxiliary_envelope_header is not None]
         assert len(header_sheets) == 1, f"{revision_id}: expected exactly one auxiliary header sheet"
         header = header_sheets[0].auxiliary_envelope_header
+        assert header is not None
         source_ref = next(source_ref for source_ref in layout.source_refs if source_ref.startswith("aeat-dr-232"))
         roles = tuple(
             role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG

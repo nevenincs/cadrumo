@@ -15,6 +15,7 @@ source_refs = [
     "aeat-modelo-322-procedure",
     "aeat-dr-353-2026",
     "aeat-modelo-353-procedure",
+    "aeat-modelo-303-procedure",
     "boe-modelo-322-2007-form",
     "boe-modelo-353-2007-form",
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
@@ -74,6 +75,7 @@ deadline_windows = [
     "modelo-353-2026-09",
     "modelo-353-2026-10",
     "modelo-353-2026-11",
+    "modelo-353-2026-12",
 ]
 
 # Calculation-completeness manifest for revision 2026-y-siguientes: the

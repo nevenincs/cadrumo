@@ -282,6 +282,10 @@ class ProfileCustodySecureObjectRecordPort(Protocol):
 class ProfileCustodySecureObjectRepositoryPort(Protocol):
     """The small encrypted-object surface needed by a profile capsule."""
 
+    def object_key_digest(self, object_key: str | bytes) -> bytes:
+        """Derive the repository's stored lookup digest for one natural key."""
+        ...
+
     def iter_all_records_raw(
         self,
         *,
@@ -381,6 +385,10 @@ class ProfileCustodyLocalRecordStore(Protocol):
 
     def lock(self, path: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
         """Return the anchored local-record lock context."""
+        ...
+
+    def root_lock(self, root: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
+        """Return the canonical profile-custody root lock context."""
         ...
 
     def read(self, path: Path, *, maximum_bytes: int) -> bytes:
@@ -497,6 +505,9 @@ class _PersistenceProfileCustodyLocalRecordStore:
 
     def lock(self, path: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
         return custody.profile_custody_local_lock(path, timeout_seconds=timeout_seconds)
+
+    def root_lock(self, root: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
+        return custody.profile_custody_root_lock(root, timeout_seconds=timeout_seconds)
 
     def read(self, path: Path, *, maximum_bytes: int) -> bytes:
         return custody.read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
@@ -775,6 +786,23 @@ class ProfileSecureObjectInventoryPort(Protocol):
         ...
 
 
+class ProfileCustodyInventoryEntryPort(Protocol):
+    """One non-secret capsule member observed by physical custody storage."""
+
+    @property
+    def size_bytes(self) -> int: ...
+
+
+class ProfileCustodyInventoryPort(Protocol):
+    """Exact inventory shape consumed by application custody transactions."""
+
+    @property
+    def digest(self) -> str: ...
+
+    @property
+    def digest_entries(self) -> tuple[ProfileCustodyInventoryEntryPort, ...]: ...
+
+
 class _PersistenceProfileBucketStorage:
     """Adapt canonical bucket layout and locking to the application port."""
 
@@ -1043,6 +1071,13 @@ def replace_profile_custody_password_envelope(
     )
 
 
+def load_profile_custody_password_material(
+    profile_id: UUID, *, root: Path | None = None
+) -> ProfileCustodyPasswordMaterialPort:
+    """Load committed password proof material through the custody boundary."""
+    return custody.load_committed_profile_password_material(profile_id, root=root)
+
+
 def map_profile_authentication_proof_failure(
     error: BaseException,
     *,
@@ -1081,6 +1116,11 @@ def profile_session_serves_bucket(session: ProfileBucketSessionPort | None, buck
     """Return whether a live bucket session serves the exact profile UUID."""
     resolved = None if session is None else _substrate_handle(session, master_key.BucketSession, "bucket session")
     return bool(master_key.session_serves_bucket(resolved, bucket_id))
+
+
+def profile_current_bucket_session() -> ProfileBucketSessionPort | None:
+    """Observe the currently bound bucket session through the custody port boundary."""
+    return master_key.current_active_bucket_session()
 
 
 def profile_bind_bucket_session(session: ProfileBucketSessionPort) -> None:

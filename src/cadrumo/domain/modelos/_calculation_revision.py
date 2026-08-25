@@ -967,8 +967,8 @@ class CalculationRevision(BaseModel):
             source meshes for repeating export records. Kept separate from
             ``binding_overrides`` so the row coordinate remains structured.
         row_source_identities: Opaque source identities and content fingerprints
-            keyed by the exact binding and row coordinate. Worksheet-originated
-            identities additionally retain their exact registry row-set grouping.
+            keyed by the exact binding and row coordinate. Registry row-set
+            identities additionally retain their exact selector grouping.
         relation_overrides: Mapping of relation values applied during
             this calculation. Kept separate from ``binding_overrides`` so
             BindingId-keyed snapshots never carry RelationId keys.

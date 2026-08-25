@@ -15,7 +15,7 @@
 # impositivo ends on another date file within the same statutory 25-día window
 # measured from their own cierre.
 
-[[revisions."2025-y-siguientes".deadline_windows]]
+[[revisions."2025".deadline_windows]]
 id = "modelo-220-2025-0a"
 filing_year = 2025
 period = "2025 0A"

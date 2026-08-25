@@ -148,7 +148,7 @@ from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from .....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from .. import ModeloDefinition
+from .. import ModeloDefinition, ModeloRevision, SourceReference
 from .._authority import ValidatedRegistryAuthority
 from .._record_design import (
     _clean_pdf_line,
@@ -867,7 +867,7 @@ def _designs_for(modelo_id: str) -> tuple[dict[int, dict[str, int]], dict[int, s
     return parsed, unreadable
 
 
-def _span_years(revision) -> set[int]:
+def _span_years(revision: ModeloRevision) -> set[int]:
     """Every filing year the revision's period selector claims."""
     selector = revision.period_selector
     if selector.years:
@@ -883,7 +883,7 @@ def _span_years(revision) -> set[int]:
     return set(range(selector.year_from, upper + 1))
 
 
-def _filing_revisions() -> list[tuple[ModeloDefinition, str, object]]:
+def _filing_revisions() -> list[tuple[ModeloDefinition, str, ModeloRevision]]:
     """Every revision that claims filing support, including incomplete claims.
 
     Filing grade is the authority boundary. Filtering on populated layouts would
@@ -898,7 +898,7 @@ def _filing_revisions() -> list[tuple[ModeloDefinition, str, object]]:
     ]
 
 
-def _declared_revisions() -> list[tuple[ModeloDefinition, str, object]]:
+def _declared_revisions() -> list[tuple[ModeloDefinition, str, ModeloRevision]]:
     """Every revision, for detector anti-vacuity controls outside support policy."""
     return [
         (modelo, revision_id, revision)
@@ -907,7 +907,7 @@ def _declared_revisions() -> list[tuple[ModeloDefinition, str, object]]:
     ]
 
 
-def _filing_supported_revisions() -> list[tuple[ModeloDefinition, str, object]]:
+def _filing_supported_revisions() -> list[tuple[ModeloDefinition, str, ModeloRevision]]:
     """Every revision that explicitly claims filing support.
 
     Kept as the raw-loader counterpart to :func:`_filing_revisions`: operational
@@ -934,7 +934,7 @@ def _filing_supported_revisions() -> list[tuple[ModeloDefinition, str, object]]:
     ]
 
 
-def _claimed_years(revision, design_years: set[int]) -> set[int]:
+def _claimed_years(revision: ModeloRevision, design_years: set[int]) -> set[int]:
     """Design years the revision claims, honouring an open-ended upper bound."""
     selector = revision.period_selector
     explicit = _span_years(revision)
@@ -946,13 +946,13 @@ def _claimed_years(revision, design_years: set[int]) -> set[int]:
 
 
 @cache
-def _source_reference_by_id() -> dict[str, object]:
+def _source_reference_by_id() -> dict[str, SourceReference]:
     """Loaded source catalogue, used as the revision's dependency receipts."""
     _modelos, catalogues = bundled_registry_tree()
-    return dict(catalogues.sources)
+    return {str(ref): source for ref, source in catalogues.sources.items()}
 
 
-def _layout_authority_receipts(modelo_id: str, revision) -> tuple[object, ...]:
+def _layout_authority_receipts(modelo_id: str, revision: ModeloRevision) -> tuple[SourceReference, ...]:
     """Layout-authority sources explicitly cited by a revision.
 
     Fixed-width modelos normally cite ``record_design`` sources.  Modelo 100
@@ -970,7 +970,7 @@ def _layout_authority_receipts(modelo_id: str, revision) -> tuple[object, ...]:
     )
 
 
-def _receipt_covers_year(source, year: int) -> bool:
+def _receipt_covers_year(source: SourceReference, year: int) -> bool:
     selector = source.period_selector
     if selector is not None:
         return selector.includes_year(year)
@@ -979,7 +979,7 @@ def _receipt_covers_year(source, year: int) -> bool:
     return source.applies_to is None or source.applies_to.year >= year
 
 
-def _source_epoch_proves_revision_span(modelo_id: str, revision) -> tuple[bool, str]:
+def _source_epoch_proves_revision_span(modelo_id: str, revision: ModeloRevision) -> tuple[bool, str]:
     """Whether cited record-design receipts cover the revision's declared year span.
 
     An open revision needs an open receipt; a closed revision needs every claimed
@@ -1101,13 +1101,13 @@ def _design_fingerprint_for_ref(ref: str) -> tuple[object, ...] | None:
     return _design_fingerprint(resolved)
 
 
-def _cited_design_fingerprints(revision: object) -> set[tuple[object, ...]]:
+def _cited_design_fingerprints(revision: ModeloRevision) -> set[tuple[object, ...]]:
     """The designs this revision's own source refs name, by fingerprint."""
     found = (_design_fingerprint_for_ref(str(ref)) for ref in revision.source_refs)
     return {fingerprint for fingerprint in found if fingerprint is not None}
 
 
-def _mid_year_span(revision: object) -> int | None:
+def _mid_year_span(revision: ModeloRevision) -> int | None:
     """The year a revision sits WHOLLY inside while covering less than all of it.
 
     ``None`` for a revision that covers a full year, several years, or is
@@ -1120,7 +1120,7 @@ def _mid_year_span(revision: object) -> int | None:
     return None if covers_whole_year else valid_from.year
 
 
-def _designs_claimed_by(modelo_id: str, revision: object) -> tuple[Path, ...]:
+def _designs_claimed_by(modelo_id: str, revision: ModeloRevision) -> tuple[Path, ...]:
     """The designs a revision's span claims, in publication order.
 
     KEYED ON THE DESIGN FILE, NOT ON THE PARSED YEAR, and that is the whole point. The
@@ -1427,7 +1427,7 @@ def _boundary_label(earlier: Path, later: Path) -> tuple[int, int]:
     return max(_design_coverage_years(earlier)), min(_design_coverage_years(later))
 
 
-def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]]:
+def _boundaries_for(modelo_id: str, revision: ModeloRevision) -> dict[tuple[int, int], list[str]]:
     """Every re-layout boundary inside one revision's span, keyed year-pair to evidence.
 
     Both signals contribute to ONE verdict rather than reporting separately,
@@ -2573,7 +2573,7 @@ def test_a_bundled_design_whose_coverage_cannot_be_read_is_reported_unmeasured()
     )
 
 
-def _declared_span_is_single_year(revision) -> bool:
+def _declared_span_is_single_year(revision: ModeloRevision) -> bool:
     """Whether this revision's OWN declared span covers exactly one filing year.
 
     Distinct from a shortage of comparable CORPUS years -- that conflates "the
@@ -2601,19 +2601,19 @@ def _declared_span_is_single_year(revision) -> bool:
 
 
 def _ordered_revisions_by_modelo(
-    all_revisions: list[tuple[ModeloDefinition, str, object]],
-) -> dict[str, list[tuple[str, object]]]:
+    all_revisions: list[tuple[ModeloDefinition, str, ModeloRevision]],
+) -> dict[str, list[tuple[str, ModeloRevision]]]:
     """``{modelo id: [(revision id, revision), ...]}``, ordered by earliest claimed year.
 
     The ordering key is :func:`_span_years`'s own minimum, the SAME function
     the relayout gate already uses to bound an open-ended span -- one
     definition of "which year does this revision start from", not a second.
     """
-    by_modelo: dict[str, list[tuple[str, object]]] = {}
+    by_modelo: dict[str, list[tuple[str, ModeloRevision]]] = {}
     for modelo, revision_id, revision in all_revisions:
         by_modelo.setdefault(modelo.id, []).append((revision_id, revision))
 
-    def _sort_key(item: tuple[str, object]) -> int:
+    def _sort_key(item: tuple[str, ModeloRevision]) -> int:
         _revision_id, revision = item
         years = _span_years(revision)
         return min(years) if years else 0
@@ -2692,7 +2692,7 @@ def _signal_label(evidence_item: str) -> str:
 def _neighbour_divergence(
     modelo_id: str,
     revision_id: str,
-    ordered: list[tuple[str, object]],
+    ordered: list[tuple[str, ModeloRevision]],
 ) -> tuple[bool, str]:
     """Whether a single-year revision's design DIFFERS from its adjacent revision(s).
 
@@ -3065,7 +3065,7 @@ def _period_overlap(id_a: str, periods_a: tuple[str, ...], id_b: str, periods_b:
     return None
 
 
-def _earliest_declared_year(revisions: list[tuple[str, object]]) -> int | None:
+def _earliest_declared_year(revisions: list[tuple[str, ModeloRevision]]) -> int | None:
     """The earliest filing year any of a modelo's revisions declares, or ``None``.
 
     ``None`` for a modelo whose every revision declares no dateable start at
@@ -3073,15 +3073,17 @@ def _earliest_declared_year(revisions: list[tuple[str, object]]) -> int | None:
     hole for a modelo with no stated coverage would be inventing a claim the
     registry never made.
     """
-    starts = [
-        min(revision.period_selector.years) if revision.period_selector.years else revision.period_selector.year_from
-        for _revision_id, revision in revisions
-        if revision.period_selector.years or revision.period_selector.year_from is not None
-    ]
+    starts: list[int] = []
+    for _revision_id, revision in revisions:
+        selector = revision.period_selector
+        if selector.years:
+            starts.append(min(selector.years))
+        elif selector.year_from is not None:
+            starts.append(selector.year_from)
     return min(starts) if starts else None
 
 
-def _offset_annual_modelo(revisions: list[tuple[str, object]]) -> bool:
+def _offset_annual_modelo(revisions: list[tuple[str, ModeloRevision]]) -> bool:
     """Whether every one of a modelo's revisions declares ONLY annual-cadence periods.
 
     Derived, not declared: :class:`~core.PeriodKind` is already the canonical,

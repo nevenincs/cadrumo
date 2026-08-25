@@ -1,15 +1,11 @@
-[revisions."2025-y-siguientes"]
+[revisions."2025"]
 authority_grade = "applicability"
 # Modelo 220 declaración anual del Impuesto sobre Sociedades del grupo fiscal en
-# régimen de consolidación fiscal. The IS declaration models for períodos
-# impositivos iniciados en 2024 are approved by Orden HAC/657/2025
-# (BOE-A-2025-12818); the bundled excerpt's art 3 names "Modelos 200 y 220"
-# verbatim, evidencing that Modelo 220 is one of the approved models. The filing
-# plazo is the general IS declaration plazo of art. 124.1 LIS (25 días naturales
-# tras los 6 meses posteriores a la conclusión del período impositivo). This is a
-# scheduling/applicability-grade revision carrying declaration-header casillas
-# only; the money-closure casillas of the group declaration are deferred, and no
-# casilla number is fabricated.
+# régimen de consolidación fiscal. Orden HAC/529/2026
+# (BOE-A-2026-11583) approves its 2025 declaration and grounds its deadline
+# through LIS art. 75.2. This is a scheduling/applicability-grade revision
+# carrying declaration-header casillas only; the money-closure casillas of the
+# group declaration are deferred, and no casilla number is fabricated.
 #
 # CORRECTED REASON. This previously read "deferred until an authoritative Modelo
 # 220 diseño de registro is bundled". FOUR are bundled and all four load through
@@ -18,12 +14,11 @@ authority_grade = "applicability"
 # 2024 and 2025 ones are named in this revision's own source_refs above. Design
 # availability is not what blocks the casillas.
 #
-# What blocks them is that this single open-ended revision SPANS A RE-LAYOUT.
-# test_revision_span_matches_published_designs measures the 2024/2025 boundary as
-# 4,524 of 7,466 shared boxes moved, 216 boxes added and 130 removed, and the
-# record set changing 137 -> 141; it reports "needs 2 revisions" and its stated
-# fix is to split at that boundary. Authoring one layout across the span would be
-# wrong for whichever year it did not follow.
+# The former open-ended revision spanned the 2024/2025 re-layout. The two
+# calendar years are now separate revisions: the 2024/2025 boundary moves 4,524
+# of 7,466 shared boxes, adds 216, removes 130, and changes the record set from
+# 137 to 141. The 2025 revision must not also claim a 2026 successor without
+# that successor's own exact design and approving authority.
 #
 # AMENDING ORDEN ACQUIRED AND CITED (2026-08-22). The gate's instruction was
 # explicit -- acquire and cite the BOE orden that authorises the later layout,
@@ -39,14 +34,13 @@ authority_grade = "applicability"
 # citation, whose only bundled provision naming 220 is art 3's domiciliación
 # heading. Its disposición final segunda fixes the 2025 temporal boundary.
 #
-# NOT SPLIT YET. The split gate (test_no_revision_spans_a_design_relayout) does
-# not flag this revision: it carries no export layout, so there are no byte
-# offsets for a re-layout to write wrongly, and the harm the split prevents does
-# not yet exist here. The split becomes required the moment an export layout is
-# authored, and the 4,524-of-7,466 moved boxes at the 2024/2025 boundary say
-# which side any such layout would have to pick.
+# No 2026 successor is declared. The 2025 AEAT design and Orden HAC/529/2026
+# both apply only to calendar-2025 periods. A later revision requires its own
+# hash-pinned record design and approving legal authority; copying this
+# revision's selection or layout evidence would fabricate continuity.
 valid_from = 2025-01-01
-period_selector = { year_from = 2025, periods = ["0A"] }
+valid_to = 2025-12-31
+period_selector = { year_from = 2025, year_to = 2025, periods = ["0A"] }
 orden_aplicabilidad = ["orden-hac-529-2026:art-6-3"]
 legal_refs = [
     "orden-hac-529-2026:art-6-3",
@@ -60,7 +54,7 @@ source_refs = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: review of the modelo 220 (IS, regimen de consolidacion fiscal) 2025-y-siguientes \
+agent: review of the modelo 220 (IS, regimen de consolidacion fiscal) 2025 \
 era. DISCLOSURE -- self-review: the same agent acquired and bundled Orden HAC/529/2026, \
 split this revision out of the former open-ended '2024-y-siguientes', and swept the \
 split's fallout, all in the immediately preceding commits. VERIFIED -- APPLICABILITY, and \
@@ -84,17 +78,17 @@ verbatim is the exact defect corrected in orden-hac-510-2021 the same day. Art 6
 art 1's approval of this modelo; the approving text itself remains to be acquired whole. \
 NOT CLAIMED -- RECORD DESIGN: 0 of 7,682 casillas the bundled 2025 diseno derives are \
 modelled. Applicability grade, declaration header only, no casilla number fabricated. A \
-scheduling and applicability claim ONLY. NOT CLAIMED -- SPAN EVIDENCE IS THIN: the gate \
-reports only 1 comparable bundled design year inside this open-ended span; that is \
-ABSENT-class evidence, not the contrary-evidence class. NOT CLAIMED -- FILING: no export \
+scheduling and applicability claim ONLY. NOT CLAIMED -- SUCCESSOR: the 2025 source and \
+approving orden both stop at calendar 2025; no 2026 design or approving authority is \
+registered, so no successor is selected. NOT CLAIMED -- FILING: no export \
 layout; on the filing-capability worklist, which its gate states is a backlog and not a \
 defect to suppress. Scope stays inspection_only. NOT CLAIMED -- independent_check_coverage \
 is n/a: NO CLAIM, not zero. NOT CLAIMED -- locales complete but not audited for accuracy."""
 reviewed_at = 2026-08-22
 
-[revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+[revisions."2025".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision. Revision '2025-y-siguientes' of \
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision. Revision '2025' of \
 modelo 220 DOES have a strictly-earlier sibling ('2024'), so a within-modelo continuity transition is \
 structurally possible here. None is declared because the two eras are not a renumbering of one another: at the \
 2024/2025 boundary AEAT's record designs move 4,524 of 7,466 shared boxes, add 216 and remove 130, and the \

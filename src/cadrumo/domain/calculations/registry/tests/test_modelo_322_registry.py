@@ -215,6 +215,7 @@ def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned
         (2026, "09", "2026-10-01", "2026-10-30", 2026),
         (2026, "10", "2026-11-01", "2026-11-30", 2026),
         (2026, "11", "2026-12-01", "2026-12-30", 2026),
+        (2026, "12", "2027-01-01", "2027-02-01", 2027),
     )
     expected = {
         (year, period): (date.fromisoformat(opens), date.fromisoformat(closes), source_year)
@@ -228,20 +229,29 @@ def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned
     }
 
     assert set(authored) == set(expected)
-    assert (2026, "12") not in authored
     for coordinate, (opens_on, closes_on, source_year) in expected.items():
         revision, window = authored[coordinate]
         year, period = coordinate
         assert window.id == f"modelo-322-{year}-{period}"
         assert window.filing_year == window.period.filing_year == year
         assert window.period_kind == "monthly"
-        assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == (opens_on, closes_on, None)
-        assert f"aeat-calendario-contribuyente-{source_year}" in window.source_refs
+        expected_payment = date(2027, 1, 27) if coordinate == (2026, "12") else None
+        assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == (
+            opens_on,
+            closes_on,
+            expected_payment,
+        )
+        expected_source = (
+            "aeat-modelo-303-procedure"
+            if source_year == 2027
+            else f"aeat-calendario-contribuyente-{source_year}"
+        )
+        assert expected_source in window.source_refs
         assert select_revision(modelo, filing_year=year, period=period) is revision
 
     for year in range(2023, 2027):
         projected = bundled_authority().deadline_windows(year, modelos=("322",))
-        expected_count = 11 if year == 2026 else 12
+        expected_count = 12
         assert len(projected) == expected_count
         assert (
             len(

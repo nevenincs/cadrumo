@@ -43,6 +43,7 @@ from ...core import (
     DescendantRelacion,
     M210GrossIncomeSourceMode,
     Modelo,
+    RegistryAuthorityGrade,
     RescateType,
 )
 from ...core.decimal import try_parse_canonical_decimal
@@ -716,7 +717,13 @@ def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
     from ._work_lifecycle import get_work_unit
 
     unit = get_work_unit(work_unit_id)
-    return resolve_registry_snapshot_for_work_unit(unit).revision
+    # The calculate path needs the rung that computes amounts, not the
+    # filing rung: a revision that honestly declares calculation must not be
+    # refused for work this application does entirely in memory.
+    return resolve_registry_snapshot_for_work_unit(
+        unit,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    ).revision
 
 
 def _resolved_maternidad_meses(work_unit_id: str) -> MaternidadMesesResolution | None:
@@ -732,7 +739,10 @@ def _resolved_maternidad_meses(work_unit_id: str) -> MaternidadMesesResolution |
     from ._work_lifecycle import get_work_unit
 
     unit = get_work_unit(work_unit_id)
-    snapshot = resolve_registry_snapshot_for_work_unit(unit)
+    snapshot = resolve_registry_snapshot_for_work_unit(
+        unit,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     try:
         record = ProfileRecordRepository.for_current_session(unit.bucket_id).load(unit.bucket_id)
     except ProfileNotFoundError:

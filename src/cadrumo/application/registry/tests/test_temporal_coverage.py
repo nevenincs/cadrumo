@@ -14,7 +14,12 @@ from ....domain.calculations.registry import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
 )
-from .. import TemporalRevisionCoverage, TemporalRevisionCoverageSummary, compose_temporal_coverage
+from .. import (
+    TemporalCoverageReport,
+    TemporalRevisionCoverage,
+    TemporalRevisionCoverageSummary,
+    compose_temporal_coverage,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -272,8 +277,8 @@ def test_temporal_coverage_row_constructs_only_real_refusal_branch_shapes(
     selected_revision: str | None,
     declared_authority_grade: RegistryAuthorityGrade | None,
 ) -> None:
-    row = TemporalRevisionCoverage(
-        **_temporal_refusal_payload(
+    row = TemporalRevisionCoverage.model_validate(
+        _temporal_refusal_payload(
             failure_code=failure_code,
             selected_revision=selected_revision,
             declared_authority_grade=declared_authority_grade,
@@ -317,9 +322,7 @@ def test_temporal_coverage_row_refuses_impossible_branch_evidence_at_constructio
     message: str,
 ) -> None:
     with pytest.raises(ValidationError, match=message):
-        TemporalRevisionCoverage(
-            **(_temporal_refusal_payload(failure_code=failure_code) | mutation),
-        )
+        TemporalRevisionCoverage.model_validate(_temporal_refusal_payload(failure_code=failure_code) | mutation)
 
 
 @pytest.mark.parametrize("declared_authority_grade", tuple(RegistryAuthorityGrade))
@@ -328,11 +331,9 @@ def test_undeclared_grade_refusal_rejects_every_non_null_grade_at_construction(
 ) -> None:
     """Every declared ladder rung contradicts an undeclared-grade refusal."""
     with pytest.raises(ValidationError, match="undeclared-grade refusal cannot carry a declared authority grade"):
-        TemporalRevisionCoverage(
-            **(
-                _temporal_refusal_payload(failure_code="undeclared_authority_grade")
-                | {"declared_authority_grade": declared_authority_grade}
-            ),
+        TemporalRevisionCoverage.model_validate(
+            _temporal_refusal_payload(failure_code="undeclared_authority_grade")
+            | {"declared_authority_grade": declared_authority_grade},
         )
 
 
@@ -371,7 +372,7 @@ def test_temporal_coverage_validator_bites_each_refusal_branch_mutation(
     mutation: dict[str, str | RegistryAuthorityGrade | None],
     message: str,
 ) -> None:
-    row = TemporalRevisionCoverage(**_temporal_refusal_payload(failure_code=failure_code))
+    row = TemporalRevisionCoverage.model_validate(_temporal_refusal_payload(failure_code=failure_code))
     mutated_row = row.model_copy(update=mutation)
 
     with pytest.raises(ValidationError, match=message):
@@ -383,7 +384,9 @@ def test_undeclared_grade_refusal_revalidates_every_non_null_grade_contradiction
     declared_authority_grade: RegistryAuthorityGrade,
 ) -> None:
     """Frozen-row mutation must not evade the all-rungs contradiction guard."""
-    row = TemporalRevisionCoverage(**_temporal_refusal_payload(failure_code="undeclared_authority_grade"))
+    row = TemporalRevisionCoverage.model_validate(
+        _temporal_refusal_payload(failure_code="undeclared_authority_grade"),
+    )
     mutated_row = row.model_copy(update={"declared_authority_grade": declared_authority_grade})
 
     with pytest.raises(ValidationError, match="undeclared-grade refusal cannot carry a declared authority grade"):
@@ -417,7 +420,7 @@ def test_temporal_coverage_row_refuses_fabricated_registry_coordinates(
     payload[field] = value
 
     with pytest.raises(ValidationError, match=message):
-        TemporalRevisionCoverage(**payload)
+        TemporalRevisionCoverage.model_validate(payload)
 
 
 def test_temporal_coverage_retains_law_selection_refusal_from_an_authority_mutation(
@@ -546,7 +549,7 @@ def _authority_with_single_model(
     )
 
 
-def _refusals(report, expected_failure_code: str) -> tuple[TemporalRevisionCoverage, ...]:
+def _refusals(report: TemporalCoverageReport, expected_failure_code: str) -> tuple[TemporalRevisionCoverage, ...]:
     """Return every retained refusal for one mutation without discarding later cells."""
     assert report.fully_validated is False
     rows = tuple(row for row in report.refused_rows if row.failure_code == expected_failure_code)
@@ -561,7 +564,7 @@ def _temporal_refusal_payload(
     failure_code: str,
     selected_revision: str | None = None,
     declared_authority_grade: RegistryAuthorityGrade | None = RegistryAuthorityGrade.APPLICABILITY,
-) -> dict[str, str | RegistryAuthorityGrade | None]:
+) -> dict[str, int | str | RegistryAuthorityGrade | None]:
     """Return one direct-construction payload shaped like a composer refusal branch."""
     revision = "2025-02-03-y-siguientes"
     if failure_code == "selected_revision_mismatch":
