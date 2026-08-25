@@ -127,6 +127,8 @@ def case_insensitive_choice(enum_class: type[StrEnum]) -> typer_click_types.Para
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
 # resolving them.
 if TYPE_CHECKING:
+    from cadrumo.application.workflow.state_models import WorkflowState
+
     from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -149,7 +151,6 @@ if TYPE_CHECKING:
         ResultSchemaInventoryRow,
         SurfaceExposureInventoryRow,
     )
-    from cadrumo.application.workflow.state_models import WorkflowState
     from ...core import Period
     from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
     from ...domain.deadlines import TaxpayerProfile
@@ -1126,8 +1127,9 @@ def active_profile_label() -> str | None:
     (:func:`~cadrumo.core.json_contract.emit_json_success`) never scans
     profile manifests.
     """
-    from ...adapters.persistence.storage import StorageValidationError
     from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
+
+    from ...adapters.persistence.storage import StorageValidationError
     from ...core import FormerProductStateError
     from ...core.bucket_pointer import resolve_active_bucket_id
 
@@ -1165,8 +1167,9 @@ def _no_active_profile_refusal() -> Exception:
     second one. ``list_profile_buckets`` reads only manifest files and
     never unlocks a bucket, so this check is cheap.
     """
-    from ...application.profile_preconditions import inspect_active_profile_precondition
     from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
+
+    from ...application.profile_preconditions import inspect_active_profile_precondition
     from ._errors import CliRefusedBoundaryError
 
     registered_profile_count = len(list_profile_buckets())
@@ -1192,6 +1195,7 @@ no_active_profile_refusal = _no_active_profile_refusal
 
 def _state() -> WorkflowState:
     from cadrumo.application.workflow.persistence import workflow_state_repository
+
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     # Without an active profile there is no bucket database to open;
@@ -1643,6 +1647,7 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
 
 def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
     from cadrumo.application.workflow.state_models import active_transaction_catalogue_repository
+
     from ...domain.transactions import LedgerNoActiveBucketError
 
     try:
