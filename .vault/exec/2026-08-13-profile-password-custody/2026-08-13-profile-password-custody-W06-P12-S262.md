@@ -1,26 +1,26 @@
 ---
 tags:
   - '#exec'
-  - '#tui-architecture'
+  - '#profile-password-custody'
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:840d1c2110be22fc3efa03888160896d43698f109bf4f94f91efdc1873aa7854'
-step_id: 'S57'
+body_hash: 'sha256:9968d72368e3ad24975291ef597272789c4eaa7ca3039b1e199c387070f44e8a'
+step_id: 'S262'
 related:
-  - "[[2026-08-11-tui-architecture-plan]]"
+  - "[[2026-08-13-profile-password-custody-plan]]"
 ---
 
 <!-- FRONTMATTER RULES:
      tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
+     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
      Additional tags may be appended below the required pair.
 
      modified: CLI-maintained last-modified stamp; set at scaffold time,
      refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
      step_id is the originating Step's canonical identifier, e.g. S01.
-     The S57 and 2026-08-11-tui-architecture-plan placeholders are machine-filled by
+     The S262 and 2026-08-13-profile-password-custody-plan placeholders are machine-filled by
      `vaultspec-core vault add exec`; do not fill them by hand.
 
      Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
@@ -38,17 +38,17 @@ related:
 <!-- STEP RECORD:
      This file represents one Step from the originating plan. Identified
      by its canonical leaf identifier (S##) and ancestor display path.
-     The Relocate TUI-owned pilot, replay, screenshot, and terminal-surface tooling and ## Scope
+     The Reconcile all four production catalogues with current source and registry revision ownership, including Modelo 038, Modelo 220, Modelo 763, missing and orphaned keys, then rerun audit, drift, completeness, and every nitpicky build and ## Scope
 
-- `src/cadrumo/entrypoints/tui/devtools` placeholders below are machine-filled
+- `locales/ and dev/locales/ and docs/locales/` placeholders below are machine-filled
      by `vaultspec-core vault add exec` from the originating Step row;
      do not fill them by hand. -->
 
-# Relocate TUI-owned pilot, replay, screenshot, and terminal-surface tooling
+# Reconcile all four production catalogues with current source and registry revision ownership, including Modelo 038, Modelo 220, Modelo 763, missing and orphaned keys, then rerun audit, drift, completeness, and every nitpicky build
 
 ## Scope
 
-- `src/cadrumo/entrypoints/tui/devtools`
+- `locales/ and dev/locales/ and docs/locales/`
 
 ## Description
 
