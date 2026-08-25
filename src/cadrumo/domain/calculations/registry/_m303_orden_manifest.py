@@ -72,11 +72,7 @@ def _generate_manifest_with_censuses(
     generated_sources: list[M303AnnualOrdenGeneratedSource] = []
     censuses: dict[SourceRefId, M303AnnualOrdenSourceCensus] = {}
     shipped = load_m303_annual_orden_censuses(registry_root, sources=sources) if registry_root is not None else None
-    ejercicios = (
-        _annual_orden_years_from_sources(sources)
-        if supported_filing_years is None
-        else supported_filing_years
-    )
+    ejercicios = _annual_orden_years_from_sources(sources) if supported_filing_years is None else supported_filing_years
     for ejercicio in ejercicios:
         source = _single_annual_orden_source_for_year(sources, ejercicio=ejercicio)
         census = None if shipped is None else shipped.get(source.id)

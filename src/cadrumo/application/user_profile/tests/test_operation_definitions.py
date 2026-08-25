@@ -170,7 +170,8 @@ def test_profile_operation_families_have_one_secure_registered_definition_each()
     assert len(set(definition_ids)) == len(definition_ids)
     assert all(
         registry.lookup(definition_id).capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
-        and registry.lookup(definition_id).capabilities.sensitive_input is OperationSensitiveInputPolicy.SECURE_REFERENCE
+        and registry.lookup(definition_id).capabilities.sensitive_input
+        is OperationSensitiveInputPolicy.SECURE_REFERENCE
         and registry.lookup(definition_id).reconciliation_policy is OperationReconciliationPolicy.INTERRUPT
         and not registry.lookup(definition_id).capabilities.owned_resources
         for definition_id in definition_ids
@@ -295,6 +296,7 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
         assert live_session is not None
         assert read_pointer(root) is not None
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
+
             async def _run_strong_close() -> object:
                 supervisor, _operands = _supervisor(
                     root,

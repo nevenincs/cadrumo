@@ -119,7 +119,9 @@ def test_embedded_envelope_refuses_a_rebound_catalogue_identity(
         source.model_copy(update={"id": alternate_identity}),
     )
 
-    with pytest.raises(RegistryValidationError, match="embedded source identity must equal its canonical catalogue key"):
+    with pytest.raises(
+        RegistryValidationError, match="embedded source identity must equal its canonical catalogue key"
+    ):
         _build(modelo, rebound_catalogues, filing_year=filing_year, period=period)
 
 
@@ -164,9 +166,7 @@ def test_embedded_envelope_source_kind_guard_reports_each_non_design_catalogue_s
         source_root=bundled_path(),
     )
 
-    assert any(
-        declaration.source_ref in failure and "not a record-design source" in failure for failure in failures
-    )
+    assert any(declaration.source_ref in failure and "not a record-design source" in failure for failure in failures)
 
 
 def test_embedded_envelope_refuses_a_digest_that_disagrees_with_its_catalogue(

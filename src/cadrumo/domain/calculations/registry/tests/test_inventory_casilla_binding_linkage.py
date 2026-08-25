@@ -50,9 +50,7 @@ def test_inventory_bindings_have_one_claim_and_no_cross_or_legacy_link() -> None
     revision = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A").revision
     claims = {
         binding_id: tuple(
-            casilla.id
-            for casilla in revision.casillas
-            if binding_id in bound_casilla_binding_ids(casilla)
+            casilla.id for casilla in revision.casillas if binding_id in bound_casilla_binding_ids(casilla)
         )
         for binding_id in _LINKS
     }
@@ -84,10 +82,6 @@ def test_rows_linkage_does_not_fold_row_values_into_scalar_formula_inputs() -> N
 
 def test_inventory_casilla_links_are_absent_from_other_m100_revisions() -> None:
     revision = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A").revision
-    linked = {
-        binding_id
-        for casilla in revision.casillas
-        for binding_id in bound_casilla_binding_ids(casilla)
-    }
+    linked = {binding_id for casilla in revision.casillas for binding_id in bound_casilla_binding_ids(casilla)}
 
     assert not linked.intersection(_LINKS)

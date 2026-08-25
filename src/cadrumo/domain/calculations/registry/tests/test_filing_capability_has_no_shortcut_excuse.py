@@ -96,8 +96,7 @@ def test_an_all_informational_casilla_set_is_not_a_parser_fingerprint() -> None:
     all_informational = {
         f"{modelo}/{revision_id}"
         for modelo, revision_id, revision in _revisions()
-        if revision.casillas
-        and all(str(getattr(c, "input_kind", "")) == "informational" for c in revision.casillas)
+        if revision.casillas and all(str(getattr(c, "input_kind", "")) == "informational" for c in revision.casillas)
     }
 
     assert "840/2003-y-siguientes" in all_informational, sorted(all_informational)
@@ -106,7 +105,5 @@ def test_an_all_informational_casilla_set_is_not_a_parser_fingerprint() -> None:
     modelo_840 = next(m for m in bundled_authority().modelos if m.id == "840")
     revision = modelo_840.revisions["2003-y-siguientes"]
 
-    assert not revision.export_layouts, (
-        "modelo 840 now carries a layout, so it is no longer the counterexample"
-    )
+    assert not revision.export_layouts, "modelo 840 now carries a layout, so it is no longer the counterexample"
     assert len(revision.casillas) > 100, len(revision.casillas)

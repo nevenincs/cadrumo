@@ -700,9 +700,7 @@ def _construct_source_ids_without_deadline_closure(revision: ModeloRevision) -> 
     source_ids: set[str] = set()
     for construct in revision.constructs:
         deadline_source_ids = {
-            source_id
-            for window_id in construct.deadline_windows
-            for source_id in windows_by_id[window_id].source_refs
+            source_id for window_id in construct.deadline_windows for source_id in windows_by_id[window_id].source_refs
         }
         source_ids.update(set(construct.source_refs) - deadline_source_ids)
     return source_ids

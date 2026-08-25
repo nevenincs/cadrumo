@@ -204,7 +204,6 @@ STANDING_LITERAL_VERSION_DECLARATIONS: Final[Mapping[tuple[str, str, str], str]]
         "CensoModeloFoundationContract",
         "schema_version",
     ): _RESPONSE_CONTRACT,
-
 }
 """The literal-authoring sites standing when this gate landed, each classified.
 

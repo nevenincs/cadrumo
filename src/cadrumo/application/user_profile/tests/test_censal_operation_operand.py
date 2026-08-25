@@ -34,6 +34,8 @@ from .._censo_sync import CENSAL_ADOPTABLE_PATHS
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
+
+
 def _domicilio(*, notification: bool) -> CensalObservationAddress:
     return CensalObservationAddress(
         tipo_via="CALLE",

@@ -84,8 +84,7 @@ def test_duplicate_atomic_qualified_coordinate_across_revisions_bites_independen
 
     assert not any("deadline window id" in failure for failure in failures)
     assert any(
-        "deadline semantic coordinate" in failure
-        and "resultado_scope=<ResultDisposition.INGRESO: 'I'>" in failure
+        "deadline semantic coordinate" in failure and "resultado_scope=<ResultDisposition.INGRESO: 'I'>" in failure
         for failure in failures
     )
 

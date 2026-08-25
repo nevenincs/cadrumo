@@ -863,23 +863,16 @@ def _rejoin_bare_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
 
         start = min(index, head_index)
         middle = " ".join(
-            lines[position].strip()
-            for position in range(start, successor_index)
-            if position not in {index, head_index}
+            lines[position].strip() for position in range(start, successor_index) if position not in {index, head_index}
         )
         rebuilt[start] = (
-            f"{ordinal} {offset} {length} {head.group('naturaleza')} "
-            f"{head.group('rest')} {middle}".rstrip()
+            f"{ordinal} {offset} {length} {head.group('naturaleza')} {head.group('rest')} {middle}".rstrip()
         )
         consumed.update(position for position in range(start, successor_index) if position != start)
 
     if not rebuilt:
         return lines
-    return tuple(
-        rebuilt.get(index, line)
-        for index, line in enumerate(lines)
-        if index not in consumed
-    )
+    return tuple(rebuilt.get(index, line) for index, line in enumerate(lines) if index not in consumed)
 
 
 #: A row whose ORDINAL and POSITION were emitted as one token, with the length
@@ -927,12 +920,7 @@ def _split_fused_ordinal_position_prefix(lines: tuple[str, ...]) -> tuple[str, .
             split.append(line)
             continue
         fused = _FUSED_ORDINAL_POSITION_RE.match(line)
-        if (
-            fused is None
-            or previous is None
-            or previous.ordinal is None
-            or not previous.ordinal.isdigit()
-        ):
+        if fused is None or previous is None or previous.ordinal is None or not previous.ordinal.isdigit():
             split.append(line)
             continue
         ordinal = str(int(previous.ordinal) + 1)
@@ -940,10 +928,7 @@ def _split_fused_ordinal_position_prefix(lines: tuple[str, ...]) -> tuple[str, .
         if f"{ordinal}{offset}" != fused.group("fused"):
             split.append(line)
             continue
-        rebuilt = (
-            f"{ordinal} {offset} {fused.group('length')} "
-            f"{fused.group('naturaleza')} {fused.group('rest')}"
-        )
+        rebuilt = f"{ordinal} {offset} {fused.group('length')} {fused.group('naturaleza')} {fused.group('rest')}"
         reparsed = _parse_pdf_row(rebuilt, index + 1)
         if reparsed is None:
             split.append(line)
@@ -951,6 +936,7 @@ def _split_fused_ordinal_position_prefix(lines: tuple[str, ...]) -> tuple[str, .
         previous = reparsed
         split.append(rebuilt)
     return tuple(split)
+
 
 #: A row whose NATURALEZA ran into the content-column marker that follows it:
 #: ``170 1697 9 AnC ...`` for AEAT's ``170 1697 9 An C ...``. The sibling
@@ -1013,6 +999,7 @@ def _split_glued_naturaleza_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         previous = reparsed
         split.append(rebuilt)
     return tuple(split)
+
 
 #: A row's TRUE ordinal and position, restated alone on the line below it after
 #: the row itself was printed with a truncated position: ``18 215`` under
@@ -1086,11 +1073,8 @@ def _repair_truncated_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
 
     if not repaired:
         return lines
-    return tuple(
-        repaired.get(index, line)
-        for index, line in enumerate(lines)
-        if index not in dropped
-    )
+    return tuple(repaired.get(index, line) for index, line in enumerate(lines) if index not in dropped)
+
 
 #: A field row whose four tokens are complete but whose DESCRIPTION wrapped onto
 #: the next line. AEAT does this often enough to matter: modelo 202 writes
@@ -1611,21 +1595,21 @@ def _read_with_reversed_column_repair(
         return first
     repaired_lines = _recover_coordinate_stutter_rows(
         _repair_truncated_offset_rows(
-        _rejoin_bare_coordinate_rows(
-        _split_glued_naturaleza_rows(
-        _split_fused_ordinal_position_prefix(
-        _reattach_stranded_casilla_tags(
-            _collapse_stuttered_row_prefix(
-                _join_wrapped_row_descriptions(
-                    _rejoin_reversed_column_rows(
-                        _split_tail_from_leading_fragment(_undouble_struck_rows(lines)),
+            _rejoin_bare_coordinate_rows(
+                _split_glued_naturaleza_rows(
+                    _split_fused_ordinal_position_prefix(
+                        _reattach_stranded_casilla_tags(
+                            _collapse_stuttered_row_prefix(
+                                _join_wrapped_row_descriptions(
+                                    _rejoin_reversed_column_rows(
+                                        _split_tail_from_leading_fragment(_undouble_struck_rows(lines)),
+                                    ),
+                                ),
+                            ),
+                        ),
                     ),
                 ),
             ),
-        ),
-        ),
-        ),
-        ),
         ),
     )
     try:

@@ -82,32 +82,28 @@ def test_next_wizard_action_returns_auth_setup_command_when_no_auth_provider() -
 def test_next_wizard_action_returns_auth_login_command_when_not_login_ready() -> None:
     """The configured provider fully materialises the registered login action."""
     action = _next_wizard_action(
-            has_profile=True,
-            missing_required=(),
-            missing_enrolment=(),
-            auth_provider="certificate",
-            login_ready=False,
+        has_profile=True,
+        missing_required=(),
+        missing_enrolment=(),
+        auth_provider="certificate",
+        login_ready=False,
     )
     assert action is not None
     assert action.action.action_id == "operator.auth.login"
-    assert {binding.argument_name: binding.value for binding in action.argument_bindings} == {
-        "provider": "certificate"
-    }
+    assert {binding.argument_name: binding.value for binding in action.argument_bindings} == {"provider": "certificate"}
 
 
 def test_next_wizard_action_uses_configured_auth_provider() -> None:
     action = _next_wizard_action(
-            has_profile=True,
-            missing_required=(),
-            missing_enrolment=(),
-            auth_provider="clave_movil",
-            login_ready=False,
+        has_profile=True,
+        missing_required=(),
+        missing_enrolment=(),
+        auth_provider="clave_movil",
+        login_ready=False,
     )
     assert action is not None
     assert action.action.action_id == "operator.auth.login"
-    assert {binding.argument_name: binding.value for binding in action.argument_bindings} == {
-        "provider": "clave_movil"
-    }
+    assert {binding.argument_name: binding.value for binding in action.argument_bindings} == {"provider": "clave_movil"}
 
 
 def test_next_wizard_action_returns_app_overview_status_in_happy_path() -> None:

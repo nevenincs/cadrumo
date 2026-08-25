@@ -177,9 +177,7 @@ def test_selector_gate_bites_when_a_live_filing_binding_is_routed_to_the_wrong_f
     """Selector dispatch cannot be weakened into a source-agnostic pass-through."""
     records = _filing_grade_bindings()
     target = next(
-        record.binding
-        for record in records
-        if record.binding.source is BindingSourceKind.LEDGER_IVA_AGGREGATION
+        record.binding for record in records if record.binding.source is BindingSourceKind.LEDGER_IVA_AGGREGATION
     )
     mutated = target.model_copy(update={"source": BindingSourceKind.MANUAL_INPUT})
 
@@ -231,9 +229,7 @@ def test_m193_2024_deferred_binding_loses_its_owner_when_its_exact_census_destin
 
     violations = _source_route_violations(records, mutated)
 
-    assert any(
-        "193/2024/" in violation and "lacks one exact census owner" in violation for violation in violations
-    )
+    assert any("193/2024/" in violation and "lacks one exact census owner" in violation for violation in violations)
 
 
 def test_filing_binding_provenance_is_copied_verbatim_from_validated_authority() -> None:

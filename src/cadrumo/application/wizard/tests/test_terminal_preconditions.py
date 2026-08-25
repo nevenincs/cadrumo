@@ -279,7 +279,9 @@ def test_wizard_preconditions_delegate_to_one_public_constructor_without_local_c
     assert delegates == [errors_module.__name__]
 
     tree = ast.parse(inspect.getsource(status_module))
-    next_action = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_next_wizard_action")
+    next_action = next(
+        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_next_wizard_action"
+    )
     literal_strings = {
         node.value.lower()
         for node in ast.walk(next_action)
@@ -295,9 +297,7 @@ def test_wizard_production_has_no_executable_profile_create_recommendation_or_sa
     production_sources = {path.name: path.read_text(encoding="utf-8") for path in wizard_root.glob("*.py")}
 
     executable_recommendations = {
-        filename
-        for filename, source in production_sources.items()
-        if "aeat config profile create" in source.lower()
+        filename for filename, source in production_sources.items() if "aeat config profile create" in source.lower()
     }
     assert not executable_recommendations
 
@@ -312,7 +312,9 @@ def test_wizard_production_has_no_executable_profile_create_recommendation_or_sa
 def test_wizard_status_next_action_declares_only_the_registered_resolved_login_action() -> None:
     source = inspect.getsource(status_module)
     tree = ast.parse(source)
-    function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_next_wizard_action")
+    function = next(
+        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_next_wizard_action"
+    )
     action_ids = {
         node.args[0].value
         for node in ast.walk(function)
@@ -323,13 +325,16 @@ def test_wizard_status_next_action_declares_only_the_registered_resolved_login_a
         and isinstance(node.args[0].value, str)
     }
     assert action_ids == {"operator.auth.login"}
-    assert _next_wizard_action(
-        has_profile=False,
-        missing_required=(),
-        missing_enrolment=(),
-        auth_provider="",
-        login_ready=False,
-    ) is None
+    assert (
+        _next_wizard_action(
+            has_profile=False,
+            missing_required=(),
+            missing_enrolment=(),
+            auth_provider="",
+            login_ready=False,
+        )
+        is None
+    )
 
 
 def test_missing_active_profile_has_an_exact_application_state_operator_decision_verdict() -> None:

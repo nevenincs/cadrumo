@@ -367,7 +367,9 @@ def test_inactive_only_delete_revalidates_policy_after_prepare_and_before_effect
 
     assert capsule.is_dir()
     assert capture_pointer(tmp_path) == active_bytes
-    assert service._repository.load_journal(journal.transaction_id).state is ProfileCustodyTransactionState.DELETE_PREPARED
+    assert (
+        service._repository.load_journal(journal.transaction_id).state is ProfileCustodyTransactionState.DELETE_PREPARED
+    )
 
 
 def test_delete_completes_when_preflight_and_execution_fall_at_different_instants(tmp_path: Path) -> None:
