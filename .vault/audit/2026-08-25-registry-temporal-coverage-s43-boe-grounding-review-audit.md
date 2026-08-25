@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:1d90f5d9113e61d7bde4dc013fc54b4515c22279d16f6098e47045e035d62f7b'
+body_hash: 'sha256:965ad7f93fa3f656dffe712eab077a738e22334ee21274c2abbe546544bd45c7'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-W02-P05-S43]]"
@@ -36,6 +36,14 @@ is not covered by the selected design source.
 The 2005 PDF remains unselected with no epoch or applicability window. Modelo
 038 remains applicability-grade, inspection-only and without an export layout.
 The peer Modelo 714 change was not modified.
+
+### raw-corpus-trailing-whitespace | low | closed: official HTML is mechanically normalized
+
+Closed. Trailing spaces were removed from the bundled official HTML without
+changing its legal text. The canonical preprocessor regenerated the paired
+JSON source digest while the extracted Markdown remained byte-identical. Both
+legal units and their required phrases continue to resolve through production
+verification.
 
 ## Recommendations
 
