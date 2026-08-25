@@ -52,6 +52,7 @@ from ....core import (
 from ....core.config import override_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
+from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes
 from ....entrypoints.tui.components.widgets import ContentScroll
 from ._credential_screen import (
@@ -59,7 +60,6 @@ from ._credential_screen import (
     CredentialApp,
     run_credential_app,
 )
-from ._status_bar import PinnedStatusBar
 
 if TYPE_CHECKING:
     from collections.abc import Callable

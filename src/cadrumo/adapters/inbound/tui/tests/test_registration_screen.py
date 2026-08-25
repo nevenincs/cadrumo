@@ -32,11 +32,11 @@ from .....adapters.persistence.storage.custody import (
 from .....core import ProfilePasswordRefusalReason, assess_profile_password
 from .....core.i18n import tr
 from .....entrypoints.cli import attempt_registration
+from .....entrypoints.tui.components.status import PinnedStatusBar
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
 from .._recovery_words_screen import RecoveryWordsScreen
 from .._registration_screen import assessment_refusal
-from .._status_bar import PinnedStatusBar
 
 pytestmark = [
     pytest.mark.integration,

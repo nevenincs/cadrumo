@@ -52,7 +52,6 @@ from ._registration_screen import (
     run_registration_tui,
 )
 from ._select import select_flow_frontend
-from ._status_bar import PinnedStatusBar, StatusTone
 from ._status_screen import (
     StatusApp,
     StatusAuthView,
@@ -80,7 +79,6 @@ __all__ = [
     "ManagerProgressSinkBinder",
     "ModeloWorkReviewApp",
     "ModeloWorkReviewScreen",
-    "PinnedStatusBar",
     "ProfileManagerApp",
     "ProfilePasswordVerdict",
     "RecoveryHandoverCancelledError",
@@ -92,7 +90,6 @@ __all__ = [
     "StatusFactRow",
     "StatusPageData",
     "StatusProfileRow",
-    "StatusTone",
     "accepted_shape_hint",
     "active_form_presenter",
     "confirm_restart_dialog",

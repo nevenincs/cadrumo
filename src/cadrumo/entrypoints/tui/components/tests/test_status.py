@@ -1,4 +1,4 @@
-"""Pilot-driven proofs for the transient pinned TUI status channel."""
+"""Pilot-driven proofs for the reusable pinned TUI status channel."""
 
 from __future__ import annotations
 
@@ -9,12 +9,9 @@ from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
 from textual.widgets import Static
 
-from .._status_bar import PinnedStatusBar
+from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 
-pytestmark = [
-    pytest.mark.unit,
-    pytest.mark.hex_inbound_adapter,
-]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _TERMINAL_SIZE = (100, 24)
 
@@ -85,6 +82,20 @@ async def test_status_bar_exposes_each_closed_tone_and_keeps_a_supplied_summary(
         assert bar.tone == "idle"
         assert bar.message == ""
         assert bar.region.height >= height
+
+
+@pytest.mark.asyncio
+async def test_status_bar_renders_progress_text_exactly_as_supplied() -> None:
+    """Progress policy belongs to the caller; this widget only presents its text."""
+    app = _StatusBarHarness()
+    supplied = "Waiting for the browser confirmation. Time remaining: 1:59."
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        bar = app.query_one("#status", PinnedStatusBar)
+        bar.show_progress(supplied)
+        await pilot.pause()
+
+        assert bar.tone == "progress"
+        assert bar.message == supplied
 
 
 @pytest.mark.asyncio

@@ -40,6 +40,7 @@ from .....core import require_active_bucket_id
 from .....core.classification import SensitivityClass
 from .....domain.user_profile import load_user_profile_schema
 from .....entrypoints.cli import persist_active_profile_field
+from .....entrypoints.tui.components.status import PinnedStatusBar
 from .....tests.manager_pilot import wait_until_settled
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -93,8 +94,6 @@ def _stored() -> dict[str, object | None]:
 
 
 def _notice(app: ProfileManagerApp) -> str:
-    from .. import PinnedStatusBar
-
     return app.query_one("#manager-status", PinnedStatusBar).message
 
 

@@ -27,6 +27,7 @@ from .....application.user_profile import (
 from .....core import require_active_bucket_id, resolve_active_bucket_id
 from .....core.i18n import tr
 from .....entrypoints.cli import persist_active_profile_field
+from .....entrypoints.tui.components.status import PinnedStatusBar
 from .....tests.manager_pilot import wait_until_settled
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -66,8 +67,6 @@ def _notice(app: ProfileManagerApp) -> str:
     really there, and the press writes a progress line synchronously — so
     such a poll is satisfied before the work it is waiting on has run.
     """
-    from .. import PinnedStatusBar
-
     return app.query_one("#manager-status", PinnedStatusBar).message
 
 
@@ -161,7 +160,6 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
 async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> None:
     """The manager consumes Notice in scrollable context, not permanent chrome."""
     from .....core.json_contract import Notice, NoticeSeverity
-    from .. import PinnedStatusBar
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -399,7 +397,7 @@ async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_
     """Cl@ve verification progress must be visible before the pull finishes."""
     from .....adapters.outbound.aeat import emit_operator_progress, operator_progress_sink
     from .....core import OperatorProgress
-    from .. import ManagerAction, ManagerActionOutcome, PinnedStatusBar
+    from .. import ManagerAction, ManagerActionOutcome
 
     release = threading.Event()
 
@@ -457,7 +455,7 @@ async def test_aeat_progress_replaces_the_inherited_stderr_sink_with_the_pinned_
 @pytest.mark.asyncio
 async def test_a_returned_refusal_is_not_styled_as_a_success(tmp_path) -> None:
     """Handled command errors carry an explicit disposition into the header."""
-    from .. import ManagerAction, ManagerActionDisposition, ManagerActionOutcome, PinnedStatusBar
+    from .. import ManagerAction, ManagerActionDisposition, ManagerActionOutcome
 
     def _run() -> ManagerActionOutcome:
         return ManagerActionOutcome(
@@ -501,7 +499,6 @@ async def test_censal_sync_projects_a_missing_route_as_actionable_schema_copy(tm
         _commit_auth_choice,
         censal_pull_action,
     )
-    from .. import PinnedStatusBar
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
@@ -658,7 +655,7 @@ async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tm
 async def test_a_registered_worker_error_is_localised_before_it_reaches_the_header(tmp_path) -> None:
     """The TUI must not expose a translation key as its error message."""
     from .....core.errors import NoActiveProfileError
-    from .. import ManagerAction, ManagerActionOutcome, PinnedStatusBar
+    from .. import ManagerAction, ManagerActionOutcome
 
     def _refuse() -> ManagerActionOutcome:
         raise NoActiveProfileError(translated_message="flows.manager.action.censal_pull_no_provider")

@@ -43,6 +43,7 @@ from textual.worker import Worker, WorkerState
 
 from ....core import OperatorProgress
 from ....core.i18n import tr
+from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
@@ -52,7 +53,6 @@ from ....entrypoints.tui.components.theme import (
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
 from ._field_edit_screen import FieldEditScreen
 from ._form_screen import FormScreen, presenting_forms_through
-from ._status_bar import PinnedStatusBar
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -834,10 +834,7 @@ class ProfileManagerApp(App[None]):
 
     def _progress(self, progress: OperatorProgress) -> None:
         """Show what is happening while it is still happening."""
-        self.query_one("#manager-status", PinnedStatusBar).show_progress(
-            progress.message,
-            timeout_seconds=progress.timeout_seconds,
-        )
+        self.query_one("#manager-status", PinnedStatusBar).show_progress(progress.render())
 
     def _progress_from_worker(self, progress: OperatorProgress) -> None:
         """Move a worker-thread progress emission onto Textual's UI task."""
