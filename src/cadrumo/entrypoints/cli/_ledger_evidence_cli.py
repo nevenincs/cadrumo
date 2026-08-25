@@ -8,10 +8,18 @@ from typing import Protocol, TypedDict, cast
 import typer
 from pydantic import ValidationError
 
-from ...application.ledger.confirmation_gate import FindingResolution
-from ...application.ledger.evidence_draft import InvoiceConfirmationResult, confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence
-from ...application.ledger.evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidencePatch, PurchaseInvoiceEvidenceService
 from ...application.ledger.attachment_review import get_attachment_review_item, list_attachment_review_queue
+from ...application.ledger.confirmation_gate import FindingResolution
+from ...application.ledger.evidence import (
+    PurchaseInvoiceEvidence,
+    PurchaseInvoiceEvidencePatch,
+    PurchaseInvoiceEvidenceService,
+)
+from ...application.ledger.evidence_draft import (
+    InvoiceConfirmationResult,
+    confirm_invoice_draft_from_evidence,
+    extract_invoice_draft_from_evidence,
+)
 from ...application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
 from ...core import IntracomOperationType
 from ...core.config import load_settings
