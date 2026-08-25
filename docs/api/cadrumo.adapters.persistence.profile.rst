@@ -21,6 +21,7 @@ Submodules
    cadrumo.adapters.persistence.profile.buckets
    cadrumo.adapters.persistence.profile.filing_amendments
    cadrumo.adapters.persistence.profile.filing_drafts
+   cadrumo.adapters.persistence.profile.filing_export_replay
    cadrumo.adapters.persistence.profile.fincas
    cadrumo.adapters.persistence.profile.inventory
    cadrumo.adapters.persistence.profile.invoices

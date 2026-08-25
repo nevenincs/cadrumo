@@ -34,7 +34,6 @@ Submodules
    cadrumo.application.user_profile._custody_carry
    cadrumo.application.user_profile._custody_hold
    cadrumo.application.user_profile._custody_hold_models
-   cadrumo.application.user_profile._custody_pointer
    cadrumo.application.user_profile._custody_ports
    cadrumo.application.user_profile._custody_repository
    cadrumo.application.user_profile._custody_service
@@ -46,7 +45,6 @@ Submodules
    cadrumo.application.user_profile._lifecycle
    cadrumo.application.user_profile._login_session
    cadrumo.application.user_profile._login_session_port
-   cadrumo.application.user_profile._operation_definitions
    cadrumo.application.user_profile._overview
    cadrumo.application.user_profile._passphrase_rotation
    cadrumo.application.user_profile._preflight
@@ -64,4 +62,5 @@ Submodules
    cadrumo.application.user_profile._section_rows
    cadrumo.application.user_profile._validation
    cadrumo.application.user_profile.login_interaction
+   cadrumo.application.user_profile.operations
    cadrumo.application.user_profile.status_projection
