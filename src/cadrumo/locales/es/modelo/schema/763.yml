@@ -6,7 +6,7 @@ modelo:
           de actividades anuales o plurianuales. Autoliquidación.
         title: Impuesto sobre actividades de juego - autoliquidación (anuales/plurianuales)
       revision:
-        2011-y-siguientes:
+        2012-2t-3t:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
               help: null
@@ -20,4 +20,79 @@ modelo:
                 title: Modelo 763 autoliquidación del Impuesto sobre actividades de
                   juego
           field:
-            label: Modelo 763 (orden-eha-1881-2011), ejercicios 2011 y siguientes
+            label: Modelo 763, ejercicio 2012 (2.º y 3.º trimestre)
+        2013-2014:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (trimestre natural)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
+                  juego
+          field:
+            label: Modelo 763, ejercicios 2013 y 2014
+        2015-2017:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (trimestre natural)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
+                  juego
+          field:
+            label: Modelo 763, ejercicios 2015 a 2017
+        2018-1t-3t:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (trimestre natural)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
+                  juego
+          field:
+            label: Modelo 763, ejercicio 2018 (1.º a 3.º trimestre)
+        2018-4t:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (trimestre natural)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
+                  juego
+          field:
+            label: Modelo 763, ejercicio 2018 (4.º trimestre)
+        2019-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Ejercicio al que se refiere la autoliquidación
+            x-chim6r1ee1in4qbfchng:
+              help: null
+              label: Periodo (trimestre natural)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
+                  juego
+          field:
+            label: Modelo 763, ejercicios 2019 y siguientes

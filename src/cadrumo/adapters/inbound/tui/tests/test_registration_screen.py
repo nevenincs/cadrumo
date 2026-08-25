@@ -33,10 +33,9 @@ from .....core import ProfilePasswordRefusalReason, assess_profile_password
 from .....core.i18n import tr
 from .....entrypoints.cli import attempt_registration
 from .....entrypoints.tui.components.status import PinnedStatusBar
+from .....entrypoints.tui.secret.passphrase import assessment_refusal
+from .....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationApp
 from .....tests.secure_sql import isolated_profile_storage_root
-from .. import RegistrationApp
-from .._recovery_words_screen import RecoveryWordsScreen
-from .._registration_screen import assessment_refusal
 
 pytestmark = [
     pytest.mark.integration,
@@ -80,9 +79,9 @@ async def test_live_submission_refusals_stay_typed_secret_free_and_create_nothin
         app = _screen()
         expected = assessment_refusal(assess_profile_password(candidate))
         assert expected is not None
-        assert expected.message_key.endswith(message_key)
+        assert expected.translated_message.endswith(message_key)
         assert dict(expected.context)["reason"] == reason.value
-        exact_message = expected.render()
+        exact_message = tr(expected.translated_message, **dict(expected.context))
 
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(pilot, username="Refused candidate", password=candidate, confirm=candidate)

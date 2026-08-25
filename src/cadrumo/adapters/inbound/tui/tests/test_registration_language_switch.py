@@ -26,10 +26,9 @@ from .....application.user_profile import login_profile
 from .....core import assess_profile_password, require_active_bucket_id
 from .....core.i18n import output_language, tr
 from .....entrypoints.cli import attempt_registration
+from .....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationApp
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
-from .. import RegistrationApp
-from .._recovery_words_screen import RecoveryWordsScreen
 
 pytestmark = [
     pytest.mark.integration,

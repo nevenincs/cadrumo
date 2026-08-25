@@ -10,7 +10,7 @@ from textual.containers import Vertical, VerticalScroll
 from textual.geometry import Size
 from textual.widgets import DataTable, Static
 
-from ....core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
+from ....core.presentation import NoticePresentation
 
 
 class ContentScroll(VerticalScroll, can_focus=False):
@@ -25,24 +25,16 @@ class ContentDataTable[CellType](DataTable[CellType]):
         self.styles.height = max(1, size.height)
 
 
-_NOTICE_GLYPH: Final[dict[NoticeSeverity, str]] = {
-    NoticeSeverity.INFO: "ⓘ",
-    NoticeSeverity.WARNING: "⚠",
+_NOTICE_GLYPH: Final[dict[str, str]] = {
+    "info": "ⓘ",
+    "warning": "⚠",
 }
-
-
-def _notice_action_target(notice: Notice) -> str | None:
-    """Return the typed executable target supplied by a notice producer."""
-    action = notice.action
-    if not isinstance(action, ResolvedNoticeAction) or action.action.cli_path is None or action.argument_bindings:
-        return None
-    return "aeat " + " ".join(action.action.cli_path)
 
 
 class NoticeBand(Vertical, can_focus=False):
     """Render already-resolved notices without adding interaction state."""
 
-    def __init__(self, notices: Sequence[Notice], *, id: str | None = None) -> None:
+    def __init__(self, notices: Sequence[NoticePresentation], *, id: str | None = None) -> None:
         """Store the immutable notice projection for rendering."""
         super().__init__(id=id)
         self._notices = tuple(notices)
@@ -53,11 +45,11 @@ class NoticeBand(Vertical, can_focus=False):
             glyph = _NOTICE_GLYPH.get(notice.severity, "•")
             yield Static(
                 f"{glyph} {notice.message}",
-                classes=f"cadrumo-notice cadrumo-notice-{notice.severity.value}",
+                classes=f"cadrumo-notice cadrumo-notice-{notice.severity}",
                 id=f"notice-{index}",
                 markup=False,
             )
-            action_target = _notice_action_target(notice)
+            action_target = notice.action_target
             if action_target is not None:
                 yield Static(
                     action_target,

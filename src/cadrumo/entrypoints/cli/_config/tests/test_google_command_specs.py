@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ..._command_spec import BindingState, SchemaState
+from ..._command_spec import BindingState, OptionSpec, SchemaState
 from .._google_command_specs import GOOGLE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -68,17 +68,27 @@ def test_google_handler_modules_hold_no_typer_structural_authority() -> None:
 def test_google_parameters_retain_aliases_flags_multiplicity_and_bounds() -> None:
     by_key = {spec.key: spec for spec in GOOGLE_COMMAND_SPECS}
     credential_set = {
-        parameter.name: parameter for parameter in by_key["config_google_credential_source_set"].parameters
+        parameter.name: parameter
+        for parameter in by_key["config_google_credential_source_set"].parameters
+        if isinstance(parameter, OptionSpec)
     }
     assert credential_set["scopes"].declarations == ("--scope",)
     assert credential_set["scopes"].multiple is True
     assert credential_set["delegates"].multiple is True
 
-    probe = {parameter.name: parameter for parameter in by_key["config_google_sync_probe"].parameters}
+    probe = {
+        parameter.name: parameter
+        for parameter in by_key["config_google_sync_probe"].parameters
+        if isinstance(parameter, OptionSpec)
+    }
     assert probe["read_only"].declarations == ("--read-only/--no-read-only",)
     assert probe["read_only"].is_flag is True
 
-    export = {parameter.name: parameter for parameter in by_key["config_google_sync_calc_export"].parameters}
+    export = {
+        parameter.name: parameter
+        for parameter in by_key["config_google_sync_calc_export"].parameters
+        if isinstance(parameter, OptionSpec)
+    }
     assert export["year"].constraint.minimum == 2000
     assert export["year"].constraint.maximum == 2099
     assert export["prefill_relations"].declarations == ("--prefill-relations/--no-prefill-relations",)

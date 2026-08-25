@@ -186,7 +186,7 @@ def profile_field_choices(
     in a checkbox: a page of mixed fields reads better with two named options
     than with a box whose meaning depends on which row the cursor is on, and
     the same reasoning already governs
-    :class:`~cadrumo.adapters.inbound.tui.FormFieldKind`. The tokens are the
+    :class:`~cadrumo.core.presentation.FormFieldKind`. The tokens are the
     canonical ``true`` / ``false`` the fact carrier promotes to a real
     :class:`bool`, so picking Yes stores a boolean rather than the word.
 

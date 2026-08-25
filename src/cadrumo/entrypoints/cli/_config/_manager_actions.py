@@ -20,7 +20,7 @@ cell cannot bring a row into existence. The page collects the whole row
 and commits once.
 
 Each one is a plain callable returning a
-:class:`~cadrumo.entrypoints.tui.profile.tasks.ManagerActionOutcome`, so the screen
+:class:`~cadrumo.application.operations.ManagerActionOutcome`, so the screen
 never learns what a censal read or a profile bundle is — it renders a
 label, calls the callable, and shows the sentence it gets back. That is
 the same injected-door arrangement the rest of this seam uses.
@@ -49,10 +49,10 @@ if TYPE_CHECKING:
 
     from ....application.auth import AuthConfigureResult
     from ....application.live import FiledHistoryOnboardingRun
+    from ....application.operations import ManagerAction, ManagerActionOutcome
     from ....core import AuthProviderKind
+    from ....core.presentation import FormField, FormPage
     from ....domain.user_profile import ProfileFieldDefinition, ProfileSectionDefinition
-    from ....entrypoints.tui.components.forms import FormField, FormPage
-    from ....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome
 
 _AUTH_PROVIDER_PATH = "auth.provider"
 _AUTH_CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
@@ -135,7 +135,7 @@ def censal_pull_action() -> ManagerAction:
     should not retype what the authority already has.
     """
     from ....adapters.outbound.aeat import operator_progress_sink
-    from ....entrypoints.tui.profile.tasks import ManagerAction
+    from ....application.operations import ManagerAction
 
     return ManagerAction(
         key="censal-pull",
@@ -148,8 +148,8 @@ def censal_pull_action() -> ManagerAction:
 
 def _run_censal_pull() -> ManagerActionOutcome:
     """Acquire once and apply only after the exact reviewed projection."""
+    from ....application.operations import ManagerActionDisposition, ManagerActionOutcome
     from ....entrypoints import run_censal_review
-    from ....entrypoints.tui.profile.tasks import ManagerActionDisposition, ManagerActionOutcome
     from ._censo_review_ui import confirm_censal_review
     from ._manager_frontend import build_active_profile_overview
 
@@ -207,7 +207,7 @@ def filed_history_pull_all_action() -> ManagerAction:
     cannot authenticate is worse than saying so first.
     """
     from ....adapters.outbound.aeat import operator_progress_sink
-    from ....entrypoints.tui.profile.tasks import ManagerAction
+    from ....application.operations import ManagerAction
 
     return ManagerAction(
         key="filed-history-pull-all",
@@ -231,11 +231,11 @@ def _run_filed_history_pull_all() -> ManagerActionOutcome:
     import asyncio
 
     from ....application.live import pull_filed_history
+    from ....application.operations import ManagerActionDisposition, ManagerActionOutcome
     from ....application.wizard import load_active_taxpayer_profile
     from ....application.workflow import workflow_state_repository
     from ....core.config import load_settings
     from ....core.errors import CadrumoError
-    from ....entrypoints.tui.profile.tasks import ManagerActionDisposition, ManagerActionOutcome
 
     unavailable = _censal_pull_unavailable()
     if unavailable is not None:
@@ -293,7 +293,7 @@ def _filed_history_pull_all_summary(run: FiledHistoryOnboardingRun) -> str:
 
 def export_action() -> ManagerAction:
     """Write a passphrase-encrypted portable copy of the profile."""
-    from ....entrypoints.tui.profile.tasks import ManagerAction
+    from ....application.operations import ManagerAction
 
     return ManagerAction(
         key="export",
@@ -320,14 +320,14 @@ def _run_export() -> ManagerActionOutcome:
 
     from pydantic import SecretStr
 
+    from ....application.operations import ManagerActionOutcome
     from ....application.user_profile import (
         ProfileBundleExportPurpose,
         ProfileBundleExportRequest,
         ProfileBundleExportTransport,
         export_profile_bundle,
     )
-    from ....entrypoints.tui.components.forms import FormField, FormPage
-    from ....entrypoints.tui.profile.tasks import ManagerActionOutcome
+    from ....core.presentation import FormField, FormPage
     from ._manager_frontend import present_form
 
     page = FormPage(
@@ -386,7 +386,7 @@ def certificate_action() -> ManagerAction:
     a required field's ordinary edit away to solve a problem it does not
     have.
     """
-    from ....entrypoints.tui.profile.tasks import ManagerAction
+    from ....application.operations import ManagerAction
 
     return ManagerAction(
         key="certificate",
@@ -422,7 +422,7 @@ def _run_certificate() -> ManagerActionOutcome:
     aim elsewhere.
     """
     from ....application.auth import list_operator_certificate_sources
-    from ....entrypoints.tui.profile.tasks import ManagerActionDisposition, ManagerActionOutcome
+    from ....application.operations import ManagerActionDisposition, ManagerActionOutcome
     from ._manager_frontend import build_active_profile_overview, present_form
 
     listing = list_operator_certificate_sources()
@@ -505,10 +505,10 @@ def _auth_form_page(
             ``""`` when none is selected.
 
     Returns:
-        The :class:`~cadrumo.entrypoints.tui.components.forms.FormPage` to present.
+        The :class:`~cadrumo.core.presentation.FormPage` to present.
     """
     from ....core import AuthProviderKind, ClaveMovilRoute
-    from ....entrypoints.tui.components.forms import FormField, FormFieldKind, FormPage, form_choices
+    from ....core.presentation import FormField, FormFieldKind, FormPage, form_choices
 
     fields = [
         FormField(
@@ -892,7 +892,7 @@ _ROW_SECTION_KEY = "__row_section"
 
 def add_row_action() -> ManagerAction:
     """Add one row to a repeatable section -- a socio, an activity, a property."""
-    from ....entrypoints.tui.profile.tasks import ManagerAction
+    from ....application.operations import ManagerAction
 
     return ManagerAction(
         key="add-row",
@@ -919,12 +919,12 @@ def _run_add_row() -> ManagerActionOutcome:
     refused by the door, and it is reported rather than raised at a screen
     that cannot act on it.
     """
+    from ....application.operations import ManagerActionDisposition, ManagerActionOutcome
     from ....application.user_profile import (
         add_profile_repeatable_section_row,
     )
     from ....core import require_active_bucket_id
     from ....domain.user_profile import ProfileSchemaValidationError, load_user_profile_schema
-    from ....entrypoints.tui.profile.tasks import ManagerActionDisposition, ManagerActionOutcome
     from ._manager_frontend import build_active_profile_overview, present_form
 
     schema = load_user_profile_schema()
@@ -990,7 +990,7 @@ def _row_page(
     title come from the shared schema-label helpers, so this page names a
     field exactly as the manager's own table does.
     """
-    from ....entrypoints.tui.components.forms import FormField, FormFieldKind, FormPage, form_choices
+    from ....core.presentation import FormField, FormFieldKind, FormPage, form_choices
 
     section = _chosen_section(sections, values)
     fields: list[FormField] = [
@@ -1028,7 +1028,7 @@ def _row_field(section: ProfileSectionDefinition, field: ProfileFieldDefinition)
     reports one field's fault as the whole row's.
     """
     from ....application.user_profile import profile_field_choices
-    from ....entrypoints.tui.components.forms import FormField, FormFieldKind, form_choices
+    from ....core.presentation import FormField, FormFieldKind, form_choices
 
     declared = profile_field_choices(field, path=f"{section.key}.{field.key}")
     return FormField(
@@ -1043,9 +1043,9 @@ def _row_field(section: ProfileSectionDefinition, field: ProfileFieldDefinition)
 
 def _shape_hint(field: ProfileFieldDefinition) -> str:
     """The accepted-shape line for a typed row, or empty when it needs none."""
-    from ....entrypoints.tui.profile.editor import accepted_shape_hint
+    from ....application.user_profile import profile_field_shape_hint
 
-    return accepted_shape_hint(field.type)
+    return profile_field_shape_hint(field.type)
 
 
 def _row_value_check(
@@ -1101,7 +1101,7 @@ def google_export_action() -> ManagerAction:
     operator does not already have on the profile they are looking at, so
     it is the one clean action; the rest is a real, tracked gap.
     """
-    from ....entrypoints.tui.profile.tasks import ManagerAction
+    from ....application.operations import ManagerAction
 
     return ManagerAction(
         key="google-export",
@@ -1113,9 +1113,9 @@ def google_export_action() -> ManagerAction:
 
 def _run_google_export() -> ManagerActionOutcome:
     """Collect parameters, then adapt them through the canonical export service."""
+    from ....application.operations import ManagerActionDisposition, ManagerActionOutcome
     from ....core.errors import CadrumoError
-    from ....entrypoints.tui.components.forms import FormField, FormPage
-    from ....entrypoints.tui.profile.tasks import ManagerActionDisposition, ManagerActionOutcome
+    from ....core.presentation import FormField, FormPage
     from ._google_sync_calc import execute_google_sheets_export
     from ._manager_frontend import present_form
 
@@ -1198,7 +1198,7 @@ def logout_action() -> ManagerAction:
     rebuilt overview, so :meth:`~cadrumo.entrypoints.tui.profile.overview.ProfileManagerApp._settle_action`
     exits the surface instead of redrawing it.
     """
-    from ....entrypoints.tui.profile.tasks import ManagerAction
+    from ....application.operations import ManagerAction
 
     return ManagerAction(
         key="logout",
@@ -1209,8 +1209,8 @@ def logout_action() -> ManagerAction:
 
 
 def _run_logout() -> ManagerActionOutcome:
+    from ....application.operations import ManagerActionOutcome
     from ....application.user_profile import logout_active_profile
-    from ....entrypoints.tui.profile.tasks import ManagerActionOutcome
 
     logout_active_profile()
     return ManagerActionOutcome(message=tr("flows.manager.action.logout_done"), close_session=True)

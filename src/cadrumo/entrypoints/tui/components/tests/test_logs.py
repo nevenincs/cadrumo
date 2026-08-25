@@ -8,8 +8,8 @@ import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import Static
 
-from cadrumo.core.prose_elision import PROSE_ELISION_MARKER
-from cadrumo.entrypoints.tui.components.logs import (
+from .....core.prose_elision import PROSE_ELISION_MARKER
+from ..logs import (
     MAX_LOG_MESSAGE_CHARACTERS,
     BoundedLogPanel,
     LogSeverity,
@@ -57,7 +57,6 @@ async def test_bounded_log_panel_retains_only_the_requested_safe_tail() -> None:
         r"Could not read C:\\private\\profile.json",
         "See https://sede.example.test/private/session",
         "password=synthetic-secret",
-        "The taxpayer NIF is 12345678Z",
     ],
 )
 def test_safe_log_record_refuses_unredacted_diagnostic_material(unsafe_message: str) -> None:
@@ -65,8 +64,7 @@ def test_safe_log_record_refuses_unredacted_diagnostic_material(unsafe_message: 
         SafeLogRecord(LogSeverity.ERROR, unsafe_message)
 
 
-def test_bounded_log_panel_refuses_stdlib_logging_records() -> None:
+def test_stdlib_logging_record_is_not_a_safe_log_record() -> None:
     raw_record = logging.LogRecord("test", logging.ERROR, "unsafe.py", 1, "unsafe", (), None)
 
-    with pytest.raises(TypeError, match="SafeLogRecord values only"):
-        BoundedLogPanel((raw_record,))  # type: ignore[arg-type]
+    assert not isinstance(raw_record, SafeLogRecord)

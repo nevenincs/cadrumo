@@ -10,8 +10,7 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, OptionList, SelectionList, Static
 
-from ....core.i18n import tr
-from .forms import FormField
+from ....core.presentation import FormField
 
 _MULTI_CHOICE_SEPARATOR = ","
 
@@ -39,10 +38,12 @@ class TextEditScreen(ModalScreen[str | None]):
     DEFAULT_CSS = _EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
-    def __init__(self, field: FormField) -> None:
+    def __init__(self, field: FormField, *, cancel_label: str, save_label: str) -> None:
         """Store the immutable field descriptor that supplies this dialog."""
         super().__init__()
         self._field = field
+        self._cancel_label = cancel_label
+        self._save_label = save_label
 
     @override
     def compose(self) -> ComposeResult:
@@ -53,8 +54,8 @@ class TextEditScreen(ModalScreen[str | None]):
             yield Input(value=self._field.value, password=self._field.secret, id="edit-input")
             yield Static(id="edit-refusal")
             with Horizontal(id="edit-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
-                yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
+                yield Button(self._cancel_label, id="btn-edit-cancel")
+                yield Button(self._save_label, id="btn-edit-save", classes="-primary")
 
     def on_mount(self) -> None:
         """Focus the text input as soon as the dialog opens."""
@@ -91,10 +92,12 @@ class ChoiceEditScreen(ModalScreen[str | None]):
     DEFAULT_CSS = _EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
-    def __init__(self, field: FormField) -> None:
+    def __init__(self, field: FormField, *, cancel_label: str, save_label: str) -> None:
         """Store the immutable field descriptor that supplies this dialog."""
         super().__init__()
         self._field = field
+        self._cancel_label = cancel_label
+        self._save_label = save_label
 
     @override
     def compose(self) -> ComposeResult:
@@ -108,8 +111,8 @@ class ChoiceEditScreen(ModalScreen[str | None]):
                 id="edit-choices",
             )
             with Horizontal(id="edit-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
-                yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
+                yield Button(self._cancel_label, id="btn-edit-cancel")
+                yield Button(self._save_label, id="btn-edit-save", classes="-primary")
 
     def on_mount(self) -> None:
         """Focus the selectable choices as soon as the dialog opens."""
@@ -130,10 +133,12 @@ class OneChoiceEditScreen(ModalScreen[str | None]):
     DEFAULT_CSS = _EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
-    def __init__(self, field: FormField) -> None:
+    def __init__(self, field: FormField, *, cancel_label: str, save_label: str) -> None:
         """Store the immutable field descriptor that supplies this dialog."""
         super().__init__()
         self._field = field
+        self._cancel_label = cancel_label
+        self._save_label = save_label
 
     @override
     def compose(self) -> ComposeResult:
@@ -143,8 +148,8 @@ class OneChoiceEditScreen(ModalScreen[str | None]):
                 yield Static(self._field.hint, id="edit-path")
             yield OptionList(*[choice.label for choice in self._field.choices], id="edit-options")
             with Horizontal(id="edit-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
-                yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
+                yield Button(self._cancel_label, id="btn-edit-cancel")
+                yield Button(self._save_label, id="btn-edit-save", classes="-primary")
 
     def on_mount(self) -> None:
         """Focus the options and restore the declared current value."""

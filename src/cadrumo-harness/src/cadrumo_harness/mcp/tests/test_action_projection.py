@@ -13,7 +13,7 @@ from cadrumo.application.operator_actions import (
 )
 from cadrumo.application.operator_surface import OperatorSurfaceContractError
 from cadrumo.core.json_contract import Notice
-from cadrumo.entrypoints.cli import (
+from cadrumo.entrypoints.cli.command_api import (
     build_verb_input_schemas,
     command_schema_refs,
     is_exposable_command,

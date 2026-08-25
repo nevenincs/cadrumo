@@ -32,7 +32,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, cast
+from typing import Final, cast, override
 
 import yaml
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
@@ -460,6 +460,7 @@ class _CandidateVisitor(ast.NodeVisitor):
             ),
         )
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._symbols.append(node.name)
         self.generic_visit(node)
@@ -470,45 +471,54 @@ class _CandidateVisitor(ast.NodeVisitor):
         self.generic_visit(node)
         self._symbols.pop()
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._visit_function(node)
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._visit_function(node)
 
+    @override
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
         for alias in _target_aliases(node.target, self._aliases):
             self._add(node, role="definition", alias=alias, action_identity=_identity(node.value))
         self.generic_visit(node)
 
+    @override
     def visit_Assign(self, node: ast.Assign) -> None:
         for target in node.targets:
             for alias in _target_aliases(target, self._aliases):
                 self._add(node, role="assignment", alias=alias, action_identity=_identity(node.value))
         self.generic_visit(node)
 
+    @override
     def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
         for alias in _target_aliases(node.target, self._aliases):
             self._add(node, role="assignment", alias=alias, action_identity=_identity(node.value))
         self.generic_visit(node)
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         for keyword in node.keywords:
             if keyword.arg in self._aliases:
                 self._add(node, role="producer", alias=keyword.arg, action_identity=_identity(keyword.value))
         self.generic_visit(node)
 
+    @override
     def visit_Dict(self, node: ast.Dict) -> None:
         for key, value in zip(node.keys, node.values, strict=True):
             if isinstance(key, ast.Constant) and isinstance(key.value, str) and key.value in self._aliases:
                 self._add(key, role="producer", alias=key.value, action_identity=_identity(value))
         self.generic_visit(node)
 
+    @override
     def visit_Attribute(self, node: ast.Attribute) -> None:
         if isinstance(node.ctx, ast.Load) and node.attr in self._aliases:
             self._add(node, role="transformer", alias=node.attr, action_identity=ast.unparse(node))
         self.generic_visit(node)
 
+    @override
     def visit_Constant(self, node: ast.Constant) -> None:
         if isinstance(node.value, str) and node.value.startswith(COMMAND_PREFIX):
             self._add(
@@ -868,12 +878,14 @@ class _DiscoveryVisitor(ast.NodeVisitor):
                     _SourceReference(COMMAND_LITERAL_ALIAS, node),
                 )
 
+    @override
     def visit_Module(self, node: ast.Module) -> None:
         self._observe_scope(node.body)
         for child in node.body:
             if isinstance(child, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
                 self.visit(child)
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         self._symbols.append(node.name)
         for child in node.body:
@@ -903,9 +915,11 @@ class _DiscoveryVisitor(ast.NodeVisitor):
                 self.visit(child)
         self._symbols.pop()
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._visit_function(node)
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._visit_function(node)
 
@@ -1607,12 +1621,14 @@ class _AuthoredMessageVisitor(ast.NodeVisitor):
             return owners or None
         return None
 
+    @override
     def visit_Import(self, node: ast.Import) -> None:
         for imported in node.names:
             name = imported.asname or imported.name.split(".")[0]
             module = imported.name if imported.asname else imported.name.split(".")[0]
             self._scope[name] = _ErrorReference(modules=frozenset({module}))
 
+    @override
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         source = _authored_message_import_module(
             module=self.module,
@@ -1648,21 +1664,25 @@ class _AuthoredMessageVisitor(ast.NodeVisitor):
                 modules=frozenset({candidate}) | reexported.modules,
             )
 
+    @override
     def visit_Assign(self, node: ast.Assign) -> None:
         self.visit(node.value)
         reference = self._resolve(node.value)
         for target in node.targets:
             self._bind_target(target, reference)
 
+    @override
     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
         if node.value is not None:
             self.visit(node.value)
             self._bind_target(node.target, self._resolve(node.value))
 
+    @override
     def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
         self.visit(node.value)
         self._bind_target(node.target, self._resolve(node.value))
 
+    @override
     def visit_If(self, node: ast.If) -> None:
         self.visit(node.test)
         before = self._scope.copy()
@@ -1698,12 +1718,15 @@ class _AuthoredMessageVisitor(ast.NodeVisitor):
         self._scopes.pop()
         self._symbols.pop()
 
+    @override
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         self._visit_function(node)
 
+    @override
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         self._visit_function(node)
 
+    @override
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         qualname = f"{self.module}.{node.name}"
         reference = _ErrorReference(
@@ -1723,6 +1746,7 @@ class _AuthoredMessageVisitor(ast.NodeVisitor):
         self._classes.pop()
         self._symbols.pop()
 
+    @override
     def visit_Call(self, node: ast.Call) -> None:
         super_owner = self._super_owner(node)
         if super_owner is not None:

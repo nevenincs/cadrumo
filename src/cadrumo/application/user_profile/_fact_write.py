@@ -101,7 +101,7 @@ def apply_profile_fact_changes(
         next_facts,
         require_complete=current.setup_state is not ProfileSetupState.INCOMPLETE,
     )
-    return repository.apply_fact_changes(
+    published = repository.apply_fact_changes(
         profile_id,
         facts=next_facts,
         expected_revision=current.record_revision,
@@ -109,6 +109,11 @@ def apply_profile_fact_changes(
         event_type=BucketEventType.PROFILE_VALUES_UPDATED,
         event_payload={"changed_fact_count": str(len(changes)), "door": door.value},
     )
+    if "preferences.output_language" in changed_paths:
+        from ...core.i18n import clear_output_language_cache
+
+        clear_output_language_cache()
+    return published
 
 
 def apply_manager_profile_field_mutation(

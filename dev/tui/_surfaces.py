@@ -49,20 +49,20 @@ class Surface:
 
 
 def _registration() -> App:
-    from cadrumo.adapters.inbound.tui import RegistrationApp
     from cadrumo.application.user_profile import assess_passphrase
     from cadrumo.entrypoints.cli._config._manager_frontend import attempt_registration
+    from cadrumo.entrypoints.tui.secret.registration import RegistrationApp
 
     return RegistrationApp(assess=assess_passphrase, register=attempt_registration)
 
 
 def _login() -> App:
-    from cadrumo.adapters.inbound.tui import LoginApp
     from cadrumo.entrypoints.cli._config._login_frontend import (
         _login_choices,
         attempt_login,
         preselected_profile_id,
     )
+    from cadrumo.entrypoints.tui.secret.login import LoginApp
 
     # ``present_login`` is the real production entry point and always
     # supplies BOTH of these -- neither is a defaulted convenience the
@@ -129,8 +129,9 @@ def _form() -> App:
     # layout of two plain text fields, or wording is a finding about the
     # harness, never about the application. Drive one of the real callers
     # above instead when the thing under evaluation is an actual form.
-    from cadrumo.adapters.inbound.tui import FormApp
-    from cadrumo.entrypoints.tui.components.forms import FormField, FormPage
+    from cadrumo.core.i18n import tr
+    from cadrumo.core.presentation import FormField, FormPage
+    from cadrumo.entrypoints.tui.components.form_screen import FormApp
 
     return FormApp(
         FormPage(
@@ -141,13 +142,13 @@ def _form() -> App:
                 FormField(key="b", label="Second"),
             ),
         ),
+        translate=tr,
     )
 
 
 def _modelo_work_wizard() -> App:
     from uuid import uuid4
 
-    from cadrumo.adapters.inbound.tui import FlowTuiApp, select_flow_frontend
     from cadrumo.core import resolve_active_bucket_id
     from cadrumo.core.flows import FrontendCapability
     from cadrumo.entrypoints.cli._modelo import _resolve_work_unit_for_cli
@@ -156,6 +157,8 @@ def _modelo_work_wizard() -> App:
         _definition_from_steps,
         _outstanding_wizard_steps,
     )
+    from cadrumo.entrypoints.tui.flows.app import FlowTuiApp
+    from cadrumo.entrypoints.tui.flows.select import select_flow_frontend
 
     from ._modelo_work_fixture import ensure_modelo_work_unit
 

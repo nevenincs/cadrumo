@@ -49,7 +49,6 @@ from uuid import uuid4
 import typer
 from pydantic import BaseModel, ValidationError
 
-from ...adapters.inbound.tui import select_flow_frontend
 from ...application.flows import (
     CopyRef,
     FlowDefinition,
@@ -79,6 +78,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import InputKind, RegistrySnapshotError, RegistryValidationError
 from ...domain.user_profile import ProfileNotFoundError
+from ...entrypoints.tui.flows.select import select_flow_frontend
 from ._common import activate_subcommand_output_language, attach_cli_policy_verdict
 from ._errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli

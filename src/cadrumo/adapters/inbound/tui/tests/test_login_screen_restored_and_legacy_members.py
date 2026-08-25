@@ -24,8 +24,8 @@ from .....application.user_profile import (
     register_profile_with_credentials,
     restore_profile_from_source_with_password,
 )
+from .....entrypoints.tui.secret.login import LoginApp, LoginAttempt, LoginChoice
 from .....tests.secure_sql import isolated_profile_storage_root
-from .. import LoginApp, LoginAttempt, LoginChoice
 
 pytestmark = [
     pytest.mark.integration,

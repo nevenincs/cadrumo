@@ -10,7 +10,7 @@ gathers the view-model from the application authorities — the active
 profile record (:class:`UserProfileRecord`), the profile bucket scan, and the
 workflow auth state — masking each fact
 by its declared :class:`SensitivityClass` — and injects the assembled
-:class:`~cadrumo.entrypoints.tui.profile.status.StatusPageData` into the
+:class:`~cadrumo.application.user_profile.StatusPageData` into the
 presentation surface,
 mirroring the setup-wizard frontend seam.
 
@@ -30,13 +30,13 @@ from .._common import format_of
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from ....entrypoints.tui.profile.status import (
+    from ....application.user_profile import (
+        ProfileFieldView,
         StatusAuthView,
         StatusFactRow,
         StatusPageData,
         StatusProfileRow,
     )
-    from ....application.user_profile import ProfileFieldView
     from ....application.workflow import WorkflowState
     from ....core.json_contract import Notice
     from ....domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
@@ -75,7 +75,7 @@ def build_status_page_data() -> StatusPageData:
     so a locked active bucket, an unreadable workflow state, or a corrupt
     recovery wrapper blanks only its own zone while the others still render.
     """
-    from ....entrypoints.tui.profile.status import StatusPageData
+    from ....application.user_profile import StatusPageData, notice_presentation
 
     active_uuid, active_label = _resolve_active_identity()
     state = _load_workflow_state()
@@ -85,7 +85,11 @@ def build_status_page_data() -> StatusPageData:
         facts=_build_fact_rows(record),
         profiles=_build_profile_rows(active_uuid, record=record),
         auth=_build_auth_view(state, active_uuid=active_uuid),
-        notices=build_active_profile_notices(record) if active_uuid is not None else (),
+        notices=(
+            tuple(notice_presentation(notice) for notice in build_active_profile_notices(record))
+            if active_uuid is not None
+            else ()
+        ),
     )
 
 
@@ -151,8 +155,8 @@ def _build_profile_rows(
     record: UserProfileRecord | None = None,
 ) -> tuple[StatusProfileRow, ...]:
     """Project the profile bucket scan into rows, degrading to empty on failure."""
+    from ....application.user_profile import StatusProfileRow
     from ....application.workflow import list_profile_buckets
-    from ....entrypoints.tui.profile.status import StatusProfileRow
 
     try:
         pointers = sorted(
@@ -183,10 +187,9 @@ def _build_auth_view(state: WorkflowState | None, *, active_uuid: str | None) ->
     against one profile can never report another profile's session
     lifetime.
     """
-    from ....application.user_profile import profile_field_choices
+    from ....application.user_profile import StatusAuthView, profile_field_choices
     from ....core.i18n import tr
     from ....domain.user_profile import load_user_profile_schema
-    from ....entrypoints.tui.profile.status import StatusAuthView
 
     idle_deadline, absolute_deadline = _active_profile_session_deadlines(active_uuid)
     if state is None:
@@ -370,10 +373,9 @@ def _build_fact_row(
     schema: ProfileSchemaDefinition,
 ) -> StatusFactRow:
     """Project one stored fact through its declared masking and display authorities."""
-    from ....application.user_profile import mask_profile_field
+    from ....application.user_profile import StatusFactRow, mask_profile_field
     from ....core.i18n import tr
     from ....domain.user_profile import UserProfileError, section_field_key
-    from ....entrypoints.tui.profile.status import StatusFactRow
 
     try:
         field_def = schema.field(section_field_key(path))

@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-import cadrumo.entrypoints.tui.components as components
-from cadrumo.entrypoints.tui.components.dialogs import TextEditScreen
-from cadrumo.entrypoints.tui.components.errors import ErrorPanel
-from cadrumo.entrypoints.tui.components.forms import FormField
-from cadrumo.entrypoints.tui.components.logs import BoundedLogPanel
-from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
-from cadrumo.entrypoints.tui.components.theme import install_cadrumo_themes
-from cadrumo.entrypoints.tui.components.widgets import ContentDataTable
+from .....core.presentation import FormField
+from ... import components
+from ..dialogs import TextEditScreen
+from ..errors import ErrorPanel
+from ..logs import BoundedLogPanel
+from ..status import PinnedStatusBar
+from ..theme import install_cadrumo_themes
+from ..widgets import ContentDataTable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -34,7 +34,7 @@ def test_presentation_symbols_have_one_direct_canonical_home() -> None:
     ) == (
         "cadrumo.entrypoints.tui.components.dialogs",
         "cadrumo.entrypoints.tui.components.errors",
-        "cadrumo.entrypoints.tui.components.forms",
+        "cadrumo.core.presentation",
         "cadrumo.entrypoints.tui.components.logs",
         "cadrumo.entrypoints.tui.components.status",
         "cadrumo.entrypoints.tui.components.widgets",

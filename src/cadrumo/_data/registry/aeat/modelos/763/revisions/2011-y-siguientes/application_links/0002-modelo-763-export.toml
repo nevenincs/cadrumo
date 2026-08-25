@@ -1,7 +1,0 @@
-[[revisions."2011-y-siguientes".application_links]]
-id = "modelo-763-export"
-surface = "export"
-consumer = "cadrumo.application.filing.export_draft"
-requires_snapshot = true
-legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-763-layout"]

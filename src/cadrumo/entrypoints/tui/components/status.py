@@ -8,8 +8,6 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Static
 
-from ....core.redaction import redact_for_cli_output
-
 StatusTone = Literal["idle", "progress", "success", "warning", "error"]
 """Closed presentation states supported by :class:`PinnedStatusBar`."""
 
@@ -66,7 +64,7 @@ class PinnedStatusBar(Vertical):
     def __init__(self, *, summary: str = "", id: str | None = None, classes: str | None = None) -> None:
         """Initialize the pinned channel with an optional supplied summary."""
         super().__init__(id=id, classes=classes)
-        self._summary = redact_for_cli_output(self._require_text(summary, field="summary"))
+        self._summary = self._require_text(summary, field="summary")
         self._message = ""
         self.add_class("tone-idle")
         self.set_class(not self._summary, "empty")
@@ -99,7 +97,7 @@ class PinnedStatusBar(Vertical):
 
     def set_summary(self, summary: str) -> None:
         """Render a replacement summary without changing the status message."""
-        self._summary = redact_for_cli_output(self._require_text(summary, field="summary"))
+        self._summary = self._require_text(summary, field="summary")
         summary_line = self.query_one(".status-summary", Static)
         summary_line.update(self._summary)
         summary_line.set_class(not self._summary, "empty")
@@ -126,7 +124,7 @@ class PinnedStatusBar(Vertical):
         self._set_message("error", message)
 
     def _set_message(self, tone: StatusTone, message: str) -> None:
-        rendered = redact_for_cli_output(self._require_text(message, field="message"))
+        rendered = self._require_text(message, field="message")
         self._message = rendered
         self.remove_class(*_TONE_CLASSES)
         self.add_class(f"tone-{tone}")

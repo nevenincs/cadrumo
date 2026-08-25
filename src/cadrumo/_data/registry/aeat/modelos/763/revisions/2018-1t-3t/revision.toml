@@ -1,0 +1,35 @@
+[revisions."2018-1t-3t"]
+authority_grade = "applicability"
+# The selector follows the exact AEAT/BOE era boundary. This scheduling-only
+# revision keeps the declaration header and does not claim a filing layout.
+id = "2018-1t-3t"
+valid_from = 2018-01-01
+valid_to = 2018-09-30
+period_selector = { years = [2018], periods = ["1T", "2T", "3T"] }
+orden_aplicabilidad = ["orden-eha-1881-2011:art-1"]
+legal_refs = [
+    "orden-eha-1881-2011:art-1",
+    "orden-eha-1881-2011:art-4",
+    "orden-hap-2373-2014:df-primera",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-763-procedure",
+    "aeat-dr-763-2015",
+    "boe-modelo-763-2015-amendment",
+]
+
+[revisions."2018-1t-3t".family_dispositions.casilla_continuidad_evolutions]
+reason = """No casilla-to-position mapping has been authored for this design era, so declaring a continuity transition would claim an identity that has not been checked."""
+legal_refs = [
+    "orden-eha-1881-2011:art-1",
+    "orden-eha-1881-2011:art-4",
+    "orden-hap-2373-2014:df-primera",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-763-procedure",
+    "aeat-dr-763-2015",
+    "boe-modelo-763-2015-amendment",
+]
+

@@ -56,13 +56,13 @@ _COLLECTING_CALLABLES: tuple[tuple[str, str], ...] = (
     ("cadrumo.application.user_profile", "restore_profile_from_recovery_artifact"),
 )
 
-_TUI_PACKAGE = Path(__file__).resolve().parent.parent
+_TUI_PACKAGE = Path(__file__).resolve().parents[4] / "entrypoints" / "tui"
 
 
 def _tui_modules() -> tuple[Path, ...]:
     return tuple(
         path
-        for path in scan_directory(_TUI_PACKAGE, pattern="*.py")
+        for path in scan_directory(_TUI_PACKAGE, pattern="*.py", recursive=True)
         if path.name != "__init__.py" or path.parent == _TUI_PACKAGE
     )
 

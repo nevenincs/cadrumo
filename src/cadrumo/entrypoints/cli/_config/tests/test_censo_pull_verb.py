@@ -30,7 +30,6 @@ import typer
 from pydantic import ValidationError
 from textual.widgets import DataTable, OptionList
 
-from .....adapters.inbound.tui import FormApp, FormScreen
 from .....application.user_profile import (
     CENSO_SOURCE_TAG,
     CensalFieldIntent,
@@ -38,6 +37,7 @@ from .....application.user_profile import (
     CensalReviewProjectionV1,
 )
 from .....core.config import Settings
+from .....entrypoints.tui.components.form_screen import FormApp, FormScreen
 from .....tests.cli_runner import invoke_cached_cli
 from ... import app as _live_app
 from .. import _censo_file
@@ -448,7 +448,7 @@ async def test_exact_projection_requires_a_real_tui_apply_choice() -> None:
             ),
         ),
     )
-    app = FormApp(build_censal_review_page(projection))
+    app = FormApp(build_censal_review_page(projection), translate=lambda key: key)
     async with app.run_test(size=(120, 40)) as pilot:
         await pilot.pause()
         screen = next(item for item in reversed(app.screen_stack) if isinstance(item, FormScreen))

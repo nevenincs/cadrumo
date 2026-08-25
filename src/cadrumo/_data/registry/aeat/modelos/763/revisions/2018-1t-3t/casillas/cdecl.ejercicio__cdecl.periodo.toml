@@ -1,0 +1,25 @@
+# Modelo 763 declaration-header casillas only. No numbered form casilla or filing
+# layout is asserted for this applicability-grade revision.
+
+[[revisions."2018-1t-3t".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2018-1t-3t".casillas]]
+id = "decl.periodo"
+number = "periodo"
+section = ["declarante"]
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+

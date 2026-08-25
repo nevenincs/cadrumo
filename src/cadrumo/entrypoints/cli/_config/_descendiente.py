@@ -53,7 +53,7 @@ if TYPE_CHECKING:
 
     from ....application.workflow import ProfileBucketPointer
     from ....core.json_contract import Notice
-    from ....entrypoints.tui.components.forms import FormChoice, FormFieldKind, FormPage
+    from ....core.presentation import FormChoice, FormFieldKind, FormPage
 
 
 def _active_profile_pointer() -> ProfileBucketPointer:
@@ -337,7 +337,7 @@ def _descendant_page(values: Mapping[str, str]) -> FormPage:
     """
     from ....application.wizard import DESCENDANT_PAGE_IDS, DESCENDANTS_COUNT_PAGE_ID
     from ....core.i18n import tr as _tr
-    from ....entrypoints.tui.components.forms import FormField, FormPage, form_choices
+    from ....core.presentation import FormField, FormPage, form_choices
 
     raw_count = values.get(DESCENDANTS_COUNT_PAGE_ID, "0")
     count = int(raw_count) if raw_count.isdigit() else 0
@@ -433,7 +433,7 @@ def _descendant_field_shape(
     grades: tuple[FormChoice, ...],
 ) -> tuple[FormFieldKind, tuple[FormChoice, ...]]:
     """Return the edit kind and choices for one per-descendant question."""
-    from ....entrypoints.tui.components.forms import FormFieldKind
+    from ....core.presentation import FormFieldKind
 
     if page_id in {"convivencia", "custodia-compartida"}:
         return FormFieldKind.SINGLE_CHOICE, yes_no

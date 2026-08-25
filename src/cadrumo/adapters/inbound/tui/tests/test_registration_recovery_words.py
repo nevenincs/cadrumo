@@ -22,9 +22,14 @@ from .....application.user_profile import (
 )
 from .....core import assess_profile_password
 from .....domain.user_profile import UserProfileFact
+from .....entrypoints.tui.secret.registration import (
+    RecoveryHandoverCancelledError,
+    RecoveryWordsScreen,
+    RegistrationApp,
+    RegistrationAttempt,
+    RegistrationRefusal,
+)
 from .....tests.secure_sql import isolated_profile_storage_root
-from .. import RecoveryHandoverCancelledError, RegistrationApp, RegistrationAttempt, RegistrationRefusal
-from .._recovery_words_screen import RecoveryWordsScreen
 
 pytestmark = [
     pytest.mark.integration,

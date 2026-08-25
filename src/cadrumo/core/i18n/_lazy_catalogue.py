@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import IO, Any
+from typing import IO, override
 
 import yaml
 
@@ -97,29 +97,29 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
         rel_shard = route_key_to_shard(key)
         self._load_shard_file(rel_shard)
 
+    @override
     def __getitem__(self, key: str) -> str | None:
         self._resolve_key(key)
         if key in self._key_cache:
             return self._key_cache[key]
         raise KeyError(key)
 
+    @override
     def __contains__(self, key: object) -> bool:
         if not isinstance(key, str):
             return False
         self._resolve_key(key)
         return key in self._key_cache
 
+    @override
     def __iter__(self) -> Iterator[str]:
         self._load_all()
         return iter(self._key_cache)
 
+    @override
     def __len__(self) -> int:
         self._load_all()
         return len(self._key_cache)
-
-    def get(self, key: str, default: Any = None) -> Any:
-        self._resolve_key(key)
-        return self._key_cache.get(key, default)
 
     def to_dict(self) -> dict[str, str | None]:
         """Return a complete flattened dictionary of all translation keys."""
