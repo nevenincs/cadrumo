@@ -5,49 +5,61 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:a100edbaaeb3864986eb78ff8fae65d9b949ce8ba9a88f385115df236afb1b3a'
+body_hash: 'sha256:74bc62cb07eef86490ed2dbb2dbcf4b16b7e6674b80b5437e65d7044467f7ddf'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace deadline-window-revision-authority with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `deadline-window-revision-authority` audit: `supported year deadline census`
 
 ## Scope
 
-<!-- What was audited and why -->
+Reconcile the periodic deadline-window repair population for filing years 2022-2026 against the canonical supported-year catalogue, current validated authority projection, original 294 missing-cell inventory, per-modelo execution records, and bundled source declarations. This is a historical measurement artefact, not a runtime cadence or supported-year authority.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### denominator-correction | high | The approved 559-cell figure overstated Modelo 216 by four cells
 
-       ### supported year deadline census | {level} | {summary}
+The twelve affected modelos have 555 expected periodic coordinates, not 559. The former arithmetic implicitly counted Modelo 216 quarters in 2023, but its only revision begins in 2024. S43 independently adjudicated 2022 and 2023 as outside temporal coverage and repaired the four real missing quarters in 2024. The plan now records 555 through its canonical edit command.
 
-     followed by a paragraph carrying the detail. supported year deadline census is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### exact-before-after-reconciliation | high | All 294 measured gaps have one disposition
+
+| Modelo | Expected | Initially retained | Measured missing | Materialised | Evidence-blocked | Current |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 111 | 80 | 32 | 48 | 48 | 0 | 80 |
+| 115 | 20 | 4 | 16 | 16 | 0 | 20 |
+| 123 | 20 | 8 | 12 | 12 | 0 | 20 |
+| 130 | 20 | 12 | 8 | 8 | 0 | 20 |
+| 131 | 20 | 16 | 4 | 4 | 0 | 20 |
+| 202 | 15 | 6 | 9 | 9 | 0 | 15 |
+| 216 | 12 | 8 | 4 | 4 | 0 | 12 |
+| 303 | 68 | 46 | 22 | 21 | 1 | 67 |
+| 322 | 60 | 18 | 42 | 41 | 1 | 59 |
+| 349 | 80 | 48 | 32 | 30 | 2 | 78 |
+| 353 | 60 | 23 | 37 | 36 | 1 | 59 |
+| 369 | 100 | 40 | 60 | 60 | 0 | 100 |
+| Total | 555 | 261 | 294 | 289 | 5 | 550 |
+
+The current authority measurement returns 550 rows and 550 unique `(modelo, filing_year, registry_token)` coordinates for this population. Every multiplicity is one. The arithmetic independently closes both axes: `261 + 294 = 555`, `289 + 5 = 294`, and `261 + 289 = 550`.
+
+### exact-blocked-coordinates | high | Five cells await the official 2027 contributor calendar
+
+The unresolved coordinates are Modelo 303 `(2026, 12)`, Modelo 322 `(2026, 12)`, Modelo 349 `(2026, 12)` and `(2026, 4T)`, and Modelo 353 `(2026, 12)`. Their filing windows physically occur in 2027. No bundled `aeat-calendario-contribuyente-2027` source exists as of this audit, so assigning dates would be inference. These five cells keep S12, S13, S14, S44, S08, and the completeness limb of S33 open.
+
+### source-accounting | high | Every materialised row is grounded through its selected revision
+
+M111, M115, M123, M130, M131, M202, M216, M303, M322, M349, and M353 rows cite the applicable bundled annual AEAT contributor calendar from 2022 through 2026 plus their modelo procedure, instructions, form, or legal source where declared. M369's 100 OSS/IOSS rows use the procedure and Orden HAC/610/2021 legal authority that defines filing in the following natural month. The per-modelo S12-S15 and S37-S44 execution records contain the exact row/date/source adjudications; the live authority projection confirms those authored coordinates retain their canonical selected revision.
+
+### structural-repair-accounting | medium | Identity corrections and duplicate removals remain separate from the 555-cell cadence denominator
+
+The original structural census found 27 duplicated base coordinates: M210 eight, M303 fourteen, M322 two, and M353 three. Canonical ownership repair removed the non-owner copies; typed M210 qualifiers preserve legitimately distinct variants. M190 and M193 corrected filing-year identity while retaining physical following-year filing dates. These operations changed invalid row structure but do not add or remove expected periodic cadence cells, so they are recorded separately from the 294 missing-cell reconciliation.
+
+### no-redeclaration | low | The census introduces no second authority
+
+Vaultspec RAG and exact searches located `select_revision`, `ValidatedRegistryAuthority.deadline_windows`, `deadline_window_semantic_coordinates`, and the registry `supported_filing_years` catalogue as the existing owners. Measurement reads those projections and the historical plan records only. No selector, parser, cadence map, supported-year horizon, deadline catalogue, resolver, or downstream deduplicator was added.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+- Keep the five unpublished 2027-closing coordinates open until an official AEAT 2027 source is bundled and adjudicated.
+- Use the corrected 555 denominator in S08 and final closure records.
+- Do not convert the historical per-modelo census table into production selection logic; production completeness must derive cadence and horizon from registry declarations and canonical revision selection.
+- Re-run the authority count and uniqueness measurement after each future evidence-backed row lands.
