@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-25'
-body_hash: 'sha256:9204ce3a2a5bbda67e206306dc29322b85d4cfe2b26228d40c03bf6c1c0db998'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -13,6 +11,8 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
+modified: '2026-08-25'
+body_hash: 'sha256:a76b2c2fb966e579ded693a78e3b922421a409086c61bef480f491d30dff9e9a'
 ---
 
 # `tui-architecture` plan
@@ -164,7 +164,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S125` - Define strict Workspace V1 version headers, visible and exact target admission, inspection and graded result arms, projection, bounded facets, schema and provenance records, capability and refusal families, locale summary, and safe read baseline without mutation authority; `src/cadrumo/application/modelo/_workspace_models.py`.
 - [x] `W03.P20.S126` - Define the application-owned ModeloWorkspaceProducerContractV1, stamped contributing projections, owner-generation-preserving epochs, structural atomic port protocol, and generated producer-contract inventory without implementing or relocating any canonical owner's native projection or generation authority; `src/cadrumo/application/modelo/_workspace_producers.py`.
 - [x] `W03.P20.S127` - Generate the exhaustive registry model-and-field classification manifest from validated public schema types, classifying every reachable leaf and discriminator branch exactly once as projected, canonically derived, or backend-only with destination, owner, and bounded reason; `src/cadrumo/application/modelo/_workspace_manifest.py`.
-- [x] `W03.P20.S159` - Expose through the canonical registry facade a registry-native atomic capture of the law-selected inspection or snapshot and its process-incarnation-local ABA-safe monotonic generation, plus current-generation validation, without any ModeloWorkspace dependency, alternate loader, private grammar, shim, alias, fallback, or re-export bridge; `src/cadrumo/domain/calculations/registry/_authority.py, src/cadrumo/domain/calculations/registry/__init__.py, and focused authority concurrency/reset tests`.
+- [ ] `W03.P20.S159` - Expose through the canonical registry facade a registry-native atomic capture of the law-selected inspection or snapshot and its process-incarnation-local ABA-safe monotonic generation, plus current-generation validation, without any ModeloWorkspace dependency, alternate loader, private grammar, shim, alias, fallback, or re-export bridge; `src/cadrumo/domain/calculations/registry/_authority.py, src/cadrumo/domain/calculations/registry/__init__.py, and focused authority concurrency/reset tests`.
 - [ ] `W03.P20.S160` - Expose the canonical resolved-work-target native atomic capture and owner generation by delegating the existing addressing and revision-assertion authority without a second selector, repository read path, ModeloWorkspace dependency, shim, alias, fallback, or bridge; `src/cadrumo/application/modelo/_work_addressing.py and focused addressing tests`.
 - [ ] `W03.P20.S161` - Expose the canonical bounded ModeloWorkReview native atomic capture and owner generation by delegating the sole build_modelo_work_review semantic join without reconstructing any review field or retaining a parallel assembler; `src/cadrumo/application/modelo/_work_review_projection.py and focused complete-parity tests`.
 - [ ] `W03.P20.S162` - Expose the canonical ProjectionModeloReadiness native atomic capture and owner generation without inferring capability, collapsing readiness axes, or duplicating operator-state computation; `src/cadrumo/application/state_projection.py and focused readiness parity tests`.
@@ -216,7 +216,7 @@ Mechanically relocate profile, secret, flow, test, and development surfaces with
 - [x] `W04.P10.S56` - Relocate the existing flow renderer mechanically without changing application flow or wizard semantics; `src/cadrumo/entrypoints/tui/flows`.
 - [ ] `W04.P10.S57` - Relocate TUI-owned pilot, replay, screenshot, and terminal-surface tooling; `src/cadrumo/entrypoints/tui/devtools`.
 - [ ] `W04.P10.S104` - Relocate the sole Casilla review screen and tests to the canonical Modelo view as a read-only consumer of the existing public application.modelo ModeloWorkReview facade, preserve named-outlier evidence, delete the legacy inbound screen, facade exports, and locale references atomically without compatibility, and provide the migration evidence consumed by the interface C1 exit validator; `src/cadrumo/entrypoints/tui/modelo/view and src/cadrumo/adapters/inbound/tui/_modelo_work_review_screen.py`.
-- [ ] `W04.P10.S58` - Move presentation tests under the canonical owning packages and remove backend imports of TUI test helpers; `src/cadrumo/entrypoints/tui/tests`.
+- [x] `W04.P10.S58` - Move presentation tests under the canonical owning packages and remove backend imports of TUI test helpers; `src/cadrumo/entrypoints/tui/tests`.
 - [ ] `W04.P10.S59` - Prove the relocation is behavior-preserving before any root app or navigation join is introduced; `src/cadrumo/entrypoints/tui/tests/test_relocation_parity.py`.
 
 ### Phase `W04.P22` - C1-to-C2 Workspace dependency handoff
