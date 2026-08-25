@@ -10,17 +10,21 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.persistence.operations.secure_references import (
+from ....adapters.persistence.operations.secure_references import (
     OPERATION_SECURE_REFERENCE_NAMESPACE,
     operation_secure_reference_repository,
 )
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.user_profile.censal_observation import (
+from ....adapters.persistence.storage import RepositoryError
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.aeat_literal_fixtures import aeat_url
+from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
+from ...operations.models import OperationRequest
+from ..censal_observation import (
     CensalObservation,
     CensalObservationAddress,
     CensalObservationIdentity,
 )
-from cadrumo.application.user_profile.censal_operation import (
+from ..censal_operation import (
     CENSAL_OPERATION_DEFINITION,
     CensalFieldIntent,
     CensalOperationExecutor,
@@ -29,12 +33,7 @@ from cadrumo.application.user_profile.censal_operation import (
     CensalReviewedFieldIntent,
     CensalReviewedOperand,
 )
-from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
-
-from ....adapters.persistence.storage import RepositoryError
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....tests.aeat_literal_fixtures import aeat_url
-from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
+from ..censo_sync import CENSAL_ADOPTABLE_PATHS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
