@@ -14,9 +14,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.user_profile.completeness import conditional_profile_missing_required
-from cadrumo.application.user_profile.keys_validation import validate_profile_values
-
 from ....domain.deadlines import (
     MODELO_IVA_BLOCK_CLAIMING_PATHS,
     MODELO_IVA_BLOCK_REQUIRED_PATHS,
@@ -26,6 +23,8 @@ from ....domain.deadlines import (
     taxpayer_profile_from_mapping,
 )
 from ...wizard import compiler as _wizard  # noqa: F401 - registers compiled profile keys
+from ..completeness import conditional_profile_missing_required
+from ..keys_validation import validate_profile_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
