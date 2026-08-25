@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-25'
-body_hash: 'sha256:c60269e0405adab62c47b8daffbb995ff20fb955fa041ff5447322b32bd55744'
+body_hash: 'sha256:33194f48edd8999e33b121e9976f95963224ad38fe818bb4f82c4f59c314cfcc'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -367,5 +367,5 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [ ] `W06.P12.S256` - Separate volatile workstation free-memory diagnostics from deterministic golden state while preserving real registry-integrity failures and host-health evidence; `docs/_sequences/contracts/workstation-setup/ and src/cadrumo/application/diagnostics.py and src/cadrumo/core/observability/`.
 - [ ] `W06.P12.S257` - Route CLI and manager censal apply through the canonical user-profile.censo-review operation, preserving one acquisition, encrypted reviewed operand, exact baseline, resume-without-reread, and apply_cotejo sole-writer authority; `src/cadrumo/application/user_profile/_censal_operation.py and src/cadrumo/entrypoints/cli/_config/ and src/cadrumo/adapters/inbound/tui/`.
 - [ ] `W06.P12.S258` - Make registry referential-integrity preflight validate every revision at its declared authority grade while retaining full reference checks and real invalid-reference failures across applicability, calculation, and filing revisions; `src/cadrumo/application/preflight.py and src/cadrumo/application/tests/test_preflight.py`.
-- [ ] `W06.P12.S259` - Correct Modelo 220 revision 2025 source grounding so it cites official authority applicable within its validity window and does not borrow the later 2026 form source; `src/cadrumo/_data/registry/aeat/modelos/220/ and src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W06.P12.S259` - Correct Modelo 220 revision 2025 source grounding so it cites official authority applicable within its validity window and does not borrow the later 2026 form source; `src/cadrumo/_data/registry/aeat/modelos/220/ and src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W06.P12.S260` - Reconcile Modelo 182 deadline windows with canonical revision ownership so no revision projects filing years outside its evidenced design era and unsupported 2026 remains refused; `src/cadrumo/_data/registry/aeat/modelos/182/ and src/cadrumo/domain/calculations/registry/tests/`.
