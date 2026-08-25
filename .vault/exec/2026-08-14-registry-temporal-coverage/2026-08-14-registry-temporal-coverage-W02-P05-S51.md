@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:b2a3a501ffcbf418b990332a5863f1e9ef833cc121973df9bfaee03de5a7e849'
+body_hash: 'sha256:c09325755cd670056019e7023f8f00b0e42c7cd0239b038e6410cda2b258c140'
 step_id: 'S51'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -46,6 +46,14 @@ and 2016--2022. Canonical corpus sync passes for 68 required URLs and 58
 manifests, and the registered-design parser test passes. These are acquisition
 facts only; no layout or revision source join was claimed.
 
+Commit `7f870ade0b` adds the official Modelo 341 `dr341_2005.pdf`, 44020
+bytes with SHA-256 `c1c59a...95c3d`, and scopes its factual authority to
+2005-02-01 through 2015-12-31. Corpus sync passes for 69 required URLs and 58
+manifests, and the focused acquisition/source-enrollment selection passes five
+tests. It remains acquisition-only because 2000--2004 has no matching source
+and the required geometry comparison is unavailable during the active registry
+relocation.
+
 No revision span, export layout, or claimed-year verdict changed in that
 commit. The whole-tree claimed-year gate therefore remains the acceptance
 criterion, not the acquisition count.
@@ -54,7 +62,7 @@ criterion, not the acquisition count.
 
 The M126 and M128 historical PDFs parse to the shipped business geometry, but
 the generic coverage validator currently misclassifies the combined label
-`Indicador de pÃ¡gina complementaria. Obligatorio En blanco` as a missing
+`Indicador de pÃƒÂ¡gina complementaria. Obligatorio En blanco` as a missing
 required field even though the authored layout emits the exact blank filler at
 offset 12. The generic validator and its test are actively owned by another
 dirty lane, so this execution did not overwrite them or add a modelo-specific
@@ -72,6 +80,12 @@ real position gap from 102 to 103, so attaching it to the sole open-ended
 layout would overstate coverage. Modelo 270's 2013 BOE annex establishes the
 historical era, but the corpus currently has no canonical generic BOE-PDF
 acquisition route; the current 2023 AEAT design must not be backdated.
+
+Modelo 576 remains an evidence blocker: the historical AEAT index exposes no
+positional design, while the BOE 2005, 2007, and 2021 annex chain is graphical
+form evidence rather than a parser-usable writer contract. The 2007 order is
+effective only from 2008 and therefore cannot establish the missing 2007
+geometry.
 
 Commit `61cdab0e89` attached the already acquired finite 2015--2019 sources for
 Modelos 126 and 128 at revision, layout, and export application-link authority.
