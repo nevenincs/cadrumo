@@ -143,8 +143,8 @@ Exercise the supported revision umbrella through localization, casilla continuit
 - [x] `W03.P05.S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P05.S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision; `src/cadrumo/application/filing/tests/`.
 - [x] `W03.P05.S84` - Implement a two-channel filing export proof port: value-independent official-layout conformance plus encrypted operator-specific source-owned replay, using only the canonical export_draft writer.; `src/cadrumo/application/filing/; dev/registry/`.
-- [ ] `W03.P05.S85` - Enroll dynamic filing-grade revisions in authoritative generated provenance and non-sensitive conformance vectors; `src/cadrumo/_data/registry/aeat/; dev/registry/`.
-- [ ] `W03.P05.S86` - Re-run S33 as the dynamic dual-channel release gate, including secure replay receipts and explicit per-revision refusal.; `dev/registry/tests/; dev/registry/conformance/`.
+- [ ] `W03.P05.S85` - Dynamically classify every current filing-grade revision through canonical law selection, generated provenance, official source bytes, semantic owners, and positioned literal probes; materialize a non-sensitive conformance vector only after full-registry validation and a separately reviewed canonical builder, otherwise retain one typed per-revision residue and its owner. Reconcile the concurrent Modelo 200 spanning-tree authority conflict through `W04.P08.S22`, never by re-pinning or regenerating it here; `src/cadrumo/_data/registry/aeat/; dev/registry/`.
+- [ ] `W03.P05.S86` - Re-run S33 as the dynamic dual-channel release gate, including secure replay receipts and explicit per-revision refusal; it cannot pass while any selected revision lacks validated provenance or a canonical builder, including a zero-success enrollment; `dev/registry/tests/; dev/registry/conformance/`.
 
 ### Phase `W03.P06` - predecessor campaign closure
 
