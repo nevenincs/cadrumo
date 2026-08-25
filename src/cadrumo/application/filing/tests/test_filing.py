@@ -270,8 +270,12 @@ def test_binding_provenance_rejects_empty_registry_refs() -> None:
         binding.model_copy(update={"legal_refs": ()}),
         binding.model_copy(update={"source_refs": ()}),
     ):
-        with pytest.raises(ModeloBuilderError, match="legal_refs/source_refs"):
+        with pytest.raises(ModeloBuilderError) as provenance_error:
             _binding_provenance(corrupted)
+        assert (
+            provenance_error.value.translated_message
+            == "application.filing.build_draft.errors.binding_provenance_missing"
+        )
 
 
 def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
@@ -561,8 +565,9 @@ def test_iter_findings_threshold() -> None:
     assert finding_error in warnings_or_errors
     assert finding_info not in warnings_or_errors
     assert finding_info in list(iter_findings(draft, severity_at_least="INFO"))
-    with pytest.raises(ModeloCalculateError, match=r"Unknown severity"):
+    with pytest.raises(ModeloCalculateError) as severity_error:
         list(iter_findings(draft, severity_at_least="HUGE"))
+    assert severity_error.value.translated_message == "application.filing.errors.unknown_severity_threshold"
 
 
 def test_approve_draft_uses_registry_schema_fingerprint() -> None:
@@ -613,10 +618,15 @@ def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
             ),
         ),
     )
+    # The profile fingerprint is supplied rather than self-loaded: this module's
+    # per-test store truncation removes the capsule's one current record row, a
+    # state no production capsule reaches, and the self-load rightly refuses it.
+    # The subject here is the TRANSACTION catalogue, which is still self-loaded.
     first_basis = compute_current_approval_basis(
         draft,
         bucket_id=_BUCKET_ID,
         schema_provider=schema_provider,
+        profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
 
     repository.save(
@@ -634,6 +644,7 @@ def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
         draft,
         bucket_id=_BUCKET_ID,
         schema_provider=schema_provider,
+        profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
 
     assert first_basis.transaction_catalogue_fingerprint != second_basis.transaction_catalogue_fingerprint
@@ -797,7 +808,10 @@ def test_approve_draft_rejects_schema_version_mismatch() -> None:
             transaction_catalogue=TransactionCatalogue(),
         )
     assert exc_info.value.translated_message == "application.filing.review.errors.registry_review_mismatch"
-    assert exc_info.value.context == {"codes": "filing-schema-version-mismatch"}
+    context = dict(exc_info.value.context)
+    assert context["codes"] == ("filing-schema-version-mismatch",)
+    assert context["modelo"] == "130"
+    assert context["finding_count"] == 1
 
 
 def test_approve_draft_rejects_formula_trace_mismatch() -> None:
@@ -819,7 +833,10 @@ def test_approve_draft_rejects_formula_trace_mismatch() -> None:
             transaction_catalogue=TransactionCatalogue(),
         )
     assert exc_info.value.translated_message == "application.filing.review.errors.registry_review_mismatch"
-    assert exc_info.value.context == {"codes": "formula-divergence"}
+    context = dict(exc_info.value.context)
+    assert context["codes"] == ("formula-divergence",)
+    assert context["modelo"] == "130"
+    assert context["finding_count"] == 1
 
 
 def test_refresh_review_status_preserves_submitted_status_but_clears_stale_approval() -> None:
