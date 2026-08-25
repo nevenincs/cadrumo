@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:4422bc2e74314f4997c367a82ca8e1885fb85123d2284fccea41f1456fd2d252'
+body_hash: 'sha256:138aa28cebf7b9ed356bba93781b2d2d1fc15ab419aaee24638e88afa51dc494'
 step_id: 'S56'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -24,13 +24,13 @@ related:
 
 ## Outcome
 
-- Open for independent review; the plan checkbox remains unchecked.
+- Independently approved and complete; the S56 plan checkbox is closed.
+- Commits: `59f33321d5` relocates the canonical flow renderer and direct consumers; `a030e9a941` removes the stale legacy facade exports.
 - AST comparison proves each moved renderer is identical to its legacy implementation except direct relative-import names and documentation.
-- Focused checks passed: scoped Ruff; ty for canonical flows and both Modelo wizard CLI consumers; the six-case Textual flow scroll-owner visual test.
-- The corrective facade import smoke, exact legacy definition/export census, Ruff, and diff check pass.
-- Focused failures are external flow-contract drift: the two named submit-parity nodes leave `final_state` unset, and locale rebuild retains `es-copy` after the English rebuild. No flow semantics were changed.
+- Focused gates passed: scoped Ruff; ty for canonical flows and both Modelo wizard CLI consumers; the six-case Textual flow scroll-owner visual test; corrective facade import smoke; exact legacy definition/export census; and diff checks.
 
 ## Notes
 
+- The three focused Textual flow failures are external contract drift, not S56 behavior: the two named submit-parity nodes leave `final_state` unset and the locale rebuild test retains `es-copy` after the English rebuild. The renderer control-flow AST is otherwise identical.
 - `dev/tui/_surfaces.py` has seven pre-existing bare-generic `App` ty diagnostics; it remains outside the S56 ty result.
-- Concurrent component-form changes remain unstaged; this corrective commit owns only the authoritative legacy facade removal required by no-reexport.
+- The full migration/global census is integration-owned and was not refreshed during this path-scoped S56 closure.
