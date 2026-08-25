@@ -47,4 +47,3 @@ related:
 - Commit `d9bdcc2acb5` was inspected: its S45-file changes are formatting-only. The canonical entrypoint inventory and original execution record predate that sweep, so the sweep neither removed nor duplicated either seam.
 - The historical twelve-definition statement in the S122 execution record is stale; the live composition denominator is thirteen.
 - The S45 plan checkbox remains open pending independent review.
-
