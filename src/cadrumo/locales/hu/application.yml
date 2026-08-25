@@ -1157,10 +1157,6 @@ application:
         nyilvántartási revízióval jött létre, de a(z) %{modelo} %{filing_year} %{period}
         modellhez törvény által meghatározott revízió most %{law_revision}. Hozza
         létre újra a munkaegységet.
-      work_unit_revision_divergence_candidates: A(z) %{modelo} %{filing_year} %{period}
-        modelo megőrzött munkacéljai a(z) %{stored_revision_ids} nyilvántartási revíziókkal
-        jöttek létre, de a jogszabály által meghatározott revízió most %{resolved_revision_id}.
-        Hozza létre újra a munkaegységet, hogy az aktuális revízióhoz kösse.
       workflow_gate_no_pending_obligation: 'Nincs függőben lévő benyújtási kötelezettség
         ehhez a modellhez/időszakhoz az aktuális dátumon (az AEAT benyújtási kötelezettségi
         ablaka nincs nyitva). A fichero-exporthoz nem szükséges ez a lépés: exportáld

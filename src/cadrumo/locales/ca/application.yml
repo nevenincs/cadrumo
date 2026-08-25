@@ -1218,11 +1218,6 @@ application:
         amb la revisió de registre %{work_unit_revision}, però la revisió determinada
         per llei per al model %{modelo} %{filing_year} %{period} ara és %{law_revision}.
         Torneu a crear la unitat de treball per vincular-la a la revisió actual.
-      work_unit_revision_divergence_candidates: Els objectius de treball persistits
-        del model %{modelo} %{filing_year} %{period} es van crear amb les revisions
-        de registre %{stored_revision_ids}, però la revisió determinada per la llei
-        ara és %{resolved_revision_id}. Torneu a crear la unitat de treball per vincular-la
-        a la revisió actual.
       workflow_gate_no_pending_obligation: 'No hi ha cap obligació de presentació
         pendent per a aquest model/període en la data actual (la finestra d''obligació
         de presentació de l''AEAT no és oberta). La presentació a fitxer no requereix

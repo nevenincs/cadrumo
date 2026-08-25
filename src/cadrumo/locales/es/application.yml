@@ -1218,11 +1218,6 @@ application:
         con la revisión de registro %{work_unit_revision}, pero la revisión determinada
         por ley para el modelo %{modelo} %{filing_year} %{period} es ahora %{law_revision}.
         Vuelva a crear la unidad de trabajo para vincularla a la revisión actual.
-      work_unit_revision_divergence_candidates: Los objetivos de trabajo persistidos
-        del modelo %{modelo} %{filing_year} %{period} se crearon con las revisiones
-        de registro %{stored_revision_ids}, pero la revisión determinada por la ley
-        es ahora %{resolved_revision_id}. Vuelva a crear la unidad de trabajo para
-        vincularla a la revisión actual.
       workflow_gate_no_pending_obligation: 'No hay ninguna obligación de presentación
         pendiente para este modelo/periodo en la fecha actual (la ventana de obligación
         de presentación de la AEAT no está abierta). La presentación a fichero no
