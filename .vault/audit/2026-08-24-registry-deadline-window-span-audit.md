@@ -740,3 +740,22 @@ the `period_selector`, and the prose. The `period_selector` is the one the
 loader honours; the directory name is decoration and misled this investigation
 until the selector was read. Check the selector, never the directory name, when
 deciding which years a revision owns.
+
+### prior-domiciliation rectificativa construction (M303 evidence chain, owned elsewhere)
+
+`src/cadrumo/application/modelo/tests/test_prior_domiciliation_election.py:120` — 12
+failures, one cause: `CalculationRevision` now refuses a RECTIFICATIVA revision built
+without a `CalculationRevisionAggregateContext`
+(`src/cadrumo/domain/modelos/_calculation_revision.py:1208`).
+
+The subject of these tests is the prior direct-debit election, not amendment evidence;
+the rectificativa revision is only a fixture input. But the parametrisation builds
+modelo **303** revisions with `filing_instance_evidence=None`, so satisfying the
+validator means supplying the complete M303 chain — filing evidence, record design,
+registry snapshot, motive, a justificante carrying `presentation_id`, and the
+authoritative taxpayer tax id. That is the M303 rectificativa evidence chain, already
+recorded here as owner-gated; this module is a downstream consumer of it, not a
+separate gap.
+
+Not fixable test-side without either fabricating a justificante chain or weakening the
+validator. Both are refused. Blocked on the same decision as the parent cluster.
