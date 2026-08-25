@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import typer
+
 from ....application.auth import AuthDiagnosticPhoneState
 from ....core.external_constants import OutputLanguage
-from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 
 def auth_diagnostics_list(
-    ctx: object,
+    ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
@@ -39,11 +41,11 @@ def auth_diagnostics_list(
             ),
         )
     list_result = AuthDiagnosticsListResult(row_count=report.row_count, rows=list(report.rows))
-    _emit_envelope(ctx, command="config.auth.diagnostics.list", result=list_result, lines=lines)
+    emit_envelope(ctx, command="config.auth.diagnostics.list", result=list_result, lines=lines)
 
 
 def auth_diagnostics_show(
-    ctx: object,
+    ctx: typer.Context,
     diagnostic_id: str,
     output_language: OutputLanguage | None = None,
 ) -> None:
@@ -63,7 +65,7 @@ def auth_diagnostics_show(
     observed_at = detail.phone_state_observed_at.isoformat() if detail.phone_state_observed_at is not None else ""
     bool_value = _optional_bool_text
     show_result = AuthDiagnosticsShowResult(**detail.model_dump())
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.diagnostics.show",
         result=show_result,
@@ -96,7 +98,8 @@ def auth_diagnostics_show(
             f"phone_state_source\t{detail.phone_state_source or ''}",
             f"phone_state_observed_at\t{observed_at}",
             f"phone_state_reported_at\t{reported_at}",
-            f"operator_report_commands\t{'; '.join(detail.operator_report_commands)}",
+            "operator_report_verdict\t"
+            f"{detail.operator_report_verdict.model_dump_json() if detail.operator_report_verdict is not None else ''}",
             f"html_captured\t{detail.html_captured}",
             f"screenshot_captured\t{detail.screenshot_captured}",
             f"html_excerpt\t{detail.html_excerpt or ''}",
@@ -109,7 +112,7 @@ def _optional_bool_text(value: bool | None) -> str:
 
 
 def auth_diagnostics_report(
-    ctx: object,
+    ctx: typer.Context,
     diagnostic_id: str,
     phone_state: AuthDiagnosticPhoneState,
     output_language: OutputLanguage | None = None,
@@ -140,7 +143,7 @@ def auth_diagnostics_report(
         phone_state=result.phone_state,
         reported_at=result.reported_at,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.diagnostics.report",
         result=report_result,
