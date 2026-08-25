@@ -473,7 +473,9 @@ def _emit_crash(exc: Exception) -> NoReturn:
         command=(
             requested_leaf.subject_leaf_key
             if requested_leaf is not None
-            else boundary_command if isinstance(boundary_command, str) else None
+            else boundary_command
+            if isinstance(boundary_command, str)
+            else None
         ),
         action=None if projection is None else projection.precondition_action,
     )
