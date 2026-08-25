@@ -51,9 +51,10 @@ from ...core import (
 )
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors import ErrorCategory, get_registered_error_code
-from ._execution_context import DefinitionBoundContext, OperationDeclarationError
+from ._execution_context import DefinitionBoundContext
 from ._supervisor_lease import OperationSupervisorLeaseMixin
 from .capabilities import OperationRequestStoragePolicy
+from .errors import OperationDeclarationError
 from .event_replay import OperationEventCursor
 from .interactions import (
     OperationApplyResponse,
@@ -90,6 +91,8 @@ def _new_response_token() -> str:
 
 
 class OperationSupervisor(OperationSupervisorLeaseMixin):
+    """Coordinate durable execution, interactions, recovery, and settlement."""
+
     def __init__(
         self,
         *,
@@ -107,6 +110,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         response_authority_issuer: OperationResponseAuthorityIssuer | None = None,
         response_token_factory: Callable[[], str] = _new_response_token,
     ) -> None:
+        """Bind the registry and durable ports for one process owner."""
         self.registry = registry
         self._journal = journal
         self._event_stream = event_stream
@@ -147,6 +151,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
     async def submit(
         self, request: OperationRequest[BaseModel], *, operation_id: OperationId | None = None
     ) -> OperationId:
+        """Persist one validated operation request without starting execution."""
         definition = self.registry.lookup(request.definition_id)
         definition_contract = self.registry.lookup_public_contract(request.definition_id)
         self._validate_request_payload(request, definition.request_type)
@@ -545,6 +550,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         await asyncio.wait((executor_task,), timeout=remaining_seconds)
 
     async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Load the authoritative current snapshot for one operation."""
         return await self._load_pinned_snapshot(operation_id)
 
     async def observe(self, operation_id: OperationId) -> OperationPersistedSnapshot:
@@ -563,6 +569,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         return await self._event_stream.read_after(operation_id, cursor, limit=limit)
 
     async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Release a frontend without mutating the durable operation."""
         return await self.inspect(operation_id)
 
     async def await_terminal(self, operation_id: OperationId) -> OperationPersistedSnapshot:
@@ -658,6 +665,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         return successor
 
     async def respond(self, response: OperationApplyResponse | OperationRejectResponse) -> OperationConsumedInteraction:
+        """Consume one pending response and resume it when its policy permits."""
         snapshot = await self.inspect(response.operation_id)
         pending = snapshot.pending_interaction
         if pending is None or any(
@@ -709,6 +717,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         task.exception()
 
     async def reject(self, response: OperationRejectResponse) -> OperationConsumedInteraction:
+        """Consume a rejected REVIEW response through the shared response transition."""
         return await self.respond(response)
 
     async def request_cancel(
@@ -717,6 +726,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         *,
         expected_revision: int | None = None,
     ) -> OperationPersistedSnapshot:
+        """Request cooperative cancellation at an optional exact revision."""
         snapshot = await self.inspect(operation_id)
         if expected_revision is not None and snapshot.revision != expected_revision:
             raise ValueError("operation cancellation expected revision is stale")
@@ -822,6 +832,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         return await self._advance(snapshot, lifecycle=OperationLifecycle.SETTLING)
 
     async def settle(self, operation_id: OperationId, receipt: OperationTerminalReceipt) -> OperationPersistedSnapshot:
+        """Persist one validated terminal receipt after owned cleanup completes."""
         snapshot = await self.inspect(operation_id)
         if receipt.identity != snapshot.identity or receipt.revision != snapshot.revision + 1:
             raise ValueError("terminal receipt does not match successor revision")

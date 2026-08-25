@@ -6,7 +6,10 @@ from collections.abc import Sequence
 from pydantic import BaseModel, ConfigDict
 
 from ....core.flows import FlowMode
-from ...flows import FlowDefinition, FlowState, ReviewProjection, run_scripted_flow, start_flow, visible_sequence
+from ...flows.definition import FlowDefinition
+from ...flows.engine import FlowState, start_flow, visible_sequence
+from ...flows.review import ReviewProjection
+from ...flows.scripted import run_scripted_flow
 from .. import DESCENDANTS_COUNT_PAGE_ID
 
 
@@ -26,14 +29,14 @@ def scripted_run_over_setup_definition(
     repeating group, so they carry no token for the ``descendientes-count``
     page the live setup definition inserts mid-walk. An injected test runner
     that feeds those raw tokens straight to
-    :func:`~cadrumo.application.flows.run_scripted_flow` would misfeed the next
+    :func:`~cadrumo.application.flows.scripted.run_scripted_flow` would misfeed the next
     token onto the INTEGER count page. This realigns the queue exactly as the
     production ``_project_scripted_answers`` projection does for a canonical
     map that omits the count key: the count page falls to its descriptor
     default (``0`` -> the group stays hidden), and every other visible page
     consumes its fixture token in walk order. A definition without the count
     page is walked unchanged. Returns the same pair
-    :func:`~cadrumo.application.flows.run_scripted_flow` yields.
+    :func:`~cadrumo.application.flows.scripted.run_scripted_flow` yields.
     """
     queue = deque(tokens)
     aligned: list[str] = []

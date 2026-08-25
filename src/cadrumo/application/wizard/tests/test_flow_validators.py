@@ -21,15 +21,8 @@ from ....core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
-from ...flows import (
-    CopyRef,
-    CrossFieldValidator,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-    ValidationVerdict,
-    resolve_cross_field_validator,
-)
+from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
+from ...flows.validators import CrossFieldValidator, ValidationVerdict, resolve_cross_field_validator
 from .. import (
     TAXPAYER_PROJECTION_VALIDATOR_ID,
     build_taxpayer_projection_validator,

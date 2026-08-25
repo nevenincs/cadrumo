@@ -64,7 +64,7 @@ from .._login_session import (
     login_profile,
 )
 from .._login_session_port import bind_profile_login_session_port
-from .._profile_pointer_transaction import ActiveProfilePointerTransactionError
+from ..profile_pointer import ActiveProfilePointerTransactionError
 from .._profile_record_repository import close_active_profile_record_session, require_profile_record_session
 from .._registration import register_profile_with_credentials
 

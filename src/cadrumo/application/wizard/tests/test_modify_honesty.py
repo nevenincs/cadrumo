@@ -44,15 +44,10 @@ from pydantic import BaseModel
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n import tr
 from ....core.json_contract import NoticeSeverity
-from ...flows import (
-    CopyRef,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-    checkpoint_available,
-    flow_definition_from_wizard_flow,
-)
+from ...flows.checkpoint import checkpoint_available
+from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.line_frontend import LineFlowFrontend
+from ...flows.wizard_projection import flow_definition_from_wizard_flow
 from .._catalogue import SETUP_FLOW
 from .._commands import (
     _MODIFY_DESCENDANTS_DOOR_CODE,

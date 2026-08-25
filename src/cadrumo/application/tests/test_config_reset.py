@@ -246,9 +246,8 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
         ConfigResetTargetPhase,
     )
     from .._config_reset_repository import ConfigResetJournalRepository
-    from ..auth import (
-        acquire_auth_acquisition_lock,
-        auth_acquisition_lock_path,
+    from ..auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
+    from ..auth.certificate_source_operations import (
         register_operator_certificate_source,
         set_operator_certificate_source_secret,
     )
@@ -377,7 +376,7 @@ def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it
         ConfigResetOperationStatus,
         ConfigResetTargetPhase,
     )
-    from ..auth import acquire_auth_acquisition_lock, auth_acquisition_lock_path
+    from ..auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
     from ..config_reset import start_config_reset
 
     with _isolated_reset_root(tmp_path) as root:
@@ -650,7 +649,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
     """ABA selection equality cannot hide a changed reset preflight witness."""
     from .._config_reset_models import ConfigResetPauseReason
     from ..config_reset import resume_config_reset, start_config_reset
-    from ..user_profile import active_profile_pointer_transaction
+    from ..user_profile import activeprofile_pointer
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
@@ -659,7 +658,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
         before = operation.pointer_snapshot.record
         assert before.bucket_id == _PROFILE_A_ID
 
-        with active_profile_pointer_transaction(root) as transaction:
+        with activeprofile_pointer(root) as transaction:
             intermediate = transaction.select(_PROFILE_C_ID)
             returned = transaction.select(_PROFILE_A_ID)
         assert intermediate.transition_revision == before.transition_revision + 1

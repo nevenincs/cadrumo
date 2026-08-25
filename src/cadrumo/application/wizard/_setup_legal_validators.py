@@ -30,12 +30,8 @@ from collections.abc import Mapping
 
 from ...core import RentaDeclaracionType
 from ...domain.contribuyente import SituacionFamiliar
-from ..flows import (
-    FlowDefinition,
-    FlowSection,
-    ValidationVerdict,
-    register_cross_field_validator,
-)
+from ..flows.definition import FlowDefinition, FlowSection
+from ..flows.validators import ValidationVerdict, register_cross_field_validator
 
 SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID = "setup-familia-conjunta-unidad-familiar"
 """Registered id of the familia section-exit Art. 82.1.2ª validator."""

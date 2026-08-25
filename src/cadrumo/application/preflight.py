@@ -49,7 +49,7 @@ from ..core.paths import (
     windows_long_paths_enabled,
     windows_storage_root_long_path_margin,
 )
-from .auth import ProviderProbeResult
+from .auth.probes import ProviderProbeResult
 from .operator_actions import ActionReference, ConditionEvidence, PreconditionVerdict
 
 if TYPE_CHECKING:
@@ -245,7 +245,7 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
     rendered green is the one doctor answer an operator cannot act on. The
     probe never raises.
     """
-    from .auth import probe_provider_configuration
+    from .auth.operator_probes import probe_provider_configuration
 
     rows: list[PreflightCheck] = []
     for kind in AuthProviderKind:

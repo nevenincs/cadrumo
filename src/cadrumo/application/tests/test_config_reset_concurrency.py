@@ -108,7 +108,7 @@ _WRITER_HARNESS = _SETTINGS_PREAMBLE + dedent(
     import time
 
     from cadrumo.adapters.persistence.storage.bucket import BucketBusyError
-    from cadrumo.application.auth import reset_operator_auth
+    from cadrumo.application.auth.operator import reset_operator_auth
     from cadrumo.tests.profile_capsule import open_test_profile_session
 
     config_module._settings_override.reset(token)

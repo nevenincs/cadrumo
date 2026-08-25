@@ -24,7 +24,7 @@ from ....core.flows import (
     FlowWidgetKind,
 )
 from ....core.hashing import content_hash_hex
-from .. import (
+from ..definition import (
     CopyRef,
     FlowChoice,
     FlowCondition,

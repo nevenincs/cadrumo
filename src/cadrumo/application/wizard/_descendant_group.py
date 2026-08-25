@@ -3,9 +3,9 @@
 Descendant collection is a genuinely new wizard surface: the one-shot
 :class:`~cadrumo.application.wizard.WizardFlow` catalogue carries no
 repeating-group primitive, so the group is authored directly in the
-substrate's :class:`~cadrumo.application.flows.FlowRepeatingGroup`
+substrate's :class:`~cadrumo.application.flows.definition.FlowRepeatingGroup`
 vocabulary and spliced into the bridged
-:class:`~cadrumo.application.flows.FlowDefinition` by
+:class:`~cadrumo.application.flows.definition.FlowDefinition` by
 :func:`attach_descendant_group` -- the same post-bridge decoration seam
 as the format-hint and legal-validator attachers, so the substrate's
 one-way projection stays domain-blind.
@@ -40,7 +40,7 @@ from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_iso8601_date
 from ...core.time import today_madrid
 from ...domain.deadlines import EntityType
-from ..flows import (
+from ..flows.definition import (
     CopyRef,
     FlowChoice,
     FlowCondition,
@@ -49,10 +49,8 @@ from ..flows import (
     FlowRepeatingGroup,
     FlowSection,
     FlowVisibility,
-    ValidationVerdict,
-    register_answer_validator,
-    register_cross_field_validator,
 )
+from ..flows.validators import ValidationVerdict, register_answer_validator, register_cross_field_validator
 
 if TYPE_CHECKING:
     from datetime import date

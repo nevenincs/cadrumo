@@ -39,8 +39,8 @@ from ...domain.transactions import BusinessClassification, TransactionDirection
 from ...tests.bucket_layout import provision_bucket_directory
 from ...tests.registry_revision import active_registry_revision_id
 from ...tests.user_profile import register_minimal_profile
-from ..auth import inspect_operator_auth
-from ..auth import test_operator_auth as probe_operator_auth
+from ..auth.operator import inspect_operator_auth
+from ..auth.operator import test_operator_auth as probe_operator_auth
 from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
 from ..modelo import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
@@ -655,7 +655,7 @@ def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
     raw engineering English ``certificate path not configured``.
     """
 
-    from ..auth import configure_operator_auth
+    from ..auth.operator import configure_operator_auth
 
     _register_active_profile()
     configure_operator_auth("certificate")
@@ -690,7 +690,7 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path
     active provider.
     """
 
-    from ..auth import configure_operator_auth
+    from ..auth.operator import configure_operator_auth
 
     _register_active_profile()
     cert_file = tmp_path / "operator-cert.pfx"
@@ -717,7 +717,7 @@ def test_auth_readiness_health_severity_is_populated_for_a_configured_provider()
     never silently empty for a configured provider.
     """
 
-    from ..auth import configure_operator_auth
+    from ..auth.operator import configure_operator_auth
 
     _register_active_profile()
     configure_operator_auth("clave_movil")

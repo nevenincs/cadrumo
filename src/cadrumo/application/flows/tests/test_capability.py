@@ -14,7 +14,7 @@ import sys
 import pytest
 
 from ....core.flows import FrontendCapability
-from .. import detect_frontend_capability
+from ..capability import detect_frontend_capability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

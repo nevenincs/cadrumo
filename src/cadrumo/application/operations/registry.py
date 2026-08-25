@@ -90,7 +90,7 @@ _STRICT_PUBLIC_MODEL_CONFIG = ConfigDict(
     validate_default=True,
 )
 
-OperationPublicSchemaId = Annotated[
+type OperationPublicSchemaId = Annotated[
     str,
     Field(min_length=3, max_length=160, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$"),
 ]

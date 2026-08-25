@@ -33,16 +33,16 @@ from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind, PageStatus
 from ...core.i18n import tr
 from ...core.parsing import parse_bool
 from ...core.tty import stdin_is_tty
-from ._capability import NO_CONSOLE_ERRORS as _NO_CONSOLE_ERRORS
-from ._checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
-from ._copy import (
+from .capability import NO_CONSOLE_ERRORS as _NO_CONSOLE_ERRORS
+from .checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
+from .copy import (
     PageCopy,
     assemble_page_copy,
     assemble_section_titles,
     resolve_optional_copy,
 )
-from ._definition import FlowDefinition
-from ._engine import (
+from .definition import FlowDefinition
+from .engine import (
     SECTION_VERDICT_PREFIX,
     FlowState,
     VisiblePage,
@@ -56,7 +56,7 @@ from ._engine import (
     visible_sequence,
 )
 from .errors import FlowCheckpointError, FlowRunAbandonedError, FlowUnsupportedConsoleError
-from ._review import ReviewProjection, assert_submit_eligible, review
+from .review import ReviewProjection, assert_submit_eligible, review
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -83,6 +83,7 @@ class LineFlowFrontend:
         checkpoint_store: CheckpointStore | None = None,
         on_answer_committed: Callable[[str, str], None] | None = None,
     ) -> None:
+        """Bind one flow definition to optional explicit terminal adapters."""
         self._definition = definition
         self._input = input
         self._output = output

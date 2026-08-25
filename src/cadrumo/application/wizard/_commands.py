@@ -18,8 +18,8 @@ Flag derivation per question kind:
   a ``list[str]``.
 
 An interactive walk projects the one-shot wizard catalogue into a
-substrate :class:`~cadrumo.application.flows.FlowDefinition`
-(via :func:`~cadrumo.application.flows.flow_definition_from_wizard_flow`)
+substrate :class:`~cadrumo.application.flows.definition.FlowDefinition`
+(via :func:`~cadrumo.application.flows.wizard_projection.flow_definition_from_wizard_flow`)
 and drives it through an injected frontend runner: the full-screen
 Textual frontend where the host supports it, degrading to the line-mode
 frontend otherwise, and refusing instructively on a non-interactive
@@ -62,17 +62,11 @@ from ...core import (
 )
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from ..flows import (
-    FlowAnswerError,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-    FlowSubmitError,
-    flow_definition_from_wizard_flow,
-    run_scripted_flow,
-    start_flow,
-    visible_sequence,
-)
+from ..flows.definition import FlowDefinition, FlowPage, FlowSection
+from ..flows.engine import start_flow, visible_sequence
+from ..flows.errors import FlowAnswerError, FlowSubmitError
+from ..flows.scripted import run_scripted_flow
+from ..flows.wizard_projection import flow_definition_from_wizard_flow
 from ._catalogue import SETUP_FLOW
 from ._descendant_group import attach_descendant_group
 from ._errors import (
@@ -712,7 +706,7 @@ def setup_flow_definition(
     CREATE (where the facts-as-checkpoint store seeds and re-seeds the group)
     and withheld for MODIFY. Modify-mode seeding cannot instantiate the
     repeating group: the modify frontend seeds render-time page defaults over
-    a fresh :func:`~cadrumo.application.flows.start_flow` state, and instance
+    a fresh :func:`~cadrumo.application.flows.engine.start_flow` state, and instance
     pages are generated dynamically from the group's count rather than being
     static items the default-seed mechanism can reach. Rendering the group
     unseeded would show an operator's existing descendants as an empty group
@@ -761,7 +755,7 @@ def _project_scripted_answers(
 ) -> tuple[list[str], dict[str, str]]:
     """Project the canonical dict into the driver's visible-sequence order.
 
-    :func:`~cadrumo.application.flows.run_scripted_flow` consumes an ordered
+    :func:`~cadrumo.application.flows.scripted.run_scripted_flow` consumes an ordered
     queue, one token per visible page, re-evaluating visibility after each
     commit. This mirrors that walk over the DEFINITION (so a substrate-only
     page keeps its true walk position) and emits each page's canonical token,

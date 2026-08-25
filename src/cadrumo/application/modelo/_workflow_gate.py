@@ -47,7 +47,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from ...adapters.persistence.profile.submission import SubmissionRepository
-from ...application.auth import select_provider
+from ...application.auth.providers import select_provider
 from ...core import AuthProviderKind, Period
 from ...core.config import Settings, load_settings
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile, resolve_filing_window

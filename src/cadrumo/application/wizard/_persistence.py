@@ -533,7 +533,7 @@ def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str
     canonical :func:`~cadrumo.domain.contribuyente.descendant_list_from_facts`,
     and emits the ``descendientes-count`` answer plus one
     ``descendientes#<index>.<page-id>`` answer per populated field. This is the
-    exact page-keyed shape :func:`~cadrumo.application.flows.resume_flow`
+    exact page-keyed shape :func:`~cadrumo.application.flows.resume.resume_flow`
     re-walks to re-instantiate the group: the count answer commits first (the
     familia section orders the count page before the group), revealing the
     instance pages the remaining answers then seed against the current

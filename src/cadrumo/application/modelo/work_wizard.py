@@ -4,7 +4,7 @@ The guided work wizard is an application-owned projection of the outstanding
 registry input surface for one :class:`~cadrumo.domain.modelos.WorkUnit`.
 It discovers only manual casillas and the remaining promptable binding or
 relation inputs, attaches the registry grounding that explains each question,
-and builds one runtime :class:`~cadrumo.application.flows.FlowDefinition`.
+and builds one runtime :class:`~cadrumo.application.flows.definition.FlowDefinition`.
 
 The returned run owns its registry-derived copy table for its entire lifetime.
 The CLI line frontend and the installed full-screen frontend both consume that
@@ -22,7 +22,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-from ...application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection, register_copy_source
+from ...application.flows.copy import register_copy_source
+from ...application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n import tr
@@ -32,7 +33,7 @@ from ._binding_readiness import profile_resolvable_binding_ids
 from ._registry_discovery import registry_bindings_for_scope, registry_casillas_for_registry_scope
 
 if TYPE_CHECKING:
-    from ...application.flows import FlowState
+    from ...application.flows.engine import FlowState
     from ...domain.modelos import WorkUnit
 
 

@@ -59,8 +59,8 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
 )
-from ...application.auth import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
-from ...application.auth import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
+from ...application.auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
+from ...application.auth.sessions import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
 from ...application.calculations import CalculationObservationRepository as _CalculationObservationRepository
 from ...application.calculations import IvaCompensationHistoryRepository as _IvaCompensationHistoryRepository
 from ...application.calculations import IvaWalletDecisionRepository as _IvaWalletDecisionRepository

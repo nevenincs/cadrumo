@@ -479,7 +479,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     authenticated) and asserting the report shape across each.
     """
     from ...tests.profile_capsule import open_test_profile_session
-    from ..auth import update_auth
+    from ..auth.actions import update_auth
     from ..workflow import workflow_state_repository
 
     with (

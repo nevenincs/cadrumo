@@ -4,7 +4,7 @@
 :class:`UserProfileRecord` from the active bucket and returns an
 :class:`ActiveProfileHealth` verdict used by every operator status surface.
 Confirmed pointer repairs coordinate mutation through the public
-:func:`~cadrumo.application.user_profile.active_profile_pointer_transaction` boundary.
+:func:`~cadrumo.application.user_profile.activeprofile_pointer` boundary.
 
 See Also:
     :class:`~application.workflow.ProfileBucketPointer`
@@ -55,7 +55,7 @@ from ..operator_actions import (
 )
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
 from ..user_profile import (
-    active_profile_pointer_transaction,
+    activeprofile_pointer,
     list_profile_key_records,
     profile_record_session_if_authenticated,
     record_to_path_values,
@@ -538,7 +538,7 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
         return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
 
     root = load_settings().cadrumo_local_storage_root
-    with active_profile_pointer_transaction(root) as pointer_transaction:
+    with activeprofile_pointer(root) as pointer_transaction:
         before = assess_active_profile_health()
         if not before.repairable_by_clearing_pointer:
             return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)

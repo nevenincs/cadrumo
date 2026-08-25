@@ -2,14 +2,14 @@
 
 The non-interactive wizard paths (``--quiet`` / ``--accept-defaults``) and
 the interactive frontends now drive the SAME projected
-:class:`~cadrumo.application.flows.FlowDefinition` through the SAME engine.
+:class:`~cadrumo.application.flows.definition.FlowDefinition` through the SAME engine.
 These tests prove the two drivers cannot diverge: the scripted intent
-driver (:func:`~cadrumo.application.flows.run_scripted_flow`) and a
-page-by-page :func:`~cadrumo.application.flows.answer` walk over the same
+driver (:func:`~cadrumo.application.flows.scripted.run_scripted_flow`) and a
+page-by-page :func:`~cadrumo.application.flows.engine.answer` walk over the same
 definition and the same intended answers produce byte-identical answer maps
 and the same submit eligibility. The refusal contract is pinned too — a
 starved required page and a trailing unconsumed token both raise
-:class:`~cadrumo.application.flows.FlowAnswerError`.
+:class:`~cadrumo.application.flows.errors.FlowAnswerError`.
 
 No mocks: the real ``SETUP_FLOW`` descriptor, the real substrate bridge and
 decorators (through the production
@@ -25,18 +25,11 @@ from collections.abc import Mapping
 import pytest
 
 from ....core.flows import FlowMode
-from ...flows import (
-    FlowAnswerError,
-    FlowDefinition,
-    FlowState,
-    answer,
-    jump_to,
-    next_page,
-    review,
-    run_scripted_flow,
-    start_flow,
-    visible_sequence,
-)
+from ...flows.definition import FlowDefinition
+from ...flows.engine import FlowState, answer, jump_to, next_page, start_flow, visible_sequence
+from ...flows.errors import FlowAnswerError
+from ...flows.review import review
+from ...flows.scripted import run_scripted_flow
 from .._catalogue import SETUP_FLOW
 from .._commands import _project_scripted_answers, setup_flow_definition
 

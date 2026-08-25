@@ -22,7 +22,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ._definition import (
+from .definition import (
     CopyRef,
     FlowChoice,
     FlowCondition,

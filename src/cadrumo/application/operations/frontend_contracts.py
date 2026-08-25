@@ -47,6 +47,8 @@ _PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_d
 
 
 class OperationObservationRefusalCode(StrEnum):
+    """Stable refusal codes for operation observation requests."""
+
     UNSUPPORTED_VERSION = "unsupported_operation_observation_version"
     UNKNOWN_OPERATION = "unknown_operation"
     CURSOR_AHEAD = "cursor_ahead"
@@ -56,6 +58,8 @@ class OperationObservationRefusalCode(StrEnum):
 
 
 class OperationReviewProjectionRefusalCode(StrEnum):
+    """Stable refusal codes for REVIEW projection requests."""
+
     UNSUPPORTED_VERSION = "unsupported_review_projection_version"
     UNKNOWN_OPERATION = "unknown_operation"
     REVIEW_NOT_PENDING = "review_not_pending"
@@ -67,6 +71,8 @@ class OperationReviewProjectionRefusalCode(StrEnum):
 
 
 class OperationWorkspaceRefreshTargetRefusalCode(StrEnum):
+    """Stable refusal codes for workspace refresh-target requests."""
+
     UNSUPPORTED_VERSION = "unsupported_refresh_target_version"
     UNKNOWN_OPERATION = "unknown_operation"
     OPERATION_NOT_TERMINAL = "operation_not_terminal"
@@ -78,6 +84,8 @@ class OperationWorkspaceRefreshTargetRefusalCode(StrEnum):
 
 
 class OperationResponseControlRefusalCode(StrEnum):
+    """Stable refusal codes for response-control requests."""
+
     UNSUPPORTED_VERSION = "unsupported_response_control_version"
     UNKNOWN_OPERATION = "unknown_operation"
     RESPONSE_NOT_PENDING = "response_not_pending"
@@ -86,6 +94,8 @@ class OperationResponseControlRefusalCode(StrEnum):
 
 
 class OperationCancellationRefusalCode(StrEnum):
+    """Stable refusal codes for cancellation requests."""
+
     UNSUPPORTED_VERSION = "unsupported_cancellation_version"
     UNKNOWN_OPERATION = "unknown_operation"
     STALE_OPERATION_REVISION = "stale_operation_revision"
@@ -95,6 +105,8 @@ class OperationCancellationRefusalCode(StrEnum):
 
 
 class OperationDetachRefusalCode(StrEnum):
+    """Stable refusal codes for detach requests."""
+
     UNSUPPORTED_VERSION = "unsupported_detach_version"
     UNKNOWN_OPERATION = "unknown_operation"
     STALE_OPERATION_REVISION = "stale_operation_revision"
@@ -155,6 +167,8 @@ class OperationObservationRequestV1(BaseModel):
 
 
 class OperationPublicProgressV1(BaseModel):
+    """Renderer-neutral progress state anchored to an operation event."""
+
     model_config = _PUBLIC_CONFIG
 
     completed: Annotated[int, Field(ge=0)]
@@ -172,6 +186,8 @@ class OperationPublicProgressV1(BaseModel):
 
 
 class OperationNoPendingInteractionV1(BaseModel):
+    """Explicit public marker for an operation with no pending interaction."""
+
     model_config = _PUBLIC_CONFIG
     disposition: Literal["none"] = "none"
 
@@ -196,6 +212,8 @@ class OperationReviewProjectionReferenceV1(BaseModel):
 
 
 class OperationReviewAvailableInteractionV1(BaseModel):
+    """Safe public description of an operation awaiting REVIEW."""
+
     model_config = _PUBLIC_CONFIG
 
     disposition: Literal["review_available"] = "review_available"
@@ -223,6 +241,8 @@ class OperationReviewAvailableInteractionV1(BaseModel):
 
 
 class OperationUnsupportedInteractionV1(BaseModel):
+    """Public marker for a pending interaction the frontend cannot perform."""
+
     model_config = _PUBLIC_CONFIG
 
     disposition: Literal["unsupported"] = "unsupported"
@@ -240,7 +260,7 @@ class OperationUnsupportedInteractionV1(BaseModel):
         return self
 
 
-OperationPublicPendingInteractionV1 = Annotated[
+type OperationPublicPendingInteractionV1 = Annotated[
     OperationNoPendingInteractionV1 | OperationReviewAvailableInteractionV1 | OperationUnsupportedInteractionV1,
     Field(discriminator="disposition"),
 ]
@@ -396,11 +416,15 @@ class _OperationPublicEventBase(BaseModel):
 
 
 class OperationPublicPhaseEventV1(_OperationPublicEventBase):
+    """Public projection of one operation phase event."""
+
     kind: Literal[OperationEventKind.PHASE] = OperationEventKind.PHASE
     phase_code: OperationEventCode
 
 
 class OperationPublicProgressEventV1(_OperationPublicEventBase):
+    """Public projection of one bounded operation progress event."""
+
     kind: Literal[OperationEventKind.PROGRESS] = OperationEventKind.PROGRESS
     completed: Annotated[int, Field(ge=0)]
     total: Annotated[int, Field(gt=0)]
@@ -414,37 +438,51 @@ class OperationPublicProgressEventV1(_OperationPublicEventBase):
 
 
 class OperationPublicLogEventV1(_OperationPublicEventBase):
+    """Public projection of one structured operation log event."""
+
     kind: Literal[OperationEventKind.LOG] = OperationEventKind.LOG
     severity: OperationLogSeverity
     diagnostic_ref: OperationDiagnosticReference | None
 
 
 class OperationPublicEffectEventV1(_OperationPublicEventBase):
+    """Public projection of one operation effect event."""
+
     kind: Literal[OperationEventKind.EFFECT] = OperationEventKind.EFFECT
     effect: OperationEffect
 
 
 class OperationPublicNoticeEventV1(_OperationPublicEventBase):
+    """Public projection of one localized-notice identity event."""
+
     kind: Literal[OperationEventKind.NOTICE] = OperationEventKind.NOTICE
     notice_code: OperationEventCode
 
 
 class OperationPublicReconciliationEventV1(_OperationPublicEventBase):
+    """Public projection of one startup-reconciliation event."""
+
     kind: Literal[OperationEventKind.RECONCILIATION] = OperationEventKind.RECONCILIATION
     outcome: OperationReconciliationOutcome
 
 
 class OperationPublicDiagnosticEventV1(_OperationPublicEventBase):
+    """Public projection of one redacted diagnostic-reference event."""
+
     kind: Literal[OperationEventKind.DIAGNOSTIC] = OperationEventKind.DIAGNOSTIC
     diagnostic_ref: OperationDiagnosticReference
 
 
 class OperationPublicInteractionEventV1(_OperationPublicEventBase):
+    """Public projection of one interaction lifecycle event."""
+
     kind: Literal[OperationEventKind.INTERACTION] = OperationEventKind.INTERACTION
     interaction_id: OperationInteractionId
 
 
 class OperationPublicTerminalEventV1(_OperationPublicEventBase):
+    """Public projection of one terminal operation receipt event."""
+
     kind: Literal[OperationEventKind.TERMINAL] = OperationEventKind.TERMINAL
     condition: OperationTerminalCondition
     effect: OperationEffect
@@ -462,7 +500,7 @@ class OperationPublicTerminalEventV1(_OperationPublicEventBase):
         return self
 
 
-OperationPublicEventV1 = Annotated[
+type OperationPublicEventV1 = Annotated[
     OperationPublicPhaseEventV1
     | OperationPublicProgressEventV1
     | OperationPublicLogEventV1
@@ -477,6 +515,8 @@ OperationPublicEventV1 = Annotated[
 
 
 class OperationPublicEventPageV1(BaseModel):
+    """Bounded public event replay page tied to one observation anchor."""
+
     model_config = _PUBLIC_CONFIG
 
     observation_version: Literal[1] = 1
@@ -526,6 +566,8 @@ class OperationPublicEventPageV1(BaseModel):
 
 
 class OperationObservationSuccessV1(BaseModel):
+    """Successful atomic public operation observation."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["success"] = "success"
@@ -546,6 +588,8 @@ class OperationObservationSuccessV1(BaseModel):
 
 
 class OperationObservationRefusalV1(BaseModel):
+    """Renderer-neutral refusal for an operation observation request."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["refused"] = "refused"
@@ -556,19 +600,23 @@ class OperationObservationRefusalV1(BaseModel):
     diagnostic_ref: OperationDiagnosticReference | None
 
 
-OperationObservationResultV1 = Annotated[
+type OperationObservationResultV1 = Annotated[
     OperationObservationSuccessV1 | OperationObservationRefusalV1,
     Field(discriminator="outcome"),
 ]
 
 
 class OperationReviewProjectionRequestV1(BaseModel):
+    """Versioned request for a safe REVIEW projection."""
+
     model_config = _PUBLIC_CONFIG
     review_projection_version: Literal[1] = 1
     reference: OperationReviewProjectionReferenceV1
 
 
 class OperationReviewProjectionSuccessV1[ReviewProjectionT: BaseModel](BaseModel):
+    """Successful typed REVIEW projection response."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["success"] = "success"
@@ -579,6 +627,8 @@ class OperationReviewProjectionSuccessV1[ReviewProjectionT: BaseModel](BaseModel
 
 
 class OperationReviewProjectionRefusalV1(BaseModel):
+    """Renderer-neutral refusal for a REVIEW projection request."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["refused"] = "refused"
@@ -596,6 +646,8 @@ type OperationReviewProjectionResultV1[ReviewProjectionT: BaseModel] = Annotated
 
 
 class OperationResponseControlRequestV1(BaseModel):
+    """Versioned request for the safe response-control surface."""
+
     model_config = _PUBLIC_CONFIG
 
     response_control_version: Literal[1] = 1
@@ -606,6 +658,8 @@ class OperationResponseControlRequestV1(BaseModel):
 
 
 class OperationResponseControlSuccessV1(BaseModel):
+    """Successful response-control inspection result."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["success"] = "success"
@@ -624,6 +678,8 @@ class OperationResponseControlSuccessV1(BaseModel):
 
 
 class OperationResponseControlRefusalV1(BaseModel):
+    """Renderer-neutral refusal for a response-control request."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["refused"] = "refused"
@@ -634,7 +690,7 @@ class OperationResponseControlRefusalV1(BaseModel):
     diagnostic_ref: OperationDiagnosticReference | None
 
 
-OperationResponseControlResultV1 = Annotated[
+type OperationResponseControlResultV1 = Annotated[
     OperationResponseControlSuccessV1 | OperationResponseControlRefusalV1,
     Field(discriminator="outcome"),
 ]
@@ -665,7 +721,7 @@ class OperationResponseRejectRequestV1(OperationResponseControlRequestV1):
         return self
 
 
-OperationResponseMutationRequestV1 = Annotated[
+type OperationResponseMutationRequestV1 = Annotated[
     OperationResponseApplyRequestV1 | OperationResponseRejectRequestV1,
     Field(discriminator="response_action"),
 ]
@@ -684,7 +740,7 @@ class OperationResponseMutationSuccessV1(BaseModel):
     response_action: Literal["apply", "reject"]
 
 
-OperationResponseMutationResultV1 = Annotated[
+type OperationResponseMutationResultV1 = Annotated[
     OperationResponseMutationSuccessV1 | OperationResponseControlRefusalV1,
     Field(discriminator="outcome"),
 ]
@@ -701,6 +757,8 @@ class OperationSubmissionReceiptV1(BaseModel):
 
 
 class OperationCancellationRequestV1(BaseModel):
+    """Versioned request to cooperatively cancel an operation."""
+
     model_config = _PUBLIC_CONFIG
     cancellation_version: Literal[1] = 1
     operation_id: OperationId
@@ -708,6 +766,8 @@ class OperationCancellationRequestV1(BaseModel):
 
 
 class OperationCancellationSuccessV1(BaseModel):
+    """Successful cooperative-cancellation request result."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["success"] = "success"
@@ -719,6 +779,8 @@ class OperationCancellationSuccessV1(BaseModel):
 
 
 class OperationCancellationRefusalV1(BaseModel):
+    """Renderer-neutral refusal for a cancellation request."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["refused"] = "refused"
@@ -729,13 +791,15 @@ class OperationCancellationRefusalV1(BaseModel):
     diagnostic_ref: OperationDiagnosticReference | None
 
 
-OperationCancellationResultV1 = Annotated[
+type OperationCancellationResultV1 = Annotated[
     OperationCancellationSuccessV1 | OperationCancellationRefusalV1,
     Field(discriminator="outcome"),
 ]
 
 
 class OperationDetachRequestV1(BaseModel):
+    """Versioned request to detach an operation from a frontend."""
+
     model_config = _PUBLIC_CONFIG
     detach_version: Literal[1] = 1
     operation_id: OperationId
@@ -743,6 +807,8 @@ class OperationDetachRequestV1(BaseModel):
 
 
 class OperationDetachSuccessV1(BaseModel):
+    """Successful frontend detach result."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["success"] = "success"
@@ -753,6 +819,8 @@ class OperationDetachSuccessV1(BaseModel):
 
 
 class OperationDetachRefusalV1(BaseModel):
+    """Renderer-neutral refusal for a detach request."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["refused"] = "refused"
@@ -763,7 +831,7 @@ class OperationDetachRefusalV1(BaseModel):
     diagnostic_ref: OperationDiagnosticReference | None
 
 
-OperationDetachResultV1 = Annotated[
+type OperationDetachResultV1 = Annotated[
     OperationDetachSuccessV1 | OperationDetachRefusalV1,
     Field(discriminator="outcome"),
 ]
@@ -782,6 +850,8 @@ class OperationWorkspaceRefreshTargetRequestV1(BaseModel):
 
 
 class OperationWorkspaceRefreshTargetSuccessV1[RefreshTargetT: BaseModel](BaseModel):
+    """Successful typed workspace refresh target resolution."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["success"] = "success"
@@ -792,6 +862,8 @@ class OperationWorkspaceRefreshTargetSuccessV1[RefreshTargetT: BaseModel](BaseMo
 
 
 class OperationWorkspaceRefreshTargetRefusalV1(BaseModel):
+    """Renderer-neutral refusal for a workspace refresh-target request."""
+
     model_config = _PUBLIC_CONFIG
 
     outcome: Literal["refused"] = "refused"

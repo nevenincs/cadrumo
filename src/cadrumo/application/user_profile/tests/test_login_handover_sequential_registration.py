@@ -34,7 +34,7 @@ from .._login_session import (
     _save_handover_journal,
     login_profile,
 )
-from .._profile_pointer_transaction import ActiveProfilePointerTransactionError
+from ..profile_pointer import ActiveProfilePointerTransactionError
 from .._registration import register_profile_with_credentials
 from .test_login_handover import (
     _assert_no_resumable_material,

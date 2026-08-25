@@ -4,7 +4,7 @@ The concrete setup flow lives in this package.
 :class:`_models.WizardFlow` descriptors declare the operator-facing sections,
 questions, widgets, visibility gates, and answer model. The command builder
 projects those descriptors onto the flow substrate
-(:mod:`cadrumo.application.flows`) and drives them through its engine and
+(:mod:`cadrumo.application.flows.definition`) and drives them through its engine and
 frontends, validates raw input with the per-widget canonical-token rules,
 rebuilds the typed :class:`core.setup_answers.SetupAnswers` projection, and
 persists profile facts through the user-profile orchestration layer.

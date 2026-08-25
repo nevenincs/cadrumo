@@ -184,7 +184,7 @@ def profile_custody_transaction_lock(root: Path, profile_id: UUID) -> Generator[
     It stays because the ORDER is the deadlock-safety rule: a future path that
     takes both must take them this way round.
     """
-    from ._profile_pointer_transaction import active_profile_pointer_transaction
+    from .profile_pointer import activeprofile_pointer
 
     adapters = default_profile_custody_local_record_store()
     storage_root = effective_storage_root(root)
@@ -192,7 +192,7 @@ def profile_custody_transaction_lock(root: Path, profile_id: UUID) -> Generator[
     # Use the application pointer transaction rather than reacquiring the raw
     # non-reentrant sidecar. A caller may already hold the canonical root lock
     # to bind an inactive-target decision across the complete custody delete.
-    with active_profile_pointer_transaction(storage_root):
+    with activeprofile_pointer(storage_root):
         try:
             adapters.ensure_directory(capsules_root)
         except Exception as exc:

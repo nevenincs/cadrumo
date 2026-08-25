@@ -15,7 +15,7 @@ from ...core.time import validate_utc_aware
 from .interactions import OperationInteractionId
 from .models import OperationId, OperationIdentity, OperationRevision
 
-OperationSecretKind = Annotated[
+type OperationSecretKind = Annotated[
     str,
     Field(min_length=3, max_length=64, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"),
 ]

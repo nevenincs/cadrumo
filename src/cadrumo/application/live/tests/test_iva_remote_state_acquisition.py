@@ -23,7 +23,7 @@ from ....core import AuthProviderKind, Period
 from ....core.config import Settings
 from ....core.identity import nif_check_letter
 from ....tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root, read_db_at_rest_bytes
-from ...auth import AuthenticatedAeatSessionResult
+from ...auth.sessions import AuthenticatedAeatSessionResult
 from .. import (
     IvaCompensationHistoryCaptureReport,
     IvaRemoteStateAcquisitionManifest,

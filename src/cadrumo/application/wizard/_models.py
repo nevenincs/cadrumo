@@ -169,7 +169,7 @@ class WizardFlow(BaseModel):
         visibility.
 
         This invariant is enforced a second time, over a different model, by
-        :meth:`~application.flows.FlowDefinition._validate_visible_when_targets`.
+    :meth:`~application.flows.definition.FlowDefinition._validate_visible_when_targets`.
         The two exist because the models differ, not by oversight: every
         ``WizardFlow`` is bridged into a ``FlowDefinition``, but
         ``attach_descendant_group`` then splices in pages authored directly in

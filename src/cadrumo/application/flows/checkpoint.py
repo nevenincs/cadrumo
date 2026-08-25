@@ -6,10 +6,10 @@ domain's existing encrypted persistence authority — never a bespoke
 store, never flow-owned crypto. The facts are the checkpoint: the port
 persists the canonical answer map only, and resume rebuilds everything
 derived (cursor, staleness, validation) from the *current* definition
-(:mod:`._resume`).
+(:mod:`.resume`).
 
 Availability is a per-mode declaration on the
-:class:`~cadrumo.application.flows.FlowDefinition` (``checkpoint``
+:class:`~cadrumo.application.flows.definition.FlowDefinition` (``checkpoint``
 field). ``UNAVAILABLE`` is the declared no-op arm: :func:`save_checkpoint`
 refuses rather than silently dropping, and frontends read
 :func:`checkpoint_available` to disable the save-and-exit affordance
@@ -23,8 +23,8 @@ from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
 
 from ...core.flows import CheckpointAvailability, FlowMode
-from ._definition import FlowDefinition
-from ._engine import FlowState
+from .definition import FlowDefinition
+from .engine import FlowState
 from .errors import FlowCheckpointError
 
 

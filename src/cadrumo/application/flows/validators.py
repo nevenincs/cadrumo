@@ -27,7 +27,7 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.flows import DEFER_TOKEN, FlowWidgetKind
 from ...core.parsing import parse_bool, parse_date
 from ...core.redaction import redact_validation_context
-from ._definition import FlowPage
+from .definition import FlowPage
 from .errors import FlowValidatorRegistryError
 
 
@@ -47,10 +47,12 @@ class ValidationVerdict(BaseModel):
 
     @classmethod
     def passed(cls) -> ValidationVerdict:
+        """Return a successful verdict with no diagnostic payload."""
         return cls(ok=True)
 
     @classmethod
     def failed(cls, message_key: str, **context: object) -> ValidationVerdict:
+        """Return a failed verdict carrying only redacted interpolation context."""
         return cls(ok=False, message_key=message_key, context=redact_validation_context(dict(context)))
 
 

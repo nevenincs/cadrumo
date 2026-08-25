@@ -35,7 +35,7 @@ from ...domain.calculations.registry import (
     build_profile_grounding_index,
 )
 from ...domain.user_profile import ProfileSchemaDefinition, UserProfileError
-from ..flows import FlowDefinition, FlowPage, FlowRepeatingGroup
+from ..flows.definition import FlowDefinition, FlowPage, FlowRepeatingGroup
 
 
 class PageLegalZone(BaseModel):

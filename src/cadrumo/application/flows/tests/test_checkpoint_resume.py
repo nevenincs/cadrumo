@@ -1,7 +1,7 @@
 """Checkpoint save/refuse and resume-projection over the real engine.
 
 Every scenario drives the checkpoint port and the resume projection
-through the public ``cadrumo.application.flows`` facade against a real
+through the defining checkpoint and resume modules against a real
 in-memory ``CheckpointStore`` implementation — a genuine port that stores
 and returns the answer map, never a mock.
 
@@ -33,22 +33,11 @@ from ....core.flows import (
     FlowWidgetKind,
     PageStatus,
 )
-from .. import (
-    CopyRef,
-    FlowCheckpointError,
-    FlowChoice,
-    FlowCondition,
-    FlowDefinition,
-    FlowPage,
-    FlowRepeatingGroup,
-    FlowSection,
-    answer,
-    checkpoint_available,
-    page_status,
-    resume_flow,
-    save_checkpoint,
-    start_flow,
-)
+from ..checkpoint import checkpoint_available, save_checkpoint
+from ..definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowRepeatingGroup, FlowSection
+from ..engine import answer, page_status, start_flow
+from ..errors import FlowCheckpointError
+from ..resume import resume_flow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

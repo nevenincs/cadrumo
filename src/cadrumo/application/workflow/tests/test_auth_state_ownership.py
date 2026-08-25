@@ -1,6 +1,5 @@
 import pytest
 
-from ... import auth as application_auth
 from .. import AuthState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -8,4 +7,3 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_persisted_auth_state_is_workflow_owned() -> None:
     assert AuthState.__module__ == "cadrumo.application._workflow_auth_models"
-    assert not hasattr(application_auth, "AuthState")

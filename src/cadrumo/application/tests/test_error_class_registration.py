@@ -67,14 +67,13 @@ def test_profile_registration_error_is_registered_and_roundtrips() -> None:
 
 
 def test_session_deserialization_error_is_registered_and_roundtrips() -> None:
-    from ..auth import SessionDeserializationError
+    from ..auth.sessions import SessionDeserializationError
 
     _assert_registered_and_roundtrip(SessionDeserializationError)
 
 
 def test_session_deserialization_error_raised_on_bad_type() -> None:
-    from ..auth import SessionDeserializationError
-    from ..auth._sessions import _session_metadata_datetime
+    from ..auth.sessions import SessionDeserializationError, _session_metadata_datetime
 
     with pytest.raises(SessionDeserializationError):
         _session_metadata_datetime(12345, field="started_at")
@@ -136,7 +135,7 @@ def test_modelo_applicability_filter_error_is_registered_and_roundtrips() -> Non
 
 
 def test_auth_diagnostic_payload_error_is_registered_and_roundtrips() -> None:
-    from ..auth import AuthDiagnosticPayloadError
+    from ..auth.errors import AuthDiagnosticPayloadError
 
     _assert_registered_and_roundtrip(AuthDiagnosticPayloadError)
 
@@ -144,8 +143,8 @@ def test_auth_diagnostic_payload_error_is_registered_and_roundtrips() -> None:
 def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
     import json
 
-    from ..auth import AuthDiagnosticPayloadError
-    from ..auth._diagnostics import _payload
+    from ..auth.diagnostics import _payload
+    from ..auth.errors import AuthDiagnosticPayloadError
 
     raw = json.dumps([1, 2, 3]).encode()
     with pytest.raises(AuthDiagnosticPayloadError):
@@ -246,7 +245,7 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
     """
     from ...core import AuthProviderKind
     from ...core.config import Settings
-    from ..auth import probe_provider_configuration
+    from ..auth.operator_probes import probe_provider_configuration
 
     settings = Settings(
         cadrumo_certificate_path=_build_valid_pkcs12_bundle(tmp_path),
@@ -262,6 +261,6 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
 
 def test_live_auth_identity_state_does_not_swallow_unrelated_exceptions() -> None:
     """The profile tax-id probe in _live_auth_identity_state is narrow: confirm function is importable."""
-    from ..auth import _operator as operator_mod
+    import cadrumo.application.auth.operator as operator_mod
 
     assert hasattr(operator_mod, "_live_auth_identity_state")

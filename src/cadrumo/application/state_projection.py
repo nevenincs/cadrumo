@@ -107,10 +107,7 @@ from ._state_projection_readiness import (
     one_line_error_message,
     readiness_binding_input_channel,
 )
-from .auth import (
-    ActiveAuthProjectionSnapshot,
-    active_auth_projection_span,
-)
+from .auth.credentials import ActiveAuthProjectionSnapshot, active_auth_projection_span
 from .auth_credentials import ActiveCertificateCredentials
 from .ledger import LedgerPreflightIssue, LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from .operator_actions import PreconditionVerdict

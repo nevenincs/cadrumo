@@ -22,13 +22,13 @@ from ...core import (
 from ...core.time import validate_utc_aware
 from ._model_contract import require_strict_frozen_operation_model_graph
 
-OperationId = Hex64Str
+type OperationId = Hex64Str
 """Opaque 256-bit identity of one operation invocation."""
 
-OperationRevision = Annotated[int, Field(ge=0)]
+type OperationRevision = Annotated[int, Field(ge=0)]
 """Optimistic, monotonically increasing snapshot revision."""
 
-OperationDefinitionId = Annotated[
+type OperationDefinitionId = Annotated[
     str,
     Field(
         min_length=3,
@@ -38,10 +38,10 @@ OperationDefinitionId = Annotated[
 ]
 """Stable registered operation-definition identity."""
 
-OperationReference = Annotated[str, Field(min_length=1, max_length=256)]
+type OperationReference = Annotated[str, Field(min_length=1, max_length=256)]
 """Opaque safe reference to an application-owned record or subject."""
 
-OperationDiagnosticReference = Annotated[
+type OperationDiagnosticReference = Annotated[
     str,
     Field(pattern=r"^sha256:(?:[0-9a-f]{12}|[0-9a-f]{64})$"),
 ]

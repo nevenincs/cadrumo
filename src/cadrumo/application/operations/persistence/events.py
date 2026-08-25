@@ -38,11 +38,15 @@ class _OperationEventBase(BaseModel):
 
 
 class OperationPhaseEvent(_OperationEventBase):
+    """Record an operation phase transition at one durable event sequence."""
+
     kind: Literal[OperationEventKind.PHASE] = OperationEventKind.PHASE
     phase_code: OperationEventCode
 
 
 class OperationProgressEvent(_OperationEventBase):
+    """Record bounded progress for one operation revision."""
+
     kind: Literal[OperationEventKind.PROGRESS] = OperationEventKind.PROGRESS
     completed: Annotated[int, Field(ge=0)]
     total: Annotated[int, Field(gt=0)]
@@ -64,6 +68,8 @@ class OperationLogRecord(_OperationEventBase):
 
 
 class OperationEffectEvent(_OperationEventBase):
+    """Record the externally visible effect reached by an operation."""
+
     kind: Literal[OperationEventKind.EFFECT] = OperationEventKind.EFFECT
     effect: OperationEffect
 
@@ -98,6 +104,8 @@ class OperationInteractionEvent(_OperationEventBase):
 
 
 class OperationTerminalEvent(_OperationEventBase):
+    """Record the terminal receipt that settles an operation."""
+
     kind: Literal[OperationEventKind.TERMINAL] = OperationEventKind.TERMINAL
     receipt: OperationTerminalReceipt
 
@@ -112,7 +120,7 @@ class OperationTerminalEvent(_OperationEventBase):
         return self
 
 
-OperationEvent = Annotated[
+type OperationEvent = Annotated[
     OperationPhaseEvent
     | OperationProgressEvent
     | OperationLogRecord
@@ -127,14 +135,10 @@ OperationEvent = Annotated[
 
 __all__ = [
     "OperationDiagnosticEvent",
-    "OperationDiagnosticReference",
     "OperationEffectEvent",
     "OperationEvent",
-    "OperationEventCode",
-    "OperationEventSequence",
     "OperationInteractionEvent",
     "OperationLogRecord",
-    "OperationLogSeverity",
     "OperationNoticeEvent",
     "OperationPhaseEvent",
     "OperationProgressEvent",

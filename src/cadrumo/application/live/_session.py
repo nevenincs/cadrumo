@@ -19,7 +19,7 @@ See Also:
 from __future__ import annotations
 
 from ...adapters.outbound.aeat.auth import AeatSession
-from ...application.auth import ensure_authenticated_aeat_session
+from ...application.auth.sessions import ensure_authenticated_aeat_session
 from ...core.access_gate import AeatAccessGate
 from ...core.config import Settings, load_settings
 

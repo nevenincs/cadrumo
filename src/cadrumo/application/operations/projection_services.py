@@ -92,14 +92,20 @@ class OperationControlSupervisor(Protocol):
         operation_id: OperationId,
         *,
         expected_revision: int,
-    ) -> OperationPersistedSnapshot: ...
+    ) -> OperationPersistedSnapshot:
+        """Request cooperative cancellation at one expected revision."""
+        ...
 
-    async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+    async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Detach the caller while retaining the durable operation state."""
+        ...
 
     async def respond(
         self,
         response: OperationApplyResponse | OperationRejectResponse,
-    ) -> OperationConsumedInteraction: ...
+    ) -> OperationConsumedInteraction:
+        """Consume one validated REVIEW response."""
+        ...
 
 
 @runtime_checkable
@@ -111,7 +117,9 @@ class OperationSecureResponseAuthority(Protocol):
         request: OperationResponseControlRequestV1,
         pending: OperationPendingInteraction,
         /,
-    ) -> frozenset[OperationResponseIntent]: ...
+    ) -> frozenset[OperationResponseIntent]:
+        """Return the response intents authorized for an exact pending review."""
+        ...
 
     async def response_token(
         self,
@@ -119,9 +127,13 @@ class OperationSecureResponseAuthority(Protocol):
         pending: OperationPendingInteraction,
         intent: OperationResponseIntent,
         /,
-    ) -> OperationResponseToken: ...
+    ) -> OperationResponseToken:
+        """Return the opaque token only for one authorized response intent."""
+        ...
 
-    def close(self) -> None: ...
+    def close(self) -> None:
+        """Irreversibly close and wipe this runtime-only authority."""
+        ...
 
 
 @runtime_checkable
@@ -160,6 +172,7 @@ class BoundOperationSecureResponseAuthority:
         response_token: OperationResponseToken,
         clock: Callable[[], datetime],
     ) -> BoundOperationSecureResponseAuthority:
+        """Bind one mutable bearer to an exact pending REVIEW decision."""
         if not intents or not intents <= frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}):
             raise ValueError("secure response authority requires supported REVIEW intents")
         return cls(
@@ -180,6 +193,7 @@ class BoundOperationSecureResponseAuthority:
         pending: OperationPendingInteraction,
         /,
     ) -> frozenset[OperationResponseIntent]:
+        """Validate the binding and return its still-permitted response intents."""
         if self._closed:
             raise ValueError("secure response authority is closed")
         if (
@@ -215,6 +229,7 @@ class BoundOperationSecureResponseAuthority:
         return self._token.decode("ascii")
 
     def close(self) -> None:
+        """Zeroize the in-memory response bearer and prevent reuse."""
         zeroize_secret_buffer(self._token)
         object.__setattr__(self, "_closed", True)
 
@@ -383,6 +398,8 @@ class OperationResponseAuthorityBroker:
 
 @dataclass(frozen=True, slots=True)
 class OperationReviewProjectionService:
+    """Resolve safe public REVIEW projections from durable operation state."""
+
     reader: OperationObservationReader
     registry: OperationRegistry
     operands: OperationSecureReferenceStore
@@ -392,6 +409,7 @@ class OperationReviewProjectionService:
         self,
         request: OperationReviewProjectionVersionHeader | OperationReviewProjectionRequestV1,
     ) -> OperationReviewProjectionResultV1[ReviewProjectionT]:
+        """Resolve the exact registered REVIEW projection or a typed refusal."""
         if request.review_projection_version != _SUPPORTED_VERSION:
             return _review_refusal(
                 OperationReviewProjectionRefusalCode.UNSUPPORTED_VERSION,
@@ -480,6 +498,8 @@ class OperationReviewProjectionService:
 
 @dataclass(frozen=True, slots=True)
 class OperationWorkspaceRefreshTargetService:
+    """Resolve safe typed workspace refresh targets after terminal success."""
+
     reader: OperationObservationReader
     registry: OperationRegistry
 
@@ -487,6 +507,7 @@ class OperationWorkspaceRefreshTargetService:
         self,
         request: OperationWorkspaceRefreshTargetVersionHeader | OperationWorkspaceRefreshTargetRequestV1,
     ) -> OperationWorkspaceRefreshTargetResultV1[RefreshTargetT]:
+        """Resolve the exact registered refresh target or a typed refusal."""
         if request.refresh_target_version != _SUPPORTED_VERSION:
             return _refresh_refusal(
                 OperationWorkspaceRefreshTargetRefusalCode.UNSUPPORTED_VERSION,
@@ -566,6 +587,8 @@ class OperationWorkspaceRefreshTargetService:
 
 @dataclass(frozen=True, slots=True)
 class OperationResponseControlService:
+    """Inspect and execute safe REVIEW response control at the public boundary."""
+
     reader: OperationObservationReader
     registry: OperationRegistry
     authority: OperationSecureResponseAuthority
@@ -575,6 +598,7 @@ class OperationResponseControlService:
         self,
         request: OperationResponseControlVersionHeader | OperationResponseControlRequestV1,
     ) -> OperationResponseControlResultV1:
+        """Return authorized response intents or a typed refusal."""
         if request.response_control_version != _SUPPORTED_VERSION:
             return _response_refusal(
                 OperationResponseControlRefusalCode.UNSUPPORTED_VERSION,
@@ -716,6 +740,8 @@ class OperationResponseControlService:
 
 @dataclass(frozen=True, slots=True)
 class OperationCancellationService:
+    """Request cooperative cancellation through one versioned public boundary."""
+
     reader: OperationObservationReader
     registry: OperationRegistry
     supervisor: OperationControlSupervisor
@@ -724,6 +750,7 @@ class OperationCancellationService:
         self,
         request: OperationCancellationVersionHeader | OperationCancellationRequestV1,
     ) -> OperationCancellationResultV1:
+        """Request cancellation or return a stable typed refusal."""
         if request.cancellation_version != _SUPPORTED_VERSION:
             return _cancellation_refusal(
                 OperationCancellationRefusalCode.UNSUPPORTED_VERSION,
@@ -804,6 +831,8 @@ class OperationCancellationService:
 
 @dataclass(frozen=True, slots=True)
 class OperationDetachService:
+    """Detach a frontend from an operation through one public boundary."""
+
     reader: OperationObservationReader
     registry: OperationRegistry
     supervisor: OperationControlSupervisor
@@ -812,6 +841,7 @@ class OperationDetachService:
         self,
         request: OperationDetachVersionHeader | OperationDetachRequestV1,
     ) -> OperationDetachResultV1:
+        """Detach the requested operation or return a stable typed refusal."""
         if request.detach_version != _SUPPORTED_VERSION:
             return _detach_refusal(
                 OperationDetachRefusalCode.UNSUPPORTED_VERSION,

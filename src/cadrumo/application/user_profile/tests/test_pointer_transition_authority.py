@@ -11,7 +11,7 @@ import pytest
 from ....core import BucketPointer, pointer_path, read_pointer
 from .. import (
     ActiveProfilePointerTransactionError,
-    active_profile_pointer_transaction,
+    activeprofile_pointer,
     observe_active_profile_pointer,
 )
 
@@ -24,7 +24,7 @@ _B = "22222222-2222-4222-8222-222222222222"
 def _select_b_then_a_in_child(root_text: str, result_queue: Any) -> None:
     """Publish two real transitions from one fresh interpreter."""
     from ....tests.profile_persistence import composed_profile_persistence_ports
-    from .. import active_profile_pointer_transaction as transaction_context
+    from .. import activeprofile_pointer as transaction_context
 
     with composed_profile_persistence_ports(), transaction_context(Path(root_text)) as transaction:
         selected_b = transaction.select(_B)
@@ -36,7 +36,7 @@ def test_absence_idempotence_and_restore_keep_one_durable_lineage(tmp_path: Path
     """A clear tombstone and restore never erase or reuse a coordinate."""
     assert observe_active_profile_pointer(tmp_path) == BucketPointer.absent(transition_revision=0)
 
-    with active_profile_pointer_transaction(tmp_path) as transaction:
+    with activeprofile_pointer(tmp_path) as transaction:
         assert transaction.clear() == BucketPointer.absent(transition_revision=0)
         selected_a = transaction.select(_A)
         assert transaction.select(_A) == selected_a
@@ -56,7 +56,7 @@ def test_absence_idempotence_and_restore_keep_one_durable_lineage(tmp_path: Path
 
 def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(tmp_path: Path) -> None:
     """A real spawned process cannot turn A→B→A into the original A witness."""
-    with active_profile_pointer_transaction(tmp_path) as transaction:
+    with activeprofile_pointer(tmp_path) as transaction:
         initial_a = transaction.select(_A)
 
     context = get_context("spawn")
@@ -75,7 +75,7 @@ def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(
     assert observe_active_profile_pointer(tmp_path) == selected_a_again
 
     with (
-        active_profile_pointer_transaction(tmp_path) as transaction,
+        activeprofile_pointer(tmp_path) as transaction,
         pytest.raises(ActiveProfilePointerTransactionError),
     ):
         transaction.compare_and_select(expected=initial_a, bucket_id=_B)
@@ -86,9 +86,9 @@ def test_facades_are_the_only_public_pointer_transition_surface() -> None:
     import cadrumo.application.user_profile as user_profile
     import cadrumo.core as core
 
-    assert user_profile.active_profile_pointer_transaction.__module__.endswith("_profile_pointer_transaction")
-    assert user_profile.observe_active_profile_pointer.__module__.endswith("_profile_pointer_transaction")
-    assert user_profile.ActiveProfilePointerTransaction.__module__.endswith("_profile_pointer_transaction")
+    assert user_profile.activeprofile_pointer.__module__.endswith("profile_pointer")
+    assert user_profile.observe_active_profile_pointer.__module__.endswith("profile_pointer")
+    assert user_profile.ActiveProfilePointerTransaction.__module__.endswith("profile_pointer")
     for retired_name in (
         "ProfileCustodyPointerSnapshot",
         "compare_and_swap_profile_pointer",
@@ -106,7 +106,7 @@ def test_facades_are_the_only_public_pointer_transition_surface() -> None:
 def test_only_the_transaction_owner_calls_the_low_level_pointer_writer() -> None:
     """Production source has one anchored writer owner, not an empty scan."""
     source_root = Path(__file__).parents[3]
-    transaction_source = source_root / "application" / "user_profile" / "_profile_pointer_transaction.py"
+    transaction_source = source_root / "application" / "user_profile" / "profile_pointer.py"
     writer_callers = {
         source
         for source in source_root.rglob("*.py")

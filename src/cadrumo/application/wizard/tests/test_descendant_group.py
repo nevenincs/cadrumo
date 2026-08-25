@@ -26,18 +26,9 @@ from ....core.flows import (
     FlowWidgetKind,
 )
 from ....domain.deadlines import EntityType
-from ...flows import (
-    CopyRef,
-    FlowChoice,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-    FlowState,
-    answer,
-    resolve_cross_field_validator,
-    start_flow,
-    visible_sequence,
-)
+from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
+from ...flows.engine import FlowState, answer, start_flow, visible_sequence
+from ...flows.validators import resolve_cross_field_validator
 from .. import attach_descendant_group, descendant_facts_from_answers
 from .._descendant_group import (
     _ALTA_POSTERIOR_INVALID_RANGE_LOCALE_KEY,

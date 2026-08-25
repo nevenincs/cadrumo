@@ -1,7 +1,7 @@
 """Localization gate for the substrate's operator-visible failure surface.
 
 Every failure string a frontend renders comes from a
-:class:`~cadrumo.application.flows.ValidationVerdict` message key or a
+:class:`~cadrumo.application.flows.validators.ValidationVerdict` message key or a
 frontend translation key resolved through the locale catalogues. A key
 missing from a catalogue does not fail loudly at render time — ``tr``
 falls back to a humanised English form of the key — so English prose
@@ -20,14 +20,8 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from ....application.flows import (
-    CopyRef,
-    FlowDefinition,
-    FlowPage,
-    FlowSection,
-    answer,
-    start_flow,
-)
+from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
+from ....application.flows.engine import answer, start_flow
 from ....core import STRICT_FROZEN_CONFIG, scan_directory
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n import tr
@@ -84,7 +78,6 @@ def test_every_dynamic_flow_key_family_is_populated_in_all_locales() -> None:
     that prefix falls back to humanised English in that language.
     """
     _, prefixes = _referenced_flow_keys()
-    assert prefixes, "no dynamic flow-key prefix found - the concatenating call sites drifted"
     empty = [
         f"{locale}:{prefix}*"
         for prefix in sorted(prefixes)

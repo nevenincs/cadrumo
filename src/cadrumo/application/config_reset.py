@@ -31,11 +31,9 @@ from ._config_reset_repository import (
     ConfigResetJournalNotFoundError,
     ConfigResetJournalRepository,
 )
-from .auth import (
-    clear_operator_auth_acquisition_locks,
-    operator_auth_revocation_is_reachable,
-    reset_operator_auth,
-)
+from .auth.operator import reset_operator_auth
+from .auth.operator_cleanup import clear_operator_auth_acquisition_locks
+from .auth.operator_scope import operator_auth_revocation_is_reachable
 from .bucket_maintenance import (
     AssessBucketDeletionCommand,
     BucketDeletionAssessment,
@@ -44,7 +42,7 @@ from .bucket_maintenance import (
 from .user_profile import (
     ProfileCapsuleLifecycle,
     ProfileCustodyRetentionOverride,
-    active_profile_pointer_transaction,
+    activeprofile_pointer,
 )
 from .workflow import list_profile_buckets
 
@@ -97,7 +95,7 @@ def start_config_reset(
     operation_id = new_config_reset_operation_id()
     with (
         repository.operation_lock(operation_id),
-        active_profile_pointer_transaction(settings.cadrumo_local_storage_root) as pointer_transaction,
+        activeprofile_pointer(settings.cadrumo_local_storage_root) as pointer_transaction,
     ):
         pointer_snapshot = _capture_pointer_snapshot(pointer_transaction.read())
         target_ids = set(
@@ -185,7 +183,7 @@ def resume_config_reset(
             ) from exc
         if operation.status is ConfigResetOperationStatus.COMPLETE:
             return operation
-        with active_profile_pointer_transaction(
+        with activeprofile_pointer(
             settings.cadrumo_local_storage_root,
         ) as pointer_transaction:
             current_pointer = _capture_pointer_snapshot(pointer_transaction.read())
@@ -729,7 +727,7 @@ def _reconcile_pointer(
         repository.save(operation)
     active_bucket_id = operation.pointer_snapshot.record.bucket_id
     if active_bucket_id is not None and any(target.bucket_id == active_bucket_id for target in operation.targets):
-        with active_profile_pointer_transaction(load_settings().cadrumo_local_storage_root) as pointer_transaction:
+        with activeprofile_pointer(load_settings().cadrumo_local_storage_root) as pointer_transaction:
             pointer_transaction.clear()
     for index in indexes:
         target = operation.targets[index]

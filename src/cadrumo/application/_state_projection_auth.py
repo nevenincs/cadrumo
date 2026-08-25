@@ -17,13 +17,10 @@ from ..core import AuthProviderKind
 from ..core.config import Settings, load_settings
 from ..core.errors import CadrumoError
 from ..core.logging import get_logger
-from .auth import (
-    ProviderProbeResult,
-    bind_profile_auth_settings,
-    probe_provider_credentials,
-    project_active_certificate_credentials,
-    select_provider,
-)
+from .auth.credentials import project_active_certificate_credentials
+from .auth.operator_probes import bind_profile_auth_settings, probe_provider_credentials
+from .auth.probes import ProviderProbeResult
+from .auth.providers import select_provider
 from .auth_credentials import ActiveCertificateCredentials
 from .workflow import WorkflowState
 

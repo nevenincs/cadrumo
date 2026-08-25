@@ -127,7 +127,7 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
     #   moved when the custody capsule became the sole profile authority.
     effect_return_by_boundary = {
         "auth_clearing_after_effect": ("_operator_cleanup.py", "clear_operator_auth_acquisition_locks"),
-        "pointer_reconciling_after_effect": ("_profile_pointer_transaction.py", "clear"),
+        "pointer_reconciling_after_effect": ("profile_pointer.py", "clear"),
         "deleting_after_effect": ("_lifecycle.py", "delete"),
     }
 
@@ -326,7 +326,7 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
         ConfigResetTargetPhase,
     )
     from .._config_reset_repository import ConfigResetJournalRepository
-    from ..auth import configure_operator_auth
+    from ..auth.operator import configure_operator_auth
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")

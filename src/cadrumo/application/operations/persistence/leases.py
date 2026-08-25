@@ -13,7 +13,7 @@ from ....core.identity import ContentDigest
 from ....core.time import validate_utc_aware
 from ..models import OperationId
 
-OperationConflictScopeReference = Hex64Str
+type OperationConflictScopeReference = Hex64Str
 
 
 def operation_conflict_scope_reference(*, definition_id: str, subject_ref: str) -> OperationConflictScopeReference:
@@ -28,7 +28,7 @@ def operation_conflict_scope_reference(*, definition_id: str, subject_ref: str) 
     )
 
 
-OperationLeaseToken = Hex64Str
+type OperationLeaseToken = Hex64Str
 
 _EVIDENCE_REF_PENDING = "0" * 64
 

@@ -35,7 +35,7 @@ from ...core.flows import (
     FlowMode,
     PageStatus,
 )
-from ._definition import (
+from .definition import (
     FlowCondition,
     FlowDefinition,
     FlowPage,
@@ -44,7 +44,7 @@ from ._definition import (
     iter_flow_conditions,
 )
 from .errors import FlowAnswerError, FlowNavigationError
-from ._validators import ValidationVerdict, resolve_cross_field_validator, run_answer_validation
+from .validators import ValidationVerdict, resolve_cross_field_validator, run_answer_validation
 
 SECTION_VERDICT_PREFIX = "section:"
 """Key prefix under which section-exit verdicts land in ``FlowState.verdicts``."""

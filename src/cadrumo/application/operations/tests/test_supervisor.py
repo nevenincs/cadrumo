@@ -83,7 +83,7 @@ from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.errors import CoreError, get_registered_error_code
 from ....tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
 from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
-from .._execution_context import OperationDeclarationError
+from ..errors import OperationDeclarationError
 from ..interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,

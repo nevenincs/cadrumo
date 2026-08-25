@@ -23,7 +23,7 @@ from pydantic import BaseModel
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.flows import CopyRefKind
 from ...core.i18n import tr
-from ._definition import CopyRef, FlowDefinition, FlowPage
+from .definition import CopyRef, FlowDefinition, FlowPage
 from .errors import FlowCopyResolutionError
 
 CopySourceResolver = Callable[[str], "str | None"]

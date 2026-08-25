@@ -14,11 +14,7 @@ from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from ...core import (
-    BucketPointer,
-    read_pointer,
-    write_pointer,
-)
+from ...core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ...core.config import load_settings
 from ...core.errors import CadrumoError
 from ...core.locks_errors import LockAcquisitionError
@@ -101,7 +97,7 @@ class ActiveProfilePointerTransaction:
             or ownership.depth < 1
         ):
             raise ActiveProfilePointerTransactionError(
-                translated_message="errors.internal.internal_active_profile_pointer_transaction",
+                translated_message="errors.internal.internal_activeprofile_pointer",
                 context={"live_ownership": False},
             )
 
@@ -144,7 +140,7 @@ def _acquire_root_lock(
 
 
 @contextmanager
-def active_profile_pointer_transaction(
+def activeprofile_pointer(
     root: Path | None = None,
     *,
     root_lock: ProfileCustodyRootLockPort | None = None,
@@ -179,17 +175,17 @@ def active_profile_pointer_transaction(
     if isinstance(ownership, _Ownership):
         if ownership.pid != current_pid:
             raise ActiveProfilePointerTransactionError(
-                translated_message="errors.internal.internal_active_profile_pointer_transaction",
+                translated_message="errors.internal.internal_activeprofile_pointer",
                 context={"owning_process_is_current": False},
             )
         if ownership.thread_id != current_thread_id:
             raise ActiveProfilePointerTransactionError(
-                translated_message="errors.internal.internal_active_profile_pointer_transaction",
+                translated_message="errors.internal.internal_activeprofile_pointer",
                 context={"owning_thread_is_current": False},
             )
         if ownership.root != canonical_root:
             raise ActiveProfilePointerTransactionError(
-                translated_message="errors.internal.internal_active_profile_pointer_transaction",
+                translated_message="errors.internal.internal_activeprofile_pointer",
                 context={"nested_root_matches": False},
             )
         ownership.depth += 1
@@ -235,13 +231,13 @@ def observe_active_profile_pointer(root: Path | None = None) -> BucketPointer:
     parallel core read path; core bootstrap remains the sole inner-layer
     exception because it cannot depend outward on this application owner.
     """
-    with active_profile_pointer_transaction(root) as transaction:
+    with activeprofile_pointer(root) as transaction:
         return transaction.read()
 
 
 __all__ = [
     "ActiveProfilePointerTransaction",
     "ActiveProfilePointerTransactionError",
-    "active_profile_pointer_transaction",
+    "activeprofile_pointer",
     "observe_active_profile_pointer",
 ]
