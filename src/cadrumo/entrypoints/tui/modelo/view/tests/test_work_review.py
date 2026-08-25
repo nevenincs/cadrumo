@@ -177,9 +177,7 @@ async def test_facet_option_sets_render_every_canonical_closed_axis(tmp_path: Pa
                 *(tr(f"flows.modelo_review.filter.option.{axis}.{member.value}") for member in enum_type),
             )
 
-        relation_chooser = cast(
-            "Select[object]", screen.query_one("#modelo-review-filter-relation-channel", Select)
-        )
+        relation_chooser = cast("Select[object]", screen.query_one("#modelo-review-filter-relation-channel", Select))
         assert _option_prompts(relation_chooser) == (
             tr("flows.modelo_review.filter.all"),
             *(
@@ -465,9 +463,7 @@ async def test_m130_realised_anomaly_finding_and_blocker_facets_bite_and_empty_t
         assert review.findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
         finding_kind.clear()
 
-        finding_severity = cast(
-            "Select[object]", screen.query_one("#modelo-review-filter-finding-severity", Select)
-        )
+        finding_severity = cast("Select[object]", screen.query_one("#modelo-review-filter-finding-severity", Select))
         await _choose_option(
             pilot,
             finding_severity,

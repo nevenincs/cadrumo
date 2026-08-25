@@ -34,7 +34,6 @@ See Also:
 
 from __future__ import annotations
 
-from contextlib import ExitStack
 from contextvars import copy_context
 from dataclasses import dataclass
 from threading import Event
@@ -53,7 +52,6 @@ from ....core import (
     PassphraseStrength,
     ProfilePasswordAssessment,
 )
-from ....core.config import override_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
@@ -152,22 +150,29 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
             return
         if attempt.outcome is None:
             self.set_busy(busy=False)
-            self.refuse(attempt.refusal or self.default_refusal())
+            self.refuse(self.resolve_attempt_refusal(attempt) or self.default_refusal())
             return
         self.outcome = attempt.outcome
         self.leave(attempt.outcome)
 
-    @staticmethod
-    def _resolved_worker_failure(error: BaseException) -> str:
+    def _resolved_worker_failure(self, error: BaseException) -> str:
         """Render an unexpected failure without leaking diagnostic prose."""
         try:
             from ....core.errors import resolve_error_message
 
-            detail = resolve_error_message(error).strip()
+            detail = resolve_error_message(error, locale=self.output_locale()).strip()
         except (LookupError, TypeError, ValueError):
             detail = ""
-        guidance = tr("errors.internal.internal_cli_unexpected_boundary")
+        guidance = tr("errors.internal.internal_cli_unexpected_boundary", locale=self.output_locale())
         return f"{detail} {guidance}".strip()
+
+    def output_locale(self) -> str | None:
+        """Return this app's explicit presentation locale, if it owns one."""
+        return None
+
+    def resolve_attempt_refusal(self, attempt: CredentialAttempt[OutcomeT]) -> str | None:
+        """Render one door refusal at this app's presentation boundary."""
+        return attempt.refusal
 
     def default_refusal(self) -> str:
         """Text shown when a refusal carries no message."""
@@ -227,18 +232,18 @@ def assessment_refusal(
     return prospective_profile_password_refusal(assessment)
 
 
-def assessment_copy(assessment: ProfilePasswordAssessment) -> str:
+def assessment_copy(assessment: ProfilePasswordAssessment, *, locale: str | None = None) -> str:
     """Resolve localized validation or advisory copy for one assessment."""
     refusal = assessment_refusal(assessment)
     if refusal is not None:
-        return tr(refusal.translated_message, **dict(refusal.context))
+        return tr(refusal.translated_message, locale=locale, **dict(refusal.context))
     match assessment.strength:
         case PassphraseStrength.WEAK:
-            return tr("flows.registration.strength.weak")
+            return tr("flows.registration.strength.weak", locale=locale)
         case PassphraseStrength.FAIR:
-            return tr("flows.registration.strength.fair")
+            return tr("flows.registration.strength.fair", locale=locale)
         case PassphraseStrength.STRONG:
-            return tr("flows.registration.strength.strong")
+            return tr("flows.registration.strength.strong", locale=locale)
 
 
 def assessment_css_class(assessment: ProfilePasswordAssessment) -> str:
@@ -415,9 +420,9 @@ class RegistrationRefusal:
     message_key: str
     context: tuple[tuple[str, object], ...] = ()
 
-    def render(self) -> str:
+    def render(self, *, locale: str | None = None) -> str:
         """Resolve the refusal under the screen's active language."""
-        return tr(self.message_key, **dict(self.context))
+        return tr(self.message_key, locale=locale, **dict(self.context))
 
 
 class RecoveryHandoverCancelledError(Exception):
@@ -452,14 +457,14 @@ class RegistrationAttempt:
         return self.expected_refusal.render() if self.expected_refusal is not None else None
 
 
-def _language_options() -> list[tuple[str, str]]:
+def _language_options(*, locale: str | None = None) -> list[tuple[str, str]]:
     """The chooser's rows, named under whichever language is on screen.
 
     Resolved on each call rather than once at import, because this is the
     one widget whose own rows have to follow the choice made in it.
     """
     return [
-        (tr(f"wizard.setup.profile.output-language.choices.{language}.label"), language)
+        (tr(f"wizard.setup.profile.output-language.choices.{language}.label", locale=locale), language)
         for language in SUPPORTED_OUTPUT_LANGUAGES
     ]
 
@@ -523,12 +528,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         recognise its own writes: rewriting its rows re-seeds its value
         and reports that back as a selection, and this is what tells the
         two apart."""
-        self._language_overrides = ExitStack()
         self._pending_recovery_handoffs: set[Event] = set()
-        """Holds the settings override the screen is rendering under.
-
-        A stack rather than a bare handle so each choice closes the one
-        before it instead of nesting another block for every selection."""
 
     @override
     def compose(self) -> ComposeResult:
@@ -566,14 +566,18 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
             # The one widget that cannot be composed empty: a chooser that
             # refuses a blank selection also refuses an empty option set.
             yield Select[str](
-                _language_options(),
+                _language_options(locale=self._active_language),
                 value=self._active_language,
                 allow_blank=False,
                 id="field-output-language",
             )
 
             with Vertical(id="registration-actions", classes="credential-actions"):
-                yield Button(tr("flows.registration.create_button"), id="btn-create", classes="-primary")
+                yield Button(
+                    tr("flows.registration.create_button", locale=self._active_language),
+                    id="btn-create",
+                    classes="-primary",
+                )
         yield Footer()
 
     def on_mount(self) -> None:
@@ -610,22 +614,13 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         self._render_localised_copy()
 
     def _activate_output_language(self, language: str) -> None:
-        """Make ``tr()`` resolve in the chosen language for this screen.
+        """Select the explicit locale used by this registration surface.
 
-        Registration is the one surface with no profile behind it, so the
-        profile-owned language preference the rest of the application
-        reads does not exist yet. The settings-level override is the
-        remaining door — the same one a ``--output-language`` flag opens
-        for a single invocation — and it drops the resolver's language
-        cache at both of its own boundaries, so nothing further is
-        needed to make the next ``tr()`` see the change.
-
-        The override lives in the message pump's context, which is why it
-        is opened and closed from handlers running there and never from a
-        caller outside them.
+        Textual dispatches lifecycle hooks through distinct asyncio contexts,
+        so a context-local settings token cannot be owned by the app lifecycle.
+        Registration passes its selected locale at every translation boundary;
+        the choice is app-local and leaves no ambient setting to restore.
         """
-        self._language_overrides.close()
-        self._language_overrides.enter_context(override_settings(cadrumo_output_language=language))
         self._active_language = language
 
     def _render_localised_copy(self) -> None:
@@ -635,22 +630,25 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         the chrome and the labels in place while the fields keep what the
         operator has already typed into them.
         """
-        title = tr("flows.registration.title")
+        locale = self._active_language
+        title = tr("flows.registration.title", locale=locale)
         self.title = title
-        self.sub_title = tr("flows.registration.section")
+        self.sub_title = tr("flows.registration.section", locale=locale)
         self.query_one("#registration-banner", Static).update(title)
-        self.query_one("#registration-intro", Static).update(tr("flows.registration.intro"))
-        self.query_one("#registration-why", Static).update(tr("flows.registration.why_password"))
-        self.query_one("#registration-body", Vertical).border_title = tr("flows.registration.section")
-        self.query_one("#label-username", Label).update(tr("flows.registration.username_label"))
-        self.query_one("#hint-username", Static).update(tr("flows.registration.username_hint"))
-        self.query_one("#label-password", Label).update(tr("flows.registration.password_label"))
+        self.query_one("#registration-intro", Static).update(tr("flows.registration.intro", locale=locale))
+        self.query_one("#registration-why", Static).update(tr("flows.registration.why_password", locale=locale))
+        self.query_one("#registration-body", Vertical).border_title = tr("flows.registration.section", locale=locale)
+        self.query_one("#label-username", Label).update(tr("flows.registration.username_label", locale=locale))
+        self.query_one("#hint-username", Static).update(tr("flows.registration.username_hint", locale=locale))
+        self.query_one("#label-password", Label).update(tr("flows.registration.password_label", locale=locale))
         self.query_one("#hint-password", Static).update(
-            tr("flows.registration.password_hint", minimum_length=PROFILE_PASSWORD_MIN_SCALARS)
+            tr("flows.registration.password_hint", locale=locale, minimum_length=PROFILE_PASSWORD_MIN_SCALARS)
         )
-        self.query_one("#label-confirm", Label).update(tr("flows.registration.confirm_label"))
-        self.query_one("#label-output-language", Label).update(tr("wizard.setup.profile.output-language.prompt"))
-        self.query_one("#btn-create", Button).label = tr("flows.registration.create_button")
+        self.query_one("#label-confirm", Label).update(tr("flows.registration.confirm_label", locale=locale))
+        self.query_one("#label-output-language", Label).update(
+            tr("wizard.setup.profile.output-language.prompt", locale=locale)
+        )
+        self.query_one("#btn-create", Button).label = tr("flows.registration.create_button", locale=locale)
         self._render_language_choices()
         self._render_strength(self.query_one("#field-password", Input).value)
 
@@ -663,7 +661,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         :meth:`on_select_changed` guards against.
         """
         chooser = cast("Select[str]", self.query_one("#field-output-language", Select))
-        chooser.set_options(_language_options())
+        chooser.set_options(_language_options(locale=self._active_language))
         chooser.value = self._active_language
 
     # ── live feedback ───────────────────────────────────────────────────
@@ -682,12 +680,24 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
             return
         assessment = self._assess_profile_password(candidate)
         line.add_class(assessment_css_class(assessment))
-        line.update(assessment_copy(assessment))
+        line.update(assessment_copy(assessment, locale=self._active_language))
 
     def selected_output_language(self) -> str:
         """Return the closed language selection for the profile being created."""
         selected = cast("Select[str]", self.query_one("#field-output-language", Select)).value
-        return selected if isinstance(selected, str) else output_language()
+        return selected if isinstance(selected, str) else self._active_language
+
+    @override
+    def output_locale(self) -> str:
+        """Return the registration surface's task-independent locale."""
+        return self._active_language
+
+    @override
+    def resolve_attempt_refusal(self, attempt: CredentialAttempt[ProfileRegistrationOutcome]) -> str | None:
+        """Render structured registration refusals under this screen's locale."""
+        if isinstance(attempt, RegistrationAttempt) and attempt.expected_refusal is not None:
+            return attempt.expected_refusal.render(locale=self._active_language)
+        return attempt.refusal
 
     # ── intents ─────────────────────────────────────────────────────────
 
@@ -724,16 +734,16 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         confirm = self.query_one("#field-confirm", Input).value
 
         if not username:
-            self.refuse(tr("flows.registration.refusal.username_required"))
+            self.refuse(tr("flows.registration.refusal.username_required", locale=self._active_language))
             self.query_one("#field-username", Input).focus()
             return
         assessment = self._assess_profile_password(password)
         if not assessment.accepted:
-            self.refuse(assessment_copy(assessment))
+            self.refuse(assessment_copy(assessment, locale=self._active_language))
             self.query_one("#field-password", Input).focus()
             return
         if password != confirm:
-            self.refuse(tr("flows.registration.refusal.confirmation_mismatch"))
+            self.refuse(tr("flows.registration.refusal.confirmation_mismatch", locale=self._active_language))
             self.query_one("#field-confirm", Input).focus()
             return
 
@@ -758,11 +768,11 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
 
     @override
     def default_refusal(self) -> str:
-        return tr("flows.registration.refusal.username_required")
+        return tr("flows.registration.refusal.username_required", locale=self._active_language)
 
     @override
     def progress_message(self) -> str:
-        return tr("flows.registration.create_button")
+        return tr("flows.registration.create_button", locale=self._active_language)
 
     def _confirm_recovery_possession(self, enrollment: ProfileRecoveryEnrollment) -> str:
         """Show words, block for confirmation, and return exact proof."""
@@ -782,6 +792,7 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
             self.push_screen(
                 RecoveryWordsScreen(
                     enrollment=enrollment,
+                    locale=self._active_language,
                     on_confirm=_accept,
                     on_cancel=_refuse,
                 )
@@ -801,20 +812,6 @@ class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
         """Release every pre-publication handoff when the application stops."""
         for pending in tuple(self._pending_recovery_handoffs):
             pending.set()
-        self._language_overrides.close()
-
-    @override
-    def leave(self, outcome: ProfileRegistrationOutcome | None) -> None:
-        """Close the screen, releasing the language it was rendering under.
-
-        Released here rather than at teardown because the override is
-        bound to the message pump's context, and every caller of this is
-        a handler running there. The created profile carries the chosen
-        language of its own, so nothing downstream needs the override to
-        survive the screen.
-        """
-        self._language_overrides.close()
-        super().leave(outcome)
 
     @override
     def set_busy(self, *, busy: bool) -> None:
@@ -849,12 +846,14 @@ class RecoveryWordsScreen(Screen[None]):
         self,
         *,
         enrollment: ProfileRecoveryEnrollment,
+        locale: str,
         on_confirm: Callable[[str], None],
         on_cancel: Callable[[], None],
     ) -> None:
         """Bind one ephemeral recovery enrollment and its terminal callbacks."""
         super().__init__()
         self._enrollment = enrollment
+        self._locale = locale
         self._on_confirm = on_confirm
         self._on_cancel = on_cancel
         self._resolved = False
@@ -862,17 +861,19 @@ class RecoveryWordsScreen(Screen[None]):
     @override
     def compose(self) -> ComposeResult:
         with Container(id="words-panel"):
-            yield Static(tr("cli.config.custody.recovery_words_heading"), id="words-heading")
+            yield Static(tr("cli.config.custody.recovery_words_heading", locale=self._locale), id="words-heading")
             yield Static(self._enrollment.recovery_key.mnemonic, id="words-value")
-            yield Static(tr("cli.config.custody.recovery_words_warning"), id="words-warning")
+            yield Static(tr("cli.config.custody.recovery_words_warning", locale=self._locale), id="words-warning")
             yield Input(
                 password=True,
-                placeholder=tr("cli.config.profile.create_recovery_verification_prompt"),
+                placeholder=tr("cli.config.profile.create_recovery_verification_prompt", locale=self._locale),
                 id="field-recovery-verification",
             )
             with Container(id="words-actions"):
-                yield Button(tr("cli.config.custody.recovery_words_cancel"), id="btn-cancel-words")
-                yield Button(tr("cli.config.custody.recovery_words_confirm"), id="btn-confirm-words")
+                yield Button(tr("cli.config.custody.recovery_words_cancel", locale=self._locale), id="btn-cancel-words")
+                yield Button(
+                    tr("cli.config.custody.recovery_words_confirm", locale=self._locale), id="btn-confirm-words"
+                )
 
     @on(Button.Pressed, "#btn-confirm-words")
     def _confirm(self) -> None:

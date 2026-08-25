@@ -149,18 +149,11 @@ def test_relocated_symbols_have_single_canonical_defining_modules_and_inert_faca
 
 def test_manager_pilot_has_one_canonical_home_and_exactly_seven_direct_consumers() -> None:
     """The settling barrier lives in the TUI test package, not the old root."""
+    repo_root = Path(__file__).parents[5]
     old_home = _TUI_ROOT.parents[1] / "tests" / "manager_pilot.py"
     canonical_home = _TUI_ROOT / "tests" / "manager_pilot.py"
     assert not old_home.exists()
     assert canonical_home.is_file()
-
-    canonical_tree = ast.parse(canonical_home.read_text(encoding="utf-8"), filename=str(canonical_home))
-    definitions = [
-        node
-        for node in ast.walk(canonical_tree)
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "wait_until_settled"
-    ]
-    assert len(definitions) == 1
 
     expected_consumers = {
         "test_manager_field_editors.py",
@@ -171,18 +164,58 @@ def test_manager_pilot_has_one_canonical_home_and_exactly_seven_direct_consumers
         "test_manager_screen.py",
         "test_visual_verification.py",
     }
-    consumers: set[str] = set()
-    for path in (_TUI_ROOT / "tests").glob("*.py"):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        if any(
-            isinstance(node, ast.ImportFrom)
-            and node.level == 1
-            and node.module == "manager_pilot"
-            and any(alias.name == "wait_until_settled" for alias in node.names)
-            for node in ast.walk(tree)
-        ):
-            consumers.add(path.name)
-    assert consumers == expected_consumers
+    consumers: set[Path] = set()
+    manager_edges: list[tuple[Path, str]] = []
+    definition_sites: list[Path] = []
+    for root in (repo_root / "src" / "cadrumo", repo_root / "dev"):
+        for path in root.rglob("*.py"):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            definition_sites.extend(
+                path
+                for node in ast.walk(tree)
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "wait_until_settled"
+            )
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        if "manager_pilot" in alias.name or "wait_until_settled" in alias.name:
+                            manager_edges.append((path, f"import {alias.name}"))
+                elif isinstance(node, ast.ImportFrom):
+                    target = node.module or ""
+                    if "manager_pilot" in target or any(alias.name == "wait_until_settled" for alias in node.names):
+                        manager_edges.append((path, f"from {'.' * node.level}{target} import ..."))
+                elif isinstance(node, ast.Call):
+                    function = node.func
+                    is_dynamic_import = (isinstance(function, ast.Name) and function.id == "__import__") or (
+                        isinstance(function, ast.Attribute) and function.attr == "import_module"
+                    )
+                    if is_dynamic_import and node.args and isinstance(node.args[0], ast.Constant):
+                        target = node.args[0].value
+                        if isinstance(target, str) and (
+                            "manager_pilot" in target or "wait_until_settled" in target
+                        ):
+                            manager_edges.append((path, f"dynamic {target}"))
+            if path.parent == canonical_home.parent and path.name in expected_consumers:
+                consumers.update(
+                    path
+                    for node in ast.walk(tree)
+                    if isinstance(node, ast.ImportFrom)
+                    and node.level == 1
+                    and node.module == "manager_pilot"
+                    and any(alias.name == "wait_until_settled" for alias in node.names)
+                )
+
+    assert tuple(sorted(path.name for path in consumers)) == tuple(sorted(expected_consumers))
+    assert definition_sites == [canonical_home]
+    canonical_edges = {
+        (path.name, target)
+        for path, target in manager_edges
+        if path.parent == canonical_home.parent
+        and path.name in expected_consumers
+        and target == "from .manager_pilot import ..."
+    }
+    assert {name for name, _ in canonical_edges} == expected_consumers
+    assert len(manager_edges) == 7
 
     tests_init = _TUI_ROOT / "tests" / "__init__.py"
     tests_init_tree = ast.parse(tests_init.read_text(encoding="utf-8"), filename=str(tests_init))

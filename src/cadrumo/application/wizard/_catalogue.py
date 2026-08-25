@@ -392,7 +392,7 @@ _IDENTIDAD_SECTION = WizardSection(
     questions=(
         WizardQuestion(
             id="output-language",
-        profile_key=PROFILE_OUTPUT_LANGUAGE_PATH,
+            profile_key=PROFILE_OUTPUT_LANGUAGE_PATH,
             widget=WizardWidget.SELECT,
             prompt=tr("wizard.setup.profile.output-language.prompt"),
             choices=_OUTPUT_LANGUAGE_CHOICES,

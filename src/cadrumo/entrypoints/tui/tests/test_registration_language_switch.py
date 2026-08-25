@@ -41,6 +41,7 @@ _PASSWORD = "registration-language-operator-secret"  # noqa: S105 - synthetic te
 _STARTING_LANGUAGE = "en"
 _TARGET_LANGUAGE = "hu"
 
+
 def _screen() -> RegistrationApp:
     """The production composition, wired to the doors the CLI gives it."""
     return RegistrationApp(assess=assess_profile_password, register=attempt_registration)
@@ -204,6 +205,9 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
                 await pilot.pause(0.1)
             assert isinstance(pilot.app.screen, RecoveryWordsScreen)
             recovery = pilot.app.screen
+            assert str(recovery.query_one("#words-heading", Static).content) == tr(
+                "cli.config.custody.recovery_words_heading", locale=_TARGET_LANGUAGE
+            ), "the recovery handoff must retain the registration surface's explicit language"
             recovery.query_one("#field-recovery-verification", Input).value = str(
                 recovery.query_one("#words-value", Static).render()
             )
@@ -228,7 +232,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
 
 @pytest.mark.asyncio
 async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None:
-    """The override the screen renders under must not colour anything after it.
+    """The screen's explicit locale must not colour anything after it.
 
     This is the hazard the sanctioned-override inventory in
     ``locales/tests/test_dynamic_prefix_registry_coverage.py`` exists to
@@ -238,13 +242,10 @@ async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None
     registration screen is listed there as reviewed rather than
     ctx-scoped, because a Textual app has no command context to scope to.
 
-    What this pins is the outcome, not the means. The screen closes its
-    override on the way out, but removing that close does not fail this
-    test and is not what makes the screen safe: the override is entered
-    on the app's own message-pump task, whose context the caller does not
-    share. What does fail this test is moving the site to a mechanism
-    that reaches past the task — an environment variable and a
-    settings-cache reset — which is the substitution worth catching.
+    Registration passes the selected locale at each translation boundary.
+    It does not mutate settings, process environment, or shared caches, so
+    independently running and nested UI tasks cannot inherit one another's
+    screen-local choice.
 
     The mid-screen assertion is the control: without proof that the
     override was live inside the screen, an unchanged caller language
@@ -261,10 +262,8 @@ async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None
             await pilot.pause()
             await _choose(pilot, _TARGET_LANGUAGE)
             assert app.title == tr("flows.registration.title", locale=_TARGET_LANGUAGE), (
-                "the override must be live inside the screen, or the assertion below is vacuous"
+                "the explicit locale must be live inside the screen, or the assertion below is vacuous"
             )
             await pilot.press("escape")
 
-        assert output_language() == before, (
-            "the screen's language override must not survive it and reach the caller's rendering"
-        )
+        assert output_language() == before, "the screen's explicit language must not reach the caller's rendering"
