@@ -314,6 +314,32 @@ _CHECK_MODE_PENDING: dict[str, str] = {
     # above. The entry retires itself the day the split lands and check mode
     # passes.
     "m200-2024-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
+    # 185 and 222 are STALE grades, not wrong ones. Each revision carries a
+    # human applicability review stamped 2026-08-21 recording "no export layout
+    # of either kind is declared" and reaching "scheduling and applicability
+    # only". The generated export-tree installs (5bff9d5332e for 185,
+    # 8fdb80c99f6 for 222) then landed a fixed_width layout and the casillas
+    # WITHOUT touching revision.toml, so measured at HEAD both statements are
+    # false: 185 declares 21 casillas and one layout, 222 declares 76 and one.
+    #
+    # The enrolment is not the wrong half: all 21 enrolled rows declare exactly
+    # one export layout, and the grade enum itself states that "an informative
+    # modelo carrying export layouts and no formulas can legitimately reach
+    # FILING". Promotion is an attestation no program may make, so these stay
+    # red until a human tax reviewer raises them. The entries retire themselves
+    # on that attestation.
+    "m185-2025-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
+    "m222-2025-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
+    # 232 is not a grade or data defect -- it validates cleanly at BOTH
+    # calculation and filing grade through the full authority. It is the same
+    # isolation limitation already recorded for the 202 rows above: a continuity
+    # evolution is a CROSS-REVISION fact, declaring a transition from
+    # '2016-2017' to '2018-y-siguientes', and the candidate registry prunes
+    # every sibling so the evolution dangles. The asymmetry confirms it -- the
+    # m232-2016-2017 row PASSES, and only the LANDING revision fails, because
+    # evolutions are authored on their to_revision. Do not look for a defect in
+    # 232's evolutions; it is not there.
+    "m232-2018-y-siguientes": "evolution references a revision that the modelo does not declare",
     "m202-2019-2022": "appears on exactly one casilla",
     "m202-2023-2024": "appears on exactly one casilla",
     "m202-2025-y-siguientes": "lacks exact source revision coverage",
