@@ -21,7 +21,7 @@ into source-mesh output.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar, Literal, override
+from typing import TYPE_CHECKING, ClassVar, override
 
 from pydantic import BaseModel, Field
 
@@ -30,11 +30,7 @@ from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors import CoreValidationError
 
 if TYPE_CHECKING:
-    from datetime import datetime
     from pathlib import Path
-
-    from ...domain.calculations.registry import RegistryModeloObservation
-    from ._observations_repository import ObservationEnvelopePayload
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...domain.calculations.registry import BindingId, RegistrySnapshot
@@ -48,112 +44,6 @@ from ..aggregation import (
 from ._observations_repository import CalculationObservationRepository
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
-
-
-# ---------------------------------------------------------------------------
-# Shared two-ejercicio encrypted-SQL round-trip assertion
-#
-# The informativa / ad-hoc data-fidelity suites (M184, M232, M308, M347, M720,
-# M721, ...) each repeat three near-identical tests verbatim: year-N persists
-# and reloads strictly, year-N+1 persists and reloads strictly, and both
-# ejercicios are independently retrievable with no cross-year bleed. This
-# helper carries the shared persist/reload/provenance assertions; each test
-# file keeps its own per-modelo casilla layout and its own distinguishing-
-# casilla checks (which value must not bleed differs by modelo).
-# ---------------------------------------------------------------------------
-
-
-def _find_modelo_observation(
-    repo: CalculationObservationRepository,
-    *,
-    modelo: str,
-    filing_year: int,
-    period: str,
-) -> ObservationEnvelopePayload | None:
-    """Scan ``iter_modelo`` and return the envelope matching ``(filing_year, period)``.
-
-    Follows the production retrieval pattern: ``iter_modelo`` scans all rows in
-    the namespace, decrypts each, and filters in Python — the SQL
-    ``WHERE object_key = ?`` path cannot match the stored ciphertext since
-    ``EncryptedString`` uses AES-256-GCM with a random nonce.
-    """
-    for payload in repo.iter_modelo(modelo):
-        obs = payload.observation
-        if obs.filing_year == filing_year and obs.period == period:
-            return payload
-    return None
-
-
-def assert_two_ejercicio_round_trip(
-    *,
-    tmp_path: Path,
-    stage: Literal["year_n", "year_n_plus_1", "both"],
-    modelo: str,
-    period: str,
-    obs_n: RegistryModeloObservation,
-    obs_n_plus_1: RegistryModeloObservation,
-    year_n: int,
-    year_n_plus_1: int,
-    clock_n: datetime,
-    clock_n_plus_1: datetime,
-) -> tuple[ObservationEnvelopePayload | None, ObservationEnvelopePayload | None]:
-    """Persist one or both ejercicio observations and assert the round-trip.
-
-    ``stage`` selects which of the three original per-modelo test bodies to
-    reproduce exactly:
-
-    - ``"year_n"``: persists ONLY ``obs_n``, reloads it via ``iter_modelo``,
-      and asserts strict pydantic equality plus ``source_kind``/``captured_at``
-      provenance.
-    - ``"year_n_plus_1"``: the mirror of ``"year_n"`` for ``obs_n_plus_1``.
-    - ``"both"``: persists both observations and asserts strict equality and
-      provenance for both independently.
-
-    Returns ``(loaded_n, loaded_n_plus_1)`` — the envelope for a stage that
-    was not persisted is ``None``. The caller adds its own per-modelo
-    distinguishing-casilla assertions on top (the value that must not bleed
-    between ejercicios differs by modelo and is not generalised here).
-    """
-    from ...tests.secure_sql import isolated_runtime_profile
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        loaded_n: ObservationEnvelopePayload | None = None
-        loaded_n_plus_1: ObservationEnvelopePayload | None = None
-
-        if stage in ("year_n", "both"):
-            repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=clock_n))
-            loaded_n = _find_modelo_observation(repo, modelo=modelo, filing_year=year_n, period=period)
-            assert loaded_n is not None, (
-                f"year-N observation not found for ({modelo!r}, {year_n}, {period!r}) after save"
-            )
-            assert loaded_n.observation == obs_n, (
-                f"{modelo} year-N observation did not survive the encrypted-SQL roundtrip; "
-                "at least one casilla was silently dropped, coerced, or defaulted away"
-            )
-            assert loaded_n.source_kind == "app_filing"
-            assert loaded_n.captured_at == clock_n
-
-        if stage in ("year_n_plus_1", "both"):
-            repo.save(
-                repo.prepare_observation_envelope(
-                    obs_n_plus_1,
-                    source_kind="app_filing",
-                    captured_at=clock_n_plus_1,
-                ),
-            )
-            loaded_n_plus_1 = _find_modelo_observation(repo, modelo=modelo, filing_year=year_n_plus_1, period=period)
-            assert loaded_n_plus_1 is not None, (
-                f"year-N+1 observation not found for ({modelo!r}, {year_n_plus_1}, {period!r}) after save"
-            )
-            assert loaded_n_plus_1.observation == obs_n_plus_1, (
-                f"{modelo} year-N+1 observation did not survive the encrypted-SQL roundtrip; "
-                "at least one casilla was silently dropped, coerced, or defaulted away"
-            )
-            assert loaded_n_plus_1.source_kind == "app_filing"
-            assert loaded_n_plus_1.captured_at == clock_n_plus_1
-
-        return loaded_n, loaded_n_plus_1
 
 
 # ---------------------------------------------------------------------------
@@ -574,5 +464,4 @@ __all__ = [
     "EnrollmentYearObservation",
     "PreviousFilingSourceResolver",
     "assert_enrollment_matches_manifest",
-    "assert_two_ejercicio_round_trip",
 ]
