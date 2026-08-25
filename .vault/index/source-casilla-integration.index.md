@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:17cac830fbae194a36af3401b8fda5735b8da3c9ad7562d77943a67b6e6398a8'
+body_hash: 'sha256:614d816001c6613aeb79c2b534a6a5e275fdc41c2861cb1791a3554d14eb6ddb'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -173,6 +173,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-s94-m232-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s95-m232-terminal-closure-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s96-m360-deferral-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s97-m360-terminal-deferral-review-audit]]'
 ---
 
 # `source-casilla-integration` feature index
@@ -239,6 +240,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s94-m232-deferral-review-audit` - `source-casilla-integration` audit: `S94 M232 terminal deferral review`
 - `2026-08-25-source-casilla-integration-s95-m232-terminal-closure-review-audit` - `source-casilla-integration` audit: `S95 M232 terminal deferral closure review`
 - `2026-08-25-source-casilla-integration-s96-m360-deferral-review-audit` - `source-casilla-integration` audit: `S96 M360 deferral review`
+- `2026-08-25-source-casilla-integration-s97-m360-terminal-deferral-review-audit` - `source-casilla-integration` audit: `S97 M360 terminal deferral review`
 
 ### exec
 
