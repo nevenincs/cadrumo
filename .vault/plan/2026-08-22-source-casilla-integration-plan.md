@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
+modified: '2026-08-25'
+body_hash: 'sha256:b87979b47b2fb3ff47468f402cc8fcc5cfe434c9b09de1ea413d850759298255'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -16,8 +18,6 @@ related:
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research]]'
-modified: '2026-08-25'
-body_hash: 'sha256:1eaad4b69ed5889b519ee6968b1078ccf92c0c561563194893fbf0001bef0fad'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -369,7 +369,7 @@ Repeat discovery and bounded delivery until the census reaches a stable, fully a
 - [x] `W06.P20.S112` - regenerate and compare the canonical connectivity census after completed source slices, record capability-selector drift without adjudicating it, and hand the result to S113/S115; `.vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S112.md; .vault/index/source-casilla-integration.index.md`.
 - [x] `W06.P20.S113` - classify the two S112-discovered structural helper identities under existing source-connectivity governance and hand their evidence-backed not_applicable disposition to S115 without census mutation; `.vault/research/2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research.md; .vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S113.md; .vault/index/source-casilla-integration.index.md`.
 - [ ] `W06.P20.S114` - close S114 with no vertical slice: S112 found no new candidate and S113 classified both reviewed helpers not_applicable; `dev/source_connectivity/tests/test_census_completeness.py, S114 exec, source plan, generated feature index`.
-- [ ] `W06.P20.S115` - classify every rejected or blocked candidate with evidence, owner, review condition, and bounded follow-up; `src/cadrumo/_data/source_connectivity/census.toml`.
+- [x] `W06.P20.S115` - classify the S112/S113 structural helpers as evidence-backed not_applicable selector members without creating source candidates; `src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/application/registry/source_connectivity.py; dev/source_connectivity/discovery.py; dev/source_connectivity/tests/test_census_completeness.py; .vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S115.md; .vault/index/source-casilla-integration.index.md`.
 - [ ] `W06.P20.S116` - rerun discovery until two consecutive runs produce no unclassified or unactioned candidate; `.vault/audit/2026-08-22-source-casilla-connectivity-close-audit.md`.
 - [ ] `W06.P20.S117` - prove the final census has no expired deferral, unexplained disappearance, or unsupported connected claim; `dev/source_connectivity/tests/test_campaign_close.py`.
 - [ ] `W06.P20.S226` - Adjudicate Modelo 187's non-substitutable payer and Article 42 RGAT entity/IIC value paths, including required type-1/type-2 filer facts, before defining a canonical source, binding, casilla, provenance, collision policy, or census disposition.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/187/`.

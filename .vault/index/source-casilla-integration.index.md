@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:3d431e7c942329a0c938fd0c5ec68102e2960a1518c666841c39cfccfc82e3a6'
+body_hash: 'sha256:45caf0c7af3b5e16bdd1e3320e2eccdf2ab8cef03b9ac415512d48fc9337ff20'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -135,7 +135,10 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P19-summary]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S112]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S113]]'
+  - '[[2026-08-22-source-casilla-integration-W06-P20-S114]]'
+  - '[[2026-08-22-source-casilla-integration-W06-P20-S115]]'
   - '[[2026-08-22-source-casilla-integration-W06-P20-S226]]'
+  - '[[2026-08-22-source-casilla-integration-W06-P20-S227]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -189,6 +192,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-m187-source-owner-deferral-adr]]'
   - '[[2026-08-25-source-casilla-integration-m193-row-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
+  - '[[2026-08-25-source-casilla-integration-modelo-220-group-value-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-s100-m182-row-source-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s101-m182-terminal-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-followup-audit]]'
@@ -435,7 +439,10 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P19-summary` - `source-casilla-integration` `W05.P19` summary
 - `2026-08-22-source-casilla-integration-W06-P20-S112` - regenerate and compare the canonical connectivity census after completed source slices, record capability-selector drift without adjudicating it, and hand the result to S113/S115
 - `2026-08-22-source-casilla-integration-W06-P20-S113` - classify the two S112-discovered structural helper identities without creating a source claim
+- `2026-08-22-source-casilla-integration-W06-P20-S114` - record the zero-delivery closure: S112 exposed no connect candidates and S113 classified both additions not_applicable, so no source-connectivity vertical slice is authorized
+- `2026-08-22-source-casilla-integration-W06-P20-S115` - classify the S112/S113 structural-helper handoff in the frozen census selector
 - `2026-08-22-source-casilla-integration-W06-P20-S226` - Adjudicate Modelo 187's non-substitutable payer and Article 42 RGAT entity/IIC value paths, including required type-1/type-2 filer facts, before defining a canonical source, binding, casilla, provenance, collision policy, or census disposition.
+- `2026-08-22-source-casilla-integration-W06-P20-S227` - Adjudicate the Modelo 220 2024 and 2025 group-value origins, grain, source identity, provenance, and absence semantics before any m220 producer key, binding, casilla, or filing layout is introduced.
 
 ### plan
 
@@ -451,4 +458,5 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-m187-payer-entity-iic-grounding-research` - `source-casilla-integration` research: `m187 payer entity iic grounding`
 - `2026-08-25-source-casilla-integration-m193-row-source-grounding-research` - `source-casilla-integration` research: `Modelo 193 contributor-expense row source grounding`
 - `2026-08-25-source-casilla-integration-m296-row-source-grounding-research` - `source-casilla-integration` research: `Modelo 296 withholding row source grounding`
+- `2026-08-25-source-casilla-integration-modelo-220-group-value-source-grounding-research` - `source-casilla-integration` research: `modelo 220 group value source grounding`
 - `2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research` - `source-casilla-integration` research: `s113 helper candidate classification`

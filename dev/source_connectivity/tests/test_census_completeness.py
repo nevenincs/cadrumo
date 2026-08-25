@@ -173,7 +173,7 @@ def test_inventory_repository_ownership_uses_its_live_discovery_locator() -> Non
     focused_manifest = manifest.model_copy(update={"entries": (entry,)})
     evidence = discovered_source_capability_evidence(REPO_ROOT)
     repository_locator = "src/cadrumo/adapters/persistence/profile/inventory.py:121"
-    projection_locator = "src/cadrumo/domain/contribuyente/inventory/__init__.py:1370"
+    projection_locator = "src/cadrumo/domain/contribuyente/inventory/__init__.py:1367"
     create_locator = "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:4866"
     movement_locator = "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:7118"
 
@@ -258,6 +258,25 @@ def test_s112_helpers_have_no_new_connectivity_candidate_or_connected_outcome() 
 
     assert helper_ids <= set(assignments["coverage.remaining-calculation-helpers"])
     assert census_claims == set()
+
+
+def test_s115_freezes_reviewed_s112_helper_set_by_secondary_count() -> None:
+    """Count is a secondary selector guard; the digest remains its canonical identity proof."""
+    manifest = load_source_connectivity_census()
+    entry = next(item for item in manifest.entries if item.candidate_id == "coverage.remaining-calculation-helpers")
+    discovered = discovered_source_capability_ids(REPO_ROOT)
+
+    assignments = assign_capabilities_to_census(discovered, manifest)
+
+    assert entry.expected_capability_count == 267
+    assert len(assignments[entry.candidate_id]) == entry.expected_capability_count
+
+    stale_count = entry.model_copy(update={"expected_capability_count": 266})
+    stale_manifest = manifest.model_copy(
+        update={"entries": tuple(stale_count if item is entry else item for item in manifest.entries)}
+    )
+    with pytest.raises(ValueError, match="capability coverage count drift"):
+        assign_capabilities_to_census(discovered, stale_manifest)
 
 
 def test_registry_destination_candidates_resolve_against_live_authority() -> None:
