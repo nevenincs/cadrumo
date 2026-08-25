@@ -27,8 +27,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..casilla_reference import CasillaReferenceError, CasillaReferenceResult, render_casilla_reference
 from ..terminology import project_casilla_search_records
 from ..terminology._casilla_anchor import casilla_page_anchor

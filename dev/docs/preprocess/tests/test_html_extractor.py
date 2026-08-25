@@ -21,8 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ...._paths import REPO_ROOT
 from .._html import (
     HTML_EXTRACTOR_ID,
     build_outputs,

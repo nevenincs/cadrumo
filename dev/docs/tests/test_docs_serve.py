@@ -23,8 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..serve import (
     _DEFAULT_HOST,
     _DEFAULT_PORT,

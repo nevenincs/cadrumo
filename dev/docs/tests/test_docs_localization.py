@@ -36,8 +36,8 @@ from babel.messages.pofile import read_po
 
 from cadrumo.core import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..i18n import TARGET_LANGUAGES, user_scope_source_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]

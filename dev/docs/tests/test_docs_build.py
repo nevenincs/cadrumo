@@ -23,7 +23,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
+
+from ..._paths import REPO_ROOT
 
 #: A real nitpicky whole-tree Sphinx build is minutes of work, not seconds, so
 #: the project-wide 300 s per-test ceiling (``pyproject.toml``) cannot hold it.

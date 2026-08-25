@@ -83,6 +83,7 @@ from cadrumo.tests.profile_capsule import (
     publish_test_profile_capsule,
     upsert_test_profile_facts,
 )
+from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 from cadrumo.tests.secure_sql import isolated_profile_storage_root
 
 from ..._paths import REPO_ROOT
@@ -769,6 +770,7 @@ def sequence_sandbox(
             cadrumo_output_language="en",
         ),
         isolated_profile_storage_root(tmp_path=sandbox_root),
+        composed_profile_persistence_ports(),
         _isolated_diagnostic_log(),
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),

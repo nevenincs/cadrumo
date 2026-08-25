@@ -40,8 +40,8 @@ import pydantic
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ...packaging.evidence import DistributionEvidence, EvidenceStatus
 from ...release.readiness import ALL_DISTRIBUTION_ROWS
 

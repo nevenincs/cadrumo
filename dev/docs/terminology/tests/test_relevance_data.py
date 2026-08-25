@@ -35,8 +35,8 @@ from typing import TypedDict
 import pytest
 
 from cadrumo.domain.calculations.registry import bundled_authority
-from dev._paths import REPO_ROOT
 
+from ...._paths import REPO_ROOT
 from ...terminology_handbook import load_terminology_handbook
 from .._search_record import SearchRecordKind
 from .._sweep import SweepResult, enumerate_query_vocabulary

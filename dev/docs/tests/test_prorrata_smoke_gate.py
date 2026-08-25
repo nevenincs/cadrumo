@@ -40,8 +40,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised

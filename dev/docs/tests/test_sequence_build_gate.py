@@ -25,8 +25,8 @@ from sphinx.application import Sphinx
 
 from cadrumo.core import scan_directory
 from cadrumo.tests.env_scope import scoped_env_var
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..cli_tree import default_cli_tree_path
 from ..sequence_build_gate import (
     check_sequence_goldens,

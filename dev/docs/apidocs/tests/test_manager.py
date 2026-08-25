@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
 
+from ...._paths import REPO_ROOT
 from ..manager import ApiStubManager, DriftResult, ScaffoldResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -28,8 +28,8 @@ import pytest
 from cadrumo.core import BindingSourceKind, Modelo
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import CasillaConstraints, InputKind
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from .._locale_chrome import DocsChromeError, docs_chrome
 from ..casilla_reference import (
     EMPTY_SCHEMA,

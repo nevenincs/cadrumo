@@ -42,8 +42,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records
 from .test_palette_ranking import (

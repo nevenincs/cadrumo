@@ -68,8 +68,8 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 
+from ...._paths import REPO_ROOT, UTF_8
 from .._html import build_outputs
 from .._parts import part_stand_in_path
 from .._schema import PreprocessOutput
