@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:c55e71f516ec457d0fcd8cec29545159e0e4dd242f7de55202ffe9b2f3fa598f'
+body_hash: 'sha256:507377379112c2e900f2676427c5415d1bda381b7c709c346e748b8728f199bb'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -191,7 +191,9 @@ related:
   - '[[2026-08-25-source-casilla-integration-m187-payer-entity-iic-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m187-source-owner-deferral-adr]]'
   - '[[2026-08-25-source-casilla-integration-m193-row-source-grounding-research]]'
+  - '[[2026-08-25-source-casilla-integration-m220-source-owner-deferral-adr]]'
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
+  - '[[2026-08-25-source-casilla-integration-m390-2021-annual-value-arrival-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-modelo-220-group-value-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-s100-m182-row-source-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s101-m182-terminal-deferral-review-audit]]'
@@ -203,6 +205,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-s114-zero-delivery-closure-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s115-structural-helper-selector-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s227-modelo-220-source-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s87-independent-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit]]'
@@ -237,6 +240,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 
 - `2026-08-22-source-casilla-integration-adr` - `source-casilla-integration` adr: `ratcheted source-domain-to-casilla connectivity` | (**status:** `accepted`)
 - `2026-08-25-source-casilla-integration-m187-source-owner-deferral-adr` - `source-casilla-integration` adr: `m187 source owner deferral` | (**status:** `accepted`)
+- `2026-08-25-source-casilla-integration-m220-source-owner-deferral-adr` - `source-casilla-integration` adr: `m220 source owner deferral` | (**status:** `accepted`)
 
 ### audit
 
@@ -291,6 +295,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s114-zero-delivery-closure-review-audit` - `source-casilla-integration` audit: `S114 zero-delivery closure review`
 - `2026-08-25-source-casilla-integration-s115-structural-helper-selector-review-audit` - `source-casilla-integration` audit: `S115 structural helper selector review`
 - `2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit` - `source-casilla-integration` audit: `S226 Modelo 187 source-owner decision review`
+- `2026-08-25-source-casilla-integration-s227-modelo-220-source-deferral-review-audit` - `source-casilla-integration` audit: `S227 Modelo 220 source deferral review`
 - `2026-08-25-source-casilla-integration-s87-independent-post-review-audit` - `source-casilla-integration` audit: `S87 snapshot-bound row assembly independent review`
 - `2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit` - `source-casilla-integration` audit: `s88 google pull post review`
 - `2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit` - `source-casilla-integration` audit: `S89 row source identity review`
@@ -462,5 +467,6 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-m187-payer-entity-iic-grounding-research` - `source-casilla-integration` research: `m187 payer entity iic grounding`
 - `2026-08-25-source-casilla-integration-m193-row-source-grounding-research` - `source-casilla-integration` research: `Modelo 193 contributor-expense row source grounding`
 - `2026-08-25-source-casilla-integration-m296-row-source-grounding-research` - `source-casilla-integration` research: `Modelo 296 withholding row source grounding`
+- `2026-08-25-source-casilla-integration-m390-2021-annual-value-arrival-grounding-research` - `source-casilla-integration` research: `m390 2021 annual value arrival grounding`
 - `2026-08-25-source-casilla-integration-modelo-220-group-value-source-grounding-research` - `source-casilla-integration` research: `modelo 220 group value source grounding`
 - `2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research` - `source-casilla-integration` research: `s113 helper candidate classification`

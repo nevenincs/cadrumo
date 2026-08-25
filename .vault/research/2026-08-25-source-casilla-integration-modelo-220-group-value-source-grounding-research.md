@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:c5aafadd4935f0265787cfd189da18abf1fb4688cd1475692c781264a8a553eb'
+body_hash: 'sha256:250f2f6b67be33446e57a9c8990f61204c30ff532117201cd125173c37baeb0a'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
@@ -16,7 +16,7 @@ Modelo 220 has real group-valued facts for the separately selected 2024 and
 2025 eras, but the official designs are declaration targets rather than an
 acquisition contract. The current tree has no non-lossy secure owner for their
 composite group/member grain. Under the accepted source-connectivity ADR, the
-evidence therefore supports a deferred candidate and does not support a
+evidence identifies a genuine candidate but does not itself authorize a
 producer, binding, casilla linkage, layout, or census promotion.
 
 ## Findings
@@ -89,46 +89,19 @@ requires these properties before a candidate becomes implementation-ready.
 `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/casillas/cdecl.ejercicio__cdecl.tipo-declaracion.toml:1`
 `.vault/adr/2026-08-22-source-casilla-integration-adr.md:52`
 
-### A future connection needs a composite secure owner and two-era proof
+### The evidence leaves composite ownership and two-era lifecycle proof absent
 
-Connecting from record offsets, from manual casillas, or from Modelo 200
-calculation support is rejected: each would infer an origin that the evidence
-does not establish. A future owner must securely persist the group and member
-identity, period and revision, native value role and units, the relevant
-individual declaration/source reference, source fingerprint and capture
-provenance, and an explicit distinction between absent, inapplicable, and zero.
-It must then prove resolver enrollment, diagnostics/provenance, encrypted
-revision persistence and replay, operator/review reachability, and supported
-export separately for 2024 and 2025. The 2024/2025 design re-layout precludes
-assuming that one era's destination or semantics applies to the other.
+The evidence provides no basis to infer origin from record offsets, manual
+casillas, or Modelo 200 calculation support. It also does not demonstrate a
+secure carrier of group/member identity, period/revision, native value role and
+units, the individual declaration/source reference, fingerprinted capture
+provenance, or distinct absent/inapplicable/zero semantics. No evidence shows
+resolver enrollment, diagnostics/provenance, encrypted revision persistence and
+replay, operator/review reachability, or supported export for either 2024 or
+2025. The distinct 2024/2025 designs do not establish transferable destination
+or semantic equivalence.
 `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/revision.toml:1`
 `.vault/adr/2026-08-22-source-casilla-integration-adr.md:81`
-
-## Decision
-
-### Deferred ingress-blocked M220 group-value candidate
-
-The evidence supports a real but **ingress-blocked** M220 group-value
-candidate for the two exact designs, not a connection and not a
-`not_applicable` result. The decision is bounded to the 2024 design at
-`a8f398dd42db0b1142d5f2e98bf3a60d79069e31d63af32001373f459fee4f2e` and
-the 2025 design at
-`69c3a234e96eb4485a31c65209348bbcede0a49a8c143223c952000784f3f2df`.
-S227 records evidence and governance only: it deliberately adds no census
-row, producer, binding, casilla linkage, layout, resolver, or export claim.
-
-`source-connectivity-campaign` owns the deferred decision. It may reopen only
-when one encrypted, non-lossy owner retains the composite group and
-representative/dominant identity; each member identity and its
-individual-declaration/source reference; tax period and exact M220 revision;
-native member/group value role, unit, and value identity; capture provenance
-and fingerprint; and an explicit absent-versus-inapplicable-versus-zero state.
-That owner must then have independently demonstrated resolver enrollment,
-diagnostics/provenance, encrypted revision persistence and replay,
-operator/review reachability, and source-owned supported export for **each**
-of the 2024 and 2025 eras. A record position, a manual casilla, a Modelo 200
-relationship, or M222 fiscal-group identity cannot satisfy any part of this
-predicate.
 
 ## Sources
 

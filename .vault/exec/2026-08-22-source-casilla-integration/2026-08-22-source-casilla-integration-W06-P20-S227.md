@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:7c09efc040a5be1401d230c3f7995bd1d03cf6283813fb92ea7f80c223524bd4'
+body_hash: 'sha256:47ce5e29f6ba5445e76bc0b969c31208ba1295cbdb8811a2d8f32775ecf95677'
 step_id: 'S227'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -16,6 +16,7 @@ related:
 ## Scope
 
 - `.vault/research/2026-08-25-source-casilla-integration-modelo-220-group-value-source-grounding-research.md`
+- `.vault/adr/2026-08-25-source-casilla-integration-m220-source-owner-deferral-adr.md`
 - `.vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S227.md`
 - `.vault/plan/2026-08-22-source-casilla-integration-plan.md`
 - `.vault/index/source-casilla-integration.index.md`
@@ -30,35 +31,23 @@ related:
 - Preserve the composite group/member source grain, including an explicit
   absent-versus-inapplicable-versus-zero state, rather than collapsing it to a
   header or total.
-- Defer the genuine M220 group-value candidate as ingress-blocked because no
-  encrypted non-lossy owner exists. Reject export coordinates, direct/manual
-  casillas, Modelo 200 relationships, and M222 group identity as source proof.
-- Reuse the accepted source-connectivity ADR; add no competing ADR, census row,
-  producer, binding, resolver, lifecycle, layout, or export route.
+- Record the accepted model-scoped ADR that owns the ingress-blocked
+  disposition, accountable owner, and reopening predicate.
+- Add no census row, producer, binding, resolver, lifecycle, layout, or export
+  route.
 
 ## Outcome
 
-Modelo 220 group values are a genuine source-connectivity candidate at
-composite group/member grain, but no non-lossy encrypted owner is evidenced.
-The evidence result is therefore **defer / ingress-blocked**, not connection
-or `not_applicable`. The 2024 and 2025 designs establish separate targets and
-must not be collapsed into one era. Manual/direct M220 entry, M220 export
-coordinates, Modelo 200 relationships, and M222 fiscal-group identity are not
-source acquisition or lifecycle proof.
-
-No M220 producer key, binding, casilla change, layout, source-mesh route, or
-census disposition was created. Reopen only when one secure owner preserves
-composite group/member and representative identity, individual-declaration
-references, exact period/revision, native role/units, fingerprinted capture
-provenance, and absent/inapplicable/zero semantics; it must then prove
-resolver enrollment, diagnostics/provenance, encrypted persistence/replay,
-review, and supported source-owned export separately for 2024 and 2025.
+The accepted M220 source-owner deferral ADR owns the bounded
+`ingress_blocked` disposition and reopening predicate. The 2024 and 2025
+designs remain separate evidence eras. No M220 producer key, binding, casilla
+change, layout, source-mesh route, or census disposition was created.
 
 ## Notes
 
-- The accepted source-connectivity ADR governs this evidence decision. A later
-  separately authorized census step must attach the bounded campaign follow-up
-  before it can admit an ingress-blocked row.
+- The model-scoped ADR is the sole home for M220 normative deferral language;
+  this execution record only attests the accepted decision and its no-runtime,
+  no-census boundary.
 - Semantic RAG initially selected binary workbook blobs, whose renderer cannot
   decode them as UTF-8. Discovery was narrowed to text registry and filing
   surfaces; the official workbook evidence was read through its hash-pinned
