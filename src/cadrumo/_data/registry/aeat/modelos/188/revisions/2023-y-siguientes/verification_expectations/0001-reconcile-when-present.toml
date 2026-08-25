@@ -1,11 +1,11 @@
-# Reconcile-when-present for Modelo 188 revision 2019-y-siguientes. The
+# Reconcile-when-present for Modelo 188 revision 2023-y-siguientes. The
 # hoja-resumen prints five declaration boxes and every one is operator input, so
 # none is engine-computed: each is reconciled against the filing WHEN the filing
 # prints it, and all are EXCLUDED from the coverage denominator
 # (min_coverage = 0), so enrollment can never lower coverage or flip a
 # legitimate filing's verdict.
-[[revisions."2019-y-siguientes".verification_expectations]]
-id = "modelo-188-2019-y-siguientes-reconcile-when-present"
+[[revisions."2023-y-siguientes".verification_expectations]]
+id = "modelo-188-2023-y-siguientes-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "01",

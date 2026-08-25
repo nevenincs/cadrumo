@@ -1,4 +1,4 @@
-[[revisions."2019-y-siguientes".application_links]]
+[[revisions."2023-y-siguientes".application_links]]
 id = "modelo-188-calculation"
 surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry"
@@ -6,7 +6,7 @@ requires_snapshot = true
 legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99"]
 source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout"]
 
-[[revisions."2019-y-siguientes".application_links]]
+[[revisions."2023-y-siguientes".application_links]]
 id = "modelo-188-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
@@ -14,7 +14,7 @@ requires_snapshot = true
 legal_refs = ["orden-1999-11-17:apartado-quinto"]
 source_refs = ["aeat-modelo-188-procedure"]
 
-[[revisions."2019-y-siguientes".application_links]]
+[[revisions."2023-y-siguientes".application_links]]
 id = "modelo-188-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
@@ -22,28 +22,28 @@ requires_snapshot = true
 legal_refs = ["orden-1999-11-17:apartado-quinto"]
 source_refs = ["aeat-modelo-188-procedure"]
 
-[[revisions."2019-y-siguientes".application_links]]
+[[revisions."2023-y-siguientes".application_links]]
 id = "modelo-188-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"
 requires_snapshot = true
 legal_refs = ["orden-1999-11-17:apartado-quinto"]
 source_refs = ["aeat-modelo-188-procedure"]
-[[revisions."2019-y-siguientes".application_links]]
+[[revisions."2023-y-siguientes".application_links]]
 id = "modelo-188-approval"
 surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
 legal_refs = ["orden-1999-11-17:apartado-quinto"]
 source_refs = ["aeat-modelo-188-procedure"]
-[[revisions."2019-y-siguientes".application_links]]
+[[revisions."2023-y-siguientes".application_links]]
 id = "modelo-188-reconciliation"
 surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["orden-1999-11-17:apartado-quinto"]
 source_refs = ["aeat-modelo-188-procedure"]
-[[revisions."2019-y-siguientes".application_links]]
+[[revisions."2023-y-siguientes".application_links]]
 id = "modelo-188-workflow"
 surface = "workflow"
 consumer = "cadrumo.application.workflow"

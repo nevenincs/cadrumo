@@ -1,4 +1,4 @@
-[[revisions."2019-y-siguientes".applicability]]
+[[revisions."2023-y-siguientes".applicability]]
 id = "m188-seed"
 applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
 required_payer_fact = "pays_capital_income_with_retencion"

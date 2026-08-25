@@ -31,7 +31,7 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELOS = ("187", "188", "194")
-_REVISION_BY_MODELO = {"187": "2022-y-siguientes", "188": "2019-y-siguientes", "194": "2019-y-siguientes"}
+_REVISION_BY_MODELO = {"187": "2022-y-siguientes", "188": "2023-y-siguientes", "194": "2019-y-siguientes"}
 _SOURCE_CASILLA: CasillaId = validated_casilla_id("04", surface="_SOURCE_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("05", surface="_TARGET_CASILLA")
 
@@ -105,6 +105,22 @@ def test_modelo_187_selects_only_the_2022_design_era() -> None:
 
     assert select_revision(modelo, filing_year=2022, period="0A", on=date(2022, 12, 31)) == revision
     for filing_year in range(2019, 2022):
+        with pytest.raises(NoRevisionForPeriodError):
+            select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
+
+
+def test_modelo_188_selects_only_the_2023_design_era() -> None:
+    """The sole hash-pinned 2023 design cannot establish earlier years."""
+    modelo, catalogues = _committed_modelo("188")
+    revision = modelo.revisions["2023-y-siguientes"]
+
+    assert revision.authority_grade.value == "applicability"
+    assert revision.valid_from == date(2023, 1, 1)
+    assert revision.period_selector.year_from == 2023
+    assert {ref for ref in revision.source_refs if ref.startswith("aeat-dr-188-")} == {"aeat-dr-188-2023"}
+    assert catalogues.sources["aeat-dr-188-2023"].applies_from == date(2023, 1, 1)
+    assert select_revision(modelo, filing_year=2023, period="0A", on=date(2023, 12, 31)) == revision
+    for filing_year in range(2019, 2023):
         with pytest.raises(NoRevisionForPeriodError):
             select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
 
