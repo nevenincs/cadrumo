@@ -269,7 +269,8 @@ from ._review import (
     unapprove_draft,
 )
 from ._runtime_repository import modelo_record_repository_for_application
-from .errors import ModeloApplicationError, ModeloApplicationError as _ModeloBuilderError, ModeloCalculateError
+from .errors import ModeloApplicationError, ModeloCalculateError
+from .errors import ModeloApplicationError as _ModeloBuilderError
 from .runtime import (
     ModeloOperatorProfile,
     build_runtime_schema_provider,

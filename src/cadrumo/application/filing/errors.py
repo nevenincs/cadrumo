@@ -28,14 +28,13 @@ from typing import ClassVar
 
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors import TerminalPreconditionErrorMixin
-from ...domain.filing import ModeloDraftError
+from ...domain.filing import FilingExportError, ModeloBuilderError, ModeloImportError
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 
 
 class FilingPreconditionCondition(StrEnum):
     """Application-owned failed conditions for filing-boundary refusals."""
 
-    APPLICATION_BUCKET_AVAILABLE = "filing.application.bucket.available"
     CALCULATION_FINDINGS_CLEAR = "filing.calculate.findings.clear"
     CALCULATION_SUMMARY_COHERENT = "filing.calculate.summary.coherent"
     OPERATION_ADMISSIBLE = "filing.application.operation.admissible"
@@ -89,12 +88,18 @@ class _FilingTerminalErrorMixin(TerminalPreconditionErrorMixin[PreconditionVerdi
         )
 
 
-class ModeloApplicationError(_FilingTerminalErrorMixin, ModeloDraftError):
+class ModeloApplicationError(
+    _FilingTerminalErrorMixin,
+    ModeloBuilderError,
+    ModeloImportError,
+    FilingExportError,
+):
     """Base class for errors raised by the filing application layer.
 
-    The class extends :class:`domain.filing.ModeloDraftError` so callers that
-    catch the domain filing boundary still catch application-level filing
-    failures.
+    The class remains an instance of the domain builder, import, and export
+    catch families.  Those direct application boundaries share one registered
+    error envelope, and changing their concrete type must not discard a
+    caller's established domain catch while adding terminal transport.
     """
 
     precondition_condition = FilingPreconditionCondition.OPERATION_ADMISSIBLE

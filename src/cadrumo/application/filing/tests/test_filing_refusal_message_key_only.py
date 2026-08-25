@@ -21,13 +21,13 @@ proves that every operator-reachable family transports an explicit terminal
 precondition outcome; layout renderers and invariant-only constructors are
 listed as structural exclusions, not silently omitted.
 
-Scope is declared rather than inferred. Three modules are deliberately NOT in
+Scope is declared rather than inferred. Six modules are deliberately NOT in
 the swept set, because their producers are registry-layout and renderer
 structural invariants addressed to whoever authored the export layout rather
-than continuation refusals addressed to the operator, and they are not migrated:
-``_export.py`` field and digest declarations, ``_projection.py``, and
-``_export_xml_dictionary.py``. Naming them here keeps the exclusion visible
-instead of hiding it behind a matcher that would silently pass.
+than continuation refusals addressed to the operator.  Each exclusion records
+the downstream export owner that catches or projects the invariant; naming
+them here keeps the exclusion visible instead of hiding it behind a matcher
+that would silently pass.
 
 See Also:
     :class:`~cadrumo.application.filing.errors.ModeloCalculateError`
@@ -44,6 +44,7 @@ import pytest
 
 from ....core import ActionConditionality, NoRecoveryOutcome, scan_directory
 from ....core.errors import TerminalPreconditionErrorMixin
+from ....domain.filing import FilingExportError, ModeloBuilderError, ModeloImportError
 from ..errors import FilingPreconditionCondition, ModeloApplicationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -83,12 +84,34 @@ _SWEPT_MODULES: tuple[str, ...] = (
 )
 
 #: Modules carrying registry-layout and renderer structural invariants that are
-#: NOT migrated. Listed so the exclusion is auditable rather than implicit.
-_UNSWEPT_MODULES: tuple[str, ...] = (
-    "_export.py",
-    "_export_xml_dictionary.py",
-    "_projection.py",
-)
+#: NOT migrated.  The value records the downstream export boundary that catches
+#: or projects the invariant, keeping every structural exclusion auditable.
+_UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
+    "_export.py": (
+        "The public export/verify boundary owns field and digest declaration "
+        "failures and projects them at the filed-artifact boundary."
+    ),
+    "_export_producer.py": (
+        "Producer-snapshot completeness is consumed by _export.py, whose "
+        "public export boundary owns the resulting validation/catch path."
+    ),
+    "_export_xml_dictionary.py": (
+        "XML-dictionary layout invariants are consumed by _export.py, whose "
+        "export/verification boundary owns their projection."
+    ),
+    "_projection.py": (
+        "Projection-plan and value-address invariants are consumed by _export.py's render-request boundary."
+    ),
+    "_record_field_renderer.py": (
+        "Field offset, length, and role invariants are consumed by "
+        "_record_renderer.py/_export.py at the artifact boundary."
+    ),
+    "_record_renderer.py": (
+        "Record ordering and occurrence invariants are consumed by _export.py at the artifact boundary."
+    ),
+}
+
+_UNSWEPT_MODULES: tuple[str, ...] = tuple(_UNSWEPT_MODULE_RATIONALES)
 
 #: The complete adjudicated population whose key-only failures can reach an
 #: operator through a filing application surface.  These aliases deliberately
@@ -122,6 +145,25 @@ def _authored_message_sites(path: Path) -> list[tuple[str, int]]:
     return offenders
 
 
+def _filing_owned_authored_error_modules(root: Path = _FILING_PACKAGE) -> set[str]:
+    """Return every filing module that still authors a registered-error message."""
+    return {path.name for path in scan_directory(root, pattern="*.py") if _authored_message_sites(path)}
+
+
+def _assert_authored_error_module_partition(
+    *, root: Path, swept_modules: tuple[str, ...], unswept_modules: tuple[str, ...]
+) -> None:
+    """Require every authored filing-error module to have one explicit role."""
+    overlap = sorted(set(swept_modules) & set(unswept_modules))
+    assert overlap == [], f"a module cannot be both swept and structurally excluded: {overlap}"
+
+    authored_modules = _filing_owned_authored_error_modules(root)
+    assert authored_modules == set(unswept_modules), (
+        "every filing-owned authored-error module must be explicitly unswept "
+        f"with a downstream owner/catch rationale: found {sorted(authored_modules)}"
+    )
+
+
 def test_the_declared_module_rosters_still_name_real_modules() -> None:
     """Keep both rosters honest against a rename, deletion or split.
 
@@ -134,6 +176,8 @@ def test_the_declared_module_rosters_still_name_real_modules() -> None:
 
     assert missing_swept == [], f"the swept roster names modules that no longer exist: {missing_swept}"
     assert missing_unswept == [], f"the unswept roster names modules that no longer exist: {missing_unswept}"
+    assert set(_UNSWEPT_MODULE_RATIONALES) == set(_UNSWEPT_MODULES)
+    assert all(_UNSWEPT_MODULE_RATIONALES.values())
 
 
 def _imported_application_refusal_aliases(path: Path) -> set[str]:
@@ -149,13 +193,34 @@ def _imported_application_refusal_aliases(path: Path) -> set[str]:
     return aliases
 
 
+def _assert_operator_reachable_refusal_census(census: dict[str, tuple[Path, str]]) -> None:
+    """Reject any reachable family that bypasses the registered terminal carrier."""
+    resolved = {
+        module: alias in _imported_application_refusal_aliases(path) for module, (path, alias) in census.items()
+    }
+    assert resolved == {module: True for module in census}
+
+
 def test_each_operator_reachable_refusal_family_uses_the_registered_terminal_carrier() -> None:
     """Census every reachable family; renderer/invariant modules are excluded above."""
-    resolved = {
-        module: alias in _imported_application_refusal_aliases(_FILING_PACKAGE / module)
-        for module, alias in _OPERATOR_REACHABLE_REFUSAL_ALIASES.items()
-    }
-    assert resolved == {module: True for module in _OPERATOR_REACHABLE_REFUSAL_ALIASES}
+    _assert_operator_reachable_refusal_census(
+        {module: (_FILING_PACKAGE / module, alias) for module, alias in _OPERATOR_REACHABLE_REFUSAL_ALIASES.items()}
+    )
+
+
+def test_operator_reachable_refusal_census_rejects_a_missing_terminal_import(tmp_path: Path) -> None:
+    """Mutation proof: a legacy domain-only producer cannot slip through the census."""
+    legacy = tmp_path / "legacy_refusal.py"
+    legacy.write_text(
+        "from cadrumo.domain.filing import ModeloBuilderError\n"
+        "\n"
+        "def refuse():\n"
+        "    raise ModeloBuilderError(translated_message='application.filing.test.error')\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssertionError):
+        _assert_operator_reachable_refusal_census({"legacy_refusal.py": (legacy, "ModeloBuilderError")})
 
 
 def test_the_filing_owned_error_roster_still_names_reachable_errors() -> None:
@@ -182,6 +247,27 @@ def test_the_filing_owned_error_roster_still_names_reachable_errors() -> None:
 def test_no_swept_filing_module_authors_its_own_refusal_message() -> None:
     offenders = {name: sites for name in _SWEPT_MODULES if (sites := _authored_message_sites(_FILING_PACKAGE / name))}
     assert offenders == {}, f"migrated filing refusals must carry a locale key, never authored text: {offenders}"
+
+
+def test_every_filing_owned_authored_error_module_is_explicitly_unswept() -> None:
+    """The complete AST census cannot silently omit a new renderer/error module."""
+    _assert_authored_error_module_partition(
+        root=_FILING_PACKAGE,
+        swept_modules=_SWEPT_MODULES,
+        unswept_modules=_UNSWEPT_MODULES,
+    )
+
+
+def test_authored_error_module_partition_rejects_an_unclassified_module(tmp_path: Path) -> None:
+    """Mutation proof: a newly authored error module cannot evade the roster."""
+    renderer = tmp_path / "new_renderer.py"
+    renderer.write_text(
+        'raise FilingExportValidationError("layout field offset is invalid")\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssertionError, match="explicitly unswept"):
+        _assert_authored_error_module_partition(root=tmp_path, swept_modules=(), unswept_modules=())
 
 
 def test_the_authored_message_scan_detects_both_shapes_of_the_defect(tmp_path: Path) -> None:
@@ -226,6 +312,16 @@ def _assert_terminal_application_refusal(error: ModeloApplicationError) -> None:
     assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
     assert verdict.evidence[0].values == {"error_type": "ModeloApplicationError"}
+
+
+def test_terminal_application_refusal_preserves_the_established_domain_catch_families() -> None:
+    """Transport must not make direct filing callers lose their existing catches."""
+    error = ModeloApplicationError(translated_message="application.filing.test.errors.refusal")
+
+    assert isinstance(error, ModeloBuilderError)
+    assert isinstance(error, ModeloImportError)
+    assert isinstance(error, FilingExportError)
+    _assert_terminal_application_refusal(error)
 
 
 def test_decimal_input_refusal_renders_as_its_key_and_terminal_condition() -> None:
