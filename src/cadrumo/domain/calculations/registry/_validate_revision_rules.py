@@ -133,13 +133,12 @@ def validate_periodic_deadline_completeness(
     ``registry_period_kind`` validates the shared period vocabulary; it is not
     replaced by a deadline-specific parser or cadence table.
     """
-    periodic_kinds = {"monthly", "quarterly"}
     candidate_periods = sorted(
         {
             period
             for revision in modelo.revisions.values()
             for schedule in revision.filing_schedules
-            if schedule.period_kind in periodic_kinds
+            if schedule.is_periodic
             for period in schedule.periods
         },
     )
@@ -153,7 +152,7 @@ def validate_periodic_deadline_completeness(
             selected_schedules = tuple(
                 schedule
                 for schedule in selected.filing_schedules
-                if schedule.period_kind in periodic_kinds and period in schedule.periods
+                if schedule.is_periodic and period in schedule.periods
             )
             if not selected_schedules:
                 continue
