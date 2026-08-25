@@ -21,7 +21,8 @@ import pytest
 
 from cadrumo import llm
 from cadrumo.core import LLM_EXTRA, scan_directory
-from dev.packaging._smoke_common import (
+
+from .._smoke_common import (
     build_companion_wheels,
     build_wheel,
     create_pip_venv,

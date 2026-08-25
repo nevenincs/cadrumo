@@ -16,8 +16,8 @@ from typing import Final, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
 from cadrumo.core import DirectoryEntryKind, scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 
+from .._paths import REPO_ROOT, UTF_8
 from ._command import CommandResult
 from ._hashing import sha256_path
 from .cohort_manifest import (

@@ -38,8 +38,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,

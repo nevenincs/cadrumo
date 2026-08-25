@@ -37,7 +37,7 @@ import subprocess
 import tomllib
 from pathlib import Path
 
-from dev._paths import UTF_8
+from .._paths import UTF_8
 
 _UTF_8 = UTF_8
 #: The runtime install closure is ``cadrumo`` plus the ``cadrumo-harness``

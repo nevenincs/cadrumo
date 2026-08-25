@@ -26,8 +26,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
-
+from .._paths import REPO_ROOT
 from ._smoke_common import (
     create_pip_venv,
     isolated_product_env,

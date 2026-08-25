@@ -6,8 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
-
+from .._paths import REPO_ROOT
 from ._smoke_common import (
     assert_cadrumo_version_output,
     assert_installed_data,

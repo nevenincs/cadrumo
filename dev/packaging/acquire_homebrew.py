@@ -20,8 +20,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
-from dev._paths import UTF_8
-
+from .._paths import UTF_8
 from ._acquire_common import (
     EXPECTED_ORACLE_TARGET_VALUE,
     AcquisitionError,

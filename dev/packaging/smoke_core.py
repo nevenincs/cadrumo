@@ -17,8 +17,7 @@ from typing import Final
 
 from packaging.requirements import Requirement
 
-from dev._paths import UTF_8
-
+from .._paths import UTF_8
 from ._distribution_names import normalise_distribution_name
 from ._hashing import sha256_path
 from ._smoke_common import (

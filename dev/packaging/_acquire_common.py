@@ -26,8 +26,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
 
 from cadrumo.core import scan_directory
-from dev._paths import UTF_8
 
+from .._paths import UTF_8
 from ._hashing import sha256_path
 from .cohort_manifest import LoadedReleaseCohort
 from .evidence import CommandTranscript

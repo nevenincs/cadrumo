@@ -17,13 +17,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final, override
 
-from dev._paths import REPO_ROOT
-
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 if not __package__:
     __package__ = "dev.packaging"
+
+from .._paths import REPO_ROOT
 
 from ._command import CommandResult, run_command  # noqa: E402
 from ._hashing import sha256_path  # noqa: E402

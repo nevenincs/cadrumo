@@ -38,8 +38,7 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
-from dev._paths import UTF_8
-
+from .._paths import UTF_8
 from ._command import CommandResult
 from ._hashing import sha256_path
 from ._installed_wheel_binding import (

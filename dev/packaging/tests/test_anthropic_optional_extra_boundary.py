@@ -18,7 +18,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import ANTHROPIC_EXTRA
-from dev.packaging._smoke_common import (
+
+from .._smoke_common import (
     build_companion_wheels,
     build_wheel,
     create_pip_venv,

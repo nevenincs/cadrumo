@@ -37,8 +37,8 @@ from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core import iter_directory, scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 
+from .._paths import REPO_ROOT, UTF_8
 from ._command import CommandResult, run_command
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name

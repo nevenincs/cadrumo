@@ -39,7 +39,8 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from cadrumo.core import iter_directory
-from dev._paths import UTF_8
+
+from .._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _CACHE_DIR_ENV: Final[str] = "CADRUMO_PROOF_CACHE_DIR"

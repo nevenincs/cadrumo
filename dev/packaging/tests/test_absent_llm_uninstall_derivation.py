@@ -18,8 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..smoke_absent_llm import (
     _EXTRA,
     _INFERENCE_SURFACES,

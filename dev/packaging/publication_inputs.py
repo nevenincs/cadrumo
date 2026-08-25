@@ -44,8 +44,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
-
+from .._paths import UTF_8
 from ..docs.download_matrix import DownloadDescriptor, claimed_channels, load_descriptor
 
 _UTF_8: Final[str] = UTF_8

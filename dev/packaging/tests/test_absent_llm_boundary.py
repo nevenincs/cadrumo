@@ -22,8 +22,7 @@ from importlib.metadata import packages_distributions
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from .._distribution_names import normalise_distribution_name
 from .._smoke_common import optional_extra_registry
 from ..smoke_absent_llm import _EXPECTED_EXTRA, _INFERENCE_SURFACES

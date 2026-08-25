@@ -24,8 +24,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, Final
 
-from dev._paths import UTF_8
-
+from .._paths import UTF_8
 from ._acquire_common import capture_owned_server_launch
 from .cohort_manifest import load_release_cohort
 from .desktop_capture import collect_seed_secrets

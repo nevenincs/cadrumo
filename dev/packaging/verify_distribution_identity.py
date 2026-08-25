@@ -35,7 +35,8 @@ from cadrumo_harness import (
 
 import cadrumo
 from cadrumo.core import PRODUCT_IDENTITY, scan_directory
-from dev._paths import REPO_ROOT, UTF_8
+
+from .._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _REQUIRED_HARNESS_PREFIX: Final[str] = "cadrumo-"

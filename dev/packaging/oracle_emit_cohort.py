@@ -21,8 +21,7 @@ import subprocess
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
-
+from .._paths import UTF_8
 from ._acquire_common import PYTHON_COHORT_WHEEL_NAMES, AcquisitionError, run_installed_cli_oracle, venv_executable
 from .cohort_manifest import load_release_cohort
 from .distribution_evidence_emit import emit_installed_oracle_evidence

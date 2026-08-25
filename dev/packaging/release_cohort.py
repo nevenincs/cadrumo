@@ -16,7 +16,7 @@ from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Final
 
-from dev._paths import UTF_8
+from .._paths import UTF_8
 
 _HERE = Path(__file__).resolve().parent
 _REPO_ROOT = _HERE.parents[1]

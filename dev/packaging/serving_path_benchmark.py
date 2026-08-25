@@ -60,8 +60,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Final, cast
 
-from dev._paths import UTF_8
-
+from .._paths import UTF_8
 from ..ci.perf_measurement import timed_subprocess
 from .installed_tax_oracle import (
     isolated_product_environment,

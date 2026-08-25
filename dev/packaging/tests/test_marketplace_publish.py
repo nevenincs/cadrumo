@@ -20,8 +20,8 @@ from typing import Any, Final
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 
+from ..._paths import REPO_ROOT, UTF_8
 from ..marketplace_publish import (
     _SUPERSESSION_REPORT,
     MarketplacePublishError,

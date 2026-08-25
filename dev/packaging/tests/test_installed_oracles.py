@@ -31,8 +31,8 @@ import pytest
 from cadrumo_harness import materialise_marketplace
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from .._hashing import sha256_path
 from .._smoke_common import (
     create_pip_venv,

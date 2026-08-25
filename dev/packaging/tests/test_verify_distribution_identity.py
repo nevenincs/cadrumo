@@ -9,8 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..verify_distribution_identity import (
     ModelFacingDescriptionCheck,
     _labeled_product_description,

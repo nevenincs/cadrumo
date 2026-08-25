@@ -26,7 +26,8 @@ import pytest
 from cadrumo.application.provisioning import ProvisioningPreconditionCondition
 from cadrumo.core import NoRecoveryOutcome
 from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from dev.packaging._smoke_common import (
+
+from .._smoke_common import (
     build_companion_wheels,
     build_wheel,
     create_pip_venv,

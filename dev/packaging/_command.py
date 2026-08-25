@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
-from dev._paths import UTF_8
+from .._paths import UTF_8
 
 _UTF_8 = UTF_8
 
