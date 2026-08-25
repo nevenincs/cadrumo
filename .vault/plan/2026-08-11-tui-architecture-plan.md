@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-25'
-body_hash: 'sha256:ac86e8d58c55520f0327e91dd5f6397f49526ace20fe0862c21ee6428ef96f6d'
+body_hash: 'sha256:ad1357de6b1313d4072dc1c95273e7c434f2650ba86c5424626cd421913a2f4e'
 ---
 
 # `tui-architecture` plan
@@ -307,8 +307,8 @@ Replace every CLI, application-test, and development import of the legacy TUI wi
 - [ ] `W06.P14.S83` - Remove work-wizard imports of TUI internals while preserving line-mode and installed-TUI selection semantics; `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`.
 - [ ] `W06.P14.S84` - Remove amendment-wizard imports of TUI internals while preserving line-mode and installed-TUI selection semantics; `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`.
 - [x] `W06.P14.S85` - Replace application flow parity dependencies on TUI modules with backend contract assertions; `src/cadrumo/application/flows/tests/test_frontend_parity.py`.
-- [ ] `W06.P14.S86` - Move the manager pilot behind the TUI devtools facade or installed out-of-process boundary; `src/cadrumo/tests/manager_pilot.py`.
-- [ ] `W06.P14.S87` - Move remaining development TUI launchers and surface checks beneath the canonical TUI devtools package; `dev/tui`.
+- [x] `W06.P14.S86` - Move the manager pilot behind the TUI devtools facade or installed out-of-process boundary; `src/cadrumo/tests/manager_pilot.py`.
+- [x] `W06.P14.S87` - Move remaining development TUI launchers and surface checks beneath the canonical TUI devtools package; `dev/tui`.
 
 ### Phase `W06.P15` - Legacy adapter removal
 
