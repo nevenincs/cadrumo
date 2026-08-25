@@ -844,6 +844,7 @@ _register_language_resolver()
 #: block above, this table, and ``__all__`` below, all hand-synchronised. That
 #: is the standing cause of this class of slip and it is not addressed here.
 _LAZY_EXPORTS: dict[str, str] = {
+    "ProfileCustodyRecoveryArtifactWarning": "._recovery_contracts",
     "ProfileBucketStoragePathsPort": "._custody_ports",
     "ProfileBucketStoragePort": "._custody_ports",
     "ProfileCustodyBucketEventHistoryPort": "._custody_ports",
@@ -1176,6 +1177,7 @@ __all__ = [
     "ProfileCustodyInventoryWitness",
     "ProfileCustodyPasswordMaterialPort",
     "ProfileCustodyPointerSnapshot",
+    "ProfileCustodyRecoveryArtifactWarning",
     "ProfileCustodyRecoveryEnvelopePort",
     "ProfileCustodyRetentionOverride",
     "ProfileCustodySecureObjectRepositoryPort",

@@ -15,7 +15,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
-from .....application.user_profile._recovery_contracts import ProfileCustodyRecoveryArtifactWarning
+from .....application.user_profile import ProfileCustodyRecoveryArtifactWarning
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
