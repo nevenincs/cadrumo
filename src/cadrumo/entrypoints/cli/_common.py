@@ -157,7 +157,7 @@ if TYPE_CHECKING:
     from ...domain.filing import ModeloDraft
     from ...domain.invoices import InvoiceCatalogue
     from ...domain.transactions import TransactionCatalogue
-    from ...domain.user_profile import UserProfileRecord
+    from ...domain.user_profile.values import UserProfileRecord
     from ._verb_input_schema import VerbInputSchema
 
 __all__ = [
@@ -718,7 +718,7 @@ def emit_envelope(
     real profile. The indicator is resolved by
     :func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`,
     shared with the setup wizard's own success emitters
-    (:mod:`cadrumo.application.wizard._commands`), which sit below this CLI
+    (:mod:`cadrumo.application.wizard.commands`), which sit below this CLI
     package and route through the same funnel rather than a second
     implementation.
 
@@ -1170,7 +1170,7 @@ def _no_active_profile_refusal() -> Exception:
     from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
     from ...application.profile_preconditions import inspect_active_profile_precondition
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     registered_profile_count = len(list_profile_buckets())
     verdict = inspect_active_profile_precondition(
@@ -1593,7 +1593,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     record = state.active_profile_record()
     verdict = inspect_filing_taxpayer_identity_precondition(
@@ -1646,12 +1646,14 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
 
 
 def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
-    from cadrumo.application.workflow.state_models import active_transaction_catalogue_repository
-
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ...application.workflow.active_profile import active_transaction_catalogue_repository
     from ...domain.transactions import LedgerNoActiveBucketError
 
     try:
-        return active_transaction_catalogue_repository(state)
+        return active_transaction_catalogue_repository(
+            repository_factory=lambda bucket_id: TransactionCatalogueRepository(bucket_id=bucket_id),
+        )
     except LedgerNoActiveBucketError as exc:
         raise _no_active_profile_refusal() from exc
 

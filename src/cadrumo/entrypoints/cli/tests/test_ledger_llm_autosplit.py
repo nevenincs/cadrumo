@@ -14,11 +14,11 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.ledger import reject_llm_suggestion
+from ....application.ledger.llm_classification import reject_llm_suggestion
 from ....core.json_contract import NoticeSeverity
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import BusinessClassification
-from ....llm import LLMClassificationSuggestion
+from ....llm.suggestions import LLMClassificationSuggestion
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli

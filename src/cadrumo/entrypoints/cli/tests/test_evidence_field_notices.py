@@ -15,16 +15,10 @@ from pathlib import Path
 
 import pytest
 
-from ....application.ledger import (
-    DocumentTranscription,
-    FieldAmbiguityCandidate,
-    FieldProvenance,
-    IdentityCandidate,
-    InvoiceDraft,
-    TranscriberIdentity,
-    resolve_counterparty_identity,
-    verified_provenance,
-)
+from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
+from ....application.ledger.evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ....application.ledger.identity_roles import IdentityCandidate, resolve_counterparty_identity
+from ....application.ledger.grounded_reading import verified_provenance
 from ....core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 from ....core.json_contract import Notice, NoticeSeverity, derive_status
 from .._evidence_field_notices import DEGRADED_GROUNDING_OUTCOMES, field_degradation_notices

@@ -13,17 +13,17 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .. import (
     SANDBOX_PROFILE_LABEL,
     SEED_SUFFIX,
     FrameKind,
-    SequenceParseError,
     default_seeds_root,
     load_seed_frames,
     parse_sequence,
 )
+from ..errors import SequenceParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

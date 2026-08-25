@@ -133,8 +133,8 @@ _LEDGER_RATIOS_PAYLOAD_EXPORTS = (
 )
 
 if TYPE_CHECKING:
-    from ...application.ledger import LedgerExportResult as _AppLedgerExportResult
-    from ...application.ledger import LedgerSourceImportResult as _AppLedgerSourceImportResult
+    from ...application.ledger.models import LedgerExportResult as _AppLedgerExportResult
+    from ...application.ledger.models import LedgerSourceImportResult as _AppLedgerSourceImportResult
 
 # ---------------------------------------------------------------------------
 # Shared nested models (not direct CommandSpec schema targets)

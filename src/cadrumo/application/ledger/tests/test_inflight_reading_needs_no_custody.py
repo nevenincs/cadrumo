@@ -31,7 +31,7 @@ from hashlib import sha256
 
 import pytest
 
-from .._evidence_input import EvidenceInput
+from ..evidence_input import EvidenceInput
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

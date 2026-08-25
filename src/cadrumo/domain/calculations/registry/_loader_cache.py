@@ -35,17 +35,19 @@ from pathlib import Path
 from typing import Literal
 
 from ....core import (
-    DirectoryEntryKind,
     StorageCategory,
     freeze_toml,
-    iter_directory,
     read_toml,
-    scan_directory,
     storage_location,
+)
+from ....core.directory_scan import (
+    DirectoryEntryKind,
+    iter_directory,
+    scan_directory,
 )
 from ....core.config import load_settings
 from ....core.resources import bundled_path
-from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
+from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
 from ._ids import RevisionId
 from ._toml_helpers import as_toml_table as _as_toml_table
 
@@ -276,7 +278,7 @@ def _validate_revision_directory_entries(revisions_dir: Path) -> tuple[tuple[Pat
     One scan is sound here where a memo would not be: the listing is consumed
     immediately, so this never holds a directory's contents across the window
     in which something could write to it -- the hazard
-    :mod:`~cadrumo.core._directory_scan` documents when it declines to cache.
+    :mod:`~cadrumo.core.directory_scan` documents when it declines to cache.
 
     Returns:
         The ``.toml`` files, then the subdirectories, each in scan order.

@@ -8,33 +8,32 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.application.operations.interactions import (
+from ....adapters.outbound.aeat.sede import parse_censal_datos
+from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ....domain.buckets import BucketEventType
+from ....tests import FIXTURES_DIR
+from ...operations.interactions import (
     OperationApplyResponse,
     OperationRejectResponse,
 )
-from cadrumo.application.operations.models import (
+from ...operations.models import (
     OperationRequest,
     OperationTerminalReceipt,
 )
-from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
-from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
-from cadrumo.application.user_profile.censal_operation import (
+from ...operations.persistence.leases import operation_conflict_scope_reference
+from ..capsule_record import ProfileRecordStore
+from ..censal_operation import (
     CENSAL_OPERATION_DEFINITION,
     CensalFieldIntent,
     CensalOperationAcquisition,
     CensalOperationExecutor,
     CensalReviewedFieldIntent,
 )
-from cadrumo.application.user_profile.censo_sync import CENSO_SOURCE_TAG
-from cadrumo.application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo, open_censo_divergences
-from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
-from cadrumo.application.user_profile.projections import record_to_path_values
-
-from ....adapters.outbound.aeat.sede import parse_censal_datos
-from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ....domain.buckets import BucketEventType
-from ....tests import FIXTURES_DIR
+from ..censo_sync import CENSO_SOURCE_TAG
+from ..cotejo_apply import CensoDivergence, apply_cotejo, open_censo_divergences
+from ..profile_record_repository import ProfileRecordRepository
+from ..projections import record_to_path_values
 from .test_censal_operation_executor import (
     _NOW,
     _RESPONSE_TOKEN,

@@ -10,7 +10,7 @@ from shutil import rmtree
 
 import pytest
 
-from cadrumo.core import DirectoryEntryKind, scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry import RegistryValidationError, load_modelo_directory
 
 from ..pipeline import _tree_publication

@@ -36,10 +36,10 @@ from pathlib import Path
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....core.config import override_settings
 from ....core.i18n import tr
-from .._errors import AggregationConfigError, AggregationValidationError, t
+from ..errors import AggregationConfigError, AggregationValidationError, t
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -104,7 +104,7 @@ _MIGRATED_KEYS: tuple[str, ...] = (
 #: Modules whose refusals this gate covers. Anchored so a rename cannot let the
 #: static sweep pass vacuously over a package that no longer contains them.
 _COVERED_MODULES: tuple[str, ...] = (
-    "_errors.py",
+    "errors.py",
     "_invoice_retencion.py",
     "_iva_ledger.py",
     "_m303_arrivals.py",

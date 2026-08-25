@@ -45,7 +45,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .....core.config import override_settings
 from .....core.resources import bundled_path
 from .....tests.env_scope import scoped_env_var

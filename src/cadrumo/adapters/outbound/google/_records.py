@@ -4,7 +4,7 @@ The per-profile Google session persists
 :class:`adapters.outbound.google.OAuthClient`,
 :class:`adapters.outbound.google.OAuthToken`, and
 :class:`adapters.outbound.google.OAuthMetadata` through
-:mod:`adapters.outbound.google._session_store`.
+:mod:`adapters.outbound.google.session_store`.
 :class:`adapters.outbound.google.DriveConfig` stores the Drive root
 folder selected for the profile and is read by
 :func:`adapters.outbound.storage.get_storage_provider` when building the

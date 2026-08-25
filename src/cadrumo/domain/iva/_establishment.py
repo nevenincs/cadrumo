@@ -268,7 +268,7 @@ def _territory_carve_outs() -> dict[str, _CarveOut]:
             a scope outside the closed sets, cites no provision, or gives a row
             anything other than exactly one disposition.
     """
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     target = bundled_path("registry", "aeat", "iva", "territory_carve_outs.toml")
     try:
@@ -353,7 +353,7 @@ def _carve_out_rows_from_payload(target: object, payload: Mapping[str, Any]) -> 
 
 def _carve_out_code(target: object, record: Mapping[str, Any], already_resolved: Mapping[str, _CarveOut]) -> str:
     """Return the row's alpha-2 code, refusing a malformed or repeated one."""
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     code = str(record.get("code", "")).strip().upper()
     if len(code) != _ALPHA2_LENGTH or not code.isalpha():
@@ -374,7 +374,7 @@ def _carve_out_disposition(
     Exactly one must be declared. A row naming none establishes nothing by
     accident, and a row naming two states the law twice.
     """
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     assimilated = record.get("assimilated_to")
     raw_scope = record.get("scope")
@@ -410,7 +410,7 @@ def _carve_out_citations(target: object, record: Mapping[str, Any], *, code: str
     A territorial rule IS a regulatory value, so an uncited row is ungrounded
     rather than merely undocumented and must not load.
     """
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     references = _str_tuple_or_none(record.get("legal_refs", ()))
     if references is None:
@@ -435,7 +435,7 @@ def _carve_out_row(
 
 def _refuse_empty_carve_out_table(target: object, resolved: Mapping[str, _CarveOut]) -> None:
     """Refuse a table that names no territory at all."""
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     if not resolved:
         raise IvaCatalogueError(f"{target}: the carve-out table names no territory")
@@ -443,7 +443,7 @@ def _refuse_empty_carve_out_table(target: object, resolved: Mapping[str, _CarveO
 
 def _refuse_unresolvable_parents(target: object, resolved: dict[str, _CarveOut]) -> None:
     """Refuse an assimilation pointing at a code no catalogue names."""
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     unresolvable = {row.assimilated_to for row in resolved.values() if row.assimilated_to} - _resolvable_parents(
         resolved
@@ -463,7 +463,7 @@ def _refuse_assimilation_cycles(target: object, resolved: Mapping[str, _CarveOut
     self-pointer refusal is the length-one case of this one; both are kept, so
     the commonest mistake still earns the message that names it directly.
     """
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     for start in resolved:
         seen = {start}
@@ -745,7 +745,7 @@ def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
             outside the closed set, or cites a provision that does not resolve
             to the bundled legal text it claims.
     """
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
     from ._grounding import verify_table_legal_refs
 
     target = bundled_path("registry", "aeat", "iva", "territories.toml")
@@ -869,7 +869,7 @@ def _country_vocabulary_payload() -> object:
     Raises:
         IvaCatalogueError: When the bundled table cannot be read or parsed.
     """
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     target = bundled_path("registry", "aeat", "iva", "country_names.toml")
     try:
@@ -900,7 +900,7 @@ def _index_country_names(payload: object, *, source: str) -> dict[str, str]:
             printed name, carries a blank one, when two DIFFERENT countries
             claim one normalised name, or when the vocabulary is empty.
     """
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     target = source
     if not _is_str_keyed_mapping(payload):
@@ -927,7 +927,7 @@ def _country_record_code_and_names(record: object, *, target: str) -> tuple[str,
         IvaCatalogueError: When the record is not a table, names no alpha-2
             code, or carries no printed name.
     """
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     if not _is_str_keyed_mapping(record):
         raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
@@ -953,7 +953,7 @@ def _claim_printed_country_name(
         IvaCatalogueError: When the name normalises to nothing, or when two
             DIFFERENT countries claim one normalised name.
     """
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     normalised = _normalise_printed_country_name(str(name))
     if not normalised:
@@ -1014,7 +1014,7 @@ def _index_country_alpha3(payload: object, *, source: str) -> dict[str, str]:
         IvaCatalogueError: On any of the three refusals above, on a malformed
             code in either column, or when the column is empty.
     """
-    from ._errors import IvaCatalogueError
+    from .errors import IvaCatalogueError
 
     target = source
     if not _is_str_keyed_mapping(payload):

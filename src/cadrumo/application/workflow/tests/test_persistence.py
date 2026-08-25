@@ -18,7 +18,7 @@ from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStag
 
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ..errors import WorkflowError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

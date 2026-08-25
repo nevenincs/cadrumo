@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._llm_review_workflow import (
+from ..llm_review_workflow import (
     LlmReviewDecision,
     LlmReviewInvocationOrigin,
     LlmReviewRequest,

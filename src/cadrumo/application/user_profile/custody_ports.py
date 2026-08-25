@@ -25,6 +25,7 @@ from ...core.errors import CoreError
 
 if TYPE_CHECKING:
     from ...domain.buckets import BucketEventHistoryCatalogue
+    from ...domain.user_profile.values import UserProfileSnapshot
     from .recovery_contracts import ProfileCustodyRecoveryArtifactWarning
 
 from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
@@ -39,6 +40,16 @@ class ProfileCustodyCommitPort(Protocol):
     @property
     def transaction_id(self) -> UUID:
         """The transaction that durably published this capsule."""
+        ...
+
+    @property
+    def publication_kind(self) -> Literal["enroll", "restore"]:
+        """Whether this capsule was enrolled locally or restored."""
+        ...
+
+    @property
+    def published_at(self) -> str:
+        """The canonical UTC instant recorded by the publication marker."""
         ...
 
 
@@ -67,6 +78,30 @@ class ProfileCustodyCapsuleLabelPort(Protocol):
 
     def canonical_json_bytes(self) -> bytes:
         """Return the canonical bytes committed into the capsule inventory."""
+        ...
+
+
+class ProfileCustodyLabelHeadPort(Protocol):
+    """Authenticated head of one committed profile-label lineage."""
+
+    @property
+    def label_revision(self) -> int:
+        """The latest authenticated label revision."""
+        ...
+
+    @property
+    def label_content_digest(self) -> str:
+        """The content digest of the latest authenticated label."""
+        ...
+
+    @property
+    def label_self_digest(self) -> str:
+        """The self-digest of the latest authenticated label."""
+        ...
+
+    @property
+    def self_digest(self) -> str:
+        """The self-digest authenticating this lineage head."""
         ...
 
 
@@ -211,6 +246,22 @@ class ProfileCustodySecureObjectRepositoryPort(Protocol):
 
     def apply_batch(self, writes: tuple[SecureObjectWrite, ...]) -> None:
         """Commit an atomic set of encrypted-object writes."""
+        ...
+
+
+class ProfileSnapshotPersistencePort(Protocol):
+    """Encrypted persistence boundary for immutable filing-time snapshots."""
+
+    def exists(self, snapshot_id: str) -> bool:
+        """Report whether one immutable snapshot row exists."""
+        ...
+
+    def load(self, snapshot_id: str) -> UserProfileSnapshot | None:
+        """Load and decode one snapshot, or report its absence."""
+        ...
+
+    def save(self, snapshot: UserProfileSnapshot) -> None:
+        """Encode and persist one immutable snapshot."""
         ...
 
 
@@ -404,6 +455,10 @@ class ProfileRecordCryptoError(CoreError, RuntimeError):
     """
 
 
+class ProfileCustodyRecordIntegrityError(CoreError, ValueError):
+    """The persistence provider refused a malformed or altered custody record."""
+
+
 class ProfileRecordEncryptedBlob(BaseModel):
     """Neutral encrypted-record shape exchanged across the application port."""
 
@@ -427,8 +482,56 @@ class ProfileRecordEncryptedBlob(BaseModel):
         return cls(nonce=payload[:12], ciphertext=payload[12:])
 
 
+@dataclass(frozen=True, slots=True)
+class ProfilePassphraseKdfPolicy:
+    """Supported Argon2id version and window for passphrase-sealed records."""
+
+    version: int
+    minimum_memory_cost_kib: int
+    maximum_memory_cost_kib: int
+    minimum_time_cost: int
+    maximum_time_cost: int
+    minimum_parallelism: int
+    maximum_parallelism: int
+    salt_bytes: int
+
+
+@dataclass(frozen=True, slots=True)
+class ProfilePassphraseKdfParameters:
+    """Persisted KDF parameters accompanying one passphrase-sealed record."""
+
+    version: int
+    memory_cost: int
+    time_cost: int
+    parallelism: int
+    salt: bytes
+
+
+@dataclass(frozen=True, slots=True)
+class ProfilePassphraseEncryptedRecord:
+    """Neutral KDF metadata and AEAD ciphertext minted by persistence."""
+
+    parameters: ProfilePassphraseKdfParameters
+    blob: ProfileRecordEncryptedBlob
+
+
 class ProfileRecordCryptoPort(Protocol):
-    """AEAD operations required by the capsule record authority."""
+    """AEAD and passphrase-sealing operations for profile-owned records."""
+
+    def passphrase_kdf_policy(self) -> ProfilePassphraseKdfPolicy:
+        """Return the single supported Argon2id version and cost window."""
+        ...
+
+    def passphrase_kdf_window_accepts(
+        self,
+        *,
+        memory_cost: int,
+        time_cost: int,
+        parallelism: int,
+        salt: bytes,
+    ) -> bool:
+        """Return whether persisted parameters satisfy the supported cost window."""
+        ...
 
     def encrypt_record(
         self,
@@ -448,6 +551,27 @@ class ProfileRecordCryptoPort(Protocol):
         associated_data: bytes | None = None,
     ) -> bytes:
         """Decrypt one record and verify its authenticated associated data."""
+        ...
+
+    def seal_with_passphrase(
+        self,
+        plaintext: bytes,
+        *,
+        passphrase: bytes,
+        associated_data: bytes,
+    ) -> ProfilePassphraseEncryptedRecord:
+        """Derive a fresh passphrase key and seal one record under it."""
+        ...
+
+    def open_with_passphrase(
+        self,
+        blob: ProfileRecordEncryptedBlob,
+        *,
+        passphrase: bytes,
+        parameters: ProfilePassphraseKdfParameters,
+        associated_data: bytes,
+    ) -> bytes:
+        """Derive the persisted passphrase key and authenticate one record."""
         ...
 
 
@@ -838,6 +962,16 @@ class ProfileCustodyPort(Protocol):
         """Load the authenticated label from one committed capsule."""
         ...
 
+    def verify_or_recover_initial_label_head(
+        self,
+        *,
+        label: ProfileCustodyCapsuleLabelPort,
+        source_witness: str,
+        root: Path,
+    ) -> ProfileCustodyLabelHeadPort:
+        """Verify the label head or recover its initial committed witness."""
+        ...
+
     def load_staged_capsule_label(
         self,
         profile_id: UUID,
@@ -925,8 +1059,22 @@ class ProfileCustodyPort(Protocol):
         """Return canonical bucket path and lock operations."""
         ...
 
+    def read_output_language_hint(self, *, storage_root: Path, bucket_id: str) -> str | None:
+        """Read one bucket's non-secret failure-rendering language hint."""
+        ...
+
     def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
         """Return active-bucket namespace inventory."""
+        ...
+
+    def profile_snapshot_persistence(
+        self,
+        bucket_id: str,
+        *,
+        object_key: Callable[[str, str], str],
+        objects: ProfileCustodySecureObjectRepositoryPort | None = None,
+    ) -> ProfileSnapshotPersistencePort:
+        """Return immutable profile-snapshot persistence for one bucket."""
         ...
 
     def record_crypto(self) -> ProfileRecordCryptoPort:
@@ -1103,6 +1251,14 @@ def inventory_committed_profile_custody(profile_id: UUID, *, root: Path | None =
 def default_profile_bucket_storage() -> ProfileBucketStoragePort:
     """Return canonical bucket layout and locking through the application port."""
     return profile_custody_port().bucket_storage()
+
+
+def read_profile_output_language_hint(*, storage_root: Path, bucket_id: str) -> str | None:
+    """Read one bucket's non-secret output-language hint through custody."""
+    return profile_custody_port().read_output_language_hint(
+        storage_root=storage_root,
+        bucket_id=bucket_id,
+    )
 
 
 def default_profile_secure_object_inventory() -> ProfileSecureObjectInventoryPort:
@@ -1378,10 +1534,12 @@ __all__ = [
     "ProfileCustodyCapsuleLabelPort",
     "ProfileCustodyCommitPort",
     "ProfileCustodyEnvelopePort",
+    "ProfileCustodyLabelHeadPort",
     "ProfileCustodyLocalRecordStore",
     "ProfileCustodyPasswordMaterialPort",
     "ProfileCustodyPasswordProofMaterialPort",
     "ProfileCustodyPort",
+    "ProfileCustodyRecordIntegrityError",
     "ProfileCustodyRecordSessionMaterial",
     "ProfileCustodyRecoveryArtifactExportReceiptPort",
     "ProfileCustodyRecoveryArtifactPort",
@@ -1395,11 +1553,15 @@ __all__ = [
     "ProfileCustodySecureObjectRepositoryPort",
     "ProfileCustodySentinelPort",
     "ProfileCustodyUnlockPort",
+    "ProfilePassphraseEncryptedRecord",
+    "ProfilePassphraseKdfParameters",
+    "ProfilePassphraseKdfPolicy",
     "ProfileRecordCryptoError",
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",
     "ProfileRecoveryKeyPort",
     "ProfileSecureObjectInventoryPort",
+    "ProfileSnapshotPersistencePort",
     "bind_profile_custody_port",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
@@ -1424,6 +1586,7 @@ __all__ = [
     "profile_is_keyring_unavailable",
     "profile_is_persistence_failure",
     "prove_profile_recovery_artifact",
+    "read_profile_output_language_hint",
     "refuse_profile_login_without_password_channel",
     "replace_profile_custody_password_envelope",
     "unlock_profile_custody_password",

@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry import (
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,
     AUXILIARY_ENVELOPE_HEADER_ROWS,
+    GeneratedArtifactSource,
     RecordDesignAuxiliaryEnvelopeHeader,
     RecordDesignAuxiliaryEnvelopeHeaderRole,
     RecordDesignCompositeRelativeClosing,
@@ -29,7 +30,6 @@ from cadrumo.domain.calculations.registry import (
     RecordDesignVariableEnvelope,
     RegistryValidationError,
     ResolvedRecordDesignBinary,
-    SourceReference,
     SourceRefId,
     extract_record_design,
     resolve_record_design_binary,
@@ -261,7 +261,7 @@ class RecordDesignIntermediate(_StrictModel):
 
 def load_record_design_intermediate(
     root: Path,
-    sources: Mapping[str, SourceReference],
+    sources: Mapping[str, GeneratedArtifactSource],
     *,
     source_ref: str,
     filing_year: int,

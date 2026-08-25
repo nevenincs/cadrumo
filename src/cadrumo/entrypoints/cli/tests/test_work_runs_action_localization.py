@@ -12,6 +12,18 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.workflow.abort import WorkflowAbortReason
+from cadrumo.application.workflow.persistence import save_run
+from cadrumo.application.workflow.run_models import (
+    SiteHealthAlert,
+    WorkflowFailureDetails,
+    WorkflowObligationFacts,
+    WorkflowResult,
+    WorkflowSiteHealthFacts,
+    WorkflowStage,
+    WorkflowStep,
+)
+
 from ....adapters.outbound.aeat.browser import SiteHealthState
 from ....application.operator_actions import (
     ActionArgumentBinding,
@@ -19,9 +31,6 @@ from ....application.operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from cadrumo.application.workflow.run_models import SiteHealthAlert, WorkflowFailureDetails, WorkflowObligationFacts, WorkflowResult, WorkflowSiteHealthFacts, WorkflowStage, WorkflowStep
-from cadrumo.application.workflow.abort import WorkflowAbortReason
-from cadrumo.application.workflow.persistence import save_run
 from ....core import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -33,7 +42,7 @@ from ....core import (
 )
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....domain.deadlines import ObligationStatus
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root

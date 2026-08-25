@@ -51,7 +51,7 @@ from ...domain.iva import (
     TransactionKind,
     lookup_rate,
 )
-from ._errors import AggregationValidationError, t
+from .errors import AggregationValidationError, t
 from ._invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
     invoice_devengo_in_period,

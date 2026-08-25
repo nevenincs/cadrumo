@@ -64,7 +64,7 @@ from ._browser_constants import (
     default_viewport,
 )
 from ._browser_stage import build_playwright_stage_runner
-from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
+from .errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
 
 logger = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()

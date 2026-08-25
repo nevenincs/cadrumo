@@ -143,13 +143,13 @@ def _ensure_profile_keys_registered() -> None:
     budget it also happens to protect. Hoisting it to module scope deadlocks a
     real import: this module is reached through the package's own lazy
     ``__getattr__``, so while that resolver is on the stack the wizard package
-    loads, and ``wizard._status`` imports a name back out of this package that
+    loads, and ``wizard.status`` imports a name back out of this package that
     the resolver has not bound yet. The failure is an ``ImportError`` for a
     name that plainly exists, from a chain that looks acyclic in the static
     import graph, which is exactly why a graph-based check will keep declaring
     the hoist safe.
     """
-    from ..wizard import WIZARD_FLOWS
+    from ..wizard.catalogue import WIZARD_FLOWS
 
     _ = WIZARD_FLOWS
 

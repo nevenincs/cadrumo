@@ -41,7 +41,7 @@ from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import load_test_profile_record, seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_eligibility_advisory_finding
@@ -247,7 +247,7 @@ def test_advisory_weighted_count_matches_calculate_path_candidate_count(
     )
     _seed(seeded_bucket, facts)
 
-    from ....domain.user_profile import load_user_profile_schema
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     record = load_test_profile_record(seeded_bucket)
     fact_index = profile_fact_index(record, load_user_profile_schema())

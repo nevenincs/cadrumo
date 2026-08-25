@@ -9,7 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period, scan_directory, validated_casilla_id
+from ....core import Period, validated_casilla_id
+from ....core.directory_scan import scan_directory
 from ....domain.modelos import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from ....tests.filing_evidence import general_m303_filing_evidence
 from .. import StoredCalculationDriftError

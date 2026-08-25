@@ -1,7 +1,7 @@
 """Real-behavior tests for the censo-override warning helper.
 
 Locks the contract that
-:func:`cadrumo.application.ledger._ratios.censo_override_warning` returns
+:func:`cadrumo.application.ledger.ratios.censo_override_warning` returns
 a typed warning when an operator's per-category override for a
 HOME_OFFICE category deviates from the legally-binding censo-derived
 value, and stays silent for non-HOME_OFFICE categories.
@@ -14,7 +14,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.categories import SpendingCategory
-from .._ratios import (
+from ..ratios import (
     RatiosCensoOverrideWarning,
     censo_business_pct_for,
     censo_override_warning,

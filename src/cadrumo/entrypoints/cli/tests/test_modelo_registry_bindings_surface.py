@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....core.resources import resources
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

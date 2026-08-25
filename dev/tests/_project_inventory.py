@@ -12,7 +12,7 @@ from __future__ import annotations
 from functools import cache
 from pathlib import Path
 
-from cadrumo.core import DirectoryEntryKind, scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
 from .._paths import REPO_ROOT
 

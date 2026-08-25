@@ -60,7 +60,7 @@ if TYPE_CHECKING:
         ground_extracted_fields,
         parse_invoice_extraction_response,
     )
-    from ._suggestions import (
+    from .suggestions import (
         ExtractionPayload,
         ExtractionProducer,
         LLMClassificationSuggestion,
@@ -98,7 +98,7 @@ from ._consent import (
     cloud_evidence_read_permitted,
     mint_evidence_consent_token,
 )
-from ._errors import (
+from .errors import (
     LLMBusyError,
     LLMCacheError,
     LLMConfigError,
@@ -298,9 +298,9 @@ def __getattr__(name: str) -> object:
     lives: each still has exactly one canonical home and one import path.
     """
     if name in _SUGGESTION_EXPORTS:
-        from . import _suggestions
+        from . import suggestions
 
-        return getattr(_suggestions, name)
+        return getattr(suggestions, name)
     if name == "LocalVisionLLMClassifier":
         from ._vision_classifier import LocalVisionLLMClassifier
 

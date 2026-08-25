@@ -45,7 +45,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG, AggregationCaptureKind, Period
 from ...core.time import UtcInstant, now
-from ._errors import AggregationValidationError, t
+from .errors import AggregationValidationError, t
 from ._observation_window import hashed_tax_id_token, replace_observation_window
 from ._retenciones import RetencionObservation, RetencionScheme
 
@@ -237,7 +237,7 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
         the pull≠calculate divergence this store closes). An empty
         ``observations`` clears the window (the operator declared none); the
         resolver raises a no-silent
-        :class:`~._errors.AggregationValidationError` when a declaring revision
+        :class:`~.errors.AggregationValidationError` when a declaring revision
         then reads an empty store, before a zero perceptor count can be filed.
         """
         replace_observation_window(

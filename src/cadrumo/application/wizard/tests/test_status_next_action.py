@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._status import _next_wizard_action
+from ..status import _next_wizard_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

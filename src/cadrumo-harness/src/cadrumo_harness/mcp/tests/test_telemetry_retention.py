@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .._telemetry import (
     SessionTelemetryWriter,

@@ -21,7 +21,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import CasillaConstraints, LegalRefId, load_modelo_directory
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._modelo_localization import casilla_occurrence_locale_key
 from .._schema import (
     CasillaDefinition,

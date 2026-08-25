@@ -64,7 +64,7 @@ from ..iva import (
     category_bears_taxable_base,
     category_components,
 )
-from ._errors import InvoiceValidationError
+from .errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping

@@ -10,8 +10,8 @@ from __future__ import annotations
 import pytest
 
 from ....tests.registry_tree import bundled_registry_tree
-from .._loader import load_user_profile_schema
-from .._schema import ProfileSchemaDefinition
+from ..loader import load_user_profile_schema
+from ..schema import ProfileSchemaDefinition
 
 
 @pytest.fixture(name="schema", scope="function")

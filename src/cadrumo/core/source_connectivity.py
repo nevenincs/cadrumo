@@ -456,7 +456,7 @@ class SourceConnectivityCensusRow(SourceConnectivityCandidateIdentity):
             authority = (info.context or {}).get("source_connectivity_proof_authority")
             if not isinstance(authority, SourceConnectivityProofAuthority):
                 raise ValueError("connected connectivity row requires live proof authority validation")
-            self._verify_connected_authority(authority)
+            self.verify_connected_authority(authority)
         elif self.connected_proof is not None:
             raise ValueError("only a connected connectivity row may carry connected_proof")
         if (

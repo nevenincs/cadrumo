@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .._authority import ValidatedRegistryAuthority
-from .._errors import RegistryLoadError
+from ..errors import RegistryLoadError
 from .._loader import _load_shared_catalogue_files, load_registry_tree
 from .._schema import SupportedFilingYearsCatalogue
 

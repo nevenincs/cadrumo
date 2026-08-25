@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .._errors import CorpusSearchInputError
+from ..errors import CorpusSearchInputError
 from .._lexical_index import build_lexical_index, iter_corpus_chunks
 from .._models import CitationResolution, RetrievalHit, RetrievalMode, RetrievalResponse
 from .._retrieval import run_retrieval

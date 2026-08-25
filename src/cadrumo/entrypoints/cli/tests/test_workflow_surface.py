@@ -182,7 +182,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     )
     assert declare_result.exit_code == 0, declare_result.output
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
 
     # Profile identity is an immutable UUIDv4 minted at creation; the
     # ``operator`` string is only the operator-facing display label.

@@ -67,7 +67,7 @@ def test_the_owned_session_is_closed_when_it_is_the_active_one() -> None:
 
     assert owned.sealed
     assert current_active_bucket_session() is None
-    assert owner._session is None
+    assert owner.session is None
 
 
 def test_a_session_bound_by_someone_else_survives_the_unwind() -> None:

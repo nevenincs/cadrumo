@@ -81,7 +81,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests import SRC_CADRUMO
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 

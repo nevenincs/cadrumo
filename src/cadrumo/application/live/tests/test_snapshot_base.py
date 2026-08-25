@@ -18,9 +18,9 @@ from ....adapters.persistence.storage.sql import SecureObjectRecord, SecureObjec
 from ....core.errors import CadrumoError
 from ....core.hashing import content_hash_hex
 from ....core.identity import BucketId
-from .._borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
-from .._errors import LiveApplicationInputError
-from .._snapshot_base import (
+from ..borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
+from ..errors import LiveApplicationInputError
+from ..snapshot_base import (
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotRepository,
@@ -476,7 +476,7 @@ def test_secure_snapshot_repository_conforms_to_protocol(
     Uses the expedientes namespace+model to exercise the generic class.
     """
     from ....adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
-    from .._expedientes import (
+    from ..expedientes import (
         PersistedExpedientesSnapshot,
         expedientes_snapshot_object_key,
     )

@@ -25,7 +25,7 @@ from ....domain.modelos import (
     WorkUnit,
     derive_work_unit_id,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._attribution_received_advisory import _attribution_received_omission_advisory_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

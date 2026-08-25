@@ -6,7 +6,7 @@ import typer
 
 from ....core.external_constants import OutputLanguage
 from .._common import activate_subcommand_output_language, emit_envelope
-from .._errors import CliRefusedBoundaryError
+from ..errors import CliRefusedBoundaryError
 
 
 def _parse_values(tokens: list[str]) -> dict[str, str]:

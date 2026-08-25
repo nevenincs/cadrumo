@@ -42,7 +42,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import ActionConditionality, NoRecoveryOutcome, scan_directory
+from ....core import ActionConditionality, NoRecoveryOutcome
+from ....core.directory_scan import scan_directory
 from ....core.errors import TerminalPreconditionErrorMixin
 from ....domain.filing import FilingExportError, ModeloBuilderError, ModeloImportError
 from ..errors import FilingPreconditionCondition, ModeloApplicationError

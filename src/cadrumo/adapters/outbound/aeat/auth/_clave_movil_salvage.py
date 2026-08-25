@@ -23,11 +23,12 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+
 from .....core.logging import get_logger
 from .....core.time import now
-from . import _session_store
-from ._authenticator import AEAT_SESSION_IDLE_TTL, BrowserContextLike, BrowserPageLike
-from ._clave_movil_metadata import ClaveMovilSessionMetadata
+from .authenticator import AEAT_SESSION_IDLE_TTL, BrowserContextLike, BrowserPageLike
+from .clave_movil_metadata import ClaveMovilSessionMetadata
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -158,7 +159,7 @@ class _ClaveMovilSessionSalvageMixin(abc.ABC):
                 identity_nif=dni_nie,
                 authenticated_at=authenticated_at,
                 idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
-                storage_state_sha256=_session_store.storage_state_sha256(storage_state),
+                storage_state_sha256=session_store.storage_state_sha256(storage_state),
                 used_non_qr_fallback=self._settings.cadrumo_clave_prefer_non_qr,
                 verification_code=None,
                 landing_url=self._salvageable_landing_url(

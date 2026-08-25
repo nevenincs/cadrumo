@@ -34,7 +34,7 @@ from pathlib import Path
 import pytest
 from babel.messages.pofile import read_po
 
-from cadrumo.core import DirectoryEntryKind, scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 
 from ..._paths import REPO_ROOT

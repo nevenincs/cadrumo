@@ -54,7 +54,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from cadrumo.core import iter_directory, scan_directory
+from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from .._paths import UTF_8
 

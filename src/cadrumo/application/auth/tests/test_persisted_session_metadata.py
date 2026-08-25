@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 
 import pytest
 
-from ....adapters.outbound.aeat.auth import _session_store
+from ....adapters.outbound.aeat.auth import session_store
 from ....core import AuthProviderKind
 from ....core.external_constants import load_external_constants
 from ....tests.secure_sql import isolated_runtime_profile
@@ -51,7 +51,7 @@ def test_load_persisted_session_accepts_provider_specific_clave_metadata(tmp_pat
             "origins": [],
         }
         path = storage_state_paths(AuthProviderKind.CLAVE_MOVIL).storage_state
-        _session_store.save(
+        session_store.save(
             path,
             storage_state=storage_state,
             metadata={
@@ -60,7 +60,7 @@ def test_load_persisted_session_accepts_provider_specific_clave_metadata(tmp_pat
                 "identity_nif": "TEST-IDENTITY",
                 "authenticated_at": authenticated_at.isoformat().replace("+00:00", "Z"),
                 "idle_deadline": (authenticated_at + timedelta(minutes=18)).isoformat().replace("+00:00", "Z"),
-                "storage_state_sha256": _session_store.storage_state_sha256(storage_state),
+                "storage_state_sha256": session_store.storage_state_sha256(storage_state),
                 "used_non_qr_fallback": True,
                 "verification_code": "SUB",
                 "landing_url": landing_url,

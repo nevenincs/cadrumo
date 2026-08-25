@@ -51,7 +51,7 @@ from typing import TYPE_CHECKING, Final
 from ...core import TipoActividad
 from ...core.resources import bundled_path
 from ..deadlines import IrpfActivityKind
-from ._errors import TransactionValidationError
+from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

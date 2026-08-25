@@ -17,7 +17,7 @@ import pytest
 from .....core import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .....tests.registry_tree import bundled_registry_tree
 from .. import _loader
-from .._errors import RegistryLoadError
+from ..errors import RegistryLoadError
 from .._loader import load_modelo_directory
 from .._schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
 from .._schema_base import GOVERNANCE_STAMP, governance_stamp_fields

@@ -26,7 +26,7 @@ from pydantic import SecretStr
 
 from ....core import AuthProviderKind
 from ....core.config import override_settings
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import (
     bound_test_profile_record,
     replace_test_profile_record,

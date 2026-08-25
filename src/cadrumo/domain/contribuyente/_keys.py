@@ -2,7 +2,7 @@
 
 The registry is a tuple of strict :class:`ProfileKey` records compiled
 from the wizard descriptor catalogue
-(``cadrumo.application.wizard._catalogue.WIZARD_FLOWS``) and pushed into this
+(``cadrumo.application.wizard.catalogue.WIZARD_FLOWS``) and pushed into this
 domain registry via :func:`register_profile_keys` when the wizard package is
 imported (its ``__init__`` eagerly runs the compiler's registration). The
 domain never pulls upward into the application layer: reading the
@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
-from ._errors import ProfileKeysRegistrationError, ProfileValidationError
+from .errors import ProfileKeysRegistrationError, ProfileValidationError
 from ._normalise import normalise_key
 
 if TYPE_CHECKING:

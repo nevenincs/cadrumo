@@ -7,7 +7,7 @@ from functools import cache
 
 import pytest
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .....core.aggregation import BindingSourceKind
 from .....core.resources import bundled_path
 from .. import _bindings

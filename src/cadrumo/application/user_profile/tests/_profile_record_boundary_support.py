@@ -32,7 +32,7 @@ from ....adapters.persistence.storage.custody import (
     create_profile_custody_sentinel,
 )
 from ....domain.buckets import BucketEventType
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 
 PROFILE_ID = UUID("3f8b1d42-6c07-4e59-9a13-2b7e5c04d8af")

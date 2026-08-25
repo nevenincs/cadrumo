@@ -1,7 +1,7 @@
 """Canonical registry slot for the wizard-flow catalogue.
 
 Domain modules that need to inspect ``SETUP_FLOW`` or ``WIZARD_FLOWS``
-import from here, never from ``application.wizard._catalogue``. This
+import from here, never from ``application.wizard.catalogue``. This
 module is the core slot that holds already-built descriptors; it does not build
 wizard sections, render prompts, compile profile keys, persist answers, or
 own the :mod:`core.setup_answers` typed answer model.
@@ -13,7 +13,7 @@ The application layer registers the concrete descriptors at startup via
 surfaces immediately rather than silently falling back to an upward dependency.
 
 The protocol this module defines (:class:`WizardFlowProtocol`) is satisfied by
-:class:`application.wizard._models.WizardFlow`. Domain code depends only on the
+:class:`application.wizard.models.WizardFlow`. Domain code depends only on the
 structural slot and the accessor functions; the concrete descriptor class stays
 owned by the application wizard package.
 """
@@ -75,7 +75,7 @@ def register_wizard_catalogue(
     """Register the concrete wizard-flow descriptors from the application layer.
 
     Call this exactly once at application startup (e.g. in the
-    ``application.wizard._catalogue`` module body, after the
+    ``application.wizard.catalogue`` module body, after the
     ``SETUP_FLOW`` / ``WIZARD_FLOWS`` constants are built).
 
     Calling with identical objects a second time is a no-op. Calling with
@@ -105,7 +105,7 @@ def get_setup_flow() -> Any:  # ANY-RETURN-RATIONALE-CATALOGUE-SLOT
     Returns:
         The concrete ``SETUP_FLOW`` descriptor registered by the
         application layer. Callers should treat it as the canonical setup-flow
-        descriptor and should not import ``application.wizard._catalogue``
+        descriptor and should not import ``application.wizard.catalogue``
         as a fallback.
 
     Raises:

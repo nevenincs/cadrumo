@@ -21,7 +21,8 @@ from urllib.parse import quote, urljoin, urlsplit
 
 from pydantic import AnyUrl
 
-from .....core import Period, scan_directory
+from .....core import Period
+from .....core.directory_scan import scan_directory
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings, load_settings
 from .....core.external_constants import UTF_8_ENCODING
@@ -48,7 +49,7 @@ from ._browser_constants import (
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
 )
-from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._iva_compensation_wallet_parsing import (
     _EXTERNAL,
     _PRE303,
@@ -69,7 +70,7 @@ from ._schema import IvaCompensationWalletObservation
 
 if TYPE_CHECKING:
     from .._playwright import Page
-    from ..auth import AeatSession
+    from ..auth.authenticator_types import AeatSession
 
 
 log = get_logger(__name__)

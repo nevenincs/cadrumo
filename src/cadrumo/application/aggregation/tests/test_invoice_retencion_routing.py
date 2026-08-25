@@ -30,7 +30,7 @@ from ....domain.calculations.registry import ModeloRevision, resolve_retenciones
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.iva import InvoiceKind, IvaCategory, IvaRetencionRole, category_components
 from ....tests.secure_sql import isolated_runtime_profile
-from .._errors import AggregationValidationError
+from ..errors import AggregationValidationError
 from .._invoice_retencion import (
     INVOICE_RETENCION_DEFECT_GUIDANCE,
     InvoiceRetencionProjectionDefect,

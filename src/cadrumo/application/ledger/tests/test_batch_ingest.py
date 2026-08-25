@@ -15,7 +15,7 @@ from pydantic import ValidationError
 
 from ....domain.iva import InvoiceKind
 from ...operator_actions import PreconditionVerdict
-from .._batch_ingest import (
+from ..batch_ingest import (
     BATCH_ITEM_STATUSES,
     BatchItemResult,
     BatchItemStatus,
@@ -24,7 +24,7 @@ from .._batch_ingest import (
     order_batch_sources,
     summarise_batch,
 )
-from .._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from ..preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

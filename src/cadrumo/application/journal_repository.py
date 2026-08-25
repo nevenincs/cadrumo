@@ -32,8 +32,10 @@ from ..core import (
     StorageCategory,
     exclusive_file_lock,
     is_link_like,
-    scan_directory,
     storage_location,
+)
+from ..core.directory_scan import (
+    scan_directory,
 )
 from ..core.atomic_write import atomic_write_hardened_text
 from ..core.errors import CadrumoError

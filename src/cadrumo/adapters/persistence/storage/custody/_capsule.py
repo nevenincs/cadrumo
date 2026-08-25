@@ -71,7 +71,7 @@ from ._capsule_records import (
 from ._capsule_records import (
     parse_profile_custody_deletion_marker as _parse_profile_custody_deletion_marker,
 )
-from ._errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 from ._filesystem import (
     PROFILE_CUSTODY_COMMIT_FILENAME,
     ProfileCustodyPasswordReadOperation,

@@ -27,7 +27,7 @@ from .._surface import (
     resolve_surface_mode,
 )
 from .._tools import build_tool_descriptors
-from ._session import connected_server_and_client_session as connect
+from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

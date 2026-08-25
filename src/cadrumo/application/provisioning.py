@@ -47,9 +47,11 @@ from ..core import (
     OptionalExtra,
     candidates_for_role,
     hardware_tier_for_free_bytes,
-    iter_directory,
     model_candidate,
     optional_extra_available,
+)
+from ..core.directory_scan import (
+    iter_directory,
 )
 from ..core.config import Settings, load_settings
 from ..core.i18n import tr

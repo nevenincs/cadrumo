@@ -3,8 +3,8 @@
 The profile-setup wizard catalogue (``SETUP_FLOW`` / ``WIZARD_FLOWS``) and the
 project-answers projection are core registry slots that a domain module reaches
 during ``app modelo work create``. They are populated by importing
-:mod:`cadrumo.application.wizard._catalogue` and
-:mod:`cadrumo.application.wizard._persistence` for their registration side effect.
+:mod:`cadrumo.application.wizard.catalogue` and
+:mod:`cadrumo.application.wizard.persistence` for their registration side effect.
 
 The CLI root callback owns that side-effect import — the same contract as the
 active-profile language resolver. A relocation that drops the import leaves the

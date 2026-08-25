@@ -23,7 +23,7 @@ from ....core.flows import (
 )
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.validators import CrossFieldValidator, ValidationVerdict, resolve_cross_field_validator
-from .. import (
+from ..flow_validators import (
     TAXPAYER_PROJECTION_VALIDATOR_ID,
     build_taxpayer_projection_validator,
     register_taxpayer_projection_validator,

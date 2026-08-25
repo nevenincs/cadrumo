@@ -8,30 +8,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, SecretStr, field_validator
 
-from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
-from cadrumo.application.operations.secret_submission import OperationEphemeralSecretDeclaration
-from cadrumo.application.user_profile.bundle_export_contracts import (
-    ProfileBundleExportPurpose,
-    ProfileBundleExportRequest,
-    ProfileBundleExportResult,
-    ProfileBundleExportTransport,
-)
-
 from ...core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,
@@ -44,8 +20,31 @@ from ...core import (
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity import ContentDigest
 from ...core.time import now
+from ..operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
+from ..operations.registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+)
+from ..operations.secret_submission import OperationEphemeralSecretDeclaration
 from .bundle_export import export_profile_bundle
+from .bundle_export_contracts import (
+    ProfileBundleExportPurpose,
+    ProfileBundleExportRequest,
+    ProfileBundleExportResult,
+    ProfileBundleExportTransport,
+)
 from .fact_write import apply_manager_profile_field_mutation
 from .login_session import logout_active_profile
 from .section_rows import add_profile_repeatable_section_row

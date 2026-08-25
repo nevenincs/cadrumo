@@ -10,19 +10,16 @@ from pydantic import ValidationError
 from ....core.classification import SensitivityClass
 from ....core.resources import bundled_path, resources
 from ...calculations.registry import verify_legal_catalogue
-from .. import (
+from ..errors import SCHEMA_LOAD_MESSAGE_KEY, UserProfileNotFoundError, UserProfileSchemaLoadError
+from ..loader import CONDITION_SCHEMA_PATH_STAT, CONDITION_SCHEMA_TABLE_PRESENT, load_user_profile_schema
+from ..schema import (
     ProfileFieldDefinition,
     ProfileFieldType,
     ProfileRemovePolicy,
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
     ProfileSnapshotPolicy,
-    UserProfileNotFoundError,
-    UserProfileSchemaLoadError,
-    load_user_profile_schema,
 )
-from .._errors import SCHEMA_LOAD_MESSAGE_KEY
-from .._loader import CONDITION_SCHEMA_PATH_STAT, CONDITION_SCHEMA_TABLE_PRESENT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

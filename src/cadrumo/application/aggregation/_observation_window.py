@@ -33,7 +33,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import tax_id_identity_token
 from ...core.time import now
-from ._errors import AggregationValidationError, t
+from .errors import AggregationValidationError, t
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureBoundRepository

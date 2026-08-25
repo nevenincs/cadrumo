@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import iter_directory
+from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.external_constants import OutputLanguage
 
 from .. import (
@@ -21,13 +21,13 @@ from .. import (
     EnrolmentCandidate,
     ScaffoldAction,
     SeedLabel,
-    TerminologyValidationError,
     build_scaffold_plan,
     collect_enrolment_candidates,
     load_terminology_handbook,
     scaffold_handbook,
     serialise_concept,
 )
+from ..errors import TerminologyValidationError
 from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

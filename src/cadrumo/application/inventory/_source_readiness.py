@@ -1,16 +1,15 @@
 """Readiness facts for the inventory calculation source.
 
 The strict-frozen record and context-independent readiness check distinguishes
-the completed encrypted schema-v3 inventory persistence boundary from the still
-missing calculation-source connection. It does not resolve calculation values,
-adapt or enroll a source, participate in the source mesh, or emit diagnostics.
-Its source identity is the canonical
+the connected encrypted schema-v3 inventory source from the still-incomplete
+filing row projection. It does not resolve calculation values, render filing
+rows, or emit diagnostics. Its source identity is the canonical
 :attr:`~core.BindingSourceKind.INVENTORY` member.
 
 See Also:
     :class:`~application.inventory.InventoryService`
-        Application service for encrypted schema-v3 inventory state that is not
-        yet enrolled as canonical calculation-source state.
+        Application service for encrypted schema-v3 inventory state consumed by
+        the canonical calculation-source resolver.
 """
 
 from __future__ import annotations
@@ -33,10 +32,11 @@ class InventorySourceReadiness(BaseModel):
 def inventory_source_readiness() -> InventorySourceReadiness:
     """Return the context-independent inventory-source readiness fact.
 
-    Encrypted schema-v3 persistence is complete for movements, valuation inputs,
-    complete acquisition cost, and closing authority. Readiness remains false
-    until the inventory resolver, source-mesh enrollment, registry bindings,
-    orchestration, and ownership refusal path are connected.
+    Encrypted schema-v3 persistence, the canonical resolver, source-mesh
+    enrollment, registry row bindings, calculation orchestration, source
+    identity, and caller-override refusal are present. Readiness remains false
+    until the row bindings are materialized into grounded repeated M100 activity
+    casillas and filing-grade rendering and verification are proven end to end.
 
     Returns:
         An :class:`~application.inventory.InventorySourceReadiness` with
@@ -46,10 +46,10 @@ def inventory_source_readiness() -> InventorySourceReadiness:
         ready=False,
         source_kind=BindingSourceKind.INVENTORY,
         reason=(
-            "inventory encrypted schema-v3 persistence is complete for movements, valuation inputs, "
-            "complete acquisition cost, and closing authority; calculation-source readiness remains false "
-            "until the canonical inventory resolver, source-mesh enrollment, registry bindings, "
-            "calculation orchestration, and source-ownership refusal path are connected"
+            "inventory encrypted schema-v3 persistence, canonical resolution, source-mesh enrollment, "
+            "registry row bindings, calculation orchestration, source identity, and caller-override refusal "
+            "are connected; filing readiness remains false until grounded repeated M100 activity-row casillas "
+            "are materialized, rendered, and verified end to end"
         ),
     )
 

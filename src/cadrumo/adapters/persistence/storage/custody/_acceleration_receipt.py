@@ -88,7 +88,7 @@ from ..errors import (
     StorageError,
     StorageValidationError,
 )
-from ._errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 from ._filesystem import (
     compare_and_clear_profile_custody_local_record,
     compare_and_replace_profile_custody_local_record,

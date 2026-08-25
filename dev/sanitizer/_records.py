@@ -30,7 +30,7 @@ from pydantic import (
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.identity import validate_spanish_tax_id
 
-from ._errors import SanitizerValidationError
+from .errors import SanitizerValidationError
 
 _SHA256_PATTERN = r"^[0-9a-f]{64}$"
 

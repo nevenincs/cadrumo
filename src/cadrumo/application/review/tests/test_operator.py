@@ -13,7 +13,7 @@ from ....core.i18n import tr
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from .. import ReviewSeverity, ReviewState
-from .._errors import ReviewError, ReviewKindReservedError
+from ..errors import ReviewError, ReviewKindReservedError
 from .._models import FindingReviewItem
 from .._operator import (
     ACCEPTED_KINDS,

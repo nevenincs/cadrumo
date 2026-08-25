@@ -25,9 +25,7 @@ from ...domain.submission import ModeloDraftStatus
 from ..auth.models import AuthState
 from ._identity import period_identity_segment
 from .active_profile import (
-    ActiveProfileRecordResolution,
     active_profile_selection,
-    require_active_profile_bucket_id,
     resolve_active_profile_record,
 )
 from .review_models import (
@@ -37,9 +35,8 @@ from .review_models import (
 )
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...adapters.persistence.storage import SecureObjectRepository
-    from ...domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
+    from ...domain.user_profile.values import UserProfileRecord
+
 
 def _parse_declaration_modelo(value: object) -> Modelo:
     """Resolve a persisted declaration pointer through the canonical Modelo enum."""
@@ -128,23 +125,13 @@ class WorkflowState(BaseModel):
     bucket_events: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
 
-    def active_profile_record(
-        self,
-        *,
-        secure_objects: SecureObjectRepository | None = None,
-        schema: ProfileSchemaDefinition | None = None,
-    ) -> UserProfileRecord | None:
+    def active_profile_record(self) -> UserProfileRecord | None:
         """Return the active :class:`UserProfileRecord` from its secure bucket.
 
         The active selector resolves via the precedence chain in
         :func:`cadrumo.application.workflow.active_profile.active_profile_selection`
         resolves the canonical selector, then the committed-capsule projection resolves a display
         label to its immutable bucket UUID before secure storage is addressed.
-
-        ``secure_objects`` (a :class:`SecureObjectRepository` override) and
-        ``schema`` are optional overrides forwarded to
-        the canonical user-profile lifecycle service; a
-        per-bucket store and the bundled schema are resolved when ``None``.
 
         This is the convenience view for callers that legitimately act only on
         a present record and treat every absence alike. A caller that REPORTS
@@ -154,16 +141,7 @@ class WorkflowState(BaseModel):
         gone, and a projection that guesses between them tells the operator
         their financial records are missing when they merely need to log in.
         """
-        return self.resolve_active_profile_record().record
-
-    def resolve_active_profile_record(self) -> ActiveProfileRecordResolution:
-        """Return the active-profile record read together with its absence reason.
-
-        See :func:`resolve_active_profile_record`, whose contract this shares;
-        the active profile is resolved from process state rather than from this
-        record, so the two are the same read reached from either handle.
-        """
-        return resolve_active_profile_record()
+        return resolve_active_profile_record().record
 
     def active_profile_bucket_id(self) -> str | None:
         """Return the selected profile's canonical secure bucket UUID.
@@ -174,33 +152,6 @@ class WorkflowState(BaseModel):
         returns ``None``; health diagnostics retain the raw selector separately.
         """
         return active_profile_selection()[1]
-
-
-def active_transaction_catalogue_repository(
-    state: WorkflowState,
-    *,
-    objects: SecureObjectRepository | None = None,
-) -> TransactionCatalogueRepository:
-    """Return the :class:`TransactionCatalogueRepository` for the active profile bucket.
-
-    Args:
-        state: The current workflow state used to resolve the active bucket.
-        objects: Optional
-            :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
-            override passed through to the returned repository.
-    """
-    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...core.errors import NoActiveProfileError
-    from ...domain.transactions import LedgerNoActiveBucketError
-
-    try:
-        bucket_id = require_active_profile_bucket_id()
-    except NoActiveProfileError as exc:
-        raise LedgerNoActiveBucketError(
-            translated_message="application.workflow.errors.no_active_profile_bucket",
-            context={"repository": "transaction_catalogue", "operation": "resolve_active_bucket"},
-        ) from exc
-    return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
 
 
 def update_declaration_pointer(
@@ -258,7 +209,6 @@ def update_declaration_pointer(
 __all__ = [
     "DeclaracionPointer",
     "WorkflowState",
-    "active_transaction_catalogue_repository",
     "declaration_key",
     "update_declaration_pointer",
 ]

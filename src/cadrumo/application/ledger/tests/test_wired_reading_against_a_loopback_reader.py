@@ -42,9 +42,9 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .._evidence_draft import _read_transcription_semantically
-from .._evidence_input import EvidenceInput
-from .._evidence_textlayer import transcribe_text_layer
+from ..evidence_draft import _read_transcription_semantically
+from ..evidence_input import EvidenceInput
+from ..evidence_textlayer import transcribe_text_layer
 from ._loopback_reader import READING_RUNTIME_MODEL
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

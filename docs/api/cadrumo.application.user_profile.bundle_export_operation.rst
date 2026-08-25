@@ -5,3 +5,4 @@ cadrumo.application.user_profile.bundle_export_operation module
    :members:
    :show-inheritance:
    :ignore-module-all:
+   :exclude-members: JournalRepositoryBase

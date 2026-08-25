@@ -34,7 +34,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
 from ...ci.lane_reachability import resolve_just_executable

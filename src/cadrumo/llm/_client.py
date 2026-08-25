@@ -28,7 +28,7 @@ from ..core.hashing import content_hash_hex
 from ..core.logging import get_logger
 from ..core.time import now
 from ._consent import provider_reads_off_host
-from ._errors import (
+from .errors import (
     LLMBusyError,
     LLMCacheError,
     LLMConfigError,

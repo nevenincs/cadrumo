@@ -180,6 +180,8 @@ from cadrumo.core import (
     CorpusAnchorResolutionError,
     normalise_corpus_text,
     resolve_anchored_extracted_unit,
+)
+from cadrumo.core.directory_scan import (
     scan_directory,
 )
 

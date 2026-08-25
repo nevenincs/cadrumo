@@ -23,8 +23,8 @@ from pydantic import ValidationError
 
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._document_transcription import DocumentTranscription, TranscriberIdentity
-from .._extracted_document_cache import (
+from ..document_transcription import DocumentTranscription, TranscriberIdentity
+from ..extracted_document_cache import (
     ExtractedDocumentCacheDocument,
     load_extracted_document_cache,
     read_cached_transcription,

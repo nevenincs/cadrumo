@@ -41,7 +41,7 @@ def justificante_pull(
     metadata registration, and optional local filing-evidence stamp share the
     same application boundary before emitting :class:`JustificanteCaptureResult`.
     """
-    from ...application.live import capture_justificante_snapshot_outcome
+    from ...application.live.justificante import capture_justificante_snapshot_outcome
     from ._app_live_justificante_payloads import JustificanteCaptureResult
 
     bucket_id = _bucket_id()
@@ -105,7 +105,7 @@ def justificante_list(ctx: typer.Context) -> None:
     Rows are :class:`JustificanteSnapshotSummaryPayload` projections emitted in
     a :class:`JustificanteListResult` envelope.
     """
-    from ...application.live import JustificanteCaptureSnapshotService
+    from ...application.live.justificante import JustificanteCaptureSnapshotService
     from ._app_live_justificante_payloads import JustificanteListResult, JustificanteSnapshotSummaryPayload
 
     bucket_id = _bucket_id()
@@ -144,7 +144,7 @@ def justificante_view(
     The snapshot is resolved through :class:`JustificanteCaptureSnapshotService`
     and projected as :class:`JustificanteViewResult`.
     """
-    from ...application.live import JustificanteCaptureSnapshotService
+    from ...application.live.justificante import JustificanteCaptureSnapshotService
     from ._app_live_justificante_payloads import JustificanteViewResult
 
     bucket_id = _bucket_id()

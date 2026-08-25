@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from ._errors import WipeTypeError
+from .errors import WipeTypeError
 
 _WIPE_TYPE_MESSAGE_KEY: Final[str] = "errors.internal.internal_wipe_type"
 

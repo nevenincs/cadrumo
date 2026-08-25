@@ -21,7 +21,7 @@ from dataclasses import dataclass
 
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ._bindings_previous_filing import is_direct_previous_filing_binding
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import ModeloId, RelationId
 from ._iva_wallet_relation_targets import (
     IvaWalletRevisionRelationTarget,

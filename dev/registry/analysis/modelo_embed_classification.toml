@@ -725,7 +725,7 @@ data. Its numeric literals are month, day and sentinel bounds.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_errors.py"
+path = "src/cadrumo/domain/calculations/registry/errors.py"
 classification = "machinery"
 justification = """
 The registry error catalogue. Its modelo-specific content is one constructor,

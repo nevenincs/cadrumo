@@ -25,7 +25,7 @@ with no structural judgement -- it is shared with the seed-recipe loader
 (``_seeds.py``). :func:`parse_sequence` is the public entry: it inlines a
 ``:seed:`` recipe when requested, runs the line pass over the body, then enforces
 the sequence-result contract and placeholder resolution, raising a single
-accumulating :class:`~dev.docs.sequences._errors.SequenceParseError` naming every
+accumulating :class:`~dev.docs.sequences.errors.SequenceParseError` naming every
 fault. No fault aborts the pass; the author sees the whole worklist at once.
 """
 
@@ -41,7 +41,6 @@ from typing import get_args
 
 from pydantic import StringConstraints
 
-from ._errors import SequenceParseError
 from ._schema import (
     BlockedDetail,
     BlockedReason,
@@ -58,6 +57,7 @@ from ._schema import (
     StepSentence,
     VerifySentence,
 )
+from .errors import SequenceParseError
 
 __all__ = ["parse_frame_lines", "parse_sequence", "result_frame_asserts_result_payload"]
 

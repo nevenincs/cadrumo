@@ -20,7 +20,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo import llm
-from cadrumo.core import LLM_EXTRA, scan_directory
+from cadrumo.core import LLM_EXTRA
+from cadrumo.core.directory_scan import scan_directory
 
 from .._smoke_common import (
     build_companion_wheels,
@@ -110,7 +111,7 @@ def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
         from pathlib import Path
 
         import cadrumo
-        from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentity
+        from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
         from cadrumo.core import (
             FieldOrigin,
             ImageMediaType,

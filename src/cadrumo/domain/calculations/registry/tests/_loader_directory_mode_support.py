@@ -7,7 +7,7 @@ import re
 from functools import cache
 from pathlib import Path
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
 from .. import ModeloDefinition, ModeloSource
 from .._loader import (
@@ -159,10 +159,10 @@ def _write_modelo(
             else manifest_text
         ),
         encoding="utf-8",
+        newline="\n",
     )
     (revision_dir / "casillas" / "0001-casillas.toml").write_text(
-        casilla_fragment + fragment_extra,
-        encoding="utf-8",
+        casilla_fragment + fragment_extra, encoding="utf-8", newline="\n"
     )
     return modelo_dir
 

@@ -218,12 +218,12 @@ class WorkflowEngine:
         self._deadline_engine = deadline_engine
         self._filing_draft_builder = filing_draft_builder
         self._submission_engine = submission_engine
-        self._session = session
+        self.session = session
         self._certificate_bundle = certificate_bundle
         self._inputs_provider = inputs_provider
         self._settings = settings
-        self._expedientes_source = expedientes_source
-        self._notifications_source = notifications_source
+        self.expedientes_source = expedientes_source
+        self.notifications_source = notifications_source
         # Lazy run-id recomputation state. These are set at the start
         # of every ``_drive`` call and consumed by
         # ``_record_site_unavailable`` so an alert raised *after* the
@@ -749,7 +749,7 @@ class WorkflowEngine:
         """
         del profile  # session identity is implicit; tax_id no longer crosses the boundary.
         started = _utcnow()
-        if self._session is None or self._notifications_source is None:
+        if self.session is None or self.notifications_source is None:
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.CHECKING_INBOX,
@@ -765,7 +765,7 @@ class WorkflowEngine:
             )
             return
         try:
-            snapshot = await self._notifications_source(self._session)
+            snapshot = await self.notifications_source(self.session)
         except SiteHealthError as exc:
             self._record_site_unavailable(
                 stage=WorkflowStage.CHECKING_INBOX,
@@ -868,9 +868,9 @@ class WorkflowEngine:
         steps: list[WorkflowStep],
     ) -> None:
         """Abort with ``ALREADY_FILED`` when the status reader reports an existing expediente."""
-        if self._session is not None and self._expedientes_source is not None:
+        if self.session is not None and self.expedientes_source is not None:
             try:
-                expedientes = await self._expedientes_source(self._session, obligation.modelo)
+                expedientes = await self.expedientes_source(self.session, obligation.modelo)
             except SiteHealthError as exc:
                 self._record_site_unavailable(
                     stage=WorkflowStage.BUILDING_DRAFT,

@@ -45,7 +45,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
-from ... import scan_directory
+from ...directory_scan import scan_directory
 from .. import (
     CorpusBundleSigningError,
     CorpusBundleSigningKeyNotFoundError,

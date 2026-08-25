@@ -33,13 +33,14 @@ from ....application.modelo import (
     list_work_units,
     rename_work_unit,
 )
-from ....core import Period, scan_directory
+from ....core import Period
+from ....core.directory_scan import scan_directory
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import RevisionId
 from ...user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._codes import ModeloCode
-from .._errors import ModeloValidationError
+from ..errors import ModeloValidationError
 from .._repository import (
     remove_work_unit,
     upsert_work_unit,

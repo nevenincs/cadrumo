@@ -213,7 +213,7 @@ def test_inactive_transaction_skipped_silently() -> None:
 
 
 def test_non_quarterly_period_raises() -> None:
-    from .._errors import AggregationPeriodError
+    from ..errors import AggregationPeriodError
 
     catalogue = TransactionCatalogue.from_transactions(())
     with pytest.raises(AggregationPeriodError):

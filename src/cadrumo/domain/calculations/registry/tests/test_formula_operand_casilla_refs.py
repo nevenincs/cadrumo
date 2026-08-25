@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core import BindingSourceKind, validated_casilla_id
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import DataBindingDefinition, FormulaDefinition, FormulaExpression, InputKind
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,

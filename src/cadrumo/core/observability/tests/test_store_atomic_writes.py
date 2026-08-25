@@ -33,7 +33,8 @@ from pathlib import Path
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory, scan_directory
+from ... import StorageCategory
+from ...directory_scan import scan_directory
 from ...config import override_settings
 from .. import (
     RunOutcome,
@@ -41,7 +42,7 @@ from .. import (
     save_envelope,
     save_trace,
 )
-from .._errors import RunTracePersistenceError
+from ..errors import RunTracePersistenceError
 from .._store import ENVELOPE_FILENAME, TRACE_FILENAME, runs_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

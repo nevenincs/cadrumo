@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .. import ProfileSetupState, UserProfileRecord, UserProfileSnapshot
+from ..values import ProfileSetupState, UserProfileRecord, UserProfileSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

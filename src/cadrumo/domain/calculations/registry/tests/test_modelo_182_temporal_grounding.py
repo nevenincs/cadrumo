@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.resources import resources
-from .._errors import NoRevisionForPeriodError
+from ..errors import NoRevisionForPeriodError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

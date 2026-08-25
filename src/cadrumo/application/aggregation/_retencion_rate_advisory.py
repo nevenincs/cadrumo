@@ -326,7 +326,7 @@ def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
     # Function-local for the cycle reason the sibling profile-backed advisories
     # document: the profile package reaches back into this layer.
     from ...domain.deadlines import IrpfActivityKind, IrpfEstimationRegime, IVARegime
-    from ...domain.user_profile import ProfileNotFoundError
+    from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import projection_for_taxpayer
 

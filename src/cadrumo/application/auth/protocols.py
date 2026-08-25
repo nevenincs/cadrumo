@@ -2,7 +2,7 @@
 
 These protocols declare the interface the application layer depends on for
 persisted auth session management.  Concrete implementations live in the
-adapter layer (adapters/outbound/aeat/auth/_session_store.py) and satisfy
+adapter layer (adapters/outbound/aeat/auth/session_store.py) and satisfy
 these protocols structurally.
 :class:`SessionStoreProtocol` returns :class:`PersistedSessionDataProtocol`
 records to the persisted-session service.
@@ -31,7 +31,7 @@ class SessionStoreProtocol(Protocol):
 
     The application layer depends on this protocol rather than the concrete
     adapter module so that application/auth/_sessions.py does not carry a
-    direct import from adapters/outbound/aeat/auth/_session_store.py.
+    direct import from adapters/outbound/aeat/auth/session_store.py.
     """
 
     def exists(self, path: Path) -> bool:

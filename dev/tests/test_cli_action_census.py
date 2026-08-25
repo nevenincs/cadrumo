@@ -274,14 +274,14 @@ def test_unknown_semantic_cluster_is_reported_and_cannot_be_auto_admitted() -> N
     unknown = UnknownCluster(
         kind="manual-rag-cluster",
         token=cluster_name,
-        path="src/cadrumo/entrypoints/cli/_errors.py",
+        path="src/cadrumo/entrypoints/cli/errors.py",
         enclosing_symbol="render_error",
         line=1,
         column=0,
         trigger=DiscoveryTrigger(
             kind=DiscoveryTriggerKind.SEED,
             token=seed_name,
-            path="src/cadrumo/entrypoints/cli/_errors.py",
+            path="src/cadrumo/entrypoints/cli/errors.py",
             enclosing_symbol="render_error",
             line=1,
             column=0,

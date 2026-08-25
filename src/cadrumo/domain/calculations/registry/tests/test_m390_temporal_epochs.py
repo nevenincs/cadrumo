@@ -8,7 +8,7 @@ from datetime import date
 import pytest
 
 from .....core import RegistryAuthorityGrade
-from .._errors import NoRevisionForPeriodError
+from ..errors import NoRevisionForPeriodError
 from .._temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

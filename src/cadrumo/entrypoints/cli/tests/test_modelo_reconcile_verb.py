@@ -14,9 +14,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.application.workflow.persistence import workflow_state_repository
 from ....core import Period, validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
@@ -227,7 +228,7 @@ def _declaracion_fixture_profile() -> None:
     isolated backend `_isolated_backend` already opened for the test rather
     than nesting a second storage root, which `SecureObjectRepository`
     per-bucket session handling does not support."""
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
 
     set_active_test_profile_facts(
         [UserProfileFact(path="identity.tax_id", value=_DECLARACION_FIXTURE_TAX_ID)],

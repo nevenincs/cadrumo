@@ -8,11 +8,15 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.config import Settings
 from ......tests.secure_sql import isolated_runtime_profile
-from .. import AeatAuthenticator, AeatLoginAssertionError, _session_store, extract_nif_from_subject
-from .._authenticator_persistence import PersistedSessionMetadata
+from ..authenticator import AeatAuthenticator
+from ..authenticator_persistence import PersistedSessionMetadata
+from ..certificate import extract_nif_from_subject
+from ..errors import AeatLoginAssertionError
 from ._authenticator_support import SECRET_PASSPHRASE, _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -60,7 +64,7 @@ async def test_resume_rejects_invalid_encrypted_session_before_browser_resolutio
             certificate_nif=extract_nif_from_subject(certificate),
             authenticated_at=current,
             idle_deadline=current + timedelta(hours=1),
-            storage_state_sha256=_session_store.storage_state_sha256(storage_state),
+            storage_state_sha256=session_store.storage_state_sha256(storage_state),
         ).model_dump(mode="json")
         storage_state_path = tmp_path / f"{case}-storage.json"
 
@@ -84,7 +88,7 @@ async def test_resume_rejects_invalid_encrypted_session_before_browser_resolutio
             metadata["certificate_nif"] = "87654321X"
 
         if case != "missing-storage":
-            _session_store.save(
+            session_store.save(
                 storage_state_path,
                 storage_state=storage_state,
                 metadata=metadata,
@@ -95,4 +99,4 @@ async def test_resume_rejects_invalid_encrypted_session_before_browser_resolutio
 
         assert excinfo.value.context is not None
         assert excinfo.value.context["reason"] == expected_reason
-        assert not _session_store.exists(storage_state_path)
+        assert not session_store.exists(storage_state_path)

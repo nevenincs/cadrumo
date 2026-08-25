@@ -30,7 +30,7 @@ from .._prompts import (
     build_prompt_catalogue,
     prompt_document,
 )
-from ._session import connected_server_and_client_session as connect
+from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

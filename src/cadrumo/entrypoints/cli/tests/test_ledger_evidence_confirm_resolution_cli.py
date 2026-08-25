@@ -39,10 +39,10 @@ from typing import Final
 import pytest
 from click.testing import Result
 
-from ....application.ledger import FILER_POSTCODE_FACT_PATH
+from ....application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
 from ....core import STR_KEYED_MAPPING_ADAPTER, IvaCategoryOutcome
 from ....domain.iva import IvaCategory
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ._ledger_ux_support import _invoke, _open_bucket_session
 

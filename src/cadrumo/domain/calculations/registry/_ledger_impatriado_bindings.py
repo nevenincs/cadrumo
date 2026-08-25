@@ -33,7 +33,7 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId
 from ._ledger_binding_resolution import (
     resolve_ledger_family_binding_values,

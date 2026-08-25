@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     import logging
 
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 
 
 class PlaywrightStageRunner(Protocol):

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..._errors import ResourceNotFoundError
+from ...errors import ResourceNotFoundError
 from ..modelos import StaticModeloRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

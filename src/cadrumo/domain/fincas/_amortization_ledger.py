@@ -25,7 +25,7 @@ from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.external_constants import AMORTIZACION_INMUEBLE_RATE
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
-from ._errors import AmortizationLedgerCapExceededError
+from .errors import AmortizationLedgerCapExceededError
 from ._models import Finca, FincaAmortizacionLedgerEntry, FincaRendimientoRecord
 
 _logger = get_logger(__name__)

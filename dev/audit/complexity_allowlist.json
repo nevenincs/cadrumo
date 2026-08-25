@@ -166,7 +166,7 @@
         "reason": "flat guard/dispatch chain, max nesting depth 0; long but linear, never regressed from baseline",
         "score": 14
       },
-      "src/cadrumo/application/live/_filed_data_capture.py::pull_filed_history": {
+      "src/cadrumo/application/live/filed_data_capture.py::pull_filed_history": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 14
       },

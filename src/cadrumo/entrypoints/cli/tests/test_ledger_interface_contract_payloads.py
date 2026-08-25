@@ -14,7 +14,8 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from ....application.ledger import ExportSerializationFormat, LedgerExportResult, LedgerExportRow
+from cadrumo.application.export import ExportSerializationFormat
+from ....application.ledger.models import LedgerExportResult, LedgerExportRow
 from ....core import OperatorActionAxis
 from ....domain.categories import ProportionalityKind, SpendingCategory
 from ....domain.transactions import BusinessClassification

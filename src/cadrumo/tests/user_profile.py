@@ -14,24 +14,19 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ..application.user_profile.validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
-from ..application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from ..application.user_profile.completeness import conditional_profile_missing_required
+from ..application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from ..application.user_profile.validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
 from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ..core.hashing import sha256_hex
 from ..core.identity import nif_check_letter
 from ..domain.deadlines import IVARegime
-from ..domain.user_profile import (
-    NUMERIC_PROFILE_FIELD_TYPES,
-    ProfileFieldType,
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-)
+from ..domain.user_profile.schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType
+from ..domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .profile_capsule import seed_test_profile_record
 
 if TYPE_CHECKING:
-    from ..domain.user_profile import ProfileFieldDefinition, ProfileSchemaDefinition
+    from ..domain.user_profile.schema import ProfileFieldDefinition, ProfileSchemaDefinition
 
 
 _PLACEHOLDER_TAX_ID = f"12345678{nif_check_letter(12345678)}"

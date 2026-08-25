@@ -22,7 +22,7 @@ frame's parsed JSON envelope and bound; later frames interpolate the bound value
 into their ``{name}`` placeholder tokens before execution. A capture against
 non-JSON output, a json-path missing from the envelope, a non-scalar or null
 capture, and an undeclared non-zero exit code are all fail-fast
-:class:`~dev.docs.sequences._errors.SequenceExecutionError` refusals — every
+:class:`~dev.docs.sequences.errors.SequenceExecutionError` refusals — every
 later frame would otherwise run against a corrupted premise.
 
 Safety: a frame that would contact live
@@ -77,7 +77,7 @@ from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.time import frozen_clock
-from cadrumo.domain.user_profile import UserProfileFact
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from cadrumo.tests.profile_capsule import (
     bound_test_profile_record,
@@ -88,7 +88,6 @@ from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 from cadrumo.tests.secure_sql import isolated_profile_storage_root
 
 from ..._paths import REPO_ROOT
-from ._errors import SequenceExecutionError
 from ._schema import (
     FrameKind,
     Identifier,
@@ -97,6 +96,7 @@ from ._schema import (
     SequenceFrame,
     SequenceId,
 )
+from .errors import SequenceExecutionError
 
 __all__ = [
     "SANDBOX_INSTANT",

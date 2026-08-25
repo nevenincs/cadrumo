@@ -13,7 +13,7 @@ raise these errors only after those owner surfaces have supplied their typed
 evidence.
 """
 
-from ._errors import (
+from .errors import (
     ReconciliationDeclaracionParseError,
     ReconciliationDriftError,
     ReconciliationError,

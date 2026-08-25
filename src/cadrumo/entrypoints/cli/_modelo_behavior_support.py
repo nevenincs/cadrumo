@@ -10,13 +10,15 @@ from ...application.modelo import (
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
+    declared_modelo_period_tokens,
+)
+from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectorContradictionError,
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
-    declared_modelo_period_tokens,
     modelo_work_address_from_operator_target,
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,

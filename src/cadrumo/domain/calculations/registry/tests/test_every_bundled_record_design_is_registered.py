@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import DirectoryEntryKind, scan_directory
+from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.resources import bundled_path
 from ._catalogue_verification_support import _catalogues
 

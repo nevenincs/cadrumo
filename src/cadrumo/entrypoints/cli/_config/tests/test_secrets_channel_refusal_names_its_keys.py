@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, ConfigDict, SecretStr
 
-from ..._errors import CliRefusedBoundaryError
+from ...errors import CliRefusedBoundaryError
 from .._secure_input import _validate_secrets_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

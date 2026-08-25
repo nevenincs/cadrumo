@@ -62,7 +62,7 @@ from ..core import (
 )
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
-from ._errors import LLMConfigError, LLMValidationError
+from .errors import LLMConfigError, LLMValidationError
 from ._models import LLMProvider, LLMRequest
 from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 

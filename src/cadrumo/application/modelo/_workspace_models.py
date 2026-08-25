@@ -31,10 +31,10 @@ from ...domain.calculations.registry import (
 )
 from ...domain.filing import ModeloScalar
 from ...domain.modelos import CalculationSourceRef, ModeloCode, WorkUnitState
-from ..ledger import LedgerPreflightIssueReason
+from ..ledger.preflight import LedgerPreflightIssueReason
 from ..operator_actions import ActionReference
 from ..registry import RegistryClosureLimb
-from ._work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
+from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from .work_review_projection import ModeloWorkReview
 
 _MAX_FACET_PAGE_SIZE = 200

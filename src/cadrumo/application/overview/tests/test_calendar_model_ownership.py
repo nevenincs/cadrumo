@@ -10,7 +10,7 @@ from pydantic import AnyHttpUrl
 
 from ....adapters.outbound.aeat.sede import RemoteNotification
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
-from ...live import PersistedNotificationsSnapshot
+from ...live.notifications import PersistedNotificationsSnapshot
 from .. import OverviewCalendarEvent, OverviewCalendarRange, calendar_events_from_notification_snapshots
 from .. import _calendar_models as _calendar_models
 

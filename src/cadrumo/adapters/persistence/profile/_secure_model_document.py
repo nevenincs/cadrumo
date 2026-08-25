@@ -35,7 +35,6 @@ from ..storage import (
     SecureObjectRepository,
     SecureObjectRevisionConflictError,
     SecureObjectWrite,
-    StorageValidationError,
     secure_object_logical_path,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
@@ -119,16 +118,15 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
 
     def load(self) -> DocumentT:
         """Load and strictly decode the document, or return its declared empty form."""
-        from ..storage.crypto import secure_object_key_digest
+        document, _revision_id = self.load_revisioned()
+        return document
 
-        object_key_digest = secure_object_key_digest(self.object_key)
-        if any(
-            row.namespace == self._definition.namespace
-            and row.object_key == object_key_digest
-            and row.schema_version != self._definition.schema_version
-            for row in self._objects.iter_all_records_raw()
-        ):
-            raise StorageValidationError(f"{self._definition.namespace} requires explicit schema migration before read")
+    def _decode_record(self, payload: bytes) -> DocumentT:
+        """Validate one loaded encrypted bare-document payload."""
+        return self._model_type.model_validate_json(payload)
+
+    def load_revisioned(self) -> tuple[DocumentT, str]:
+        """Return the document and revision from one secure-object record."""
         record = self._objects.load(
             self._definition.namespace,
             self.object_key,
@@ -136,22 +134,13 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
             max_supported_version=self._definition.schema_version,
         )
         if record is None:
-            return self._empty_document()
-        return self._model_type.model_validate_json(record.payload)
+            return self._empty_document(), ABSENT_SECURE_OBJECT_REVISION_ID
+        return self._decode_record(record.payload), record.revision_id
 
     def _validate_payloads(self, payloads: Mapping[str, bytes]) -> None:
         """Validate all upgraded singleton bytes before the migration batch writes."""
         for payload in payloads.values():
             self._model_type.model_validate_json(payload)
-
-    def load_revisioned(self) -> tuple[DocumentT, str]:
-        """Return the stored document and the revision id it was read at.
-
-        The public read for a caller composing a GUARDED co-commit: it cannot
-        use :meth:`mutate`, whose write commits on its own, but it needs the
-        same revision to carry on its write.
-        """
-        return self._load_with_revision()
 
     def to_secure_object_write(
         self,
@@ -183,24 +172,6 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
     def save(self, document: DocumentT) -> None:
         """Encrypt and save one document in the transactional secure-object path."""
         self._objects.save_many((self.to_secure_object_write(document),))
-
-    def _load_with_revision(self) -> tuple[DocumentT, str]:
-        """Return the stored document and the revision id it was read at.
-
-        An absent row reports :data:`ABSENT_SECURE_OBJECT_REVISION_ID`, the
-        sentinel the write funnel treats as "this row must not exist yet", so
-        the first writer of a singleton is guarded exactly like every later one.
-        """
-        document = self.load()
-        record = self._objects.load(
-            self._definition.namespace,
-            self.object_key,
-            expected_class=self._definition.sensitivity,
-            max_supported_version=self._definition.schema_version,
-        )
-        if record is None:
-            return self._empty_document(), ABSENT_SECURE_OBJECT_REVISION_ID
-        return document, record.revision_id
 
     def mutate(self, mutation: Callable[[DocumentT], DocumentT], *, attempts: int = 4) -> DocumentT:
         """Apply ``mutation`` to the stored document as one guarded unit of work.
@@ -236,7 +207,7 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
         """
         last_conflict: SecureObjectRevisionConflictError | None = None
         for _attempt in range(attempts):
-            current, revision_id = self._load_with_revision()
+            current, revision_id = self.load_revisioned()
             updated = mutation(current)
             write = self.to_secure_object_write(updated).model_copy(
                 update={"expected_revision_id": revision_id},

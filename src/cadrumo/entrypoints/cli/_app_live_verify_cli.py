@@ -13,7 +13,10 @@ from typing import TypedDict
 
 import typer
 
-from ...application.live import VerifySurface, VerifyVerdict
+from ...application.live.verify import (
+    VerifySurface,
+    VerifyVerdict,
+)
 from ...core.i18n import tr
 from ...core.identity import tax_id_identity_token
 from ...core.time import now
@@ -64,7 +67,7 @@ def verify_list(
     stored observations returned by :class:`VerifyService`, not fresh live
     checks, and are emitted through :class:`VerifyListResult`.
     """
-    from ...application.live import VerifyService
+    from ...application.live.verify import VerifyService
     from ._app_live_verify_payloads import VerifyListResult, VerifyObservationSummaryPayload
 
     bucket_id = _bucket_id()
@@ -94,7 +97,7 @@ def verify_show(
     :class:`VerifyService` and emits :class:`VerifyViewResult` with the same row
     shape as ``aeat app live verify list``.
     """
-    from ...application.live import VerifyService
+    from ...application.live.verify import VerifyService
     from ._app_live_verify_payloads import VerifyViewResult
 
     bucket_id = _bucket_id()
@@ -116,7 +119,7 @@ def verify_latest(
     emits the stable :class:`VerifyLatestResult` shape with
     ``observation_id=None``.
     """
-    from ...application.live import VerifyService
+    from ...application.live.verify import VerifyService
     from ._app_live_verify_payloads import VerifyLatestResult
 
     bucket_id = _bucket_id()
@@ -161,7 +164,7 @@ def verify_nif_iva(
     :class:`VerifyNifIvaResult`.
     """
     from ...adapters.outbound.aeat.sede import NifIvaCheckSedeDriver
-    from ...application.live import VerifyService
+    from ...application.live.verify import VerifyService
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
     from ._app_live_verify_payloads import VerifyNifIvaResult
@@ -202,7 +205,7 @@ def verify_tgvi(
     :class:`VerifyTgviResult`.
     """
     from ...adapters.outbound.aeat.sede import GroiSedeDriver
-    from ...application.live import VerifyService
+    from ...application.live.verify import VerifyService
     from ...core.access_gate import AeatAccessGate
     from ...core.config import load_settings
     from ._app_live_verify_payloads import VerifyTgviResult

@@ -15,7 +15,7 @@ from playwright.async_api import BrowserContext, Playwright, Route, async_playwr
 from playwright.async_api import Error as PlaywrightError
 
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_PATH, AEAT_CERTIFICATE_PROTECTED_URL, Settings
-from ...auth import BrowserSessionFactory
+from ...auth.authenticator_types import BrowserSessionFactory
 from .. import BrowserSession, DefaultBrowserSession, PlaywrightStealthEvasion, Profile
 
 _EXTERNAL = Settings.external_constants()

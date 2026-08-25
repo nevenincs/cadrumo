@@ -93,7 +93,7 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import BindingId, ValidatedRegistryAuthority
 from ....domain.period import calculation_filing_date
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from .. import (
     BucketAggregationCalculationResult,

@@ -15,7 +15,7 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.i18n import tr
-from .._labels import (
+from ..labels import (
     profile_field_label,
     profile_field_label_key,
     profile_schema_locale_keys,

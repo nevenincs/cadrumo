@@ -28,7 +28,7 @@ from .._binding_selector_utils import (
     ManualInputRecordFieldSelector,
     manual_input_record_field_selector,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

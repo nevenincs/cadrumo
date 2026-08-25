@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....core.errors import CadrumoError, get_registered_error_code
 from ....core.i18n import tr
 from ....domain.portals import PORTAL_REGISTRY

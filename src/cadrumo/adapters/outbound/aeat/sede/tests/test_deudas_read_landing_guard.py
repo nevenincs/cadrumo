@@ -40,8 +40,8 @@ from ......tests.aeat_literal_fixtures import (
 )
 from .. import assert_deudas_landing, deudas_read_path_prefixes
 from .._adapter_utils import assert_read_landing
-from .._deudas import _READ_GUARD_POLICY
-from .._errors import SedeNavigationError
+from ..deudas import _READ_GUARD_POLICY
+from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

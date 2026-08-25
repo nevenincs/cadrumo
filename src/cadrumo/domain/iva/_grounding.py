@@ -51,7 +51,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.resources import bundled_path
-from ._errors import IvaCatalogueError
+from .errors import IvaCatalogueError
 
 if TYPE_CHECKING:
     # Type-only: importing these at runtime would close the cycle the local

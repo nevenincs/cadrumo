@@ -20,8 +20,8 @@ from pydantic import ValidationError
 
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
-from .._evidence import MediaKind, PurchaseInvoiceEvidence
-from .._evidence_reference import (
+from ..evidence import MediaKind, PurchaseInvoiceEvidence
+from ..evidence_reference import (
     EvidenceReference,
     EvidenceReferenceOutcome,
     classify_evidence_reference,

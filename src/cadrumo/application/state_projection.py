@@ -113,7 +113,7 @@ from ._state_projection_readiness import (
 )
 from .auth.credentials import ActiveAuthProjectionSnapshot, active_auth_projection_span
 from .auth_credentials import ActiveCertificateCredentials
-from .ledger import LedgerPreflightIssue, LedgerPreflightIssueReason, preflight_ledger_tax_readiness
+from .ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from .operator_actions import PreconditionVerdict
 from .user_profile.commands import ProfilePreflightRequirement
 
@@ -586,7 +586,7 @@ class ProjectionModeloReadiness(BaseModel):
     The projection combines profile requirements, registry-snapshot
     availability, calculation binding resolution, and ledger preflight
     into one emit shape. ``ready`` is true only when every axis is ready; a
-    :class:`~cadrumo.application.ledger.LedgerPreflightIssue` blocks readiness
+    :class:`~cadrumo.application.ledger.preflight.LedgerPreflightIssue` blocks readiness
     only when the resolved :class:`RegistrySnapshot` declares ledger-backed
     bindings.
 
@@ -678,7 +678,7 @@ def _build_modelo_readiness(
 
     from ..core.i18n import tr
     from ..core.resources import resources
-    from ..domain.user_profile import ProfileSetupState
+    from ..domain.user_profile.values import ProfileSetupState
     from .modelo import (
         modelo_applicability_refusal,
         modelo_work_profile_preflight_report,
@@ -1154,9 +1154,9 @@ def _assemble_operator_state_projection(
 
 def _ensure_profile_key_registry_registered() -> None:
     """Import the wizard package before projection code reads profile-key metadata."""
-    from . import wizard as _wizard
+    from .wizard.compiler import ensure_profile_keys_registered
 
-    _ = _wizard
+    ensure_profile_keys_registered()
 
 
 __all__ = [

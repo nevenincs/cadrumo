@@ -21,11 +21,11 @@ import pytest
 import yaml
 
 from .. import (
-    LocaleError,
     LocaleManager,
     LocaleMoveConflict,
     LocaleNode,
 )
+from ..errors import LocaleError
 from ..manager import _flatten_leaf_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

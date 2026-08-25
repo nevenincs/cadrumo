@@ -24,8 +24,8 @@ from ...application.modelo import (
     ModeloCalculationRevisionSelector,
     list_calculation_revisions,
     modelo_202_modality_for_work_unit,
-    resolve_modelo_work_unit_for_operator_target,
 )
+from ...application.modelo.work_addressing import resolve_modelo_work_unit_for_operator_target
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ._common import activate_subcommand_output_language, emit_envelope

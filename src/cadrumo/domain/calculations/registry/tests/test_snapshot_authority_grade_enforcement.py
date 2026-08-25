@@ -9,7 +9,7 @@ import pytest
 from .....core import RegistryAuthorityGrade
 from .....tests.registry_tree import bundled_registry_tree
 from .._authority import ValidatedRegistryAuthority
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from .._snapshot import _build_validated_snapshot
 

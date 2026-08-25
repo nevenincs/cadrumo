@@ -44,7 +44,7 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import TextIO
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests import pytest_numbered_dir_root, reap_abandoned_numbered_dirs
 
 CLAUDE_TEMP_STEM = "claude"

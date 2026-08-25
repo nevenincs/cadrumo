@@ -37,7 +37,7 @@ from ...core.identity import (
 from ...core.money import CENT, round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
-from .. import canonical_decimal_string
+from ..identifiers import canonical_decimal_string
 from ..iva import (
     EUMemberState,
     InvoiceKind,
@@ -57,7 +57,7 @@ from ._enums import (
     iva_rate_percentage,
     iva_rate_slot_percentage,
 )
-from ._errors import InvoiceValidationError
+from .errors import InvoiceValidationError
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
 
 if TYPE_CHECKING:

@@ -7,7 +7,7 @@ from typing import Annotated
 
 from pydantic import BeforeValidator
 
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 
 __all__ = ["InputKind", "InputKindValue"]
 

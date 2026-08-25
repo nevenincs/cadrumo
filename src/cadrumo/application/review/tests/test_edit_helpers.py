@@ -51,7 +51,7 @@ from .._edit import (
     _ensure_known_keys,
     _ensure_unique_keys,
 )
-from .._errors import EditParseError
+from ..errors import EditParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

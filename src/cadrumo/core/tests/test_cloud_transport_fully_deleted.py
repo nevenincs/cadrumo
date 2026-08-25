@@ -57,12 +57,12 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ...tests import SRC_CADRUMO, non_test_package_python_files, repo_relative
-from .. import scan_directory
+from ..directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 if TYPE_CHECKING:
-    from ...application.ledger import InvoiceExtractionAuthorityValues
+    from ...application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
     from ..config import LLMProvider
 
 _DELETED_CLOUD_SYMBOL_FAMILIES: dict[str, tuple[str, ...]] = {
@@ -368,7 +368,7 @@ def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
     """
     from decimal import Decimal
 
-    from ...application.ledger import InvoiceExtractionAuthorityValues, default_invoice_extraction_period
+    from ...application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues, default_invoice_extraction_period
     from ...domain.iva import IvaCategory
 
     return InvoiceExtractionAuthorityValues(

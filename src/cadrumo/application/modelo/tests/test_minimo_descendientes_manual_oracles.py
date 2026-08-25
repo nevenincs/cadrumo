@@ -39,7 +39,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.calculations.registry.tests import read_manual_worked_example
 from ....domain.contribuyente import RentaMaritalStatus
-from ....domain.user_profile import UserProfileFactValue
+from ....domain.user_profile.values import UserProfileFactValue
 from .._profile_binding import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_minimo_descendientes_facts,

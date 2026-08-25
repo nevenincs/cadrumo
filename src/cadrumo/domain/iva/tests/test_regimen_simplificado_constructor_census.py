@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from .._regimen_simplificado_rows import (
     ActividadAgricolaSimplificado,
     ActividadNoAgricolaSimplificado,

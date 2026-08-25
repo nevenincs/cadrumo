@@ -60,7 +60,7 @@ from ._amortization_ledger import (
     compute_amortization_for_year,
 )
 from ._enums import ExpenseCategory, ReduccionTier, UseType
-from ._errors import (
+from .errors import (
     AmortizationLedgerCapExceededError,
     ContractNotFoundError,
     FincaAggregationError,

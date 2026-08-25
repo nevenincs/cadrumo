@@ -28,7 +28,7 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.packaging"
 
-from cadrumo.core import scan_directory  # noqa: E402
+from cadrumo.core.directory_scan import scan_directory   # noqa: E402
 
 from ._command import CommandResult, run_command  # noqa: E402
 from ._hashing import sha256_path  # noqa: E402
@@ -426,8 +426,7 @@ def main(argv: list[str] | None = None) -> int:
     poison = run_root / "poison-ambient-editable"
     (poison / "cadrumo_harness").mkdir(parents=True)
     (poison / "cadrumo_harness" / "__init__.py").write_text(
-        "raise RuntimeError('ambient editable Cadrumo harness was imported')\n",
-        encoding=_UTF_8,
+        "raise RuntimeError('ambient editable Cadrumo harness was imported')\n", encoding=_UTF_8, newline="\n"
     )
     environment["PYTHONPATH"] = str(poison)
     environment["UV_CACHE_DIR"] = str(run_root / "empty-uv-cache")

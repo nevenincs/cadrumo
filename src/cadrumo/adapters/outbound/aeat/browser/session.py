@@ -43,8 +43,8 @@ from .....core.errors import SiteHealthError
 from .....core.logging import get_logger
 from .....core.time import now
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ..auth import BrowserContextProvisioner
-from ._errors import (
+from ..auth.providers import BrowserContextProvisioner
+from .errors import (
     BrowserError,
     BrowserFailureMode,
     BrowserPreconditionCondition,

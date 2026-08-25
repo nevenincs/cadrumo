@@ -88,12 +88,13 @@ from ._overview_rendering import (
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from ...application.overview import CalendarWarning
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from cadrumo.application.workflow.state_models import WorkflowState
+
+    from ...application.overview import CalendarWarning
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...domain.deadlines import TaxpayerProfile
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
 logger = get_logger(__name__)
 
@@ -141,7 +142,7 @@ def _incomplete_profile_refusal(warnings: Sequence[CalendarWarning]) -> CliRefus
         cli_exception_no_recovery_verdict,
     )
     from ._common import attach_cli_policy_verdict
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     return attach_cli_policy_verdict(
         CliRefusedBoundaryError(
@@ -184,7 +185,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     from ...domain.calculations.registry import build_profile_grounding_index
     from ...domain.deadlines import EntityType
     from ._common import attach_cli_policy_verdict
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     missing: list[str] = []
     if profile.entity_type is None:
@@ -534,7 +535,8 @@ def _calendar_profile_groups(
 ) -> tuple[dict[str, _ProfileBucketPointer], list[_ProfileBucketPointer], list[_ProfileBucketPointer]]:
     """Classify registered profiles without treating labels as readiness authority."""
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-    from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ...domain.user_profile.values import ProfileSetupState
 
     active: dict[str, _ProfileBucketPointer] = {}
     setup_incomplete: list[_ProfileBucketPointer] = []
@@ -610,6 +612,7 @@ def _overview_calendar_all_profiles(
     ``overview.calendar``.
     """
     from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
+
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     today = today_madrid()
@@ -776,8 +779,9 @@ def overview_prepare(
     renders the typed envelope plus per-step next-command notices.
     """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.ledger import PurchaseInvoiceEvidenceService, preflight_ledger_tax_readiness
-    from ...application.modelo import list_work_units, registry_describe_modelo_for_scope
+    from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
+    from ...application.ledger.preflight import preflight_ledger_tax_readiness
+    from ...application.modelo import registry_describe_modelo_for_scope
     from ...application.overview import build_data_prep_walkthrough
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -806,11 +810,7 @@ def overview_prepare(
         period=canonical_period,
         transaction_repository=transaction_repository,
     )
-    work_units = list_work_units(
-        bucket_id=bucket_id,
-        include_discarded=False,
-        repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
-    )
+    work_unit_catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
 
     walkthrough = build_data_prep_walkthrough(
         bucket_id=bucket_id,
@@ -820,7 +820,7 @@ def overview_prepare(
         invoice_catalogue=invoice_catalogue,
         evidence_records=evidence_records,
         preflight_report=preflight_report,
-        work_units=work_units,
+        work_unit_catalogue=work_unit_catalogue,
     )
 
     typed_result, lines, notices = overview_prepare_output(walkthrough)
@@ -844,7 +844,7 @@ def overview_pipeline(
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.ledger import summarize_manual_transactions
+    from ...application.ledger.actions_manual import summarize_manual_transactions
     from ...application.modelo import get_calculation_revision, list_verification_reports, list_work_units
     from ...application.overview import build_pipeline_health_report
     from ...domain.modelos import CalculationRevision, VerificationReport

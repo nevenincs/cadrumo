@@ -18,7 +18,7 @@ operator workflow remain outside this domain surface.
 Callers outside this subpackage import exclusively from
 :mod:`domain.manuals` and must not reach into private modules such as
 :mod:`domain.manuals._schema`, :mod:`domain.manuals._loader`,
-:mod:`domain.manuals._verify`, :mod:`domain.manuals._fetch`, or
+:mod:`domain.manuals.verify`, :mod:`domain.manuals._fetch`, or
 :mod:`domain.manuals._ids`.
 
 Registry corpus services project these records into local operator reports and
@@ -54,7 +54,7 @@ Examples:
 
 from __future__ import annotations
 
-from ._errors import (
+from .errors import (
     ManifestError,
     ManualError,
     ManualNotFoundError,
@@ -98,7 +98,7 @@ from ._schema import (
     SectionRef,
     SectionSource,
 )
-from ._verify import (
+from .verify import (
     ManualVerificationIssue,
     ManualVerificationReport,
     raise_on_errors,

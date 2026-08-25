@@ -161,7 +161,7 @@ def live_auth_identity_kind(
     """Return the safe identity-kind label for the configured provider."""
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return ""
-    from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
+    from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilConfigurationError, classify_identity
 
     credentials = probe_clave_credentials(provider_kind, settings=settings, state=state)
     identity = credentials.dni_nie if credentials is not None else ""
@@ -497,7 +497,7 @@ def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _Provide
     ``invalid_identity``; an unset identity as ``identity_unset``. The
     probe never contacts AEAT — it validates the local configuration.
     """
-    from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
+    from ...adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilConfigurationError, classify_identity
 
     resolved_settings = settings or load_settings()
     credentials = probe_clave_credentials(AuthProviderKind.CLAVE_MOVIL, settings=resolved_settings)

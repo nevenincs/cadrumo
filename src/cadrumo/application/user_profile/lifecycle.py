@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from ...domain.user_profile import UserProfileRecord
+from ...domain.user_profile.values import UserProfileRecord
 from .aggregate import CommittedProfileView, ProfileRestoreAuthority
 from .capsule_record import (
     ProfileRecordCommandEvent,

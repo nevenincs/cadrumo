@@ -69,7 +69,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
 from ._common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope
-from ._errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
+from .errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
     bad_parameter_from_error,

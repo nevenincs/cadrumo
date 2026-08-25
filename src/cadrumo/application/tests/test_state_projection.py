@@ -41,7 +41,8 @@ from ...tests.registry_revision import active_registry_revision_id
 from ...tests.user_profile import register_minimal_profile
 from ..auth.operator import inspect_operator_auth
 from ..auth.operator import test_operator_auth as probe_operator_auth
-from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
+from ..ledger.models import ManualLedgerTransactionCommand
+from ..ledger.actions_manual import create_manual_transaction
 from ..modelo import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
 from ..state_projection import (
@@ -54,7 +55,7 @@ from ..state_projection import (
 from ..user_profile.profile_record_repository import close_active_profile_record_session
 from ..user_profile.login_session_port import profile_bind_bucket_session
 from ..user_profile.registration import register_profile_with_credentials
-from ..wizard import WIZARD_FLOWS
+from ..wizard.catalogue import WIZARD_FLOWS
 from cadrumo.application.workflow.state_models import WorkflowState
 from cadrumo.application.workflow.persistence import workflow_state_repository
 

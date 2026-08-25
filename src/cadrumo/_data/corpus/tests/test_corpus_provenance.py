@@ -22,13 +22,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.directory_scan import iter_directory, scan_directory
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 bundled_path = importlib.import_module("cadrumo.core.resources").bundled_path
-_core = importlib.import_module("cadrumo.core")
-iter_directory = _core.iter_directory
-scan_directory = _core.scan_directory
 _CORPUS_ROOT = bundled_path("corpus", "aeat_official", "instructions")
 
 

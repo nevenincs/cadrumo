@@ -12,10 +12,10 @@ from __future__ import annotations
 import pytest
 
 from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
-from .._confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
-from .._deterministic_findings import deterministic_check_names, deterministic_findings
-from .._evidence_draft import InvoiceDraft
-from .._postal_shape_finding import postal_shape_findings
+from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND, confirmation_blockers
+from ..deterministic_findings import deterministic_check_names, deterministic_findings
+from ..evidence_draft import InvoiceDraft
+from ..postal_shape_finding import postal_shape_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -13,7 +13,7 @@ from typing import cast
 import pytest
 from pydantic import BaseModel, SecretStr, ValidationError
 
-from ..._errors import CliRefusedBoundaryError
+from ...errors import CliRefusedBoundaryError
 from .._secure_input import (
     _MAX_SECRETS_BYTES,
     MachineSecretChannel,
@@ -187,7 +187,7 @@ from cadrumo.entrypoints.cli._config._secure_input import (
     read_machine_secret_payload,
     select_machine_secret_channel,
 )
-from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
+from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
 class Payload(MachineSecretPayload):
     passphrase: SecretStr
     passphrase_confirmation: SecretStr

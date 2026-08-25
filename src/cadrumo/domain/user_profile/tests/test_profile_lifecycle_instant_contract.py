@@ -20,8 +20,8 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from ....domain.user_profile import ProfileSetupState
-from .._values import UserProfileFact, UserProfileRecord, UserProfileSnapshot
+from ....domain.user_profile.values import ProfileSetupState
+from ..values import UserProfileFact, UserProfileRecord, UserProfileSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

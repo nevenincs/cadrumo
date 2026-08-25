@@ -36,7 +36,8 @@ from pathlib import Path
 
 import tomlkit
 
-from cadrumo.core import DirectoryEntryKind, Modelo, scan_directory
+from cadrumo.core import Modelo
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     ApplicabilityRuleDefinition,

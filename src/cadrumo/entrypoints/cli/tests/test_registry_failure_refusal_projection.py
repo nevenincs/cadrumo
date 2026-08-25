@@ -10,7 +10,7 @@ from ....domain.calculations.registry import (
     RegistryValidationError,
 )
 from .._common import cli_policy_refusal_projection
-from .._errors import _project_cadrumo_error
+from ..errors import _project_cadrumo_error
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

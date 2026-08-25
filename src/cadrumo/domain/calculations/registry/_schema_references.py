@@ -21,7 +21,7 @@ from ....core.external_constants import (
     XLSX_EXTENSION,
 )
 from ....core.identity import ContentDigest
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from ._schema_base import DateAxis, EvidenceTier, LegalRefs, LegalReviewStatusField, RegistryModel, ReviewStatus
 

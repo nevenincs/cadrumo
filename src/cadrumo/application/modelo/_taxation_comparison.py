@@ -38,7 +38,7 @@ See Also:
         refusal used for the cuota resultante and cuota diferencial roles.
     :mod:`~cadrumo.application.modelo._binding_resolution`:
         Supplies the profile-bound values used by the work-unit entry point.
-    :mod:`~cadrumo.application.modelo._work_addressing`:
+    :mod:`~cadrumo.application.modelo.work_addressing`:
         Resolves natural or exact work addresses before CLI comparison.
 """
 
@@ -350,7 +350,6 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
             Performs the pure snapshot comparison after this function resolves
             work-unit state.
     """
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
         resolve_available_bound_inputs_by_casilla_id,
@@ -359,15 +358,28 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     from ._action_errors import WorkUnitNotFoundError
     from ._binding_resolution import resolve_declaration_period_inputs
     from ._registry_resources import authority_via_resources as _authority_via_resources
+    from .work_addressing import (
+        ModeloWorkSelectorRequest,
+        ModeloWorkSelectorState,
+        resolve_modelo_work_bucket,
+        select_modelo_work_resolution,
+    )
 
-    wu_repo = WorkUnitCatalogueRepository()
-    work_units = wu_repo.load()
-    work_unit = work_units.get(work_unit_id)
-    if work_unit is None:
+    request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
+    bucket_id = resolve_modelo_work_bucket(request)
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+
+    resolution = select_modelo_work_resolution(
+        request,
+        catalogue=WorkUnitCatalogueRepository(bucket_id=bucket_id).load(),
+        bucket_id=bucket_id,
+    )
+    if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
         raise WorkUnitNotFoundError(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": work_unit_id},
         )
+    work_unit = resolution.work_unit
 
     try:
         authority = _authority_via_resources()
@@ -433,13 +445,13 @@ def compare_taxation_for_work_address(address: object) -> TaxationComparisonResu
     """Run conjunta-vs-individual comparison for a natural or exact work address.
 
     Args:
-        address: The :class:`~cadrumo.application.modelo._work_addressing.ModeloWorkAddress`
+        address: The :class:`~cadrumo.application.modelo.work_addressing.ModeloWorkAddress`
             selected by CLI work-address parsing.
 
     Returns:
         A :class:`TaxationComparisonResult` for the resolved work unit.
     """
-    from ._work_addressing import ModeloWorkAddress, resolve_modelo_work_address_unit
+    from .work_addressing import ModeloWorkAddress, resolve_modelo_work_address_unit
 
     if not isinstance(address, ModeloWorkAddress):
         raise TypeError(f"expected ModeloWorkAddress, got {type(address).__name__}")

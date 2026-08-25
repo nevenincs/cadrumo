@@ -1,15 +1,15 @@
 """Real-behavior tests for ledger provider ID dispatch coverage.
 
 The ledger import service accepts provider IDs as operator text, normalises them
-through :class:`~application.ledger._actions_import.LedgerProviderID`, and then
+through :class:`~application.ledger.actions_import.LedgerProviderID`, and then
 dispatches to the concrete inbound financial provider implementations. These
 tests pin the enum's public strings, alias handling, and unknown-provider
 diagnostic surface.
 
 See Also:
-    :class:`~application.ledger._actions_import.LedgerProviderID`
+    :class:`~application.ledger.actions_import.LedgerProviderID`
         Canonical set of ledger import provider IDs accepted by the service.
-    :func:`~application.ledger._actions_import._resolve_financial_provider`
+    :func:`~application.ledger.actions_import._resolve_financial_provider`
         Resolver that maps provider IDs to concrete parser implementations.
     :mod:`~adapters.inbound.financial.providers`
         Provider package supplying CSV, OFX, XLSX, and N26 PDF parsers.
@@ -23,7 +23,7 @@ import pytest
 
 from ....adapters.inbound.financial.providers import CsvProvider, OfxProvider, PdfN26Provider, XlsxProvider
 from ....domain.transactions import TransactionValidationError
-from .._actions_import import LedgerProviderID, _resolve_financial_provider
+from ..actions_import import LedgerProviderID, _resolve_financial_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

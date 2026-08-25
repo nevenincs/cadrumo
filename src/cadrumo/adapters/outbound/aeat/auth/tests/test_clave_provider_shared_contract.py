@@ -43,6 +43,8 @@ from urllib.parse import quote
 
 import pytest
 
+import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+
 from ......core import AuthProviderKind
 from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import (
@@ -53,12 +55,11 @@ from ......tests.aeat_literal_fixtures import (
     WLPL_INWINVOC_TWO_SEGMENT_PATH_CANARY,
 )
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from .. import _session_store
-from .._clave_movil import ClaveMovilAuthProvider
-from .._clave_movil_metadata import ClaveMovilSessionMetadata
-from .._clave_permanente import ClavePermanenteAuthProvider
-from .._clave_permanente_metadata import ClavePermanenteSessionMetadata
-from .._errors import AeatLoginAssertionError
+from ..clave_movil import ClaveMovilAuthProvider
+from ..clave_movil_metadata import ClaveMovilSessionMetadata
+from ..clave_permanente import ClavePermanenteAuthProvider
+from ..clave_permanente_metadata import ClavePermanenteSessionMetadata
+from ..errors import AeatLoginAssertionError
 from ._clave_movil_support import _settings_for as _movil_settings_for
 from ._clave_permanente_support import _settings_for as _permanente_settings_for
 
@@ -160,7 +161,7 @@ def _metadata_for(profile: _ProviderProfile, storage_state: Mapping[str, object]
         identity_nif=_IDENTITY,
         authenticated_at=_AUTHENTICATED_AT,
         idle_deadline=_AUTHENTICATED_AT + timedelta(minutes=18),
-        storage_state_sha256=_session_store.storage_state_sha256(storage_state),
+        storage_state_sha256=session_store.storage_state_sha256(storage_state),
         landing_url=f"{_DOMAINS.www6}{_TARGET_PATH}",
     )
 
@@ -455,11 +456,11 @@ def test_a_persisted_session_round_trips_through_the_real_encrypted_store(
     storage_state = _storage_state()
     metadata = _metadata_for(profile, storage_state)
 
-    assert _session_store.exists(path) is False
+    assert session_store.exists(path) is False
 
     provider._persist_session(path, storage_state=storage_state, metadata=metadata)
 
-    assert _session_store.exists(path) is True
+    assert session_store.exists(path) is True
     persisted = provider._load_persisted(path)
     assert persisted.storage_state["cookies"] == storage_state["cookies"]
 
@@ -496,7 +497,7 @@ def test_metadata_that_does_not_validate_refuses_the_resume(
 
     provider = profile.build(tmp_path)
     path = provider._storage_state_path()
-    _session_store.save(path, storage_state=_storage_state(), metadata={"provider_kind": "certificate"})
+    session_store.save(path, storage_state=_storage_state(), metadata={"provider_kind": "certificate"})
 
     persisted = provider._load_persisted(path)
     with pytest.raises(AeatLoginAssertionError, match="metadata invalid"):
@@ -515,11 +516,11 @@ def test_invalidating_a_persisted_session_removes_it_from_the_store(
     storage_state = _storage_state()
     provider._persist_session(path, storage_state=storage_state, metadata=_metadata_for(profile, storage_state))
 
-    assert _session_store.exists(path) is True
+    assert session_store.exists(path) is True
 
     provider._invalidate_persisted(path)
 
-    assert _session_store.exists(path) is False
+    assert session_store.exists(path) is False
 
 
 @_profiles()
@@ -533,7 +534,7 @@ def test_invalidating_an_absent_session_is_a_tolerated_no_op(
 
     provider._invalidate_persisted(provider._storage_state_path())
 
-    assert _session_store.exists(provider._storage_state_path()) is False
+    assert session_store.exists(provider._storage_state_path()) is False
 
 
 # ── Lifecycle ───────────────────────────────────────────────────────────────

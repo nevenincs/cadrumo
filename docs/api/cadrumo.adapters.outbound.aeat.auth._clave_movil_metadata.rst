@@ -1,7 +1,8 @@
-cadrumo.adapters.outbound.aeat.auth._clave_movil_metadata module
+cadrumo.adapters.outbound.aeat.auth.clave_movil_metadata module
 ================================================================
 
-.. automodule:: cadrumo.adapters.outbound.aeat.auth._clave_movil_metadata
+.. automodule:: cadrumo.adapters.outbound.aeat.auth.clave_movil_metadata
    :members:
    :show-inheritance:
    :ignore-module-all:
+

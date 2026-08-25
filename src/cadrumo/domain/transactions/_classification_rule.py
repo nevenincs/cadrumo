@@ -20,7 +20,7 @@ from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...core.time import now
 from ._enums import BusinessClassification
-from ._errors import ClassificationRuleError
+from .errors import ClassificationRuleError
 
 _logger = get_logger(__name__)
 

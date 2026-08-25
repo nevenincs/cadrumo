@@ -31,7 +31,7 @@ import pytest
 
 from ....core.errors import CadrumoError, get_registered_error_code
 from ....core.i18n import tr
-from .._errors import (
+from ..errors import (
     PortalIntegrityError,
     PortalRegistryError,
     PortalValidationError,
@@ -40,7 +40,7 @@ from .._errors import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_ERRORS_MODULE = Path(__file__).resolve().parent.parent / "_errors.py"
+_ERRORS_MODULE = Path(__file__).resolve().parent.parent / "errors.py"
 
 #: The registered locale key for the unknown-portal refusal, written out rather
 #: than read back from the registry the constructor itself consults. Deriving it

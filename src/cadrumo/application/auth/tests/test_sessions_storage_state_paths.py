@@ -29,14 +29,15 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.auth import _session_store
+from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.storage.bucket import bucket_paths
-from ....core import AuthProviderKind, DirectoryEntryKind, scan_directory
+from ....core import AuthProviderKind
+from ....core.directory_scan import DirectoryEntryKind, scan_directory
 from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
+from ...wizard import compiler as _wizard  # noqa: F401  (compiler import seeds the ProfileKey registry)
 from ..operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from ..sessions import storage_state_paths
 
@@ -158,12 +159,12 @@ def _create_profile_with_certificate_session(bucket_id: str) -> None:
         register_minimal_profile(profile_id=bucket_id)
         configure_operator_auth("certificate")
         session_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-        _session_store.save(
+        session_store.save(
             session_path,
             storage_state={"cookies": [], "origins": []},
             metadata={"provider_kind": "certificate"},
         )
-        assert _session_store.exists(session_path)
+        assert session_store.exists(session_path)
 
 
 def test_provider_logout_leaves_unrelated_bucket_session_bytes_identical(tmp_path: Path) -> None:
@@ -178,9 +179,9 @@ def test_provider_logout_leaves_unrelated_bucket_session_bytes_identical(tmp_pat
 
         with open_test_profile_session(_PROFILE_A):
             session_a = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-            assert _session_store.exists(session_a)
+            assert session_store.exists(session_a)
             result = logout_operator_auth(provider="certificate")
-            assert _session_store.exists(session_a) is False
+            assert session_store.exists(session_a) is False
 
         unrelated_after = _hash_bucket_tree(storage_root, _PROFILE_B)
 
@@ -188,7 +189,7 @@ def test_provider_logout_leaves_unrelated_bucket_session_bytes_identical(tmp_pat
         assert unrelated_after == unrelated_before
 
         with open_test_profile_session(_PROFILE_B):
-            assert _session_store.exists(storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state)
+            assert session_store.exists(storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state)
 
 
 def test_all_provider_reset_leaves_unrelated_bucket_session_bytes_identical(tmp_path: Path) -> None:
@@ -203,9 +204,9 @@ def test_all_provider_reset_leaves_unrelated_bucket_session_bytes_identical(tmp_
 
         with open_test_profile_session(_PROFILE_A):
             session_a = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
-            assert _session_store.exists(session_a)
+            assert session_store.exists(session_a)
             result = reset_operator_auth(all_providers=True)
-            assert _session_store.exists(session_a) is False
+            assert session_store.exists(session_a) is False
 
         unrelated_after = _hash_bucket_tree(storage_root, _PROFILE_B)
 
@@ -213,4 +214,4 @@ def test_all_provider_reset_leaves_unrelated_bucket_session_bytes_identical(tmp_
         assert unrelated_after == unrelated_before
 
         with open_test_profile_session(_PROFILE_B):
-            assert _session_store.exists(storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state)
+            assert session_store.exists(storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state)

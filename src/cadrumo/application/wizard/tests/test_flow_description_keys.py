@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.i18n import tr
-from .._catalogue import WIZARD_FLOWS
+from ..catalogue import WIZARD_FLOWS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

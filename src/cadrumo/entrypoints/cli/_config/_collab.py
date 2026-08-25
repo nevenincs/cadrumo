@@ -12,7 +12,7 @@ against; see :mod:`~entrypoints.cli._modelo_review_package_cli`.
 
 ``add`` is idempotent-guarded to the extent the underlying repository already
 is: a duplicate ``recipient_id`` refuses instructively (``RecipientAlreadyRegisteredError``
-propagates verbatim through :func:`~entrypoints.cli._errors.command_error_boundary`,
+propagates verbatim through :func:`~entrypoints.cli.errors.command_error_boundary`,
 which renders every registered :class:`~core.errors.CadrumoError` at the CLI
 boundary) rather than silently overwriting the prior fingerprint -- a
 fingerprint swap must be an explicit ``remove`` followed by ``add``, never an

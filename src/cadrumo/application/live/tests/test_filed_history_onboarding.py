@@ -24,7 +24,7 @@ import pytest
 
 from ....core import FiledHistoryDiscoverySignal, RegisterScopingSignal
 from ....core.json_contract import NoticeSeverity
-from .._filed_data_capture import (
+from ..filed_data_capture import (
     FiledHistoryOnboardingRun,
     FiledHistoryPairOutcome,
     FiledPeriodSelectionRow,
@@ -304,7 +304,7 @@ def test_the_run_model_holds_one_advisory_per_unreached_reason_without_merging()
     unnoticed.
     """
     from ....core.json_contract import Notice, NoticeSeverity
-    from .._filed_observation_persistence import (
+    from ..filed_observation_persistence import (
         FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
         FiledJustificanteUnreachedReason,
     )
@@ -344,7 +344,7 @@ def test_the_run_advisory_builder_uses_a_different_code_from_the_evidence_adviso
     about either advisory travelling anywhere.
     """
     from ....core.json_contract import Notice, NoticeSeverity
-    from .._filed_observation_persistence import FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
+    from ..filed_observation_persistence import FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
 
     run = FiledHistoryOnboardingRun(
         pairs=(_pair(signals=_PROFILE, row_count=0),),

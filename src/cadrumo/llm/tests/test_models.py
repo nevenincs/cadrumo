@@ -16,7 +16,7 @@ from pydantic import ValidationError
 
 from ...core import NoRecoveryOutcome
 from .. import LLMProvider, LLMRequest, LLMResponse, PromptDefinition, Translation
-from .._errors import LLMValidationError
+from ..errors import LLMValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

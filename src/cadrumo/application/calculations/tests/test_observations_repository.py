@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from .._errors import ObservationKeyError
+from ..errors import ObservationKeyError
 from .._observations_repository import (
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,

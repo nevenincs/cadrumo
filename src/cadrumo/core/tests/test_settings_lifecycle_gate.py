@@ -46,7 +46,7 @@ from pathlib import Path
 
 import pytest
 
-from .. import scan_directory
+from ..directory_scan import scan_directory
 from .._storage_taxonomy import (
     EXTERNAL_PATH_SETTINGS_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,

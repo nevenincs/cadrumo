@@ -4,9 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from ....adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError, ClaveMovilConfigurationError
+from ....adapters.outbound.aeat.auth.clave_movil_support import (
+    ClaveMovilApprovalTimeoutError,
+    ClaveMovilConfigurationError,
+)
 from ....adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError, SedeParseError
-from .. import LiveIvaAcquisitionFailureMode, classify_live_iva_acquisition_failure
+from ..errors import (
+    LiveIvaAcquisitionFailureMode,
+    classify_live_iva_acquisition_failure,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

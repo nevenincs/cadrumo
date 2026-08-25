@@ -23,7 +23,7 @@ from typing import Protocol
 from uuid import UUID
 
 from .....core import StorageCategory, storage_location
-from ._errors import (
+from .errors import (
     ProfileCustodyRecordError,
     ProfileCustodyRecoveryGuidance,
     ProfileCustodyRefusal,

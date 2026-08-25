@@ -24,10 +24,8 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.iva import IvaCategory
-from ....llm import LLMSaturatedSuggestion
-from .. import (
-    saturate_llm_classification,
-)
+from ....llm.suggestions import LLMSaturatedSuggestion
+from ..llm_classification import saturate_llm_classification
 from ._llm_saturation_support import (
     _BUCKET,
     _saturating_subprocess_classifier,

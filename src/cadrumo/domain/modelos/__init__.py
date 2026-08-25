@@ -122,7 +122,7 @@ from ._dt12_reduccion import (
     compute_dt12_reduccion_plan_pensiones,
     dt12_regime_window_eligibility,
 )
-from ._errors import (
+from .errors import (
     Modelo036LifecycleError,
     Modelo036PriorAltaRequiredError,
     Modelo036TerminalStateError,
@@ -173,7 +173,6 @@ from ._protocols import (
     ModeloRecordCatalogueRepositoryProtocol,
     TransactionParticipationIndexRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
-    WorkUnitCatalogueRepositoryProtocol,
 )
 from ._repository import WorkUnitPersistenceError, upsert_work_unit
 from ._row_models import (
@@ -288,7 +287,6 @@ __all__ = (
     "VerificationReportPersistenceError",
     "WorkUnit",
     "WorkUnitCatalogue",
-    "WorkUnitCatalogueRepositoryProtocol",
     "WorkUnitPersistenceError",
     "WorkUnitState",
     "assert_revision_snapshot_evidence_coverage",

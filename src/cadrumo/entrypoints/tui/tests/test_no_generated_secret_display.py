@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

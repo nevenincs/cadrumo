@@ -27,7 +27,7 @@ from ...iva import (
     RegimenSimplificadoFilingRows,
     validate_regimen_simplificado_rows,
 )
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 
 if TYPE_CHECKING:
     from ...modelos import M303RegimenSimplificadoCalculationResult

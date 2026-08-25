@@ -20,8 +20,8 @@ import pytest
 from ....core import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva import CustomerTaxStatus
-from .._classifier_inputs import ClassifierInputFact, collect_classifier_inputs
-from .._evidence_draft import InvoiceDraft
+from ..classifier_inputs import ClassifierInputFact, collect_classifier_inputs
+from ..evidence_draft import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -14,7 +14,7 @@ from ....domain.usage_ratios import (
     UsageRatioProfile,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._ratios import (
+from ..ratios import (
     eligible_ratio_categories,
     list_eligible_ratios_for_bucket,
     set_usage_ratio,
@@ -160,12 +160,12 @@ class TestRuntimeFacade:
 
     def test_bucket_wrappers_fail_closed_for_inactive_runtime_bucket(self, tmp_path: Path) -> None:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-            with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
+            with pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"):
                 set_usage_ratio(
                     bucket_id=_OTHER_BUCKET_ID,
                     category=SpendingCategory.TELEFONIA_MOVIL,
                     ratio=Decimal("0.42"),
                 )
 
-            with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
+            with pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"):
                 validate_ratios_for_bucket(bucket_id=_OTHER_BUCKET_ID)

@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import iter_directory, scan_directory
+from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from .._paths import UTF_8
 

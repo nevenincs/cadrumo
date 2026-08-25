@@ -25,7 +25,7 @@ from ....application.user_profile.profile_pointer import active_profile_pointer_
 from ....application.user_profile.profile_record_repository import bound_profile_record_session
 from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 from ...user_profile.login_session_port import profile_bind_bucket_session
 from ..profile_health import assess_active_profile_health, repair_active_profile_pointer

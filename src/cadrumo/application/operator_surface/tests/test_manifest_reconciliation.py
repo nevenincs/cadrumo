@@ -7,7 +7,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from .._errors import OperatorSurfaceContractError
+from ..errors import OperatorSurfaceContractError
 from .._manifest import (
     ExplicitExclusionInventoryRow,
     InputSchemaInventoryRow,

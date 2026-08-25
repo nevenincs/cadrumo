@@ -15,16 +15,11 @@ from __future__ import annotations
 import pytest
 
 from ......application.auth_credentials import unnamed_certificate_credentials
-from ......core.config import Settings
+from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
 from ......tests.live_gate import requires_live_enabled
-from .. import (
-    AEAT_CERTIFICATE_PROTECTED_URL,
-    AeatAuthenticator,
-    AeatLoginAssertion,
-    AeatSession,
-    CertificateHealthSeverity,
-    extract_nif_from_subject,
-)
+from ..authenticator import AeatAuthenticator
+from ..authenticator_types import AeatLoginAssertion, AeatSession
+from ..certificate import CertificateHealthSeverity, extract_nif_from_subject
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
@@ -86,7 +81,7 @@ async def test_aeat_authenticator_full_live_flow() -> None:
     from typing import Any, cast
 
     from ...browser import Profile, create_browser_session
-    from .. import BrowserSessionFactory
+    from ..authenticator_types import BrowserSessionFactory
 
     profile = Profile(name="live-auth-gate")
 

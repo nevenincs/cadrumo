@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from ... import scan_directory
+from ...directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

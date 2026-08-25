@@ -21,7 +21,7 @@ import pytest
 import typer
 
 from ....application.review import LedgerReviewFilterKey
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import discover_modelo_sources
 from ....tests import REPO_ROOT
@@ -145,7 +145,7 @@ def _ledger_help_by_command() -> dict[str, str]:
     # ``click.Group``, so a bare ``isinstance(group, click.Group)`` is False.
     # Derive the vendored ``Command`` base from the TyperGroup MRO so the
     # command-group hierarchy is recognised without a brittle private-module
-    # import (mirrors the production fix in ``cli/_errors.py``, which derives the
+    # import (mirrors the production fix in ``cli/errors.py``, which derives the
     # vendored ``ClickException`` from ``typer.BadParameter.__mro__``).
     vendored_command = next(base for base in type(group).__mro__ if base.__name__ == "Command")
     assert isinstance(group, vendored_command)

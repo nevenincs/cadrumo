@@ -28,10 +28,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core import PRODUCT_IDENTITY, StorageCategory, iter_directory, storage_location
+from ....core import PRODUCT_IDENTITY, StorageCategory, storage_location
+from ....core.directory_scan import iter_directory
 from ....core.bucket_pointer import pointer_path
 from ....tests.cli_runner import invoke_cached_cli
-from ._sessionless_root_fixtures import _sessionless_root
+from .sessionless_root_fixtures import _sessionless_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

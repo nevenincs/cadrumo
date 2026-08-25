@@ -16,7 +16,7 @@ Also exercises the expiry, review-only, and replay-defence follow-up slice:
 a package presented past its ``valid_until`` deadline refuses, a
 ``review_only`` envelope decrypts but is flagged non-filing-grade, and the
 envelope's replay nonce composes with
-:class:`~application.modelo.RecipientReplayGuardRepository` to refuse a
+:class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository` to refuse a
 second presentation of the same package.
 
 See Also:
@@ -43,6 +43,10 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.recipient_replay_guard import (
+    RecipientPackageReplayedError,
+    RecipientReplayGuardRepository,
+)
 from ....adapters.persistence.storage import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _ENCRYPTION_KEY_NAMESPACE,
 )
@@ -75,10 +79,6 @@ from .._review_package_recipient_encryption import (
 from .._review_package_recipient_registry import (
     RecipientFingerprintRegistryRepository,
     public_key_hex_from_raw_bytes,
-)
-from .._review_package_recipient_replay_guard import (
-    RecipientPackageReplayedError,
-    RecipientReplayGuardRepository,
 )
 from ._review_package_bytes_support import build_package_bytes
 

@@ -20,7 +20,7 @@ import pytest
 from ....core import ImageMediaType
 from ....core.config import Settings
 from ....domain.transactions import prompt_spec_with_saturation_fields
-from ....domain.user_profile import ProfileSetupState
+from ....domain.user_profile.values import ProfileSetupState
 from ....llm import LocalVisionLLMClassifier, MultimodalImageInput
 from ....tests.llm_vision_evidence_support import _png_image, _transaction
 from ....tests.persistence_vision_evidence_support import (
@@ -32,9 +32,9 @@ from ....tests.persistence_vision_evidence_support import (
 )
 from ....tests.secure_sql import TestRuntimeProfile
 from ...provisioning import ProvisioningPreconditionCondition
-from .._evidence import PurchaseInvoiceEvidenceInputError
-from .._llm_classification import _classify_with_evidence, _resolve_evidence, _ResolvedEvidence
-from .._preconditions import LedgerPreconditionCondition
+from ..evidence import PurchaseInvoiceEvidenceInputError
+from ..llm_classification import ResolvedEvidence, _resolve_evidence, classify_with_evidence
+from ..preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -109,7 +109,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     attachment (direct-bytes path). Both reach the gate and must refuse with an
     instructive, non-silent error naming the opt-in command.
     """
-    from ....domain.user_profile import UserProfileFact, UserProfileRecord
+    from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
     from ....tests.profile_capsule import seed_test_profile_record
 
     clock = datetime(2026, 1, 1, tzinfo=UTC)
@@ -150,7 +150,7 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
             "cadrumo_llm_vision_read_timeout_s": 1,
         },
     )
-    evidence = _ResolvedEvidence(
+    evidence = ResolvedEvidence(
         reference="reader-unavailable",
         text=None,
         images=(
@@ -163,7 +163,7 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
     reader = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(), settings=settings)
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _classify_with_evidence(
+        classify_with_evidence(
             _transaction("reader-unavailable"),
             evidence,
             text_classifier=None,

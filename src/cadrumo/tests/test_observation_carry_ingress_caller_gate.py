@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ..core import scan_directory
+from ..core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -24,7 +24,7 @@ class _Caller:
 
 _LITERAL_NORMALIZING_CONTROLS = {
     _Caller(
-        "application/live/_filed_observation_persistence.py",
+        "application/live/filed_observation_persistence.py",
         "persist_filed_calculation_observation",
     ),
 }

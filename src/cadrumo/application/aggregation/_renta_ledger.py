@@ -68,7 +68,8 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
+from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.values import UserProfileRecord
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import fact_value
 from . import _shared_issue_reasons
@@ -78,7 +79,7 @@ from ._currency_predicates import (
     effective_eur_taxable_base,
     is_non_eur_without_conversion,
 )
-from ._errors import AggregationPeriodError, AggregationValidationError, t
+from .errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, LedgerAggregationResultBase
 from ._renta_business_eligibility import (
     relies_on_activity_marker,

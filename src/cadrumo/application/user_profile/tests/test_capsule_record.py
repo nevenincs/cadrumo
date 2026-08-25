@@ -24,7 +24,7 @@ from ....adapters.persistence.storage.custody import (
     create_profile_custody_sentinel,
 )
 from ....domain.buckets import BucketEventType
-from ....domain.user_profile import ProfileSetupState, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

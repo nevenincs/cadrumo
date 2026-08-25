@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.transactions import BusinessClassification
-from .._actions_classification import _parse_bulk_classify_rows
+from ..actions_classification import _parse_bulk_classify_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -22,7 +22,7 @@ See Also:
 from __future__ import annotations
 
 from ._document_reader import NotificationDocumentReader
-from ._errors import NotificacionParseError, SancionArithmeticError, SancionParseError
+from .errors import NotificacionParseError, SancionArithmeticError, SancionParseError
 from ._sancion import parse_sancion_document
 
 __all__ = [

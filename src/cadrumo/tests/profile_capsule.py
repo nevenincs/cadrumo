@@ -26,19 +26,19 @@ from ..adapters.persistence.storage.tests.profile_capsule_runtime import (
     new_test_profile_custody_envelope,
     test_profile_recovery_envelope,
 )
-from ..application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from ..application.user_profile.custody_ports import ProfileCustodyRecoveryEnvelopePort
-from ..application.user_profile.profile_record_repository import ProfileRecordRepository, bound_profile_record_session, close_active_profile_record_session
 from ..application.user_profile.capsule_record import ProfileRecordSession
+from ..application.user_profile.custody_ports import ProfileCustodyRecoveryEnvelopePort
+from ..application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from ..application.user_profile.profile_record_repository import (
+    ProfileRecordRepository,
+    bound_profile_record_session,
+    close_active_profile_record_session,
+)
 from ..core.identity import canonical_profile_bucket_id
 from ..core.paths import effective_storage_root
 from ..domain.buckets import BucketEventType
-from ..domain.user_profile import (
-    ProfileSchemaValidationError,
-    ProfileSetupState,
-    UserProfileFact,
-    UserProfileRecord,
-)
+from ..domain.user_profile.errors import ProfileSchemaValidationError
+from ..domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 
 def _active_bucket_dek(profile_id: UUID) -> bytes:

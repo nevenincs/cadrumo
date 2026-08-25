@@ -18,7 +18,7 @@ from functools import lru_cache
 from ...core import BindingSourceKind
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ._errors import OperatorSurfaceContractError, operator_surface_contract_verdict
+from .errors import OperatorSurfaceContractError, operator_surface_contract_verdict
 from ._models import (
     LifecycleContract,
     ModeloLifecycleStep,

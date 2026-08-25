@@ -30,7 +30,7 @@ from ._descendant_facts import (
     relacion_kwarg,
 )
 from ._descendant_record import DescendantRecordFields
-from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
+from .errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
 from ._family_profile import RentaFamilyProfile
 from ._family_types import (
     GuarderiaMonthSpend,

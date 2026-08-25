@@ -39,12 +39,9 @@ from ....domain.modelos import (
 from ....domain.transactions import BusinessClassification, Transaction
 from ....tests.env_scope import ready_clave_settings
 from ....tests.secure_sql import isolated_runtime_profile
-from ...ledger import (
-    ManualLedgerTransactionPatch,
-    PurchaseInvoiceEvidenceService,
-    attach_manual_transaction_evidence,
-    update_manual_transaction_fields,
-)
+from ...ledger.models import ManualLedgerTransactionPatch
+from ...ledger.evidence import PurchaseInvoiceEvidenceService
+from ...ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields
 from .. import verify_modelo_revision
 from .test_modelo_303_deductible_evidence_gate import (
     _BUCKET_ID,

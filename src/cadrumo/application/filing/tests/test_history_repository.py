@@ -18,7 +18,7 @@ from ....adapters.persistence.storage.bucket import bucket_paths
 from ....adapters.persistence.storage.errors import ClassificationError, SecureObjectRowIdentityError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
-from ....domain import ModeloIdentifier
+from ....domain.identifiers import ModeloIdentifier
 from ....tests.secure_sql import TestRuntimeProfile
 from .._history_models import ModeloHistory, ModeloHistoryEntry
 from .._history_repository import ModeloHistoryRepository

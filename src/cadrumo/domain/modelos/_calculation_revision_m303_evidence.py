@@ -14,7 +14,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import ContentDigest
 from ..calculations.registry import LegalRefId, RevisionId, SourceRefId
 from ..filing_evidence import FilingEvidenceReference
-from ._errors import ModeloValidationError
+from .errors import ModeloValidationError
 
 
 class M303InsolvencyFilingSubtype(StrEnum):

@@ -19,7 +19,7 @@ from ._binding_selector_utils import (
     uppercase_alpha_code,
     validate_rectification_fields,
 )
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId
 from ._invoice_bindings import (
     InvoiceObservation,

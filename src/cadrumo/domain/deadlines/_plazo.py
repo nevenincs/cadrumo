@@ -16,7 +16,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from ...core import M210_TIPO_RENTA_CODE_PROJECTION, Modelo, Period, PeriodKind, ResultDisposition
-from ._errors import DeadlineValidationError
+from .errors import DeadlineValidationError
 
 if TYPE_CHECKING:
     from ..calculations.registry import DeadlineWindowDefinition, ModeloRevision

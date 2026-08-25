@@ -2,11 +2,11 @@
 
 These tests assert:
 
-1. After importing cadrumo.application.wizard._catalogue, the core registry
+1. After importing cadrumo.application.wizard.catalogue, the core registry
    slot is filled and get_setup_flow() / get_wizard_flows() return the
    same objects that _catalogue exposes as SETUP_FLOW / WIZARD_FLOWS.
 
-2. No deferred lazy upward imports from cadrumo.application.wizard._catalogue
+2. No deferred lazy upward imports from cadrumo.application.wizard.catalogue
    remain in cadrumo.domain.deadlines._profiles or cadrumo.domain.contribuyente._keys.
    A fresh Python interpreter imports those domain modules and asserts the
    application wizard catalogue was not loaded as an import-time side effect.
@@ -14,7 +14,7 @@ These tests assert:
 See Also:
     :mod:`~core.wizard_catalogue`
         Core registry slot this test expects domain code to consume.
-    :mod:`~application.wizard._catalogue`
+    :mod:`~application.wizard.catalogue`
         Application-owned descriptor catalogue that registers into the core slot.
     :mod:`~domain.contribuyente._keys`
         Domain registry that must receive pushed profile keys without pulling
@@ -39,8 +39,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_setup_flow_round_trip_identity() -> None:
     """get_setup_flow() returns the exact SETUP_FLOW object from _catalogue."""
 
-    # Import _catalogue first — its module body calls register_wizard_catalogue.
-    from ...application.wizard import _catalogue as catalogue
+    # Import catalogue first — its module body calls register_wizard_catalogue.
+    import cadrumo.application.wizard.catalogue as catalogue
     from ..wizard_catalogue import get_setup_flow
 
     assert get_setup_flow() is catalogue.SETUP_FLOW, (
@@ -52,7 +52,7 @@ def test_setup_flow_round_trip_identity() -> None:
 def test_wizard_flows_round_trip_identity() -> None:
     """get_wizard_flows() returns the exact WIZARD_FLOWS tuple from _catalogue."""
 
-    from ...application.wizard import _catalogue as catalogue
+    import cadrumo.application.wizard.catalogue as catalogue
     from ..wizard_catalogue import get_wizard_flows
 
     assert get_wizard_flows() is catalogue.WIZARD_FLOWS, (
@@ -100,8 +100,8 @@ for module_name in (
 ):
     importlib.import_module(module_name)
 
-if "cadrumo.application.wizard._catalogue" in sys.modules:
-    raise SystemExit("domain imports loaded cadrumo.application.wizard._catalogue")
+if "cadrumo.application.wizard.catalogue" in sys.modules:
+    raise SystemExit("domain imports loaded cadrumo.application.wizard.catalogue")
 """
 
     result = subprocess.run(  # noqa: S603 - fixed interpreter and literal script for import isolation.

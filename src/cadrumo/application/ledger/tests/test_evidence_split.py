@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._evidence_split import derive_child_amounts
+from ..evidence_split import derive_child_amounts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

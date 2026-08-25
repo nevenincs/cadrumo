@@ -26,7 +26,7 @@ from textual.containers import Vertical
 from textual.theme import Theme
 
 from ....application.user_profile.status_projection import StatusPageData
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....core.config import TuiAppearance
 from ....entrypoints.tui.profile.status import StatusApp
 from ....entrypoints.tui.secret.app import RegistrationApp
@@ -199,7 +199,7 @@ def _registration_screen() -> RegistrationApp:
     Geometry never calls them, but the screen takes them because it does
     not reach up into the application layer for itself.
     """
-    from ....core import assess_profile_password
+    from ....core.credentials import assess_profile_password
     from ..devtools.fixture import registration_attempt
 
     return RegistrationApp(assess=assess_profile_password, register=registration_attempt)

@@ -42,7 +42,7 @@ from ....core.i18n import OutputLanguage, tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
-from .._errors import CliRefusedBoundaryError
+from ..errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from ....application.bucket_maintenance import BucketDeletionAssessment

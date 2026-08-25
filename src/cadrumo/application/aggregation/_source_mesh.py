@@ -61,7 +61,7 @@ from ...domain.calculations.registry import (
     SourceRefId,
 )
 from ...domain.modelos import M303RegimenSimplificadoAnnualSummaryHandoff, ModeloDetailRow
-from ._errors import AggregationValidationError, t
+from .errors import AggregationValidationError, t
 
 RowBindingValue = str | Decimal
 

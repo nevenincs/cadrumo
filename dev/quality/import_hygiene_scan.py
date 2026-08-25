@@ -56,7 +56,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 

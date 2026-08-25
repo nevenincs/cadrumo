@@ -5,7 +5,7 @@ Currently owns the ``workflow_state.reset`` emission path used by the
 payload mirrors the row-level metadata of the discarded envelope plus
 the actor/source/timestamp captured by the boundary; the plaintext
 envelope content is never recorded. Events are appended to the
-:class:`BucketEventHistoryRepository` via :func:`emit_workflow_state_reset`.
+composed bucket-event history port via :func:`emit_workflow_state_reset`.
 
 See Also:
     :class:`~cadrumo.application.workflow.WorkflowStateRepository`
@@ -16,8 +16,8 @@ See Also:
         execute the emit-before-delete recovery route.
     :class:`~cadrumo.domain.buckets.BucketEvent`
         Immutable audit event emitted for ``workflow_state.reset``.
-    :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`
-        Append-only secure repository that stores the reset event.
+    :func:`~cadrumo.application.user_profile.default_profile_bucket_event_history_repository`
+        Composed append-only repository port that stores the reset event.
 """
 
 from __future__ import annotations
@@ -27,7 +27,6 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...core.time import now as utc_now
@@ -37,6 +36,7 @@ from ...domain.buckets import (
     BucketEventType,
     emit_bucket_event,
 )
+from ..user_profile.custody_ports import default_profile_bucket_event_history_repository
 
 SYSTEM_BUCKET_ID: Final[str] = "system"
 WORKFLOW_STATE_OBJECT_ID: Final[str] = "cadrumo.workflow:state"
@@ -113,7 +113,7 @@ def emit_workflow_state_reset(
         timestamp=occurred_at,
     )
     return emit_bucket_event(
-        repository=BucketEventHistoryRepository(),
+        repository=default_profile_bucket_event_history_repository(),
         bucket_id=fingerprint.recovered_bucket_id or SYSTEM_BUCKET_ID,
         event_type=BucketEventType.WORKFLOW_STATE_RESET,
         occurred_at=occurred_at,

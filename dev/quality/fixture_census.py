@@ -55,7 +55,7 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import DirectoryEntryKind, scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 

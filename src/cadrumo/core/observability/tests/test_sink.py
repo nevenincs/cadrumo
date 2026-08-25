@@ -30,7 +30,8 @@ import pytest
 
 from ....tests.path_obstruction import obstructed_path
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory, iter_directory, storage_path
+from ... import StorageCategory, storage_path
+from ...directory_scan import iter_directory
 from ...config import override_settings
 from .. import (
     NavigationPayload,

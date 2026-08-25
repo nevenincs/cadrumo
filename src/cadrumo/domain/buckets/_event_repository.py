@@ -18,7 +18,7 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from ._errors import BucketEventValidationError, BucketsError
+from .errors import BucketEventValidationError, BucketsError
 from ._event import (
     BucketEvent,
     BucketEventHistoryCatalogue,

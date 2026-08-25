@@ -25,9 +25,9 @@ from ....core.access_gate import (
     derive_modelo_authorization,
     load_authorization_manifest,
 )
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import bundled_path as _bundled_path
 from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
-from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._identity import (
     FingerprintTuples,
     RegistryIdentity,
@@ -48,7 +48,7 @@ from ._snapshot import (
     _build_validated_snapshot,  # pyright: ignore[reportPrivateUsage]  # the registry authority owns snapshot admission
 )
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
-from ._static_inspection import RegistryRevisionInspection
+from ._static_inspection import RegistryRevisionInspection, StaticGeneratedArtifactInspection
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
 from ._supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
 from ._temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
@@ -61,6 +61,7 @@ from ._verdict_cache import (
     shipped_verdict_location,
     stamp_bundled_verdict,
 )
+from .errors import RegistrySnapshotError, RegistryValidationError
 
 
 def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTuples:
@@ -154,7 +155,7 @@ class RegistryDiagnosticFilingRevision:
     selection_coordinates: tuple[tuple[int, str], ...]
     layout_ids: tuple[str, ...]
     layout_json: str | None
-    inspection_json: str | None
+    inspection: StaticGeneratedArtifactInspection | None
     refusal_reason: str | None = None
     refusal_detail: str | None = None
 
@@ -178,7 +179,7 @@ def derive_filing_revision_classifications(
     """Copy every filing revision into static law-selection classification facts.
 
     The supplied authority is used only while this function runs.  Returned
-    facts contain immutable coordinates, error text, and serialized static
+    facts contain immutable coordinates, error text, and minimal static
     layout/inspection projections; they retain no authority, snapshot, or
     service object.
     """
@@ -201,7 +202,7 @@ def derive_filing_revision_classifications(
                         selection_coordinates=(),
                         layout_ids=(),
                         layout_json=None,
-                        inspection_json=None,
+                        inspection=None,
                         refusal_reason="law_selection_failed",
                         refusal_detail=str(error),
                     )
@@ -215,7 +216,7 @@ def derive_filing_revision_classifications(
                     sources=authority.catalogues.sources,
                     legal_ref_ids=frozenset(authority.catalogues.legal),
                 )
-                inspection_json = inspection.model_dump_json()
+                static_inspection = StaticGeneratedArtifactInspection.from_inspection(inspection)
             except ValueError as error:
                 classified.append(
                     RegistryDiagnosticFilingRevision(
@@ -224,7 +225,7 @@ def derive_filing_revision_classifications(
                         selection_coordinates=selection_coordinates,
                         layout_ids=tuple(str(layout.id) for layout in revision.export_layouts),
                         layout_json=None,
-                        inspection_json=None,
+                        inspection=None,
                         refusal_reason="revision_validation_failed",
                         refusal_detail=str(error),
                     )
@@ -249,7 +250,7 @@ def derive_filing_revision_classifications(
                         selection_coordinates=selection_coordinates,
                         layout_ids=tuple(str(item.id) for item in revision.export_layouts),
                         layout_json=None if layout is None else layout.model_dump_json(),
-                        inspection_json=inspection_json,
+                        inspection=static_inspection,
                         refusal_reason="revision_validation_failed",
                         refusal_detail=str(error),
                     )
@@ -263,7 +264,7 @@ def derive_filing_revision_classifications(
                         selection_coordinates=selection_coordinates,
                         layout_ids=(),
                         layout_json=None,
-                        inspection_json=inspection_json,
+                        inspection=static_inspection,
                         refusal_reason="law_selection_failed",
                         refusal_detail=str(error),
                     )
@@ -277,7 +278,7 @@ def derive_filing_revision_classifications(
                         selection_coordinates=selection_coordinates,
                         layout_ids=(),
                         layout_json=None,
-                        inspection_json=inspection_json,
+                        inspection=static_inspection,
                         refusal_reason="law_selection_failed",
                         refusal_detail="a filing-grade snapshot selected a different revision",
                     )
@@ -295,7 +296,7 @@ def derive_filing_revision_classifications(
                         selection_coordinates=selection_coordinates,
                         layout_ids=layout_ids,
                         layout_json=None,
-                        inspection_json=inspection_json,
+                        inspection=static_inspection,
                         refusal_reason="layout_unavailable",
                         refusal_detail=(
                             "the filing revision has no stable single layout across its selected coordinates"
@@ -311,7 +312,7 @@ def derive_filing_revision_classifications(
                         selection_coordinates=selection_coordinates,
                         layout_ids=layout_ids,
                         layout_json=None,
-                        inspection_json=inspection_json,
+                        inspection=static_inspection,
                         refusal_reason="layout_unavailable",
                         refusal_detail="conformance supports exactly one generated filing layout per revision",
                     )
@@ -324,7 +325,7 @@ def derive_filing_revision_classifications(
                     selection_coordinates=selection_coordinates,
                     layout_ids=layout_ids,
                     layout_json=snapshots[0].revision.export_layouts[0].model_dump_json(),
-                    inspection_json=inspection_json,
+                    inspection=static_inspection,
                 )
             )
     return tuple(classified)
@@ -358,7 +359,7 @@ def _fingerprint_key[T: tuple[tuple[object, ...], ...]](fingerprints: T) -> _Fin
     digest = hashlib.sha256()
     for entry in fingerprints:
         for fingerprint_field in entry:
-            digest.update(str(fingerprint_field).encode("utf-8"))
+            digest.update(str(fingerprint_field).encode(UTF_8_ENCODING))
             digest.update(b"\x1f")
         digest.update(b"\x1e")
     return _FingerprintKey(digest=digest.hexdigest(), fingerprints=fingerprints)

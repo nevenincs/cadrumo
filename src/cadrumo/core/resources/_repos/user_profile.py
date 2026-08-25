@@ -7,19 +7,19 @@ from typing import TYPE_CHECKING, override
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
-    from ....domain.user_profile import ProfileSchemaDefinition
+    from ....domain.user_profile.schema import ProfileSchemaDefinition
 
 
 class UserProfileSchemaRepository(ResourceCacheRepository["ProfileSchemaDefinition", None]):
     """Singleton-keyed repository for the bundled user-profile schema.
 
-    Wraps :func:`cadrumo.domain.user_profile.load_user_profile_schema`
+    Wraps :func:`cadrumo.domain.user_profile.loader.load_user_profile_schema`
     and returns the :class:`ProfileSchemaDefinition` aggregate.
     """
 
     @override
     def _load(self, key: None) -> ProfileSchemaDefinition:
-        from ....domain.user_profile import load_user_profile_schema
+        from ....domain.user_profile.loader import load_user_profile_schema
 
         return load_user_profile_schema()
 

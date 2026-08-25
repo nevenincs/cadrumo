@@ -97,7 +97,7 @@ def assert_snapshot_matches_work_unit_revision(
     coordinates the snapshot was actually resolved against.
 
     See Also:
-        :func:`cadrumo.application.modelo._work_addressing.resolve_registry_revision_for_work_target`:
+        :func:`cadrumo.application.modelo.work_addressing.resolve_registry_revision_for_work_target`:
             Performs the create-time counterpart of this revision identity
             assertion.
         :class:`cadrumo.application.modelo._action_errors.WorkUnitRevisionDivergenceError`:
@@ -141,7 +141,7 @@ def resolve_registry_snapshot_for_work_unit(
     law-determined resolver answer.
 
     See Also:
-        :func:`cadrumo.application.modelo._work_addressing.resolve_registry_revision_for_work_target`:
+        :func:`cadrumo.application.modelo.work_addressing.resolve_registry_revision_for_work_target`:
             Performs the create-time counterpart of this revision identity
             assertion.
         :class:`cadrumo.application.modelo._action_errors.WorkUnitRevisionDivergenceError`:

@@ -22,7 +22,7 @@ from ....core import (
     hydrate_filing_projection_ref,
 )
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._export_semantics import (
     ExportComputedKey,
     ExportDraftAttribute,

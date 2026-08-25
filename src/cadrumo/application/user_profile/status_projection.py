@@ -12,7 +12,9 @@ if TYPE_CHECKING:
     from cadrumo.application.workflow.state_models import WorkflowState
 
     from ...core.json_contract import Notice
-    from ...domain.user_profile import ProfileFieldView, ProfileSchemaDefinition, UserProfileRecord
+    from ...domain.user_profile.schema import ProfileSchemaDefinition
+    from ...domain.user_profile.values import UserProfileRecord
+    from .overview import ProfileFieldView
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,7 +153,7 @@ def _build_profile_rows(
 def _build_auth_view(state: WorkflowState | None, *, active_uuid: str | None) -> StatusAuthView:
     """Project application auth state and the live unlock-session deadlines."""
     from ...core.i18n import tr
-    from ...domain.user_profile import load_user_profile_schema
+    from ...domain.user_profile.loader import load_user_profile_schema
     from .overview import profile_field_choices
 
     idle_deadline, absolute_deadline = _active_profile_session_deadlines(active_uuid)
@@ -235,7 +237,7 @@ def _build_fact_rows(
     schema: ProfileSchemaDefinition | None = None,
 ) -> tuple[StatusFactRow, ...]:
     """Project facts with the same schema labels and masking as profile overview."""
-    from ...domain.user_profile import load_user_profile_schema
+    from ...domain.user_profile.loader import load_user_profile_schema
     from .overview import build_profile_overview
     from .projections import record_to_path_values
 
@@ -258,7 +260,8 @@ def _build_fact_row(
 ) -> StatusFactRow:
     """Render one stored field from its declared label, choice, and sensitivity."""
     from ...core.i18n import tr
-    from ...domain.user_profile import UserProfileError, section_field_key
+    from ...domain.user_profile.errors import UserProfileError
+    from ...domain.user_profile.values import section_field_key
     from .overview import mask_profile_field
 
     try:

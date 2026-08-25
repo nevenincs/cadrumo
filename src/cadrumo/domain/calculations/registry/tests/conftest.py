@@ -1,7 +1,7 @@
 """Pytest fixtures for domain calculations registry tests.
 
 Importing :mod:`cadrumo.application.wizard` triggers the import-time
-``register_profile_keys`` push (in ``cadrumo.application.wizard._compiler``) that
+``register_profile_keys`` push (in ``cadrumo.application.wizard.compiler``) that
 populates :data:`cadrumo.domain.contribuyente.PROFILE_KEYS` from the compiled wizard
 flows. ``test_modelo_100_registry`` imports ``PROFILE_KEYS`` at module load, which
 raises ``ProfileKeysRegistrationError`` if the keys were never registered — a
@@ -22,7 +22,7 @@ from collections.abc import Callable
 
 import pytest
 
-from .....application import wizard as _wizard  # noqa: F401  -- side-effect import: registers profile keys
+from .....application.wizard import compiler as _wizard  # noqa: F401  -- side-effect import: registers profile keys
 from .....core import RegistryAuthorityGrade
 from .._schema import RegistrySnapshot
 from ._formula_runtime_support import (

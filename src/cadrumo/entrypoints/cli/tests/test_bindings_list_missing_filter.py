@@ -12,7 +12,7 @@ PROPER subset of Modelo 100's formula-consumed ``source = "profile"``
 bindings, ``--missing`` must return STRICTLY FEWER rows than the
 unfiltered listing, and the rows it removes must be EXACTLY the
 profile-resolved binding ids — no more, no fewer. No mocks: a real
-:class:`~cadrumo.domain.user_profile.UserProfileRecord` is persisted to a
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord` is persisted to a
 real bucket and the real registry authority resolves the bindings.
 """
 
@@ -22,7 +22,7 @@ from datetime import date
 
 import pytest
 
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ._strict_cli_fixture_support import binding_isolated_backend

@@ -17,7 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, scan_directory, validated_casilla_id
+from ....core import CasillaId, Period, validated_casilla_id
+from ....core.directory_scan import scan_directory
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     LegalRefId,

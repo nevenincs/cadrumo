@@ -20,7 +20,7 @@ A perfect reader is an upper bound on every real one, so a document failing here
 cannot be rescued by a better prompt, a larger model or a second pass.
 
 The verdict is never computed here. Every document is put through
-:func:`~application.ledger.party_regions`, the production partition itself, so
+:func:`~application.ledger.party_colocation.party_regions`, the production partition itself, so
 this module cannot drift into a second implementation of the rule it is scoring.
 
 **The dominant real layout defeats line containment, and that is the finding.**
@@ -47,14 +47,10 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.application.ledger import (
-    DocumentTranscription,
-    FieldProvenance,
-    InvoiceDraft,
-    TranscriberIdentity,
-    party_regions,
-    printed_excerpt_occurs_in_text,
-)
+from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
+from cadrumo.application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
+from cadrumo.application.ledger.party_colocation import party_regions
+from cadrumo.application.ledger.grounding_anchor import printed_excerpt_occurs_in_text
 from cadrumo.core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 
 __all__ = [

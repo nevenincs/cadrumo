@@ -17,12 +17,12 @@ from pydantic import ValidationError
 
 from ....core import LOCAL_TRANSPORT_LABEL, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....core.decimal import coerce_finite_european_decimal
-from .._closure_findings import closure_findings
-from .._document_transcription import DocumentTranscription, TranscriberIdentity
-from .._evidence_draft import FieldProvenance, InvoiceDraft
-from .._evidence_input import EvidenceInput
-from .._evidence_textlayer import transcribe_text_layer
-from .._grounding_anchor import (
+from ..closure_findings import closure_findings
+from ..document_transcription import DocumentTranscription, TranscriberIdentity
+from ..evidence_draft import FieldProvenance, InvoiceDraft
+from ..evidence_input import EvidenceInput
+from ..evidence_textlayer import transcribe_text_layer
+from ..grounding_anchor import (
     evaluate_anchor,
     ground_anchored_value,
     ground_self_reported_anchor,

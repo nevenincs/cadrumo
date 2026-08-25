@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema_base import FormulaOperator
 
 __all__ = ["FORMULA_OPERATOR_ARITIES", "FormulaOperatorArity", "require_formula_operator_arity"]

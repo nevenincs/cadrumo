@@ -133,7 +133,7 @@ AeatCertificadoId = Annotated[str, StringConstraints(min_length=10, max_length=1
 """AEAT's *Nº de certificado*, at the bound the live notifications parser already enforces.
 
 Every real capture observed is 13 digits (``2699101808461`` / ``2596230606502``); the
-parser's own gate (``adapters.outbound.aeat.sede._notifications._CERT_RE``) admits
+parser's own gate (``adapters.outbound.aeat.sede.notifications._CERT_RE``) admits
 10 to 16 digits, a deliberate margin around the observation rather than the observation
 itself, matching :data:`AeatExpedienteId`'s precedent of widening past a thin sample
 rather than pinning to it exactly.

@@ -14,8 +14,8 @@ registry moved.
 
 **So the renderer cannot reach an authority at all.** Every regulatory value
 arrives as data, in one frozen
-:class:`~application.ledger.InvoiceExtractionAuthorityValues` resolved by
-:func:`~application.ledger.resolve_invoice_extraction_authority_values`. This
+:class:`~application.ledger.invoice_extraction_authority.InvoiceExtractionAuthorityValues` resolved by
+:func:`~application.ledger.invoice_extraction_authority.resolve_invoice_extraction_authority_values`. This
 package is an adapter over a model transport, and an adapter that looks a rate up
 for itself has made itself a second consumer of the calculation authorities.
 Removing the reach is a stronger guarantee than remembering not to write ``21``:
@@ -98,7 +98,7 @@ from ._models import PromptDefinition, PromptRegistry
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
 
-    from ..application.ledger import InvoiceExtractionAuthorityValues
+    from ..application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
     from ..domain.iva import IvaCategory
 
 __all__ = [
@@ -271,7 +271,7 @@ def default_extraction_period() -> Period:
     """Return the period a reader falls back to when the caller names none.
 
     Delegates to
-    :func:`~application.ledger.default_invoice_extraction_period` rather than
+    :func:`~application.ledger.invoice_extraction_authority.default_invoice_extraction_period` rather than
     re-deriving the fallback. Which coordinate an unbound document is read
     against is a decision, and a decision with two homes is a decision that will
     eventually be made two ways.
@@ -279,7 +279,7 @@ def default_extraction_period() -> Period:
     Returns:
         :class:`~core.Period`: The current civil year's annual period.
     """
-    from ..application.ledger import default_invoice_extraction_period
+    from ..application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 
     return default_invoice_extraction_period()
 
@@ -502,7 +502,7 @@ def render_invoice_extraction_prompt(
 
     Args:
         values: The regulatory values to substitute, resolved by
-            :func:`~application.ledger.resolve_invoice_extraction_authority_values`
+            :func:`~application.ledger.invoice_extraction_authority.resolve_invoice_extraction_authority_values`
             against a law-determined period.
         fields: The field names the prompt should ask for, or ``None`` for
             every declared field. A named field the contract declaration does
@@ -569,7 +569,7 @@ def build_invoice_extraction_prompt(
         PeriodError: When ``period`` carries no calendar span, so no rate window
             can be resolved against it.
     """
-    from ..application.ledger import resolve_invoice_extraction_authority_values
+    from ..application.ledger.invoice_extraction_authority import resolve_invoice_extraction_authority_values
 
     return render_invoice_extraction_prompt(
         values=resolve_invoice_extraction_authority_values(period=period),

@@ -44,8 +44,8 @@ from pydantic import ValidationError
 
 from ....adapters.inbound.einvoice import parse_einvoice_document
 from ....domain.invoices import InvoiceComponents
-from .._closure_findings import closure_findings
-from .._evidence_draft import DraftDiscrepancyKind, InvoiceDraft
+from ..closure_findings import closure_findings
+from ..evidence_draft import DraftDiscrepancyKind, InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

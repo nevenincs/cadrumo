@@ -23,7 +23,7 @@ mechanism that actually fits it:
 - **Writers that never took the lock** -- a hand edit, an editor save, a bulk
   sweep. No lock can exclude those, so :class:`CatalogueWriteGuard` digests each
   file as it is read and refuses the write if the bytes moved underneath. The
-  refusal is a :class:`~dev.locales._errors.LocaleWriteConflictError`, telling the
+  refusal is a :class:`~dev.locales.errors.LocaleWriteConflictError`, telling the
   operator to retry rather than silently clobbering.
 
 The lock alone would leave the second class unguarded; the digest check alone
@@ -47,7 +47,7 @@ from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.logging import get_logger
 
-from ._errors import LocaleError, LocaleWriteConflictError
+from .errors import LocaleError, LocaleWriteConflictError
 
 _log = get_logger(__name__)
 

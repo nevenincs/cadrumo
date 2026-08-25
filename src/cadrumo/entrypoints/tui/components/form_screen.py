@@ -38,7 +38,6 @@ from ....core.presentation import (
     FormField,
     FormFieldKind,
     FormPage,
-    form_choices,
     multi_choice_tokens,
 )
 from .dialogs import ChoiceEditScreen, OneChoiceEditScreen, TextEditScreen
@@ -401,8 +400,6 @@ __all__ = [
     "FormScreen",
     "FormTranslator",
     "active_form_presenter",
-    "form_choices",
-    "multi_choice_tokens",
     "presenting_forms_through",
     "run_form_tui",
 ]

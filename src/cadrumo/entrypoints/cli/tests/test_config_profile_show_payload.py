@@ -4,7 +4,7 @@
 ``status``, and ``schema_version`` as permissive optionals, so a malformed
 lifecycle status or a non-positive schema version could be reported as a
 valid profile row. It now bounds them at the same widths
-:class:`~cadrumo.domain.user_profile.UserProfileRecord` enforces, while
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord` enforces, while
 keeping the explicit missing/unreadable failure branches (including the
 ``profile_record_unreadable`` readiness sentinel, which is separate from the
 record's ``setup_state``.
@@ -15,7 +15,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....domain.user_profile import ProfileSetupState
+from ....domain.user_profile.values import ProfileSetupState
 from .._config_payloads import ConfigProfileShowResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

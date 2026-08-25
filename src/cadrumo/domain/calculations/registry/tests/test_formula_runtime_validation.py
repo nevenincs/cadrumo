@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
 from .._formula_text_inputs import validated_text_input_casilla_ids
 from .._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot

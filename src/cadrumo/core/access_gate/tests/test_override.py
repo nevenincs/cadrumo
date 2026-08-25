@@ -16,7 +16,7 @@ import pytest
 from ... import config as _config
 from ...config import load_settings, override_settings
 from .. import AeatAccessGate
-from .._errors import AeatLiveReadNotEnabledError, LiveSubmitForbiddenError
+from ..errors import AeatLiveReadNotEnabledError, LiveSubmitForbiddenError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

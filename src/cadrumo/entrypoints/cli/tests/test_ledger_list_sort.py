@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....application.ledger import ManualLedgerTransactionResult
+from ....application.ledger.models import ManualLedgerTransactionResult
 from ....application.review import LedgerReviewFilterSpec
 from ....core import LedgerSortField, LedgerSortOrder
 from ....domain.transactions import (

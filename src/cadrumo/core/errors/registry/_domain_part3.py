@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.domain.portals._errors.PortalValidationError",
+        "cadrumo.domain.portals.errors.PortalValidationError",
         ErrorCode(
             code="ERROR_PORTALS_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -18,7 +18,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.usage_ratios._errors.UsageRatioValidationError",
+        "cadrumo.domain.usage_ratios.errors.UsageRatioValidationError",
         ErrorCode(
             code="ERROR_USAGE_RATIOS_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -28,7 +28,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.deadlines._errors.DeadlineValidationError",
+        "cadrumo.domain.deadlines.errors.DeadlineValidationError",
         ErrorCode(
             code="ERROR_DEADLINES_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -38,7 +38,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.submission._errors.SubmissionValidationError",
+        "cadrumo.domain.submission.errors.SubmissionValidationError",
         ErrorCode(
             code="ERROR_SUBMISSION_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -48,7 +48,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.manuals._errors.ManualValidationError",
+        "cadrumo.domain.manuals.errors.ManualValidationError",
         ErrorCode(
             code="ERROR_MANUALS_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -168,7 +168,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.UserProfileError",
+        "cadrumo.domain.user_profile.errors.UserProfileError",
         ErrorCode(
             code="ERROR_USER_PROFILE",
             category=ErrorCategory.ERROR,
@@ -178,7 +178,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.UserProfileSchemaLoadError",
+        "cadrumo.domain.user_profile.errors.UserProfileSchemaLoadError",
         ErrorCode(
             code="FAIL_USER_PROFILE_SCHEMA_LOAD",
             category=ErrorCategory.FAIL,
@@ -188,7 +188,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.UserProfileValidationError",
+        "cadrumo.domain.user_profile.errors.UserProfileValidationError",
         ErrorCode(
             code="REFUSED_USER_PROFILE_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -198,7 +198,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.UserProfileNotFoundError",
+        "cadrumo.domain.user_profile.errors.UserProfileNotFoundError",
         ErrorCode(
             code="FAIL_USER_PROFILE_NOT_FOUND",
             category=ErrorCategory.FAIL,
@@ -208,7 +208,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileNotFoundError",
+        "cadrumo.domain.user_profile.errors.ProfileNotFoundError",
         ErrorCode(
             code="REFUSED_PROFILE_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -218,7 +218,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileAlreadyExistsError",
+        "cadrumo.domain.user_profile.errors.ProfileAlreadyExistsError",
         ErrorCode(
             code="REFUSED_PROFILE_ALREADY_EXISTS",
             category=ErrorCategory.REFUSED,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileSchemaValidationError",
+        "cadrumo.domain.user_profile.errors.ProfileSchemaValidationError",
         ErrorCode(
             code="REFUSED_PROFILE_SCHEMA_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -238,7 +238,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfilePreflightMissingError",
+        "cadrumo.domain.user_profile.errors.ProfilePreflightMissingError",
         ErrorCode(
             code="REFUSED_PROFILE_PREFLIGHT_MISSING",
             category=ErrorCategory.REFUSED,
@@ -248,7 +248,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileSnapshotHashMismatchError",
+        "cadrumo.domain.user_profile.errors.ProfileSnapshotHashMismatchError",
         ErrorCode(
             code="INTEGRITY_PROFILE_SNAPSHOT_HASH_MISMATCH",
             category=ErrorCategory.INTEGRITY,
@@ -258,7 +258,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileBucketMismatchError",
+        "cadrumo.domain.user_profile.errors.ProfileBucketMismatchError",
         ErrorCode(
             code="INTEGRITY_PROFILE_BUCKET_MISMATCH",
             category=ErrorCategory.INTEGRITY,
@@ -268,7 +268,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileSnapshotNotFoundError",
+        "cadrumo.domain.user_profile.errors.ProfileSnapshotNotFoundError",
         ErrorCode(
             code="INTEGRITY_PROFILE_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.INTEGRITY,
@@ -278,7 +278,27 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.StoredProfileDriftError",
+        "cadrumo.domain.user_profile.errors.ProfileSnapshotClassificationError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_SNAPSHOT_CLASSIFICATION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="application.user_profile.errors.repository_classification_mismatch",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.user_profile.errors.ProfileSnapshotVersionError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_SNAPSHOT_VERSION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="application.user_profile.errors.repository_profile_snapshot_version_unsupported",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.user_profile.errors.StoredProfileDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_PROFILE_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -288,7 +308,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.transactions._errors.StoredTransactionDriftError",
+        "cadrumo.domain.transactions.errors.StoredTransactionDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_TRANSACTION_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -298,7 +318,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileExportError",
+        "cadrumo.domain.user_profile.errors.ProfileExportError",
         ErrorCode(
             code="FAIL_PROFILE_EXPORT",
             category=ErrorCategory.FAIL,
@@ -308,7 +328,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileImportError",
+        "cadrumo.domain.user_profile.errors.ProfileImportError",
         ErrorCode(
             code="FAIL_PROFILE_IMPORT",
             category=ErrorCategory.FAIL,
@@ -318,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileImportSignatureError",
+        "cadrumo.domain.user_profile.errors.ProfileImportSignatureError",
         ErrorCode(
             code="INTEGRITY_PROFILE_IMPORT_SIGNATURE",
             category=ErrorCategory.INTEGRITY,
@@ -328,7 +348,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.user_profile._errors.ProfileImportCollisionError",
+        "cadrumo.domain.user_profile.errors.ProfileImportCollisionError",
         ErrorCode(
             code="REFUSED_PROFILE_IMPORT_COLLISION",
             category=ErrorCategory.REFUSED,
@@ -338,7 +358,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.currency._errors.CurrencyError",
+        "cadrumo.domain.currency.errors.CurrencyError",
         ErrorCode(
             code="FAIL_CURRENCY_ERROR",
             category=ErrorCategory.FAIL,
@@ -348,7 +368,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.currency._errors.MissingExchangeRateError",
+        "cadrumo.domain.currency.errors.MissingExchangeRateError",
         ErrorCode(
             code="FAIL_MISSING_EXCHANGE_RATE",
             category=ErrorCategory.FAIL,
@@ -358,7 +378,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.currency._errors.UnsupportedCurrencyError",
+        "cadrumo.domain.currency.errors.UnsupportedCurrencyError",
         ErrorCode(
             code="REFUSED_UNSUPPORTED_CURRENCY",
             category=ErrorCategory.REFUSED,
@@ -368,7 +388,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.currency._errors.ExchangeRateProviderError",
+        "cadrumo.domain.currency.errors.ExchangeRateProviderError",
         ErrorCode(
             code="FAIL_EXCHANGE_RATE_PROVIDER",
             category=ErrorCategory.FAIL,
@@ -378,7 +398,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.currency._errors.StaleExchangeRateError",
+        "cadrumo.domain.currency.errors.StaleExchangeRateError",
         ErrorCode(
             code="FAIL_STALE_EXCHANGE_RATE",
             category=ErrorCategory.FAIL,
@@ -388,7 +408,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing.reconciliation._errors.ReconciliationError",
+        "cadrumo.domain.filing.reconciliation.errors.ReconciliationError",
         ErrorCode(
             code="FAIL_RECONCILIATION",
             category=ErrorCategory.FAIL,
@@ -408,7 +428,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._errors.ModeloExportError",
+        "cadrumo.domain.modelos.errors.ModeloExportError",
         ErrorCode(
             code="FAIL_MODELO_EXPORT",
             category=ErrorCategory.FAIL,
@@ -418,7 +438,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._errors.ModeloExportManifestError",
+        "cadrumo.domain.modelos.errors.ModeloExportManifestError",
         ErrorCode(
             code="FAIL_MODELO_EXPORT_MANIFEST",
             category=ErrorCategory.FAIL,
@@ -428,7 +448,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._errors.Modelo036LifecycleError",
+        "cadrumo.domain.modelos.errors.Modelo036LifecycleError",
         ErrorCode(
             code="FAIL_MODELO_036_LIFECYCLE",
             category=ErrorCategory.FAIL,
@@ -438,7 +458,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._errors.Modelo036PriorAltaRequiredError",
+        "cadrumo.domain.modelos.errors.Modelo036PriorAltaRequiredError",
         ErrorCode(
             code="REFUSED_MODELO_036_PRIOR_ALTA_REQUIRED",
             category=ErrorCategory.REFUSED,
@@ -448,7 +468,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._errors.Modelo036TerminalStateError",
+        "cadrumo.domain.modelos.errors.Modelo036TerminalStateError",
         ErrorCode(
             code="REFUSED_MODELO_036_TERMINAL_STATE",
             category=ErrorCategory.REFUSED,
@@ -458,7 +478,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing.reconciliation._errors.ReconciliationDeclaracionParseError",
+        "cadrumo.domain.filing.reconciliation.errors.ReconciliationDeclaracionParseError",
         ErrorCode(
             code="FAIL_DECLARATION_PARSE",
             category=ErrorCategory.FAIL,
@@ -468,7 +488,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing.reconciliation._errors.ReconciliationDriftError",
+        "cadrumo.domain.filing.reconciliation.errors.ReconciliationDriftError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_DRIFT",
             category=ErrorCategory.REFUSED,

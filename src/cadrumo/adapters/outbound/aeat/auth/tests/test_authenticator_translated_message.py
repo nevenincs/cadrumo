@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.i18n import tr
-from .. import AeatLoginAssertionError
+from ..errors import AeatLoginAssertionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

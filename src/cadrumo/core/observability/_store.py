@@ -28,13 +28,14 @@ from typing import Never
 
 from pydantic import ValidationError
 
-from .. import StorageCategory, scan_directory, storage_path
+from .. import StorageCategory, storage_path
+from ..directory_scan import scan_directory
 from ..atomic_write import atomic_write_text
 from ..config import Settings, load_settings
 from ..logging import get_logger
 from ..paths import directory_byte_total, select_filesystem_retention_survivors
 from ..time import now
-from ._errors import RunTracePersistenceError, RunTraceValidationError
+from .errors import RunTracePersistenceError, RunTraceValidationError
 from ._models import RUN_ID_PATTERN, RunEvent, RunTrace
 from ._redaction_rules import diagnostic_rules
 

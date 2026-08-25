@@ -23,7 +23,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.browser import SiteHealthState
-from ....adapters.persistence.storage import ClassificationError, Envelope, EnvelopeVersionError, SensitivityClass
+from ....adapters.persistence.storage import (
+    WORKFLOW_RUN_NAMESPACE,
+    ClassificationError,
+    Envelope,
+    EnvelopeVersionError,
+    SensitivityClass,
+)
 from ....core import (
     ActionArgumentStatus,
     ActionConditionality,
@@ -46,14 +52,7 @@ from ...operator_actions import (
     PreconditionVerdict,
 )
 from ..errors import WorkflowError
-from ..persistence import (
-    _RUN_NAMESPACE,
-    _RUN_SENSITIVITY,
-    _RUN_VERSION,
-    WorkflowRunRepository,
-    load_run,
-    save_run,
-)
+from ..persistence import WorkflowRunRepository, load_run, save_run
 from ..run_models import (
     SiteHealthAlert,
     WorkflowAbortReason,
@@ -277,7 +276,7 @@ def test_workflow_run_survives_encrypted_storage_roundtrip(
         assert details.blocking_finding_codes == ("modelo.required_binding", "modelo.schema_mismatch")
         assert loaded.steps[1].precondition_verdict == _draft_not_ready_verdict()
         assert loaded.summary_locale_key == "application.workflow.results.aborted"
-        assert _RUN_VERSION == 3
+        assert WORKFLOW_RUN_NAMESPACE.schema_version == 3
 
 
 def test_site_health_projection_survives_encrypted_roundtrip_without_source_evidence(
@@ -395,7 +394,6 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
     import json as _json
 
     from ....adapters.persistence.storage import SensitivityClass
-    from ..persistence import _RUN_NAMESPACE, _RUN_VERSION
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         objects = profile.repository
@@ -404,10 +402,10 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
 
         # Sanity: the run is loadable through the runtime repository.
         loaded = objects.load(
-            _RUN_NAMESPACE,
+            WORKFLOW_RUN_NAMESPACE.namespace,
             original.run_id,
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_RUN_VERSION,
+            max_supported_version=WORKFLOW_RUN_NAMESPACE.schema_version,
         )
         assert loaded is not None, (
             "save_run did not persist via the runtime repository — re-check "
@@ -424,10 +422,10 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
         payload["aborted_reason"] = None
         envelope["payload"] = payload
         objects.save(
-            namespace=_RUN_NAMESPACE,
+            namespace=WORKFLOW_RUN_NAMESPACE.namespace,
             object_key=original.run_id,
             classification=SensitivityClass.FINANCIAL,
-            schema_version=_RUN_VERSION,
+            schema_version=WORKFLOW_RUN_NAMESPACE.schema_version,
             written_at=_MUTATED_RUN_WRITTEN_AT,
             payload=_json.dumps(envelope).encode("utf-8"),
         )
@@ -458,19 +456,19 @@ def test_workflow_run_v2_is_refused_before_locale_neutral_v3_hydration(tmp_path:
         payload = _workflow_run_v2_envelope_bytes(
             original,
             schema_version=old_version,
-            classification=_RUN_SENSITIVITY,
+            classification=WORKFLOW_RUN_NAMESPACE.sensitivity,
         )
         with pytest.raises(ValidationError):
             Envelope[WorkflowResult].model_validate_json(payload)
         profile.repository.save(
-            namespace=_RUN_NAMESPACE,
+            namespace=WORKFLOW_RUN_NAMESPACE.namespace,
             object_key=original.run_id,
-            classification=_RUN_SENSITIVITY,
+            classification=WORKFLOW_RUN_NAMESPACE.sensitivity,
             # The registered write boundary correctly refuses an outer v2 row.
             # Persist a current outer row whose decrypted inner envelope claims
             # v2 so the production workflow loader's exact-version check is
             # exercised directly rather than short-circuited by the substrate.
-            schema_version=_RUN_VERSION,
+            schema_version=WORKFLOW_RUN_NAMESPACE.schema_version,
             written_at=_MUTATED_RUN_WRITTEN_AT,
             payload=payload,
         )
@@ -488,16 +486,16 @@ def test_workflow_run_inner_classification_is_refused_before_v3_hydration(tmp_pa
         repository = WorkflowRunRepository(objects=profile.repository)
         payload = _workflow_run_v2_envelope_bytes(
             original,
-            schema_version=_RUN_VERSION,
+            schema_version=WORKFLOW_RUN_NAMESPACE.schema_version,
             classification=SensitivityClass.OPERATIONAL,
         )
         with pytest.raises(ValidationError):
             Envelope[WorkflowResult].model_validate_json(payload)
         profile.repository.save(
-            namespace=_RUN_NAMESPACE,
+            namespace=WORKFLOW_RUN_NAMESPACE.namespace,
             object_key=original.run_id,
-            classification=_RUN_SENSITIVITY,
-            schema_version=_RUN_VERSION,
+            classification=WORKFLOW_RUN_NAMESPACE.sensitivity,
+            schema_version=WORKFLOW_RUN_NAMESPACE.schema_version,
             written_at=_MUTATED_RUN_WRITTEN_AT,
             payload=payload,
         )
@@ -528,16 +526,16 @@ class TestRunOwnsItsRow:
     def _rekey(self, repo: WorkflowRunRepository, *, payload_run_id: str, under_key: str) -> None:
         """Write run ``payload_run_id``'s genuine envelope under a foreign key."""
         envelope = Envelope[WorkflowResult](
-            schema_version=_RUN_VERSION,
+            schema_version=WORKFLOW_RUN_NAMESPACE.schema_version,
             written_at=_MUTATED_RUN_WRITTEN_AT,
-            classification=_RUN_SENSITIVITY,
+            classification=WORKFLOW_RUN_NAMESPACE.sensitivity,
             payload=self._run(payload_run_id),
         )
         repo._objects.save(
-            namespace=_RUN_NAMESPACE,
+            namespace=WORKFLOW_RUN_NAMESPACE.namespace,
             object_key=under_key,
-            classification=_RUN_SENSITIVITY,
-            schema_version=_RUN_VERSION,
+            classification=WORKFLOW_RUN_NAMESPACE.sensitivity,
+            schema_version=WORKFLOW_RUN_NAMESPACE.schema_version,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )

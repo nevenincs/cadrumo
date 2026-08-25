@@ -13,7 +13,7 @@ from ....core import (
     M303Exonerado390ActivityProjectionRef,
     M303Exonerado390OperacionesTercerosProjectionRef,
 )
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 
 if TYPE_CHECKING:
     from ...modelos import M303Exonerado390ActivityRowEvidence, M303Exonerado390FilingEvidence

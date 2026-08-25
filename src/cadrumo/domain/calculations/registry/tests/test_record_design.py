@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import DirectoryEntryKind, scan_directory
+from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .. import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
@@ -66,7 +66,16 @@ def test_modelo_200_workbook_recovers_source_declared_totals_and_variable_envelo
     _modelo, catalogues = _committed_registry_tree()
     source = catalogues.sources["aeat-dr-200-2025"]
     workbook_path = bundled_path() / source.corpus_path
-    declared_totals, formula_anchors = _official_total_rows(workbook_path)
+
+    # The formula half of this evidence lives only in the .xlsx rendering of the
+    # same AEAT workbook. xlrd reads the .xls the catalogue pins and returns the
+    # CACHED total -- 627.0 -- but no formula text, so "=SUM(C6:C118)" is
+    # unavailable from it at all. Reading the sibling keeps the assertion that
+    # the total is a sum over the record rows rather than a number that happens
+    # to sit beside them, and the parse below still runs against the pinned
+    # binary, so the two formats corroborate rather than one replacing the other.
+    formula_source = workbook_path.with_suffix(".xlsx")
+    declared_totals, formula_anchors = _official_total_rows(formula_source)
 
     assert declared_totals
     assert formula_anchors["DP200001"] == ("A119", "C119", "=SUM(C6:C118)", 627)
@@ -930,7 +939,7 @@ def test_a_workbook_mixing_both_header_spellings_yields_every_sheet() -> None:
     presented as carrying no record sheets at all.
     """
     design = scan_directory(
-        _RECORD_DESIGN_ROOT / "modelo_115" / "files", pattern="*.xlsx", select=DirectoryEntryKind.FILES
+        _RECORD_DESIGN_ROOT / "modelo_115" / "files", pattern="*.xls", select=DirectoryEntryKind.FILES
     )[0]
     sheets = extract_record_design(design).accept_partial()
 
@@ -1089,7 +1098,7 @@ def test_a_declared_header_cell_correction_is_read_and_an_undeclared_blank_colum
     without one, the same blank cell must still refuse (proven with a
     synthetic row carrying no declared correction).
     """
-    design = _RECORD_DESIGN_ROOT / "modelo_100" / "files" / "20-100-ejercicio-2015-1-75-mb-xls.xlsx"
+    design = _RECORD_DESIGN_ROOT / "modelo_100" / "files" / "20-100-ejercicio-2015-1-75-mb-xls.xls"
     assert design.is_file(), f"corpus anchor moved: {design}"
     extraction = extract_record_design(design)
 
@@ -1134,7 +1143,7 @@ def test_a_design_read_in_full_reports_complete_and_hands_over_its_sheets() -> N
     which is the more expensive failure and the easier one to ship unnoticed.
     """
     design = scan_directory(
-        _RECORD_DESIGN_ROOT / "modelo_115" / "files", pattern="*.xlsx", select=DirectoryEntryKind.FILES
+        _RECORD_DESIGN_ROOT / "modelo_115" / "files", pattern="*.xls", select=DirectoryEntryKind.FILES
     )[0]
     extraction = extract_record_design(design)
 
@@ -1226,7 +1235,7 @@ def test_a_declared_end_of_record_terminator_is_separated_and_kept() -> None:
     because those two bytes are part of the record and a parse that drops them
     understates every record built from it.
     """
-    design = _RECORD_DESIGN_ROOT / "modelo_100" / "files" / "20-100-ejercicio-2015-1-75-mb-xls.xlsx"
+    design = _RECORD_DESIGN_ROOT / "modelo_100" / "files" / "20-100-ejercicio-2015-1-75-mb-xls.xls"
     assert design.is_file(), f"corpus anchor moved: {design}"
 
     envelopes = [sheet.variable_envelope for sheet in extract_record_design(design).accept_partial()]

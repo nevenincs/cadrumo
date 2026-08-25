@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Period, hydrate_scenario_filing_period
 from .._authority import ValidatedRegistryAuthority
-from .._errors import RegistrySnapshotError, RegistryValidationError
+from ..errors import RegistrySnapshotError, RegistryValidationError
 from .._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
 from .._ids import BindingId, LegalRefId, RelationId, SourceRefId
 from .._period_selector_match import selector_period_matches_request

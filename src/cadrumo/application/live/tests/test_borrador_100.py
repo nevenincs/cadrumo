@@ -18,16 +18,16 @@ from ....adapters.persistence.storage import (
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from .. import (
+from ..borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
     Borrador100SnapshotService,
-    LiveApplicationInputError,
-    SnapshotLifecycleState,
     borrador_100_snapshot_object_key,
     derive_borrador_100_snapshot_id,
 )
+from ..errors import LiveApplicationInputError
+from ..snapshot_base import SnapshotLifecycleState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

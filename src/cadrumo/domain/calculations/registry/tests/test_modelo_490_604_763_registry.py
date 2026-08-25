@@ -34,7 +34,7 @@ import pytest
 
 from .....core import RegistryAuthorityGrade, TaxDomain
 from .....core.resources import bundled_path
-from .._errors import NoRevisionForPeriodError
+from ..errors import NoRevisionForPeriodError
 from .._snapshot import build_snapshot
 from .._temporal import select_revision
 from .._validate import RegistryValidator

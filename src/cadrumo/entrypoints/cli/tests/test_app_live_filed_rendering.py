@@ -7,7 +7,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from ....application.live import (
+from ....application.live.remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
     FiledDataCaptureReport,

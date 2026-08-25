@@ -8,7 +8,7 @@ import pytest
 
 from .....core.resources import resources
 from .....domain.calculations.registry import FormulaDefinition, FormulaExpression, InputKind, ModeloRevision
-from .._errors import CalcSheetsEngineError
+from ..errors import CalcSheetsEngineError
 from .._layout import plan_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

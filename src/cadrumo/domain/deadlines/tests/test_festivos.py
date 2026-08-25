@@ -26,7 +26,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from .. import (
     MODELOS_WITHOUT_SHIFT,
     CalendarCCAA,
@@ -39,7 +39,7 @@ from .. import (
     next_business_day,
     shift_deadline,
 )
-from .._errors import DeadlineValidationError
+from ..errors import DeadlineValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

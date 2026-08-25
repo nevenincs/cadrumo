@@ -97,7 +97,7 @@ from typing import Final, TypedDict
 import pytest
 from pydantic import TypeAdapter
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests import repo_relative
 
 from .._paths import REPO_ROOT

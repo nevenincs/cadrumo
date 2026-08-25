@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from .. import DirectoryEntryKind, scan_directory
+from ..directory_scan import DirectoryEntryKind, scan_directory
 from ..redaction import redact_for_cli_output, redact_for_log
 from .test_redaction_population_coverage import (
     _DIGEST_RE,

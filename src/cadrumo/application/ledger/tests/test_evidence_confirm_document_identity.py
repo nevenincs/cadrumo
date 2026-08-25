@@ -31,7 +31,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.invoices import Invoice, InvoiceValidationError
 from ....domain.iva import InvoiceKind
-from .._evidence_draft import (
+from ..evidence_draft import (
     _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR,
     InvoiceConfirmationResult,
     _fields_a_reconfirm_would_change,

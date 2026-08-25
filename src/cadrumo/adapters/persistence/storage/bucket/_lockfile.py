@@ -36,7 +36,7 @@ from .....core.config import load_settings as _load_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .._storage_path_definitions import BUCKET_LOCK_FILENAME
-from ._errors import BucketBusyError, BucketValidationError
+from .errors import BucketBusyError, BucketValidationError
 
 if TYPE_CHECKING:
     pass

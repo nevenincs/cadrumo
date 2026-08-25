@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....tests import REPO_ROOT
 from ....tests.cli_runner import invoke_cached_cli
 

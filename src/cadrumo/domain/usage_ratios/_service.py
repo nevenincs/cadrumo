@@ -24,7 +24,7 @@ from ..categories import (
     effective_usage_ratio,
     resolve_category_profiles,
 )
-from ._errors import UsageRatioPersistenceError, UsageRatioValidationError
+from .errors import UsageRatioPersistenceError, UsageRatioValidationError
 from ._model import UsageRatioProfile
 
 __all__ = [

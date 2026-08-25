@@ -81,7 +81,7 @@ from __future__ import annotations
 from datetime import date
 
 from ....core import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import RevisionId
 
 REVISION_REVIEW_DATE_CEILING: date = date(2100, 1, 1)

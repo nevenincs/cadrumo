@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 
 from ..._paths import UTF_8
-from ._errors import SequenceEngineError
+from .errors import SequenceEngineError
 
 __all__ = ["read_sequence_contract", "sequence_contract_path"]
 

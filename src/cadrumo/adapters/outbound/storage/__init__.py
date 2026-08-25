@@ -25,7 +25,7 @@ manifest helpers, and the factory.
 from __future__ import annotations
 
 from ._drive_pagination import next_drive_page_token
-from ._errors import (
+from .errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
     OutboundStorageIntegrityError,

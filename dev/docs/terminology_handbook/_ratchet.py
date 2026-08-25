@@ -16,7 +16,7 @@ from pathlib import Path
 from cadrumo.core.external_constants import UTF_8_ENCODING
 
 from ._curation import AuditReport, audit_handbook
-from ._errors import TerminologyLoadError
+from .errors import TerminologyLoadError
 
 __all__ = [
     "CurationBacklogRatchetBaseline",

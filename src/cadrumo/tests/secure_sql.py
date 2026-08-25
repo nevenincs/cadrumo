@@ -44,7 +44,8 @@ from ..adapters.persistence.storage.master_key import (
 from ..adapters.persistence.storage.sql import SecureObjectRow
 from ..adapters.persistence.storage.sql.session import session_scope
 from ..adapters.persistence.storage.tests.profile_capsule_runtime import provision_test_profile_bucket_session
-from ..core import DirectoryEntryKind, StorageCategory, scan_directory
+from ..core import StorageCategory
+from ..core.directory_scan import DirectoryEntryKind, scan_directory
 from ..core.config import Settings, load_settings, override_settings
 from ..core.errors import CadrumoError
 from .master_key import EphemeralMasterKeyProvider

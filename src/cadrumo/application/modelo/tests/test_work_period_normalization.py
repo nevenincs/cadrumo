@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
-from .. import ModeloWorkPeriodTokenError, modelo_work_address_from_operator_target
+from ..work_addressing import ModeloWorkPeriodTokenError, modelo_work_address_from_operator_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

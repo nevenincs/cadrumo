@@ -27,7 +27,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ._corpus_catalogue import verify_source_catalogue
-from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue_grounding
 from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ._source_evidence_fingerprint import (
@@ -59,6 +58,7 @@ from ._validation_memoization import (
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
+from .errors import RegistryValidationError
 
 if TYPE_CHECKING:
     from ...user_profile import ProfileSchemaDefinition
@@ -112,7 +112,7 @@ class RegistryValidator:
             if source_evidence_fingerprint is not None
             else collect_source_evidence_fingerprints(
                 self._source_root,
-                justificante_corpus_root=self._justificante_corpus_root,
+                justificante_corpus_root=self.justificante_corpus_root,
             )
         )
 
@@ -131,6 +131,7 @@ class RegistryValidator:
 
     @property
     def justificante_corpus_root(self) -> Path | None:
+        """Return the explicitly supplied authoring corpus root."""
         return self._justificante_corpus_root
 
     def _source_root_key(self) -> str | None:
@@ -138,8 +139,8 @@ class RegistryValidator:
 
     def _corpus_root_key(self) -> str | None:
         return (
-            str(self._justificante_corpus_root.expanduser().resolve())
-            if self._justificante_corpus_root is not None
+            str(self.justificante_corpus_root.expanduser().resolve())
+            if self.justificante_corpus_root is not None
             else None
         )
 
@@ -267,7 +268,8 @@ class RegistryValidator:
         REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, ())
 
     def _validate_user_profile_contract(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
-        from ...user_profile import load_user_profile_schema, validate_user_profile_registry_contract
+        from ...user_profile.loader import load_user_profile_schema
+        from ...user_profile.registry_contract import validate_user_profile_registry_contract
 
         schema = self._user_profile_schema or load_user_profile_schema()
         report = validate_user_profile_registry_contract(modelos, schema)
@@ -286,7 +288,7 @@ class RegistryValidator:
             source_refs=self._sources,
             evidence=self._evidence,
             source_root=self._source_root,
-            justificante_corpus_root=self._justificante_corpus_root,
+            justificante_corpus_root=self.justificante_corpus_root,
         )
         for failure in validate_producer_inventory(prefix, revision):
             if failure not in failures:

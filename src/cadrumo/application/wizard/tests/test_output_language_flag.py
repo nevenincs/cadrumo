@@ -23,8 +23,8 @@ import pytest
 from ....core.config import override_settings
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, clear_output_language_cache, tr
 from ....tests.clean_install_fixtures import _clean_install
-from .._catalogue import SETUP_FLOW
-from .._commands import _SETUP_OPTION_INFOS
+from ..catalogue import SETUP_FLOW
+from ..commands import _SETUP_OPTION_INFOS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

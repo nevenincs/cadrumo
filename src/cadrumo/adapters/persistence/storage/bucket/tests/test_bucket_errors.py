@@ -7,7 +7,7 @@ manifest, lockfile, recovery, and active-bucket failures observable without
 leaking raw storage details.
 
 See Also:
-    :mod:`~adapters.persistence.storage.bucket._errors`
+    :mod:`~adapters.persistence.storage.bucket.errors`
         Error hierarchy and payload constructors under test.
     :mod:`~adapters.persistence.storage.bucket._lockfile`
         PID-stamped lock primitive that raises busy / locked bucket failures.
@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.errors import ERROR_REGISTRY, CadrumoError, get_registered_error_code
-from .._errors import (
+from ..errors import (
     BucketAlreadyPresentError,
     BucketBusyError,
     BucketError,

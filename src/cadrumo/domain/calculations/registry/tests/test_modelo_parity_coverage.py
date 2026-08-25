@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

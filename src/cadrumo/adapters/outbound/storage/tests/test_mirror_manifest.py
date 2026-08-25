@@ -10,7 +10,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, iter_directory, scan_directory
+from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.directory_scan import iter_directory, scan_directory
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageRemoteMirrorPolicy
 from .. import (
@@ -677,7 +678,7 @@ def test_manifest_refuses_a_mixed_namespace_object_set() -> None:
 def test_namespace_mismatch_is_an_explicit_operator_decision_verdict(tmp_path: Path) -> None:
     local = _single_object_manifest(tmp_path)
     remote = local.model_copy(update={"namespace": "other-namespace"})
-    from .._errors import OutboundStorageValidationError
+    from ..errors import OutboundStorageValidationError
 
     with pytest.raises(OutboundStorageValidationError) as raised:
         compare_remote_mirror_manifests(local=local, remote=remote)

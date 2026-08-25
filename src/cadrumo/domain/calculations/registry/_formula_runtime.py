@@ -40,7 +40,7 @@ from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
 from ._casilla_membership import duplicate_casilla_ids
 from ._convenio import ConvenioAuthority
-from ._errors import CasillaConstraintViolationError, RegistryValidationError
+from .errors import CasillaConstraintViolationError, RegistryValidationError
 from ._formula_initial_values import (
     binding_values_with_absent_by_design_defaults as _binding_values_with_absent_by_design_defaults,
 )

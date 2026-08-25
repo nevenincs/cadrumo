@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from .....core import CasillaId, validated_casilla_id
 from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import aeat_host
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._live_parity import ParityFieldComparison
 from .._remote_state_guard import (
     RemoteOperation,

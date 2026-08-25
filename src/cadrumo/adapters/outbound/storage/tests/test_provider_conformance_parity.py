@@ -38,7 +38,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .._errors import OutboundStorageValidationError
+from ..errors import OutboundStorageValidationError
 from .._google_drive import GoogleDriveProvider
 from .._key_validation import assert_admissible_object_key_hmac
 from .._local import LocalFileSystemProvider

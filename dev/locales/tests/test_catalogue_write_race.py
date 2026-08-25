@@ -19,8 +19,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from .._errors import LocaleError, LocaleWriteConflictError
 from .._write_guard import LOCK_FILENAME, catalogue_write_guard
+from ..errors import LocaleError, LocaleWriteConflictError
 from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

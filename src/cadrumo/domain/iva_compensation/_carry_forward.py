@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import IvaCompensationStateProvenance, Period, PeriodKind, StandardPeriodCode
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
-from ._errors import (
+from .errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
 )

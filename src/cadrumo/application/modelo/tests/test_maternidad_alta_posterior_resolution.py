@@ -4,7 +4,7 @@
 (:func:`~cadrumo.application.modelo._calculate_input.apply_calculation_shortcut_inputs`
 consumes it via ``_resolved_maternidad_meses``). These tests drive it directly
 against the resident registry authority and a real
-:class:`~cadrumo.domain.user_profile.UserProfileRecord` -- no mocks, no
+:class:`~cadrumo.domain.user_profile.values.UserProfileRecord` -- no mocks, no
 monkeypatched engine -- and feed its output straight into
 :func:`~cadrumo.domain.contribuyente.compute_deduccion_maternidad_0611`, the
 same function the calculate path calls, so the whole resolution chain is
@@ -34,7 +34,7 @@ from ....domain.contribuyente import (
     compute_deduccion_maternidad_0611,
     descendant_facts_from_list,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._profile_binding import resolve_maternidad_meses
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

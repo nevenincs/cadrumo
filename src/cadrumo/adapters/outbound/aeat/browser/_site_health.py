@@ -39,7 +39,7 @@ from pydantic import (
 
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.redaction import redact_for_log
-from ._errors import BrowserValidationError
+from .errors import BrowserValidationError
 
 _MAX_HTML_FRAGMENT_CHARS: Final = 4096
 

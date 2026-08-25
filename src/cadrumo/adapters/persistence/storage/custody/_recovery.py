@@ -20,7 +20,7 @@ from .....core.hashing import (
     validate_prefixed_digest,
 )
 from .....core.identity import canonical_profile_bucket_id
-from ._errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 from ._kdf_supervision import unlock_profile_custody_recovery_material, wrap_profile_custody_recovery_material
 from ._records import (
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,

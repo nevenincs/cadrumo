@@ -74,13 +74,13 @@ from ...domain.modelos import (
     VerificationReport,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
-    WorkUnitCatalogueRepositoryProtocol,
 )
 from ..calculations import (
     CalculationObservationRepository,
     CrossPeriodExpectedMemberSet,
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from cadrumo.application.workflow.engine import WorkflowEngine
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from ._action_errors import (

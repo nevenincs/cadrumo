@@ -35,7 +35,7 @@ from typing import Final
 
 from packaging.requirements import Requirement
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 from ._distribution_names import normalise_distribution_name
@@ -346,7 +346,7 @@ def _drive_surfaces(work_dir: Path, venv_path: Path, calls: str, *, leaf: str) -
     code = f"""
 import json
 
-from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentity
+from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
 from cadrumo.llm import (
     LocalTextLLMClassifier,
@@ -550,7 +550,7 @@ def _assert_inference_surfaces_refuse(work_dir: Path, venv_path: Path) -> None:
     code = f"""
 import json
 
-from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentity
+from cadrumo.application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
 from cadrumo.llm import (
     LocalTextLLMClassifier,

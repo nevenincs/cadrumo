@@ -15,14 +15,14 @@ from pathlib import Path
 import pytest
 
 from ....core.i18n import Translatable as tr
-from .._errors import WizardValidationError
-from .._models import (
+from ..errors import WizardValidationError
+from ..models import (
     WizardChoice,
     WizardCondition,
     WizardQuestion,
     WizardWidget,
 )
-from .._widgets import validate_widget_answer
+from ..widgets import validate_widget_answer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

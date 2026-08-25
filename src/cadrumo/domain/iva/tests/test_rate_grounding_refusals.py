@@ -2,7 +2,7 @@
 
 The shipped-corpus checks in ``test_rate_grounding.py`` only exercise the happy
 path: the real table loads, so no refusal ever fires. Every refusal in
-``_rates._verify_rate_grounding`` was therefore unprotected, and a grounding
+``_rates.verify_rate_grounding`` was therefore unprotected, and a grounding
 verifier that silently stops refusing is worse than one that is merely complex.
 
 These tests drive each refusal with the REAL verifier functions
@@ -21,7 +21,7 @@ import pytest
 
 from ....core.resources import bundled_path
 from ...calculations.registry import LegalReference, SourceReference
-from .._errors import IvaCatalogueError
+from ..errors import IvaCatalogueError
 from .._grounding import legal_ref_failures
 from .._rates import (
     _source_ref_failures,

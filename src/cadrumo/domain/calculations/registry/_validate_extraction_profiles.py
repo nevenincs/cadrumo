@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ....core import iter_directory
+from ....core.directory_scan import iter_directory
 from ._schema import ExtractionProfileDefinition, ExtractionTargetDefinition
 
 

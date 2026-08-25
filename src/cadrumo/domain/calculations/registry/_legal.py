@@ -17,7 +17,7 @@ from ....core import (
     resolve_anchored_extracted_unit,
 )
 from ._citation_blocklist import CitationSource, find_known_bad
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema import LegalReference
 
 _SOURCE_BY_KIND: dict[str, CitationSource] = {

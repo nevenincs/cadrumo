@@ -72,8 +72,12 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     inventory = next(entry for entry in manifest.entries if entry.candidate_id == "inventory.stock-valuation")
 
     assert inventory.disposition.value == "connect_candidate"
-    assert "prerequisites are complete" in inventory.review_condition
-    assert "S39" in inventory.review_condition
+    assert "canonical inventory resolver" in inventory.review_condition
+    assert "source-mesh enrollment" in inventory.review_condition
+    assert "registry row bindings" in inventory.review_condition
+    assert "repeated activity-row casillas" in inventory.review_condition
+    assert "verified end to end" in inventory.review_condition
+    assert "fabricated activity-envelope facts" in inventory.review_condition
     assert "complete acquisition cost" not in inventory.review_condition
     assert "explicit-closing authority remain blocking" not in inventory.review_condition
     summaries = " ".join(item.summary for item in inventory.grounding)
@@ -174,8 +178,8 @@ def test_inventory_repository_ownership_uses_its_live_discovery_locator() -> Non
     evidence = discovered_source_capability_evidence(REPO_ROOT)
     repository_locator = "src/cadrumo/adapters/persistence/profile/inventory.py:121"
     projection_locator = "src/cadrumo/domain/contribuyente/inventory/__init__.py:1367"
-    create_locator = "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:4866"
-    movement_locator = "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:7118"
+    create_locator = "src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py:28"
+    movement_locator = "src/cadrumo/entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py:26"
 
     assert repository_locator in entry.capability_locators
     assert projection_locator in entry.capability_locators
@@ -246,7 +250,7 @@ def test_reviewed_helpers_have_no_new_connectivity_candidate_or_connected_outcom
     assignments = assign_capabilities_to_census(discovered_source_capability_ids(REPO_ROOT), manifest)
     helper_ids = {
         "calculation_helper:src/cadrumo/domain/calculations/registry/_temporal.py:revision_selection_coordinates",
-        "calculation_helper:src/cadrumo/domain/portals/_errors.py:portal_integrity_error",
+        "calculation_helper:src/cadrumo/domain/portals/errors.py:portal_integrity_error",
     }
     census_claims = {
         capability_id

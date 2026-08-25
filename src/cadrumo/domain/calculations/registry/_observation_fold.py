@@ -25,7 +25,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 
 if TYPE_CHECKING:
     from ._bindings import RegistryModeloObservation

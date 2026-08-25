@@ -40,7 +40,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.invoices import decompose_invoice
 from ....domain.iva import InvoiceKind, IvaCategory, IvaRateKind
-from .._evidence_draft import (
+from ..evidence_draft import (
     InvoiceDraft,
     InvoiceDraftRateBreakdown,
     confirm_invoice_draft_from_evidence,

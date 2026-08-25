@@ -4,7 +4,7 @@ The setup flow's phase-8 compare-select reconciliation of a Certificado de
 Situación Censal (procedure G313) against the profile answers commits
 through the one sanctioned write path here. Adopted certificate values
 persist as ordinary effective-dated
-:class:`~cadrumo.domain.user_profile.UserProfileFact` rows stamped with the
+:class:`~cadrumo.domain.user_profile.values.UserProfileFact` rows stamped with the
 non-official artefact provenance token; deferred axes persist as
 ``censo.divergencia.{n}.*`` divergence rows recording the unadopted
 certificate evidence. Exactly one ``CENSO_APPLIED`` bucket event marks the
@@ -38,14 +38,14 @@ from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.buckets import BucketEventType
-from ...domain.user_profile import ProfileSetupState, UserProfileFact
+from ...domain.user_profile.values import ProfileSetupState, UserProfileFact
 from .capsule_record import ProfileRecordConflictError
 from .profile_record_repository import ProfileRecordRepository
 from .validation import reject_invalid_profile_facts
 
 if TYPE_CHECKING:
     from ...domain.censo import CertificadoSituacionCensal
-    from ...domain.user_profile import UserProfileRecord
+    from ...domain.user_profile.values import UserProfileRecord
     from .censal_operation import CensalReviewedOperand
 
 #: Schema field family the deferred divergence rows persist under, indexed

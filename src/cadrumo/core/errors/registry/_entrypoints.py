@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.entrypoints.cli._config._errors.ConfigBoundaryError",
+        "cadrumo.entrypoints.cli._config.errors.ConfigBoundaryError",
         ErrorCode(
             code="ERROR_CONFIG_BOUNDARY",
             category=ErrorCategory.ERROR,
@@ -18,7 +18,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.cli._errors.CliCommandGroupUnavailableError",
+        "cadrumo.entrypoints.cli.errors.CliCommandGroupUnavailableError",
         ErrorCode(
             code="FAIL_CLI_COMMAND_GROUP_UNAVAILABLE",
             category=ErrorCategory.FAIL,
@@ -28,7 +28,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.cli._errors.CliRefusedBoundaryError",
+        "cadrumo.entrypoints.cli.errors.CliRefusedBoundaryError",
         ErrorCode(
             code="REFUSED_CLI_BOUNDARY",
             category=ErrorCategory.REFUSED,
@@ -38,7 +38,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.cli._errors.CliTuiNotImplementedError",
+        "cadrumo.entrypoints.cli.errors.CliTuiNotImplementedError",
         ErrorCode(
             code="TUI_NOT_IMPLEMENTED",
             category=ErrorCategory.REFUSED,
@@ -48,7 +48,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.cli._errors.CliOutboundPayloadBoundaryError",
+        "cadrumo.entrypoints.cli.errors.CliOutboundPayloadBoundaryError",
         ErrorCode(
             code="INTERNAL_CLI_OUTBOUND_PAYLOAD_BOUNDARY",
             category=ErrorCategory.INTERNAL,
@@ -58,7 +58,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.cli._errors.CliStoredDataValidationBoundaryError",
+        "cadrumo.entrypoints.cli.errors.CliStoredDataValidationBoundaryError",
         ErrorCode(
             code="INTEGRITY_STORED_DATA_VALIDATION_BOUNDARY",
             category=ErrorCategory.INTEGRITY,
@@ -68,7 +68,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.cli._errors.CliValidationBoundaryError",
+        "cadrumo.entrypoints.cli.errors.CliValidationBoundaryError",
         ErrorCode(
             code="REFUSED_CLI_VALIDATION_BOUNDARY",
             category=ErrorCategory.REFUSED,
@@ -78,7 +78,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.cli._errors.CliUnexpectedBoundaryError",
+        "cadrumo.entrypoints.cli.errors.CliUnexpectedBoundaryError",
         ErrorCode(
             code="INTERNAL_CLI_UNEXPECTED_BOUNDARY",
             category=ErrorCategory.INTERNAL,

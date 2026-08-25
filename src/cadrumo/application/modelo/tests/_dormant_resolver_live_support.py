@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)

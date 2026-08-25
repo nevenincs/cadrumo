@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core import scan_directory
+from ......core.directory_scan import scan_directory
 from ......tests import FIXTURES_DIR
 from ......tests.aeat_literal_fixtures import configured_path
 

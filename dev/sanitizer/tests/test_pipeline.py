@@ -25,8 +25,8 @@ from pydantic import SecretStr
 from cadrumo.tests import FIXTURES_DIR
 
 from .. import fixtures, sanitize_pdf
-from .._errors import AlreadySanitizedError, SanitizerSourceParseError, SignaturePresentError
 from .._records import NameReplacement, NifReplacement, TokenMap
+from ..errors import AlreadySanitizedError, SanitizerSourceParseError, SignaturePresentError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

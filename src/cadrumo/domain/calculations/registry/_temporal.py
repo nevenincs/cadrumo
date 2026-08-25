@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import date
 
 from ....core import RegistrySelectorPeriodCode
-from ._errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
+from .errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
 from ._ids import RevisionId
 from ._period_selector_match import selector_token_for_request
 from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues

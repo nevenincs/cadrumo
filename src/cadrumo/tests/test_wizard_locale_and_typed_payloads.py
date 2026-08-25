@@ -34,7 +34,7 @@ import sys
 import pytest
 import yaml
 
-from ..core import scan_directory
+from ..core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -42,7 +42,7 @@ _SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 
 def _wizard_descriptor_translation_keys() -> set[str]:
-    from ..application.wizard import WIZARD_FLOWS
+    from ..application.wizard.catalogue import WIZARD_FLOWS
 
     keys: set[str] = set()
     for flow in WIZARD_FLOWS:

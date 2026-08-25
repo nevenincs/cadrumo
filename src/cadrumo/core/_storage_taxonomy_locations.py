@@ -83,7 +83,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LIVE_STATE,
         "live-state",
-        consumer_module="application/live/_iva_remote_state.py",
+        consumer_module="application/live/iva_remote_state.py",
         settings_field="cadrumo_live_state_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -94,7 +94,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LIVE_STATE_IVA_WALLET,
         "live-state/iva-wallet",
-        consumer_module="application/live/_iva_remote_state.py",
+        consumer_module="application/live/iva_remote_state.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -102,7 +102,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LIVE_STATE_IVA_REMOTE_STATE,
         "live-state/iva-remote-state",
-        consumer_module="application/live/_iva_remote_state.py",
+        consumer_module="application/live/iva_remote_state.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -110,7 +110,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_FILED_HISTORY,
         "live-state/iva-remote-state/filed-history",
-        consumer_module="application/live/_iva_remote_state.py",
+        consumer_module="application/live/iva_remote_state.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -118,7 +118,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LIVE_STATE_IVA_REMOTE_STATE_WALLET,
         "live-state/iva-remote-state/wallet",
-        consumer_module="application/live/_iva_remote_state.py",
+        consumer_module="application/live/iva_remote_state.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,

@@ -22,7 +22,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._schema import ProfileFieldDefinition, ProfileFieldType, numeric_value_refusal
+from ..schema import ProfileFieldDefinition, ProfileFieldType, numeric_value_refusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

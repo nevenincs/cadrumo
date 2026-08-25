@@ -22,17 +22,17 @@ __all__ = ["consent_profile"]
 
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile
-from .._consent_withdrawal import (
+from ..consent_withdrawal import (
     ConsentRederivationError,
     artefact_is_cloud_derived,
     provenance_stamp_transport,
     rederive_artefact_on_host,
     survey_cloud_consent,
 )
-from .._document_transcription import DocumentTranscription, TranscriberIdentity
-from .._evidence_draft import InvoiceDraft
-from .._extracted_document_cache import write_cached_transcription
-from .._extraction_draft_store import read_extraction_draft, write_extraction_draft
+from ..document_transcription import DocumentTranscription, TranscriberIdentity
+from ..evidence_draft import InvoiceDraft
+from ..extracted_document_cache import write_cached_transcription
+from ..extraction_draft_store import read_extraction_draft, write_extraction_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

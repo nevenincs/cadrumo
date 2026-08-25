@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources import bundled_path, resources
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]

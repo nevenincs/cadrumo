@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Final, Literal, cast, overload
 from uuid import uuid4
 
-from ._errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 from ._filesystem_primitives import (
     PROFILE_CUSTODY_COMMIT_FILENAME,
     ProfileCustodyPasswordReadOperation,

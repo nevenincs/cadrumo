@@ -13,7 +13,7 @@ starved required page and a trailing unconsumed token both raise
 
 No mocks: the real ``SETUP_FLOW`` descriptor, the real substrate bridge and
 decorators (through the production
-:func:`~cadrumo.application.wizard._commands.setup_flow_definition`), and
+:func:`~cadrumo.application.wizard.commands.setup_flow_definition`), and
 the real engine transitions. The intended answers are the specification
 (operator inputs), never a copy of a driver's output.
 """
@@ -30,8 +30,8 @@ from ...flows.engine import FlowState, answer, jump_to, next_page, start_flow, v
 from ...flows.errors import FlowAnswerError
 from ...flows.review import review
 from ...flows.scripted import run_scripted_flow
-from .._catalogue import SETUP_FLOW
-from .._commands import _project_scripted_answers, setup_flow_definition
+from ..catalogue import SETUP_FLOW
+from ..commands import _project_scripted_answers, setup_flow_definition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

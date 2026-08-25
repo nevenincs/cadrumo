@@ -21,10 +21,11 @@ from pathlib import Path
 
 import pytest
 
-from .....core import UNDECLARED_REGISTRY_AUTHORITY_GRADE, DirectoryEntryKind, RegistryAuthorityGrade, scan_directory
+from .....core import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
+from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from .._errors import RegistryLoadError
+from ..errors import RegistryLoadError
 from .._loader import load_modelo_directory
 from .._schema import (
     REVISION_GOVERNANCE_FIELDS,

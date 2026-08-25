@@ -44,7 +44,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
-from ...domain.user_profile import ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileNotFoundError
 from ._common import _parse_iso_date, emit_envelope, resolve_notice_action
 from ._modelo_behavior_support import bare_period_error, resolve_year_period
 from ._modelo_cli_support import bad_parameter_from_error, parse_binding_override
@@ -109,7 +109,7 @@ def guard_ceded_autonomic_modelo(modelo: str) -> None:
     refusal instead, naming the ceded tax and its regional filing route, and is
     a no-op for every registry-backed or genuinely unknown code.
     """
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     modelo_code = modelo.strip()
     locale_key = ceded_autonomic_modelo_locale_key(modelo_code)

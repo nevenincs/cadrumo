@@ -14,7 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.resources import bundled_path, resources
-from .._errors import FincaValidationError
+from ..errors import FincaValidationError
 from .._imputacion_parameters import (
     LirpfArt85ImputacionParameters,
     _parameters_from_catalogue,

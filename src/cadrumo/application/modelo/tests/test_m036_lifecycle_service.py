@@ -23,7 +23,7 @@ from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import CensoModeloEventKind
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
-from ...live import LiveApplicationInputError
+from ...live.errors import LiveApplicationInputError
 from .._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,

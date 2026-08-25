@@ -15,12 +15,12 @@ Major declarations:
   :class:`application.export.TabularExportResult`.
 * :class:`application.export.ExportSerializationFormat` — the closed set
   of supported output formats.
-* :class:`application.export._errors.ExportFieldError` and
-  :class:`application.export._errors.ExportFormatError` — typed
+* :class:`application.export.errors.ExportFieldError` and
+  :class:`application.export.errors.ExportFormatError` — typed
   validation failures for export callers.
 
 See Also:
-    :func:`application.ledger.export_ledger_transactions`
+    :func:`application.ledger.actions_export.export_ledger_transactions`
         Ledger command service that calls this serializer, then owns bucket
         events and operator output paths.
     :func:`application.modelo.export_modelo_revision`

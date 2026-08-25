@@ -1,7 +1,7 @@
 """Referential-integrity validation for registry snapshots.
 
 Walks all 20 typed-ID reference fields across a :class:`RegistrySnapshot`
-and raises :class:`~cadrumo.domain.calculations.registry._errors.RegistryValidationError`
+and raises :class:`~cadrumo.domain.calculations.registry.errors.RegistryValidationError`
 for every dangling reference found in the :class:`ModeloRevision`.
 """
 
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId
 from ._schema import InputKind, ModeloRevision
 from ._validate_cross_domain_snapshot import (

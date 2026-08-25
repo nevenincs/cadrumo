@@ -24,7 +24,7 @@ import re
 from collections.abc import Mapping
 from pathlib import Path
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry import RegistryValidationError
 
 from ._export_tree import RenderedExportTree
@@ -129,7 +129,7 @@ def write_generated_casilla_export_refs(
             lines.insert(anchor + 1, _render(expected) + ending)
             changed = True
         if changed:
-            path.write_text("".join(lines), encoding="utf-8")
+            path.write_text("".join(lines), encoding="utf-8", newline="\n")
             written.append(path)
 
     missing = sorted(set(export_refs_by_casilla) - seen)

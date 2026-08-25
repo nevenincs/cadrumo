@@ -2,7 +2,7 @@
 
 Any command surface that renders a success envelope or text line for the
 operator — the CLI transport (:mod:`entrypoints.cli._common`) and the setup
-wizard (:mod:`application.wizard._commands`) alike — must be able to warn the
+wizard (:mod:`application.wizard.commands`) alike — must be able to warn the
 operator that the active profile bucket is a discardable sandbox rather than
 their real profile. Both surfaces need the SAME check, so it lives here,
 below both of them, rather than duplicated per surface.
@@ -32,7 +32,8 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
     projection is deliberately re-read on every call (no caching) so a
     mid-process ``switch`` is reflected on the very next command.
     """
-    from cadrumo.domain.user_profile import ProfileNotFoundError
+    from cadrumo.domain.user_profile.errors import ProfileNotFoundError
+
     from ...application.user_profile.profile_repository import CommittedProfileRepository
     from ...core import FormerProductStateError
     from ...core.bucket_pointer import resolve_active_bucket_id

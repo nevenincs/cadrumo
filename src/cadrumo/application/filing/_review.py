@@ -39,7 +39,7 @@ from ...core.hashing import content_hash_hex
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain import canonical_decimal_string
+from ...domain.identifiers import canonical_decimal_string
 from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.categories import CategoryProfile, SpendingCategory, resolve_category_profiles
 from ...domain.filing import (
@@ -53,7 +53,7 @@ from ...domain.filing import (
 from ...domain.invoices import InvoiceCatalogue
 from ...domain.submission import ModeloDraftStatus
 from ...domain.transactions import Transaction, TransactionCatalogue
-from ...domain.user_profile import ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileNotFoundError
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import record_to_path_values
 

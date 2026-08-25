@@ -24,14 +24,14 @@ from ....domain.iva import (
     TransactionKind,
     domestic_rate_tier_is_required,
 )
-from .._classification_assembly import (
+from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
     classify_from_assembled_criteria,
 )
-from .._classifier_inputs import collect_classifier_inputs
-from .._evidence_draft import InvoiceDraft
+from ..classifier_inputs import collect_classifier_inputs
+from ..evidence_draft import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

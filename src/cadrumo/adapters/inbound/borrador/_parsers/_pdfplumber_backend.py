@@ -17,7 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ...pdf import extract_pages_text_from_path
-from .._errors import BorradorParseError
+from ..errors import BorradorParseError
 
 
 def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:

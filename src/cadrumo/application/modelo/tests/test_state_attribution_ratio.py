@@ -21,7 +21,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
 from .._profile_binding import (
     ProfileBindingResolutionError,
     _inject_derived_state_attribution_facts,

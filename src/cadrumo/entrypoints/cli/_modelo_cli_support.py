@@ -27,10 +27,6 @@ from ...application.modelo import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloDetailRow,
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkRevisionConflictError,
-    ModeloWorkUnitCandidate,
-    ModeloWorkVisibleTargetAmbiguousError,
     WorkCalculateInputBundle,
     WorkUnitNotFoundError,
     build_work_calculate_input_bundle,
@@ -40,6 +36,12 @@ from ...application.modelo import (
     modelo_work_create_refusal_locale_key,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
+)
+from ...application.modelo.work_addressing import (
+    ModeloWorkAddressNotFoundError,
+    ModeloWorkRevisionConflictError,
+    ModeloWorkUnitCandidate,
+    ModeloWorkVisibleTargetAmbiguousError,
 )
 from ...core import (
     HEX_PATTERN_64,
@@ -57,8 +59,8 @@ from ...core.logging import get_logger
 from ...domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry import BindingId, RelationId
 from ._common import active_bucket_id_or_refuse, active_profile_label
-from ._errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
+from .errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from ...domain.modelos import FilingInstanceEvidence

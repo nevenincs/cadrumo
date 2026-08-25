@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import iter_directory
+from cadrumo.core.directory_scan import iter_directory
 
 from .._proof_ledger import (
     ProofContractError,

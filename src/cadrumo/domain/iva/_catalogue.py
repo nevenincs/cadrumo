@@ -16,10 +16,11 @@ from types import MappingProxyType
 
 from pydantic import ValidationError
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml, scan_directory
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
+from ...core.directory_scan import scan_directory
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
-from ._errors import IvaCatalogueError
+from .errors import IvaCatalogueError
 from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationGrounding, IvaRegulation
 
 

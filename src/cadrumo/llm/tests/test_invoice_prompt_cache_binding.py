@@ -29,7 +29,7 @@ from __future__ import annotations
 import pytest
 
 from ...adapters.outbound.llm import LLMCache
-from ...application.ledger import resolve_invoice_extraction_authority_values
+from ...application.ledger.invoice_extraction_authority import resolve_invoice_extraction_authority_values
 from ...core import Period
 from ...core.time import now
 from ...domain.transactions import DecisionProvenance

@@ -53,7 +53,7 @@ from ...core.logging import get_logger
 from ..categories import SpendingCategory, resolve_category_profiles
 from ..iva import IvaCategory
 from ._enums import BusinessClassification
-from ._errors import LLMClassifierError, TransactionValidationError
+from .errors import LLMClassifierError, TransactionValidationError
 from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier
 from ._models import Transaction
 

@@ -29,41 +29,20 @@ See Also:
 from __future__ import annotations
 
 import contextvars
-from collections.abc import Callable
+from collections.abc import Callable, Generator, Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
-
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage import (
-    WORKFLOW_RUN_NAMESPACE as WORKFLOW_RUN_STORAGE_NAMESPACE,
-)
-from ...adapters.persistence.storage import (
-    WORKFLOW_STATE_NAMESPACE as WORKFLOW_STATE_STORAGE_NAMESPACE,
-)
-from ...adapters.persistence.storage import (
-    ClassificationError,
-    Envelope,
-    EnvelopeVersionError,
-    SecretStoreError,
-    SecureObjectRepository,
-    SecureObjectRevisionConflictError,
-    SecureObjectWrite,
-    SensitivityClass,
-    StorageError,
-    inner_envelope_classification_is_expected,
-    inner_envelope_version_is_current,
-    secure_object_repository_for_active_bucket,
-    secure_object_repository_for_cold_bootstrap_state,
-)
-from ...adapters.persistence.storage.crypto import secure_object_key_digest
-from ...core import ABSENT_SECURE_OBJECT_REVISION_ID
+from ...core import SecureObjectWrite
+from ...core.classification import SensitivityClass
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger
 from ...core.time import now as utc_now
-from ...domain.buckets import BucketEvent, append_bucket_event
+from ...domain.buckets import BucketEvent
 from .errors import WorkflowError
 from .events import (
     WorkflowStateResetFingerprint,
@@ -88,23 +67,188 @@ class WorkflowEnvelopeReasonClass(StrEnum):
     ABSENT = "absent"
 
 
-_STATE_VERSION = WORKFLOW_STATE_STORAGE_NAMESPACE.schema_version
-_STATE_NAMESPACE = WORKFLOW_STATE_STORAGE_NAMESPACE.namespace
-_STATE_OBJECT_KEY = WORKFLOW_STATE_STORAGE_NAMESPACE.require_default_object_key()
-_STATE_SENSITIVITY = WORKFLOW_STATE_STORAGE_NAMESPACE.sensitivity
-_RUN_VERSION = WORKFLOW_RUN_STORAGE_NAMESPACE.schema_version
-_RUN_NAMESPACE = WORKFLOW_RUN_STORAGE_NAMESPACE.namespace
-_RUN_SENSITIVITY = WORKFLOW_RUN_STORAGE_NAMESPACE.sensitivity
 _UPDATE_RETRY_LIMIT = 4
 
 
-class _WorkflowRunEnvelopeHeader(BaseModel):
-    """Version and classification inspected before the typed run payload."""
+class WorkflowSecureObjectRecordPort(Protocol):
+    """Decrypted secure-object fields required by workflow persistence."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    @property
+    def object_key(self) -> bytes:
+        """Opaque stored digest of the natural object key."""
+        ...
 
-    schema_version: int = Field(ge=1)
-    classification: SensitivityClass
+    @property
+    def payload(self) -> bytes:
+        """Decrypted inner-envelope bytes."""
+        ...
+
+    @property
+    def revision_id(self) -> str:
+        """Current compare-and-swap revision token."""
+        ...
+
+
+class WorkflowSecureObjectMetadataPort(Protocol):
+    """Decryption-free state-row metadata used by reset fingerprints."""
+
+    @property
+    def schema_version(self) -> int:
+        """Persisted outer schema version."""
+        ...
+
+    @property
+    def written_at(self) -> datetime:
+        """UTC instant the row was written."""
+        ...
+
+    @property
+    def byte_length(self) -> int:
+        """Stored encrypted payload length."""
+        ...
+
+
+class WorkflowSecureObjectStorePort(Protocol):
+    """Encrypted-object operations consumed by the concrete workflow adapter."""
+
+    def load(
+        self,
+        namespace: str,
+        object_key: str,
+        *,
+        expected_class: SensitivityClass,
+        max_supported_version: int,
+    ) -> WorkflowSecureObjectRecordPort | None:
+        """Load one decrypted row under its registered contract."""
+        ...
+
+    def save_many(self, writes: tuple[SecureObjectWrite, ...]) -> None:
+        """Commit prepared writes in one storage transaction."""
+        ...
+
+    def peek_metadata(self, namespace: str, object_key: str) -> WorkflowSecureObjectMetadataPort | None:
+        """Read row metadata without decrypting the payload."""
+        ...
+
+    def delete(self, namespace: str, object_key: str) -> bool:
+        """Delete one addressed row when present."""
+        ...
+
+    def save(
+        self,
+        *,
+        namespace: str,
+        object_key: str,
+        classification: SensitivityClass,
+        schema_version: int,
+        written_at: datetime,
+        payload: bytes,
+    ) -> None:
+        """Persist one encrypted payload."""
+        ...
+
+    def list_records(
+        self,
+        namespace: str,
+        *,
+        expected_class: SensitivityClass,
+        max_supported_version: int,
+    ) -> Iterator[WorkflowSecureObjectRecordPort]:
+        """Iterate every readable row under one namespace."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class WorkflowStateStorageProbe:
+    """Storage-owned reset observation without adapter-specific DTOs or errors."""
+
+    metadata: WorkflowSecureObjectMetadataPort | None
+    state: WorkflowState | None
+    envelope_readable: bool
+
+
+class WorkflowPersistencePort(Protocol):
+    """Concrete encrypted persistence capability composed by an executable host."""
+
+    def active_store(self) -> WorkflowSecureObjectStorePort:
+        """Return a secure-object store bound to the active bucket session."""
+        ...
+
+    def cold_bootstrap_store(self) -> WorkflowSecureObjectStorePort:
+        """Return the recovery-only store used when no bucket is active."""
+        ...
+
+    def load_state(self, store: WorkflowSecureObjectStorePort) -> tuple[WorkflowState, str]:
+        """Decode state and return the exact storage revision read."""
+        ...
+
+    def prepare_state_write(
+        self,
+        state: WorkflowState,
+        *,
+        expected_revision_id: str | None,
+    ) -> SecureObjectWrite:
+        """Encode one state write without committing it."""
+        ...
+
+    def save_writes(self, store: WorkflowSecureObjectStorePort, writes: tuple[SecureObjectWrite, ...]) -> None:
+        """Commit state and sibling writes atomically."""
+        ...
+
+    def probe_state(self, store: WorkflowSecureObjectStorePort) -> WorkflowStateStorageProbe:
+        """Return reset metadata plus any readable state payload."""
+        ...
+
+    def delete_state(self, store: WorkflowSecureObjectStorePort) -> None:
+        """Delete only the workflow-state row."""
+        ...
+
+    def is_revision_conflict(self, error: BaseException) -> bool:
+        """Recognise the concrete optimistic-concurrency refusal."""
+        ...
+
+    def prepare_bucket_event_write(
+        self,
+        store: WorkflowSecureObjectStorePort,
+        events: tuple[BucketEvent, ...],
+    ) -> SecureObjectWrite:
+        """Prepare the history-catalogue write for ``events``."""
+        ...
+
+    def save_run(self, store: WorkflowSecureObjectStorePort, result: WorkflowResult) -> None:
+        """Encode and persist one workflow run."""
+        ...
+
+    def load_run(self, store: WorkflowSecureObjectStorePort, run_id: str) -> WorkflowResult:
+        """Load one run and verify its stored identity."""
+        ...
+
+    def list_runs(self, store: WorkflowSecureObjectStorePort) -> tuple[WorkflowResult, ...]:
+        """Load every run after verifying stored identities."""
+        ...
+
+
+_BOUND_WORKFLOW_PERSISTENCE_PORT: contextvars.ContextVar[WorkflowPersistencePort] = contextvars.ContextVar(
+    "cadrumo_workflow_persistence_port",
+)
+
+
+@contextmanager
+def bind_workflow_persistence_port(port: WorkflowPersistencePort) -> Generator[WorkflowPersistencePort]:
+    """Bind one outward-composed workflow persistence adapter for this host lifetime."""
+    token = _BOUND_WORKFLOW_PERSISTENCE_PORT.set(port)
+    try:
+        yield port
+    finally:
+        _BOUND_WORKFLOW_PERSISTENCE_PORT.reset(token)
+
+
+def workflow_persistence_port() -> WorkflowPersistencePort:
+    """Resolve the explicitly composed workflow persistence adapter."""
+    try:
+        return _BOUND_WORKFLOW_PERSISTENCE_PORT.get()
+    except LookupError as error:
+        raise RuntimeError("workflow persistence infrastructure has not been composed") from error
 
 
 _OPERATION_INSTANT: contextvars.ContextVar[datetime | None] = contextvars.ContextVar(
@@ -141,13 +285,14 @@ def current_operation_instant() -> datetime | None:
     return _OPERATION_INSTANT.get()
 
 
-def _clear_output_language_cache() -> None:
+@contextmanager
+def workflow_operation_instant_scope(instant: datetime) -> Generator[None]:
+    """Publish one stable instant for every attempt of a logical state update."""
+    token = _OPERATION_INSTANT.set(instant)
     try:
-        from ...core.i18n import clear_output_language_cache
-    except Exception:  # pragma: no cover - cache invalidation must never block persistence
-        _logger.debug("workflow persistence could not import i18n cache invalidator", exc_info=True)
-        return
-    clear_output_language_cache()
+        yield
+    finally:
+        _OPERATION_INSTANT.reset(token)
 
 
 class WorkflowStateRepository:
@@ -156,11 +301,13 @@ class WorkflowStateRepository:
     def __init__(
         self,
         *,
-        objects: SecureObjectRepository | None = None,
+        objects: WorkflowSecureObjectStorePort | None = None,
+        persistence: WorkflowPersistencePort | None = None,
         emit_reset: Callable[..., object] = emit_workflow_state_reset,
     ) -> None:
         """Bind the active-bucket store and the reset-event emitter."""
-        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
+        self._persistence = persistence if persistence is not None else workflow_persistence_port()
+        self._objects = objects if objects is not None else self._persistence.active_store()
         # Injectable so the emit-first ordering contract in
         # reset_workflow_state can be exercised with a real failing
         # emitter — no module monkeypatching. Mirrors the injectable
@@ -178,37 +325,12 @@ class WorkflowStateRepository:
 
     def _load_revisioned(self) -> tuple[WorkflowState, str]:
         """Load state together with the exact secure-object revision read."""
-        record = self._objects.load(
-            _STATE_NAMESPACE,
-            _STATE_OBJECT_KEY,
-            expected_class=_STATE_SENSITIVITY,
-            max_supported_version=_STATE_VERSION,
-        )
-        if record is None:
-            return WorkflowState(), ABSENT_SECURE_OBJECT_REVISION_ID
-        raw_payload = record.payload.decode("utf-8")
-        try:
-            envelope = Envelope[WorkflowState].model_validate_json(raw_payload)
-        except ValidationError as exc:
-            raise WorkflowError(
-                translated_message="application.workflow.errors.state_unreadable",
-                context={"detail": str(exc)},
-            ) from exc
-        if not inner_envelope_classification_is_expected(envelope.classification, _STATE_SENSITIVITY):
-            raise ClassificationError(
-                f"workflow state has classification {envelope.classification}; consumer expected {_STATE_SENSITIVITY}",
-            )
-        if not inner_envelope_version_is_current(envelope.schema_version, _STATE_VERSION):
-            raise EnvelopeVersionError(
-                f"workflow state is at version {envelope.schema_version}; consumer supports up to {_STATE_VERSION}",
-            )
-        return envelope.payload, record.revision_id
+        return self._persistence.load_state(self._objects)
 
     def save(self, state: WorkflowState) -> None:
         """Persist state in the encrypted database object store."""
         write = self.to_secure_object_write(state)
-        self._objects.save_many((write,))
-        _clear_output_language_cache()
+        self._persistence.save_writes(self._objects, (write,))
         _logger.debug("persisted workflow state to secure backend")
 
     def to_secure_object_write(
@@ -225,26 +347,8 @@ class WorkflowStateRepository:
         :meth:`~adapters.persistence.storage.SecureObjectRepository.save_many`
         call.
         """
-        try:
-            payload = WorkflowState.model_validate({**state.__dict__, "updated_at": utc_now()})
-        except ValueError as exc:
-            raise WorkflowError(
-                translated_message="application.workflow.errors.state_write_invalid_payload",
-                context={"detail": str(exc)},
-            ) from exc
-        envelope = Envelope[WorkflowState](
-            schema_version=_STATE_VERSION,
-            written_at=utc_now(),
-            classification=_STATE_SENSITIVITY,
-            payload=payload,
-        )
-        return SecureObjectWrite(
-            namespace=_STATE_NAMESPACE,
-            object_key=_STATE_OBJECT_KEY,
-            classification=_STATE_SENSITIVITY,
-            schema_version=_STATE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+        return self._persistence.prepare_state_write(
+            state,
             expected_revision_id=expected_revision_id,
         )
 
@@ -277,40 +381,9 @@ class WorkflowStateRepository:
         state envelope to reset; the fingerprint records empty
         metadata rather than crashing on the absent database.
         """
-        try:
-            metadata = self._objects.peek_metadata(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
-        except StorageError:
-            return WorkflowStateResetFingerprint(
-                schema_version=None,
-                written_at=None,
-                byte_length=None,
-                reason_class=reason_class or WorkflowEnvelopeReasonClass.ABSENT,
-                recovered_bucket_id=None,
-            )
-        recovered_bucket_id: str | None = None
-        envelope_readable = True
-        try:
-            state = self.load()
-        except (
-            WorkflowError,
-            ClassificationError,
-            EnvelopeVersionError,
-            ValidationError,
-            SecretStoreError,
-        ):
-            # The fingerprint path is the recovery route for an unreadable
-            # envelope; surfacing the envelope failure here would defeat
-            # the purpose. ``SecretStoreError`` covers the
-            # bootstrap-exempt ``repair reset-progress`` case where no
-            # active session is bound (``NoActiveBucketSessionError``)
-            # or the session has expired (``SessionExpiredError``) —
-            # the recovery verb must still delete the row by key.
-            # Fall back to row-level metadata only.
-            state = None
-            envelope_readable = False
-        if state is not None:
-            recovered_bucket_id = state.active_profile_bucket_id()
-        if metadata is None:
+        probe = self._persistence.probe_state(self._objects)
+        recovered_bucket_id = None if probe.state is None else probe.state.active_profile_bucket_id()
+        if probe.metadata is None:
             return WorkflowStateResetFingerprint(
                 schema_version=None,
                 written_at=None,
@@ -319,12 +392,12 @@ class WorkflowStateRepository:
                 recovered_bucket_id=recovered_bucket_id,
             )
         derived_reason = (
-            WorkflowEnvelopeReasonClass.READABLE if envelope_readable else WorkflowEnvelopeReasonClass.UNREADABLE
+            WorkflowEnvelopeReasonClass.READABLE if probe.envelope_readable else WorkflowEnvelopeReasonClass.UNREADABLE
         )
         return WorkflowStateResetFingerprint(
-            schema_version=metadata.schema_version,
-            written_at=metadata.written_at,
-            byte_length=metadata.byte_length,
+            schema_version=probe.metadata.schema_version,
+            written_at=probe.metadata.written_at,
+            byte_length=probe.metadata.byte_length,
             reason_class=reason_class or derived_reason,
             recovered_bucket_id=recovered_bucket_id,
         )
@@ -352,8 +425,7 @@ class WorkflowStateRepository:
         """
         fingerprint = self.fingerprint_state(reason_class=reason_class)
         self._emit_reset(fingerprint=fingerprint, actor=actor, source=source)
-        self._objects.delete(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
-        _clear_output_language_cache()
+        self._persistence.delete_state(self._objects)
         _logger.info("workflow state envelope reset; recovery route fired by operator")
         return fingerprint
 
@@ -378,11 +450,8 @@ class WorkflowStateRepository:
         steady is what lets a retried emission collapse onto one catalogue
         entry instead of landing a second audit row for one logical change.
         """
-        token = _OPERATION_INSTANT.set(utc_now())
-        try:
+        with workflow_operation_instant_scope(utc_now()):
             return self._update_with_writes_attempts(fn)
-        finally:
-            _OPERATION_INSTANT.reset(token)
 
     def _update_with_writes_attempts(
         self,
@@ -399,12 +468,11 @@ class WorkflowStateRepository:
                 expected_revision_id=revision_id,
             )
             try:
-                self._objects.save_many((state_write, *sibling_writes))
-            except SecureObjectRevisionConflictError:
-                if attempt + 1 == _UPDATE_RETRY_LIMIT:
+                self._persistence.save_writes(self._objects, (state_write, *sibling_writes))
+            except Exception as error:
+                if not self._persistence.is_revision_conflict(error) or attempt + 1 == _UPDATE_RETRY_LIMIT:
                     raise
                 continue
-            _clear_output_language_cache()
             _logger.debug("persisted revision-aware workflow state update")
             return updated
         raise AssertionError("bounded workflow-state update retry loop exhausted")
@@ -419,16 +487,7 @@ class WorkflowStateRepository:
             updated, events = fn(state)
             if not events:
                 return updated, ()
-            repository = BucketEventHistoryRepository(objects=self._objects)
-            catalogue, revision_id = repository.load_revisioned()
-            for event in events:
-                catalogue = append_bucket_event(catalogue, event)
-            return updated, (
-                repository.to_secure_object_write(
-                    catalogue,
-                    expected_revision_id=revision_id,
-                ),
-            )
+            return updated, (self._persistence.prepare_bucket_event_write(self._objects, events),)
 
         return self.update_with_writes(prepare)
 
@@ -436,28 +495,21 @@ class WorkflowStateRepository:
 class WorkflowRunRepository:
     """Encrypted secure-object repository for :class:`WorkflowResult` runs."""
 
-    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        objects: WorkflowSecureObjectStorePort | None = None,
+        persistence: WorkflowPersistencePort | None = None,
+    ) -> None:
         """Bind the active-bucket secure-object store for workflow runs."""
-        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
+        self._persistence = persistence if persistence is not None else workflow_persistence_port()
+        self._objects = objects if objects is not None else self._persistence.active_store()
 
     def save(self, result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
         """Persist one workflow result in the secure object backend."""
         run_id = _validate_run_id(result.run_id)
         marker_dir = runs_dir or Settings().cadrumo_workflow_runs_dir
-        envelope = Envelope[WorkflowResult](
-            schema_version=_RUN_VERSION,
-            written_at=utc_now(),
-            classification=_RUN_SENSITIVITY,
-            payload=result,
-        )
-        self._objects.save(
-            namespace=_RUN_NAMESPACE,
-            object_key=run_id,
-            classification=_RUN_SENSITIVITY,
-            schema_version=_RUN_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
+        self._persistence.save_run(self._objects, result)
         return marker_dir / run_id
 
     def load(self, run_id: str) -> WorkflowResult:
@@ -476,72 +528,20 @@ class WorkflowRunRepository:
                 stored payload names a different run than the key it sits under.
         """
         safe_run_id = _validate_run_id(run_id)
-        record = self._objects.load(
-            _RUN_NAMESPACE,
-            safe_run_id,
-            expected_class=_RUN_SENSITIVITY,
-            max_supported_version=_RUN_VERSION,
-        )
-        if record is None:
-            raise WorkflowError(
-                translated_message="application.workflow.errors.run_not_found",
-                context={"run_id": safe_run_id},
-            )
-        envelope = _validate_workflow_run_envelope(record.payload)
-        if envelope.payload.run_id != safe_run_id:
-            raise WorkflowError(
-                translated_message="application.workflow.errors.run_identity_mismatch",
-                context={"run_id": safe_run_id},
-            )
-        return envelope.payload
+        return self._persistence.load_run(self._objects, safe_run_id)
 
     def list(self, *, since: date | None = None) -> tuple[WorkflowResult, ...]:
         """List persisted workflow runs newest-first, optionally filtered by date.
 
         Each element is a :class:`WorkflowResult`.
         """
-        records = self._objects.list_records(
-            _RUN_NAMESPACE,
-            expected_class=_RUN_SENSITIVITY,
-            max_supported_version=_RUN_VERSION,
-        )
-        runs: list[WorkflowResult] = []
-        for record in records:
-            envelope = _validate_workflow_run_envelope(record.payload)
-            result = envelope.payload
-            # Enumeration has no requested key to compare against, so the
-            # payload's own id is checked against the row's stored key digest --
-            # the same digest the write path derived from ``run_id``.
-            if secure_object_key_digest(result.run_id) != record.object_key:
-                raise WorkflowError(
-                    translated_message="application.workflow.errors.run_identity_mismatch",
-                    context={"run_id": result.run_id},
-                )
-            if since is not None and result.started_at.date() < since:
-                continue
-            runs.append(result)
+        runs = [
+            result
+            for result in self._persistence.list_runs(self._objects)
+            if since is None or result.started_at.date() >= since
+        ]
         runs.sort(key=lambda item: item.started_at, reverse=True)
         return tuple(runs)
-
-
-def _validate_workflow_run_envelope(payload: bytes) -> Envelope[WorkflowResult]:
-    """Validate one workflow-run envelope against the exact current contract.
-
-    The repository is pre-release, so a workflow-run schema change advances the
-    current format and refuses earlier app-written payloads. There is no legacy
-    upgrader or tolerant read branch.
-    """
-    raw_payload = payload.decode("utf-8")
-    header = _WorkflowRunEnvelopeHeader.model_validate_json(raw_payload)
-    if not inner_envelope_classification_is_expected(header.classification, _RUN_SENSITIVITY):
-        raise ClassificationError(
-            f"workflow run has classification {header.classification}; consumer expected {_RUN_SENSITIVITY}",
-        )
-    if not inner_envelope_version_is_current(header.schema_version, _RUN_VERSION):
-        raise EnvelopeVersionError(
-            f"workflow run is at version {header.schema_version}; consumer requires {_RUN_VERSION}",
-        )
-    return Envelope[WorkflowResult].model_validate_json(raw_payload)
 
 
 def workflow_state_repository() -> WorkflowStateRepository:
@@ -559,12 +559,13 @@ def workflow_state_repository() -> WorkflowStateRepository:
     """
     from ...core.bucket_pointer import resolve_active_bucket_id
 
+    persistence = workflow_persistence_port()
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         if classify_storage_route(load_settings()).kind is StorageRouteKind.EXPLICIT_DATABASE_URL:
-            return WorkflowStateRepository(objects=secure_object_repository_for_active_bucket())
-        return WorkflowStateRepository(objects=secure_object_repository_for_cold_bootstrap_state())
-    return WorkflowStateRepository(objects=secure_object_repository_for_active_bucket())
+            return WorkflowStateRepository(objects=persistence.active_store(), persistence=persistence)
+        return WorkflowStateRepository(objects=persistence.cold_bootstrap_store(), persistence=persistence)
+    return WorkflowStateRepository(objects=persistence.active_store(), persistence=persistence)
 
 
 def reset_workflow_state(
@@ -624,13 +625,21 @@ def list_runs(*, since: date | None = None) -> tuple[WorkflowResult, ...]:
 
 __all__ = [
     "WorkflowEnvelopeReasonClass",
+    "WorkflowPersistencePort",
     "WorkflowRunRepository",
+    "WorkflowSecureObjectMetadataPort",
+    "WorkflowSecureObjectRecordPort",
+    "WorkflowSecureObjectStorePort",
     "WorkflowStateRepository",
+    "WorkflowStateStorageProbe",
+    "bind_workflow_persistence_port",
     "current_operation_instant",
     "fingerprint_workflow_state",
     "list_runs",
     "load_run",
     "reset_workflow_state",
     "save_run",
+    "workflow_operation_instant_scope",
+    "workflow_persistence_port",
     "workflow_state_repository",
 ]

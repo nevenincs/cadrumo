@@ -14,15 +14,18 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from cadrumo.application.operations.composition import (
+from ...adapters.persistence.operations.journal import OperationJournalRepository
+from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ...adapters.persistence.storage import SecureObjectRepository
+from ...application.auth.operation_definitions import build_auth_operation_definitions
+from ...application.export import build_google_sheets_export_operation_definition
+from ...application.operations.composition import (
     OperationComposedServices,
     OperationSubmission,
     compose_operation_services,
 )
-from cadrumo.application.operations.frontend_contracts import (
+from ...application.operations.frontend_contracts import (
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
     OperationCancellationSuccessV1,
@@ -39,27 +42,33 @@ from cadrumo.application.operations.frontend_contracts import (
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
 )
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import (
+from ...application.operations.models import OperationRequest
+from ...application.operations.registry import (
     OperationDefinition,
     OperationRegistry,
 )
-
-from ...adapters.persistence.storage import SecureObjectRepository
-from ...application.auth.operation_definitions import build_auth_operation_definitions
-from ...application.export import build_google_sheets_export_operation_definition
+from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
+from ...application.user_profile.censal_observation import (
+    CensalObservation,
+    CensalObservationAddress,
+    CensalObservationIdentity,
+)
+from ...application.user_profile.censal_operation import (
+    CensalFieldIntent,
+    CensalOperationAcquisition,
+    CensalProfileBaseline,
+    CensalReviewedFieldIntent,
+    build_censal_operation_definition,
+)
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
-from ...application.user_profile.censal_operation import CensalFieldIntent, CensalOperationAcquisition, CensalProfileBaseline, CensalReviewedFieldIntent, build_censal_operation_definition
-from ...application.user_profile.censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
-from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
-from ...application.user_profile.profile_record_repository import ProfileRecordRepository
-from ...application.user_profile.login_session import login_profile
 from ...application.user_profile.custody_ports import profile_custody_secure_object_repository
+from ...application.user_profile.login_session import login_profile
+from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...core import AuthProviderKind, OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...core.time import now
-from ...domain.user_profile import UserProfileFact
+from ...domain.user_profile.values import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
 from ...tests.secure_sql import isolated_profile_storage_root
 from .. import build_production_operation_registry

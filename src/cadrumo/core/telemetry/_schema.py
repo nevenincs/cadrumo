@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field
 
 from .._models import STRICT_FROZEN_CONFIG
 from ..identity import ContentDigest
-from ._errors import TelemetrySchemaError
+from .errors import TelemetrySchemaError
 
 __all__ = [
     "TELEMETRY_METRIC_REGISTRY",

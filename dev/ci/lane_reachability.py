@@ -100,7 +100,7 @@ from typing import Final
 
 import yaml
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
 

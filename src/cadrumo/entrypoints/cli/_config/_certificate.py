@@ -38,7 +38,7 @@ from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
-from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._secure_input import MachineSecretPayload
 
 

@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....core.external_constants import load_external_constants
 from ....core.resources import bundled_path
 from .. import (
@@ -22,7 +22,7 @@ from .. import (
     verify_fetched_pdf,
     write_manifest,
 )
-from .._errors import ManifestError
+from ..errors import ManifestError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

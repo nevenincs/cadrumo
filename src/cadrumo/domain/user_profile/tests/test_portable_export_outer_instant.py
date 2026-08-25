@@ -19,9 +19,9 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from ....domain.user_profile import ProfileSetupState
-from .._portable_export import UserProfilePortableExport
-from .._values import UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState
+from ..portable_export import UserProfilePortableExport
+from ..values import UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -73,7 +73,7 @@ def test_a_utc_export_round_trips_canonically() -> None:
 
 def test_the_outer_stamp_and_the_carried_rows_share_one_policy() -> None:
     """The point of the fix: one boundary, one instant contract."""
-    from .._portable_export import CarriedSecureObject
+    from ..portable_export import CarriedSecureObject
 
     with pytest.raises(ValidationError):
         CarriedSecureObject(

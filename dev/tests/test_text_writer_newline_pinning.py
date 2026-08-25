@@ -50,10 +50,6 @@ MIN_SCANNED_MODULES = 700
 #: ``(repository-relative path, qualified function name)`` with a stated reason.
 #: Keying by function is load-bearing -- see the module docstring.
 EXEMPTIONS: dict[tuple[str, str], str] = {
-    ("src/cadrumo/entrypoints/cli/_config/_secure_input.py", "write_to_controlling_terminal"): (
-        "Writes to the CONOUT$ / /dev/tty console DEVICE, not a file. A device cannot "
-        "drift a tracked artefact, and forcing LF would degrade Windows console rendering."
-    ),
     (
         "src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py",
         "write_sealed_archive",

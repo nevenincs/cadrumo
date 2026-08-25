@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
 from ...domain.retention import RetentionFloorAssessment
-from ...domain.user_profile import ProfileSetupState
+from ...domain.user_profile.values import ProfileSetupState
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 
 

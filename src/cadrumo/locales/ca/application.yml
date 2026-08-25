@@ -1303,6 +1303,11 @@ application:
         (%{mismatch_kind}).
       registry_advisory_predicate_fired: S'ha activat un predicat consultiu del registre
         per a aquesta revisió.
+      registry_authority_grade_insufficient: La revisio del registre d'aquest model
+        declara autoritat %{declared_grade} i no pot donar suport a una presentacio,
+        que exigeix autoritat %{requested_grade}. La revisio es resol correctament;
+        no esta acreditada al nivell que exigeix una presentacio, de manera que aquest
+        objectiu de treball encara no es pot verificar per presentar.
       registry_snapshot_unresolved: No s'ha pogut resoldre la instantània del registre
         per a aquest objectiu de treball.
       suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració consigna

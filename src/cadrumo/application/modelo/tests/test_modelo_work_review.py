@@ -36,7 +36,7 @@ from ....domain.modelos import (
     upsert_verification_report,
     upsert_work_unit,
 )
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 from .._calculation_actions import calculate_modelo_revision
 from ..work_review_projection import (

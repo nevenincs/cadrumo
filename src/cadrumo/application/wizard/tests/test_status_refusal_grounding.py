@@ -15,7 +15,7 @@ import pytest
 
 from ....core.resources import resources
 from ...user_profile.preflight import build_profile_preflight_requirement
-from .._status import _TAX_ID_PATH, _grounded_tax_id_requirement
+from ..status import _TAX_ID_PATH, _grounded_tax_id_requirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

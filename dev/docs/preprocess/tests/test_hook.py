@@ -25,7 +25,7 @@ from typing import cast
 
 import pytest
 
-from cadrumo.core import iter_directory, scan_directory
+from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from ...._paths import REPO_ROOT
 from ..hook import (

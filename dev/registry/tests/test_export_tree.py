@@ -14,6 +14,8 @@ from cadrumo.core import (
     FilingProducerKey,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
+)
+from cadrumo.core.directory_scan import (
     scan_directory,
 )
 from cadrumo.core.resources import bundled_path

@@ -131,7 +131,7 @@ def resolve_maritime_exemption(
         :class:`MaritimeExemptionResult` with typed observations and flat view.
 
     Raises:
-        :class:`~domain.renta._errors.RentaValidationError`: Eligibility
+        :class:`~domain.renta.errors.RentaValidationError`: Eligibility
             predicate mismatch or invalid input. The DA 41 inactive guard and
             RETMAR completeness gate raise their own typed exceptions from the
             called guards.

@@ -4,7 +4,7 @@ Exercises the ordered data-prep checklist directly against real
 :class:`~cadrumo.domain.transactions.TransactionCatalogueRepository` storage (an
 isolated encrypted profile bucket, no mocks), real
 :class:`~cadrumo.domain.invoices.InvoiceCatalogue` / :class:`~cadrumo.domain.invoices.Invoice`
-records, and a real :func:`~cadrumo.application.ledger.preflight_ledger_tax_readiness`
+records, and a real :func:`~cadrumo.application.ledger.preflight.preflight_ledger_tax_readiness`
 report. This module never touches the modelo calculation registry authority, so it
 stays independent of any registry-authoring state elsewhere in the tree.
 """
@@ -21,11 +21,12 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_transaction_catalogue_fixture,
 )
-from ....application.ledger import MediaKind, PurchaseInvoiceEvidence, preflight_ledger_tax_readiness
+from ....application.ledger.evidence import MediaKind, PurchaseInvoiceEvidence
+from ....application.ledger.preflight import preflight_ledger_tax_readiness
 from ....core import BindingSourceKind, Period
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -194,7 +195,7 @@ def _walkthrough(
         invoice_catalogue=invoice_catalogue or InvoiceCatalogue.model_validate({}),
         evidence_records=evidence_records,
         preflight_report=preflight_report,
-        work_units=work_units,
+        work_unit_catalogue=WorkUnitCatalogue.from_work_units(work_units),
     )
 
 

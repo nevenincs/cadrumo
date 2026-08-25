@@ -22,7 +22,7 @@ from .._config._secure_input import (
     ProfileSecretChannel,
     select_profile_secret_channel,
 )
-from .._errors import CliRefusedBoundaryError
+from ..errors import CliRefusedBoundaryError
 from .._profile_authentication_contract import (
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,

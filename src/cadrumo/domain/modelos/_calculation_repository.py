@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
 from ._calculation_revision import CalculationRevision, CalculationRevisionCatalogue
-from ._errors import ModeloError
+from .errors import ModeloError
 
 if TYPE_CHECKING:
     from ._calculation_revision_aggregate import CalculationRevisionAggregateContext

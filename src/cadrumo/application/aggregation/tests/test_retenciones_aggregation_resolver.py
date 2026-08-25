@@ -23,7 +23,7 @@ from ....core import AggregationCaptureKind, BindingSourceKind, NoRecoveryOutcom
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision, RegistrySnapshot
 from ....tests.secure_sql import isolated_runtime_profile
-from .._errors import AggregationValidationError
+from ..errors import AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition
 from .._retencion_observations_repository import RetencionObservationRepository

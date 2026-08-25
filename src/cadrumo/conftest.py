@@ -19,7 +19,6 @@ import os
 import sys
 import tempfile
 from collections.abc import Iterator, Mapping
-from contextlib import ExitStack
 from pathlib import Path
 
 import pytest
@@ -146,21 +145,12 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
 
 @pytest.fixture(scope="session", autouse=True)
 def compose_profile_persistence_ports() -> Iterator[None]:
-    """Compose real custody/session adapters for tests that load their owners."""
-    custody_loaded = "cadrumo.application.user_profile.custody_ports" in sys.modules
-    login_session_loaded = "cadrumo.application.user_profile.login_session_port" in sys.modules
-    if not custody_loaded and not login_session_loaded:
-        yield
-        return
-    from .adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
-    from .application.user_profile.custody_ports import bind_profile_custody_port
-    from .application.user_profile.login_session_port import bind_profile_login_session_port
+    """Compose real custody/session/workflow adapters for tests that load their owners."""
+    from .adapters.persistence.workflow import build_workflow_persistence_port
+    from .application.workflow.persistence import bind_workflow_persistence_port
+    from .tests.profile_persistence import composed_profile_persistence_ports
 
-    with ExitStack() as composition:
-        if custody_loaded:
-            composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-        if custody_loaded or login_session_loaded:
-            composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+    with composed_profile_persistence_ports(), bind_workflow_persistence_port(build_workflow_persistence_port()):
         yield
 
 

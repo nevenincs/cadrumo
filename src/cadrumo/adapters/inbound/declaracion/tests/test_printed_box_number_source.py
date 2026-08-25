@@ -46,7 +46,7 @@ from .....domain.calculations.registry import (
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
 )
-from .._errors import DeclaracionParseError
+from ..errors import DeclaracionParseError
 from .._parser import _numeric_casilla_anchors
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

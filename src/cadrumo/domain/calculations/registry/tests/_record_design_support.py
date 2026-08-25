@@ -9,7 +9,7 @@ from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
 from .. import (
     CasillaFieldKind,

@@ -1,7 +1,7 @@
 """Windows encoding regression tests for CLI stderr emission.
 
 Pins the contract that
-:func:`cadrumo.entrypoints.cli._errors.write_stderr` never raises when
+:func:`cadrumo.entrypoints.cli.errors.write_stderr` never raises when
 the underlying stream uses the Windows default ``cp1252`` codec, even
 when :func:`cadrumo.core.errors.render_error_text` produces non-ASCII
 characters under the operator's configured language.
@@ -20,7 +20,7 @@ import pytest
 
 from ....core.access_gate import LiveSubmitForbiddenError
 from ....core.errors import render_error_text
-from .._errors import write_stderr
+from ..errors import write_stderr
 from .._stdio import _set_windows_console_utf8, configure_stdio_for_utf8
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

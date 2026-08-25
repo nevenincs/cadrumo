@@ -29,7 +29,7 @@ See Also:
         Single catalogue writer used after field validation succeeds.
     :func:`~application.invoices.import_invoices_from_rows`
         Spreadsheet-oriented sibling path with matching idempotency semantics.
-    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
         Automated evidence extraction path this non-interactive wizard
         complements when OCR is unavailable or insufficient.
 """

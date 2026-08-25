@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema import RegistrySnapshot
 
 __all__ = ["verification_tolerance_or_exact"]

@@ -75,7 +75,9 @@ _SETTINGS_PREAMBLE = dedent(
         cadrumo_output_language="en",
     )
     token = config_module._settings_override.set(settings)
-    from cadrumo.application import wizard as _wizard
+    from cadrumo.application.wizard.compiler import ensure_profile_keys_registered
+
+    ensure_profile_keys_registered()
 
     from contextlib import ExitStack
 

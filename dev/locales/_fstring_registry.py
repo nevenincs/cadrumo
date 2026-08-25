@@ -58,7 +58,7 @@ def _hyphen(v: str) -> str:
 
 
 # The service-capability CONFIRM question ids (hyphenated, matching the catalogue
-# question ids in :mod:`application.wizard._catalogue`). Their prompt and
+# question ids in :mod:`application.wizard.catalogue`). Their prompt and
 # CLI-flag-help keys are f-string-built, so they are enumerated here for scaffold.
 _CAPABILITY_QUESTION_IDS: tuple[str, ...] = (
     "cloud-evidence-upload",
@@ -153,7 +153,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     will propagate the error with full context rather than a silent empty set.
     """
     from cadrumo.application.storage_management import StorageAreaDisposition, StorageOccupancy
-    from cadrumo.application.wizard import WIZARD_FLOWS
+    from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
     from cadrumo.core import StorageArea
     from cadrumo.core.errors._registry import ErrorCategory
     from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
@@ -166,7 +166,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         IrpfSpecialRegime,
         LegalEntityForm,
     )
-    from cadrumo.domain.user_profile import ProfileSetupState
+    from cadrumo.domain.user_profile.values import ProfileSetupState
 
     return (
         *_wizard_choice_label_registrations(

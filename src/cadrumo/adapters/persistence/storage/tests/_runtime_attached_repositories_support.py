@@ -13,6 +13,10 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
+from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
+from cadrumo.application.workflow.state_models import DeclaracionPointer, WorkflowState
+
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
@@ -35,28 +39,21 @@ from .....application.diagnostics import (
     secure_object_unreadable_total,
 )
 from .....application.filing import ModeloHistory, ModeloHistoryEntry, ModeloHistoryRepository
-from .....application.live import (
+from .....application.live.borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
-    SnapshotLifecycleState,
     derive_borrador_100_snapshot_id,
 )
-from .....application.modelo import (
-    RecipientFingerprintRegistryRepository,
-    RecipientReplayGuardRepository,
-)
+from .....application.live.snapshot_base import SnapshotLifecycleState
+from .....application.modelo import RecipientFingerprintRegistryRepository
 from .....application.repair_integrity import (
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
     repair_remediation_decision_id,
 )
-from cadrumo.application.workflow.state_models import DeclaracionPointer, WorkflowState
-from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
-from cadrumo.application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
 from .....core import CasillaId, IvaCompensationStateProvenance, validated_casilla_id
 from .....core import Period as _Period
 from .....core.config import override_settings
-from .....domain import ModeloIdentifier
 from .....domain.attachments import AttachmentNotFoundError
 from .....domain.buckets import (
     BucketEvent,
@@ -84,6 +81,7 @@ from .....domain.filing import (
     make_amendment_id,
     registry_schema_version,
 )
+from .....domain.identifiers import ModeloIdentifier
 from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
 from .....domain.iva import InvoiceKind
 from .....domain.iva_compensation import IvaCompensationPeriodState, IvaCompensationReconciliationDecision
@@ -143,10 +141,11 @@ from ....outbound.google import (
     OAuthMetadata,
     OAuthToken,
 )
-from ....outbound.google import _session_store as google_session_store
+from ....outbound.google import session_store as google_session_store
 from ....outbound.llm import EvidenceConsentLedger, LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
+from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from .. import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, AttachmentStore, SensitivityClass, StorageValidationError

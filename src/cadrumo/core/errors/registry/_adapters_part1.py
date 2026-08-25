@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.adapters.outbound.aeat.auth._authenticator_types._PersistedSessionInvalidError",
+        "cadrumo.adapters.outbound.aeat.auth.authenticator_types.PersistedSessionInvalidError",
         ErrorCode(
             code="AUTH_AUTH_AUTHENTICATOR_PERSISTED_SESSION_INVALID",
             category=ErrorCategory.AUTH,
@@ -18,7 +18,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._clave_movil_support.ClaveMovilApprovalTimeoutError",
+        "cadrumo.adapters.outbound.aeat.auth.clave_movil_support.ClaveMovilApprovalTimeoutError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_APPROVAL_TIMEOUT",
             category=ErrorCategory.AUTH,
@@ -28,7 +28,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._clave_movil_support.ClaveMovilConfigurationError",
+        "cadrumo.adapters.outbound.aeat.auth.clave_movil_support.ClaveMovilConfigurationError",
         ErrorCode(
             code="AUTH_AUTH_CLAVE_MOVIL_CLAVE_MOVIL_CONFIGURATION",
             category=ErrorCategory.AUTH,
@@ -98,7 +98,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.borrador._errors.ArtefactNotRecognisedError",
+        "cadrumo.adapters.inbound.borrador.errors.ArtefactNotRecognisedError",
         ErrorCode(
             code="ERROR_BORRADOR_ARTEFACT_NOT_RECOGNISED",
             category=ErrorCategory.ERROR,
@@ -108,7 +108,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.borrador._errors.BorradorParseError",
+        "cadrumo.adapters.inbound.borrador.errors.BorradorParseError",
         ErrorCode(
             code="FAIL_BORRADOR_PARSE",
             category=ErrorCategory.FAIL,
@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.notificacion._errors.NotificacionParseError",
+        "cadrumo.adapters.inbound.notificacion.errors.NotificacionParseError",
         ErrorCode(
             code="FAIL_NOTIFICACION_PARSE",
             category=ErrorCategory.FAIL,
@@ -128,7 +128,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.notificacion._errors.SancionParseError",
+        "cadrumo.adapters.inbound.notificacion.errors.SancionParseError",
         ErrorCode(
             code="FAIL_SANCION_PARSE",
             category=ErrorCategory.FAIL,
@@ -138,7 +138,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.notificacion._errors.SancionArithmeticError",
+        "cadrumo.adapters.inbound.notificacion.errors.SancionArithmeticError",
         ErrorCode(
             code="FAIL_SANCION_ARITHMETIC",
             category=ErrorCategory.FAIL,
@@ -148,7 +148,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.browser._errors.BrowserError",
+        "cadrumo.adapters.outbound.aeat.browser.errors.BrowserError",
         ErrorCode(
             code="FAIL_BROWSER_SESSION_BROWSER",
             category=ErrorCategory.FAIL,
@@ -158,7 +158,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.browser._errors.BrowserEvasionError",
+        "cadrumo.adapters.outbound.aeat.browser.errors.BrowserEvasionError",
         ErrorCode(
             code="FAIL_BROWSER_EVASION",
             category=ErrorCategory.FAIL,
@@ -168,7 +168,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.declaracion._errors.DeclaracionParseError",
+        "cadrumo.adapters.inbound.declaracion.errors.DeclaracionParseError",
         ErrorCode(
             code="FAIL_DECLARACION_PARSE",
             category=ErrorCategory.FAIL,
@@ -178,7 +178,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.declaracion._errors.TemplateNotDetectedError",
+        "cadrumo.adapters.inbound.declaracion.errors.TemplateNotDetectedError",
         ErrorCode(
             code="ERROR_DECLARACION_TEMPLATE_NOT_DETECTED",
             category=ErrorCategory.ERROR,
@@ -188,7 +188,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.sede._errors.ExpedienteNotFoundError",
+        "cadrumo.adapters.outbound.aeat.sede.errors.ExpedienteNotFoundError",
         ErrorCode(
             code="ERROR_SEDE_EXPEDIENTE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -198,7 +198,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.sede._errors.JustificanteFetchError",
+        "cadrumo.adapters.outbound.aeat.sede.errors.JustificanteFetchError",
         ErrorCode(
             code="FAIL_SEDE_JUSTIFICANTE_FETCH",
             category=ErrorCategory.FAIL,
@@ -208,7 +208,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.sede._errors.SedeError",
+        "cadrumo.adapters.outbound.aeat.sede.errors.SedeError",
         ErrorCode(
             code="ERROR_SEDE",
             category=ErrorCategory.ERROR,
@@ -218,7 +218,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.sede._errors.SedeNavigationError",
+        "cadrumo.adapters.outbound.aeat.sede.errors.SedeNavigationError",
         ErrorCode(
             code="ERROR_SEDE_NAVIGATION",
             category=ErrorCategory.ERROR,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.sede._errors.SedeParseError",
+        "cadrumo.adapters.outbound.aeat.sede.errors.SedeParseError",
         ErrorCode(
             code="FAIL_SEDE_PARSE",
             category=ErrorCategory.FAIL,
@@ -518,7 +518,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.export._errors.AeatExportFormatError",
+        "cadrumo.adapters.outbound.aeat.export.errors.AeatExportFormatError",
         ErrorCode(
             code="FAIL_EXPORT_FORMAT",
             category=ErrorCategory.FAIL,
@@ -528,7 +528,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._errors.AuthValidationError",
+        "cadrumo.adapters.outbound.aeat.auth.errors.AuthValidationError",
         ErrorCode(
             code="AUTH_AUTH_VALIDATION",
             category=ErrorCategory.AUTH,
@@ -538,7 +538,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.browser._errors.BrowserValidationError",
+        "cadrumo.adapters.outbound.aeat.browser.errors.BrowserValidationError",
         ErrorCode(
             code="FAIL_BROWSER_VALIDATION",
             category=ErrorCategory.FAIL,
@@ -548,7 +548,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.sede._errors.SedeValidationError",
+        "cadrumo.adapters.outbound.aeat.sede.errors.SedeValidationError",
         ErrorCode(
             code="FAIL_SEDE_VALIDATION",
             category=ErrorCategory.FAIL,
@@ -558,7 +558,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.sede._errors.BrowserAdapterTypeError",
+        "cadrumo.adapters.outbound.aeat.sede.errors.BrowserAdapterTypeError",
         ErrorCode(
             code="ERROR_SEDE_BROWSER_ADAPTER_TYPE",
             category=ErrorCategory.ERROR,
@@ -568,7 +568,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._errors.AuthError",
+        "cadrumo.adapters.outbound.aeat.auth.errors.AuthError",
         ErrorCode(
             code="AUTH_AUTH",
             category=ErrorCategory.AUTH,
@@ -578,7 +578,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._errors.AuthProviderCleanupError",
+        "cadrumo.adapters.outbound.aeat.auth.errors.AuthProviderCleanupError",
         ErrorCode(
             code="AUTH_AUTH_PROVIDER_CLEANUP",
             category=ErrorCategory.AUTH,
@@ -588,7 +588,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.aeat.auth._errors.AuthConfigurationError",
+        "cadrumo.adapters.outbound.aeat.auth.errors.AuthConfigurationError",
         ErrorCode(
             code="AUTH_AUTH_CONFIGURATION",
             category=ErrorCategory.AUTH,
@@ -598,3 +598,4 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
 )
+

@@ -20,9 +20,10 @@ from pathlib import Path
 
 import pytest
 
-from ......core import CasillaValueKind, scan_directory, validated_casilla_id
+from ......core import CasillaValueKind, validated_casilla_id
+from ......core.directory_scan import scan_directory
 from .._declarations_observations import _observed_value_kind, non_numeric_observed_casillas
-from .._errors import SedeValidationError
+from ..errors import SedeValidationError
 from .._schema import ObservedCasillaSkip, ObservedCasillaValue
 from ._declarations_support import _filed_observation
 

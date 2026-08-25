@@ -17,8 +17,10 @@ from ....core import (
     CasillaId,
     M210GrossIncomeSourceMode,
     Period,
-    scan_directory,
     validated_casilla_id,
+)
+from ....core.directory_scan import (
+    scan_directory,
 )
 from ....core.resources import resources
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
@@ -43,7 +45,7 @@ from .._calculation_revision import (
     M303InsolvencyFilingSubtype,
     derive_calculation_revision_id,
 )
-from .._errors import ModeloValidationError
+from ..errors import ModeloValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

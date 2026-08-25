@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from .....core import StorageCategory, storage_location
 from .....core.paths import effective_storage_root
 from ._capsule_records import ProfileCustodyCapsuleLabel
-from ._errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 from ._filesystem import (
     clear_profile_custody_local_record,
     ensure_profile_custody_local_directory,

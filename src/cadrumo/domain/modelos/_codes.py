@@ -10,7 +10,7 @@ from __future__ import annotations
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
-from ._errors import ModeloValidationError
+from .errors import ModeloValidationError
 
 
 class ModeloCode(str):

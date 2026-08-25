@@ -13,7 +13,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ......core import StorageCategory, scan_directory
+from ......core import StorageCategory
+from ......core.directory_scan import scan_directory
 from ......core.config import Settings
 from .. import (
     PROFILE_CUSTODY_SENTINEL_FILENAME,

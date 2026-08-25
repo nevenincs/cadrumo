@@ -18,7 +18,7 @@ import pytest
 from ....core import Modelo, Period
 from ....core.resources import resources
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._attribution_received_advisory import _attribution_received_omission_advisory_findings

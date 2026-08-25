@@ -98,7 +98,8 @@ from typing import Final
 
 import pytest
 
-from cadrumo.core import identity, scan_directory
+from cadrumo.core import identity
+from cadrumo.core.directory_scan import scan_directory
 
 from ..identifier_noun_census import annotation_text, is_bare_str
 
@@ -226,7 +227,7 @@ _FREE_TEXT_POPULATIONS: Final[tuple[_FreeTextPopulation, ...]] = (
 #: standing as a stale carve-out.
 _FREE_TEXT_ANCHORS: Final[tuple[tuple[str, str, str], ...]] = (
     ("src/cadrumo/adapters/outbound/aeat/sede/_declarations_schema.py", "Declaracion", "estado"),
-    ("src/cadrumo/adapters/outbound/aeat/sede/_deudas.py", "Deuda", "situacion"),
+    ("src/cadrumo/adapters/outbound/aeat/sede/deudas.py", "Deuda", "situacion"),
 )
 
 
@@ -404,7 +405,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/ledger/_evidence_draft.py",
+        path="src/cadrumo/application/ledger/evidence_draft.py",
         model="CounterpartyDraftSide",
         field="tax_id",
         group="verbatim external evidence",
@@ -414,7 +415,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         ),
     ),
     _Adjudication(
-        path="src/cadrumo/application/ledger/_models.py",
+        path="src/cadrumo/application/ledger/models.py",
         model="BulkClassifyFailure",
         field="transaction_id",
         group="mixed-source diagnostic references",

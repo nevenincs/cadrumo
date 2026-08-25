@@ -15,7 +15,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 
 _QUARTERLY_PERIOD_ORDINAL: dict[str, int] = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}
 _ORDINAL_TO_QUARTERLY: dict[int, str] = {ordinal: code for code, ordinal in _QUARTERLY_PERIOD_ORDINAL.items()}

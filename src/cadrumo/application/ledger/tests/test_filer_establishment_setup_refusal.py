@@ -33,11 +33,11 @@ import pytest
 
 from ....core import NoRecoveryOutcome
 from ....domain.iva import IvaTerritorialScope
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._confirm_establishment import _filer_scope
-from .._evidence_draft import PurchaseInvoiceEvidenceInputError
-from .._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
-from .._preconditions import LedgerPreconditionCondition
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ..confirm_establishment import _filer_scope
+from ..evidence_draft import PurchaseInvoiceEvidenceInputError
+from ..filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
+from ..preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

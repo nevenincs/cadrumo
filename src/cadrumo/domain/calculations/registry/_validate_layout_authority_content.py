@@ -70,6 +70,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import resolve_companion_binary
 from ._schema import SourceReference
 
@@ -100,10 +101,10 @@ def _read_source_text(source_root: Path, source: SourceReference) -> str | None:
     )
     for candidate in candidates:
         if candidate.is_file():
-            return candidate.read_text(encoding="utf-8", errors="replace")
+            return candidate.read_text(encoding=UTF_8_ENCODING, errors="replace")
     companion = resolve_companion_binary(*source.corpus_path.split("/"))
     if companion is not None and companion.is_file():
-        return companion.read_text(encoding="utf-8", errors="replace")
+        return companion.read_text(encoding=UTF_8_ENCODING, errors="replace")
     return None
 
 

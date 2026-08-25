@@ -120,23 +120,25 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
                 inner envelope's schema version is not the consumer's current
                 version.
         """
+        document, _revision_id = self.load_revisioned()
+        return document
+
+    def _decode_record(self, payload: bytes) -> DocumentT:
+        """Validate one loaded encrypted payload against the Envelope contract."""
         from ..storage import Envelope, inner_envelope_classification_is_expected, inner_envelope_version_is_current
 
-        record = self._objects.load(
-            self.namespace,
-            self.object_key,
-            expected_class=self._definition.sensitivity,
-            max_supported_version=self._definition.schema_version,
-        )
-        if record is None:
-            return self._empty_document()
-        envelope = Envelope.for_payload_type(self._model_type).model_validate_json(record.payload)
+        envelope = Envelope.for_payload_type(self._model_type).model_validate_json(payload)
         if not inner_envelope_classification_is_expected(envelope.classification, self._definition.sensitivity):
             from ..storage import ClassificationError
 
             raise ClassificationError(
                 f"{self.namespace}/{self.object_key} has classification {envelope.classification}; "
                 f"consumer expected {self._definition.sensitivity}",
+                context={
+                    "reason": "classification_mismatch",
+                    "expected_classification": self._definition.sensitivity.value,
+                    "actual_classification": envelope.classification.value,
+                },
             )
         if not inner_envelope_version_is_current(envelope.schema_version, self._definition.schema_version):
             from ..storage import EnvelopeVersionError
@@ -144,6 +146,11 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             raise EnvelopeVersionError(
                 f"{self.namespace}/{self.object_key} is at version {envelope.schema_version}; "
                 f"consumer supports up to {self._definition.schema_version}",
+                context={
+                    "reason": "unsupported_envelope_version",
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": self._definition.schema_version,
+                },
             )
         if not isinstance(envelope.payload, self._model_type):
             raise TypeError(f"{self.namespace}/{self.object_key} envelope payload has an unexpected type")
@@ -158,7 +165,15 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         ``ABSENT_SECURE_OBJECT_REVISION_ID`` sentinel, so the first writer of a
         singleton is guarded exactly like every later one.
         """
-        return self._load_with_revision()
+        record = self._objects.load(
+            self.namespace,
+            self.object_key,
+            expected_class=self._definition.sensitivity,
+            max_supported_version=self._definition.schema_version,
+        )
+        if record is None:
+            return self._empty_document(), ABSENT_SECURE_OBJECT_REVISION_ID
+        return self._decode_record(record.payload), record.revision_id
 
     def to_secure_object_write(
         self,
@@ -214,24 +229,6 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             payload=write.payload,
         )
 
-    def _load_with_revision(self) -> tuple[DocumentT, str]:
-        """Return the stored document and the revision id it was read at.
-
-        An absent row reports :data:`ABSENT_SECURE_OBJECT_REVISION_ID`, the
-        sentinel the write funnel reads as "this row must not exist yet", so the
-        first writer of a singleton is guarded exactly like every later one.
-        """
-        document = self.load()
-        record = self._objects.load(
-            self.namespace,
-            self.object_key,
-            expected_class=self._definition.sensitivity,
-            max_supported_version=self._definition.schema_version,
-        )
-        if record is None:
-            return self._empty_document(), ABSENT_SECURE_OBJECT_REVISION_ID
-        return document, record.revision_id
-
     def mutate(self, mutation: Callable[[DocumentT], DocumentT], *, attempts: int = 4) -> DocumentT:
         """Apply ``mutation`` to the stored document as one guarded unit of work.
 
@@ -267,7 +264,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         """
         last_conflict: SecureObjectRevisionConflictError | None = None
         for _attempt in range(attempts):
-            current, revision_id = self._load_with_revision()
+            current, revision_id = self.load_revisioned()
             updated = mutation(current)
             write = self.to_secure_object_write(updated).model_copy(
                 update={"expected_revision_id": revision_id},

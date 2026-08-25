@@ -22,8 +22,8 @@ from ....domain.deadlines import (
     LegalEntityForm,
     taxpayer_profile_from_mapping,
 )
-from .._catalogue import SETUP_FLOW
-from .._persistence import project_answers, serialise_answers
+from ..catalogue import SETUP_FLOW
+from ..persistence import project_answers, serialise_answers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -351,7 +351,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         and the projection must reload at ``None``.
         """
 
-        from .._commands import _run_scripted_walk
+        from ..commands import _run_scripted_walk
 
         # The scripted walk is driven by a sparse canonical dict; every
         # visible question falls back to its descriptor default (or

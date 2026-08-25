@@ -66,6 +66,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
+from ....core.external_constants import UTF_8_ENCODING
 from ._schema import DeadlineWindowDefinition, SourceReference
 from ._validate_evidence import EvidenceValidator
 
@@ -107,7 +108,7 @@ def _read_source_text(source_root: Path, source: SourceReference) -> str | None:
     """
     candidate = source_root / source.corpus_path
     if candidate.is_file():
-        return candidate.read_text(encoding="utf-8", errors="replace")
+        return candidate.read_text(encoding=UTF_8_ENCODING, errors="replace")
     return None
 
 

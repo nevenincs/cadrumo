@@ -33,7 +33,7 @@ from pydantic import (
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date
-from ._errors import IvaValidationError
+from .errors import IvaValidationError
 
 
 class _ModuloOrdenAnualLike(Protocol):

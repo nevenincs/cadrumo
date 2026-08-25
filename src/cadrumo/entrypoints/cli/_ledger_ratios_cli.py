@@ -146,7 +146,7 @@ def ratios_set(
 ) -> None:
     """Set or replace one per-category usage-ratio override on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger import censo_override_warning, set_usage_ratio
+    from ...application.ledger.ratios import censo_override_warning, set_usage_ratio
     from ...application.user_profile.censo_sync import CensoSyncService
     from ._ledger_payloads import RatiosSetResult
 
@@ -189,7 +189,7 @@ def ratios_unset(
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger import unset_usage_ratio
+    from ...application.ledger.ratios import unset_usage_ratio
     from ...domain.usage_ratios import UsageRatioValidationError
     from ._ledger_payloads import RatiosUnsetResult
 
@@ -225,7 +225,7 @@ def ratios_eligible(
 ) -> None:
     """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger import list_eligible_ratios_for_bucket
+    from ...application.ledger.ratios import list_eligible_ratios_for_bucket
     from ._ledger_payloads import RatiosEligibleResult, RatiosEligibleRowPayload
 
     bucket_id = _ratios_bucket_id()
@@ -264,7 +264,7 @@ def ratios_validate(
 ) -> None:
     """Validate per-category usage-ratio overrides against eligibility and bound rules without mutating state."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ...application.ledger import validate_ratios_for_bucket
+    from ...application.ledger.ratios import validate_ratios_for_bucket
     from ._ledger_payloads import RatiosValidateFindingPayload, RatiosValidateResult
 
     bucket_id = _ratios_bucket_id()

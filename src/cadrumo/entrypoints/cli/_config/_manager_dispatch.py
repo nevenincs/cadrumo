@@ -6,7 +6,7 @@ its verb. The `create` closure refuses a name that already has a manifest; the
 pointer — is the authority for the create-vs-edit branch.
 
 Both are registered as per-LEAF lazy subcommands rather than built at
-package-import time. :func:`~cadrumo.application.wizard.build_wizard_command`
+package-import time. :func:`~cadrumo.application.wizard.commands.build_wizard_command`
 reaches ``application.wizard`` -> ``application.workflow`` ->
 ``application.filing`` -> the justificante PDF adapter, so constructing these
 two closures eagerly made every other `config` verb — `login` included — pay
@@ -34,7 +34,7 @@ from typer._click.core import Context as _TyperClickContext
 from ....core.i18n import tr
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._common import activate_subcommand_output_language
-from .._errors import command_error_boundary as _command_error_boundary
+from ..errors import command_error_boundary as _command_error_boundary
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -101,7 +101,7 @@ def with_profile_cli_projection(wizard_command, *, mode: WizardPersistMode):
 @cache
 def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
     """Build the behavior-only wizard callable for one profile verb."""
-    from ....application.wizard import build_wizard_command
+    from ....application.wizard.commands import build_wizard_command
 
     return cast(
         "Callable[..., None]",

@@ -19,7 +19,7 @@ See Also:
     :func:`~cadrumo.entrypoints.cli._common.emit_envelope`
         CLI transport funnel; delegates its JSON branch here and reuses
         :func:`sandbox_notice_for_active_bucket` for its text-mode banner.
-    :mod:`application.wizard._commands`
+    :mod:`application.wizard.commands`
         Setup-wizard success/save-exit emitters; route through the same
         two functions rather than calling
         :func:`~cadrumo.core.json_contract.emit_json_success` directly.

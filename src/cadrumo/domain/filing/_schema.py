@@ -39,7 +39,7 @@ from ...domain.calculations.registry import RevisionId
 from ..calculations import RowSourceIdentity
 from ..calculations.registry import BindingId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
 from ..submission import ModeloDraftStatus
-from ._errors import FilingValidationError
+from .errors import FilingValidationError
 
 APPROVAL_BASIS_VERSION = "review-basis-v4"
 

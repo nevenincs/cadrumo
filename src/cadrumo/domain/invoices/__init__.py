@@ -82,7 +82,7 @@ from ._enums import (
     numeric_iva_rate_percentages,
     numeric_iva_rate_slots,
 )
-from ._errors import (
+from .errors import (
     InvoiceCatalogueError,
     InvoiceError,
     InvoiceLinkError,
@@ -92,7 +92,7 @@ from ._errors import (
     InvoiceValidationError,
 )
 
-# Sibling-package import deferred below `._enums` and `._errors`: the
+# Sibling-package import deferred below `._enums` and `.errors`: the
 # classification module imports back into this package for IvaRate. If
 # this `from ..iva...` block is hoisted above local imports, the
 # invoices package is only partially initialised when classification

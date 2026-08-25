@@ -169,7 +169,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.calculations.registry import validate_registry_scope as _validate_registry_scope
 from ...domain.calculations.registry import xml_dictionary_entries as _xml_dictionary_entries
-from ._errors import RegistryPreconditionCondition, registry_terminal_refusal
+from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 
 __all__ = [
     "AnnualCasillaPopulationComparison",

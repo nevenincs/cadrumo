@@ -33,7 +33,7 @@ import re
 import pytest
 
 from .....core import ExportLayoutFormat
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._export import derive_export_layouts_from_bindings
 from .._record_design import extract_record_design
 from .._record_design_schema import (

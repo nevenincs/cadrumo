@@ -224,7 +224,7 @@ def test_repository_backed_m100_aggregation_partition_matches_full_scan(
 
 def test_m100_annual_income_rejects_non_annual_period() -> None:
     """The annual M100 income aggregator refuses a quarterly period."""
-    from .._errors import AggregationPeriodError
+    from ..errors import AggregationPeriodError
 
     catalogue = TransactionCatalogue.from_transactions(())
     with pytest.raises(AggregationPeriodError):

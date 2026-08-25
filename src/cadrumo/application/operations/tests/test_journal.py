@@ -9,19 +9,21 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
-from cadrumo.application.operations.models import (
+from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ..capabilities import OperationRequestStoragePolicy
+from ..models import (
     OperationId,
     OperationIdentity,
     OperationRequest,
+    OperationSnapshot,
     OperationTerminalReceipt,
 )
-from cadrumo.application.operations.persistence.events import (
+from ..persistence.events import (
     OperationPhaseEvent,
     OperationProgressEvent,
     OperationTerminalEvent,
 )
-from cadrumo.application.operations.persistence.journal import (
+from ..persistence.journal import (
     OperationEventStream,
     OperationJournal,
     OperationLeaseRepository,
@@ -32,7 +34,7 @@ from cadrumo.application.operations.persistence.journal import (
     OperationProgressFoldInput,
     OperationSecureReferenceStore,
 )
-from cadrumo.application.operations.persistence.leases import (
+from ..persistence.leases import (
     OperationConflictScopeReference,
     OperationLeaseDisposition,
     OperationLeaseObservation,
@@ -41,14 +43,11 @@ from cadrumo.application.operations.persistence.leases import (
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-from cadrumo.application.operations.persistence.replay import (
+from ..persistence.replay import (
     OperationReplayLimit,
     OperationReplayPage,
     OperationReplayStatus,
 )
-
-from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ..models import OperationSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ......core import scan_directory
+from ......core.directory_scan import scan_directory
 from .._export_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from .._sealed_archive_errors import (
     SealedArchiveHeaderError,

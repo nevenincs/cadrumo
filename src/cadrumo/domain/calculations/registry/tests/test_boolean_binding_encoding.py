@@ -21,7 +21,7 @@ from .._binding_selector_utils import (
     BooleanBindingEncodedValue,
     boolean_binding_encoded_values,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

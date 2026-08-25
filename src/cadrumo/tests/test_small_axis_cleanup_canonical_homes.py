@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import importlib.util
-import sys
-
 import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -26,12 +23,10 @@ def test_auth_provider_contract_has_one_public_home() -> None:
     assert not hasattr(adapter_auth, "AuthProviderDescription")
 
 
-def test_setup_answers_module_not_importable() -> None:
-    sys.modules.pop("cadrumo.application.wizard._setup_answers", None)
+def test_setup_answers_has_one_core_home() -> None:
+    from ..core.setup_answers import SetupAnswers
 
-    spec = importlib.util.find_spec("cadrumo.application.wizard._setup_answers")
-
-    assert spec is None
+    assert SetupAnswers.__module__ == "cadrumo.core.setup_answers"
 
 
 def test_counterpart_source_kind_application_imports_from_domain() -> None:

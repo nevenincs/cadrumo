@@ -42,7 +42,7 @@ from ._config_state_root import (
     live_state_root_inputs,
     platform_user_data_root,
 )
-from ._directory_scan import DirectoryEntryKind, iter_directory
+from .directory_scan import DirectoryEntryKind, iter_directory
 from .errors import CoreValidationError
 
 if TYPE_CHECKING:

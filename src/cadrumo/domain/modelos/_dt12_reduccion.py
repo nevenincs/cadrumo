@@ -24,7 +24,7 @@ from enum import StrEnum
 
 from ...core.external_constants import DT12_RESCATE_REDUCCION_RATE
 from ...core.money import round_to_cents
-from ._errors import PensionReduccionError
+from .errors import PensionReduccionError
 
 # DT 12ª apartado 4 boundary years (LIRPF, added by Ley 26/2014 art. 1.86).
 _DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR = 2011

@@ -30,13 +30,13 @@ import pytest
 
 from ....core import ClassifierInputSource
 from ....domain.iva import IvaTerritorialScope, classify_iva
-from .._classification_assembly import (
+from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
 )
-from .._classifier_inputs import ClassifierInputs
-from .._counterparty_establishment import (
+from ..classifier_inputs import ClassifierInputs
+from ..counterparty_establishment import (
     ConfirmedCounterpartyFacts,
     ConfirmedCounterpartyFactsInputError,
     ConfirmedCounterpartyFactsRepository,

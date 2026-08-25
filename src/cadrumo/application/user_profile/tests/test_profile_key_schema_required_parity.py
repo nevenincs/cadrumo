@@ -27,8 +27,8 @@ from enum import StrEnum
 
 import pytest
 
-from ....domain.user_profile import load_user_profile_schema
-from ...wizard import ensure_profile_keys_registered
+from ....domain.user_profile.loader import load_user_profile_schema
+from ...wizard.compiler import ensure_profile_keys_registered
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

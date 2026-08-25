@@ -10,7 +10,7 @@ See Also:
         Alias definition under test.
     :class:`~application.live.PersistedNotificationsSnapshot`
         Bucket-scoped live snapshot payload that stores a ``SnapshotId``.
-    :mod:`~application.live._snapshot_base`
+    :mod:`~application.live.snapshot_base`
         Shared secure snapshot persistence base for live capture services.
 """
 

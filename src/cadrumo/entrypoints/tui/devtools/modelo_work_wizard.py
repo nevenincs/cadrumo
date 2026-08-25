@@ -14,12 +14,12 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING
 
-from ....application.modelo import ensure_modelo_work_unit_for_active_target
+from ....application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
 from ....application.modelo.work_wizard import ModeloWorkWizardRun, open_modelo_work_wizard
 from ....core import Modelo, Period
 from ....core.flows import FlowMode
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ..flows.app import FlowTuiApp
 from .fixture import harness_storage, passphrase
 
@@ -54,9 +54,10 @@ _ACTIVE_WIZARD: ContextVar[ModeloWorkWizardRun | None] = ContextVar("active_mode
 
 def _ensure_modelo_work_profile() -> str:
     """Return an unlocked harness profile with the full M130 readiness facts."""
+    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
+
     from ....application.user_profile.login_session import login_profile
     from ....application.user_profile.registration import register_profile_with_credentials
-    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
     existing = next(
         (pointer for pointer in list_profile_buckets().values() if pointer.label == _PROFILE_LABEL),

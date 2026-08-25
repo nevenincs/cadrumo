@@ -225,7 +225,7 @@ def test_effective_usage_ratio_refuses_non_usage_ratio_rules() -> None:
     evaluator)."""
 
     from .. import effective_usage_ratio
-    from .._errors import CategoryValidationError
+    from ..errors import CategoryValidationError
 
     rule = ProportionalityRule(
         kind=ProportionalityKind.FULL_DEDUCTIBLE,

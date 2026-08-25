@@ -48,7 +48,7 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     iva_wallet_owned_binding_ids_for_revision,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations

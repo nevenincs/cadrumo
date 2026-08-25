@@ -14,7 +14,7 @@ from ._profile_storage_fixtures import isolated_profile_storage
 __all__ = ["isolated_profile_storage"]
 from click.testing import Result
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....tests import REPO_ROOT, leaf_name
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.user_profile import register_cli_profile

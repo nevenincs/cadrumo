@@ -41,7 +41,7 @@ from ....core.config import Settings
 from ....domain.invoices import InvoiceValidationError, IvaRate, numeric_iva_rate_slots
 from ....domain.iva import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes
-from .._evidence_draft import confirm_invoice_draft_from_evidence
+from ..evidence_draft import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

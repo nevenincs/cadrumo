@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from ......core.config import Settings
-from .._clave_movil import ClaveMovilAuthProvider
+from ..clave_movil import ClaveMovilAuthProvider
 from ._clave_movil_support import _CLAVE_SURFACE, _DOMAINS, _aeat_url, _settings_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

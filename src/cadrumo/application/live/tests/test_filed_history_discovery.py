@@ -30,7 +30,7 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, validated_casilla_id
 from ....domain.deadlines import TaxpayerProfile
-from .._filed_data_capture import (
+from ..filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
     FiledHistoryDiscoveryReport,

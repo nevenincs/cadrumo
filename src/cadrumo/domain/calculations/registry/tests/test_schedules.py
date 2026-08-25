@@ -19,7 +19,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schedules import (
     _resolve_profile_fact,
     evaluate_profile_conditions,

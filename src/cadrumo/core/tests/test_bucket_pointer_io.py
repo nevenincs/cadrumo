@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .. import scan_directory
+from ..directory_scan import scan_directory
 from ..bucket_pointer import BucketPointer, pointer_path, read_pointer, write_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

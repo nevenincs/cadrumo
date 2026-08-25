@@ -30,13 +30,18 @@ from pydantic import BaseModel, ValidationError
 
 from ....core.errors import get_registered_error_code
 from ....core.json_contract import Notice, NoticeSeverity
-from .. import StoredProfileDriftError, UserProfileSchemaLoadError, load_user_profile_schema
-from .._errors import SCHEMA_LOAD_MESSAGE_KEY, STORED_PROFILE_DRIFT_MESSAGE_KEY
-from .._loader import (
+from ..errors import (
+    SCHEMA_LOAD_MESSAGE_KEY,
+    STORED_PROFILE_DRIFT_MESSAGE_KEY,
+    StoredProfileDriftError,
+    UserProfileSchemaLoadError,
+)
+from ..loader import (
     CONDITION_DERIVED_SELECTORS_ARRAY,
     CONDITION_SCHEMA_MODEL_VALID,
     CONDITION_SCHEMA_TOML_PARSE,
     CONDITION_SECTIONS_TABLE_PRESENT,
+    load_user_profile_schema,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -70,7 +75,7 @@ _RESERVED_ACTION_KEYS: Final[frozenset[str]] = frozenset(
 )
 
 _PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
-_SCANNED_MODULES: Final[tuple[str, ...]] = ("_errors.py", "_loader.py")
+_SCANNED_MODULES: Final[tuple[str, ...]] = ("errors.py", "loader.py")
 
 #: Structurally well-formed TOML whose values do not satisfy the strict schema
 #: model: the ``[schema]`` table declares only an id, so title, version and both
@@ -402,5 +407,5 @@ def test_the_scanned_modules_are_the_ones_that_declare_and_build_the_refusals() 
     assert declared == _PINNED_ERROR_NAMES
     assert built == {"UserProfileSchemaLoadError"}
     assert delegating == len(_PINNED_ERROR_NAMES)
-    assert inspect.getsourcefile(UserProfileSchemaLoadError) == str(_PACKAGE_ROOT / "_errors.py")
-    assert inspect.getsourcefile(StoredProfileDriftError) == str(_PACKAGE_ROOT / "_errors.py")
+    assert inspect.getsourcefile(UserProfileSchemaLoadError) == str(_PACKAGE_ROOT / "errors.py")
+    assert inspect.getsourcefile(StoredProfileDriftError) == str(_PACKAGE_ROOT / "errors.py")

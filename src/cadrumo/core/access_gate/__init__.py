@@ -57,7 +57,7 @@ from ._authorization import (
     load_authorization_manifest,
     manifest_dir,
 )
-from ._errors import (
+from .errors import (
     AccessGateSubmissionError,
     AccessGateSubmissionPreflightError,
     AeatLiveReadNotEnabledError,

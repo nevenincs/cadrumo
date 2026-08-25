@@ -38,7 +38,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from cadrumo.core import iter_directory
+from cadrumo.core.directory_scan import iter_directory
 
 from .._paths import UTF_8
 

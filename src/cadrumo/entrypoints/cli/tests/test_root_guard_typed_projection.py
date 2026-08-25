@@ -26,7 +26,7 @@ from .._common import (
     preserve_requested_cli_leaf,
     project_cli_policy_refusal,
 )
-from .._errors import CliRefusedBoundaryError, error_boundary_under_test
+from ..errors import CliRefusedBoundaryError, error_boundary_under_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

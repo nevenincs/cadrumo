@@ -200,7 +200,7 @@ def _m036_declaration_repository(bucket_id: BucketId) -> SecureSnapshotRepositor
     # owned by application.live, which depends transitively on this package for
     # the work-unit aggregations.
     from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-    from ..live import LiveApplicationInputError
+    from ..live.errors import LiveApplicationInputError
 
     return SecureSnapshotRepository(
         bucket_id=bucket_id,
@@ -268,7 +268,7 @@ def _require_profile_owns_bucket(*, profile_id: ProfileId, bucket_id: BucketId) 
     :data:`~cadrumo.core.identity.ProfileId` boundary constraints, so
     surrounding whitespace cannot manufacture a mismatch or hide one.
     """
-    from ..live import LiveApplicationInputError
+    from ..live.errors import LiveApplicationInputError
 
     canonical_profile = str(profile_id).strip()
     canonical_bucket = str(bucket_id).strip()

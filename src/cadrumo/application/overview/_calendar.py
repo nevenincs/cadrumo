@@ -143,7 +143,9 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry import DeadlineWindowDefinition
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
-    from ..live import JustificanteCaptureSnapshot, PersistedExpedientesSnapshot, PersistedNotificationsSnapshot
+    from ..live.expedientes import PersistedExpedientesSnapshot
+    from ..live.justificante import JustificanteCaptureSnapshot
+    from ..live.notifications import PersistedNotificationsSnapshot
 
 _log = _get_logger(__name__)
 _IVA_REGIME_MODELOS = IVA_REGIME_MODELOS

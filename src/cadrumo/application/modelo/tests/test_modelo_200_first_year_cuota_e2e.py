@@ -54,7 +54,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import resources
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import CalculationObservationRepository
 from ...tests import register_wizard_catalogue

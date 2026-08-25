@@ -30,7 +30,7 @@ from typing import IO, Any, cast
 import pytest
 from cadrumo_harness import materialise_marketplace
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
 from .._hashing import sha256_path

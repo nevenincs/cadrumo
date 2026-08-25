@@ -29,7 +29,7 @@ from ....application.provisioning import (
 from ....core import AcceleratorKind
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile
-from .._batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
+from ..batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
 from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

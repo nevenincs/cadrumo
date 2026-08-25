@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import OperatorActionAxis, scan_directory
+from ....core import OperatorActionAxis
+from ....core.directory_scan import scan_directory
 from .. import (
     OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,
     ModeloVerificationFinding,

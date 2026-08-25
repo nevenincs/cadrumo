@@ -18,7 +18,7 @@ from ....domain.iva import (
     PorcentajeIngresoCuentaIaeOrdenAnual,
     ReduccionLorcaOrdenAnual,
 )
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import LegalRefId, RevisionId, SourceRefId
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,

@@ -20,7 +20,7 @@ See Also:
     :class:`cadrumo.application.aggregation._source_mesh.BorradorSourceProvenance`
         Snapshot id and sourced-binding trace persisted onto the calculation
         revision.
-    :class:`cadrumo.application.live._borrador_100.Borrador100SnapshotRepository`
+    :class:`cadrumo.application.live.borrador_100.Borrador100SnapshotRepository`
         Secure snapshot repository used to load the explicitly selected
         borrador capture.
 """
@@ -52,7 +52,7 @@ from ._decimal_parsing import decimal_from_string
 from ._preconditions import build_modelo_precondition_failure
 
 if TYPE_CHECKING:
-    from ..live import Borrador100Snapshot, Borrador100SnapshotRepository
+    from ..live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
@@ -122,12 +122,9 @@ def resolve_modelo_100_borrador_bindings(
             owned_sources=(BindingSourceKind.BORRADOR,),
         )
 
-    from ..live import (
-        Borrador100SnapshotRepository,
-        BorradorSnapshotNotFoundError,
-        LiveApplicationInputError,
-        SnapshotLifecycleState,
-    )
+    from ..live.borrador_100 import Borrador100SnapshotRepository, BorradorSnapshotNotFoundError
+    from ..live.errors import LiveApplicationInputError
+    from ..live.snapshot_base import SnapshotLifecycleState
 
     if not registry_snapshot.modelo.has_capability("borrador"):
         target_modelo = command.modelo.strip()

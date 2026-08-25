@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
-from .._errors import AggregationConfigError
+from ..errors import AggregationConfigError
 from .._service import (
     ACCEPTED_SOURCE_KINDS,
     PerModeloAggregationContract,

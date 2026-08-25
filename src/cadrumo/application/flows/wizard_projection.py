@@ -33,7 +33,7 @@ from .definition import (
 )
 
 if TYPE_CHECKING:
-    from ..wizard import (
+    from ..wizard.models import (
         WizardChoice,
         WizardCondition,
         WizardFlow,
@@ -108,7 +108,7 @@ def _visibility(
 ) -> FlowCondition | FlowVisibility | None:
     if visible_when is None:
         return None
-    from ..wizard import WizardCondition as _WizardCondition
+    from ..wizard.models import WizardCondition as _WizardCondition
 
     if isinstance(visible_when, _WizardCondition):
         return _condition(visible_when)

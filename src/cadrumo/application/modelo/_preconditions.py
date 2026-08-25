@@ -364,6 +364,19 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.registry_snapshot.unavailable",
         action_id="operator.registry.verify",
     ),
+    # No action, and TERMINAL rather than OPERATOR_DECISION: a revision that
+    # declares less than filing authority is not something the operator can
+    # decide their way out of. Re-running verify produces the identical refusal,
+    # so pointing at ``operator.registry.verify`` here -- as the sibling above
+    # legitimately does for an UNRESOLVED snapshot -- would hand out a next step
+    # that cannot resolve the finding. The revision has to be split and attested
+    # first, and that is not operator work.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.registry_snapshot.filing_authority",
+        "modelo.work.verify.registry_snapshot.authority_grade_insufficient",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.required_casillas.complete",

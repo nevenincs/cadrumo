@@ -28,7 +28,7 @@ import pytest
 
 from ....core import build_provenance_stamp, provenance_stamp_transport
 from ....core.config import LLMProvider
-from .._llm_classification import _transport_from_provenance
+from ..llm_classification import _transport_from_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

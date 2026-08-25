@@ -37,7 +37,7 @@ from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, TransactionId, WorkUnitId
 from ._codes import ModeloCode
-from ._errors import ModeloValidationError
+from .errors import ModeloValidationError
 
 ModeloActorLabel = Annotated[
     str,

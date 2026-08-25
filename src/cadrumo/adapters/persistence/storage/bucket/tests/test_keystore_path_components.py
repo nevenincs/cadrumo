@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from .._errors import BucketValidationError
+from ..errors import BucketValidationError
 from .._keystore_paths import keystore_path, keystore_sidecar_path
 from .._layout import bucket_paths
 

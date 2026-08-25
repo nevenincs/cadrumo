@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING
 from ._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from ._codes import Portal
 from ._entries._common import build_entry, portal_path
-from ._errors import (
+from .errors import (
     PortalIntegrityError,
     PortalRegistryError,
     PortalRegistryInvariant,

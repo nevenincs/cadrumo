@@ -20,11 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.ledger import (
-    LedgerCatalogueResetReport,
-    LedgerRemovalBlocker,
-    LedgerTransactionRemovalReport,
-)
+from ....application.ledger.models import LedgerCatalogueResetReport, LedgerRemovalBlocker, LedgerTransactionRemovalReport
 from ....core.json_contract import strict_round_trip
 from .._ledger_payloads import LedgerRemoveResult, LedgerResetResult
 

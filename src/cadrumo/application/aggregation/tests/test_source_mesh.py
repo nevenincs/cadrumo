@@ -24,7 +24,7 @@ from .. import (
     merge_source_resolutions_by_precedence,
     storage_degradation_resolution,
 )
-from .._errors import AggregationValidationError
+from ..errors import AggregationValidationError
 from .._source_mesh import RowSourceIdentity, SourceMeshError, out_of_window_summary_source_diagnostic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

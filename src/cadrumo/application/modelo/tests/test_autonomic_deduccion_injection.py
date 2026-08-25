@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.user_profile import UserProfileFactValue
+from ....domain.user_profile.values import UserProfileFactValue
 from .._profile_binding import inject_derived_autonomic_deduccion_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

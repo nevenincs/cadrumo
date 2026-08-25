@@ -15,8 +15,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core import FilingProjectionRef
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
+    GeneratedArtifactInspection,
     ProjectionEndpointDeclaration,
-    RegistryRevisionInspection,
     RegistryValidationError,
     SourceRefId,
 )
@@ -60,7 +60,7 @@ type _RecordKey = tuple[str, str]
 def validate_semantic_map(
     semantic_map: SemanticMap,
     intermediate: RecordDesignIntermediate,
-    inspection: RegistryRevisionInspection,
+    inspection: GeneratedArtifactInspection,
     *,
     anomaly_exceptions: tuple[SemanticMapAnomalyException, ...] = (),
 ) -> None:
@@ -114,7 +114,7 @@ def _validate_scope(
 
 def validate_inspection_source_authority(
     intermediate: RecordDesignIntermediate,
-    inspection: RegistryRevisionInspection,
+    inspection: GeneratedArtifactInspection,
 ) -> None:
     """Require parser evidence to belong to the selected static revision."""
     source = inspection.sources.get(intermediate.source.source_ref)

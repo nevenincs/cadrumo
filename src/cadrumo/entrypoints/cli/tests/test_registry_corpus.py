@@ -24,7 +24,7 @@ from click.testing import Result
 from typer._click.core import Context as TyperContext
 from typer.core import TyperGroup
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....tests import REPO_ROOT
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 

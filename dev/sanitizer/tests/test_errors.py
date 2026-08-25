@@ -4,14 +4,26 @@ from __future__ import annotations
 
 import pytest
 
+import dev.sanitizer as sanitizer_package
 from cadrumo.core.errors import CadrumoError
+from dev.sanitizer import errors
 
-from .._errors import AlreadySanitizedError, SanitizationError, SanitizerSourceParseError
+from ..errors import AlreadySanitizedError, SanitizationError, SanitizerSourceParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SENSITIVE_BASENAME = "12345678Z-sanitizer-source.pdf"
 _SOURCE_SHA256 = "6a84b40c8c1b6a6771598f77d5334b9af858f5fbdc8fe96c3a8b2511af0f45bc"
+
+
+def test_errors_live_in_public_defining_module_without_facade_reexports() -> None:
+    """The public module owns the hierarchy and the package has no error facade."""
+    assert errors.__name__ == "dev.sanitizer.errors"
+    assert {SanitizationError.__module__, AlreadySanitizedError.__module__} == {errors.__name__}
+    assert "SanitizationError" not in sanitizer_package.__all__
+    assert "AlreadySanitizedError" not in sanitizer_package.__all__
+    assert not hasattr(sanitizer_package, "SanitizationError")
+    assert not hasattr(sanitizer_package, "AlreadySanitizedError")
 
 
 def test_the_family_stays_outside_the_product_error_registry() -> None:

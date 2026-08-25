@@ -63,7 +63,7 @@ from .....domain.iva_compensation import (
 )
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from ._declarations_schema import Declaracion
-from ._errors import SedeParseError, SedeValidationError
+from .errors import SedeParseError, SedeValidationError
 from ._schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,

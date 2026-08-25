@@ -5,7 +5,7 @@ the strict :class:`CertificadoSituacionCensal` record (the six officially
 certified fields), its per-row :class:`ActividadLocalCertificada`, the
 typed failure family, and :func:`censo_facts_from_certificado`, which
 projects a parsed certificate onto candidate
-:class:`~cadrumo.domain.user_profile.UserProfileFact` rows for the setup
+:class:`~cadrumo.domain.user_profile.values.UserProfileFact` rows for the setup
 flow's cotejo reconciliation.
 """
 

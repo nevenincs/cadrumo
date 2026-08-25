@@ -30,7 +30,8 @@ from pathlib import Path
 import pytest
 
 from ......core import FiledHistoryDiscoverySignal
-from ...auth import AeatSession, CertificateSessionDetail
+from ...auth.authenticator_types import AeatSession
+from ...auth.providers import CertificateSessionDetail
 from .._declarations import (
     _combobox_option_texts,
     discover_filed_declaration_availability,
@@ -38,7 +39,7 @@ from .._declarations import (
     filed_register_modelo_options,
     walk_declarations_register,
 )
-from .._errors import SedeNavigationError, SedeParseError
+from ..errors import SedeNavigationError, SedeParseError
 from .._schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

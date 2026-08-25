@@ -48,11 +48,6 @@ from ._dynamic import (
     strip_page_labels,
     strip_thumbnails,
 )
-from ._errors import (
-    AlreadySanitizedError,
-    SanitizerSourceParseError,
-    SignaturePresentError,
-)
 from ._metadata import scrub_docinfo, scrub_xmp
 from ._records import (
     Replacement,
@@ -63,6 +58,11 @@ from ._records import (
 )
 from ._streams import apply_token_map_to_pdf
 from ._structtree import drop_struct_tree as _drop_struct_tree_helper
+from .errors import (
+    AlreadySanitizedError,
+    SanitizerSourceParseError,
+    SignaturePresentError,
+)
 
 _LOG = get_logger(__name__)
 SANITIZER_VERSION = "0.1.0"

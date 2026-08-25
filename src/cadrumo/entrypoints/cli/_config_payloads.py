@@ -21,6 +21,12 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
+from cadrumo.application.user_profile.bundle_export_contracts import (
+    ProfileBundleExportPurpose,
+    ProfileBundleExportTransport,
+)
+from cadrumo.application.workflow.profile_health import ProfileHealthStatus, ProfileSource
+
 from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ...application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
@@ -31,16 +37,14 @@ from ...application.config_reset import (
     ConfigResetPauseReason,
     ConfigResetTargetPhase,
 )
-from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
-from cadrumo.application.workflow.profile_health import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64, Period
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import RevisionId
-from ...domain.user_profile import ProfileSetupState
+from ...domain.user_profile.values import ProfileSetupState
 
 # The two wizard-owned profile result schemas are deferred public targets owned
 # by their production CommandSpec declarations, NOT here: the `config` group imports this
@@ -944,7 +948,7 @@ class ApoderadoCheckResult(OutputSchema):
 # Profile wizard / lifecycle verb result schemas
 #
 # ``config.profile.create`` / ``config.profile.edit`` are declared at their real
-# producer in :mod:`application.wizard._results`, which sits below this package in
+# producer in :mod:`application.wizard.results`, which sits below this package in
 # the hexagonal direction and cannot construct a class defined up here. They
 # are referenced there by production CommandSpec. There is NO wizard import HERE:
 # the ``config`` group must not pull the wizard dependency tail into every

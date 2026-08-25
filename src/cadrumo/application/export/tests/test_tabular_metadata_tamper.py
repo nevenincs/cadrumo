@@ -25,7 +25,7 @@ from pydantic import ValidationError
 from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, XLSX_MIME_TYPE
 from ....core.hashing import sha256_hex
 from .. import ExportSerializationFormat, TabularExportResult, serialize_tabular_rows
-from .._errors import ExportFieldError
+from ..errors import ExportFieldError
 from .._tabular import verify_export_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -46,7 +46,7 @@ def _refusal_reason(exc_info: pytest.ExceptionInfo[ValidationError]) -> str:
     """Return the typed refusal reason pydantic wrapped in its ValidationError.
 
     The model validator raises the same typed, localisable
-    :class:`~application.export._errors.ExportFieldError` the rest of the export
+    :class:`~application.export.errors.ExportFieldError` the rest of the export
     surface raises; pydantic wraps it when it fires inside a validator. Reading
     the reason back proves the refusal is the intended one rather than any
     incidental validation failure.

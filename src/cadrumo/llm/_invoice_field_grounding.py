@@ -23,7 +23,7 @@ Nothing in this module knows about images, providers or transports, which is why
 it lives here rather than beside either reader.
 
 See Also:
-    :class:`~application.ledger.InvoiceDraft`
+    :class:`~application.ledger.evidence_draft.InvoiceDraft`
         Typed draft every grounded reader returns.
     :func:`~core.identity.validate_spanish_tax_id`
         Spanish NIF/NIE/CIF checksum authority.
@@ -41,12 +41,8 @@ from typing import cast
 
 from pydantic import BaseModel, Field
 
-from ..application.ledger import (
-    DraftDiscrepancyFinding,
-    FieldProvenance,
-    InvoiceDraft,
-    PurchaseInvoiceEvidenceInputError,
-)
+from ..application.ledger.evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
+from ..application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ..core import (
     STRICT_FROZEN_CONFIG,
     ActionEvidenceProvenance,
@@ -136,7 +132,7 @@ class ExtractedFieldAnchors(_ExtractedInvoiceFieldClaims):
     Every attribute is an optional string for the same reason the value side is:
     the model returns strings, and nothing here rejects or rewrites one. An
     anchor that does not occur in the document is caught by the anchor check
-    (:func:`~application.ledger.evaluate_anchor`), never by this schema, because
+    (:func:`~application.ledger.grounding_anchor.evaluate_anchor`), never by this schema, because
     that check needs the document and this schema does not have it.
     """
 
@@ -158,7 +154,7 @@ class ExtractedRoleEvidence(BaseModel):
     string on the same terms as the other two halves: nothing is rejected or
     rewritten here, because the check that matters needs the document and this
     schema does not have it. A value that does not occur in the transcription is
-    dropped by :func:`~application.ledger.printed_excerpt_occurs` at the
+    dropped by :func:`~application.ledger.grounding_anchor.printed_excerpt_occurs` at the
     grounding stage, so an invented role evidence cannot promote an identity.
     """
 
@@ -553,7 +549,7 @@ def _read_provenance(
     The outcome is always :attr:`~core.FieldGroundingOutcome.UNANCHORED`, and
     that is a deliberate under-claim rather than a placeholder. The model
     REPORTING an anchor is a claim about the document, not a check against it;
-    the check belongs to :func:`~application.ledger.evaluate_anchor`, which
+    the check belongs to :func:`~application.ledger.grounding_anchor.evaluate_anchor`, which
     needs the transcription this stage does not hold. ``UNANCHORED`` is the only
     member that is true here: ``ANCHORED`` would assert a search nobody ran,
     ``RECONCILED`` an independent identity nobody consulted, ``CONTRADICTED`` a
@@ -602,7 +598,7 @@ def _unverified_identity_findings(
     Without this the two collapse before anything can tell them apart. The
     counterparty role resolution reads the DRAFT, so a rejected identifier
     reaches it as an absence -- and
-    :func:`~application.ledger.resolve_counterparty_identity` deliberately
+    :func:`~application.ledger.identity_roles.resolve_counterparty_identity` deliberately
     raises no unresolved-role finding on an absence, because a factura
     simplificada legitimately has one. The distinction has to be preserved at
     the stage that performs the rejection; nothing downstream can reconstruct
@@ -664,7 +660,7 @@ def ground_extracted_fields(
     only this stage still holds that fact.
 
     Every field that survives grounding also gets a
-    :class:`~application.ledger.FieldProvenance` envelope carrying the verbatim
+    :class:`~application.ledger.evidence_draft.FieldProvenance` envelope carrying the verbatim
     anchor the model reported for it, so no value reaches the operator without
     the printed form it claims to have come from.
 

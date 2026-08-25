@@ -26,7 +26,7 @@ See Also:
         Mint-or-load path for the bucket's recipient decryption key.
     :class:`~application.modelo.RecipientEncryptedPackage`
         JSON envelope written to disk by the encrypt verb.
-    :class:`~application.modelo.RecipientReplayGuardRepository`
+    :class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository`
         Consumed-nonce ledger that refuses the second decrypt.
     :class:`~entrypoints.cli._modelo_review_package_payloads.ModeloReviewPackageEncryptForRecipientResult`
         JSON result schema asserted for the encrypt verb.
@@ -56,7 +56,7 @@ from ....application.modelo import (
     recipient_encryption_public_key,
 )
 from ....core import CasillaId, validated_casilla_id
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli

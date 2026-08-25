@@ -36,8 +36,7 @@ from .....persistence.storage import (
 )
 from .....persistence.storage.sql import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
-from .._clave_movil_page_flow import _mint_diagnostic_id
-from .._clave_movil_support import DIAGNOSTIC_NAMESPACE
+from ..clave_movil_support import DIAGNOSTIC_NAMESPACE, mint_diagnostic_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -99,7 +98,7 @@ def test_rapid_diagnostic_captures_keep_distinct_encrypted_rows(tmp_path: Path) 
     """One UTC capture instant cannot collapse distinct encrypted diagnostics."""
 
     captured_at = datetime(2026, 8, 2, 9, 0, tzinfo=UTC)
-    diagnostic_ids = tuple(_mint_diagnostic_id(captured_at) for _ in range(8))
+    diagnostic_ids = tuple(mint_diagnostic_id(captured_at) for _ in range(8))
 
     assert len(set(diagnostic_ids)) == len(diagnostic_ids)
     assert all(diagnostic_id.startswith("20260802T090000.000000Z-") for diagnostic_id in diagnostic_ids)

@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.errors import ERROR_REGISTRY, ErrorEnvelope, build_error_envelope, get_registered_error_code
-from .._errors import (
+from ..errors import (
     BucketAlreadyPresentError,
     BucketBusyError,
     BucketError,

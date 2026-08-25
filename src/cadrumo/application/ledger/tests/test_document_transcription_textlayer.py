@@ -20,10 +20,10 @@ import pytest
 
 from ....core import FieldOrigin
 from ....tests.pdf_fixtures import multi_page_text_pdf_bytes
-from .._document_transcription import DocumentTranscription
-from .._evidence import PurchaseInvoiceEvidenceInputError
-from .._evidence_input import EvidenceInput
-from .._evidence_textlayer import (
+from ..document_transcription import DocumentTranscription, TranscriberIdentity
+from ..evidence import PurchaseInvoiceEvidenceInputError
+from ..evidence_input import EvidenceInput
+from ..evidence_textlayer import (
     TEXT_LAYER_TRANSCRIBER_NAME,
     text_layer_transcriber_identity,
     transcribe_text_layer,
@@ -187,10 +187,7 @@ class TestRefusals:
             transcribe_text_layer(blank)
 
 
-def test_facade_exports_the_acquisition_record() -> None:
-    from ... import ledger
-
-    assert ledger.DocumentTranscription is DocumentTranscription
-    assert ledger.TranscriberIdentity is type(text_layer_transcriber_identity())
-    assert "DocumentTranscription" in ledger.__all__
-    assert "TranscriberIdentity" in ledger.__all__
+def test_defining_modules_own_the_acquisition_record() -> None:
+    assert DocumentTranscription.__module__ == "cadrumo.application.ledger.document_transcription"
+    assert TranscriberIdentity.__module__ == "cadrumo.application.ledger.document_transcription"
+    assert TranscriberIdentity is type(text_layer_transcriber_identity())

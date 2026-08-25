@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.time import now
-from ._errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
+from .errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
 
 DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
 _FILED_HISTORY_OBSERVATION: Final = "filed_history_observation"

@@ -59,7 +59,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import Field, model_validator
 
 from ._classification import InvoiceKind
-from ._errors import IvaValidationError
+from .errors import IvaValidationError
 from ._schema import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     IvaCategory,

@@ -56,7 +56,7 @@ from ....core.decimal import is_aeat_printed_money
 from ....core.i18n import tr
 from ....domain.notifications import SancionLiquidacion
 from ..pdf import parse_spanish_decimal
-from ._errors import SancionArithmeticError, SancionParseError
+from .errors import SancionArithmeticError, SancionParseError
 
 _CENT: Final = Decimal("0.01")
 _ZERO: Final = Decimal("0.00")

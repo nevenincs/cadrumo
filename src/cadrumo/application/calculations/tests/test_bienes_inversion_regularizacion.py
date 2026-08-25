@@ -10,7 +10,8 @@ from typing import Any, cast, override
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
-from ....core import BindingSourceKind, Period, scan_directory
+from ....core import BindingSourceKind, Period
+from ....core.directory_scan import scan_directory
 from ....core.resources import resources
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,

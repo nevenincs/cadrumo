@@ -93,7 +93,6 @@ from ...domain.modelos import (
     TransactionRevisionParticipation,
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepositoryProtocol,
     derive_calculation_revision_id,
     derive_filing_record_id,
     upsert_calculation_revision,
@@ -101,6 +100,7 @@ from ...domain.modelos import (
     upsert_transaction_participation,
     upsert_work_unit,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,

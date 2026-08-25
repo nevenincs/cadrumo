@@ -72,7 +72,7 @@ if TYPE_CHECKING:
         reserved_kind_reason,
         severity_rank,
     )
-    from ._errors import ReviewError, ReviewKindReservedError, ReviewSourceLoadError
+    from .errors import ReviewError, ReviewKindReservedError, ReviewSourceLoadError
     from ._filter import (
         DeclaracionReviewFilterKey,
         DeclaracionReviewFilterSpec,
@@ -110,7 +110,7 @@ if TYPE_CHECKING:
 #: This facade's ``_models`` submodule pulls in ``application.filing`` and its
 #: PDF-extraction chain (``pdfplumber``/``pdfminer``) -- measured at ~160,000 us
 #: cumulative import cost -- for consumers that only ever wanted a single enum
-#: (e.g. ``application.ledger._models`` importing ``LedgerReviewStatus`` for two
+#: (e.g. ``application.ledger.models`` importing ``LedgerReviewStatus`` for two
 #: pydantic field annotations). A CLI process runs one command, so most of that
 #: cost was paid for symbols the invocation never touched.
 _LAZY_EXPORTS: dict[str, str] = {
@@ -136,16 +136,16 @@ _LAZY_EXPORTS: dict[str, str] = {
     "LedgerReviewFilterSpec": "._filter",
     "LedgerReviewRecord": "._models",
     "LedgerReviewStatus": "._filter",
-    "ReviewError": "._errors",
+    "ReviewError": ".errors",
     "ReviewFormat": "._enums",
     "ReviewItem": "._models",
     "ReviewItemKind": "._enums",
-    "ReviewKindReservedError": "._errors",
+    "ReviewKindReservedError": ".errors",
     "ReviewQueue": "._aggregator",
     "ReviewQueueReport": "._operator",
     "ReviewQueueRow": "._operator",
     "ReviewSeverity": "._enums",
-    "ReviewSourceLoadError": "._errors",
+    "ReviewSourceLoadError": ".errors",
     "ReviewState": "._enums",
     "TransactionReviewItem": "._models",
     "drafts_pending": "._adapters",

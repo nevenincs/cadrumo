@@ -32,7 +32,7 @@ from ...domain.transactions import (
     derive_import_fingerprint,
     derive_transaction_id,
 )
-from ..ledger._actions_import import _evaluate_import_rows
+from ..ledger.actions_import import _evaluate_import_rows
 from ..transactions import import_ledger_with_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

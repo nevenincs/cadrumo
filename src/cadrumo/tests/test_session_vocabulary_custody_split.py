@@ -41,7 +41,7 @@ ACCELERATION_RECEIPT_PATHS: tuple[str, ...] = (
 """Modules owning the keystore-resident acceleration receipt."""
 
 AUTHORITY_SESSION_PATHS: tuple[str, ...] = (
-    "adapters/outbound/aeat/auth/_session_store.py",
+    "adapters/outbound/aeat/auth/session_store.py",
     "adapters/outbound/aeat/auth/_session_probe.py",
     "application/auth/_sessions.py",
 )

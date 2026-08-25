@@ -23,7 +23,7 @@ from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, 
 from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.login_session import login_profile, logout_active_profile
 from ....application.user_profile.login_interaction import attempt_profile_login, profile_login_choices
-from ....core import assess_profile_password
+from ....core.credentials import assess_profile_password
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....tests.modelo_work_review import build_real_modelo_work_review

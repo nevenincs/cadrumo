@@ -23,7 +23,7 @@ from ...modelos._dt12_reduccion import (
     Dt12WindowBranch,
     dt12_regime_window_eligibility,
 )
-from ...modelos._errors import PensionReduccionError
+from ...modelos.errors import PensionReduccionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

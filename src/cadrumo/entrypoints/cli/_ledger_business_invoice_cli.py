@@ -186,7 +186,7 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...application.user_profile.projections import projection_for_taxpayer
     from ...core.bucket_pointer import resolve_active_bucket_id
-    from ...domain.user_profile import ProfileNotFoundError
+    from ...domain.user_profile.errors import ProfileNotFoundError
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:

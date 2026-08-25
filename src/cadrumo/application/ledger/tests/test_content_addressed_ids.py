@@ -28,7 +28,7 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....core.time import frozen_clock
-from .._evidence import derive_purchase_invoice_evidence_id
+from ..evidence import derive_purchase_invoice_evidence_id
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._ledger_value_fixtures import isolated_settings, pdf_file, secure_objects
@@ -130,7 +130,7 @@ class TestEvidenceIdContentAddressed:
         and assert the reload surfaces the tampered content as strict inequality —
         so a broken save/load path could not pass this test.
         """
-        from .._evidence import PurchaseInvoiceEvidenceDocument, PurchaseInvoiceEvidenceRepository
+        from ..evidence import PurchaseInvoiceEvidenceDocument, PurchaseInvoiceEvidenceRepository
 
         svc = _make_svc(isolated_settings, secure_objects)
         original = svc.add(

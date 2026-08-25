@@ -21,13 +21,9 @@ import typer
 from pydantic import ValidationError
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.ledger import (
-    ManualLedgerTransactionCommand,
-    ManualLedgerTransactionPatch,
-    create_manual_transaction,
-    resolve_lineage_transaction_id,
-    update_manual_transaction_fields,
-)
+from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from ...application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
+from ...application.ledger.id_resolution import resolve_lineage_transaction_id
 from ...core import Art104TresExclusion, IvaDeductionFactKind, M210PayerMode, ProrrataRegisterRegime
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -700,7 +696,7 @@ def ledger_link(
 ) -> None:
     """Bind a transaction to one reconciliation-catalogue invoice, atomically."""
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ...application.ledger import link_manual_transaction_invoice
+    from ...application.ledger.actions_manual import link_manual_transaction_invoice
     from ...domain.invoices import InvoiceLinkError
 
     state = _state()

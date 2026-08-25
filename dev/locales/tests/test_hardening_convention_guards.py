@@ -10,7 +10,7 @@ from typing import NamedTuple
 import pytest
 
 from cadrumo.adapters.persistence.storage.errors import SecureStorageError
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.errors import ERROR_REGISTRY, CadrumoError, get_registered_error_code
 from cadrumo.tests import (
     SRC_CADRUMO,
@@ -577,7 +577,7 @@ def _is_environ_target(node: ast.expr, os_aliases: set[str], environ_aliases: se
 
 def _import_secure_storage_error_modules() -> None:
     for module_name in (
-        "cadrumo.adapters.persistence.storage.bucket._errors",
+        "cadrumo.adapters.persistence.storage.bucket.errors",
         "cadrumo.adapters.persistence.storage.errors",
         "cadrumo.adapters.persistence.storage.master_key._active_session",
     ):

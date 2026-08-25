@@ -39,7 +39,7 @@ from ....domain.buckets import (
 )
 from ....domain.transactions import TransactionCatalogue
 from ....tests.secure_sql import isolated_runtime_profile
-from .._actions_common import _commit_with_guarded_events
+from ..actions_common import _commit_with_guarded_events
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -30,7 +30,7 @@ from ._binding_selector_utils import selector_as_dict as _binding_selector_as_di
 from ._bindings import CasillaObservation, bound_casilla_binding_ids, resolve_bound_casilla_binding_value
 from ._bindings_previous_filing import PreviousModeloSelector
 from ._casilla_membership import casillas_by_id
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId
 from ._schema import CasillaDefinition, DataBindingDefinition, InputKind, ModeloRevision
 

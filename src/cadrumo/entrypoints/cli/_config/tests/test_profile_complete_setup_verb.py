@@ -14,7 +14,7 @@ import json
 import pytest
 
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
-from .....domain.user_profile import ProfileSetupState
+from .....domain.user_profile.values import ProfileSetupState
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.user_profile import register_cli_profile
 from ._isolated_storage_fixture import config_check_backend as config_check_backend

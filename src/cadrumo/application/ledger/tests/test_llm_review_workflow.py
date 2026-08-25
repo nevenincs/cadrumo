@@ -33,25 +33,25 @@ from ....domain.transactions import (
     TransactionLifecycleState,
     TransactionValidationError,
 )
-from ....llm import (
+from ....llm.suggestions import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
     LLMSplitSuggestion,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from ..llm_classification import (
     apply_evidence_split,
     apply_llm_classification,
     saturate_llm_classification,
     suggest_evidence_split,
 )
-from .._llm_review_workflow import (
+from ..llm_review_workflow import (
     LlmReviewDecision,
     LlmReviewInvocationOrigin,
     execute_reviewed_decision,
 )
-from .._models import ManualLedgerTransactionResult
+from ..models import ManualLedgerTransactionResult
 from ._llm_evidence_split_support import (
     _single_line_proposal,
     _split_subprocess_proposer,
@@ -448,8 +448,8 @@ def test_cli_route_parity_classify_apply_matches_direct_primitive(tmp_path: Path
         )
         return _stable_dump(result.transaction), classified[0].payload["source_command"]
 
-    direct_tx, direct_cmd = _run_in_fresh_profile(tmp_path / "direct", "bucket-parity-direct", _direct)
-    workflow_tx, workflow_cmd = _run_in_fresh_profile(tmp_path / "workflow", "bucket-parity-workflow", _workflow)
+    direct_tx, direct_cmd = _run_in_fresh_profile(tmp_path / "direct", "4ad6f74a-2d46-4e6f-ae46-58bb910137a1", _direct)
+    workflow_tx, workflow_cmd = _run_in_fresh_profile(tmp_path / "workflow", "3e9f396c-0fd2-4357-9de3-0597d58893c3", _workflow)
 
     assert direct_tx == workflow_tx
     assert direct_cmd == workflow_cmd == origin.source_command
@@ -497,7 +497,7 @@ def test_cli_route_parity_split_apply_matches_direct_primitive(tmp_path: Path) -
 
         return _run
 
-    direct = _run_in_fresh_profile(tmp_path / "split-direct", "bucket-split-direct", _scenario(use_workflow=False))
-    workflow = _run_in_fresh_profile(tmp_path / "split-workflow", "bucket-split-workflow", _scenario(use_workflow=True))
+    direct = _run_in_fresh_profile(tmp_path / "split-direct", "f6b3236e-cc08-48f3-90f4-6a2dce620f79", _scenario(use_workflow=False))
+    workflow = _run_in_fresh_profile(tmp_path / "split-workflow", "bd6b0d50-aa23-487d-a27e-eedeb99d2f2f", _scenario(use_workflow=True))
 
     assert direct == workflow

@@ -58,7 +58,7 @@ if TYPE_CHECKING:
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
     from ..calculations import ObservationEnvelopePayload
-    from ..live import JustificanteCaptureSnapshot
+    from ..live.justificante import JustificanteCaptureSnapshot
 
 _AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = MappingProxyType(
     {

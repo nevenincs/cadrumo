@@ -23,7 +23,8 @@ from PIL import Image
 
 from ....adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ....adapters.inbound.pdf import extract_pages_text_from_bytes
-from ....core import STR_KEYED_MAPPING_ADAPTER, STRUCTURED_DOCUMENT_SHAPES, DocumentShape, scan_directory
+from ....core import STR_KEYED_MAPPING_ADAPTER, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from ....core.directory_scan import scan_directory
 from ....llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
 from ....tests.fixtures import (
     FIXTURE_PROVENANCE_REAL,
@@ -381,8 +382,8 @@ def test_the_core_draft_path_routes_a_structured_document_to_the_exact_reader() 
     """
     from hashlib import sha256
 
-    from .._evidence_draft import _extract_invoice_fields_from_structured_record
-    from .._evidence_input import EvidenceInput
+    from ..evidence_draft import _extract_invoice_fields_from_structured_record
+    from ..evidence_input import EvidenceInput
 
     data = _read("zugferd_en16931_invoice.pdf")
     evidence = EvidenceInput(
@@ -564,9 +565,9 @@ def test_an_unrecognised_xml_refuses_rather_than_reaching_the_vision_model() -> 
     """
     from hashlib import sha256
 
-    from .._evidence import PurchaseInvoiceEvidenceInputError
-    from .._evidence_draft import _refuse_an_unrecognised_xml_document
-    from .._evidence_input import EvidenceInput
+    from ..evidence import PurchaseInvoiceEvidenceInputError
+    from ..evidence_draft import _refuse_an_unrecognised_xml_document
+    from ..evidence_input import EvidenceInput
 
     sii_record = (
         b'<?xml version="1.0" encoding="UTF-8"?>'
@@ -598,8 +599,8 @@ def test_a_recognised_structured_xml_is_not_caught_by_the_unrecognised_xml_refus
     """
     from hashlib import sha256
 
-    from .._evidence_draft import _refuse_an_unrecognised_xml_document
-    from .._evidence_input import EvidenceInput
+    from ..evidence_draft import _refuse_an_unrecognised_xml_document
+    from ..evidence_input import EvidenceInput
 
     data = _read("facturae_32_series_and_parties_invoice.xml")
     evidence = EvidenceInput(
@@ -628,8 +629,8 @@ def test_the_structured_draft_carries_both_parties_rather_than_discarding_the_cu
     """
     from hashlib import sha256
 
-    from .._evidence_draft import _extract_invoice_fields_from_structured_record
-    from .._evidence_input import EvidenceInput
+    from ..evidence_draft import _extract_invoice_fields_from_structured_record
+    from ..evidence_input import EvidenceInput
 
     data = _read("facturae_32_series_and_parties_invoice.xml")
     evidence = EvidenceInput(

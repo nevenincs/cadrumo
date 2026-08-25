@@ -29,7 +29,7 @@ class RootAuthenticator(Protocol):
     ) -> None: ...
 
 
-CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli._errors").CliRefusedBoundaryError
+CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli.errors").CliRefusedBoundaryError
 
 _LOGGED_OUT_REFUSALS = frozenset(
     {ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING}
@@ -138,7 +138,7 @@ def activate_profile_session(
     # Profile-key readers are registered by wizard module side effects.  The
     # parsed gate now runs before deferred handler imports, so establish that
     # catalogue explicitly before any resumed/root-authenticated dispatch.
-    from ...application.wizard import ensure_profile_keys_registered
+    from ...application.wizard.compiler import ensure_profile_keys_registered
 
     ensure_profile_keys_registered()
     if active_bucket_session_serves(bucket_id):

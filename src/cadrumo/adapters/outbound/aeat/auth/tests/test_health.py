@@ -19,7 +19,7 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
 from ......core.errors import CadrumoError
-from .. import (
+from ..certificate import (
     CertificateBundle,
     CertificateHealth,
     CertificateHealthSeverity,

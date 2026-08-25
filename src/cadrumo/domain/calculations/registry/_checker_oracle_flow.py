@@ -16,7 +16,7 @@ from pydantic import AnyUrl, BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.identity import tax_id_identity_token
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import OracleId
 from ._live_parity import (
     OracleSurfaceKind,

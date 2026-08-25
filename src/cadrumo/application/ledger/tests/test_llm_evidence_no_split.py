@@ -12,11 +12,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
 from ....domain.transactions import BusinessClassification, TransactionLifecycleState, TransactionValidationError
-from .. import (
-    apply_evidence_classification,
-    apply_evidence_split,
-    suggest_evidence_split,
-)
+from ..llm_classification import apply_evidence_classification, apply_evidence_split, suggest_evidence_split
 from ._llm_evidence_split_support import (
     _BUCKET,
     _NOW,

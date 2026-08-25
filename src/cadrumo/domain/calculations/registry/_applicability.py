@@ -119,7 +119,7 @@ from ._applicability_modelo202 import (
 from ._applicability_payer_facts import PayerFact, payer_fact_holds
 from ._applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
 from ._applicability_routes import TaxRoute
-from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
+from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from ._ids import LegalRefId, ModeloId
 from ._schema import ApplicabilityRuleDefinition
 

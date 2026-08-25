@@ -44,7 +44,7 @@ from ._binding_selector_utils import (
     binding_export_selector,
 )
 from ._corpus_catalogue import verify_source_file
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId
 from ._schema import (
     AuxiliaryEnvelopeHeaderDefinition,

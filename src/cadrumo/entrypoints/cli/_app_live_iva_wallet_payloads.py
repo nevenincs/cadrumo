@@ -10,8 +10,8 @@ from pydantic import (
     model_validator,
 )
 
-from ...application.live import (
-    LiveIvaAcquisitionFailureMode,
+from ...application.live.errors import LiveIvaAcquisitionFailureMode
+from ...application.live.remote_state_models import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
 )

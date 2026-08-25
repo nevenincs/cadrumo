@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period, RegistrySelectorPeriodCode
 from ....core.aggregation import RelationAggregationOp
 from ._binding_selector_utils import unique_tuple
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId, LegalRefId, ModeloId, RelationId, SourceRefId
 from ._observation_fold import gather_observed_requirement_values
 from ._period_offset_math import apply_period_offset

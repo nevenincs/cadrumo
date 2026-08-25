@@ -64,7 +64,7 @@ from ._adapter_utils import (
 )
 from ._browser_constants import PLAYWRIGHT_WAIT_NETWORKIDLE, default_viewport
 from ._browser_stage import build_playwright_stage_runner
-from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
+from .errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
 from ._renta_web_open_safety import assert_click_target_safe, install_page_safety_net
 
 _SPANISH_AMOUNT_RE = compile(r"[-+]?\d{1,3}(?:\.\d{3})*,\d{2}|[-+]?\d+(?:[.,]\d+)?")

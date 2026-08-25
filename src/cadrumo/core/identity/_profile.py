@@ -7,7 +7,7 @@ lets every consumer — adapters, persistence, application services, the
 CLI surface — import it without crossing a sibling-domain boundary.
 
 Profile identities are minted as canonical UUIDv4 strings via
-:func:`cadrumo.domain.user_profile._values.new_profile_id`. Operator labels
+:func:`cadrumo.domain.user_profile.values.new_profile_id`. Operator labels
 resolve to profile UUIDs through the application profile resolver before
 they reach this identity boundary.
 """

@@ -108,7 +108,7 @@ This module owns the SHAPE-based redaction rules (:func:`redact_for_log`,
 :func:`default_rules_for_class`); it also owns this minimal NAME-based base
 because a key-name predicate is a second, complementary layer over shape-based
 redaction wherever one exists (see :mod:`cadrumo.core.logging`,
-:mod:`cadrumo.application.live._remote_state_outcomes` and
+:mod:`cadrumo.application.live.remote_state_outcomes` and
 :mod:`cadrumo.application.user_profile`), and a base that lives in only one of
 those consuming sites is a base only until someone edits the other one.
 

@@ -1,7 +1,7 @@
 """The wizard-to-flow bridge over the real setup catalogue.
 
 Every scenario projects the real one-shot wizard catalogue
-(:data:`cadrumo.application.wizard.WIZARD_FLOWS`) into a substrate
+(:data:`cadrumo.application.wizard.catalogue.WIZARD_FLOWS`) into a substrate
 :class:`FlowDefinition` through its defining modules, then asserts the mechanical mapping
 holds one-to-one: id and section count, every question id becoming a page
 with its ``profile_key`` as ``domain_key``, widget identity with the
@@ -28,7 +28,8 @@ from ....core.flows import (
 # The bridge reads the real wizard catalogue. The import is at module top so
 # a genuine peer-WIP breakage would surface as a loud collection error rather
 # than a silent skip; at HEAD it imports cleanly.
-from ...wizard import WIZARD_FLOWS, WizardFlow, WizardQuestion, WizardVisibility
+from ...wizard.catalogue import WIZARD_FLOWS
+from ...wizard.models import WizardFlow, WizardQuestion, WizardVisibility
 from ..definition import FlowCondition, FlowDefinition, FlowPage, FlowVisibility
 from ..engine import start_flow, visible_sequence
 from ..wizard_projection import flow_definition_from_wizard_flow

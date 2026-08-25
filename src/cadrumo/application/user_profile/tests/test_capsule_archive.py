@@ -25,7 +25,7 @@ from cadrumo.application.user_profile.custody_ports import profile_custody_recov
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 from ....adapters.persistence.storage.custody import load_committed_profile_password_material
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 
 if TYPE_CHECKING:

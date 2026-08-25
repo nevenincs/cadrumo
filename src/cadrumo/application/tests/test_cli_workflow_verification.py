@@ -10,7 +10,7 @@ from ...adapters.persistence.storage.sql import dispose_engine
 from ...tests.profile_capsule import open_test_profile_session
 from ...tests.secure_sql import isolated_profile_storage_root
 from ...tests.user_profile import register_minimal_profile
-from .. import wizard as _wizard  # noqa: F401 - registers compiled profile keys
+from ..wizard import compiler as _wizard  # noqa: F401 - registers compiled profile keys
 from ..auth.operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from ..operator_surface import require_accepted_root
 from cadrumo.application.workflow.persistence import workflow_state_repository

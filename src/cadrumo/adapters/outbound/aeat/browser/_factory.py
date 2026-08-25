@@ -38,7 +38,7 @@ from .....core.async_cleanup import (
     close_async_resources,
 )
 from .....core.logging import get_logger
-from ._errors import BrowserError, BrowserFailureMode, BrowserPreconditionCondition, browser_no_action_verdict
+from .errors import BrowserError, BrowserFailureMode, BrowserPreconditionCondition, browser_no_action_verdict
 from .profile import Profile
 from .session import BrowserSession
 
@@ -121,15 +121,15 @@ class DefaultBrowserSession:
                 is stopped.
         """
         self._playwright = playwright
-        self._session = session
+        self.session = session
         self._close_lock = asyncio.Lock()
-        self._session_closed = False
+        self.session_closed = False
         self._playwright_stopped = False
 
     @property
     def profile(self) -> Profile:
         """The :class:`Profile` associated with the underlying session."""
-        return self._session.profile
+        return self.session.profile
 
     # ADAPTER-INTERNAL-ALIAS-RATIONALE-PLAYWRIGHT-PROVISIONER: provisioner is an
     # optional duck-typed adapter that exposes build_context_kwargs(); Playwright
@@ -147,14 +147,14 @@ class DefaultBrowserSession:
         certificate provisioners and persisted Cl@ve storage state use the same
         path as callers that work with :class:`BrowserSession` directly.
         """
-        return await self._session.create_context(
+        return await self.session.create_context(
             provisioner=provisioner,
             storage_state=storage_state,
         )
 
     async def navigate(self, page: Page, url: str) -> Response | None:
         """Navigate through :meth:`BrowserSession.navigate`."""
-        return await self._session.navigate(page, url)
+        return await self.session.navigate(page, url)
 
     async def close(self) -> None:
         """Close the session and stop the Playwright runtime.
@@ -165,7 +165,7 @@ class DefaultBrowserSession:
         close failed.
         """
         async with self._close_lock:
-            if self._session_closed and self._playwright_stopped:
+            if self.session_closed and self._playwright_stopped:
                 return
             session_error = await self._close_browser_session()
             stop_error = await self._stop_playwright_runtime()
@@ -181,13 +181,13 @@ class DefaultBrowserSession:
 
     async def _close_browser_session(self) -> BaseException | None:
         """Close the browser session once, recording success; return the error if it raised."""
-        if self._session_closed:
+        if self.session_closed:
             return None
         try:
-            await self._session.close()
+            await self.session.close()
         except BaseException as exc:
             return exc
-        self._session_closed = True
+        self.session_closed = True
         return None
 
     async def _stop_playwright_runtime(self) -> Exception | None:
@@ -216,7 +216,7 @@ class DefaultBrowserSession:
         self._playwright_stopped = True
         # A stopped Playwright runtime has reaped every browser it
         # owns even when Browser.close() raised first.
-        self._session_closed = True
+        self.session_closed = True
         return None
 
 

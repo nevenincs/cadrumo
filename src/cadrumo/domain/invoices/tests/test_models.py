@@ -17,7 +17,7 @@ from .._enums import (
     iva_rate_slot_percentage,
     numeric_iva_rate_percentages,
 )
-from .._errors import InvoiceValidationError
+from ..errors import InvoiceValidationError
 from .._models import (
     Invoice,
     InvoiceCatalogue,

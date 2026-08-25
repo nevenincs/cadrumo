@@ -12,7 +12,7 @@ that module's own docstring documents for
 each under its owning surface.
 
 The models here are the WIRE projection of the application-layer batch result
-(:class:`~cadrumo.application.ledger.BatchRunResult` and its rows), not a second
+(:class:`~cadrumo.application.ledger.batch_ingest.BatchRunResult` and its rows), not a second
 definition of it. Every field is populated from that result's own
 ``model_dump(mode="json")``, so a field added to the engine's row surfaces here
 by name or not at all -- the strict ``extra="forbid"`` base turns a drift into a
@@ -44,7 +44,7 @@ __all__ = [
 
 
 class EvidenceBatchItemPayload(OutputSchema):
-    """One document's row, mirroring :class:`~cadrumo.application.ledger.BatchItemResult`.
+    """One document's row, mirroring :class:`~cadrumo.application.ledger.batch_ingest.BatchItemResult`.
 
     ``refusal_code``, ``refusal_facts`` and ``refusal_action`` are present
     exactly when ``status`` is ``refused``; the engine's own model enforces that
@@ -69,7 +69,7 @@ class EvidenceBatchUnresolvedPayload(OutputSchema):
     """A submitted source whose bytes could not be read at all.
 
     Kept in its own list rather than folded into the item rows, mirroring
-    :class:`~cadrumo.application.ledger.UnresolvedBatchSource`: an item's
+    :class:`~cadrumo.application.ledger.batch_ingest.UnresolvedBatchSource`: an item's
     identity IS its content address, and an unreadable file has none, so a
     placeholder would collide the moment a second file failed the same way.
     """

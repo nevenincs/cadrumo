@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from .._errors import BucketEventValidationError
+from ..errors import BucketEventValidationError
 from .._event import (
     BucketEvent,
     BucketEventHistoryCatalogue,

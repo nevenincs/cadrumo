@@ -22,8 +22,8 @@ from collections.abc import Container
 
 from cadrumo.core import ConceptLifecycle
 
-from ._errors import TerminologyValidationError
 from ._loader import HandbookValidator, TerminologyHandbook
+from .errors import TerminologyValidationError
 
 __all__ = [
     "approved_completeness_validator",

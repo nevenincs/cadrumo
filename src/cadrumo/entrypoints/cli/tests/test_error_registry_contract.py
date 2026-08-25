@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.auth.certificate import AeatSessionExpiredError
+from ....adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
 from ....adapters.outbound.aeat.browser.session import BrowserError
 from ....application.operator_actions import lookup_action
 from ....application.review import ReviewKindReservedError

@@ -12,9 +12,10 @@ import tomllib
 
 import pytest
 
-from ....core import ConceptLifecycle, scan_directory
+from ....core import ConceptLifecycle
+from ....core.directory_scan import scan_directory
 from ....core.external_constants import UTF_8_ENCODING
-from .._errors import CorpusSearchInputError
+from ..errors import CorpusSearchInputError
 from .._terminology import (
     _project_concept,
     _terminology_root,

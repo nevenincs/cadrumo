@@ -45,7 +45,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ... import scan_directory
+from ...directory_scan import scan_directory
 from .. import extract_placeholders
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

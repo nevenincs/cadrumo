@@ -10,7 +10,7 @@ import pytest
 from .....core import ConvenioOverrideKind, ResultDisposition, TipoRentaIrnr
 from .....core.resources import bundled_path
 from .. import load_catalogue_file, load_convenio_authority, load_modelo_directory, select_revision
-from .._errors import NoRevisionForPeriodError
+from ..errors import NoRevisionForPeriodError
 from .._legal import verify_legal_catalogue
 from .._schema import ModeloDefinition, RegistryCatalogues
 from .._snapshot import build_snapshot

@@ -67,7 +67,7 @@ from ._amendment import (
     ModeloSustitutiva,
     make_amendment_id,
 )
-from ._errors import (
+from .errors import (
     FilingExportError,
     FilingExportValidationError,
     FilingValidationError,

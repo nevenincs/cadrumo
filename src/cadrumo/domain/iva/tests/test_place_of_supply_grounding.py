@@ -240,7 +240,7 @@ def test_the_enum_prose_does_not_attribute_a_nature_to_the_union_scheme_article(
 
 def test_an_ungrounded_rule_refuses_rather_than_returning_a_default() -> None:
     """Refusal is the contract: a placement with no provision is not answerable."""
-    from .._errors import IvaCatalogueError
+    from ..errors import IvaCatalogueError
 
     with pytest.raises(IvaCatalogueError, match="not grounded"):
         place_of_supply_rule("RZZ_no_such_rule", on=_ON)

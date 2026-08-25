@@ -154,7 +154,7 @@ def test_s70_adapter_producers_cannot_author_actions_or_executable_recovery_pros
 
 def test_s70_cli_boundary_delegates_all_verdict_construction_to_application_authorities() -> None:
     """The boundary selects established helpers; it does not rebuild verdict DTOs."""
-    source = (_CADRUMO_ROOT / "entrypoints" / "cli" / "_errors.py").read_text(encoding="utf-8")
+    source = (_CADRUMO_ROOT / "entrypoints" / "cli" / "errors.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     constructed = {
         name for node in ast.walk(tree) if isinstance(node, ast.Call) if (name := _callee_name(node)) is not None

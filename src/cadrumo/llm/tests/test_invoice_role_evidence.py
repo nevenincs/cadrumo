@@ -28,7 +28,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from ...application.ledger import PurchaseInvoiceEvidenceInputError
+from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ...core import Period
 from .._invoice_extraction_prompt import build_invoice_extraction_prompt
 from .._invoice_field_contract import (

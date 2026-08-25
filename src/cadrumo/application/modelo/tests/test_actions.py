@@ -977,7 +977,7 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values() -> Non
     ``--iva-regime`` choice set.
     """
     from ....core.wizard_catalogue import get_setup_flow
-    from ...wizard._commands import _IVA_REGIME_CHOICE_VALUES
+    from ...wizard.commands import _IVA_REGIME_CHOICE_VALUES
 
     wizard_values = {
         choice.value

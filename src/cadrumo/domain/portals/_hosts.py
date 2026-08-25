@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 
 from ...core.config import Settings
 from ._categories import PortalHost
-from ._errors import PortalValidationError
+from .errors import PortalValidationError
 
 
 def portal_host_origin(subdomain: PortalHost) -> str:

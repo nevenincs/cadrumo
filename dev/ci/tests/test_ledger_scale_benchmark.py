@@ -107,7 +107,7 @@ from cadrumo.domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from cadrumo.domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.profile_capsule import seed_test_profile_record
 from cadrumo.tests.registry_observations import registry_grounded_observations
 from cadrumo.tests.secure_sql import isolated_runtime_profile

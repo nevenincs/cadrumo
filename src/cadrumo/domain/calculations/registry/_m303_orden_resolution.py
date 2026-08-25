@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from ....core import Modelo
 from ....domain.iva import M303RegimenSimplificadoScopeDecision
 from ....domain.period import period_end_date
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import SourceRefId
 from ._m303_orden_projection_models import (
     ActividadOrdenAnualRef,

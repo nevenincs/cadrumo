@@ -40,7 +40,7 @@ from ...core import CasillaId, Modelo
 from ...core.decimal import coerce_decimal
 from ...domain.calculations.registry import LegalRefId, ModeloRevision
 from ...domain.contribuyente import DescendantInfo, RentaFamilyProfile, descendant_list_from_facts
-from ...domain.user_profile import ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileNotFoundError
 from ..aggregation import CalculationSourceDiagnostic
 from ._semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 

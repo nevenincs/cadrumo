@@ -12,9 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.application.operations.capabilities import (
+from .....application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
@@ -22,12 +20,13 @@ from cadrumo.application.operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from cadrumo.application.operations.models import (
+from .....application.operations.models import (
     CredentialFreeOperationRequest,
     OperationRequest,
     OperationTerminalReceipt,
 )
-from cadrumo.application.operations.registry import (
+from .....application.operations.owner import OperationExecutorContext
+from .....application.operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
     OperationFrontendProjection,
@@ -36,15 +35,12 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
-from cadrumo.application.operations.secret_submission import (
+from .....application.operations.secret_submission import (
     EphemeralSecretSubmission,
     OperationEphemeralSecretDeclaration,
     OperationSecretRequirement,
 )
-from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-
-from .....application.operations.owner import OperationExecutorContext
+from .....application.operations.supervisor import OperationSupervisor
 from .....core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,
@@ -52,7 +48,10 @@ from .....core import (
     OperationDeadline,
     OperationDurability,
 )
+from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...storage import RepositoryError
+from ..journal import OperationJournalRepository
+from ..lease import OperationLeaseFilesystemRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

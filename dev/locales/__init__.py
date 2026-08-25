@@ -16,7 +16,6 @@ Major declarations:
 * :class:`LocaleManager` loads, scaffolds, checks, and audits the runtime locale
   catalogues.
 * :class:`StrictUniqueKeyLoader` rejects duplicate YAML keys at parse time.
-* :class:`LocaleError` reports maintenance failures.
 * :func:`catalogue_write_guard` serialises catalogue edits and refuses a write
   that would discard a change landed by another writer.
 * :data:`LocaleNode` documents the recursive locale-tree shape consumers walk.
@@ -39,7 +38,6 @@ from ._colanding import (
     check_colanding,
     resolve_change,
 )
-from ._errors import LocaleError, LocaleWriteConflictError
 from ._fstring_registry import get_registered_keys
 from ._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
@@ -84,7 +82,6 @@ __all__ = [
     "CatalogueWriteGuard",
     "ColandingFinding",
     "ColandingResult",
-    "LocaleError",
     "LocaleManager",
     "LocaleMoveConflict",
     "LocaleMoveDisposition",
@@ -92,7 +89,6 @@ __all__ = [
     "LocaleNode",
     "LocaleSubtreeMovePlan",
     "LocaleSubtreeMoveResult",
-    "LocaleWriteConflictError",
     "RevisionMoveCandidate",
     "RevisionMoveReport",
     "RevisionParityFindings",

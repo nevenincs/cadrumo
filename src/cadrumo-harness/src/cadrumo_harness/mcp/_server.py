@@ -49,7 +49,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cadrumo.adapters.persistence.storage import close_all_live_bucket_sessions
-from cadrumo.application.wizard import ensure_profile_keys_registered
+from cadrumo.application.wizard.compiler import ensure_profile_keys_registered
 from cadrumo.core import PRODUCT_IDENTITY, FormerProductStateError
 
 from ._call_runtime import serving_capacity_limiter
@@ -627,7 +627,7 @@ def build_server(
     ``execute`` applies the persona gate internally.
 
     Seeds the process-global profile-key registry through
-    :func:`~application.wizard.ensure_profile_keys_registered` before any
+    :func:`~application.wizard.compiler.ensure_profile_keys_registered` before any
     handler is registered. This is the server's initialisation point, the
     counterpart of the CLI root callback's own registration step: the domain
     registry cannot seed itself and every production reader of it sits

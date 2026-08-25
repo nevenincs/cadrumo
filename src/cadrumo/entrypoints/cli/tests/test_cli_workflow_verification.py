@@ -29,7 +29,7 @@ def _assert_is_command_group(value: object) -> None:
     and never descends from the upstream ``click.Group``, so a bare
     ``isinstance(value, click.Group)`` is False. Derive the vendored
     ``Command`` base from the value's MRO and assert against it (mirrors the
-    production fix in ``cli/_errors.py`` and the test-side fix in
+    production fix in ``cli/errors.py`` and the test-side fix in
     ``test_backend_boundary.py``).
     """
     vendored_command = next(

@@ -25,7 +25,7 @@ See Also:
     :func:`~application.modelo._verification_actions._append_revision_advisory_findings`:
         Verification collector that appends this advisory beside the reduction
         and objective-estimation advisories.
-    :class:`~cadrumo.domain.user_profile.UserProfileRecord`:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`:
         Active taxpayer profile the advisory reads ``attribution_received``
         facts from.
     :class:`~cadrumo.domain.modelos.WorkUnit`:
@@ -46,7 +46,8 @@ from ...domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ...domain.user_profile import ProfileNotFoundError, UserProfileFact, UserProfileRecord
+from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 

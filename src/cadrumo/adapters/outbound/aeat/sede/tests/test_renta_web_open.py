@@ -20,7 +20,7 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from ..._playwright import PlaywrightTimeoutError
-from .._errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .._renta_web_open import (
     RentaWebOpenSedeDriver,
     _playwright_stage,

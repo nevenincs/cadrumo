@@ -16,14 +16,13 @@ from ......domain.calculations.registry import RegistryValidationError, RemoteOp
 from ......tests.profile_capsule import open_test_profile_session
 from ......tests.secure_sql import isolated_runtime_profile
 from ......tests.user_profile import register_minimal_profile
-from .. import operator_progress_sink
-from .._clave_movil import (
-    ClaveMovilAuthProvider,
-    ClaveMovilConfigurationError,
-    _auth_browser_action_policy,
-    _classify_identity,
-    _render_progress_banner,
+from ...operator_progress import operator_progress_sink
+from ..clave_movil import ClaveMovilAuthProvider, ClaveMovilConfigurationError
+from ..clave_movil_support import (
+    auth_browser_action_policy as _auth_browser_action_policy,
 )
+from ..clave_movil_support import classify_identity as _classify_identity
+from ..clave_movil_support import render_progress_banner as _render_progress_banner
 from ._clave_movil_support import _CLAVE_SURFACE, _DOMAINS, _aeat_url, _run, _settings_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -192,7 +191,7 @@ def test_probe_without_persisted_session_refuses_without_fresh_login(tmp_path: P
     )
 
     async def run() -> None:
-        from .._authenticator import AeatLoginAssertionError
+        from ..authenticator import AeatLoginAssertionError
 
         with pytest.raises(AeatLoginAssertionError, match="no persisted"):
             await provider.probe_persisted_session()
@@ -218,7 +217,7 @@ def test_render_progress_banner_uses_structured_log_not_stdio(
     caplog: pytest.LogCaptureFixture,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    with caplog.at_level(logging.INFO, logger="cadrumo.adapters.outbound.aeat.auth._clave_movil"):
+    with caplog.at_level(logging.INFO, logger="cadrumo.adapters.outbound.aeat.auth.clave_movil"):
         _render_progress_banner(
             verification_code="ABC123",
             timeout_seconds=120,
@@ -228,3 +227,4 @@ def test_render_progress_banner_uses_structured_log_not_stdio(
     assert captured.out == ""
     assert captured.err == ""
     assert any("auth.waiting_banner" in record.message for record in caplog.records)
+

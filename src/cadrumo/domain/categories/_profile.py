@@ -12,7 +12,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.i18n import Translatable as tr
-from ._errors import CategoryValidationError
+from .errors import CategoryValidationError
 from ._proportionality import ProportionalityRule
 from ._spending_category import SpendingCategory
 

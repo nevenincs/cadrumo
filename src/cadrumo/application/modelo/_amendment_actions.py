@@ -74,7 +74,6 @@ from ...domain.modelos import (
     ModeloRecordStatus,
     WorkUnit,
     WorkUnitCatalogue,
-    WorkUnitCatalogueRepositoryProtocol,
     derive_calculation_revision_id,
     derive_filing_record_id,
     m303_rectificativa_motive_is_applicable,
@@ -82,6 +81,7 @@ from ...domain.modelos import (
     upsert_filing_record,
     upsert_work_unit,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     AmendmentEvidenceMissingError,
     AmendmentM303RectificativaMotiveError,

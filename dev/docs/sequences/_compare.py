@@ -46,7 +46,6 @@ from collections.abc import Mapping
 
 from cadrumo.core.observability import canonicalise, differing_paths, mask_document
 
-from ._errors import SequenceGoldenMismatchError
 from ._golden_store import (
     SequenceGolden,
     mask_host_conditional_details,
@@ -57,6 +56,7 @@ from ._golden_store import (
 )
 from ._runner import FrameExecution, SequenceTranscript, _resolve_json_path
 from ._schema import ParsedSequence
+from .errors import SequenceGoldenMismatchError
 
 __all__ = [
     "assert_transcript_matches_golden",

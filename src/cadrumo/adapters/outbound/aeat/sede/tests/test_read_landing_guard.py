@@ -33,7 +33,7 @@ from ......tests.aeat_literal_fixtures import (
     configured_path,
 )
 from .._adapter_utils import assert_read_landing
-from .._errors import SedeNavigationError
+from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

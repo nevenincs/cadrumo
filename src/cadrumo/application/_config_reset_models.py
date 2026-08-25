@@ -18,7 +18,7 @@ from ..core import STRICT_FROZEN_CONFIG, Hex64Str
 from ..core.bucket_pointer import BucketPointer
 from ..core.identity import BucketId, ContentDigest
 from ..core.time import validate_utc_aware
-from ..domain.user_profile import ProfileSetupState
+from ..domain.user_profile.values import ProfileSetupState
 from ._bucket_deletion_contracts import BucketDeletionFingerprint
 
 CONFIG_RESET_SCHEMA_VERSION = 2

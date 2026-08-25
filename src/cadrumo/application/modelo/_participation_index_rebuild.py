@@ -42,9 +42,9 @@ from ...domain.modelos import (
     ModeloRecordCatalogueRepositoryProtocol,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
-    WorkUnitCatalogueRepositoryProtocol,
     upsert_transaction_participation,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 _FINALIZED_REVISION_STATES = frozenset(
     {

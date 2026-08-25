@@ -31,7 +31,8 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ActionEvidenceProvenance, NoRecoveryOutcome, scan_directory
+from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.directory_scan import scan_directory
 from ...core.config import Settings, coerce_output_language_setting, load_settings
 from ...core.errors import BaseSeverity
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
@@ -66,7 +67,7 @@ from ._corpus_manual_helpers import (
     manual_report_with_registry_casilla_issues as _manual_report_with_registry_casilla_issues,
 )
 from ._corpus_manual_helpers import manual_rule_kind as _manual_rule_kind
-from ._errors import RegistryApplicationInputError, RegistryPreconditionCondition, registry_terminal_refusal
+from .errors import RegistryApplicationInputError, RegistryPreconditionCondition, registry_terminal_refusal
 
 _LOGGER = get_logger(__name__)
 

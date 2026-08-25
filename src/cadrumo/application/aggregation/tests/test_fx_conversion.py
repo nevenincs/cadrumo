@@ -48,7 +48,7 @@ from ....domain.currency import (
 )
 from ....domain.transactions import RawProvenance, RawTransaction, SourceFormat, TransactionDirection
 from ....tests.ecb_stub import ecb_csv_fetch
-from ...ledger import import_ledger_transactions
+from ...ledger.actions_import import import_ledger_transactions
 from .._currency_predicates import is_non_eur_without_conversion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

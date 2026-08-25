@@ -33,16 +33,10 @@ from ....domain.transactions import (
     TransactionLifecycleState,
     TransactionNotFoundError,
 )
-from ....llm import (
-    LLMClassificationSuggestion,
-    LLMSaturatedSuggestion,
-    LLMSuggestionRejectionResult,
-)
+from ....llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSuggestionRejectionResult
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    reject_llm_suggestion,
-)
-from .._llm_review_workflow import (
+from ..llm_classification import reject_llm_suggestion
+from ..llm_review_workflow import (
     LlmReviewDecision,
     LlmReviewInvocationOrigin,
     execute_reviewed_decision,

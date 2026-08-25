@@ -21,7 +21,7 @@ See Also:
     :func:`~llm._invoice_field_grounding.ground_extracted_fields`
         Grounded re-validation step that rejects hallucinated identifiers and
         unparsable values.
-    :func:`~application.ledger.extract_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
         Text-layer-first orchestration path that routes scan-only evidence to
         this local vision fallback.
 """
@@ -38,7 +38,8 @@ from decimal import Decimal
 
 import pytest
 
-from ...application.ledger import DocumentTranscription, PurchaseInvoiceEvidenceInputError
+from ...application.ledger.document_transcription import DocumentTranscription
+from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
 from ...core import FieldOrigin, ImageMediaType
 from ...core.config import load_settings
 from ...core.decimal import coerce_finite_european_decimal

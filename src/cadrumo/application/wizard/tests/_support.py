@@ -10,7 +10,7 @@ from ...flows.definition import FlowDefinition
 from ...flows.engine import FlowState, start_flow, visible_sequence
 from ...flows.review import ReviewProjection
 from ...flows.scripted import run_scripted_flow
-from .. import DESCENDANTS_COUNT_PAGE_ID
+from ..descendant_group import DESCENDANTS_COUNT_PAGE_ID
 
 
 class EmptyAnswersBase(BaseModel):

@@ -29,7 +29,7 @@ from mcp.client.stdio import stdio_client
 from mcp.types import CallToolResult, TextResourceContents
 from pydantic import AnyUrl
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
 from ._command import run_command
@@ -568,8 +568,7 @@ def run_installed_mcp_oracle(
         raise InstalledMcpOracleError("local machine-secret profile provisioning failed")
     secret_file = resolved_work_dir / ".cadrumo-mcp-profile-secret.json"
     secret_file.write_text(
-        json.dumps({"profile_passphrase": passphrase}, separators=(",", ":")),
-        encoding=_UTF_8,
+        json.dumps({"profile_passphrase": passphrase}, separators=(",", ":")), encoding=_UTF_8, newline="\n"
     )
     secret_file.chmod(0o600)
     effective_server_args = (*effective_server_args, "--profile-secrets-file", str(secret_file))

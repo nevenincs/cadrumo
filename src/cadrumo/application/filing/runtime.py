@@ -27,7 +27,7 @@ a :class:`~domain.calculations.registry.ValidatedRegistryAuthority` loaded
 from the configured registry root.
 
 See Also:
-    :func:`application.wizard._status.load_active_taxpayer_profile`
+    :func:`application.wizard.status.load_active_taxpayer_profile`
         Active-profile bridge that supplies the
         :class:`domain.deadlines.TaxpayerProfile` projected here.
     :mod:`application.modelo._workflow_gate`
@@ -423,7 +423,7 @@ def load_default_filing_profile(
         ModeloBuilderError: When no profile is active in the workflow
             state.
     """
-    from ..wizard import (
+    from ..wizard.status import (
         WizardStatusError,
         load_active_taxpayer_profile,
     )

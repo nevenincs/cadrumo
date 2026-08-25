@@ -11,7 +11,7 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.config import override_settings
 from .....core.resources import resources
 from .._engine import build_export_plan
-from .._errors import CalcSheetsParityError
+from ..errors import CalcSheetsParityError
 from .._parity_harness import (
     OperatorInputScenario,
     _build_operator_inputs,

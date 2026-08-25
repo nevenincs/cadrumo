@@ -55,6 +55,7 @@ from cadrumo.core.time import now
 from cadrumo.domain.calculations.registry import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
+    GeneratedArtifactInspection,
     ModeloId,
     RegistryDiagnosticFilingRevision,
     RegistryRevisionInspection,
@@ -320,7 +321,7 @@ def _derive_static_filing_export_conformance_enrollment(
             )
             continue
         try:
-            layout, inspection = _deserialize_static_revision(selected)
+            layout, inspection = _static_verifier_inputs(selected)
         except ValueError as error:
             residues.append(
                 _revision_validation_residue(
@@ -492,7 +493,7 @@ def _static_revision_residue(
     """Map one static selection failure through the shared provenance verifier."""
     if selected.refusal_reason == "revision_validation_failed":
         try:
-            layout, inspection = _deserialize_static_revision(selected)
+            layout, inspection = _static_verifier_inputs(selected)
             _verify_static_generated_provenance(
                 workspace_root=workspace_root,
                 registry_root=registry_root,
@@ -529,15 +530,15 @@ def _static_revision_residue(
     )
 
 
-def _deserialize_static_revision(
+def _static_verifier_inputs(
     selected: RegistryDiagnosticFilingRevision,
-) -> tuple[ExportLayoutDefinition, RegistryRevisionInspection]:
-    """Restore local verifier inputs from a copied static revision projection."""
-    if selected.layout_json is None or selected.inspection_json is None or not selected.selection_coordinates:
+) -> tuple[ExportLayoutDefinition, GeneratedArtifactInspection]:
+    """Return copied static verifier inputs without restoring a full inspection model."""
+    if selected.layout_json is None or selected.inspection is None or not selected.selection_coordinates:
         raise ValueError("static filing revision has no complete verifier projection")
     return (
         ExportLayoutDefinition.model_validate_json(selected.layout_json),
-        RegistryRevisionInspection.model_validate_json(selected.inspection_json),
+        selected.inspection,
     )
 
 
@@ -548,7 +549,7 @@ def _verify_static_generated_provenance(
     source_root: Path,
     selected: RegistryDiagnosticFilingRevision,
     layout: ExportLayoutDefinition,
-    inspection: RegistryRevisionInspection,
+    inspection: GeneratedArtifactInspection,
 ) -> tuple[bytes, ExportFragmentProvenanceManifest]:
     """Load and verify provenance using only static revision projection facts."""
     manifest_path = (
@@ -918,7 +919,7 @@ def _verify_generated_revision(
     *,
     workspace_root: Path,
     source_root: Path,
-    inspection: RegistryRevisionInspection,
+    inspection: GeneratedArtifactInspection,
     entry: _ConformanceGenerationEntry,
     layout: ExportLayoutDefinition,
 ):

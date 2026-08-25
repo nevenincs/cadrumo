@@ -18,7 +18,8 @@ from pydantic import TypeAdapter, ValidationError
 from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from ....adapters.persistence.storage import Envelope, SensitivityClass, StorageRuntimeReadinessCode
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....core import StorageCategory, scan_directory, storage_path
+from ....core import StorageCategory, storage_path
+from ....core.directory_scan import scan_directory
 from ....core.identity import BucketId
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...categories import SpendingCategory

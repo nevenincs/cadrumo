@@ -28,7 +28,7 @@ def _import_one_transaction(
         f"2026-04-01,{payee},{reference},{amount},EUR,{marker}\n"
     )
     csv_path = tmp_path / "import.csv"
-    csv_path.write_text(csv_content, encoding="utf-8")
+    csv_path.write_text(csv_content, encoding="utf-8", newline="\n")
     result = invoke_cached_cli(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
     listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])

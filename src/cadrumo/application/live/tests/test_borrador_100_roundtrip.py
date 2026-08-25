@@ -24,13 +24,13 @@ from ....adapters.persistence.storage.errors import StorageValidationError
 from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_template_path
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from .._borrador_100 import (
+from ..borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
     SnapshotLifecycleState,
     derive_borrador_100_snapshot_id,
 )
-from .._errors import LiveApplicationInputError
+from ..errors import LiveApplicationInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PERIOD = Period.from_year_and_code(2024, "0A")
@@ -225,7 +225,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
         # Surgically delete ``superseded_by_snapshot_id`` from the
         # persisted JSON envelope payload, then attempt to load. The
         # column accessor handles encrypt/decrypt automatically.
-        from .._borrador_100 import (
+        from ..borrador_100 import (
             BORRADOR_100_SNAPSHOT_NAMESPACE,
             borrador_100_snapshot_object_key,
         )

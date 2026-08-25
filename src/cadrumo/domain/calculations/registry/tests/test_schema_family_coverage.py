@@ -23,7 +23,7 @@ from pydantic import BaseModel, ValidationError
 from .....core import UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS, RegistrySchemaFamilyDisposition
 from .....tests.registry_tree import bundled_registry_tree
 from .._coverage import REQUIRED_COVERAGE_TIERS
-from .._errors import RegistryLoadError
+from ..errors import RegistryLoadError
 from .._loader import load_modelo_directory
 from .._schema import (
     REVISION_COLLECTION_SHAPED_FIELDS,

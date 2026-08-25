@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .....core.external_constants import UTF_8_ENCODING
-from ._errors import ProfileCustodyRecoverySecretError
+from .errors import ProfileCustodyRecoverySecretError
 
 
 def encode_recovery_secret(secret: str) -> bytes:

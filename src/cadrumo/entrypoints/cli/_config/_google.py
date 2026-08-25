@@ -89,7 +89,7 @@ from ....core.hashing import sha256_hex
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import emit_envelope
-from .._errors import CliRefusedBoundaryError
+from ..errors import CliRefusedBoundaryError
 from ._google_errors import _google_refusal
 from ._google_payloads import (
     GoogleLoginResult,

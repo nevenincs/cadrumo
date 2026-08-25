@@ -42,7 +42,8 @@ from urllib.parse import urlparse
 
 import pytest
 
-from .....core import Period, is_aeat_csv, scan_directory
+from .....core import Period, is_aeat_csv
+from .....core.directory_scan import scan_directory
 from .....domain.justificante import Justificante
 from .....tests import FIXTURES_DIR as _FIXTURES_ROOT
 from .....tests import parse_committed_justificante_fixture

@@ -31,14 +31,15 @@ from ....application.provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from ....core import LOCAL_TRANSPORT_LABEL, AcceleratorKind, scan_directory
+from ....core import LOCAL_TRANSPORT_LABEL, AcceleratorKind
+from ....core.directory_scan import scan_directory
 from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.secure_sql import TestRuntimeProfile
-from .._batch_ingest import BatchRunResult, run_evidence_batch
-from .._evidence import PurchaseInvoiceEvidenceService
-from .._extraction_draft_store import load_extraction_drafts
+from ..batch_ingest import BatchRunResult, run_evidence_batch
+from ..evidence import PurchaseInvoiceEvidenceService
+from ..extraction_draft_store import load_extraction_drafts
 from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -175,7 +176,7 @@ def test_an_all_local_batch_ingest_surveys_as_on_host(
     listing documents that never left the machine trains the operator to skim
     it, and the one row that matters is then the one they skim past.
     """
-    from .._consent_withdrawal import survey_cloud_consent
+    from ..consent_withdrawal import survey_cloud_consent
 
     _run(runtime_profile, batch_dir)
 

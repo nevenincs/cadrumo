@@ -27,7 +27,7 @@ operator's actual consequence, and it does not require ranking the outcomes by
 how alarming they sound.
 
 See Also:
-    :class:`~application.ledger.ConfirmedEstablishment`
+    :class:`~application.ledger.confirm_establishment.ConfirmedEstablishment`
         The resolution these notices read; every field of it was unread before.
     :class:`~core.IvaCategoryOutcome`
         Which rung established the treatment, or why none did.
@@ -46,7 +46,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 
 if TYPE_CHECKING:
-    from ...application.ledger import ConfirmedEstablishment
+    from ...application.ledger.confirm_establishment import ConfirmedEstablishment
 
 __all__ = ["confirm_resolution_lines", "confirm_resolution_notices"]
 

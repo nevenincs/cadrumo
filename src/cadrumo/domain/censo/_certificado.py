@@ -10,7 +10,7 @@ unpinned until a real issued-certificate specimen exists, so the inbound
 adapter refuses loudly rather than guessing a layout.
 
 ``censo_facts_from_certificado`` projects the certificate onto candidate
-:class:`~cadrumo.domain.user_profile.UserProfileFact` rows for the cotejo's
+:class:`~cadrumo.domain.user_profile.values.UserProfileFact` rows for the cotejo's
 compare-select pages. Only axes with an unambiguous profile counterpart
 produce a candidate fact; the rest are display-only certificate evidence:
 
@@ -88,7 +88,7 @@ class CertificadoSituacionCensal(BaseModel):
 def censo_facts_from_certificado(certificado: CertificadoSituacionCensal) -> tuple[UserProfileFact, ...]:
     """Project the certificate onto candidate profile facts for the cotejo.
 
-    Returns :class:`~cadrumo.domain.user_profile.UserProfileFact` rows
+    Returns :class:`~cadrumo.domain.user_profile.values.UserProfileFact` rows
     stamped with the artefact provenance token. Axes without an unambiguous
     profile counterpart are deliberately absent (display-only evidence on
     the cotejo page); see the module docstring for the per-axis rationale.

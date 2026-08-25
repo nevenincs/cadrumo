@@ -25,9 +25,9 @@ which would prove the parse and not the point.
 
 Every case drives the REAL path: bytes are written through the real encrypted
 evidence service and read back through
-:func:`~application.ledger.extract_invoice_draft_from_evidence`, the function the
+:func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`, the function the
 CLI calls, and the territory is resolved through
-:func:`~application.ledger.resolve_draft_counterparty_establishment`, the
+:func:`~application.ledger.establishment_ladder.resolve_draft_counterparty_establishment`, the
 function confirm calls. Nothing constructs a draft or calls a parser directly.
 
 See Also:
@@ -53,9 +53,9 @@ from ....domain.iva import (
     country_code_for_stated_country_code,
     territorial_scope_for_country,
 )
-from .._establishment_ladder import EstablishmentRung, resolve_draft_counterparty_establishment
-from .._evidence_draft import FieldProvenance, InvoiceDraft, extract_invoice_draft_from_evidence
-from .._grounding_anchor import ground_structured_value
+from ..establishment_ladder import EstablishmentRung, resolve_draft_counterparty_establishment
+from ..evidence_draft import FieldProvenance, InvoiceDraft, extract_invoice_draft_from_evidence
+from ..grounding_anchor import ground_structured_value
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._ledger_value_fixtures import isolated_settings, secure_objects

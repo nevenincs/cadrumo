@@ -65,7 +65,7 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
 )
 from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository, ResultDispositionProjection

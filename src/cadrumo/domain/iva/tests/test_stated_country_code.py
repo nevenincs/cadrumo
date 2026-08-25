@@ -37,7 +37,7 @@ import pytest
 from ....core.resources import bundled_path
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha3
 from .. import country_code_for_stated_country_code
-from .._errors import IvaCatalogueError
+from ..errors import IvaCatalogueError
 from .._establishment import _index_country_alpha3
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -146,7 +146,7 @@ def _capture_censo_with_vivienda_office(office_m2: str, total_m2: str) -> None:
     """
     from decimal import Decimal
 
-    from cadrumo.domain.user_profile import UserProfileFact
+    from cadrumo.domain.user_profile.values import UserProfileFact
 
     facts = (
         UserProfileFact(path="vivienda_office.total_m2", value=Decimal(total_m2)),

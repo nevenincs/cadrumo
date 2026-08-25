@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from .._errors import ProfileCustodyRecordError
+from ..errors import ProfileCustodyRecordError
 from .._filesystem import profile_custody_root_lock
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

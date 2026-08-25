@@ -21,7 +21,7 @@ import pytest
 from pydantic import ValidationError
 
 from .._bindings_previous_filing import previous_filing_binding_source_casilla_ids
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

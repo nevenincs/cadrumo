@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ....application.operator_actions import no_action_precondition_verdict
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ._errors import OutboundStorageNetworkError
+from .errors import OutboundStorageNetworkError
 
 
 def next_drive_page_token(value: object, *, seen_tokens: set[str], action: str) -> str | None:

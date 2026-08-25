@@ -41,7 +41,7 @@
             {
                 "importer_path": "src/cadrumo/application/auth/tests/test_diagnostics.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.adapters.outbound.aeat.auth._clave_movil_page_flow",
+                "target_mod": "cadrumo.adapters.outbound.aeat.auth.clave_movil_page_flow",
                 "imported_names": ["_mint_diagnostic_id"],
                 "reason": "White-box test of the private Cl@ve Movil page-flow diagnostic-id minting helper. Internal correctness helper with no consumer outside the adapter; promoting it would expose implementation detail as public API."
             },
@@ -69,7 +69,7 @@
             {
                 "importer_path": "src/cadrumo/application/flows/tests/test_validation_context_redaction.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.application.wizard._widgets",
+                "target_mod": "cadrumo.application.wizard.widgets",
                 "imported_names": ["_redact_validation_context"],
                 "reason": "White-box test of the wizard widgets' private validation-context redaction helper. Internal privacy-redaction helper with no consumer outside the wizard package; promoting it would expose an internal implementation detail as public API."
             },
@@ -97,7 +97,7 @@
             {
                 "importer_path": "src/cadrumo/application/modelo/tests/test_actions.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.application.wizard._commands",
+                "target_mod": "cadrumo.application.wizard.commands",
                 "imported_names": ["_IVA_REGIME_CHOICE_VALUES"],
                 "reason": "White-box test cross-checking the private CLI IVA-regime choice set against the wizard's operator-selectable values. Internal CLI choice-enumeration constant, not a public contract."
             },
@@ -286,3 +286,4 @@
         ]
     }
 }
+

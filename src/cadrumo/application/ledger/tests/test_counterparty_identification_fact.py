@@ -26,7 +26,7 @@ import pytest
 
 from ....domain.iva import EUMemberState, IvaTerritorialScope
 from ....tests.secure_sql import TestRuntimeProfile
-from .._counterparty_establishment import (
+from ..counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,
     CounterpartyEstablishmentConflictError,
     forget_confirmed_counterparty_facts,

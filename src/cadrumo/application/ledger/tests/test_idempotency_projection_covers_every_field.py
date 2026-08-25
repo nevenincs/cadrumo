@@ -29,8 +29,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._actions_common import _command_idempotency_fields, _transaction_idempotency_fields
-from .._actions_manual import _transaction_from_command
+from ..actions_common import _command_idempotency_fields, _transaction_idempotency_fields
+from ..actions_manual import _transaction_from_command
 from ._action_test_support import (
     UTC,
     Decimal,

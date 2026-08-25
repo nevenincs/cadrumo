@@ -26,7 +26,7 @@ from ...core import Modelo, Period
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_date as _parse_date_canonical
 from ...core.setup_answers import SetupAnswers, project_setup_answers
-from ._errors import ProfileError
+from .errors import ProfileError
 from ._models import (
     CrossPeriodGroupMemberRoster,
     EntityType,

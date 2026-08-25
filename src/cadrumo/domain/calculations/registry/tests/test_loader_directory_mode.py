@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core import scan_directory
-from .._errors import RegistryFailureCondition, RegistryLoadError, RegistryValidationError
+from .....core.directory_scan import scan_directory
+from ..errors import RegistryFailureCondition, RegistryLoadError, RegistryValidationError
 from .._loader import (
     ModeloSource,
     clear_fingerprint_cache,

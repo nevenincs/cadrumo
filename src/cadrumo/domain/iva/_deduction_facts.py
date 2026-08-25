@@ -12,7 +12,7 @@ from ...core import (
     IvaDeductionFactKind,
 )
 from ...core.identity import ContentDigest
-from ._errors import IvaValidationError
+from .errors import IvaValidationError
 from ._flow import IvaFlowDirection
 from ._schema import IvaCategory, IvaRateKind
 

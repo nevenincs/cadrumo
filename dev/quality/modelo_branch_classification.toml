@@ -118,7 +118,86 @@ under ``aeat-registry-authority-flow``, and is recorded as its own finding rathe
 than adjudicated away here.
 """
 
+[[group]]
+id = "payload-scope-guard"
+classification = "orchestration_routing"
+justification = """
+The branch refuses a modelo-specific PAYLOAD riding a coordinate of another
+modelo: typed filing facts on a snapshot of a different modelo, a censo
+event-kind period on a non-036 destination. A carrier named for one modelo may
+only ride that modelo's coordinate -- and no provision says so, the TYPE does,
+which is what separates this from a regulatory claim.
+
+It is deliberately neither of its neighbours. It is not ``modelo-path-routing``:
+there is no per-modelo implementation on the other side, so the branch selects
+nothing. It is not ``modelo-scope-guard``: the function it sits in is generic
+and serves every modelo, so there is no modelo-named function being guarded.
+What it decides is whether a type shape is admissible where it was supplied,
+which is a statement about this codebase's own payload contracts.
+
+The citation names the refusal the branch raises, because that refusal IS the
+thing selected.
+"""
+
 # -- Adjudicated branches ----------------------------------------------------
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_binding_prefill.py"
+enclosing_symbol = "_observation_from_iva_compensation_history"
+modelo_codes = "M303"
+group = "casilla-target-selection"
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_m303_carry_ingress.py"
+enclosing_symbol = "_normalize_carry_observation"
+modelo_codes = "M303"
+group = "casilla-target-selection"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_projection.py"
+enclosing_symbol = "_validate_m303_projection_request"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_validate_m303_projection_request"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export_parity.py"
+enclosing_symbol = "_m303_nota_three_requires_bank_account"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_m303_nota_three_requires_bank_account"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_record_field_renderer.py"
+enclosing_symbol = "_draft_period_code"
+modelo_codes = "M369"
+group = "official-design-convention"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_record_field_renderer.py"
+enclosing_symbol = "_m369_period_binding_value"
+modelo_codes = "M369"
+group = "official-design-convention"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export.py"
+enclosing_symbol = "_projection_plan_for_layout"
+modelo_codes = "M200"
+group = "modelo-path-routing"
+selects = "build_m200_filing_projection_plan"
+
+[[branch]]
+path = "src/cadrumo/application/registry/source_connectivity.py"
+enclosing_symbol = "_require_kind_payload"
+modelo_codes = "M036"
+group = "payload-scope-guard"
+selects = "censo event destination coordinates are reserved for canonical Modelo 036"
+
+[[branch]]
+path = "src/cadrumo/application/user_profile/preflight.py"
+enclosing_symbol = "report"
+modelo_codes = "M111"
+group = "obligation-condition"
 
 [[branch]]
 path = "src/cadrumo/application/aggregation/_inventory.py"
@@ -428,20 +507,20 @@ group = "modelo-scope-guard"
 selects = "resolve"
 
 [[branch]]
-path = "src/cadrumo/application/live/_filed_observation_persistence.py"
+path = "src/cadrumo/application/live/filed_observation_persistence.py"
 enclosing_symbol = "_filed_observation_history_period_sort_key"
 modelo_codes = "M303"
 group = "official-design-convention"
 
 [[branch]]
-path = "src/cadrumo/application/live/_filed_observation_persistence.py"
+path = "src/cadrumo/application/live/filed_observation_persistence.py"
 enclosing_symbol = "persist_filed_calculation_observation"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
 selects = "persist_filed_calculation_observation"
 
 [[branch]]
-path = "src/cadrumo/application/live/_filed_observation_persistence.py"
+path = "src/cadrumo/application/live/filed_observation_persistence.py"
 enclosing_symbol = "persist_iva_compensation_history_observations_strict"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
@@ -1060,4 +1139,79 @@ The script's own refusal prose says so, citing the union rather than any article
 No provision states that only modelo 303 has projection endpoints; the union does.
 Widen that union and this branch must be made again, which is why the citation
 names the evidence resolver the branch selects rather than the guard.
+"""
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export.py"
+enclosing_symbol = "_projection_plan_for_layout"
+modelo_codes = "M296"
+group = "modelo-path-routing"
+selects = "build_m296_filing_projection_plan"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_producer_snapshot.py"
+enclosing_symbol = "_validate_snapshot_model_profile"
+modelo_codes = "M390"
+group = "payload-scope-guard"
+selects = "ValueError"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_work_plazo.py"
+enclosing_symbol = "calculated_m210_plazo_notice"
+modelo_codes = "M210"
+group = "modelo-scope-guard"
+selects = "calculated_m210_plazo_notice"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_calculate_input.py"
+enclosing_symbol = "calculate_modelo_work_revision"
+modelo_codes = "M210"
+group = "modelo-path-routing"
+selects = "calculated_m210_plazo_notice"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_external_import_actions.py"
+enclosing_symbol = "import_external_filing_source"
+modelo_codes = "M303"
+classification = "orchestration_routing"
+selects = "ExternalModeloImportError"
+justification = """
+An evidence-policy refusal, and the policy is this application's rather than the
+law's. External import is refused for 303 because 303 must arrive through the
+filing-evidence path -- the refusal's own message key is
+external_import_m303_filing_evidence_required. No provision forbids importing a
+303 from outside; the application requires filing evidence for it and this
+branch enforces where that content may enter. What it decides is which intake
+path is allowed, which is routing. The citation names the refusal it raises.
+"""
+
+[[branch]]
+path = "src/cadrumo/application/live/filed_observation_persistence.py"
+enclosing_symbol = "import_complete_filed_observation_baseline"
+modelo_codes = "M303"
+classification = "orchestration_routing"
+selects = "import_external_filing_source"
+justification = """
+An exclusion guard that sends 303 elsewhere rather than deciding anything about
+303. The function's own docstring states the reason -- "Modelo 303 keeps its
+dedicated filing-evidence policy" -- so returning None here leaves the capture
+on the observation path and the 303-specific policy owns it. The decision is
+which of two intake paths runs, and the regulatory content lives in whichever
+one does. The citation names the importer this function otherwise routes into.
+"""
+
+[[branch]]
+path = "src/cadrumo/application/calculations/_m303_regimen_simplificado_annual_summary.py"
+enclosing_symbol = "_validated_source_evidence"
+modelo_codes = "M303"
+classification = "orchestration_routing"
+selects = "select_revision"
+justification = """
+The branch picks the registry modelo definition this resolver was built for --
+it is a member of M303RegimenSimplificadoAnnualSummarySourceResolver, whose
+whole subject is the 303 annual-summary handoff, so selecting 303 restates the
+class's identity rather than deciding a treatment. Every regulatory question it
+then asks is delegated: which revision governs the source coordinate is resolved
+by select_revision from (modelo, filing_year, period), the law-determined
+selector, not chosen here. The citation names that selector.
 """

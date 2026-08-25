@@ -78,7 +78,7 @@ _ALLOWLIST: dict[str, str] = {
         "explicit `now=` and read wall-clock only as the default on the live "
         "certificate path barred from the frozen-clock seam."
     ),
-    "adapters/outbound/aeat/auth/_authenticator_types.py": (
+    "adapters/outbound/aeat/auth/authenticator_types.py": (
         "Injectable live-AEAT site: the authenticator freshness check accepts an "
         "explicit `now=` and falls back to wall-clock only on the live auth path "
         "barred from the frozen-clock seam."

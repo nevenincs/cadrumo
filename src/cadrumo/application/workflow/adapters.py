@@ -33,14 +33,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING
 
 from ...core import Period
 from ...core.config import Settings, load_settings
 from ...core.identity import SubjectTaxId
-
-if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth import AeatSession
 from ...core.logging import get_logger
 from ...domain.deadlines import (
     DeadlineEngine,
@@ -55,12 +51,12 @@ from .errors import WorkflowError
 from .protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
+    ExpedientesSource,
     ModeloDraftBuilderProtocol,
     ModeloInputs,
     ModeloInputsProviderProtocol,
     RegistryModeloDraftProtocol,
     SubmissionEngineProtocol,
-    WorkflowExpedienteProtocol,
 )
 
 _logger = get_logger(__name__)
@@ -177,23 +173,13 @@ class SubmissionEngineAdapter:
         )
 
 
-async def _live_expedientes_source(session: object, modelo: str | None) -> tuple[WorkflowExpedienteProtocol, ...]:
-    from ...adapters.outbound.aeat.auth import AeatSession
-    from ...adapters.outbound.aeat.sede import walk_expedientes_tree
-
-    # session is typed as ``object`` to match the ``ExpedientesSource`` Protocol
-    # (Callable[[object, str | None], ...]); the concrete value at this call
-    # site is always an ``AeatSession`` supplied by ``default_engine``.
-    assert isinstance(session, AeatSession)
-    return await walk_expedientes_tree(session, modelo=modelo)
-
-
 def default_engine(
     *,
     submission_engine: SubmissionEngineProtocol | None = None,
     deadline_engine: DeadlineEngineProtocol | None = None,
     filing_draft_builder: ModeloDraftBuilderProtocol | None = None,
-    session: AeatSession | None = None,
+    session: object | None = None,
+    expedientes_source: ExpedientesSource | None = None,
     certificate_bundle: CertificateBundleProtocol | None = None,
     inputs_provider: ModeloInputsProviderProtocol | None = None,
     settings: Settings | None = None,
@@ -211,9 +197,10 @@ def default_engine(
             workflow to have any obligation to work on.
         filing_draft_builder: Required :class:`ModeloDraftBuilderProtocol`.
             ``None`` triggers a :class:`WorkflowError`.
-        session: Optional authenticated :class:`~adapters.outbound.aeat.auth.AeatSession`.
+        session: Optional authenticated session handle supplied by the composition root.
             ``None`` skips both the inbox probe and the already-filed
             probe (both stages record a "not wired" diagnostic).
+        expedientes_source: Optional outward-composed live expediente reader.
         certificate_bundle: Optional :class:`CertificateBundleProtocol`.
         inputs_provider: Required :class:`ModeloInputsProviderProtocol`. Sensitive draft
             inputs come from bucket-backed application services, not
@@ -252,7 +239,7 @@ def default_engine(
         certificate_bundle=certificate_bundle,
         inputs_provider=inputs_provider,
         settings=cfg,
-        expedientes_source=_live_expedientes_source if session is not None else None,
+        expedientes_source=expedientes_source,
         # A workflow has no active-bucket input. Do not bypass the canonical
         # bucket-scoped capture_notifications application facade merely to
         # populate this transient preflight; the inbox stage remains NOT_WIRED.

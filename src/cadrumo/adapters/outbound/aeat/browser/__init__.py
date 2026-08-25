@@ -33,7 +33,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._errors import BrowserError, BrowserFailureMode, BrowserValidationError
+from .errors import BrowserError, BrowserFailureMode, BrowserValidationError
 from ._factory import (
     DefaultBrowserSession,
     create_browser_session,

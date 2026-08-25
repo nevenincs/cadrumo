@@ -8,7 +8,8 @@ import pytest
 
 from ... import core
 from ...tests import modules_declaring_class
-from .. import DirectoryEntryKind, EstadoCasillaOficial, scan_directory
+from .. import EstadoCasillaOficial
+from ..directory_scan import DirectoryEntryKind, scan_directory
 from .. import _estado_casilla_oficial as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

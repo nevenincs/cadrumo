@@ -48,15 +48,15 @@ from ...flows.checkpoint import checkpoint_available
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.line_frontend import LineFlowFrontend
 from ...flows.wizard_projection import flow_definition_from_wizard_flow
-from .._catalogue import SETUP_FLOW
-from .._commands import (
+from ..catalogue import SETUP_FLOW
+from ..commands import (
     _MODIFY_DESCENDANTS_DOOR_CODE,
     _MODIFY_NO_RESUME_CODE,
     _SETUP_CHECKPOINT,
     _emit_wizard_success,
     setup_flow_definition,
 )
-from .._descendant_group import DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
+from ..descendant_group import DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

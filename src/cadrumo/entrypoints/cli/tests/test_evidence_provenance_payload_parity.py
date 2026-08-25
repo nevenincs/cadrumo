@@ -22,7 +22,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....application.ledger import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ....application.ledger.evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 from ....core import FieldGroundingOutcome, FieldOrigin
 from .._command_schema import command_schema_types
 from .._ledger_business_payloads import EvidenceConfirmResult, EvidenceExtractResult

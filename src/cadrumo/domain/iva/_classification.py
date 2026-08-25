@@ -52,7 +52,7 @@ from typing import Final, NamedTuple
 from pydantic import Field, model_validator
 
 from ...core.logging import get_logger
-from ._errors import IvaRateNotFoundError, IvaValidationError
+from .errors import IvaRateNotFoundError, IvaValidationError
 from ._lookup import lookup_rate
 from ._schema import (
     EUMemberState,

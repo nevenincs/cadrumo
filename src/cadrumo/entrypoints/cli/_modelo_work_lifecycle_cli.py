@@ -8,16 +8,10 @@ from dataclasses import dataclass
 import typer
 
 from ...application.modelo import (
-    ModeloWorkRegistryYearMismatchError,
-    ModeloWorkRevisionConflictError,
-    ModeloWorkSelectorContradictionError,
-    ModeloWorkUnitNotFoundError,
-    ModeloWorkVisibleTargetAmbiguousError,
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     discard_work_unit,
-    ensure_modelo_work_unit_for_active_target,
     guard_active_profile_foral_ccaa,
     lifecycle_continuation_for_work_list,
     lifecycle_continuation_for_work_status,
@@ -27,6 +21,14 @@ from ...application.modelo import (
     rename_work_unit,
     require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
+)
+from ...application.modelo.work_addressing import (
+    ModeloWorkRegistryYearMismatchError,
+    ModeloWorkRevisionConflictError,
+    ModeloWorkSelectorContradictionError,
+    ModeloWorkUnitNotFoundError,
+    ModeloWorkVisibleTargetAmbiguousError,
+    ensure_modelo_work_unit_for_active_target,
     resolve_registry_revision_for_work_target,
 )
 from ...core import Modelo, Period
@@ -80,7 +82,7 @@ def _validate_filing_year(year: int) -> None:
 
 
 def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> None:
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     refusal = modelo_work_create_applicability_refusal(modelo, allow_not_applicable=allow_not_applicable)
     if refusal is None:
@@ -92,7 +94,7 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
 
 
 def guard_unsupported_work_modelo(modelo: str) -> None:
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     modelo_code = modelo.strip()
     locale_key = modelo_work_create_refusal_locale_key(modelo_code)

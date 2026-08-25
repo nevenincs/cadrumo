@@ -27,7 +27,7 @@ See Also:
         Single catalogue writer invoked for every accepted row.
     :func:`~application.invoices.create_invoice_via_wizard`
         Manual single-invoice path with the same writer and idempotent identity.
-    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
         Evidence-confirm path that also delegates the final invoice write to
         the catalogue writer.
 """

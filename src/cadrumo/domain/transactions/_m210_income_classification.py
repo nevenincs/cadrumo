@@ -14,7 +14,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import M210_TIPO_RENTA_CODE_PROJECTION, STRICT_FROZEN_CONFIG, M210PayerMode
-from ._errors import TransactionValidationError
+from .errors import TransactionValidationError
 
 
 class M210IncomeClassification(BaseModel):

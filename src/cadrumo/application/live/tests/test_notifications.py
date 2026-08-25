@@ -24,8 +24,8 @@ from ....adapters.outbound.aeat.sede import (
 from ....adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ....core.config import Settings
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
-from .._errors import LiveApplicationInputError
-from .._notifications import (
+from ..errors import LiveApplicationInputError
+from ..notifications import (
     NotificationsService,
     NotificationsSnapshotNotFoundError,
     notifications_snapshot_object_key,

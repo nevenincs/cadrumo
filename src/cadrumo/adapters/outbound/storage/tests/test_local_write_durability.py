@@ -22,10 +22,10 @@ from pathlib import Path
 
 import pytest
 
-from .....core import DirectoryEntryKind, scan_directory
+from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.hashing import sha256_hex
 from .....tests.path_obstruction import obstructed_path
-from .._errors import OutboundStorageError
+from ..errors import OutboundStorageError
 from .._local import LocalFileSystemProvider, _sidecar_filename
 from .._records import ProviderKind
 

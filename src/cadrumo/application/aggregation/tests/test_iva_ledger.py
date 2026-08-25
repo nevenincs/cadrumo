@@ -53,7 +53,7 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....tests.secure_sql import isolated_two_bucket_runtime
-from ...ledger import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
+from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
 from .. import (
     AggregationValidationError,
     IvaLedgerAggregation,

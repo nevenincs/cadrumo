@@ -23,7 +23,7 @@ from ...core import STRICT_FROZEN_CONFIG, Hex64Str
 from ...core.hashing import content_hash_hex
 from ...core.time import UtcInstant, validate_utc_aware
 from ..contribuyente import ProfileName as _ProfileName
-from ._errors import BucketEventValidationError
+from .errors import BucketEventValidationError
 
 BucketEventId = Hex64Str
 """Lowercase 64-character SHA-256 identifier of a bucket event.

@@ -45,7 +45,7 @@ from functools import cache
 
 import pytest
 
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._formula_runtime import _resolve_bracket
 from ._registry_schema_support import _committed_modelo
 

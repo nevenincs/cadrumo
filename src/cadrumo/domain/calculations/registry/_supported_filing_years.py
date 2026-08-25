@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from ....core import RegistryAuthorityGrade, RegistrySelectorPeriodCode
-from ._errors import RegistrySnapshotError
+from .errors import RegistrySnapshotError
 from ._ids import ModeloId
 from ._period_selector_match import selector_period_matches_request
 from ._schema import ModeloDefinition, SourceReference, SupportedFilingYearsCatalogue

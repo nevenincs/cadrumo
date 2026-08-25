@@ -69,7 +69,7 @@ def _active_revision_for(modelo: str, *, filing_year: int, period: str) -> str:
     resolver reads, not from a hand-copied literal: a registry edit that
     moves the active revision moves this expectation with it.
     """
-    from ....application.modelo import resolve_registry_revision_for_work_target
+    from ....application.modelo.work_addressing import resolve_registry_revision_for_work_target
 
     return resolve_registry_revision_for_work_target(
         modelo=modelo,
@@ -307,7 +307,7 @@ def test_ambiguous_resolution_carries_candidates_on_typed_field_not_message() ->
     """
     from ....domain.calculations.registry import AmbiguousRevisionSelectionError
     from .._config._profile_inspect import _resolve_preflight_revision_id
-    from .._errors import CliRefusedBoundaryError
+    from ..errors import CliRefusedBoundaryError
 
     authority = resources().modelos.authority
     definition = authority.modelo("303")

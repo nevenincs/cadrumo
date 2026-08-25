@@ -29,7 +29,7 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n import tr
 from ...domain.calculations.registry import InputKind, RegistrySnapshotError, RegistryValidationError
-from ...domain.user_profile import ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileNotFoundError
 from ._binding_readiness import profile_resolvable_binding_ids
 from ._registry_discovery import registry_bindings_for_scope, registry_casillas_for_registry_scope
 

@@ -12,7 +12,7 @@ tokens, field names, exit codes -- never on prose, which is localised.
 See Also:
     :func:`~entrypoints.cli._ledger_evidence_review_cli.register_evidence_review_commands`
         The registration under test.
-    :func:`~application.ledger.confirmation_blockers`
+    :func:`~application.ledger.confirmation_gate.confirmation_blockers`
         The gate the surface projects.
 """
 
@@ -25,16 +25,10 @@ from pathlib import Path
 
 import pytest
 
-from ....application.ledger import (
-    DocumentTranscription,
-    DraftDiscrepancyFinding,
-    FieldAmbiguityCandidate,
-    FieldProvenance,
-    InvoiceDraft,
-    TranscriberIdentity,
-    verified_provenance,
-    write_extraction_draft,
-)
+from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
+from ....application.ledger.evidence_draft import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ....application.ledger.grounded_reading import verified_provenance
+from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....core import LOCAL_TRANSPORT_LABEL, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings

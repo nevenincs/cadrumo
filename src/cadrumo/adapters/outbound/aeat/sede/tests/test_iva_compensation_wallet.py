@@ -30,7 +30,7 @@ from ......tests.aeat_literal_fixtures import (
 )
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
 from .._adapter_utils import is_aeat_auth_gate_redirect
-from .._errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .._iva_compensation_wallet import (
     IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,

@@ -15,7 +15,7 @@ from ....core import (
 )
 from ....core.aggregation import RelationAggregation
 from ....core.identity import AeatBoxNumber, ContinuidadId
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import (
     BindingId,
     ExportFieldId,

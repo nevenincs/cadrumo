@@ -10,10 +10,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.iva import IvaCategory
 from ....domain.transactions import BusinessClassification, TransactionValidationError
-from .. import (
-    apply_saturated_llm_classification,
-    saturate_llm_classification,
-)
+from ..llm_classification import apply_saturated_llm_classification, saturate_llm_classification
 from ._llm_saturation_support import (
     _BUCKET,
     _NOW,

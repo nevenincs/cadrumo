@@ -36,7 +36,7 @@ from email.parser import Parser
 from pathlib import Path
 from typing import Any, Final
 
-from cadrumo.core import iter_directory, scan_directory
+from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 from ._command import CommandResult, run_command
@@ -1064,7 +1064,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from cadrumo.adapters.outbound.llm._client import LLMClient
-from cadrumo.adapters.outbound.llm._errors import LLMConfigError
+from cadrumo.adapters.outbound.llm.errors import LLMConfigError
 from cadrumo.adapters.outbound.llm._models import LLMProvider
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.master_key import activate_session

@@ -94,7 +94,7 @@ def ensure_profile() -> str:
         return next(iter(existing))
 
     from ....application.user_profile.registration import register_profile_with_credentials
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
 
     outcome = register_profile_with_credentials(
         label=PROFILE_LABEL,
@@ -114,7 +114,7 @@ def registration_attempt(
 ):
     """Adapt public profile registration into the TUI screen's result contract."""
     from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
     from ....entrypoints.tui.secret.app import (
         RecoveryHandoverCancelledError,
         RegistrationAttempt,

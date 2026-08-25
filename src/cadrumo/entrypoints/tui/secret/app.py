@@ -47,7 +47,7 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, Label, Select, Static
 from textual.worker import Worker, WorkerState
 
-from ....core import (
+from ....core.credentials import (
     PROFILE_PASSWORD_MIN_SCALARS,
     PassphraseStrength,
     ProfilePasswordAssessment,

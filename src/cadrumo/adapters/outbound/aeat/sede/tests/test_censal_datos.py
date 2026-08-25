@@ -39,7 +39,7 @@ from .._censal_datos import (
     landed_on_censal_path,
     parse_censal_datos,
 )
-from .._errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

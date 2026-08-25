@@ -35,7 +35,7 @@ which leave the archive itself in plaintext ZIP form.
 the running bucket's OWN X25519 keypair (mirroring the signing keypair's
 mint-once-persist-as-ciphertext contract exactly, via
 :func:`~application.modelo.ensure_recipient_encryption_keypair`) and
-composes :class:`~application.modelo.RecipientReplayGuardRepository`
+composes :class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository`
 around the pure decrypt primitive to refuse a captured package presented twice.
 Both verbs operate entirely on in-memory bytes; the plaintext package bytes are
 never written to disk except as the final recovered archive the operator
@@ -63,6 +63,12 @@ from pathlib import Path
 
 import typer
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
+from ...adapters.persistence.profile.recipient_replay_guard import (
+    RecipientPackageReplayedError,
+    RecipientReplayGuardRepository,
+)
 from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -81,15 +87,11 @@ from ...application.modelo import (
     ModeloPaymentElectionIncompatibleError,
     ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundElectionNotEligibleError,
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkPeriodTokenError,
     RecipientDecryptionError,
     RecipientEncryptedPackage,
     RecipientEncryptionError,
     RecipientFingerprintRegistryRepository,
     RecipientNotRegisteredError,
-    RecipientPackageReplayedError,
-    RecipientReplayGuardRepository,
     ReviewPackageCounterSigningError,
     ReviewPackageError,
     ReviewPackageFeedbackError,
@@ -110,14 +112,17 @@ from ...application.modelo import (
     export_modelo_revision,
     get_work_unit,
     import_feedback_package,
-    resolve_modelo_revision_for_operator_target,
     review_package_signing_public_key,
     sign_review_package,
     verify_counter_signed_receipt,
     verify_review_package,
     verify_review_package_signature,
 )
-from cadrumo.application.workflow.persistence import workflow_state_repository
+from ...application.modelo.work_addressing import (
+    ModeloWorkAddressNotFoundError,
+    ModeloWorkPeriodTokenError,
+    resolve_modelo_revision_for_operator_target,
+)
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr

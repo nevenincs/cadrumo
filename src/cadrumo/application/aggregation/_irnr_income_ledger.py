@@ -41,7 +41,7 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from . import _shared_issue_reasons
-from ._errors import AggregationPeriodError, AggregationValidationError, t
+from .errors import AggregationPeriodError, AggregationValidationError, t
 from ._grouping import fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 

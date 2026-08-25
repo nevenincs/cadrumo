@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources import bundled_path
-from .._errors import RegistrySnapshotError, RegistryValidationError
+from ..errors import RegistrySnapshotError, RegistryValidationError
 from ._registry_scenarios_support import (
     _REGISTRY_ROOT,
     _estimacion_objetiva_modulos_archetype_scenario,

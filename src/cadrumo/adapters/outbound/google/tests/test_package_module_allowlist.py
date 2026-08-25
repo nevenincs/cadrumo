@@ -15,7 +15,7 @@ See Also:
     :mod:`~adapters.outbound.google._oauth_flow`
         Desktop OAuth flow surface whose legacy predecessors remain outside
         the allowed module list.
-    :mod:`~adapters.outbound.google._session_store`
+    :mod:`~adapters.outbound.google.session_store`
         Secure per-profile OAuth session persistence enrolled as a deliberate
         package module.
 """
@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -44,12 +44,12 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
         "_drive_entries.py",  # shared Drive owned-entry query escaping, lookup/backfill policy, and id validation
         "drive_media_server.py",  # contract: real local Drive media endpoint for resolver roundtrips
-        "_errors.py",
+        "errors.py",
         "_impersonation.py",  # service-account impersonation credential source
         "_oauth_flow.py",
         "_active_profile.py",
         "_records.py",
-        "_session_store.py",
+        "session_store.py",
         "test_session_store_logout_atomicity.py",  # contract: logout removes the token and its companion metadata, or neither
         "test_session_store_namespace_binding.py",  # contract: session-store secure-object namespace-binding roundtrip
         "test_api.py",  # contract: execute_request typed response + error-translation contract

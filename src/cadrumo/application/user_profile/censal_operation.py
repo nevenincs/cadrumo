@@ -43,7 +43,7 @@ from ...core import (
 from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity import ContentDigest, ContentDigestOrAbsent, ProfileId
-from ...domain.user_profile import UserProfileRecord
+from ...domain.user_profile.values import UserProfileRecord
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from .capsule_record import ProfileRecordConflictError
 from .censal_observation import CensalObservation
@@ -464,7 +464,7 @@ class CensalOperationExecutor:
 
 async def _pull_censal_datos() -> CensalObservation:
     """Acquire through the sole public live application door."""
-    from ..live import pull_censal_datos
+    from ..live.censo import pull_censal_datos
 
     observation = await pull_censal_datos()
     if not isinstance(observation, CensalObservation):

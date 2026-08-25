@@ -67,7 +67,7 @@ from ...domain.calculations.registry import (
     select_revision,
 )
 from ...domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
-from ._errors import BindingPrefillTypeError
+from .errors import BindingPrefillTypeError
 from ._iva_compensation_casillas import (
     M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
 )

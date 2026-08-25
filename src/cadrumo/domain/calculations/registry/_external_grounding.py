@@ -77,11 +77,13 @@ from ....core import (
     ElidedProse,
     ExternalOracleCorpus,
     RegistrySelectorPeriodCode,
+)
+from ....core.directory_scan import (
     scan_directory,
 )
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import bundled_path
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import ModeloId, RevisionId
 from ._loader import load_registry_tree
 from ._period_selector_match import selector_token_for_request

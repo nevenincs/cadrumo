@@ -18,7 +18,7 @@ from ....core import (
     OrdenAnualIvaSeasonalIndex,
     orden_anual_iva_authority_units,
 )
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import LegalRefId
 from ._m303_orden_constants import EXTRACTOR_VERSION
 from ._m303_orden_keys import (

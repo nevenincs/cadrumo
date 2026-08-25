@@ -6,7 +6,7 @@ operator-observable question "is my pipeline healthy for this period?" by
 composing three already-existing read models for the requested
 ``(filing_year, period)`` scope into one typed report:
 
-* ledger health — :func:`~application.ledger.summarize_manual_transactions`
+* ledger health — :func:`~application.ledger.actions_manual.summarize_manual_transactions`
   (active/pending-review/reviewed/skipped counts, readiness-issue count).
 * modelo readiness — one :class:`ModeloHealthRow` per
   :class:`~domain.modelos.WorkUnit`
@@ -32,7 +32,7 @@ See Also:
         Sibling read-only overview builders (``status``, ``prepare``,
         ``calendar``, ``agenda``, ``backlog``, ``explain``) this module
         follows the same shape as.
-    :func:`~application.ledger.summarize_manual_transactions`
+    :func:`~application.ledger.actions_manual.summarize_manual_transactions`
         Owns the ledger status counters this report's ledger section reuses
         rather than re-deriving.
     :class:`~domain.modelos.WorkUnit`
@@ -58,7 +58,7 @@ from ...domain.modelos import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
-from ..ledger import LedgerStatusReport
+from ..ledger.models import LedgerStatusReport
 from ..operator_actions import DeclaredNextAction
 from ._next_actions import declare_next_action
 
@@ -130,7 +130,7 @@ class PipelineHealthReport(BaseModel):
         bucket_id: Active profile bucket the report is scoped to.
         filing_year: Filing year for the requested scope.
         period: Registry period token for the requested scope (e.g. ``1T``).
-        ledger: The reused :class:`~application.ledger.LedgerStatusReport`
+        ledger: The reused :class:`~application.ledger.models.LedgerStatusReport`
             for the same ``(bucket_id, period)`` scope.
         modelos: Ordered :class:`ModeloHealthRow` rows, one per work unit
             found for the period, sorted by modelo code. Empty when no work
@@ -299,7 +299,7 @@ def build_pipeline_health_report(
         filing_year: Filing year for the requested scope.
         period: Typed filing :class:`~core.Period` for the requested scope.
         ledger_report: Already-built
-            :class:`~application.ledger.LedgerStatusReport` for
+            :class:`~application.ledger.models.LedgerStatusReport` for
             ``(bucket_id, period)`` (period-scoped, so ``ready`` and
             ``readiness_issue_count`` are populated).
         work_units: Non-discarded :class:`~domain.modelos.WorkUnit` rows

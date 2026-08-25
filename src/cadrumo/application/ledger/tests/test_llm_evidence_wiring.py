@@ -29,12 +29,12 @@ from ....domain.transactions import (
 )
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._evidence import (
+from ..evidence import (
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceService,
 )
-from .._llm_classification import _resolve_evidence, suggest_llm_classification
+from ..llm_classification import _resolve_evidence, suggest_llm_classification
 from ._subprocess_classifier_support import SubprocessLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

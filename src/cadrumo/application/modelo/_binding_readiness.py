@@ -37,7 +37,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     select_revision_for_year,
 )
-from ...domain.user_profile import ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileNotFoundError
 from ._profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
 from ._registry_resources import authority_via_resources
 

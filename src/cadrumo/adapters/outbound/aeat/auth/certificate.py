@@ -47,7 +47,7 @@ from .....core.external_constants import UTF_8_ENCODING
 from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....core.time import coerce_utc_aware
-from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthError, AuthValidationError
+from .errors import AuthError, AuthValidationError
 
 log = get_logger(__name__)
 
@@ -103,7 +103,7 @@ class CertificateNifParseError(CertificateError):
     """
 
 
-# AeatLoginAssertionError and AeatSessionExpiredError are now in ._errors
+# AeatLoginAssertionError and AeatSessionExpiredError are now in .errors
 
 
 # ── Enums ───────────────────────────────────────────────────────────────────
@@ -663,8 +663,6 @@ def read_certificate_subject_nif(*, path: Path, password: SecretStr, friendly_na
 
 
 __all__ = [
-    "AeatLoginAssertionError",
-    "AeatSessionExpiredError",
     "CertificateBundle",
     "CertificateError",
     "CertificateExpiredError",

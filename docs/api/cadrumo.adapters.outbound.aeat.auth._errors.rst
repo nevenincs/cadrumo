@@ -1,7 +1,8 @@
-cadrumo.adapters.outbound.aeat.auth._errors module
+cadrumo.adapters.outbound.aeat.auth.errors module
 ==================================================
 
-.. automodule:: cadrumo.adapters.outbound.aeat.auth._errors
+.. automodule:: cadrumo.adapters.outbound.aeat.auth.errors
    :members:
    :show-inheritance:
    :ignore-module-all:
+

@@ -22,7 +22,7 @@ import pytest
 
 from .....tests.registry_tree import bundled_registry_tree
 from .. import _loader
-from .._errors import RegistryLoadError
+from ..errors import RegistryLoadError
 from .._loader import load_modelo_directory
 from .._schema import (
     REVISION_GOVERNANCE_FIELDS,

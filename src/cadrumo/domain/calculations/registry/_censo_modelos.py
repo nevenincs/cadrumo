@@ -20,7 +20,7 @@ from ....core import Modelo
 from ....core.logging import get_logger
 from ....core.resources import resources
 from ._authority import ValidatedRegistryAuthority
-from ._errors import RegistrySnapshotError, RegistryValidationError
+from .errors import RegistrySnapshotError, RegistryValidationError
 from ._temporal import select_revision
 
 CENSO_MODELO_SERVICE_OWNER = "cadrumo.domain.calculations.registry"

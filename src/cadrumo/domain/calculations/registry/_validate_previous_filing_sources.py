@@ -22,7 +22,7 @@ from collections.abc import Iterable, Mapping
 
 from ....core import BindingSourceKind
 from ._bindings_previous_filing import previous_filing_source_reference
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloDefinition
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 

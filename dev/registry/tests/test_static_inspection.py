@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry import (
     RegistryRevisionInspection,
     bundled_revision_inspection,

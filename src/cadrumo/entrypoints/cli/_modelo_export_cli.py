@@ -6,6 +6,8 @@ from pathlib import Path
 
 import typer
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -23,13 +25,14 @@ from ...application.modelo import (
     ModeloPaymentElectionIncompatibleError,
     ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundElectionNotEligibleError,
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkPeriodTokenError,
     WorkUnitNotFoundError,
     export_modelo_revision,
+)
+from ...application.modelo.work_addressing import (
+    ModeloWorkAddressNotFoundError,
+    ModeloWorkPeriodTokenError,
     resolve_modelo_revision_for_operator_target,
 )
-from cadrumo.application.workflow.persistence import workflow_state_repository
 from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity

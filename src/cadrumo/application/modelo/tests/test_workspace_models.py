@@ -15,7 +15,7 @@ from ....core import (
 )
 from ....domain.modelos import CalculationSourceRef
 from ...registry import RegistryClosureLimb, RegistryClosureOwnerDisposition, RegistryClosureRefusal
-from .._work_addressing import ModeloVisibleFilingTarget
+from ..work_addressing import ModeloVisibleFilingTarget
 from .._workspace_models import (
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBoundedFacetV1,

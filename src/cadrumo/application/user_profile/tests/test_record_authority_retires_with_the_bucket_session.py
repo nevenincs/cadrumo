@@ -26,7 +26,7 @@ from cadrumo.application.user_profile.profile_record_repository import (
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 from ....adapters.persistence.storage import master_key
-from ....domain.user_profile import ProfileNotFoundError
+from ....domain.user_profile.errors import ProfileNotFoundError
 from ....tests.secure_sql import isolated_profile_storage_root
 
 if TYPE_CHECKING:

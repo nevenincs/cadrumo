@@ -42,11 +42,11 @@ from ....domain.modelos import (
     derive_filing_record_id,
 )
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
-from .._filed_observation_persistence import (
+from ..filed_observation_persistence import (
     _existing_justificante_evidence_matches,
     _filed_observation_source_metadata,
 )
-from .._justificante import _existing_capture_evidence_matches_current_csv
+from ..justificante import _existing_capture_evidence_matches_current_csv
 from ._filed_capture_history_support import _prior_303_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

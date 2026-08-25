@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .._errors import ProfileCustodyRecoverySecretError
+from ..errors import ProfileCustodyRecoverySecretError
 from .._recovery_secret_codec import decode_recovery_secret, encode_recovery_secret
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

@@ -7,14 +7,14 @@ disagree, the disagreement is reported rather than discarded.
 
 Builds real text-bearing PDFs in memory (reportlab), stores them through the
 real encrypted evidence path, and confirms them through
-:func:`~application.ledger.confirm_invoice_draft_from_evidence`. No mocks.
+:func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`. No mocks.
 
 See Also:
-    :class:`~application.ledger.PrintedTotalDiscrepancy`
+    :class:`~application.ledger.evidence_draft.PrintedTotalDiscrepancy`
         The record describing a printed-vs-recorded total disagreement.
-    :func:`~application.ledger.printed_total_discrepancy`
+    :func:`~application.ledger.evidence_draft.printed_total_discrepancy`
         The comparison this module exercises.
-    :func:`~application.ledger.confirm_invoice_draft_from_evidence`
+    :func:`~application.ledger.evidence_draft.confirm_invoice_draft_from_evidence`
         Confirm step that carries the discrepancy on its result.
 """
 
@@ -34,8 +34,8 @@ from ....core.config import Settings
 from ....domain.invoices import InvoiceClass
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.pdf_fixtures import text_pdf_bytes
-from .._confirmation_gate import FindingResolution, confirmation_blockers
-from .._evidence_draft import confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence
+from ..confirmation_gate import FindingResolution, confirmation_blockers
+from ..evidence_draft import confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile

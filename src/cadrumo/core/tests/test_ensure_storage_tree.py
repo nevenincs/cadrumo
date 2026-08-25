@@ -23,7 +23,7 @@ from typing import Final
 
 import pytest
 
-from .. import iter_directory
+from ..directory_scan import iter_directory
 from ..config import load_settings, override_settings
 from ..errors import CoreValidationError
 from ..storage_materialization import ensure_storage_tree

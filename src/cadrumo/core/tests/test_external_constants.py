@@ -360,7 +360,7 @@ def test_live_sede_executable_route_literals_stay_centralized(source_tree_ast: M
 
     checked_paths = (
         repo_path("src/cadrumo/core/config.py"),
-        repo_path("src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py"),
+        repo_path("src/cadrumo/adapters/outbound/aeat/auth/clave_movil.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/_groi_check.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/_nif_iva_check.py"),
         repo_path("src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py"),

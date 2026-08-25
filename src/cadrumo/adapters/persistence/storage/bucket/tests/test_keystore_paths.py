@@ -24,7 +24,7 @@ from typing import Final
 import pytest
 
 from ......core.errors import build_error_envelope
-from .._errors import BucketValidationError
+from ..errors import BucketValidationError
 from .._keystore_paths import (
     keystore_path,
     keystore_root,

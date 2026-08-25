@@ -15,7 +15,7 @@ from .....core.logging import get_logger
 from .._html import parse_html
 from ._adapter_utils import cell_text, normalize_response_text
 from ._declarations_schema import Declaracion
-from ._errors import SedeFailureMode, SedeParseError, SedeValidationError
+from .errors import SedeFailureMode, SedeParseError, SedeValidationError
 
 __all__ = [
     "DeclaracionesRegisterPage",

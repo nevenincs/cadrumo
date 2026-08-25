@@ -48,7 +48,7 @@ from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import parse_iso_datetime, validate_utc_aware
 from ._drive_pagination import next_drive_page_token
-from ._errors import (
+from .errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
     OutboundStorageIntegrityError,
@@ -442,7 +442,7 @@ class GoogleDriveProvider:
                             provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                         ),
                     )
-                self._verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
+                self.verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
                 self._vault_folder_id = str(entry["id"])
                 return self._vault_folder_id
             page_token = next_drive_page_token(
@@ -557,7 +557,7 @@ class GoogleDriveProvider:
             response = self._execute(service.files().list(**kwargs), action=action)
             files = response.get("files", []) if isinstance(response, dict) else []
             for entry in files:
-                self._verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
+                self.verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
                 folder_id = str(entry["id"])
                 self._namespace_folder_ids[namespace] = folder_id
                 return folder_id

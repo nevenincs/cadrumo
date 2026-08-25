@@ -28,13 +28,13 @@ import pytest
 
 from ....core import ConfirmationBlockReason, FieldGroundingOutcome, FieldOrigin, FindingResolutionAction
 from ....core.redaction import redact_for_cli_output
-from .._confirmation_gate import (
+from ..confirmation_gate import (
     ConfirmationBlockedError,
     FindingResolution,
     confirmation_blockers,
     resolved_blockers,
 )
-from .._evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
+from ..evidence_draft import FieldAmbiguityCandidate, FieldProvenance, InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

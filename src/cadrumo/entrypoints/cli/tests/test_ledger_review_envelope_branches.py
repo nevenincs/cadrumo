@@ -1,6 +1,6 @@
 """The ledger review envelope must describe exactly one real outcome.
 
-Canonical :class:`~application.ledger.LedgerReviewRow` requires a
+Canonical :class:`~application.ledger.models.LedgerReviewRow` requires a
 content-addressed transaction id, a 10-character date, and non-empty amount,
 description and status. ``LedgerReviewRowPayload`` redeclared those as
 unconstrained strings, and ``LedgerReviewResult`` made every list and detail
@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....application.ledger import LedgerReviewRow
+from ....application.ledger.models import LedgerReviewRow
 from .._ledger_payloads import LedgerReviewResult, LedgerReviewRowPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.auth._clave_movil_page_flow import _mint_diagnostic_id
+from ....adapters.outbound.aeat.auth.clave_movil_support import mint_diagnostic_id
 from ....adapters.persistence.storage import (
     CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
     SecureObjectRepository,
@@ -398,7 +398,7 @@ def test_rapid_encrypted_diagnostic_captures_list_and_load_individually(tmp_path
     """Same-moment captures remain independently addressable after encrypted persistence."""
 
     captured_at = datetime(2026, 8, 2, 9, 0, tzinfo=UTC)
-    diagnostic_ids = tuple(_mint_diagnostic_id(captured_at) for _ in range(8))
+    diagnostic_ids = tuple(mint_diagnostic_id(captured_at) for _ in range(8))
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         for sequence, diagnostic_id in enumerate(diagnostic_ids):
             _store_diagnostic(
@@ -570,3 +570,4 @@ class TestPersistedPhoneStateTaxonomy:
                 )
 
                 assert list_auth_diagnostics().rows[0].phone_state is state
+

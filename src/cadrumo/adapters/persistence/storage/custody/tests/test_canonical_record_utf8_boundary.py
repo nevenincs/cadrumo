@@ -27,7 +27,7 @@ from .._capsule_records import (
     ProfileCustodyCapsuleLabel,
     parse_profile_custody_capsule_label,
 )
-from .._errors import ProfileCustodyRecordError
+from ..errors import ProfileCustodyRecordError
 from .._filesystem import (
     read_profile_custody_local_record,
     write_profile_custody_local_record,

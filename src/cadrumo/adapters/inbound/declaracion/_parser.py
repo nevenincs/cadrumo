@@ -62,7 +62,7 @@ from ..pdf import (
     source_pdf_reference_path,
 )
 from ._detect import detect_template_revision, detect_template_revision_from_pages
-from ._errors import DeclaracionParseError, TemplateNotDetectedError
+from .errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parsers import extract_pages_text, extract_pages_text_from_bytes
 from ._schema import InboundDeclaracionObservation, TemplateRevision
 

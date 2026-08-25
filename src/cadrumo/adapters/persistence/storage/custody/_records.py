@@ -12,7 +12,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core import assess_profile_password as _assess_profile_password
+from .....core.credentials import assess_profile_password as _assess_profile_password
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
@@ -21,7 +21,7 @@ from .....core.hashing import (
     reject_json_constant,
 )
 from ..crypto import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
-from ._errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
+from .errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 
 PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION: Final = 1
 #: The password envelope's name inside a capsule's ``custody/`` directory.

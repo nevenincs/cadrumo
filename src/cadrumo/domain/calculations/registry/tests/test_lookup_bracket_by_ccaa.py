@@ -14,7 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import BracketEntry, FormulaExpression, ParameterDefinition
 from ._formula_runtime_support import _evaluate
 

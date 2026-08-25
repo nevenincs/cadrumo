@@ -12,8 +12,8 @@ import hashlib
 import pytest
 
 from ....tests.pdf_fixtures import text_pdf_bytes
-from .._evidence_input import EvidenceInput
-from .._evidence_textlayer import extract_evidence_text
+from ..evidence_input import EvidenceInput
+from ..evidence_textlayer import extract_evidence_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -39,7 +39,7 @@ def test_extracts_text_layer_from_pdf_bytes_on_host() -> None:
 
 def test_image_evidence_has_no_text_layer() -> None:
     ev = _evidence_input(b"\x89PNG\r\n\x1a\nfake-png-bytes", "image/png")
-    from .._evidence import PurchaseInvoiceEvidenceInputError
+    from ..evidence import PurchaseInvoiceEvidenceInputError
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
         extract_evidence_text(ev)

@@ -62,7 +62,7 @@ from ...domain.iva_compensation import (
     derive_iva_compensation_year_end_carry_partition,
     iva_compensation_period_sort_key,
 )
-from ._errors import IvaCompensationModeloError
+from .errors import IvaCompensationModeloError
 from ._iva_compensation_casillas import (
     M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
 )

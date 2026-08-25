@@ -35,7 +35,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._errors import RetentionError, RetentionFloorError
+from .errors import RetentionError, RetentionFloorError
 from ._floor import (
     TAX_RECORD_RETENTION_FLOOR_YEARS,
     RetainableFilingRecord,

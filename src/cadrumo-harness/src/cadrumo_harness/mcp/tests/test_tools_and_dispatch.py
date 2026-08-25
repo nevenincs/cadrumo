@@ -306,7 +306,7 @@ def test_ledger_import_provider_renders_as_a_json_enum() -> None:
     special case (the ``FuncParamType`` wrapping a ``click_type=click.Choice`` does
     NOT carry choices; an enum-typed option is the idiom that does).
     """
-    from cadrumo.application.ledger import LedgerProviderID
+    from cadrumo.application.ledger.actions_import import LedgerProviderID
 
     expected = [provider.value for provider in LedgerProviderID]
     by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}

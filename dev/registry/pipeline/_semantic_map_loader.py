@@ -15,7 +15,8 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
-from cadrumo.core import FilingProducerKey, compile_filing_projection_ref, freeze_toml, iter_directory, read_toml
+from cadrumo.core import FilingProducerKey, compile_filing_projection_ref, freeze_toml, read_toml
+from cadrumo.core.directory_scan import iter_directory
 from cadrumo.domain.calculations.registry import (
     ExportComputedKey,
     ExportDraftAttribute,

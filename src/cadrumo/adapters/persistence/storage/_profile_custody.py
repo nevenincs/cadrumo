@@ -20,10 +20,12 @@ from ....application.user_profile.custody_ports import (
     ProfileCustodyCapsuleSourceMaterial,
     ProfileCustodyEnvelopePort,
     ProfileCustodyInventoryPort,
+    ProfileCustodyLabelHeadPort,
     ProfileCustodyLocalRecordStore,
     ProfileCustodyPasswordMaterialPort,
     ProfileCustodyPasswordProofMaterialPort,
     ProfileCustodyPort,
+    ProfileCustodyRecordIntegrityError,
     ProfileCustodyRecoveryArtifactExportReceiptPort,
     ProfileCustodyRecoveryEnrollmentMaterial,
     ProfileCustodyRecoveryEnvelopePort,
@@ -33,18 +35,36 @@ from ....application.user_profile.custody_ports import (
     ProfileCustodySecureObjectRepositoryPort,
     ProfileCustodySentinelPort,
     ProfileCustodyUnlockPort,
+    ProfilePassphraseEncryptedRecord,
+    ProfilePassphraseKdfParameters,
+    ProfilePassphraseKdfPolicy,
     ProfileRecordCryptoError,
     ProfileRecordCryptoPort,
     ProfileRecordEncryptedBlob,
     ProfileSecureObjectInventoryPort,
+    ProfileSnapshotPersistencePort,
 )
 from ....core import StorageCategory, storage_location
+from ....core.classification import SensitivityClass
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
 from ....core.time import now as _utc_now
+from ....domain.user_profile.errors import (
+    PROFILE_SNAPSHOT_CLASSIFICATION_MISMATCH_MESSAGE,
+    PROFILE_SNAPSHOT_VERSION_UNSUPPORTED_MESSAGE,
+    ProfileSnapshotClassificationError,
+    ProfileSnapshotNotFoundError,
+    ProfileSnapshotVersionError,
+    UserProfileValidationError,
+)
+from ....domain.user_profile.values import UserProfileSnapshot
 from ..profile.buckets import BucketEventHistoryRepository
+from ..profile.snapshots import SecureSnapshotRepository
 from . import (
+    USER_PROFILE_SNAPSHOT_NAMESPACE,
     USER_PROFILE_VALUE_NAMESPACE,
+    ClassificationError,
+    EnvelopeVersionError,
     KeyringUnavailableError,
     MasterKeyMaterialMissingError,
     PersistenceError,
@@ -58,6 +78,7 @@ from . import (
     secure_object_repository_for_bucket,
     secure_object_repository_for_staged_bucket,
 )
+from ._kdf_salt import KDF_SALT_BYTES
 
 
 def _capsule_relative(category: StorageCategory) -> Path:
@@ -162,7 +183,118 @@ class _PersistenceProfileSecureObjectInventory:
         return self._list_keys(namespace)
 
 
+class _PersistenceProfileSnapshotStore:
+    """Profile port over the canonical generic snapshot persistence adapter."""
+
+    def __init__(
+        self,
+        *,
+        bucket_id: str,
+        object_key: Callable[[str, str], str],
+        objects: SecureObjectRepository | None,
+    ) -> None:
+        def not_found(snapshot_id: str) -> Exception:
+            return ProfileSnapshotNotFoundError(context={"snapshot_id": snapshot_id})
+
+        def ambiguous(prefix: str, matches: tuple[str, ...]) -> Exception:
+            return UserProfileValidationError(context={"snapshot_id_prefix": prefix, "matches": matches})
+
+        def classification_error(
+            snapshot_id: str,
+            actual: SensitivityClass,
+            expected: SensitivityClass,
+        ) -> Exception:
+            return ProfileSnapshotClassificationError(
+                PROFILE_SNAPSHOT_CLASSIFICATION_MISMATCH_MESSAGE,
+                translated_message="application.user_profile.errors.repository_classification_mismatch",
+                context={
+                    "namespace": USER_PROFILE_SNAPSHOT_NAMESPACE.namespace,
+                    "snapshot_id": snapshot_id,
+                    "classification": actual.value,
+                    "expected": expected.value,
+                },
+            )
+
+        def version_error(snapshot_id: str, actual: int, expected: int) -> Exception:
+            return ProfileSnapshotVersionError(
+                PROFILE_SNAPSHOT_VERSION_UNSUPPORTED_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_snapshot_version_unsupported",
+                context={
+                    "snapshot_id": snapshot_id,
+                    "schema_version": actual,
+                    "max_supported_version": expected,
+                },
+            )
+
+        self._delegate = SecureSnapshotRepository(
+            bucket_id=bucket_id,
+            payload_model=UserProfileSnapshot,
+            namespace_definition=USER_PROFILE_SNAPSHOT_NAMESPACE,
+            object_key=object_key,
+            not_found_factory=not_found,
+            ambiguous_prefix_factory=ambiguous,
+            domain_label="profile",
+            input_error_cls=UserProfileValidationError,
+            objects=objects,
+            enforce_payload_identity=False,
+            classification_error_factory=classification_error,
+            version_error_factory=version_error,
+        )
+
+    def exists(self, snapshot_id: str) -> bool:
+        return self._delegate.exists(snapshot_id)
+
+    def load(self, snapshot_id: str) -> UserProfileSnapshot | None:
+        try:
+            return self._delegate.load(snapshot_id)
+        except ProfileSnapshotNotFoundError:
+            return None
+        except ClassificationError as exc:
+            raise ProfileSnapshotClassificationError(
+                str(exc),
+                translated_message=exc.translated_message,
+                context=exc.context,
+            ) from exc
+        except EnvelopeVersionError as exc:
+            raise ProfileSnapshotVersionError(
+                str(exc),
+                translated_message=exc.translated_message,
+                context=exc.context,
+            ) from exc
+
+    def save(self, snapshot: UserProfileSnapshot) -> None:
+        self._delegate.save(snapshot)
+
+
 class _PersistenceProfileRecordCrypto:
+    def passphrase_kdf_policy(self) -> ProfilePassphraseKdfPolicy:
+        return ProfilePassphraseKdfPolicy(
+            version=master_key.ARGON2_VERSION,
+            minimum_memory_cost_kib=master_key.MIN_MEMORY_COST_KIB,
+            maximum_memory_cost_kib=master_key.MAX_MEMORY_COST_KIB,
+            minimum_time_cost=master_key.MIN_TIME_COST,
+            maximum_time_cost=master_key.MAX_TIME_COST,
+            minimum_parallelism=master_key.MIN_PARALLELISM,
+            maximum_parallelism=master_key.MAX_PARALLELISM,
+            salt_bytes=KDF_SALT_BYTES,
+        )
+
+    def passphrase_kdf_window_accepts(
+        self,
+        *,
+        memory_cost: int,
+        time_cost: int,
+        parallelism: int,
+        salt: bytes,
+    ) -> bool:
+        policy = self.passphrase_kdf_policy()
+        return (
+            policy.minimum_memory_cost_kib <= memory_cost <= policy.maximum_memory_cost_kib
+            and policy.minimum_time_cost <= time_cost <= policy.maximum_time_cost
+            and policy.minimum_parallelism <= parallelism <= policy.maximum_parallelism
+            and len(salt) == policy.salt_bytes
+        )
+
     def encrypt_record(
         self,
         plaintext: bytes,
@@ -188,6 +320,72 @@ class _PersistenceProfileRecordCrypto:
             return crypto.decrypt_record(adapter_blob, key=key, associated_data=associated_data)
         except Exception as exc:
             raise ProfileRecordCryptoError("profile record decryption failed") from exc
+
+    def seal_with_passphrase(
+        self,
+        plaintext: bytes,
+        *,
+        passphrase: bytes,
+        associated_data: bytes,
+    ) -> ProfilePassphraseEncryptedRecord:
+        try:
+            parameters = master_key.KdfParams.default()
+            sealing_key = master_key.derive_kek_with_params(
+                passphrase,
+                parameters.salt,
+                memory_cost=parameters.memory_cost,
+                time_cost=parameters.time_cost,
+                parallelism=parameters.parallelism,
+            )
+            blob = crypto.encrypt_record(
+                plaintext,
+                key=sealing_key,
+                associated_data=associated_data,
+            )
+        except Exception as exc:
+            raise ProfileRecordCryptoError("profile passphrase record encryption failed") from exc
+        return ProfilePassphraseEncryptedRecord(
+            parameters=ProfilePassphraseKdfParameters(
+                version=parameters.version,
+                memory_cost=parameters.memory_cost,
+                time_cost=parameters.time_cost,
+                parallelism=parameters.parallelism,
+                salt=parameters.salt,
+            ),
+            blob=ProfileRecordEncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext),
+        )
+
+    def open_with_passphrase(
+        self,
+        blob: ProfileRecordEncryptedBlob,
+        *,
+        passphrase: bytes,
+        parameters: ProfilePassphraseKdfParameters,
+        associated_data: bytes,
+    ) -> bytes:
+        policy = self.passphrase_kdf_policy()
+        if parameters.version != policy.version or not self.passphrase_kdf_window_accepts(
+            memory_cost=parameters.memory_cost,
+            time_cost=parameters.time_cost,
+            parallelism=parameters.parallelism,
+            salt=parameters.salt,
+        ):
+            raise ProfileRecordCryptoError("profile passphrase KDF parameters are unsupported")
+        try:
+            sealing_key = master_key.derive_kek_with_params(
+                passphrase,
+                parameters.salt,
+                memory_cost=parameters.memory_cost,
+                time_cost=parameters.time_cost,
+                parallelism=parameters.parallelism,
+            )
+            return crypto.decrypt_record(
+                crypto.EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext),
+                key=sealing_key,
+                associated_data=associated_data,
+            )
+        except Exception as exc:
+            raise ProfileRecordCryptoError("profile passphrase record decryption failed") from exc
 
 
 class _PersistenceProfileCustody:
@@ -305,6 +503,21 @@ class _PersistenceProfileCustody:
 
     def load_committed_capsule_label(self, profile_id: UUID, *, root: Path) -> ProfileCustodyCapsuleLabelPort:
         return custody.load_committed_profile_custody_label_record(profile_id, root=root)
+
+    def verify_or_recover_initial_label_head(
+        self,
+        *,
+        label: ProfileCustodyCapsuleLabelPort,
+        source_witness: str,
+        root: Path,
+    ) -> ProfileCustodyLabelHeadPort:
+        try:
+            return custody.ProfileLabelHeadRepository(root=root).verify_or_recover_initial(
+                label=_substrate_handle(label, custody.ProfileCustodyCapsuleLabel, "capsule label"),
+                source_witness=source_witness,
+            )
+        except custody.ProfileCustodyRecordError as exc:
+            raise ProfileCustodyRecordIntegrityError(str(exc)) from exc
 
     def load_staged_capsule_label(
         self,
@@ -445,8 +658,30 @@ class _PersistenceProfileCustody:
     def bucket_storage(self) -> ProfileBucketStoragePort:
         return _PersistenceProfileBucketStorage()
 
+    def read_output_language_hint(self, *, storage_root: Path, bucket_id: str) -> str | None:
+        return bucket.read_bucket_output_language_hint(
+            storage_root=storage_root,
+            bucket_id=bucket_id,
+        )
+
     def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
         return _PersistenceProfileSecureObjectInventory()
+
+    def profile_snapshot_persistence(
+        self,
+        bucket_id: str,
+        *,
+        object_key: Callable[[str, str], str],
+        objects: ProfileCustodySecureObjectRepositoryPort | None = None,
+    ) -> ProfileSnapshotPersistencePort:
+        resolved = (
+            None if objects is None else _substrate_handle(objects, SecureObjectRepository, "secure-object repository")
+        )
+        return _PersistenceProfileSnapshotStore(
+            bucket_id=bucket_id,
+            object_key=object_key,
+            objects=resolved,
+        )
 
     def record_crypto(self) -> ProfileRecordCryptoPort:
         return _PersistenceProfileRecordCrypto()

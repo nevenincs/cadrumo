@@ -21,7 +21,7 @@ from ._aeat_hosts import (
     is_aeat_host,
     is_sanctioned_gov_idp_host,
 )
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema import LiveCrossReferenceDecision
 
 CrossReferenceClassification = Literal[

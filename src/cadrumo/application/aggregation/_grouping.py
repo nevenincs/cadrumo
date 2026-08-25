@@ -42,7 +42,7 @@ from decimal import Decimal
 from typing import NamedTuple, Protocol
 
 from ...core import CasillaId, Period, PeriodKind
-from ._errors import AggregationPeriodError, AggregationUnsupportedModeloError, t
+from .errors import AggregationPeriodError, AggregationUnsupportedModeloError, t
 from ._models import CasillaAggregation, CasillaProvenance
 
 

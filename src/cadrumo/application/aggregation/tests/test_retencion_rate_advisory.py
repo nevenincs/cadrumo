@@ -25,7 +25,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind, scan_directory
+from ....core import BindingSourceKind
+from ....core.directory_scan import scan_directory
 from .._retencion_rate_advisory import (
     ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND,
     administrador_retencion_rate_advisory_observations,

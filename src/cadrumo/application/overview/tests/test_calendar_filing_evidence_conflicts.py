@@ -8,7 +8,7 @@ import pytest
 
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....domain.modelos import ExternalEvidenceKind
-from ...live import PersistedExpedientesSnapshot
+from ...live.expedientes import PersistedExpedientesSnapshot
 from .. import (
     OverviewAeatSubmissionState,
     OverviewCalendarRange,

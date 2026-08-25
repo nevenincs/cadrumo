@@ -20,7 +20,7 @@ not a defence.
 acknowledgement, not a durable grant; a stored one would be exactly the sticky
 enablement this posture forbids. ``model_dump`` and ``model_dump_json`` are
 overridden to raise, mirroring
-:class:`~application.ledger.EvidenceInput`'s refusal, so a stray persistence
+:class:`~application.ledger.evidence_input.EvidenceInput`'s refusal, so a stray persistence
 call fails loudly rather than minting a consent record that outlives the
 invocation.
 
@@ -40,7 +40,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_valid
 
 from ..core import ActionEvidenceProvenance
 from ..core.config import LLMProvider, Settings
-from ._errors import LLMConsentError
+from .errors import LLMConsentError
 from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 __all__ = [

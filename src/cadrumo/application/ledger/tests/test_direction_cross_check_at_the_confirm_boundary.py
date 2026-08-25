@@ -26,8 +26,8 @@ import pytest
 
 from ....core import ConfirmationBlockReason, DraftDiscrepancyKind
 from ....domain.iva import InvoiceKind
-from .._confirmation_gate import ConfirmationBlockedError, confirmation_blockers, resolved_blockers
-from .._evidence_draft import InvoiceDraft, _with_direction_contradiction
+from ..confirmation_gate import ConfirmationBlockedError, confirmation_blockers, resolved_blockers
+from ..evidence_draft import InvoiceDraft, _with_direction_contradiction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -33,8 +33,6 @@ from .. import (
     FrameKind,
     ParsedSequence,
     SequenceGolden,
-    SequenceGoldenError,
-    SequenceGoldenMismatchError,
     SequenceTranscript,
     _compare,
     assert_transcript_matches_golden,
@@ -51,6 +49,7 @@ from .. import (
     write_golden,
 )
 from .._golden_store import _repo_root
+from ..errors import SequenceGoldenError, SequenceGoldenMismatchError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

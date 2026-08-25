@@ -49,7 +49,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, Validation
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo, read_toml
 from ...core.resources import bundled_path
-from ._errors import DeadlineValidationError
+from .errors import DeadlineValidationError
 
 # ---------------------------------------------------------------------------
 # CCAA enumeration (ISO 3166-2:ES codes).

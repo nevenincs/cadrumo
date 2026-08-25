@@ -88,7 +88,7 @@ _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 
 @contextmanager
 def _registration(tmp_path: Path) -> Iterator[RegistrationApp]:
-    from ....core import assess_profile_password
+    from ....core.credentials import assess_profile_password
     from ..devtools.fixture import registration_attempt
 
     del tmp_path  # unused: this surface writes nothing until a real submit, which no gate here does

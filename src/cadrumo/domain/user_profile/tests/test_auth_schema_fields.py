@@ -33,7 +33,7 @@ import pytest
 
 from ....core import AuthProviderKind
 from ....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
-from .. import ProfileSchemaDefinition
+from ..schema import ProfileSchemaDefinition
 from ._schema_loader_fixtures import function_scoped_schema  # noqa: F401
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

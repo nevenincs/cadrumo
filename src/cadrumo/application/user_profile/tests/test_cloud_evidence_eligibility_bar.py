@@ -44,9 +44,10 @@ import pytest
 
 from cadrumo.application.user_profile.capabilities import CapabilitySource, resolve_capability
 
-from ....core import ServiceCapability, scan_directory
+from ....core import ServiceCapability
+from ....core.directory_scan import scan_directory
 from ....core.config import Settings, load_settings
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....llm import EvidenceConsentToken, LLMConsentError, cloud_evidence_read_permitted, mint_evidence_consent_token
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

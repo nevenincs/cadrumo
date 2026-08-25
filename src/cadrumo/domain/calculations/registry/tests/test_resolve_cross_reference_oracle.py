@@ -14,7 +14,7 @@ from __future__ import annotations
 import pytest
 
 from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .._live_parity import (
     LiveParityCatalogue,

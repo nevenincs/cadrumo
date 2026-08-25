@@ -11,7 +11,7 @@ from .....core.hashing import hash_file
 from .....core.resources import bundled_path
 from .. import _corpus_catalogue
 from .._corpus_catalogue import resolve_record_design_binary
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import SourceReference
 from ._catalogue_verification_support import _catalogues
 

@@ -439,6 +439,4 @@ def test_status_screen_never_imports_the_application_layer() -> None:
 
 
 def _status_screen_path() -> str:
-    from ..profile import status
-
-    return status.__file__
+    return str(pathlib.Path(__file__).parents[1] / "profile" / "status.py")

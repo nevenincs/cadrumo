@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG, M303RegimenSimplificadoFact
 from ..filing_evidence import FilingEvidenceReference
-from ._errors import IvaValidationError
+from .errors import IvaValidationError
 from ._schema import validate_orden_module_identities
 
 _Token = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]

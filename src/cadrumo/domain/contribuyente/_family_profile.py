@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, field_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
 from ._descendant import DescendantInfo
-from ._errors import ProfileValidationError
+from .errors import ProfileValidationError
 from ._family_types import (
     MAX_AGE_MENOR_TRES,
     MinimoDescendientesThresholds,

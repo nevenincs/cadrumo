@@ -22,7 +22,7 @@ from .._bindings import (
     resolve_counterpart_binding_row_values,
     resolve_counterpart_binding_values,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import DataBindingDefinition, ModeloRevision
 from ._registry_schema_support import _committed_modelo
 

@@ -21,7 +21,7 @@ from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
 from ...core.decimal import coerce_decimal
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
-from ._errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
+from .errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 from ._grounding import legal_ref_failures, registry_catalogues
 from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
 

@@ -8,7 +8,7 @@ from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id, v
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._bindings import CasillaObservation, RegistryModeloObservation
-from .._errors import NoRevisionForPeriodError
+from ..errors import NoRevisionForPeriodError
 from .._relations import RegistryFoldRequirement
 from .._schema import ModeloRevision
 from .._snapshot import build_snapshot

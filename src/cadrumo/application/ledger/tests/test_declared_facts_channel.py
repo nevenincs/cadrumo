@@ -23,7 +23,7 @@ who thought a private two-member enum was tidier.
 Model-free and network-free: typed construction and one pure assembly call.
 
 See Also:
-    :class:`~application.ledger.ClassifierInputFact`
+    :class:`~application.ledger.classifier_inputs.ClassifierInputFact`
         The audit envelope that speaks the same source vocabulary.
 """
 
@@ -42,12 +42,12 @@ from ....domain.iva import (
     IvaTerritorialScope,
     SupplyNature,
 )
-from .._classification_assembly import (
+from ..classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
 )
-from .._classifier_inputs import ClassifierInputFact, ClassifierInputs
+from ..classifier_inputs import ClassifierInputFact, ClassifierInputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

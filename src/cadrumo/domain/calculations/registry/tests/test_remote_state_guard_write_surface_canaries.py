@@ -43,7 +43,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_host,
     aeat_url,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,

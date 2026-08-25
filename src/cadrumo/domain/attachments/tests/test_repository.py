@@ -14,7 +14,7 @@ from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped
 from ....core import StorageCategory, storage_path
 from ....tests.secure_sql import TestRuntimeProfile
 from .._enums import AttachmentKind, AttachmentSource
-from .._errors import AttachmentNotFoundError, AttachmentValidationError
+from ..errors import AttachmentNotFoundError, AttachmentValidationError
 from .._models import Attachment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -132,7 +132,7 @@ class _TripwireProvider:
     """
 
     def __init__(self) -> None:
-        self._session: BucketSession | None = None
+        self.session: BucketSession | None = None
         self._activation_cm: AbstractContextManager[None] | None = None
 
     def get_master_key(self) -> bytes:
@@ -150,7 +150,7 @@ class _TripwireProvider:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        self._session = None
+        self.session = None
         self._activation_cm = None
 
 

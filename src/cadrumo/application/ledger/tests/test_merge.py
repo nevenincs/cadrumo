@@ -25,7 +25,7 @@ from ....domain.transactions import (
     SplitRole,
     TransactionLifecycleState,
 )
-from .. import merge_transactions
+from ..actions_split_merge import merge_transactions
 from ._merge_test_support import _BUCKET_ID, _repositories, _split_setup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

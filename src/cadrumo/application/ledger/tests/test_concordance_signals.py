@@ -30,7 +30,7 @@ per-Member-State lookup the production walk uses, so a schedule change moves
 these cases with it rather than leaving them asserting a literal nobody honours.
 
 See Also:
-    :func:`~application.ledger.resolve_draft_counterparty_establishment`
+    :func:`~application.ledger.establishment_ladder.resolve_draft_counterparty_establishment`
         The walk this rung belongs to.
 """
 
@@ -42,7 +42,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.iva import IvaTerritorialScope
-from .._establishment_ladder import EstablishmentRung, RegistrationEstablishmentConflict, _printed_evidence
+from ..establishment_ladder import EstablishmentRung, RegistrationEstablishmentConflict, _printed_evidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

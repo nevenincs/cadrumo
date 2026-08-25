@@ -27,7 +27,7 @@ for _import_root in (str(_REPO_ROOT), str(_SOURCE_ROOT)):
 if not __package__:
     __package__ = "dev.packaging"
 
-from cadrumo.core import scan_directory  # noqa: E402
+from cadrumo.core.directory_scan import scan_directory   # noqa: E402
 
 from ._hashing import sha256_path  # noqa: E402
 from .cohort_manifest import (  # noqa: E402

@@ -25,7 +25,7 @@ from ....core import PROSE_ELISION_MARKER
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import BusinessClassification, TransactionDirection
 from .._business_proportion import business_proportion
-from .._errors import AggregationPeriodError
+from ..errors import AggregationPeriodError
 from .._renta_ledger import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,

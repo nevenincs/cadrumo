@@ -27,7 +27,7 @@ from uuid import UUID
 
 import pytest
 
-from ....core import DirectoryEntryKind, scan_directory
+from ....core.directory_scan import DirectoryEntryKind, scan_directory
 from ....core.config import load_settings, override_settings
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests import REPO_ROOT

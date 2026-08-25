@@ -17,7 +17,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core import M210PayerMode, Period
 from ....core.resources import resources
 from ....domain.modelos import Modelo210AgrupacionRentaRow, ModeloError
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import seed_test_profile_record

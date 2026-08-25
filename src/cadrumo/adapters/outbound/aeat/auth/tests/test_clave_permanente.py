@@ -15,10 +15,10 @@ from ......domain.calculations.registry import (
     assert_remote_operation_allowed,
 )
 from ......tests.secure_sql import isolated_runtime_profile
-from .._clave_permanente import ClavePermanenteAuthProvider
-from .._clave_permanente_support import clave_permanente_auth_browser_action_policy
-from .._errors import AeatLoginAssertionError, AuthConfigurationError
-from .._providers import ClavePermanenteSessionDetail
+from ..clave_permanente import ClavePermanenteAuthProvider
+from ..clave_permanente_support import clave_permanente_auth_browser_action_policy
+from ..errors import AeatLoginAssertionError, AuthConfigurationError
+from ..providers import ClavePermanenteSessionDetail
 from ._clave_permanente_support import (
     _DOMAINS,
     _aeat_url,
@@ -124,7 +124,7 @@ def test_auth_provider_kind_has_clave_permanente_member() -> None:
 
 
 def test_select_provider_dispatches_clave_permanente(tmp_path: Path) -> None:
-    from .. import select_provider
+    from ..provider_selection import select_provider
 
     settings = _settings_for(
         tmp_path,
@@ -236,7 +236,7 @@ class TestVerify:
 
         async def run() -> None:
             from ......core.time import now
-            from .._authenticator_types import AeatSession
+            from ..authenticator_types import AeatSession
 
             attempted_at = now()
             session_without_context = AeatSession(

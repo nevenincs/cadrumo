@@ -18,7 +18,7 @@ import pytest
 from ....core.errors import CoreValidationError
 from ....core.parsing import normalise_iso_3166_alpha2_jurisdiction
 from ....domain.transactions import Transaction, TransactionValidationError
-from .._models import _validate_iso_3166_jurisdiction
+from ..models import _validate_iso_3166_jurisdiction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

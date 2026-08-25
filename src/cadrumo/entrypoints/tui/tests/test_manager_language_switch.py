@@ -24,8 +24,8 @@ from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
 
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
-from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n import tr
@@ -83,7 +83,7 @@ _COLUMN_KEYS = (
 
 def _register_in(language: str) -> None:
     """Create the profile already carrying a language, as registration does."""
-    from ....domain.user_profile import UserProfileFact
+    from ....domain.user_profile.values import UserProfileFact
 
     register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,

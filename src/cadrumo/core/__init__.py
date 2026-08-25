@@ -24,9 +24,10 @@ is the matching shared removal primitive those same locks use to survive the
 Windows sharing violation a waiter's open handle causes. TOML and option utilities expose
 :func:`read_toml`, :func:`parse_toml_text`, :func:`freeze_toml`,
 :class:`OptionalExtra`, and :func:`require_optional_extra`. Directory
-listing goes through :func:`scan_directory` (sorted and materialised) and
-:func:`iter_directory` (lazy, for early-exit callers), narrowed by
-:class:`DirectoryEntryKind` — the one ``os.scandir`` walk every layer shares
+listing goes through :func:`~cadrumo.core.directory_scan.scan_directory` (sorted
+and materialised) and :func:`~cadrumo.core.directory_scan.iter_directory` (lazy,
+for early-exit callers), narrowed by
+:class:`~cadrumo.core.directory_scan.DirectoryEntryKind` — the one ``os.scandir`` walk every layer shares
 instead of reaching for ``Path.glob``. Filing-result
 helpers expose the codified :class:`ResultDisposition` mapping and its
 casilla/refund predicates. Service and operator-adjacent primitives include
@@ -128,18 +129,6 @@ if TYPE_CHECKING:
         ReviewAdvisoryKind,
     )
     from ._corpus_sidecar import render_corpus_sidecar_text
-    from ._credentials import (
-        LENGTH_ALONE_IS_STRONG,
-        LENGTH_FAIR_FLOOR,
-        PROFILE_PASSWORD_MAX_SCALARS,
-        PROFILE_PASSWORD_MAX_UTF8_BYTES,
-        PROFILE_PASSWORD_MIN_SCALARS,
-        PassphraseStrength,
-        ProfilePasswordAssessment,
-        ProfilePasswordRefusalReason,
-        assess_passphrase_strength,
-        assess_profile_password,
-    )
     from ._declaracion_idioma import DeclaracionIdioma
     from ._descendant_relacion import (
         ART_58_2_ENTITLING_RELACIONES,
@@ -147,7 +136,6 @@ if TYPE_CHECKING:
         DescendantRelacion,
     )
     from ._deuda_direccion import DeudaDireccion
-    from ._directory_scan import DirectoryEntryKind, iter_directory, scan_directory
     from ._document_shape import (
         AEAT_RECORD_BATCH_SHAPES,
         PDF_CONTAINER_SHAPES,
@@ -548,8 +536,6 @@ __all__: list[str] = [
     "IAE_SUBJECT_TIPOS_ACTIVIDAD",
     "IBAN_SHAPE_RE",
     "INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE",
-    "LENGTH_ALONE_IS_STRONG",
-    "LENGTH_FAIR_FLOOR",
     "LLM_EXTRA",
     "LOCAL_TRANSPORT_LABEL",
     "LOCKFILE_UNLINK_RETRY_SECONDS",
@@ -572,9 +558,6 @@ __all__: list[str] = [
     "PDF_CONTAINER_SHAPES",
     "PERSISTED_FORMATS",
     "PRODUCT_IDENTITY",
-    "PROFILE_PASSWORD_MAX_SCALARS",
-    "PROFILE_PASSWORD_MAX_UTF8_BYTES",
-    "PROFILE_PASSWORD_MIN_SCALARS",
     "PROSE_ELISION_MARKER",
     "QWEN_RESEARCH",
     "RECORD_DESIGN_EPOCH_PATTERN",
@@ -631,7 +614,6 @@ __all__: list[str] = [
     "DeploymentLicencePosture",
     "DescendantRelacion",
     "DeudaDireccion",
-    "DirectoryEntryKind",
     "DocumentShape",
     "DraftDiscrepancyKind",
     "ElidedProse",
@@ -749,7 +731,6 @@ __all__: list[str] = [
     "OrdenAnualIvaSeasonalIndex",
     "OutputFormat",
     "OutputLanguage",
-    "PassphraseStrength",
     "PaymentElection",
     "Period",
     "PeriodError",
@@ -761,8 +742,6 @@ __all__: list[str] = [
     "PreconditionOutcomeInvariant",
     "PriorDomiciliationElection",
     "ProductIdentity",
-    "ProfilePasswordAssessment",
-    "ProfilePasswordRefusalReason",
     "ProfileRecordUnavailability",
     "ProfileSessionRefusalReason",
     "ProrrataActivityRowType",
@@ -822,8 +801,6 @@ __all__: list[str] = [
     "accepted_filing_period_patterns",
     "accepted_period_codes",
     "accepted_period_patterns",
-    "assess_passphrase_strength",
-    "assess_profile_password",
     "bucket_scoped_storage_path",
     "build_provenance_stamp",
     "candidates_for_role",
@@ -858,7 +835,6 @@ __all__: list[str] = [
     "is_administrative_period_token",
     "is_aeat_csv",
     "is_link_like",
-    "iter_directory",
     "lineage_obligations",
     "live_state_root_inputs",
     "misclassified_floor_keys",
@@ -893,7 +869,6 @@ __all__: list[str] = [
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
     "result_disposition_requires_bank_account",
-    "scan_directory",
     "sha256_hex",
     "spanish_stemmer",
     "spanish_word_tokens",
@@ -982,7 +957,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "DeploymentLicencePosture": "._model_catalogue",
     "DescendantRelacion": "._descendant_relacion",
     "DeudaDireccion": "._deuda_direccion",
-    "DirectoryEntryKind": "._directory_scan",
     "DocumentShape": "._document_shape",
     "DraftDiscrepancyKind": "._draft_discrepancy",
     "EXTERNAL_PATH_SETTINGS_FIELDS": "._storage_taxonomy",
@@ -1027,8 +1001,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "IvaCompensationStateProvenance": "._iva_compensation_provenance",
     "IvaDeductionEvidenceAuthority": "._iva_deduction_fact",
     "IvaDeductionFactKind": "._iva_deduction_fact",
-    "LENGTH_ALONE_IS_STRONG": "._credentials",
-    "LENGTH_FAIR_FLOOR": "._credentials",
     "LLM_EXTRA": "._optional_extras",
     "LLMProvider": "._config_support",
     "LOCAL_TRANSPORT_LABEL": "._provenance_stamp",
@@ -1097,9 +1069,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "Modelo": "._modelo",
     "ModeloCalculationRouteId": "._calculation_route",
     "ModeloWorkProgressState": "._modelo_work_progress_state",
-    "PROFILE_PASSWORD_MAX_SCALARS": "._credentials",
-    "PROFILE_PASSWORD_MAX_UTF8_BYTES": "._credentials",
-    "PROFILE_PASSWORD_MIN_SCALARS": "._credentials",
     "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD": "._tipos_actividad",
     "NON_REGISTRY_MODELOS": "._modelo",
     "NoRecoveryOutcome": "._operator_action_enums",
@@ -1141,9 +1110,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "PERSISTED_FORMATS": ".compatibility_lifecycle",
     "PRODUCT_IDENTITY": ".product_identity",
     "PROSE_ELISION_MARKER": ".prose_elision",
-    "PassphraseStrength": "._credentials",
-    "ProfilePasswordAssessment": "._credentials",
-    "ProfilePasswordRefusalReason": "._credentials",
     "PaymentElection": "._payment_election",
     "Period": "._period",
     "PeriodError": "._period",
@@ -1237,8 +1203,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "accepted_filing_period_patterns": "._period",
     "accepted_period_codes": "._period",
     "accepted_period_patterns": "._period",
-    "assess_passphrase_strength": "._credentials",
-    "assess_profile_password": "._credentials",
     "bucket_scoped_storage_path": "._storage_taxonomy",
     "build_provenance_stamp": "._provenance_stamp",
     "candidates_for_role": "._model_catalogue",
@@ -1272,7 +1236,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "is_administrative_period_token": "._period",
     "is_aeat_csv": "._aeat_csv",
     "is_link_like": "._link_safety",
-    "iter_directory": "._directory_scan",
     "lineage_obligations": ".compatibility_lifecycle",
     "live_state_root_inputs": "._config_state_root",
     "misclassified_floor_keys": ".compatibility_lifecycle",
@@ -1306,7 +1269,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "result_disposition_casilla_ids": "._result_disposition",
     "result_disposition_is_refund": "._result_disposition",
     "result_disposition_requires_bank_account": "._result_disposition",
-    "scan_directory": "._directory_scan",
     "sha256_hex": ".hashing",
     "spanish_stemmer": "._spanish_stemming",
     "spanish_word_tokens": "._spanish_stemming",

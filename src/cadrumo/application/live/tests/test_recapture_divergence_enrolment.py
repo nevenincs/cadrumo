@@ -14,11 +14,12 @@ clean sweep.
 
 from __future__ import annotations
 
+import importlib
 import inspect
 
 import pytest
 
-from .._filed_data_capture import _CaptureAccumulator
+from ..filed_data_capture import _CaptureAccumulator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,10 +59,9 @@ class TestTheDivergenceIsReadBeforeThePersist:
         """
         from pathlib import Path
 
-        from .. import _filed_data_capture
-
-        assert _filed_data_capture.__file__ is not None
-        source = Path(_filed_data_capture.__file__).read_text(encoding="utf-8")
+        module = importlib.import_module("..filed_data_capture", package=__package__)
+        assert module.__file__ is not None
+        source = Path(module.__file__).read_text(encoding="utf-8")
         assert source.count("store.persist_observation(") == 1, (
             "persist_observation is called outside the accumulator funnel; that "
             "path upserts without reading the divergence first"
@@ -77,12 +77,12 @@ class TestTheAdvisoryReachesTheOperator:
         assert accumulator.recapture_notices == []
 
     def test_the_run_model_exposes_the_notices(self) -> None:
-        from .._filed_data_capture import FiledHistoryOnboardingRun
+        from ..filed_data_capture import FiledHistoryOnboardingRun
 
         assert "recapture_notices" in FiledHistoryOnboardingRun.model_fields
 
     def test_the_bulk_report_exposes_the_notices(self) -> None:
-        from .._remote_state_models import BulkFiledDataCaptureReport
+        from ..remote_state_models import BulkFiledDataCaptureReport
 
         assert "recapture_notices" in BulkFiledDataCaptureReport.model_fields
 

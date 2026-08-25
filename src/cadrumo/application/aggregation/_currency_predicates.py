@@ -14,7 +14,7 @@ from decimal import Decimal
 
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.transactions import Transaction
-from ._errors import AggregationConfigError, t
+from .errors import AggregationConfigError, t
 
 
 def is_non_eur_without_conversion(transaction: Transaction) -> bool:
@@ -44,7 +44,7 @@ def effective_eur_amount(transaction: Transaction) -> Decimal:
     conversion was pre-applied at import; otherwise returns
     ``transaction.raw.amount`` (the native EUR amount for domestic rows).
 
-    Raises :class:`~.._errors.AggregationConfigError` when
+    Raises :class:`~..errors.AggregationConfigError` when
     ``is_non_eur_without_conversion`` is ``True`` for the row, rather than
     documenting the precondition and trusting every caller to check it first.
     An unconverted foreign-currency row has no valid EUR projection to

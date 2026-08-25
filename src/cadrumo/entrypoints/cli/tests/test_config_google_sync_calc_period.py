@@ -6,7 +6,7 @@ import pytest
 
 from ....core import Period
 from .._config._google_sync_calc import filing_period_or_refusal, load_snapshot
-from .._errors import CliRefusedBoundaryError
+from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

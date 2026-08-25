@@ -30,7 +30,7 @@ from ...core.external_constants import (
 )
 from ...core.identity import SubjectTaxId
 from ...core.parsing import parse_iso8601_date
-from ._errors import ProfileValidationError
+from .errors import ProfileValidationError
 
 # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción autonómica
 # (DL 1/2010, de 21 octubre, arts. 4 y 18.1). Ámbito temporal: the deducción

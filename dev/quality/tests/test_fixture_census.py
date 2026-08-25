@@ -9,7 +9,7 @@ from textwrap import dedent
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
 from ..fixture_census import FixtureCensusError, _read_trees, census, iter_source_files

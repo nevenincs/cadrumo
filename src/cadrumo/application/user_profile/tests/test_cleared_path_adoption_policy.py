@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -144,7 +144,7 @@ def test_the_gate_fails_on_a_planted_adopt_on_absence_writer(tmp_path: Path) -> 
     planted.mkdir(parents=True)
     (planted / "_adopts_on_absence.py").write_text(
         "from cadrumo.application.user_profile.projections import record_to_path_values\n"
-        "from cadrumo.domain.user_profile import UserProfileFact\n"
+        "from cadrumo.domain.user_profile.values import UserProfileFact\n"
         "\n"
         "def adopt(record, path, value):\n"
         "    existing = record_to_path_values(record)\n"

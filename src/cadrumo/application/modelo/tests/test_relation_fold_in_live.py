@@ -52,7 +52,7 @@ from ....domain.calculations.registry import (
     select_revision,
 )
 from ....domain.calculations.registry.tests import build_snapshot
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile

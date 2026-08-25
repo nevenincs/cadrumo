@@ -37,7 +37,7 @@ from ._common import resolve_notice_action
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import TaxRoute
-    from ...domain.user_profile import UserProfileRecord
+    from ...domain.user_profile.values import UserProfileRecord
 
 logger = get_logger(__name__)
 
@@ -78,7 +78,9 @@ def _local_live_calendar_events(
         expected_tax_id: Taxpayer identity rows must match, when known.
     """
     from ...adapters.persistence.profile.justificante import JustificanteRepository
-    from ...application.live import ExpedientesService, JustificanteCaptureSnapshotService, NotificationsService
+    from ...application.live.expedientes import ExpedientesService
+    from ...application.live.justificante import JustificanteCaptureSnapshotService
+    from ...application.live.notifications import NotificationsService
 
     try:
         expedientes = ExpedientesService().list_snapshots(bucket_id=bucket_id)
@@ -271,7 +273,7 @@ def _local_calendar_filing_evidence(
         from ...adapters.persistence.profile.justificante import JustificanteRepository
         from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
         from ...application.calculations import CalculationObservationRepository
-        from ...application.live import JustificanteCaptureSnapshotService
+        from ...application.live.justificante import JustificanteCaptureSnapshotService
 
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())

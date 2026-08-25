@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import iter_directory
+from ....core.directory_scan import iter_directory
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     RegistryValidationError,
@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO_303 = "303"
 
-# Mirror ``RegistryValidator._justificante_corpus_root``: bundled_path() resolves
+# Mirror ``RegistryValidator.justificante_corpus_root``: bundled_path() resolves
 # to src/cadrumo/_data; the fixture tree lives one level up under tests/fixtures.
 _JUSTIFICANTE_CORPUS_ROOT = bundled_path().resolve().parents[0] / "tests" / "fixtures" / "justificantes"
 

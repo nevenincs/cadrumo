@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
 else:
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin
-from ._errors import (
+from .errors import (
     CalculationRefusalPrecondition,
     calculation_no_recovery_verdict,
 )

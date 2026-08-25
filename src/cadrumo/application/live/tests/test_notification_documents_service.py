@@ -43,8 +43,8 @@ from ....core.i18n import tr
 from ....domain.attachments import Attachment, AttachmentKind
 from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTURE
 from ....tests.secure_sql import isolated_runtime_profile
-from .._errors import LiveApplicationInputError
-from .._notification_documents import (
+from ..errors import LiveApplicationInputError
+from ..notification_documents import (
     _BYTE_DERIVED_FIELDS,
     _CALLER_SUPPLIED_FIELDS,
     _NON_IDENTITY_FIELDS,

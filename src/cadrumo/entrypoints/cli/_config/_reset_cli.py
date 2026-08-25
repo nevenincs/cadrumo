@@ -11,7 +11,7 @@ from .._config_payloads import (
     ConfigResetStartResult,
     ConfigResetStatusResult,
 )
-from .._errors import CliRefusedBoundaryError
+from ..errors import CliRefusedBoundaryError
 
 
 def _retention_override(

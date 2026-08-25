@@ -27,7 +27,7 @@ from ....core.aggregation import BindingSourceKind
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import selector_as_dict
 from ._bindings import ProfileSelector
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema import DataBindingDefinition
 
 

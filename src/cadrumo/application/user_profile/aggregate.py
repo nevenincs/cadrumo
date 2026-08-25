@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.identity import ContentDigest, PrefixedContentDigest, ProfileId, ProfileLabel
 from ...core.time import validate_utc_aware
-from ...domain.user_profile import ProfileSetupState
+from ...domain.user_profile.values import ProfileSetupState
 
 
 class LockedProfileFactSummary(BaseModel):

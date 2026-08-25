@@ -26,7 +26,7 @@ import pytest
 
 from ....core import ObservedHeaderFact, Period, ResultDisposition
 from ...calculations import CalculationObservationRepository, IvaCompensationHistoryRepository
-from .._filed_observation_persistence import _filed_observation_source_metadata
+from ..filed_observation_persistence import _filed_observation_source_metadata
 from ._filed_capture_history_support import _prior_303_observation, _secure_backend
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -64,7 +64,7 @@ def _leaked_header_keys(metadata: dict[str, str]) -> list[str]:
 
 def test_captured_header_facts_are_readable_back_out_of_storage(tmp_path: Path) -> None:
     """The end the bug was at: persisted, then read back, with provenance intact."""
-    from ...live import persist_filed_calculation_observation
+    from ..filed_observation_persistence import persist_filed_calculation_observation
 
     observation = _prior_303_observation(
         pending_compensation=Decimal("0.00"),

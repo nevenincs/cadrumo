@@ -25,7 +25,7 @@ from ...core.errors import CoreValidationError
 from ...core.identity import ContentDigest
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.time import validate_utc_aware
-from ._errors import TransactionValidationError
+from .errors import TransactionValidationError
 
 
 class SourceFormat(StrEnum):

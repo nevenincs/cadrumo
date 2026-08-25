@@ -6,7 +6,7 @@ production persist helpers (``_persist_verified_revision_evidence`` and
 revision over two ledger transactions verifies, then files; the test asserts a
 participation entry lands for every ``source_transaction_id``, that the filed
 entry carries the ``filing_record_id``, and that the lifecycle write-guard
-``_blocking_modelo_references`` keeps returning the live-scan blockers unchanged.
+``blocking_modelo_references`` keeps returning the live-scan blockers unchanged.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ....application.ledger._actions_common import _blocking_modelo_references
+from ....application.ledger.actions_common import blocking_modelo_references
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import CasillaObservation
 from ....domain.modelos import (
@@ -179,7 +179,7 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
         filed_index_b = participation_repo.load(_TX_B)
 
         # --- write-guard live-scan correctness is unchanged by the index ---
-        blockers = _blocking_modelo_references(
+        blockers = blocking_modelo_references(
             bucket_id=_BUCKET_ID,
             transaction_ids=(_TX_A,),
             work_unit_repository=wu_repo,

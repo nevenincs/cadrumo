@@ -36,12 +36,12 @@ from pydantic import BaseModel
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
-from ...domain.user_profile import UserProfileFact
+from ...domain.user_profile.values import UserProfileFact
 from .censal_observation import CensalObservation, CensalObservationAddress
 from .censo_errors import CensoSyncError
 
 if TYPE_CHECKING:
-    from ...domain.user_profile import UserProfileRecord
+    from ...domain.user_profile.values import UserProfileRecord
     from .profile_record_repository import ProfileRecordRepository
     from .projections import EffectiveFact
 
@@ -398,8 +398,8 @@ class CensoSyncService:
 
         Used by the ledger ratios CLI and the manual-transaction
         classify path to apply the legally-effective
-        :func:`cadrumo.application.ledger._ratios.censo_override_warning`
-        and :func:`cadrumo.application.ledger._ratios.censo_business_pct_for`
+        :func:`cadrumo.application.ledger.ratios.censo_override_warning`
+        and :func:`cadrumo.application.ledger.ratios.censo_business_pct_for`
         helpers without each consumer re-implementing the profile-fact
         lookup. Reads the encrypted profile record's canonical path-value
         projection — the same operator-declared facts ``config profile
@@ -409,7 +409,7 @@ class CensoSyncService:
         either ``vivienda_office.total_m2`` / ``vivienda_office.office_m2``
         is absent / non-decimal / zero.
         """
-        from ...domain.user_profile import ProfileNotFoundError
+        from ...domain.user_profile.errors import ProfileNotFoundError
         from .profile_record_repository import ProfileRecordRepository
         from .projections import record_to_path_values
 

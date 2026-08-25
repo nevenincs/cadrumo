@@ -42,7 +42,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistryValidationError
 from ._common import activate_subcommand_output_language, emit_envelope
-from ._errors import CliOutboundPayloadBoundaryError
+from .errors import CliOutboundPayloadBoundaryError
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (

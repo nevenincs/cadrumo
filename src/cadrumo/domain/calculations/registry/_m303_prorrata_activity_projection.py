@@ -19,7 +19,7 @@ from ....core import (
     M303ProrrataActivityProjectionRef,
 )
 from ...prorrata_register import ProrrataActivityRow, ProrrataRegister
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 
 _FIELDS = frozenset(M303ProrrataActivityProjectionField)
 

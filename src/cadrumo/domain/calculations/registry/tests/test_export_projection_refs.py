@@ -18,8 +18,10 @@ from .....core import (
     M303RegimenSimplificadoCohort,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
-    scan_directory,
     validated_casilla_id,
+)
+from .....core.directory_scan import (
+    scan_directory,
 )
 from .. import (
     ExportEncoding,

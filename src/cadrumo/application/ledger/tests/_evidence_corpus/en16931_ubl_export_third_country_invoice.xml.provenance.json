@@ -4,6 +4,6 @@
   "source": "authored in-tree for the unsupported-relief guard on the confirm boundary",
   "licence": "Apache-2.0",
   "notes": "Hand-authored EN16931 UBL invoice, fictional data. Declares UNTDID 5305 code G (export outside the Community, LIVA art. 21) at 0.00 percent while printing NO counterparty country at all, which is the exact shape the guard exists to refuse: the rule table cannot place a party it cannot locate, so the document's own code would otherwise be honoured and a zero-rated supply recorded for a counterparty nobody could establish. Declared synthetic rather than sourced because no bundled fixture stated code G. The assertion is that the category is WITHHELD, never a figure recomputed from the code under test.",
-  "sha256": "4d7a9ba5d9fb4f04bf666d0d81065a5c15cfbb0271deb5b8f4d917f8fed10257",
-  "bytes": 3436
+  "sha256": "8a913f4422435dab6362e64906a8d898020de602d848c96ef05c991f5d2e389d",
+  "bytes": 3348
 }

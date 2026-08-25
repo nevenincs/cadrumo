@@ -23,7 +23,7 @@ from collections.abc import Mapping
 
 from ....core import Modelo
 from ._applicability import hydrate_applicability_rule
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema import LegalReference, ModeloRevision
 from ._validate_helpers import missing_refs
 

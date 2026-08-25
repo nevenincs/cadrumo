@@ -18,12 +18,20 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile.bundle_export_operation import ProfileBundleExportJournalRepository
-from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportRequest, ProfileBundleExportTransport
+from cadrumo.application.user_profile.bundle_export_contracts import (
+    ProfileBundleExportPurpose,
+    ProfileBundleExportRequest,
+    ProfileBundleExportTransport,
+)
+
 from ....application.user_profile.bundle_export import prepare_profile_export
-from ....application.user_profile.bundle_export_operation import PROFILE_EXPORT_STAGED_TEMP_SUFFIX
-from ....core import STR_KEYED_MAPPING_ADAPTER, scan_directory
-from ....domain.user_profile import UserProfilePortableExport
+from ....application.user_profile.bundle_export_operation import (
+    PROFILE_EXPORT_STAGED_TEMP_SUFFIX,
+    ProfileBundleExportJournalRepository,
+)
+from ....core import STR_KEYED_MAPPING_ADAPTER
+from ....core.directory_scan import scan_directory
+from ....domain.user_profile.portable_export import UserProfilePortableExport
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile

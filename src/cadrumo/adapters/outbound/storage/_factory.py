@@ -11,7 +11,7 @@ active profile. :class:`core.config.Settings` drives the choice:
 - ``cadrumo_google_drive_root_folder_id`` plus the per-profile persisted
   :class:`~core.GoogleCredentialSourceKind` selection
   (:class:`~adapters.outbound.google.GoogleCredentialSourceSelection`,
-  loaded via :mod:`adapters.outbound.google._session_store`) parameterise
+  loaded via :mod:`adapters.outbound.google.session_store`) parameterise
   the Drive backend's credentials — either the default per-profile
   :class:`~adapters.outbound.google.OAuthClient` /
   :class:`~adapters.outbound.google.OAuthToken` records, or a
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 from ....application.operator_actions import no_action_precondition_verdict
 from ....core import ActionEvidenceProvenance, GoogleCredentialSourceKind, NoRecoveryOutcome
 from ....core.config import Settings, load_settings
-from ._errors import OutboundStorageError, OutboundStorageValidationError
+from .errors import OutboundStorageError, OutboundStorageValidationError
 from ._protocol import StorageProvider
 from ._records import ProviderKind
 
@@ -145,8 +145,8 @@ def _build_oauth_desktop_credentials(*, profile: str) -> Credentials:
 
     Loads :class:`~adapters.outbound.google.OAuthClient` and
     :class:`~adapters.outbound.google.OAuthToken` through
-    :func:`adapters.outbound.google._session_store.load_client` and
-    :func:`adapters.outbound.google._session_store.load_token`. Imports the
+    :func:`adapters.outbound.google.session_store.load_client` and
+    :func:`adapters.outbound.google.session_store.load_token`. Imports the
     upstream library lazily so unit tests for the local backend do not pay the
     cost.
     """

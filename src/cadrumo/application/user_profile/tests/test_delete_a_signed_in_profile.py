@@ -15,14 +15,13 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
-from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
-from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
-
 from ....adapters.persistence.storage.custody import load_committed_profile_password_material
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..lifecycle import ProfileCapsuleLifecycle
+from ..login_session import login_profile
+from ..profile_record_repository import ProfileRecordRepository
+from ..profile_repository import CommittedProfileRepository
+from ..registration import register_profile_with_credentials
 
 if TYPE_CHECKING:
     from pathlib import Path

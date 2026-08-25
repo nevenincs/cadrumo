@@ -22,7 +22,7 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
@@ -34,11 +34,11 @@ from .. import (
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
-    ensure_modelo_work_unit_for_active_target,
     mark_revision_verificado_completo,
     modelo_applicability_refusal,
     pre_activity_period_refusal,
 )
+from ..work_addressing import ensure_modelo_work_unit_for_active_target
 from .._profile_readiness_gate import _profile_activity_start_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -294,7 +294,7 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
             )
 
         from ....core.resources import resources
-        from ....domain.user_profile import profile_field_label
+        from ....domain.user_profile.labels import profile_field_label
 
         expected_label = profile_field_label(
             "activities",

@@ -70,7 +70,7 @@ from typing import Final
 
 import grimp
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
 
@@ -596,7 +596,7 @@ def trace_regime(regime: str) -> frozenset[str]:
         area = Path(workspace)
         output = area / "executed.json"
         script = area / "trace.py"
-        script.write_text(_trace_script(regime), encoding="utf-8")
+        script.write_text(_trace_script(regime), encoding="utf-8", newline="\n")
         environment = None
         if regime == "cold":
             import os

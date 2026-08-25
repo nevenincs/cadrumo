@@ -1,7 +1,8 @@
-cadrumo.adapters.outbound.aeat.auth._authenticator module
+cadrumo.adapters.outbound.aeat.auth.authenticator module
 =========================================================
 
-.. automodule:: cadrumo.adapters.outbound.aeat.auth._authenticator
+.. automodule:: cadrumo.adapters.outbound.aeat.auth.authenticator
    :members:
    :show-inheritance:
    :ignore-module-all:
+

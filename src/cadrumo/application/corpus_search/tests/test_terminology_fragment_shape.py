@@ -21,7 +21,7 @@ import tomllib
 
 import pytest
 
-from .._errors import CorpusSearchInputError
+from ..errors import CorpusSearchInputError
 from .._terminology import (
     CONCEPT_ID_MAX_LENGTH,
     CONCEPT_ID_MIN_LENGTH,

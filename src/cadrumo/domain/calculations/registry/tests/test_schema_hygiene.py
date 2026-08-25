@@ -16,7 +16,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, scan_directory, validated_casilla_id
+from .....core import CasillaId, validated_casilla_id
+from .....core.directory_scan import scan_directory
 from .....core.aggregation import BindingTypedEnumKind
 from .....core.resources import bundled_path, resources
 from ..._export_field_kind import CasillaFieldKind

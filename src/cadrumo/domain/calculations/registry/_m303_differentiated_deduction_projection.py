@@ -18,7 +18,7 @@ from ....core import (
 )
 from ...bienes_inversion import RegistroRegularizacionResult
 from ...prorrata_register import ProrrataRegister
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 
 _KINDS = (
     IvaDeductionFactKind.DOMESTIC_CURRENT,

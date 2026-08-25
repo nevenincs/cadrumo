@@ -19,8 +19,8 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
-from .._errors import LiveApplicationInputError
-from .._verify import (
+from ..errors import LiveApplicationInputError
+from ..verify import (
     VerifyObservation,
     VerifyObservationNotFoundError,
     VerifyObservationRepository,

@@ -16,7 +16,7 @@ from enum import StrEnum
 
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.buckets import BucketEventType
-from ...domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 
 class ProfileFactWriteDoor(StrEnum):

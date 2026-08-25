@@ -24,7 +24,7 @@ from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
-from ._errors import SedeParseError
+from .errors import SedeParseError
 
 
 def assert_read_http(

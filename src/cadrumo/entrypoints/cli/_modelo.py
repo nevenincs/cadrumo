@@ -24,14 +24,16 @@ from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloRecordNotFoundError,
+    WorkUnitNotFoundError,
+    amend_modelo_revision,
+    lifecycle_continuation_for_work_history,
+)
+from ...application.modelo.work_addressing import (
     ModeloWorkAddressNotFoundError,
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectorContradictionError,
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
-    WorkUnitNotFoundError,
-    amend_modelo_revision,
-    lifecycle_continuation_for_work_history,
 )
 from ...core import CasillaId, Modelo, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal

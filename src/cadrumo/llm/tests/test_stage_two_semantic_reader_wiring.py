@@ -6,7 +6,7 @@ lane, and a unit test passes whether or not anything calls the code.
 
 Four properties, each of which has failed somewhere in this repository before:
 
-* The stage takes a :class:`~application.ledger.DocumentTranscription`, not a
+* The stage takes a :class:`~application.ledger.document_transcription.DocumentTranscription`, not a
   bare string. A string carries no answer to "who read these characters off the
   document", and that answer is the ORIGIN stamped on every value the stage
   proposes.
@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING, override
 
 import pytest
 
-from ...application.ledger import DocumentTranscription, TranscriberIdentity
+from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ...core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ...core.config import load_settings
 from ...core.time import now
@@ -44,7 +44,7 @@ from .._models import LLMProvider, LLMResponse
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 if TYPE_CHECKING:
-    from ...application.ledger import InvoiceDraft
+    from ...application.ledger.evidence_draft import InvoiceDraft
     from .._models import LLMRequest
 
 _REPLY = json.dumps(

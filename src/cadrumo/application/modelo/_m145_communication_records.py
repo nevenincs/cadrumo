@@ -372,7 +372,7 @@ def _m145_communication_record_repository(
     # application, so it needs no deferral. The error class still does: it is
     # owned by application.live, which depends transitively on this package.
     from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-    from ..live import LiveApplicationInputError
+    from ..live.errors import LiveApplicationInputError
 
     return SecureSnapshotRepository(
         bucket_id=bucket_id,

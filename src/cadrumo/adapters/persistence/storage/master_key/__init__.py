@@ -53,7 +53,7 @@ from ._active_session import (
     suspend_active_session,
 )
 from ._bucket_session import BucketSession
-from ._errors import MasterKeyReentrantError
+from .errors import MasterKeyReentrantError
 from ._idle_timeout import evaluate_idle
 from ._kdf_params import (
     ARGON2_VERSION,

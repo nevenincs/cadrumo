@@ -13,7 +13,7 @@ acquiring a role-evidence key does not. A pinned count would have to be edited
 either way, which trains everyone to edit it.
 
 See Also:
-    :func:`~application.ledger.resolve_party_attribution_by_colocation`
+    :func:`~application.ledger.party_colocation.resolve_party_attribution_by_colocation`
         The code that attributes address values instead of the prompt.
 """
 
@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...application.ledger import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
+from ...application.ledger.party_attribution import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
 from ...core import Period
 from .._invoice_extraction_prompt import build_invoice_extraction_prompt
 from .._invoice_field_contract import (

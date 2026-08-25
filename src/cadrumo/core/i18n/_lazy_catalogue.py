@@ -14,6 +14,7 @@ from typing import IO, override
 
 import yaml
 
+from ..external_constants import UTF_8_ENCODING
 from ._routing import route_key_to_shard
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
         if not shard_file.is_file():
             return
         try:
-            with shard_file.open("r", encoding="utf-8") as handle:
+            with shard_file.open("r", encoding=UTF_8_ENCODING) as handle:
                 parsed = _load_yaml_handle(handle)
             flattened = _flatten_dict(parsed)
             self._key_cache.update(flattened)

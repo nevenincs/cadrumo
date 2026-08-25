@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from .....core.resources import bundled_path, resources
 from .....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
-from .._errors import RegistryLoadError, RegistryValidationError
+from ..errors import RegistryLoadError, RegistryValidationError
 from .._m303_orden_manifest import (
     check_m303_annual_orden_manifest,
     load_m303_annual_orden_authority,

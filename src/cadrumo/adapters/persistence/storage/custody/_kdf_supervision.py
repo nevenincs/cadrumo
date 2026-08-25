@@ -18,7 +18,7 @@ from .....core import StorageCategory, storage_path
 from .....core.config import load_settings
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..crypto import KEY_SIZE
-from ._errors import (
+from .errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
     ProfileCustodyRecoverySecretError,

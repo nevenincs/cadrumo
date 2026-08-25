@@ -11,7 +11,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core.config import Settings
-from .._evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
+from ..evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 
 _PDF_BYTES = b"%PDF-1.4 evidence-input-roundtrip body"
 _BUCKET_ID = "30303030-3030-4030-8030-303030303030"

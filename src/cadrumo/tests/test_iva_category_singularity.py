@@ -87,7 +87,7 @@ if TYPE_CHECKING:
 INGESTION_PACKAGE = "application/ledger/"
 """The document-ingestion package this gate governs, as an aeat-relative prefix."""
 
-CANONICAL_CATEGORY_AUTHORITY = "application/ledger/_classification_assembly.py"
+CANONICAL_CATEGORY_AUTHORITY = "application/ledger/classification_assembly.py"
 """The sole module that may decide an ingested record's IVA category.
 
 It assembles the rule table's criteria, refuses when an input is unestablished,
@@ -341,7 +341,7 @@ def _anomaly(iva_cat) -> str | None:
 def test_rule_one_fires_on_a_category_minted_from_a_document_token() -> None:
     """The first deleted rival: the UNTDID code read straight into a category."""
     violations = category_construction_violations(
-        "src/cadrumo/application/ledger/_evidence_draft.py",
+        "src/cadrumo/application/ledger/evidence_draft.py",
         ast.parse(_MINTS_FROM_A_DECLARED_CODE),
         is_authority=False,
     )
@@ -371,7 +371,7 @@ def test_rule_two_catches_the_rate_deriver_that_rule_one_cannot_see() -> None:
     two rules happen to agree.
     """
     tree = ast.parse(_DERIVES_FROM_THE_RATE)
-    display = "src/cadrumo/application/ledger/_evidence_draft.py"
+    display = "src/cadrumo/application/ledger/evidence_draft.py"
 
     assert category_construction_violations(display, tree, is_authority=False) == [], (
         "guard on the proof itself: this rival builds no category, which is exactly why "
@@ -428,7 +428,7 @@ def test_the_rules_ignore_reading_an_already_persisted_category() -> None:
     duplication it exists to prevent.
     """
     tree = ast.parse(_READS_A_PERSISTED_CATEGORY)
-    display = "src/cadrumo/application/ledger/_preflight.py"
+    display = "src/cadrumo/application/ledger/preflight.py"
 
     assert category_construction_violations(display, tree, is_authority=False) == []
     assert category_verdict_signature_violations(display, tree, is_authority=False) == []

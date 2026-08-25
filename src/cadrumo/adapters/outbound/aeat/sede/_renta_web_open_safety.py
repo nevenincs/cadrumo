@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 from .....core import fold_diacritics
 from .....core.logging import get_logger
 from .....domain.calculations.registry import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
-from ._errors import SedeFailureMode, SedeNavigationError
+from .errors import SedeFailureMode, SedeNavigationError
 
 logger = get_logger(__name__)
 

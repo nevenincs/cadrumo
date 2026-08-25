@@ -9,7 +9,7 @@ import pytest
 
 from ....core import M210_TIPO_RENTA_CODE_PROJECTION, Period, ResultDisposition
 from ...calculations.registry import DeadlineWindowDefinition, ModeloRevision
-from .._errors import DeadlineValidationError
+from ..errors import DeadlineValidationError
 from .._plazo import _resolve_projected_filing_window, resolve_filing_window
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

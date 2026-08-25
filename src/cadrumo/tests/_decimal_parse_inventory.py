@@ -180,7 +180,7 @@ When a local guard is NOT redundant
 
 Routing a site into the canonical home is right most of the time and wrong when
 the local guard carries meaning the general grammar discards. The worked example
-is in :mod:`~domain.user_profile._values`: its leading-zero check was retired as
+is in :mod:`~domain.user_profile.values`: its leading-zero check was retired as
 "subsumed by the grammar", and ``08001`` — a Spanish postcode — promptly became
 ``Decimal("8001")``, losing the zero that carries its meaning. The canonical
 grammar accepts that string; it simply answers a different question.

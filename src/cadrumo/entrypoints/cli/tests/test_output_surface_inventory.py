@@ -48,7 +48,7 @@ from typing import override
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -72,7 +72,7 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "text crosses into stdout. It replaced two entries that each owned a "
         "private copy of the same three lines."
     ),
-    ("entrypoints/cli/_errors.py", "write_stderr", "write"): (
+    ("entrypoints/cli/errors.py", "write_stderr", "write"): (
         "IS the stderr funnel: every write in this function emits redacted_text, "
         "already through the error-path redaction boundary."
     ),

@@ -11,7 +11,7 @@ from contextlib import suppress
 from typing import Final, cast
 
 from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
-from ._errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
+from .errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from ._records import ProfileCustodyKdfParameters
 
 KDF_FRAME_MAGIC: Final = b"CKDF"

@@ -19,7 +19,7 @@ def config_status(
     from pydantic import ValidationError
 
     from ....application.user_profile.projections import record_to_path_values
-    from ....application.wizard import project_answers
+    from ....application.wizard.persistence import project_answers
     from cadrumo.application.workflow.profile_health import assess_active_profile_health
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
     from cadrumo.application.workflow.persistence import workflow_state_repository

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .....core.resources import resources
 from .....tests import SRC_CADRUMO, package_python_files, repo_relative
 

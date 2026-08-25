@@ -5,7 +5,7 @@ The ``"iva-wallet"`` literal joined onto ``cadrumo_live_state_dir`` mirrors
 (``live-state/iva-wallet``). ``LIVE_STATE`` is operator-overridable, so this
 member -- like the ``SECRETS_MASTER_KEY`` family -- carries no
 ``settings_field`` and is not safe to resolve via ``storage_path`` directly;
-production (``application/live/_iva_remote_state.py``) reads the same bare
+production (``application/live/iva_remote_state.py``) reads the same bare
 leaf names off the accessor-derived root, and this test mirrors that
 sanctioned pattern rather than a taxonomy-accessor call.
 """
@@ -31,7 +31,7 @@ from ...modelo import ModeloIvaWalletReconciliationBlocked
 from ...modelo import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
 from ...user_profile.profile_record_repository import ProfileRecordRepository
 from ...user_profile.projections import record_to_path_values
-from .. import capture_iva_compensation_wallet
+from ..iva_remote_state import capture_iva_compensation_wallet
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 

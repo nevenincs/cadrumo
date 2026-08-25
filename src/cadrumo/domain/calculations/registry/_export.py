@@ -28,7 +28,7 @@ from ._binding_selector_utils import (
     selector_as_dict,
 )
 from ._casilla_membership import casillas_by_id
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._export_parse import xml_dictionary_entries
 from ._fixed_width_codec import ExportJustification, ExportPadding
 from ._ids import ExportFieldId

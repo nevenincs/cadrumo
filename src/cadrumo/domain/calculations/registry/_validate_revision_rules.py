@@ -14,7 +14,7 @@ from collections.abc import Collection
 
 from ....core import M210_TIPO_RENTA_CODE_PROJECTION
 from ._deadline_coordinate import DeadlineSemanticCoordinate, deadline_window_semantic_coordinates
-from ._errors import RegistrySnapshotError
+from .errors import RegistrySnapshotError
 from ._schema import InputKind, ModeloDefinition, ModeloRevision, filing_schedule_period_kind_mismatches
 from ._temporal import select_revision
 from ._validate_parameter_temporal import _bracket_coverage_gaps as _bracket_coverage_gaps

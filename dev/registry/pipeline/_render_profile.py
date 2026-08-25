@@ -19,7 +19,8 @@ from typing import Annotated, Final, Literal
 import rtoml
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
-from cadrumo.core import is_link_like, iter_directory
+from cadrumo.core import is_link_like
+from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.hashing import content_hash_hex, sha256_file
 from cadrumo.domain.calculations.registry import (
     ABSENT_NATURALEZA_TYPE_CODE,

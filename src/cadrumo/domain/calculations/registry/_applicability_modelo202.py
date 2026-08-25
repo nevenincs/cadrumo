@@ -16,7 +16,7 @@ from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
 from ....core.external_constants import MODELO_202_ART_40_3_INCN_THRESHOLD_EUR
 from ...deadlines import EntityType, TaxpayerProfile
-from ._errors import RegistryFailureClassification, RegistryFailureCondition
+from .errors import RegistryFailureClassification, RegistryFailureCondition
 from ._ids import LegalRefId
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]

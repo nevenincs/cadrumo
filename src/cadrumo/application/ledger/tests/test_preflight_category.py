@@ -14,7 +14,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from .. import LedgerPreflightIssueReason, preflight_transaction_catalogue
+from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
 from ._preflight_test_support import _BUCKET_ID, _Q2_2026, _raw_transaction, _transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

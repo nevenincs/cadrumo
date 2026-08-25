@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .._errors import CorpusSearchInputError
+from ..errors import CorpusSearchInputError
 from .._lexical_index import build_lexical_index, iter_corpus_chunks, search_lexical
 from ._corpus_fixture import build_sample_corpus
 

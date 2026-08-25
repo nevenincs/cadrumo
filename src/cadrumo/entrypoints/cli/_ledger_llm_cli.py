@@ -21,19 +21,11 @@ from collections.abc import Callable
 import typer
 from pydantic import BaseModel, ValidationError
 
-from ...application.ledger import (
-    LlmReviewDecision,
-    LlmReviewInvocationOrigin,
-    ManualLedgerTransactionResult,
-    apply_evidence_classification,
-    derive_operator_iva_substrate,
-    execute_reviewed_decision,
-    ledger_transaction_payload,
-    ledger_transaction_review_status,
-    saturate_llm_classification,
-    suggest_evidence_split,
-    suggest_llm_classification,
-)
+from ...application.ledger.llm_review_workflow import LlmReviewDecision, LlmReviewInvocationOrigin, execute_reviewed_decision
+from ...application.ledger.models import ManualLedgerTransactionResult
+from ...application.ledger.llm_classification import apply_evidence_classification, derive_operator_iva_substrate, saturate_llm_classification, suggest_evidence_split, suggest_llm_classification
+from ...application.ledger.actions_manual import ledger_transaction_payload
+from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...core import provenance_stamp_transport
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n import tr
@@ -44,13 +36,7 @@ from ...domain.transactions import (
     TransactionCatalogueRepositoryProtocol,
     TransactionValidationError,
 )
-from ...llm import (
-    LLMClassificationSuggestion,
-    LLMSaturatedSuggestion,
-    LLMSplitApplyResult,
-    LLMSplitSuggestion,
-    LLMSuggestionRejectionResult,
-)
+from ...llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSplitApplyResult, LLMSplitSuggestion, LLMSuggestionRejectionResult
 from ._common import _bad, _state, _tx_repo, emit_envelope
 from ._ledger_support import (
     _ledger_transaction_validation_no_recovery,
@@ -86,8 +72,8 @@ def emit_llm_rejection(
     The fourth decision terminal: the row is NOT classified, but the rejection is
     captured as a ``ledger.transaction.llm_suggestion.rejected`` audit event. The
     write is routed through the one review workflow
-    (:func:`~application.ledger.execute_reviewed_decision`) with the caller's
-    :class:`~application.ledger.LlmReviewInvocationOrigin`, so the durable
+    (:func:`~application.ledger.llm_review_workflow.execute_reviewed_decision`) with the caller's
+    :class:`~application.ledger.llm_review_workflow.LlmReviewInvocationOrigin`, so the durable
     ``source_command`` audit label is derived from the origin rather than a
     CLI-owned literal. An ``info`` :class:`Notice` confirms the log and points at
     the manual-override next step
@@ -652,7 +638,7 @@ def ledger_classify_llm(
 
     Without ``--apply`` the model's suggestion is printed for review and nothing
     is persisted. With ``--apply`` the reviewed decision is routed through the one
-    review workflow (:func:`~application.ledger.execute_reviewed_decision`) with
+    review workflow (:func:`~application.ledger.llm_review_workflow.execute_reviewed_decision`) with
     the ``CLASSIFY_LLM_APPLY`` origin, which delegates to the canonical
     classification write with ``llm:<model>`` provenance. With ``--reject`` the
     suggestion is recorded as a declined audit event and the row is left
@@ -719,7 +705,7 @@ def ledger_saturate_llm(
     and amount from the registry — never the model. Without ``--apply`` the full
     saturated suggestion is previewed and nothing is persisted; with ``--apply``
     the reviewed decision is routed through the one review workflow
-    (:func:`~application.ledger.execute_reviewed_decision`) with the
+    (:func:`~application.ledger.llm_review_workflow.execute_reviewed_decision`) with the
     ``CLASSIFY_LLM_SATURATE_APPLY`` origin, which delegates to the manual-command
     write with ``llm:<model>`` provenance; with ``--reject`` the suggestion is
     recorded as a declined audit event and the row is left unchanged. Manual

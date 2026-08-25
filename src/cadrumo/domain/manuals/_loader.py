@@ -34,7 +34,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.paths import path_stat_fingerprint, resolve_relative_subpath
-from ._errors import ManualNotFoundError, ManualParseError
+from .errors import ManualNotFoundError, ManualParseError
 from ._schema import (
     Chapter,
     Manual,

@@ -34,7 +34,7 @@ from io import BytesIO
 import pytest
 
 from cadrumo.adapters.inbound.einvoice._shape import iter_pdf_embedded_files
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

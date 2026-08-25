@@ -12,7 +12,7 @@ from pydantic import BaseModel, BeforeValidator, Field, SerializeAsAny
 from ....core import IBAN_SHAPE_RE, StandardPeriodCode, iban_mod_97, normalise_iban
 from ....core.decimal import coerce_decimal
 from ....core.identity import IdentityError, validate_spanish_tax_id
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 
 __all__ = [
     "BicString",

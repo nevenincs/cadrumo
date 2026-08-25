@@ -25,7 +25,7 @@ import pytest
 
 from .._categories import PortalCategory
 from .._codes import Portal
-from .._errors import PortalIntegrityError, UnknownPortalError
+from ..errors import PortalIntegrityError, UnknownPortalError
 from .._metadata import PortalMetadata
 from .._registry import (
     PORTAL_REGISTRY,

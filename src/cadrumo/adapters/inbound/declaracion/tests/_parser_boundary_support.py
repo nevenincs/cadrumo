@@ -19,7 +19,7 @@ from .....domain.justificante import PdfModeloImportError
 from .....tests import FIXTURES_DIR
 from ...pdf import source_pdf_reference_path
 from .. import parse_declaracion
-from .._errors import DeclaracionParseError, TemplateNotDetectedError
+from ..errors import DeclaracionParseError, TemplateNotDetectedError
 from .._parser import _extract_pages_words
 
 pytestmark = [

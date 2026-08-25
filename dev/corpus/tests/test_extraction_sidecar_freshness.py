@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import hashlib
-import importlib
 import json
 import re
 import sys
 from pathlib import Path
 
 import pytest
+
+from cadrumo.core.corpus_text import normalise_corpus_text
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
 from ...docs.preprocess import (
     EXTRACTED_JSON_SUFFIX,
@@ -20,15 +22,6 @@ from ...docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
 from ..extract_manual_corpus_text import extract_raw_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-# Absolute, string-form import by necessity: `_data/` and `_data/corpus/` carry
-# no `__init__.py` (they are a data tree, not a package chain), so this module
-# is imported in rootdir mode and a relative import cannot reach `cadrumo`.
-# The sibling `dev.*` imports above are absolute for the same reason.
-_core = importlib.import_module("cadrumo.core")
-normalise_corpus_text = _core.normalise_corpus_text
-DirectoryEntryKind = _core.DirectoryEntryKind
-scan_directory = _core.scan_directory
 
 # src/cadrumo/_data/corpus/tests/test_extraction_sidecar_freshness.py -> parents[5] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[5]

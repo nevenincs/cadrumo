@@ -8,7 +8,7 @@ from typing import get_args
 import pytest
 from pydantic import ValidationError
 
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._formula_operator_contracts import FORMULA_OPERATOR_ARITIES
 from .._formula_runtime_ops import evaluate_args_op
 from .._schema import FormulaExpression

@@ -9,7 +9,7 @@ target silently moved to ``2026-y-siguientes``).
 
 from __future__ import annotations
 
-from ..application.modelo import resolve_registry_revision_for_work_target
+from ..application.modelo.work_addressing import resolve_registry_revision_for_work_target
 from ..core import Period
 
 

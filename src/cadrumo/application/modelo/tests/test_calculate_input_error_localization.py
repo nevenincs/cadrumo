@@ -17,7 +17,7 @@ from .._calculate_input import (
     _validated_relation_id,
 )
 from .._selectors import ModeloCalculationRevisionSelector
-from .._work_addressing import ModeloRevisionPick, ModeloRevisionPickError
+from ..work_addressing import ModeloRevisionPick, ModeloRevisionPickError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

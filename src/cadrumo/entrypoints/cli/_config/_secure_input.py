@@ -55,7 +55,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.tty import stdin_is_tty
 
-_CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli._errors").CliRefusedBoundaryError
+_CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli.errors").CliRefusedBoundaryError
 
 MACHINE_SECRET_MAX_BYTES = 8192
 _MAX_SECRETS_BYTES = MACHINE_SECRET_MAX_BYTES

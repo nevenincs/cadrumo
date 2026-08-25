@@ -15,7 +15,7 @@ value co-location attributes -- otherwise the interim and the fix ship side by
 side indefinitely, which is the cleanup that never gets done.
 
 See Also:
-    :func:`~application.ledger.resolve_party_attribution_by_colocation`
+    :func:`~application.ledger.party_colocation.resolve_party_attribution_by_colocation`
         The resolver under test.
 """
 
@@ -33,11 +33,11 @@ from ....core import (
     FieldGroundingOutcome,
     FieldOrigin,
 )
-from .._document_transcription import DocumentTranscription, TranscriberIdentity
-from .._evidence_draft import FieldProvenance, InvoiceDraft
-from .._grounded_reading import ground_draft_against_transcription
-from .._party_attribution import party_attribution_advisory
-from .._party_colocation import (
+from ..document_transcription import DocumentTranscription, TranscriberIdentity
+from ..evidence_draft import FieldProvenance, InvoiceDraft
+from ..grounded_reading import ground_draft_against_transcription
+from ..party_attribution import party_attribution_advisory
+from ..party_colocation import (
     PartyAttributionOutcome,
     party_regions,
     resolve_party_attribution_by_colocation,
@@ -241,7 +241,7 @@ def test_a_transposition_reaches_the_operator_as_a_blocking_refusal() -> None:
     Detecting a swap and discarding it is the same shape as evidence no resolver
     consumes: the check runs, nothing acts, and the draft confirms clean.
     """
-    from .._confirmation_gate import confirmation_blockers
+    from ..confirmation_gate import confirmation_blockers
 
     grounded = ground_draft_against_transcription(draft=_transposed(), transcription=_transcription())
 
@@ -257,7 +257,7 @@ def test_a_transposition_reaches_the_operator_as_a_blocking_refusal() -> None:
 
 def test_a_correctly_filed_document_raises_no_attribution_blocker() -> None:
     """The ordinary case must not be refused, or the blocker trains operators to ignore it."""
-    from .._confirmation_gate import confirmation_blockers
+    from ..confirmation_gate import confirmation_blockers
 
     grounded = ground_draft_against_transcription(draft=_straight(), transcription=_transcription())
 
