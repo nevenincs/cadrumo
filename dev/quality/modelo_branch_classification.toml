@@ -1061,3 +1061,32 @@ No provision states that only modelo 303 has projection endpoints; the union doe
 Widen that union and this branch must be made again, which is why the citation
 names the evidence resolver the branch selects rather than the guard.
 """
+
+[[branch]]
+path = "src/cadrumo/application/filing/_export.py"
+enclosing_symbol = "_projection_plan_for_layout"
+modelo_codes = "M296"
+group = "modelo-path-routing"
+selects = "build_m296_filing_projection_plan"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_producer_snapshot.py"
+enclosing_symbol = "_validate_snapshot_model_profile"
+modelo_codes = "M390"
+classification = "orchestration_routing"
+selects = "ValueError"
+justification = """
+A payload-scope guard, and deliberately NOT the modelo-path-routing group its
+siblings in this function carry. The M111, M202, M296, M303 and M353 arms each
+select a per-modelo validator; this one selects nothing -- there is no
+_validate_modelo_390_snapshot -- it refuses M390FilingFacts attached to a
+snapshot of any other modelo.
+
+What it decides is that a typed carrier named for one modelo may only ride that
+modelo's snapshot. That is a fact about this codebase's payload shape, not about
+IVA: no provision says an annual-summary fact set cannot travel on a quarterly
+snapshot, the TYPE says so by being named for its modelo and being a distinct
+field. The citation names the refusal the branch raises, which is the only code token
+inside the guarded body -- the carrier's name lives in the message string, and
+the checker reads tokens rather than prose, correctly.
+"""
