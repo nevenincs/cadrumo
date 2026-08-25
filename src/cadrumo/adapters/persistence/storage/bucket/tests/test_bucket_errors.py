@@ -65,18 +65,31 @@ def test_bucket_busy_payload_carries_bucket_id_and_pid() -> None:
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "expected_context"),
     (
-        pytest.param(BucketAlreadyPresentError(bucket_id="bucket-001"), id="already-present"),
-        pytest.param(BucketLockedError(bucket_id="bucket-001"), id="locked"),
-        pytest.param(RecoveryUnavailableError(bucket_id="bucket-001"), id="recovery-unavailable"),
+        pytest.param(
+            BucketAlreadyPresentError(bucket_id="bucket-001"),
+            {"bucket_id": "bucket-001"},
+            id="already-present",
+        ),
+        pytest.param(
+            BucketLockedError(bucket_id="bucket-001"),
+            {"bucket_id": "bucket-001", "bucket_session_unlocked": False},
+            id="locked",
+        ),
+        pytest.param(
+            RecoveryUnavailableError(bucket_id="bucket-001"),
+            {"bucket_id": "bucket-001"},
+            id="recovery-unavailable",
+        ),
     ),
 )
 def test_bucket_id_payload_carries_bucket_id(
     error: BucketAlreadyPresentError | BucketLockedError | RecoveryUnavailableError,
+    expected_context: dict[str, str | bool],
 ) -> None:
     assert error.bucket_id == "bucket-001"
-    assert error.context == {"bucket_id": "bucket-001"}
+    assert error.context == expected_context
 
 
 def test_each_registry_code_is_distinct() -> None:

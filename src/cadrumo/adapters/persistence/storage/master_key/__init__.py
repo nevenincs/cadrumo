@@ -27,8 +27,8 @@ build could produce. Importing this package does not resolve providers, acquire
 keys, unwrap recovery material, or write custody files; callers must
 invoke the exported operations explicitly.
 
-The per-profile acceleration receipt that carries the ``aeat config login``
-state across processes is NOT here: it belongs to
+The per-profile acceleration receipt that carries authenticated session state
+across processes is NOT here: it belongs to
 :mod:`cadrumo.adapters.persistence.storage.custody`, which owns per-profile
 password custody. What remains is the shared-master surface plus the live
 key-holding session machinery both surfaces use — :class:`BucketSession` and
