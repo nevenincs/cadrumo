@@ -130,6 +130,15 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
         """
         ...
 
+    def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
+        """Return the catalogue together with its current persistence revision.
+
+        Co-commit callers must carry this revision into their guarded write so
+        rebuilding the singleton catalogue cannot overwrite a concurrent
+        calculation revision.
+        """
+        ...
+
     def save(self, catalogue: CalculationRevisionCatalogue) -> None:
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...

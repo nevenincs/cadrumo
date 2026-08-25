@@ -220,4 +220,3 @@ def test_wheel_keeps_registry_payload(wheel_members: frozenset[str]) -> None:
 
     registry_count = _count(f"{_WHEEL_DATA_PREFIX}/registry/")
     assert registry_count > 0, "the wheel ships no registry members; the split over-stripped the registry payload"
-

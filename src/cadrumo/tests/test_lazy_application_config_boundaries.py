@@ -77,18 +77,14 @@ def _module_level_workflow_graph(sources: dict[str, str]) -> dict[str, set[str]]
                     if node.module
                     else tuple(alias.name for alias in node.names)
                 )
-            elif isinstance(node, ast.ImportFrom) and (node.module or "").startswith(
-                "cadrumo.application.workflow."
-            ):
-                targets = (
-                    node.module.removeprefix("cadrumo.application.workflow.").split(".", maxsplit=1)[0],
-                )
+            elif isinstance(node, ast.ImportFrom) and (node.module or "").startswith("cadrumo.application.workflow."):
+                targets = (node.module.removeprefix("cadrumo.application.workflow.").split(".", maxsplit=1)[0],)
             else:
                 targets = ()
             graph[name].update(target for target in targets if target in graph)
         for target in _runtime_dynamic_import_targets(tree):
-            internal = target.lstrip(".") if target.startswith(".") else target.removeprefix(
-                "cadrumo.application.workflow."
+            internal = (
+                target.lstrip(".") if target.startswith(".") else target.removeprefix("cadrumo.application.workflow.")
             )
             internal = internal.split(".", maxsplit=1)[0]
             if internal in graph:
@@ -156,10 +152,7 @@ def _forbidden_write_imports(source: str) -> set[str]:
         for forbidden in _WRITE_SIDE_MODULES
         if any(
             target == forbidden
-            or (
-                target.startswith(".")
-                and target.lstrip(".") == forbidden.rsplit(".", maxsplit=1)[-1]
-            )
+            or (target.startswith(".") and target.lstrip(".") == forbidden.rsplit(".", maxsplit=1)[-1])
             or target.endswith(f".{forbidden.rsplit('.', maxsplit=1)[-1]}")
             for target in targets
         )
@@ -237,9 +230,7 @@ print(json.dumps({
 def test_workflow_module_level_graph_is_acyclic_and_detector_bites() -> None:
     """S18-S19 must not trade eager facade loading for an internal import cycle."""
     sources = {
-        path.stem: path.read_text(encoding="utf-8")
-        for path in _WORKFLOW.glob("*.py")
-        if path.name != "__init__.py"
+        path.stem: path.read_text(encoding="utf-8") for path in _WORKFLOW.glob("*.py") if path.name != "__init__.py"
     }
     graph = _module_level_workflow_graph(sources)
 
@@ -259,7 +250,9 @@ def test_lazy_facade_and_read_only_config_forbid_materialization_imports() -> No
     offenders: list[str] = []
     for path in (_WORKFLOW / "__init__.py", _SRC / "core" / "config.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        offenders.extend(f"{path.as_posix()} -> {target}" for target in sorted(_forbidden_write_imports(ast.unparse(tree))))
+        offenders.extend(
+            f"{path.as_posix()} -> {target}" for target in sorted(_forbidden_write_imports(ast.unparse(tree)))
+        )
 
     assert offenders == []
 

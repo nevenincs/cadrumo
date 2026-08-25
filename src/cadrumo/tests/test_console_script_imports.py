@@ -96,4 +96,3 @@ def test_console_scripts_expose_only_the_canonical_cadrumo_commands() -> None:
     pyproject = tomllib.loads((_PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert pyproject["project"]["scripts"] == {"aeat": "cadrumo.entrypoints._cli_main:main"}
-

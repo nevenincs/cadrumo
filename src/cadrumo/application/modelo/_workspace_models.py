@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import (
+    BindingSourceKind,
+    CalculationSourceLineageRole,
     STRICT_FROZEN_CONFIG,
     CasillaId,
     OutputLanguage,
@@ -17,11 +18,10 @@ from ...core import (
     RegistrySchemaFamilyDisposition,
     RevisionReviewStatus,
 )
-from ...core.identity import BucketId, ContentDigest, WorkUnitId
+from ...core.identity import BucketId, ContentDigest, ContinuidadId, ProfileId, TransactionId, WorkUnitId
 from ...domain.calculations.registry import (
     ApplicabilityRuleId,
     BindingId,
-    ContinuidadId,
     ExportFieldId,
     FormulaId,
     LegalRefId,
@@ -31,24 +31,32 @@ from ...domain.calculations.registry import (
     SourceRefId,
 )
 from ...domain.filing import ModeloScalar
-from ...domain.modelos import CalculationSourceRef, ModeloCode, WorkUnitState
+from ...domain.modelos import ModeloCode, WorkUnitState
+from ..ledger import LedgerPreflightIssueReason
 from ..operator_actions import ActionReference
 from ..registry import RegistryClosureLimb
-from ..state_projection import ProjectionModeloReadiness
 from ._work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from ._work_review import ModeloWorkReview
 
 _MAX_FACET_PAGE_SIZE = 200
+_MAX_FACET_CURSOR_LENGTH = 256
+_MAX_CONTRIBUTORS = 32
+_MAX_SCHEMA_SECTION_DEPTH = 16
+_MAX_SCHEMA_RELATIONSHIPS = 128
+_MAX_SCHEMA_EVIDENCE_REFERENCES = 64
+_MAX_REPEATED_ROW_VALUES = 200
+_MAX_PROVENANCE_RECORDS = 64
+_MAX_READINESS_REQUIREMENTS = 128
+_MAX_READINESS_BINDINGS = 128
+_MAX_READINESS_LEDGER_ISSUES = 128
+_MAX_CLOSURE_LIMBS = 16
 _MAX_SAFE_FACTS = 32
 _MAX_SAFE_FACT_TEXT_LENGTH = 256
 
-_BUCKET_ID_ADAPTER = TypeAdapter(BucketId)
-_REVISION_ID_ADAPTER = TypeAdapter(RevisionId)
-_WORK_UNIT_ID_ADAPTER = TypeAdapter(WorkUnitId)
-
 type _BoundedText = Annotated[str, Field(min_length=1, max_length=256)]
 type _BoundedCode = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
-type _WorkspaceTarget = ModeloVisibleFilingTarget | ModeloExactWorkUnitTarget
+type _BoundedLocalizedText = Annotated[str, Field(min_length=1, max_length=512)]
+type _BoundedRefList[T] = Annotated[tuple[T, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)]
 
 
 class _WorkspaceModel(BaseModel):
@@ -156,74 +164,33 @@ type ModeloWorkspaceAdmissionV1 = Annotated[
 ]
 
 
-def _target_from_mapping(value: Mapping[str, object]) -> _WorkspaceTarget:
-    """Adapt an untyped wire mapping once into the existing canonical target family."""
-    if "work_unit_id" in value:
-        expected = {"work_unit_id", "bucket_id"}
-        if set(value) - expected or "work_unit_id" not in value:
-            raise ValueError("exact workspace targets accept only work_unit_id and optional bucket_id")
-        work_unit_id = value["work_unit_id"]
-        bucket_id = value.get("bucket_id")
-        if not isinstance(work_unit_id, str) or (bucket_id is not None and not isinstance(bucket_id, str)):
-            raise ValueError("exact workspace target identifiers must be strings")
-        return ModeloExactWorkUnitTarget(
-            work_unit_id=_WORK_UNIT_ID_ADAPTER.validate_python(work_unit_id),
-            bucket_id=None if bucket_id is None else _BUCKET_ID_ADAPTER.validate_python(bucket_id),
-        )
+class ModeloWorkspaceVisibleFilingTargetV1(_WorkspaceModel):
+    """Serialized visible-target arm that retains the canonical target operand."""
 
-    expected = {"modelo", "filing_year", "period", "registry_revision_id", "bucket_id"}
-    required = {"modelo", "filing_year", "period"}
-    if set(value) - expected or not required.issubset(value):
-        raise ValueError("visible workspace targets require modelo, filing_year, and period")
-    modelo = value["modelo"]
-    filing_year = value["filing_year"]
-    period = value["period"]
-    revision_id = value.get("registry_revision_id")
-    bucket_id = value.get("bucket_id")
-    if not isinstance(modelo, str) or type(filing_year) is not int:
-        raise ValueError("visible workspace target modelo and filing_year must have canonical scalar types")
-    if not isinstance(period, (str, Period, Mapping)):
-        raise ValueError(
-            "visible workspace target period must be a Period, registry token, or canonical period mapping"
-        )
-    if revision_id is not None and not isinstance(revision_id, str):
-        raise ValueError("visible workspace target registry_revision_id must be a string")
-    if bucket_id is not None and not isinstance(bucket_id, str):
-        raise ValueError("visible workspace target bucket_id must be a string")
-    resolved_period = (
-        period
-        if isinstance(period, Period)
-        else Period.model_validate(period)
-        if isinstance(period, Mapping)
-        else Period.from_year_and_code(filing_year, period)
-    )
-    if resolved_period.filing_year != filing_year:
-        raise ValueError("visible workspace target period must agree with filing_year")
-    return ModeloVisibleFilingTarget(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=resolved_period,
-        registry_revision_id=None if revision_id is None else _REVISION_ID_ADAPTER.validate_python(revision_id),
-        bucket_id=None if bucket_id is None else _BUCKET_ID_ADAPTER.validate_python(bucket_id),
-    )
+    kind: Literal["visible_filing"] = "visible_filing"
+    target: ModeloVisibleFilingTarget
+
+
+class ModeloWorkspaceExactWorkUnitTargetV1(_WorkspaceModel):
+    """Serialized exact-work-unit arm that retains the canonical target operand."""
+
+    kind: Literal["exact_work_unit"] = "exact_work_unit"
+    target: ModeloExactWorkUnitTarget
+
+
+type ModeloWorkspaceTargetV1 = Annotated[
+    ModeloWorkspaceVisibleFilingTargetV1 | ModeloWorkspaceExactWorkUnitTargetV1,
+    Field(discriminator="kind"),
+]
 
 
 class ModeloWorkspaceRequestV1(_WorkspaceModel):
     """One V1 read request over a canonical visible or advanced exact target."""
 
     contract_version: Literal[1] = 1
-    target: _WorkspaceTarget
+    target: ModeloWorkspaceTargetV1
     admission: ModeloWorkspaceAdmissionV1
     output_language: OutputLanguage
-
-    @field_validator("target", mode="before")
-    @classmethod
-    def _adapt_wire_target(cls, value: object) -> _WorkspaceTarget:
-        if isinstance(value, (ModeloVisibleFilingTarget, ModeloExactWorkUnitTarget)):
-            return value
-        if not isinstance(value, Mapping):
-            raise ValueError("workspace target must be a canonical target or an exact target mapping")
-        return _target_from_mapping(value)
 
 
 class ModeloWorkspaceRevisionAssertionV1(_WorkspaceModel):
@@ -285,7 +252,7 @@ class ModeloWorkspaceLocalizedTextV1(_WorkspaceModel):
     """One localized display string with its canonical resolution coordinates."""
 
     locale_key: _BoundedCode
-    value: str
+    value: _BoundedLocalizedText
     locale: ModeloWorkspaceLocaleSummaryV1
 
 
@@ -386,7 +353,7 @@ class ModeloWorkspaceFormulaDispatchOperandReferenceV1(_WorkspaceModel):
 
     kind: Literal["formula_operand_dispatch"] = "formula_operand_dispatch"
     formula_id: FormulaId
-    parameter_ids: tuple[ParameterId, ...]
+    parameter_ids: Annotated[tuple[ParameterId, ...], Field(min_length=1, max_length=_MAX_SCHEMA_RELATIONSHIPS)]
 
     @field_validator("parameter_ids")
     @classmethod
@@ -480,13 +447,31 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     """Explanatory schema row using canonical registry identities, never grammar objects."""
 
     reference: ModeloWorkspaceSchemaReferenceV1
-    section_path: tuple[_BoundedText, ...]
+    section_path: Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_SCHEMA_SECTION_DEPTH)]
     data_type: _BoundedCode
     label: ModeloWorkspaceLocalizedTextV1
     classification: ModeloWorkspaceSchemaClassification
     family_disposition: RegistrySchemaFamilyDisposition
-    legal_refs: tuple[LegalRefId, ...] = ()
-    source_refs: tuple[SourceRefId, ...] = ()
+    legal_refs: _BoundedRefList[LegalRefId] = ()
+    source_refs: _BoundedRefList[SourceRefId] = ()
+    continuity: Annotated[
+        tuple[ModeloWorkspaceContinuityReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
+    ] = ()
+    applicability: Annotated[
+        tuple[ModeloWorkspaceApplicabilityReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
+    ] = ()
+    constraints: Annotated[
+        tuple[ModeloWorkspaceConstraintReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
+    ] = ()
+    formula_operands: Annotated[
+        tuple[ModeloWorkspaceFormulaOperandReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
+    ] = ()
+    relation_endpoints: Annotated[
+        tuple[ModeloWorkspaceRelationEndpointReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
+    ] = ()
+    export_exposure: Annotated[
+        tuple[ModeloWorkspaceExportExposureReferenceV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
+    ] = ()
 
 
 class ModeloWorkspaceFamilyDispositionV1(_WorkspaceModel):
@@ -494,15 +479,29 @@ class ModeloWorkspaceFamilyDispositionV1(_WorkspaceModel):
 
     family: _BoundedCode
     disposition: RegistrySchemaFamilyDisposition
-    legal_refs: tuple[LegalRefId, ...] = ()
-    source_refs: tuple[SourceRefId, ...] = ()
+    legal_refs: _BoundedRefList[LegalRefId] = ()
+    source_refs: _BoundedRefList[SourceRefId] = ()
 
 
 class ModeloWorkspaceProvenanceRecordV1(_WorkspaceModel):
-    """One selected canonical resolver lineage row for a workspace subject."""
+    """One redacted canonical resolver lineage row for a workspace subject."""
 
     subject: ModeloWorkspaceSchemaReferenceV1
-    calculation_source: CalculationSourceRef
+    resolver_id: _BoundedCode
+    lineage_role: CalculationSourceLineageRole
+    resolved_source_kind: BindingSourceKind
+    contributor_source_kind: BindingSourceKind | None = None
+    source_ref: SourceRefId
+    parent_source_ref: SourceRefId | None = None
+    fingerprint: ContentDigest | None = None
+
+    @model_validator(mode="after")
+    def _require_coherent_redacted_lineage(self) -> ModeloWorkspaceProvenanceRecordV1:
+        if self.lineage_role is CalculationSourceLineageRole.PRIMARY and self.parent_source_ref is not None:
+            raise ValueError("primary workspace provenance cannot have a parent source reference")
+        if self.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR and self.parent_source_ref is None:
+            raise ValueError("contributor workspace provenance requires a parent source reference")
+        return self
 
 
 class ModeloWorkspaceScalarMaterializationV1(_WorkspaceModel):
@@ -510,7 +509,7 @@ class ModeloWorkspaceScalarMaterializationV1(_WorkspaceModel):
 
     casilla_id: CasillaId
     value: ModeloScalar
-    provenance: tuple[ModeloWorkspaceProvenanceRecordV1, ...] = ()
+    provenance: Annotated[tuple[ModeloWorkspaceProvenanceRecordV1, ...], Field(max_length=_MAX_PROVENANCE_RECORDS)] = ()
 
 
 class ModeloWorkspaceRepeatedRowMaterializationV1(_WorkspaceModel):
@@ -518,24 +517,30 @@ class ModeloWorkspaceRepeatedRowMaterializationV1(_WorkspaceModel):
 
     binding_id: BindingId
     row_index: Annotated[int, Field(ge=1)]
-    values: tuple[ModeloWorkspaceScalarMaterializationV1, ...]
-    provenance: tuple[ModeloWorkspaceProvenanceRecordV1, ...] = ()
+    values: Annotated[
+        tuple[ModeloWorkspaceScalarMaterializationV1, ...], Field(min_length=1, max_length=_MAX_REPEATED_ROW_VALUES)
+    ]
+    provenance: Annotated[tuple[ModeloWorkspaceProvenanceRecordV1, ...], Field(max_length=_MAX_PROVENANCE_RECORDS)] = ()
 
 
-class ModeloWorkspaceMaterializationRecordV1(_WorkspaceModel):
-    """A bounded scalar or repeated-row materialization record."""
+class ModeloWorkspaceScalarMaterializationRecordV1(_WorkspaceModel):
+    """One scalar materialization arm with no nullable sibling payload."""
 
-    kind: Literal["scalar", "repeated_row"]
-    scalar: ModeloWorkspaceScalarMaterializationV1 | None = None
-    repeated_row: ModeloWorkspaceRepeatedRowMaterializationV1 | None = None
+    kind: Literal["scalar"] = "scalar"
+    scalar: ModeloWorkspaceScalarMaterializationV1
 
-    @model_validator(mode="after")
-    def _require_exactly_one_materialization_arm(self) -> ModeloWorkspaceMaterializationRecordV1:
-        if self.kind == "scalar" and self.scalar is not None and self.repeated_row is None:
-            return self
-        if self.kind == "repeated_row" and self.repeated_row is not None and self.scalar is None:
-            return self
-        raise ValueError("workspace materialization kind must name exactly one matching arm")
+
+class ModeloWorkspaceRepeatedRowMaterializationRecordV1(_WorkspaceModel):
+    """One repeated-row materialization arm with no nullable sibling payload."""
+
+    kind: Literal["repeated_row"] = "repeated_row"
+    repeated_row: ModeloWorkspaceRepeatedRowMaterializationV1
+
+
+type ModeloWorkspaceMaterializationRecordV1 = Annotated[
+    ModeloWorkspaceScalarMaterializationRecordV1 | ModeloWorkspaceRepeatedRowMaterializationRecordV1,
+    Field(discriminator="kind"),
+]
 
 
 class ModeloWorkspaceTextFactValueV1(_WorkspaceModel):

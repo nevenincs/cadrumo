@@ -926,5 +926,3 @@ def _revision_filing_authority_proof(
         if reference.review_status is LegalReviewStatus.AGENT_REVIEWED:
             tier = RevisionReviewStatus.AGENT_REVIEWED
     return _PROOF_BY_TIER[tier]
-
-

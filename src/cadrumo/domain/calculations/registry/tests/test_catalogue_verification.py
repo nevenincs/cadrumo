@@ -240,7 +240,8 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     modelo_038 = next(
         ledger
         for ledger in audit.ledgers
-        if (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period) == ("038", "2002-y-siguientes", 2002, "01")
+        if (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period)
+        == ("038", "2002-y-siguientes", 2002, "01")
     )
     assert modelo_038.revision == "2002-y-siguientes"
     assert modelo_038.authority_scope == "inspection_only"
@@ -271,7 +272,9 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
             assessment_horizon=assessment_horizon,
         )
     }
-    actual_coordinates = {(ledger.modelo, ledger.revision, ledger.filing_year, ledger.period) for ledger in audit.ledgers}
+    actual_coordinates = {
+        (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period) for ledger in audit.ledgers
+    }
     assert actual_coordinates == expected_coordinates
     for ledger in audit.ledgers:
         gates = {gate.tier: gate for gate in ledger.gates}

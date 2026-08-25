@@ -260,9 +260,6 @@ if TYPE_CHECKING:
         CensalObservationIdentity as CensalObservationIdentity,
     )
     from ._censal_operation import (
-        CensalOperationAcquisition as CensalOperationAcquisition,
-    )
-    from ._censal_operation import (
         CENSAL_OPERATION_DEFINITION as CENSAL_OPERATION_DEFINITION,
     )
     from ._censal_operation import (
@@ -273,6 +270,9 @@ if TYPE_CHECKING:
     )
     from ._censal_operation import (
         CensalFieldIntent as CensalFieldIntent,
+    )
+    from ._censal_operation import (
+        CensalOperationAcquisition as CensalOperationAcquisition,
     )
     from ._censal_operation import (
         CensalOperationOutcome as CensalOperationOutcome,
@@ -1231,9 +1231,9 @@ __all__ = [
     "apply_profile_fact_changes",
     "bind_resumed_profile_session",
     "bound_profile_record_session",
+    "build_censal_operation_definition",
     "build_censal_operation_registration",
     "build_profile_overview",
-    "build_censal_operation_definition",
     "build_profile_preflight_requirement",
     "build_user_profile_operation_definitions",
     "build_user_profile_operation_registrations",

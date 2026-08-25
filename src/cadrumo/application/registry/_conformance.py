@@ -991,11 +991,7 @@ class _AxisIndex:
         return cls(
             grounding_rows={(row.modelo, row.revision): row for row in external_grounding.rows},
             classification_rows={row.modelo: row for row in classification.rows},
-            coverage_ledgers=(
-                {}
-                if model_law_coverage is None
-                else model_law_coverage.ledgers_by_revision
-            ),
+            coverage_ledgers=({} if model_law_coverage is None else model_law_coverage.ledgers_by_revision),
             construct_evidence_ledgers=(
                 {}
                 if construct_evidence is None
@@ -1361,9 +1357,7 @@ def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> Revisio
         )
     )
     scopes = {ledger.authority_scope for ledger in ledgers}
-    authority_scope: RevisionCoverageAuthorityScope = (
-        next(iter(scopes)) if len(scopes) == 1 else "mixed"
-    )
+    authority_scope: RevisionCoverageAuthorityScope = next(iter(scopes)) if len(scopes) == 1 else "mixed"
     return RevisionModelLawCoverage(
         satisfied_tiers=satisfied,
         gap_tiers=gaps,

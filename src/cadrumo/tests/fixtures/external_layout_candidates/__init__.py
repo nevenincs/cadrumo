@@ -45,7 +45,7 @@ AEAT_PUBLISHED_FACSIMILE_CLASSIFICATION = "aeat_published_facsimile"
 
 _SHA256 = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 _NONEMPTY = Annotated[str, Field(min_length=1)]
-_PDF_HEADER_RE = re.compile(br"\A%PDF-(\d\.\d)")
+_PDF_HEADER_RE = re.compile(rb"\A%PDF-(\d\.\d)")
 _NIF_LIKE_RE = re.compile(r"\b(?:[XYZ]\d{7}[A-Z]|\d{8}[A-Z]|[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J])\b", re.I)
 _IBAN_LIKE_RE = re.compile(r"\b[A-Z]{2}\d{2}(?:[ -]?[A-Z0-9]){11,30}\b")
 _EMAIL_LIKE_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.I)
@@ -172,7 +172,9 @@ class ExternalLayoutRegistryApplicability(_FrozenStrictModel):
     def _revision_matches_verdict(self) -> ExternalLayoutRegistryApplicability:
         has_authored_revision = self.verdict != "historical_layout_without_authored_revision"
         if has_authored_revision != (self.revision_id is not None):
-            raise ValueError("revision_id is required exactly when the applicability verdict names an authored revision")
+            raise ValueError(
+                "revision_id is required exactly when the applicability verdict names an authored revision"
+            )
         return self
 
 
@@ -272,10 +274,7 @@ class ExternalLayoutCandidate(_FrozenStrictModel):
             official_source.document_id,
             official_source.source_url,
             official_source.sha256,
-            tuple(
-                (mapping.candidate_page, mapping.official_page)
-                for mapping in official_source.page_mapping
-            ),
+            tuple((mapping.candidate_page, mapping.official_page) for mapping in official_source.page_mapping),
         )
         if observed_coordinate != _EXPECTED_OFFICIAL_EVIDENCE_COORDINATES[self.modelo]:
             raise ValueError(
@@ -355,7 +354,9 @@ def _document_info(document: pdfplumber.PDF) -> dict[str, str]:
     return metadata
 
 
-def observe_external_layout_candidate(pdf_path: Path) -> tuple[ExternalLayoutContent, ExternalLayoutPdfProperties, ExternalLayoutObservations]:
+def observe_external_layout_candidate(
+    pdf_path: Path,
+) -> tuple[ExternalLayoutContent, ExternalLayoutPdfProperties, ExternalLayoutObservations]:
     """Measure the sidecar contract directly from one readable PDF."""
     data = pdf_path.read_bytes()
     header_match = _PDF_HEADER_RE.match(data)
