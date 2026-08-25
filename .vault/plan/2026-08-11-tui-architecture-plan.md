@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#tui-architecture'
 date: '2026-08-11'
+modified: '2026-08-25'
+body_hash: 'sha256:629dd331bb021c6b0e43dfb36890b9cd16fa6e7b552d35868b14e5d8a45460e9'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -11,8 +13,6 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
-modified: '2026-08-25'
-body_hash: 'sha256:4bb2ab1bfa653d289ac3e7f8158988925da8385ee72ee89f426be900560bd475'
 ---
 
 # `tui-architecture` plan
@@ -155,7 +155,7 @@ Move every current manager and credential action behind registered application e
 - [x] `W03.P08.S42` - Expose authentication operation definitions through the authentication application facade; `src/cadrumo/application/auth/__init__.py`.
 - [x] `W03.P08.S43` - Expose profile mutation and lifecycle operation definitions through the user-profile application facade; `src/cadrumo/application/user_profile/__init__.py`.
 - [x] `W03.P08.S44` - Expose Google export operation definitions through the export application facade; `src/cadrumo/application/export/__init__.py`.
-- [ ] `W03.P08.S45` - Run every production-registered executor through the shared success, refusal, failure, interaction, cancellation-capability, deadline-capability, effect, and cleanup matrix and prove the exported definition population is complete; `src/cadrumo/application/operations/tests/test_registered_executor_conformance.py`.
+- [x] `W03.P08.S45` - Run every production-registered executor through the shared success, refusal, failure, interaction, cancellation-capability, deadline-capability, effect, and cleanup matrix and prove the exported definition population is complete; `src/cadrumo/application/operations/tests/test_registered_executor_conformance.py`.
 
 ### Phase `W03.P20` - Frontend-neutral Modelo Workspace V1
 
