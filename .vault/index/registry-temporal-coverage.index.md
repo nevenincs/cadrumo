@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:ead35c4e868af0aff00c0c320dc5340e5ce1bc1bed294ed6dd03a1cccc57b7d1'
+body_hash: 'sha256:5afbe3a9a925f291bedf5ef2b93fdae0a71cc9af107d4fd0136f4ca037e93177'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -23,6 +23,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P03-S35]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P03-S39]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P04-S21]]'
+  - '[[2026-08-14-registry-temporal-coverage-W01-P04-S52]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P09-S26]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P09-S27]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S24]]'
@@ -34,6 +35,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S48]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S49]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S50]]'
+  - '[[2026-08-14-registry-temporal-coverage-W02-P05-S51]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P06-S13]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P06-S14]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
@@ -58,8 +60,10 @@ related:
   - '[[2026-08-25-registry-temporal-coverage-s44-review-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s46-m188-design-era-review-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s47-m194-era-review-audit]]'
+  - '[[2026-08-25-registry-temporal-coverage-s47-s49-final-close-review-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s48-m220-2025-scope-review-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s49-m721-package-review-audit]]'
+  - '[[2026-08-25-registry-temporal-coverage-w02-p05-s50-modelo-763-temporal-coverage-review-audit]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -90,8 +94,10 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-25-registry-temporal-coverage-s44-review-audit` - `registry-temporal-coverage` audit: `s44 review`
 - `2026-08-25-registry-temporal-coverage-s46-m188-design-era-review-audit` - `registry-temporal-coverage` audit: `S46 Modelo 188 design-era review`
 - `2026-08-25-registry-temporal-coverage-s47-m194-era-review-audit` - `registry-temporal-coverage` audit: `S47 Modelo 194 design-era review`
+- `2026-08-25-registry-temporal-coverage-s47-s49-final-close-review-audit` - `registry-temporal-coverage` audit: `S47 and S49 final close review`
 - `2026-08-25-registry-temporal-coverage-s48-m220-2025-scope-review-audit` - `registry-temporal-coverage` audit: `S48 Modelo 220 2025 scope review`
 - `2026-08-25-registry-temporal-coverage-s49-m721-package-review-audit` - `registry-temporal-coverage` audit: `S49 Modelo 721 package review`
+- `2026-08-25-registry-temporal-coverage-w02-p05-s50-modelo-763-temporal-coverage-review-audit` - `registry-temporal-coverage` audit: `W02.P05.S50 Modelo 763 temporal coverage independent review`
 
 ### exec
 
@@ -113,6 +119,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-W01-P09-S27` - Build and run a repo-wide drift detector over src/cadrumo AND dev/, not the registry package alone, explicitly naming the design-prose grammar in dev/registry/_export_tree.py (regex-parsing Spanish AEAT design prose patterns such as "15 enteros y 2 decimales", Constante "00500", and trailing Nota N references to derive filing wire facts) as a known in-scope instance alongside dev/registry/mappings/ and dev/registry/render_profiles/, finding regulatory numeric literals, year sets and modelo-conditional branches outside the sanctioned channels of registry TOML, core external_constants and the allowlisted math constants, with every allowlist entry stating its reason and keyed by path and enclosing function, and persist the census as a vault audit where every finding is enrolled as a plan row or formally deferred with a reference, gated on zero unclassified findings and on a re-run reproducing the census exactly
 - `2026-08-14-registry-temporal-coverage-W01-P01-S03` - Enforce the disposition-conditional grade ladder in registry build validation, registered in the family dispatch table: a calculation claim with an empty applicable formula family refuses and an informative revision at filing grade with a reasoned not_applicable formula family passes
 - `2026-08-14-registry-temporal-coverage-W02-P05-S24` - Declare the supported-filing-years catalogue in the registry authoring tree, replacing every Python-resident year set including SUPPORTED_EJERCICIOS, and refuse the entire registry load when any declared year has any obliged modelo without its required grade, resolvable revision or evidence-backed cells for every period, enumerating every gap with modelo, period and missing prerequisite, advisory-first until the flip
+- `2026-08-14-registry-temporal-coverage-W01-P04-S52` - Decompose the three validators that exceed the reviewability ratchet, _validate.py, _validate_cross_revision.py, and _validate_revision_rules.py, into existing family-owned validation modules or new single-responsibility family modules without raising baselines, duplicating dispatch, or changing validation order and refusal facts, and prove the reviewability plus full validator gates
 - `2026-08-14-registry-temporal-coverage-W02-P05-S43` - Correct Modelo 038 source-era scope: retain the 2024 dr038 design only from the June 2024 declaration, acquire and hash-pin an earlier official design before asserting the 2002-to-May-2024 window, and split the revision or source binding through the validated temporal authority without guessed coverage, legacy fallback, a filing-grade promotion, or an export layout.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S44` - Acquire and hash-pin exact official Modelo 182 design eras and amendment authority
 - `2026-08-14-registry-temporal-coverage-W02-P05-S45` - Acquire and hash-pin exact official Modelo 187 designs or amendment tables for 2019 through 2021, then split or constrain law-selected revision scope without backdating the post-2022 source or promoting authority grade.
@@ -121,6 +128,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S48` - Constrain Modelo 220 2025 source and selection scope to 2025 authority, remove or replace the 2026 publication-bound exception, and admit a 2026 successor only from hash-pinned exact authority without promoting authority grade.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S49` - Acquire and hash-pin distinct Modelo 721 2023 and 2024 technical contract packages with exact exercise applicability, then split or constrain law-selected revision scope without claiming unbounded technical-layout authority or promoting authority grade.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S50` - Acquire Modelo 763 opening-period and design-era authority, then split the revision at the evidenced 2012, 2015, and 4T-2018 boundaries with period-aware selectors and complete deadlines without inventing unsupported windows or promoting authority grade.
+- `2026-08-14-registry-temporal-coverage-W02-P05-S51` - Acquire and hash-pin the missing historical design eras or constrain unsupported claimed years for Modelos 126, 128, 165, 181, 184, 270, 308, 309, 341, 353, and 576, and adjudicate Modelo 180 ejercicio 2022 on the presentation axis, until the whole-tree claimed-year layout-design gate passes without backdating a newer design or inventing temporal coverage
 - `2026-08-14-registry-temporal-coverage-W02-P06-S13` - Replace the single-representative-year assessment with a derived modelo, filing-year, period and schema-family matrix over the validated authority that assesses every claimed year up to the assessment horizon, proven by property on a real long-span open revision
 - `2026-08-14-registry-temporal-coverage-W02-P06-S14` - Collapse the duplicated filing-eligibility predicate onto the snapshot-owned check and delete the coverage-ledger duplicate and the by-construction-empty filing gap surface outright, replacing them with matrix-derived gaps proven non-vacuous on a synthetic reviewed corpus, with no superseded ledger surface retained beside the matrix
 
