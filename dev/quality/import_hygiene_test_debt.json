@@ -4,21 +4,6 @@
     "_note": "Each site is a test file reaching a foreign package's private submodule to exercise an internal helper, evaluator, repository factory, or module-private constant/cache by name. Grouped by owning package below for readability; the gate reads the flat 'sites' list. Each site records an 'occurrence' ordinal -- 1-based among the entries sharing its (importer_path, target_mod, imported_names) triple, in the order the reaches appear in the importing file -- because one reach can occur several times in a file, each reasoned separately, and something has to say which reason belongs to which site. It replaces a stored line number, which was a cache of a scan with nothing to invalidate it and had drifted on roughly half the entries; the live line is recoverable from dev/quality/import_hygiene_scan.py at any time, whereas the ordinal only moves when the number of occurrences moves, which the gate checks.",
     "sites": [
       {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_actions",
-        "imported_names": [
-          "_AUTH_CLAVE_MOVIL_ROUTE_PATH",
-          "_AUTH_DNI_NIE_PATH",
-          "_AUTH_FECHA_VALIDEZ_PATH",
-          "_AUTH_PROVIDER_PATH",
-          "_AUTH_SOPORTE_PATH",
-          "_commit_auth_choice",
-          "censal_pull_action"
-        ],
-        "reason": "White-box test that the TUI's mounted shipped action never surfaces a missing profile path as a KeyError. The reach is to the CLI's own private profile-field path constants and the commit helper behind them: the assertion is that the TUI mount and the CLI action agree on the SAME path strings, so reading them through a double would assert the double instead. The constants are internal addressing for one action family, not a contract another package should depend on in production, so there is no promotion candidate."
-      },
-      {
         "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
         "occurrence": 1,
         "target_mod": "cadrumo.entrypoints.cli._config._login_frontend",

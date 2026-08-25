@@ -64,7 +64,8 @@ to declare its own serving surface to be usable.
 from __future__ import annotations
 
 import ast
-from typing import TYPE_CHECKING
+from collections.abc import Mapping
+from pathlib import Path
 
 import pytest
 
@@ -79,10 +80,6 @@ from cadrumo.tests import (
 from ._project_inventory import project_test_control_modules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-if TYPE_CHECKING:
-    from collections.abc import Mapping
-    from pathlib import Path
 
 
 HANDLER_BASE_ORIGIN = "http.server.BaseHTTPRequestHandler"

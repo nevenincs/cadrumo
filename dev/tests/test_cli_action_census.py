@@ -82,11 +82,11 @@ def test_census_observes_real_definition_producer_and_command_literal_sites(
     keys = {record.key for record in records}
 
     assert (
-        "src/cadrumo/application/filing/_calculate.py",
-        "DeclaracionCalculateSummary",
+        "src/cadrumo/application/overview/_data_prep.py",
+        "DataPrepStep",
         "definition",
         "next_action",
-        "<declaration>",
+        "<none>",
     ) in keys
     assert (
         "src/cadrumo/application/overview/_data_prep.py",

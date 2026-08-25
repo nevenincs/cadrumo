@@ -4,9 +4,10 @@ import pytest
 
 from cadrumo.application.aggregation import collect_unhandled_source_diagnostics
 from cadrumo.application.modelo import CALCULATION_ROUTE_RESOLVER_OWNERSHIP, CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.core import BindingSourceKind
-from cadrumo.core.resources import bundled_path
+from cadrumo.core.resources import bundled_path, resources
 from cadrumo.domain.calculations.registry import CasillaFieldKind, load_modelo_directory
 
 from ..check import SourceConnectivityCheckError, check_census_governance
@@ -44,7 +45,11 @@ def test_m360_remains_measurably_ingress_blocked_until_its_missing_authority_exi
 
 
 def test_m360_deferred_source_has_no_connected_downstream_lifecycle() -> None:
-    """M360 worksheet rows stay blocked before any persistent source claim can form."""
+    """Only the unowned M360 refund source stays blocked before a persistent claim can form.
+
+    The distinct operator-entered ``manual_input`` bindings remain available;
+    their presence cannot clear the deferred ``refund_operation`` lifecycle.
+    """
     source_kind = BindingSourceKind.REFUND_OPERATION
     candidate_id = "rows.refund-operation"
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "360"))
@@ -68,6 +73,19 @@ def test_m360_deferred_source_has_no_connected_downstream_lifecycle() -> None:
 
     assert candidate_id not in connected_candidate_ids()
     assert all(fixture.candidate_id != candidate_id for fixture in CONNECTED_PROOF_FIXTURES)
+
+    census = load_source_connectivity_census()
+    coverage = compose_source_connectivity_coverage(
+        authority=resources().modelos.authority,
+        census=census,
+        as_of=date(2026, 8, 25),
+    )
+    limb = next(item for item in coverage.limbs if item.modelo == "360" and item.revision == "2010-y-siguientes")
+    assert limb.outcome == "refused"
+    assert limb.refusal is not None
+    assert limb.refusal.disposition.work_item == "source-casilla.rows-refund-ingress"
+    entry = next(item for item in census.entries if item.candidate_id == candidate_id)
+    assert limb.refusal.disposition.reconsideration_condition == entry.review_condition
 
     assert all(
         record.repeat != "projection_rows"

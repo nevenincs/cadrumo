@@ -930,7 +930,6 @@ def test_discover_test_modules_returns_real_source_tests_and_excludes_fixtures()
     """Inventory discovery includes source tests and excludes fixture payloads."""
     modules = discover_test_modules()
 
-    assert Path(__file__).resolve() in modules
     assert repo_path("src/cadrumo/tests/test_marker_integrity.py") in modules
     assert all(not path.is_relative_to(FIXTURES_DIR) for path in modules)
 
@@ -939,7 +938,6 @@ def test_discover_test_control_modules_includes_support_and_conftest_files() -> 
     """Test-control discovery covers tests, support modules, and conftests."""
     modules = discover_test_control_modules()
 
-    assert Path(__file__).resolve() in modules
     assert repo_path("src/cadrumo/tests/_inventory.py") in modules
     assert repo_path("src/cadrumo/application/conftest.py") in modules
     assert all(not path.is_relative_to(FIXTURES_DIR) for path in modules)
@@ -950,7 +948,9 @@ def test_central_harness_has_no_owner_specific_behavior_modules() -> None:
     modules = tuple(path for path in discover_test_modules() if path.is_relative_to(_CENTRAL_HARNESS))
     ownership = tuple(_central_harness_ownership(path) for path in modules)
 
-    assert Path(__file__).resolve() in modules, "central-harness ownership inventory is empty"
+    assert repo_path("src/cadrumo/tests/test_marker_integrity.py") in modules, (
+        "central-harness ownership inventory is empty"
+    )
     assert any(evidence for _, _, evidence in ownership), "no structurally-owned central modules were analyzed"
     assert any(imported for _, imported, _ in ownership), "no production-bearing central modules were analyzed"
     assert any(len(imported) > 1 for _, imported, _ in ownership), "no cross-owner central modules were analyzed"
@@ -1510,12 +1510,13 @@ def test_central_harness_ownership_gate_accepts_structural_and_cross_owner_contr
 
 def test_repo_relative_uses_posix_paths() -> None:
     """Repository-relative rendering is stable on Windows and POSIX."""
-    assert repo_relative(Path(__file__).resolve()) == "src/cadrumo/tests/test_test_inventory.py"
+    assert repo_relative(Path(__file__).resolve()) == "dev/tests/test_test_inventory.py"
 
 
 def test_aeat_relative_uses_posix_package_paths() -> None:
     """Package-relative rendering is stable on Windows and POSIX."""
-    assert aeat_relative(Path(__file__).resolve()) == "tests/test_test_inventory.py"
+    package_test = repo_path("src/cadrumo/tests/test_marker_integrity.py")
+    assert aeat_relative(package_test) == "tests/test_marker_integrity.py"
 
 
 def test_repo_path_roundtrips_repo_relative() -> None:
@@ -1541,7 +1542,7 @@ def test_package_python_files_includes_tests_but_excludes_data_by_default() -> N
     """Package inventory keeps tests in scope while excluding bundled data helpers."""
     files = package_python_files()
 
-    assert Path(__file__).resolve() in files
+    assert repo_path("src/cadrumo/tests/test_marker_integrity.py") in files
     assert repo_path("src/cadrumo/core/config.py") in files
     assert all("_data" not in path.relative_to(repo_path("src/cadrumo")).parts for path in files)
 
@@ -1643,7 +1644,7 @@ def test_production_ast_items_filters_cache_to_production_package_files(tmp_path
 
 def test_package_ast_items_reuses_cache_for_test_modules() -> None:
     """Package AST iteration includes test modules and reuses cached trees."""
-    current = Path(__file__).resolve()
+    current = repo_path("src/cadrumo/tests/test_marker_integrity.py")
     current_tree = ast.parse("CURRENT = True")
     config_path = repo_path("src/cadrumo/core/config.py")
     config_tree = ast.parse("CONFIG = True")
