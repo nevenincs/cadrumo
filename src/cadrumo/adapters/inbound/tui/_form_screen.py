@@ -15,7 +15,7 @@ choices and validation all arrive from the caller, so the same screen
 serves any bounded field set without growing a branch per door.
 
 The screen owns no application logic — it is the same injected-door
-arrangement :class:`~cadrumo.adapters.inbound.tui.ProfileManagerApp` uses,
+arrangement :class:`~cadrumo.entrypoints.tui.profile.overview.ProfileManagerApp` uses,
 for the same reason: an adapter renders and reports intent, and the entry
 point composes.
 """

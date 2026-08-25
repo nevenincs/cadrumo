@@ -35,14 +35,14 @@ from .....core.json_contract import (
     ResolvedActionReference,
     ResolvedNoticeAction,
 )
-from .....tests.locales_root_fixture import locales_root_scope
-from .. import (
+from .....entrypoints.tui.profile.status import (
     StatusApp,
     StatusAuthView,
     StatusFactRow,
     StatusPageData,
     StatusProfileRow,
 )
+from .....tests.locales_root_fixture import locales_root_scope
 
 pytestmark = [
     pytest.mark.unit,
@@ -428,6 +428,6 @@ def test_status_screen_never_imports_the_application_layer() -> None:
 
 
 def _status_screen_path() -> str:
-    from .. import _status_screen
+    from .....entrypoints.tui.profile import status
 
-    return _status_screen.__file__
+    return status.__file__

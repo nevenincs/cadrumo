@@ -12,7 +12,7 @@ typed, while the operator is still looking at it.
 
 The screen owns no profile logic. It is handed a projected field and, from
 its host, the judge that says whether a typed value may be stored — the same
-:mod:`~cadrumo.adapters.inbound.tui._form_screen` arrangement, for the same
+form-presentation arrangement, for the same
 reason: an adapter renders and reports intent, and the entry point composes.
 
 See Also:
@@ -133,6 +133,7 @@ class FieldEditScreen(ModalScreen[str | None]):
         choice_labels: Mapping[str, str] | None = None,
         validate: Callable[[str], str | None] | None = None,
     ) -> None:
+        """Initialize the modal from one already-projected profile field."""
         super().__init__()
         self._field = field
         self._prompt = prompt if prompt is not None else field.label
@@ -252,6 +253,7 @@ class FieldEditScreen(ModalScreen[str | None]):
                 yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
 
     def on_mount(self) -> None:
+        """Focus the typed field or safely initialize the choice selection."""
         if not self._field.choices:
             self.query_one("#edit-input", Input).focus()
             return
@@ -274,6 +276,7 @@ class FieldEditScreen(ModalScreen[str | None]):
         options.highlighted = current
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Translate an editor button into a typed value, clear, or cancellation."""
         if event.button.id == "btn-edit-save":
             if self._field.choices:
                 self._dismiss_highlighted_option()
@@ -290,6 +293,7 @@ class FieldEditScreen(ModalScreen[str | None]):
             self.dismiss(None)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Validate and submit the value typed into the text editor."""
         self._submit_typed(event.value)
 
     def _submit_typed(self, value: str) -> None:
@@ -344,6 +348,7 @@ class FieldEditScreen(ModalScreen[str | None]):
         self.dismiss(value)
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        """Submit the option that the operator explicitly selected."""
         self._dismiss_highlighted_option()
 
     def _dismiss_highlighted_option(self) -> None:
@@ -354,6 +359,7 @@ class FieldEditScreen(ModalScreen[str | None]):
         self.dismiss(self._field.choices[highlighted].value)
 
     def action_cancel(self) -> None:
+        """Dismiss the editor without requesting a profile change."""
         self.dismiss(None)
 
 

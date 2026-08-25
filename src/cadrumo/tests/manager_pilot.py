@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..adapters.inbound.tui import ProfileManagerApp
+    from ..entrypoints.tui.profile.overview import ProfileManagerApp
 
 __all__ = ["wait_until_settled"]
 

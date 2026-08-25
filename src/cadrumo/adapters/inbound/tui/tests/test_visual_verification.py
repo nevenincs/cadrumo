@@ -45,6 +45,8 @@ from .....application.user_profile import (
 )
 from .....core import require_active_bucket_id
 from .....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from .....entrypoints.tui.profile.overview import ProfileManagerApp
+from .....entrypoints.tui.profile.status import StatusApp, StatusFactRow, StatusPageData
 from .....tests.manager_pilot import wait_until_settled
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -53,11 +55,7 @@ from .. import (
     FormApp,
     FormScreen,
     LoginApp,
-    ProfileManagerApp,
     RegistrationApp,
-    StatusApp,
-    StatusFactRow,
-    StatusPageData,
 )
 
 pytestmark = [

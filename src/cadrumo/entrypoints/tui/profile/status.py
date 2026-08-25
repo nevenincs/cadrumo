@@ -8,7 +8,7 @@ operator-facing :class:`~cadrumo.core.json_contract.Notice` advisories) —
 into five bordered zones and mutates nothing. It owns no data access: the
 adapter tier may name Textual but must not reach the application layer, so
 the entry-point gathers the view-model and injects it here, mirroring the
-way :func:`~cadrumo.adapters.inbound.tui.run_flow_tui` receives a
+way a flow renderer receives a
 pre-built :class:`~cadrumo.application.flows.FlowDefinition`.
 
 Masking is a rendering invariant, not a policy decision: a fact row
@@ -142,6 +142,7 @@ class StatusApp(App[None]):
     ]
 
     def __init__(self, data: StatusPageData) -> None:
+        """Initialize the read-only page from its supplied status projection."""
         super().__init__()
         self._data = data
 
@@ -157,6 +158,7 @@ class StatusApp(App[None]):
         yield Footer()
 
     def on_mount(self) -> None:
+        """Install the presentation theme and mount the populated zones."""
         install_cadrumo_themes(self)
         self._localize_bindings()
         self.query_one("#status-header", Static).update(tr("flows.status.title"))

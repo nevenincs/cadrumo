@@ -7,7 +7,7 @@ tests drive the real chain — a real credential registration followed by the
 canonical authenticated login door, the real in-process
 :class:`~cadrumo.adapters.persistence.storage.master_key.BucketSession`, the real
 :func:`~cadrumo.entrypoints.cli._config._status_frontend.build_status_page_data`
-builder, and the real :class:`~cadrumo.adapters.inbound.tui.StatusApp`
+builder, and the real :class:`~cadrumo.entrypoints.tui.profile.status.StatusApp`
 surface. No mock, stub, or hand-built session record.
 """
 
@@ -16,12 +16,12 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Static
 
-from .....adapters.inbound.tui import StatusApp
 from .....application.user_profile import (
     close_profile_session_artefacts,
     login_profile,
     register_profile_with_credentials,
 )
+from .....entrypoints.tui.profile.status import StatusApp
 from .....tests.secure_sql import isolated_profile_storage_root
 from .._status_frontend import build_status_page_data
 

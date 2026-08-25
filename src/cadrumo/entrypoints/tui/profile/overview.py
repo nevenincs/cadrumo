@@ -29,10 +29,9 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Callable
-from contextlib import AbstractContextManager, nullcontext
+from contextlib import nullcontext
 from contextvars import copy_context
-from dataclasses import dataclass, replace
-from enum import StrEnum
+from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import App, ComposeResult
@@ -41,6 +40,7 @@ from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Footer, LoadingIndicator, Static
 from textual.worker import Worker, WorkerState
 
+from ....adapters.inbound.tui import FormScreen, presenting_forms_through
 from ....core import OperatorProgress
 from ....core.i18n import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
@@ -51,8 +51,8 @@ from ....entrypoints.tui.components.theme import (
     toggle_appearance,
 )
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
-from ._field_edit_screen import FieldEditScreen
-from ._form_screen import FormScreen, presenting_forms_through
+from .editor import FieldEditScreen
+from .tasks import ManagerAction, ManagerActionDisposition, ManagerActionOutcome
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -61,89 +61,6 @@ if TYPE_CHECKING:
 
     from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
     from ....entrypoints.tui.components.forms import FormPage
-
-
-type ManagerProgressSinkBinder = Callable[[Callable[[OperatorProgress], None]], AbstractContextManager[None]]
-
-
-class ManagerActionDisposition(StrEnum):
-    """How a completed action should be presented to the operator."""
-
-    SUCCESS = "success"
-    WARNING = "warning"
-    REFUSED = "refused"
-
-
-@dataclass(frozen=True, slots=True)
-class ManagerActionOutcome:
-    """What an action did, as the page needs to know it.
-
-    ``overview`` carries the rebuilt page when the action changed the
-    record, and is ``None`` when it did not — an export writes a file and
-    leaves the profile alone. The screen re-renders only when it is given
-    something new, so a read-only action cannot silently redraw stale data.
-
-    ``close_session`` is the one general close signal: an action whose
-    outcome ends the operator's session (today, only logout) sets it so
-    :meth:`ProfileManagerApp._settle_action` exits the surface instead of
-    re-rendering it. Without this the screen kept rendering the
-    now-logged-out profile's stale table after logout ran underneath it —
-    worse than no affordance, because the operator would be looking at
-    data the application no longer considers live. Deliberately one flag
-    rather than a family of close *reasons*: nothing today needs to
-    distinguish "closed because logged out" from any other closing action,
-    and inventing that distinction ahead of a second consumer would be
-    exactly the speculative variant this primitive is meant not to be.
-    """
-
-    message: str
-    overview: ProfileOverview | None = None
-    close_session: bool = False
-    disposition: ManagerActionDisposition = ManagerActionDisposition.SUCCESS
-
-
-@dataclass(frozen=True, slots=True)
-class ManagerAction:
-    """One operation offered alongside the field table.
-
-    The screen knows a label and a callable. What "pull" or "export" mean
-    is the entry point's business, which is why a censal pull and a bundle
-    export can sit side by side here without this module learning what
-    either of them is.
-    """
-
-    key: str
-    label: str
-    run: Callable[[], ManagerActionOutcome]
-    label_key: str | None = None
-    """Locale key for labels that must survive a mid-session language switch.
-
-    ``label`` remains the fallback for a host-supplied action that does not
-    have a catalogue key.
-    """
-    owns_paths: tuple[str, ...] = ()
-    """Profile paths this action is the sole writer of.
-
-    A row naming one of these opens the ACTION rather than the single-field
-    edit box. Some fields cannot be set one at a time and stay correct:
-    writing them means writing several together, or doing something beside
-    the write that the generic door knows nothing about.
-
-    The authentication rows are the worked case. Setting
-    ``auth.provider`` through the generic door recorded the choice on the
-    profile while leaving the workflow state unactivated, so the profile
-    claimed a provider no session had been established for; and setting
-    ``auth.dni_nie`` alone let it drift from ``identity.tax_id``, which
-    the fail-closed session guard then refused a login over. Both are the
-    compound work the owning action already does correctly, so the row
-    routes there instead of growing a second writer.
-
-    Declared by the action rather than by the schema or this screen: the
-    action is what knows why its fields are inseparable, and this module
-    stays ignorant of what any of them mean.
-    """
-    progress_sink: ManagerProgressSinkBinder | None = None
-    """Scope that redirects operation progress into this screen, when present."""
 
 
 _PRESENT_GLYPH = "●"
@@ -255,6 +172,7 @@ class ProfileManagerApp(App[None]):
         actions: Sequence[ManagerAction] = (),
         validate: Callable[[str, str], str | None] | None = None,
     ) -> None:
+        """Initialize the overview with injected projection and write doors."""
         super().__init__()
         self.overview = overview
         self._validate_field = validate
@@ -333,6 +251,7 @@ class ProfileManagerApp(App[None]):
         yield Footer()
 
     async def on_mount(self) -> None:
+        """Install the presentation theme and render the supplied overview."""
         install_cadrumo_themes(self)
         await self._render()
 
@@ -1042,6 +961,7 @@ class ProfileManagerApp(App[None]):
         )
 
     def action_toggle_appearance(self) -> None:
+        """Flip between the light and dark appearance."""
         toggle_appearance(self)
 
 
@@ -1057,11 +977,6 @@ def run_profile_manager_tui(
 
 
 __all__ = [
-    "FieldEditScreen",
-    "ManagerAction",
-    "ManagerActionDisposition",
-    "ManagerActionOutcome",
-    "ManagerProgressSinkBinder",
     "ProfileManagerApp",
     "run_profile_manager_tui",
 ]

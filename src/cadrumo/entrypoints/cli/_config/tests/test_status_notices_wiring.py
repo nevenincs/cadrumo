@@ -10,7 +10,7 @@ These tests drive the real production chain end to end: a real profile, a
 real (or absent) persisted calculation observation, the real
 :func:`~cadrumo.application.overview.no_aeat_history_notice` producer, the
 real :func:`~cadrumo.entrypoints.cli._config._status_frontend.build_status_page_data`
-builder, and the real :class:`~cadrumo.adapters.inbound.tui.StatusApp`
+builder, and the real :class:`~cadrumo.entrypoints.tui.profile.status.StatusApp`
 surface. No mock, stub, or reimplementation of what the wiring should do.
 """
 
@@ -19,12 +19,12 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Static
 
-from .....adapters.inbound.tui import StatusApp
 from .....application.calculations import CalculationObservationRepository
 from .....application.overview import NO_AEAT_HISTORY_NOTICE_CODE
 from .....application.user_profile import login_profile, register_profile_with_credentials
 from .....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from .....domain.calculations.registry import RegistryModeloObservation
+from .....entrypoints.tui.profile.status import StatusApp
 from .....tests.secure_sql import isolated_profile_storage_root
 from .._status_frontend import build_status_page_data
 

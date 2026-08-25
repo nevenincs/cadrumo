@@ -86,13 +86,13 @@ def _login() -> App:
 
 
 def _manager() -> App:
-    from cadrumo.adapters.inbound.tui import ProfileManagerApp
     from cadrumo.entrypoints.cli._config._manager_actions import manager_actions
     from cadrumo.entrypoints.cli._config._manager_frontend import (
         build_active_profile_overview,
         persist_active_profile_field,
         profile_field_value_refusal,
     )
+    from cadrumo.entrypoints.tui.profile.overview import ProfileManagerApp
 
     # ``present_profile_manager`` is the real CLI entry point and always
     # wires ``manager_actions()`` alongside the overview and the write door.
@@ -110,8 +110,8 @@ def _manager() -> App:
 
 
 def _status() -> App:
-    from cadrumo.adapters.inbound.tui import StatusApp
     from cadrumo.entrypoints.cli._config._status_frontend import build_status_page_data
+    from cadrumo.entrypoints.tui.profile.status import StatusApp
 
     return StatusApp(build_status_page_data())
 
