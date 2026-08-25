@@ -47,9 +47,8 @@ class WorkAmendWizardResult(ModeloRecordPayload):
     instead of redeclaring its identity, timestamp, and lifecycle fields as
     bare strings: an out-of-range filing year, a malformed timestamp, an
     unknown status/kind, or an oversized notes string is refused rather than
-    accepted. Adds the wizard-specific ``corrected_casillas`` audit trail and
-    an ``export_next_action`` pointer to the existing ``modelo export``
-    verb — the amendment wizard never writes a fichero-BOE itself.
+    accepted. Adds the wizard-specific ``corrected_casillas`` audit trail;
+    the amendment wizard never writes a fichero-BOE itself.
     ``amends_filing_record_id`` is narrowed to required: every amendment
     wizard result amends a prior filing record by definition.
     """
@@ -60,7 +59,6 @@ class WorkAmendWizardResult(ModeloRecordPayload):
     amendment_reason: str = Field(min_length=1, max_length=500)
     amends_filing_record_id: FilingRecordId
     corrected_casillas: tuple[AmendWizardCorrectedCasillaPayload, ...] = ()
-    export_next_action: str = Field(min_length=1)
 
 
 __all__ = ["AmendWizardCorrectedCasillaPayload", "WorkAmendWizardResult"]

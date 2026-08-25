@@ -629,11 +629,6 @@ def _emit_amend_wizard_result(
     from ._common import _emit_envelope
     from ._modelo_rendering import filing_record_payload
 
-    export_next_action = tr(
-        "cli.app.modelo.work.amend_wizard_export_next_action",
-        work_unit_id=unit.work_unit_id,
-        default="Amendment filed as a draft internal record. Export the AEAT-importable fichero-BOE with `aeat app modelo export {work_unit_id} --output PATH`.",
-    )
     corrected_payload = tuple(
         (
             AmendWizardCorrectedCasillaPayload(
@@ -656,7 +651,6 @@ def _emit_amend_wizard_result(
             "m303_rectificativa_motive": m303_rectificativa_motive,
             "amendment_reason": reason,
             "corrected_casillas": corrected_payload,
-            "export_next_action": export_next_action,
         }
     )
     lines = [
@@ -668,7 +662,6 @@ def _emit_amend_wizard_result(
             f"corrected\t{row.number}\t{previous_value}\t{corrected_value}"
             for row, previous_value, corrected_value in corrections
         ),
-        export_next_action,
     ]
     _emit_envelope(ctx, command="modelo.work.amend_wizard", result=result, lines=lines)
 

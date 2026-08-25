@@ -87,7 +87,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
     assert "justificante" in payload["official_evidence_message"]
     assert "consulta de declaraciones presentadas" in payload["official_evidence_message"]
     assert "CSV cotejo" in payload["official_evidence_message"]
-    assert "aeat app modelo reconcile pull" in payload["official_evidence_next_action"]
+    assert "official_evidence_next_action" not in payload
     [provenance] = payload["casilla_provenance"]
     assert _casilla_id_from_payload(provenance["casilla_id"]) == _M130_RENDIMIENTO_NETO_CASILLA
     assert provenance["formula_id"] is None

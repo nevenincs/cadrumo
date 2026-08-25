@@ -451,6 +451,9 @@ if TYPE_CHECKING:
         ProfileCustodyUnlockPort as ProfileCustodyUnlockPort,
     )
     from ._custody_ports import (
+        ProfileLoginSessionPort as ProfileLoginSessionPort,
+    )
+    from ._custody_ports import (
         ProfileLoginThrottleEvaluationPort as ProfileLoginThrottleEvaluationPort,
     )
     from ._custody_ports import (
@@ -491,6 +494,9 @@ if TYPE_CHECKING:
     )
     from ._custody_ports import (
         default_profile_custody_local_record_store as default_profile_custody_local_record_store,
+    )
+    from ._custody_ports import (
+        default_profile_login_session_port as default_profile_login_session_port,
     )
     from ._custody_ports import (
         default_profile_record_crypto_port as default_profile_record_crypto_port,
@@ -855,6 +861,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileCustodySecureObjectRawRowPort": "._custody_ports",
     "ProfileCustodySecureObjectRecordPort": "._custody_ports",
     "ProfileCustodyUnlockPort": "._custody_ports",
+    "ProfileLoginSessionPort": "._custody_ports",
     "ProfileLoginThrottleEvaluationPort": "._custody_ports",
     "ProfileRecordCryptoError": "._custody_ports",
     "ProfileRecordCryptoPort": "._custody_ports",
@@ -884,6 +891,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "canonical_snapshot_digest": "._custody_ports",
     "canonical_snapshot_payload": "._custody_ports",
     "default_profile_custody_local_record_store": "._custody_ports",
+    "default_profile_login_session_port": "._custody_ports",
     "ensure_profile_custody_owner_root": "._custody_ports",
     "profile_custody_owner_root": "._custody_ports",
     "default_profile_bucket_storage": "._custody_ports",

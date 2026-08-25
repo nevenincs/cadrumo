@@ -6,9 +6,6 @@ import typer
 
 from ...application.operator_actions import ActionReference
 from ...application.state_projection import (
-    MODELO_READINESS_MISSING_PROFILE_ACTION,
-    OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE,
-    OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE,
     ModeloReadinessRequest,
     ProjectionModeloReadiness,
     build_operator_state_projection,
@@ -128,7 +125,6 @@ def _readiness_result(
                 label=req.label,
                 legal_refs=list(req.legal_refs),
                 modelos=list(req.modelos),
-                operator_action=MODELO_READINESS_MISSING_PROFILE_ACTION,
             )
             for req in report.missing
         ],
@@ -137,7 +133,6 @@ def _readiness_result(
                 binding_id=req.binding_id,
                 source=req.source,
                 input_channel=req.input_channel,
-                operator_action=OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE[req.source],
             )
             for req in report.missing_bindings
         ],
@@ -150,7 +145,6 @@ def _readiness_result(
                 transaction_id=issue.transaction_id,
                 reason=issue.reason.value,
                 detail=issue.detail,
-                operator_action=OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE[issue.reason],
             )
             for issue in report.ledger_issues
         ],
@@ -183,13 +177,6 @@ def _readiness_lines(
         f"missing\t{len(report.missing)}",
         f"missing_bindings\t{len(report.missing_bindings)}",
     ]
-    if report.missing_bindings:
-        command_period = period or report.period.registry_token
-        lines.append(
-            "missing_bindings_command\t"
-            f"aeat app modelo bindings list --modelo {modelo} --year {filing_year} "
-            f"--period {command_period} --missing",
-        )
     lines.extend(_readiness_ledger_export_lines(report, export_context))
     lines.extend(_readiness_detail_lines(report))
     if _ledger_ready_but_bindings_missing(report):
@@ -213,7 +200,6 @@ def _readiness_ledger_export_lines(
         f"ledger_issues\t{len(report.ledger_issues)}",
         f"export_ready\t{export_context is None}",
         f"export_refusal\t{export_context['reason'] if export_context is not None else ''}",
-        _readiness_finish_line(export_context),
     ]
 
 
@@ -320,12 +306,6 @@ def _export_readiness_context(report: ProjectionModeloReadiness) -> dict[str, st
         context["layout_id"] = str(layout.id)
         context["layout_format"] = str(layout.format)
     return context
-
-
-def _readiness_finish_line(export_context: dict[str, str] | None) -> str:
-    if export_context is not None:
-        return "finish_line\tlocal calculation, verification, and internal filing only; fichero-BOE export unsupported"
-    return "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)"
 
 
 __all__ = ["modelo_readiness"]

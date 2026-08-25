@@ -188,14 +188,6 @@ _LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE = (
     "Official evidence comes from AEAT after filing: justificante, consulta de declaraciones presentadas, "
     "or CSV cotejo."
 )
-_LOCAL_EXPORT_OFFICIAL_EVIDENCE_NEXT_ACTION = (
-    "After filing through AEAT, capture official evidence with "
-    "`aeat app modelo reconcile pull --modelo {modelo} --year {filing_year} --period {period}`, "
-    "or `aeat app live justificante pull --modelo {modelo} --year {filing_year} --period {period}` "
-    "when live read access is available; otherwise import AEAT justificante/CSV evidence with "
-    "`aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf "
-    "--evidence-id CSV --set CASILLA=VALUE`."
-)
 _COMPLETENESS_UNVERIFIED_MESSAGE = (
     "This fichero-BOE was NOT completeness-verified: its modelo revision declares no calculation-completeness "
     "manifest, so the structural-parity gate could not confirm every required casilla reached disk. The file may "
@@ -377,14 +369,6 @@ class ModeloExportResult(BaseModel):
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionProvenance | None = None
     local_evidence_status: str = Field(default=_LOCAL_EXPORT_EVIDENCE_STATUS, min_length=1)
     official_evidence_message: str = Field(default=_LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE, min_length=1)
-    official_evidence_next_action: str = Field(
-        default=_LOCAL_EXPORT_OFFICIAL_EVIDENCE_NEXT_ACTION.format(
-            modelo="MODELO",
-            filing_year="YEAR",
-            period="PERIOD",
-        ),
-        min_length=1,
-    )
     completeness_unverified: bool = Field(
         default=False,
         description=(
@@ -538,14 +522,6 @@ def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
             context={"work_unit_id": work_unit.work_unit_id, "period": work_unit.period.registry_token},
         )
     return work_unit.period
-
-
-def _official_evidence_next_action(*, modelo: str, filing_year: int, period: Period) -> str:
-    return _LOCAL_EXPORT_OFFICIAL_EVIDENCE_NEXT_ACTION.format(
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period.registry_token,
-    )
 
 
 def _raise_if_export_layout_unsupported(*, work_unit: WorkUnit, schema_provider: RegistrySchemaAccessor) -> None:
@@ -1204,11 +1180,6 @@ def _persist_exported_draft(
         prior_domiciliation_election=prior_domiciliation_election,
         casilla_provenance=receipt.casilla_provenance,
         iva_wallet_decision_provenance=iva_wallet_provenance,
-        official_evidence_next_action=_official_evidence_next_action(
-            modelo=str(work_unit.modelo),
-            filing_year=work_unit.filing_year,
-            period=period,
-        ),
         completeness_unverified=completeness_unverified,
     )
 

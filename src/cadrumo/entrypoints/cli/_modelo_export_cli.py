@@ -97,7 +97,6 @@ def _export_text_lines(result: ModeloExportResult) -> list[str]:
         f"bucket_event_id\t{result.bucket_event_id}",
         f"evidence_status\t{result.local_evidence_status}",
         f"evidence_notice\t{result.official_evidence_message}",
-        f"next_action\t{result.official_evidence_next_action}",
     ]
 
 

@@ -12,9 +12,9 @@ See Also:
         discovery commands.
     :class:`~domain.calculations.registry.RegistryQueryService`
         Typed registry introspection service behind the discovery surface.
-    :func:`~entrypoints.cli._modelo.missing_binding_guidance`
-        Work-calculate refusal helper that turns registry missing-input errors
-        into operator guidance.
+    :func:`~entrypoints.cli._modelo_behavior_support.bare_period_error`
+        Factual invalid-token helper that states registry-declared ids without
+        making a recovery-action selection.
 
 The bindings discovery surface is locked to the registry as its single
 source of truth, and ``work calculate`` reads from that same registry.
@@ -24,14 +24,12 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 import typer
 
 from ....application.modelo import WorkUnitNotFoundError
-from ....core import CasillaId, validated_casilla_id
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.user_profile import ProfileSetupState
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -39,10 +37,6 @@ from ....tests.cli_runner import invoke_cached_cli
 from .._modelo import _bad_parameter_from_error
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-_NON_INPUT_ERROR_CASILLA: CasillaId = validated_casilla_id(
-    "iva.casilla-99",
-    surface="_NON_INPUT_ERROR_CASILLA",
-)
 
 _UUID_TEXT_RE = re.compile(
     r"\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b",
@@ -308,7 +302,7 @@ def test_describe_revision_ids_present_in_json_payload() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Missing-binding guidance on `work calculate` (cluster E / M18).
+# Factual discovery errors on `work calculate` (cluster E / M18).
 # ---------------------------------------------------------------------------
 
 
@@ -359,74 +353,16 @@ def test_work_calculate_relation_help_names_m200_m202_relation_channels() -> Non
     assert "0" in collapsed
 
 
-def test_missing_binding_guidance_enriches_registry_validation_error() -> None:
-    """A missing-binding RegistryValidationError is enriched with the
-    --binding KEY=VALUE syntax and a bindings-list discovery command so
-    the first `work calculate` failure is self-correcting."""
+def test_discovery_bad_parameter_lists_declared_ids_as_facts_not_an_action() -> None:
+    """A discovery refusal may list valid IDs; it does not select a CLI action."""
+    from .._modelo_behavior_support import bare_period_error
 
-    from ....domain.calculations.registry import RegistryValidationError
-    from .._modelo_behavior_support import missing_binding_guidance
+    rendered = bare_period_error("303", "0A")
 
-    error = RegistryValidationError(
-        "binding 'irpf.previous_year_economic_activity_net_income' has no supplied value",
-        translated_message="errors.calc.binding_value_missing",
-        context={"binding_id": "irpf.previous_year_economic_activity_net_income"},
-    )
-    # An unknown work unit forces the generic discovery command path.
-    guidance = missing_binding_guidance(error, "no-such-work-unit")
-    assert "--binding KEY=VALUE" in guidance
-    assert "bindings list --missing" in guidance
-    assert "irpf.previous_year_economic_activity_net_income" in guidance
-
-
-def test_missing_binding_guidance_routes_by_binding_source(tmp_path) -> None:
-    """The missing-binding guidance is routed by the binding's typed source.
-
-    A ledger-aggregation binding rejects a caller ``--binding`` (it reads from
-    the bucket ledger), so its guidance MUST steer the operator to add ledger
-    rows and run ``ledger preflight`` — NOT to pass ``--binding`` (which the app
-    refuses with ``error_modelo_aggregation_binding``). A ``previous_filing``
-    binding genuinely accepts ``--binding``, so it keeps the ``--binding``
-    guidance. Modelo 130 carries both source kinds, so it exercises both
-    branches against the real registry through one persisted work unit.
-    """
-
-    from ....application.modelo import create_work_unit
-    from ....core import Period
-    from ....domain.calculations.registry import RegistryValidationError
-    from ....tests.secure_sql import isolated_runtime_profile
-    from .._modelo_behavior_support import missing_binding_guidance
-
-    period = Period.from_year_and_code(2025, "1T")
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0b1d1000-0000-4000-8000-000000000001") as runtime:
-        _seed_modelo_130_ready_profile(runtime.bucket_id)
-        unit = create_work_unit(
-            bucket_id=runtime.bucket_id,
-            modelo="130",
-            filing_year=2025,
-            period=period,
-            revision_id="2019-y-siguientes",
-        )
-
-        ledger_error = RegistryValidationError(
-            "binding 'modelo-130-actividad-economica-ingresos-cumulative' has no supplied value",
-            translated_message="errors.calc.binding_value_missing",
-            context={"binding_id": "modelo-130-actividad-economica-ingresos-cumulative"},
-        )
-        ledger_guidance = missing_binding_guidance(ledger_error, unit.work_unit_id)
-        # Ledger-sourced: steer to ledger rows + preflight, NOT --binding.
-        assert "ledger preflight" in ledger_guidance
-        assert "--binding KEY=VALUE" not in ledger_guidance
-
-        prev_filing_error = RegistryValidationError(
-            "binding 'irpf.previous_year_economic_activity_net_income' has no supplied value",
-            translated_message="errors.calc.binding_value_missing",
-            context={"binding_id": "irpf.previous_year_economic_activity_net_income"},
-        )
-        prev_filing_guidance = missing_binding_guidance(prev_filing_error, unit.work_unit_id)
-        # previous_filing-sourced: keep the --binding guidance, not ledger.
-        assert "--binding KEY=VALUE" in prev_filing_guidance
-        assert "ledger preflight" not in prev_filing_guidance
+    assert "0A" in rendered
+    assert "1T" in rendered
+    assert "4T" in rendered
+    assert "aeat" not in rendered.casefold()
 
 
 def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path) -> None:
@@ -515,85 +451,6 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
     assert "Traceback" not in result.output
     assert "ADVISORY: relation 'modelo-200-2024-rel-202-pagos-fraccionados-40-2' requires modelo 202" in result.output
     assert "source filing is missing or incomplete" in result.output
-
-
-def test_missing_relation_guidance_helper_routes_m200_m202_to_relation_flag() -> None:
-    """If a relation error reaches the refusal helper, it must point at --relation."""
-
-    from ....domain.calculations.registry import RegistryValidationError
-    from .._modelo_behavior_support import missing_binding_guidance
-
-    error = RegistryValidationError(
-        "relation 'modelo-200-2024-rel-202-pagos-fraccionados-40-2' has no supplied value",
-        translated_message="errors.calc.relation_value_missing",
-        context={"relation_id": "modelo-200-2024-rel-202-pagos-fraccionados-40-2"},
-    )
-
-    guidance = missing_binding_guidance(error, "no-such-work-unit")
-
-    assert "--relation RELATION_ID=VALUE" in guidance
-    assert "not --binding" in guidance
-    assert "DP200014B:00611" in guidance
-    assert "40.3 casilla 34" in guidance
-    assert "40.2 casilla 03" in guidance
-    assert "unused modality to 0" in guidance
-    assert "--binding KEY=VALUE" not in guidance
-
-
-def test_bindings_discovery_command_renders_runnable_period_token() -> None:
-    """The work-unit-scoped discovery command must place only the bare AEAT
-    period token after ``--period`` — never the combined ``"<year> <token>"``
-    display form of ``Period.__str__`` — so the suggested command is runnable
-    verbatim (``--period 1T``, with the year on its own ``--year`` axis)."""
-
-    from ....core import Period
-    from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
-    from .._modelo_behavior_support import _bindings_discovery_command
-
-    typed_period = Period.from_year_and_code(2026, "1T")
-    unit = WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id="test-bucket",
-            modelo="130",
-            filing_year=2026,
-            period=typed_period,
-            revision_id="r" + "0" * 63,
-        ),
-        bucket_id="test-bucket",
-        modelo=ModeloCode("130"),
-        filing_year=2026,
-        period=typed_period,
-        revision_id="r" + "0" * 63,
-        name="130-2026-1T",
-        created_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
-        updated_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
-    )
-
-    command = _bindings_discovery_command(unit)
-
-    assert "--period 1T --missing" in command
-    assert "--year 2026 --period 1T" in command
-    # The combined display form must never appear inside the --period value.
-    assert "--period 2026" not in command
-    assert str(typed_period) not in command
-    assert command == "aeat app modelo bindings list --modelo 130 --year 2026 --period 1T --missing"
-
-
-def test_missing_binding_guidance_passes_non_input_errors_through() -> None:
-    """A registry-validation error that is NOT a missing-input class is
-    returned unchanged - the guidance is scoped to inputs the operator
-    can actually supply."""
-
-    from ....domain.calculations.registry import RegistryValidationError
-    from .._modelo_behavior_support import missing_binding_guidance
-
-    error = RegistryValidationError(
-        "casilla referenced before evaluation",
-        translated_message="errors.calc.casilla_referenced_before_evaluation",
-        context={"casilla_id": _NON_INPUT_ERROR_CASILLA},
-    )
-    guidance = missing_binding_guidance(error, "no-such-work-unit")
-    assert "--binding KEY=VALUE" not in guidance
 
 
 # ---------------------------------------------------------------------------

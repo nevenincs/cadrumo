@@ -44,7 +44,7 @@ from ...domain.calculations.registry import RegistryValidationError
 from ._common import _emit_envelope, activate_subcommand_output_language
 from ._errors import CliOutboundPayloadBoundaryError
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
-from ._modelo_behavior_support import missing_binding_guidance, require_active_profile, resolve_work_unit_for_cli
+from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
     bad_parameter_from_error,
     resolve_actor_option,
@@ -76,7 +76,6 @@ class _CalculateDeps:
     resolve_actor_option: Callable[[str | None], str]
     calculate_input_bundle_from_cli: Callable[..., Any]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
-    missing_binding_guidance: Callable[[RegistryValidationError, str], str]
 
 
 def _calculate_dependencies() -> _CalculateDeps:
@@ -87,7 +86,6 @@ def _calculate_dependencies() -> _CalculateDeps:
         resolve_actor_option=resolve_actor_option,
         calculate_input_bundle_from_cli=work_calculate_input_bundle_from_cli,
         bad_parameter_from_error=bad_parameter_from_error,
-        missing_binding_guidance=missing_binding_guidance,
     )
 
 
@@ -158,7 +156,7 @@ def _run_work_calculate(
             work_unit_id=resolved_work_unit_id, actor=resolved_actor, inputs=calculation_inputs
         )
     except RegistryValidationError as exc:
-        raise typer.BadParameter(deps.missing_binding_guidance(exc, resolved_work_unit_id)) from exc
+        raise deps.bad_parameter_from_error(exc) from exc
     except WorkUnitMutationRefusedError:
         raise
     except (
@@ -223,12 +221,9 @@ def _run_work_calculate(
 def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit: WorkUnit) -> str:
     return tr(
         "cli.app.modelo.work.calculate_saved",
-        default="Saved as draft calculation revision %{revision_id} (state: %{state}). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.",
+        default="Saved as draft calculation revision %{revision_id} (state: %{state}). It is persisted and can be resumed later.",
         revision_id=revision.calculation_revision_id,
         state=calculation_revision_state_label(revision.state.value),
-        modelo=work_unit.modelo,
-        year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
     )
 
 

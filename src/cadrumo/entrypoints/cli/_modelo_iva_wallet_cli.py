@@ -187,7 +187,7 @@ def iva_wallet_correct_cmd(
                 exc.translated_message,
                 filing_year=filing_year,
                 period=period,
-                default=f"No seeded compensation record exists for {filing_year}/{period}. Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing seed.",
+                default=f"No seeded compensation record exists for {filing_year}/{period}; correction overwrites an existing seed.",
             )
         ) from exc
     except ModeloIvaWalletCorrectionSealedError as exc:
