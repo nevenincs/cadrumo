@@ -5,34 +5,48 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:0850dc3d275ee8b546bc4fa774372ed2f645df6928aefaa0c3ce98c6877129a5'
+body_hash: 'sha256:0893f74d11d352d4bf8dbd10c123f8c401dd519ac32f08db176023d05b95f4e2'
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-W03-P08-S41]]'
 ---
-# `tui-architecture` audit: `S41 Google export operation`
+# `tui-architecture` audit: `S41/S44 Google export operation and export facade`
 
 ## Scope
 
-Audited `W03.P08.S41` against the accepted `tui-architecture` decision, the roll-up plan, its architecture research, and the S41 execution record. Review was limited to `src/cadrumo/application/export/_google_operation.py` and `src/cadrumo/application/export/tests/test_google_operation.py`.
+Independently re-reviewed the atomic `W03.P08.S41` and `W03.P08.S44` cutover against the accepted `tui-architecture` ADR, the roll-up plan, both execution records, and the current source tree. The review covered:
 
-The review checked the injected-port hexagonal boundary, absence of concrete adapter and persistence dependencies in the application owner, total default factory construction with fail-closed unconfigured execution, active-profile and subject binding, phase/effect/cancellation truth, strict public request registration, encrypted result settlement, and the absence of a facade or CLI compatibility shim before deferred S44 migration.
-
-The concurrent operation executor and persistence package relocations were treated as external integration movement rather than S41 implementation defects. The current relocated tree imports and executes successfully.
+- `src/cadrumo/application/export/_google_operation.py`
+- `src/cadrumo/application/export/__init__.py`
+- `src/cadrumo/application/export/tests/test_google_operation.py`
+- `src/cadrumo/entrypoints/_operation_composition.py`
+- `src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py`
+- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`
+- `src/cadrumo/entrypoints/tests/test_operation_composition.py`
 
 ## Findings
 
-No open findings.
+No open critical, high, medium, or low findings remain.
 
-The application owner depends on one normalized `GoogleSheetsExportPort` and imports no adapter, persistence, or entrypoint implementation. Both preview and apply paths use the same injected boundary. The default definition and executor factories construct successfully without an injected transport; accidental execution refuses explicitly instead of resolving a hidden dependency.
+`_google_operation.py` owns the strict credential-free request, active-profile and capability admission, exact registry snapshot and plan construction, normalized remote result, supervised phase/effect sequence, and result custody. It imports no adapter, persistence, or entrypoint implementation. The sole remote boundary is the injected `GoogleSheetsExportPort`; the total default factory deliberately refuses an uncomposed remote call.
 
-The dry-run path records preview and `NONE`. The apply path records `UNKNOWN` before entering the supervisor-owned irreversible section and records `UPDATED` only after the port returns. A raised port call therefore cannot publish false success. The definition truthfully declares unsupported cancellation and absent deadline, exposes no interaction, permits only `NONE`, `UPDATED`, and `UNKNOWN`, and uses interrupt reconciliation for the external-effect operation.
+`application.export` is the sole public cross-package facade for the operation contracts and builders. The production composition seam imports that facade, registers the one `export.google-sheets` definition, and binds the only concrete transport. The apply branch calls `export_modelo_to_sheets` with `SyncRunRecordRepository()` and the real `apply_export_plan` adapter; the preview branch uses the real preview adapter. Therefore every production apply retains the existing sync-run provenance writer rather than reimplementing it.
 
-The request is strict, frozen, credential-free, active-profile bound, and registered once as `export.google-sheets.request`; the normalized remote result is validated before its safe result is written through secure operand custody. The S41 files do not edit the export facade or CLI and introduce no re-export or compatibility bridge, leaving that cutover to S44.
+Both CLI consumers now share the narrow `execute_google_sheets_export` input adapter. The command and manager contain no local export-plan, preview, or apply orchestration, and the prior duplicated manager planner/apply path is absent. There is no compatibility alias, non-package re-export bridge, private export-operation import, fabricated snapshot or plan, cast, `SimpleNamespace`, fake, mock, or stub in the focused operation tests.
 
-Verification completed with four real integration tests passing, scoped Ruff clean, scoped `ty` clean, and an exact AST import audit confirming no concrete adapter, persistence, or entrypoint import in the owner.
+The executor truth is exact: dry-run emits preflight, plan, preview, then `NONE`; apply emits preflight, plan, apply, then `UNKNOWN` before the irreversible section and `UPDATED` only after the port returns; the safe normalized result is written to encrypted operand custody before settlement. Capabilities truthfully declare recorded durability, unsupported cancellation, no deadline, no interactions, idempotent submit, interrupt reconciliation, and only `NONE`, `UNKNOWN`, or `UPDATED` effects.
 
-## Recommendations
+## Verification
 
-Approve S41. Keep S44 responsible for the canonical export-facade exposure and CLI migration, consuming this operation definition and injected port without copying orchestration or adding a compatibility shim.
+- RAG discovery located one application owner, one public export facade, and one entrypoint transport/provenance handoff.
+- Scoped Ruff and `ty` passed for all S41/S44 application, composition, CLI, and focused test surfaces.
+- `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/application/export/tests/test_google_operation.py` passed: 4 tests in 51.57s, including the real Model 130 registry-plan / uncomposed-port refusal proof.
+- `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/entrypoints/tests/test_operation_composition.py` passed: 7 tests.
+- `uv run --no-sync pytest -q -n0 -m 'not external_tool and not os_keychain' src/cadrumo/entrypoints/cli/tests/test_config_google_sync_calc_period.py src/cadrumo/entrypoints/cli/tests/test_google_payloads.py` passed: 13 tests in 59.97s.
+- Exact source census found the only command/manager export route is `execute_google_sheets_export`; the only production apply is the composition handoff to `export_modelo_to_sheets`.
+- `git diff --check` passed for the reviewed current tree.
+
+## Recommendation
+
+Approve the atomic S41/S44 implementation and close both steps after the normal Vault plan checks. This audit replaces the earlier pre-S44 deferral statement: facade exposure and CLI migration are completed together here, with no shim retained.

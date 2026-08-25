@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:fe5dd9acad5ab0421326e8021eed219b9ac38259b42fec7a99bc657dff6577df'
+body_hash: 'sha256:462f9cbe5bb1dbb0a2f6336b29d0d05700fb3df7645aaf12b59ca395ba7678be'
 step_id: 'S44'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -29,9 +29,9 @@ The export facade is the only legal cross-package application surface for Google
 ## Verification
 
 - Scoped Ruff and `ty` checks pass.
-- Production composition test resolves the definition and request contract through the public export facade.
-- Independent review remains pending with S41 because the two steps are atomic for the CLI cutover.
+- The real production composition fixed-point test resolves the definition and request contract through the public export facade.
+- CLI schema and payload tests pass after both consumers cut over.
 
 ## Notes
 
-S44 remains open pending S41's real-plan test, Vault validation, and independent re-review. It has no shim or legacy alias.
+S44 remains open pending independent re-review with its atomic S41 companion. It has no shim or legacy alias.

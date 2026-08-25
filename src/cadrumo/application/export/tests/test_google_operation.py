@@ -104,6 +104,7 @@ def test_google_sheets_export_definition_declares_one_safe_credential_free_contr
     assert "token" not in request_schema
 
 
+@pytest.mark.timeout(60)
 def test_default_owner_builds_a_real_registry_plan_then_refuses_uncomposed_remote_execution(
     tmp_path: Path,
 ) -> None:

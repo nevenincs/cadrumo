@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:f3487bf6eae21d8ddd0fbd31b1b4c11136d398b22c40a94b44ef2beb8c970fad'
+body_hash: 'sha256:c3a8471efa67fb7fb14348b7d843318182136d4dea464a55f7880d8284dc2555'
 step_id: 'S41'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -19,6 +19,7 @@ related:
 - `src/cadrumo/entrypoints/_operation_composition.py`
 - `src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py`
 - `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`
+- `src/cadrumo/entrypoints/tests/test_operation_composition.py`
 
 ## Description
 
@@ -35,10 +36,11 @@ S41 now has one application owner and one outer Google/provenance composition. T
 ## Verification
 
 - Scoped Ruff and `ty` checks pass for all changed application, composition, and CLI surfaces.
-- Real contract, production composition, and AST provenance tests pass; the real default-owner registry-plan proof is running separately because model `130` plan construction is CPU-bound.
-- CLI command-schema and payload tests pass.
+- The explicit 60-second real model-130 registry-plan gate passes and refuses the intentionally uncomposed remote boundary without a fabricated port.
+- The remaining focused export tests, production-composition fixed-point tests, and CLI schema/payload tests pass: 24 passed in the non-slow lane.
+- Exact census finds no `SimpleNamespace`, `cast`, manager duplicate, or CLI plan/preview/apply call; the sole production apply calls `export_modelo_to_sheets`.
 - `git diff --check` passes.
 
 ## Notes
 
-S41 remains open pending the focused real-plan gate, Vault check, and independent S40 re-review. No compatibility shim, private application import, or facade re-export bridge was introduced.
+S41 remains open pending independent S40 re-review. No compatibility shim, private application import, or facade re-export bridge was introduced.
