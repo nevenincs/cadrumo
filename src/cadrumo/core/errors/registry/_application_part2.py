@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.application.modelo._selectors.ModeloWorkNoActiveBucketError",
+        "cadrumo.application.modelo.work_unit_selection.ModeloWorkNoActiveBucketError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -18,7 +18,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._selectors.ModeloWorkUnitNotFoundError",
+        "cadrumo.application.modelo.work_unit_selection.ModeloWorkUnitNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_SELECTOR_UNIT_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -28,7 +28,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._selectors.ModeloWorkSelectorContradictionError",
+        "cadrumo.application.modelo.work_unit_selection.ModeloWorkSelectorContradictionError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_CONTRADICTION",
             category=ErrorCategory.REFUSED,
@@ -38,7 +38,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._selectors.ModeloWorkVisibleTargetAmbiguousError",
+        "cadrumo.application.modelo.work_unit_selection.ModeloWorkVisibleTargetAmbiguousError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -48,7 +48,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._selectors.ModeloWorkRevisionConflictError",
+        "cadrumo.application.modelo.work_unit_selection.ModeloWorkRevisionConflictError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_REVISION_CONFLICT",
             category=ErrorCategory.REFUSED,

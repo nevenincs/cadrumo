@@ -41,15 +41,21 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...domain.modelos import WorkUnitCatalogue
 from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ..modelo.work_unit_selection import (
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    select_modelo_work_resolution,
+)
 from ..operator_actions import DeclaredNextAction
 from ._next_actions import declare_next_action
 
 if TYPE_CHECKING:
-    from ...application.ledger.preflight import LedgerPreflightReport
     from ...application.ledger.evidence import PurchaseInvoiceEvidence
+    from ...application.ledger.preflight import LedgerPreflightReport
     from ...domain.invoices import InvoiceCatalogue
-    from ...domain.modelos import WorkUnit
     from ...domain.transactions import Transaction, TransactionCatalogueRepositoryProtocol
 
 
@@ -152,7 +158,7 @@ def build_data_prep_walkthrough(
     invoice_catalogue: InvoiceCatalogue,
     evidence_records: tuple[PurchaseInvoiceEvidence, ...],
     preflight_report: LedgerPreflightReport,
-    work_units: tuple[WorkUnit, ...],
+    work_unit_catalogue: WorkUnitCatalogue,
 ) -> DataPrepWalkthrough:
     """Build the ordered data-prep checklist for one (modelo, period) scope.
 
@@ -171,8 +177,7 @@ def build_data_prep_walkthrough(
         preflight_report: Loaded
             :class:`~application.ledger.preflight.LedgerPreflightReport` for
             ``(bucket_id, period)``.
-        work_units: Active (non-discarded)
-            :class:`~domain.modelos.WorkUnit` rows for ``bucket_id``.
+        work_unit_catalogue: Captured work-unit catalogue for ``bucket_id``.
 
     Returns:
         A :class:`DataPrepWalkthrough` with one ordered step per data-prep
@@ -192,7 +197,15 @@ def build_data_prep_walkthrough(
     steps.append(_evidence_step(period_transactions, evidence_records))
     steps.append(_invoices_step(period, invoice_catalogue))
     steps.append(_readiness_step(preflight_report))
-    steps.append(_work_unit_step(modelo=modelo, filing_year=period.filing_year, period=period, work_units=work_units))
+    steps.append(
+        _work_unit_step(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=period.filing_year,
+            period=period,
+            work_unit_catalogue=work_unit_catalogue,
+        )
+    )
 
     ready = all(step.state is DataPrepStepState.DONE for step in steps)
     return DataPrepWalkthrough(
@@ -325,19 +338,24 @@ def _readiness_step(preflight_report: LedgerPreflightReport) -> DataPrepStep:
 
 def _work_unit_step(
     *,
+    bucket_id: str,
     modelo: str,
     filing_year: int,
     period: Period,
-    work_units: tuple[WorkUnit, ...],
+    work_unit_catalogue: WorkUnitCatalogue,
 ) -> DataPrepStep:
-    matching = tuple(
-        unit
-        for unit in work_units
-        if unit.modelo == modelo
-        and unit.filing_year == filing_year
-        and unit.period.registry_token == period.registry_token
+    resolution = select_modelo_work_resolution(
+        ModeloWorkSelectorRequest(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+        ),
+        catalogue=work_unit_catalogue,
+        bucket_id=bucket_id,
+        mode=ModeloWorkSelectionMode.ACTIVE_NATURAL,
     )
-    if not matching:
+    if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
         return DataPrepStep(
             step_id=DataPrepStepId.START_MODELO_WORK,
             state=DataPrepStepState.PENDING,
@@ -349,7 +367,7 @@ def _work_unit_step(
                 period=period.registry_token,
             ),
         )
-    unit = matching[0]
+    unit = resolution.work_unit
     return DataPrepStep(
         step_id=DataPrepStepId.START_MODELO_WORK,
         state=DataPrepStepState.DONE,

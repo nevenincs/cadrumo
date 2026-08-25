@@ -66,15 +66,17 @@ from ._selectors import (
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorNotFoundError,
     ModeloCalculationRevisionSelectorStateError,
+    resolve_modelo_calculation_revision_pick,
+)
+from ._work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
+from .work_unit_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     ModeloWorkUnitNotFoundError,
     resolve_active_natural_modelo_work_unit,
-    resolve_modelo_calculation_revision_pick,
     resolve_modelo_work_unit,
 )
-from ._work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
 
 
 class ModeloRevisionPickError(ModeloError, ValueError):

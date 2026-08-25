@@ -97,6 +97,12 @@ from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,
 )
+from .work_unit_selection import (
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    resolve_modelo_work_bucket,
+    select_modelo_work_resolution,
+)
 
 _AUTOCONSUMO_PROMOTOR_BINDING: BindingId = "modelo-303-autoconsumo-promotor-base"
 _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
@@ -320,7 +326,6 @@ def calculate_modelo_work_revision(
             Calls this service and serialises the result for the operator.
     """
     from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-    from ._work_lifecycle import get_work_unit
 
     calculation = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit_id,
@@ -337,7 +342,7 @@ def calculate_modelo_work_revision(
         filing_instance_evidence=inputs.filing_instance_evidence,
     )
     revision = calculation.revision
-    work_unit = get_work_unit(revision.work_unit_id)
+    work_unit = _captured_work_unit(revision.work_unit_id)
     plazo_notices: tuple[Notice, ...] = ()
     if work_unit.modelo == Modelo.M210:
         from ._m303_regimen_simplificado_scope import active_taxpayer_profile
@@ -409,7 +414,8 @@ def build_work_calculate_input_bundle(
     :func:`cadrumo.application.modelo.apply_calculation_shortcut_inputs`.
     """
     _validate_detail_rows(detail_rows)
-    revision = _revision_for_work_unit(work_unit_id)
+    work_unit = _captured_work_unit(work_unit_id)
+    revision = _revision_for_work_unit(work_unit)
     revision_casillas_by_id = casillas_by_id(revision)
     casilla_inputs: dict[CasillaId, Decimal] = {}
     text_casilla_inputs: dict[CasillaId, str] = {}
@@ -450,7 +456,7 @@ def build_work_calculate_input_bundle(
                 binding_values[key] = _decimal_binding_value(raw_value, bindings_by_id[key])
 
     casilla_inputs, binding_values, shortcut_diagnostics = apply_calculation_shortcut_inputs(
-        work_unit_id=work_unit_id,
+        work_unit=work_unit,
         casilla_inputs=casilla_inputs,
         binding_values=binding_values,
         prestacion_inss_exenta=prestacion_inss_exenta,
@@ -712,21 +718,30 @@ def is_detail_casilla_override_key(key: str) -> bool:
     return key.strip().lower().startswith(_DETAIL_CASILLA_OVERRIDE_PREFIXES)
 
 
-def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
-    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
-    from ._work_lifecycle import get_work_unit
+def _captured_work_unit(work_unit_id: str) -> WorkUnit:
+    """Capture and exactly resolve one work unit through the canonical selector."""
+    request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
+    bucket_id = resolve_modelo_work_bucket(request)
+    catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+    resolution = select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
+    if resolution.state is not ModeloWorkSelectorState.RESOLVED or resolution.work_unit is None:
+        raise LookupError(f"work unit {work_unit_id!r} not found")
+    return resolution.work_unit
 
-    unit = get_work_unit(work_unit_id)
+
+def _revision_for_work_unit(work_unit: WorkUnit) -> ModeloRevision:
+    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+
     # The calculate path needs the rung that computes amounts, not the
     # filing rung: a revision that honestly declares calculation must not be
     # refused for work this application does entirely in memory.
     return resolve_registry_snapshot_for_work_unit(
-        unit,
+        work_unit,
         grade=RegistryAuthorityGrade.CALCULATION,
     ).revision
 
 
-def _resolved_maternidad_meses(work_unit_id: str) -> MaternidadMesesResolution | None:
+def _resolved_maternidad_meses(work_unit: WorkUnit) -> MaternidadMesesResolution | None:
     """Resolve the Art. 81.1 maternidad months the active profile contributes.
 
     Returns ``None`` when the bucket has no profile yet, mirroring the
@@ -736,21 +751,18 @@ def _resolved_maternidad_meses(work_unit_id: str) -> MaternidadMesesResolution |
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
     from ._profile_binding import resolve_maternidad_meses
-    from ._work_lifecycle import get_work_unit
-
-    unit = get_work_unit(work_unit_id)
     snapshot = resolve_registry_snapshot_for_work_unit(
-        unit,
+        work_unit,
         grade=RegistryAuthorityGrade.CALCULATION,
     )
     try:
-        record = ProfileRecordRepository.for_current_session(unit.bucket_id).load(unit.bucket_id)
+        record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
     except ProfileNotFoundError:
         return None
     return resolve_maternidad_meses(record, snapshot)
 
 
-def _maternidad_casilla_id(work_unit_id: str) -> CasillaId | None:
+def _maternidad_casilla_id(work_unit: WorkUnit) -> CasillaId | None:
     """The Art. 81.1 deducción casilla for this work unit, or ``None`` when the modelo has none.
 
     The gate on the whole derived-maternidad block. Resolving the role rather
@@ -760,12 +772,10 @@ def _maternidad_casilla_id(work_unit_id: str) -> CasillaId | None:
     would otherwise run on every calculation of every modelo.
     """
     from ._semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
-    from ._work_lifecycle import get_work_unit
-
     return casilla_id_for_unambiguous_revision_semantic_role(
-        _revision_for_work_unit(work_unit_id),
+        _revision_for_work_unit(work_unit),
         _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE,
-        modelo_id=str(get_work_unit(work_unit_id).modelo),
+        modelo_id=str(work_unit.modelo),
     )
 
 
@@ -836,7 +846,7 @@ def _maternidad_cotizaciones_ceiling_advisory(
     )
 
 
-def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: frozenset[str]) -> frozenset[str]:
+def _ambiguous_relacion_hijo_ids(work_unit: WorkUnit, contributing_hijo_ids: frozenset[str]) -> frozenset[str]:
     """*contributing_hijo_ids* whose stored ``relacion`` is the unstated default.
 
     Reads the active profile's descendiente records directly through the same
@@ -871,11 +881,8 @@ def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: froze
         return frozenset[str]()
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
-    from ._work_lifecycle import get_work_unit
-
-    unit = get_work_unit(work_unit_id)
     try:
-        record = ProfileRecordRepository.for_current_session(unit.bucket_id).load(unit.bucket_id)
+        record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
     except ProfileNotFoundError:
         return frozenset[str]()
     facts = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
@@ -1121,12 +1128,12 @@ def _supplied_option_group(
     return supplied
 
 
-def _maternidad_advisories(work_unit_id: str) -> list[CalculationSourceDiagnostic]:
+def _maternidad_advisories(work_unit: WorkUnit) -> list[CalculationSourceDiagnostic]:
     """Raise the non-blocking advisories for the maternidad-deduction casilla."""
-    maternidad_casilla_id = _maternidad_casilla_id(work_unit_id)
+    maternidad_casilla_id = _maternidad_casilla_id(work_unit)
     if maternidad_casilla_id is None:
         return []
-    maternidad = _resolved_maternidad_meses(work_unit_id)
+    maternidad = _resolved_maternidad_meses(work_unit)
     if maternidad is None:
         return []
     # The active profile's descendiente records are the SOLE authority for
@@ -1147,7 +1154,7 @@ def _maternidad_advisories(work_unit_id: str) -> list[CalculationSourceDiagnosti
             maternidad_casilla_id,
         ),
         _maternidad_ambiguous_relacion_advisory(
-            _ambiguous_relacion_hijo_ids(work_unit_id, frozenset(hijo_id for hijo_id, _ in maternidad.pairs)),
+            _ambiguous_relacion_hijo_ids(work_unit, frozenset(hijo_id for hijo_id, _ in maternidad.pairs)),
             maternidad_casilla_id,
         ),
     )
@@ -1156,7 +1163,7 @@ def _maternidad_advisories(work_unit_id: str) -> list[CalculationSourceDiagnosti
 
 def _pension_rescate_contributions(
     *,
-    work_unit_id: str,
+    work_unit: WorkUnit,
     capital: Decimal | None,
     aportaciones_pre_2007: Decimal | None,
     aportaciones_totales: Decimal | None,
@@ -1186,11 +1193,11 @@ def _pension_rescate_contributions(
         aportaciones_pre_2007=resolved_pre_2007,
         aportaciones_totales=resolved_totales,
     )
-    reduccion_casilla_id = _semantic_role_casilla_id(work_unit_id, _REDUCCION_TRABAJO_SEMANTIC_ROLE)
+    reduccion_casilla_id = _semantic_role_casilla_id(work_unit, _REDUCCION_TRABAJO_SEMANTIC_ROLE)
     inject, window_advisory = _dt12_window_decision(
         reduccion=reduccion,
         eligibility=_dt12_window_verdict(
-            work_unit_id=work_unit_id,
+            work_unit=work_unit,
             contingencia_year=contingencia_year,
             rescate_year=rescate_year,
         ),
@@ -1209,7 +1216,7 @@ def _pension_rescate_contributions(
 
 def _sal_reserva_especial_contribution(
     *,
-    work_unit_id: str,
+    work_unit: WorkUnit,
     beneficio_neto: Decimal | None,
     reserva_dotada: Decimal | None,
     capital_social: Decimal | None,
@@ -1224,7 +1231,7 @@ def _sal_reserva_especial_contribution(
         return {}
     resolved_neto, resolved_dotada, resolved_capital = supplied
     return {
-        _semantic_role_casilla_id(work_unit_id, _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE): (
+        _semantic_role_casilla_id(work_unit, _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE): (
             compute_sal_reserva_especial_dotacion(
                 beneficio_neto=resolved_neto,
                 reserva_dotada=resolved_dotada,
@@ -1236,7 +1243,7 @@ def _sal_reserva_especial_contribution(
 
 def apply_calculation_shortcut_inputs(
     *,
-    work_unit_id: str,
+    work_unit: WorkUnit,
     casilla_inputs: Mapping[CasillaId, Decimal],
     binding_values: Mapping[BindingId, Decimal],
     prestacion_inss_exenta: Decimal | None = None,
@@ -1287,14 +1294,14 @@ def apply_calculation_shortcut_inputs(
     advisories: list[CalculationSourceDiagnostic] = []
 
     if prestacion_inss_exenta is not None:
-        resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _INSS_EXENTA_SEMANTIC_ROLE)] = (
+        resolved_casilla_values[_semantic_role_casilla_id(work_unit, _INSS_EXENTA_SEMANTIC_ROLE)] = (
             prestacion_inss_exenta
         )
 
-    advisories.extend(_maternidad_advisories(work_unit_id))
+    advisories.extend(_maternidad_advisories(work_unit))
 
     pension_casilla_values, pension_advisories = _pension_rescate_contributions(
-        work_unit_id=work_unit_id,
+        work_unit=work_unit,
         capital=rescate_plan_pensiones_capital,
         aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
         aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
@@ -1307,7 +1314,7 @@ def apply_calculation_shortcut_inputs(
 
     resolved_casilla_values.update(
         _sal_reserva_especial_contribution(
-            work_unit_id=work_unit_id,
+            work_unit=work_unit,
             beneficio_neto=sal_beneficio_neto,
             reserva_dotada=sal_reserva_dotada,
             capital_social=sal_capital_social,
@@ -1322,7 +1329,7 @@ def apply_calculation_shortcut_inputs(
 
 def _dt12_window_verdict(
     *,
-    work_unit_id: str,
+    work_unit: WorkUnit,
     contingencia_year: int | None,
     rescate_year: int | None,
 ) -> Dt12WindowEligibility | None:
@@ -1335,7 +1342,7 @@ def _dt12_window_verdict(
     """
     if contingencia_year is None:
         return None
-    resolved_rescate_year = rescate_year if rescate_year is not None else _work_unit_filing_year(work_unit_id)
+    resolved_rescate_year = rescate_year if rescate_year is not None else work_unit.filing_year
     return dt12_regime_window_eligibility(
         contingencia_year=contingencia_year,
         rescate_year=resolved_rescate_year,
@@ -1410,19 +1417,8 @@ def _dt12_parcial_guidance_advisory(reduccion_casilla_id: CasillaId) -> Calculat
     )
 
 
-def _work_unit_filing_year(work_unit_id: str) -> int:
-    catalogue = WorkUnitCatalogueRepository().load()
-    work_unit = catalogue.get(work_unit_id)
-    if work_unit is None:
-        raise LookupError(f"work unit {work_unit_id!r} not found")
-    return work_unit.filing_year
-
-
-def _semantic_role_casilla_id(work_unit_id: str, semantic_role: str) -> CasillaId:
-    catalogue = WorkUnitCatalogueRepository().load()
-    work_unit = catalogue.get(work_unit_id)
-    if work_unit is None:
-        raise LookupError(f"work unit {work_unit_id!r} not found")
+def _semantic_role_casilla_id(work_unit: WorkUnit, semantic_role: str) -> CasillaId:
+    """Resolve one semantic role from the already captured parent work unit."""
     modelo_id = str(work_unit.modelo)
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(candidate for candidate in modelos if candidate.id == modelo_id)

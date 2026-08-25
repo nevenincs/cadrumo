@@ -66,15 +66,20 @@ from ...domain.modelos import (
     VerificationReport,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
+    WorkUnitCatalogue,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     StoredCalculationDriftError,
     WorkUnitNotFoundError,
-    WorkUnitRevisionDivergenceError,
 )
 from ._row_source_identity_replay import ModeloRowSourceFingerprint, revision_row_source_fingerprints_for_review
+from .work_unit_selection import (
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    select_modelo_work_resolution,
+)
 
 
 class ModeloWorkOriginAnomaly(StrEnum):
@@ -251,24 +256,6 @@ class _ReviewRowContext:
     blocking_findings: tuple[ModeloVerificationFinding, ...]
 
 
-def _is_work_target(
-    unit: WorkUnit,
-    *,
-    bucket_id: BucketId,
-    modelo: ModeloCode,
-    filing_year: int,
-    period: Period,
-) -> bool:
-    return all(
-        (
-            str(unit.bucket_id) == bucket_id,
-            str(unit.modelo) == modelo,
-            unit.filing_year == filing_year,
-            unit.period == period,
-        ),
-    )
-
-
 def _work_unit_for_target(
     *,
     bucket_id: BucketId,
@@ -276,20 +263,20 @@ def _work_unit_for_target(
     filing_year: int,
     period: Period,
     registry_revision_id: RevisionId,
-    repository: WorkUnitCatalogueRepositoryProtocol,
+    catalogue: WorkUnitCatalogue,
 ) -> WorkUnit:
-    candidates = tuple(
-        unit
-        for unit in repository.load().values()
-        if _is_work_target(
-            unit,
+    resolution = select_modelo_work_resolution(
+        ModeloWorkSelectorRequest(
             bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
             period=period,
-        )
+            revision_id=registry_revision_id,
+        ),
+        catalogue=catalogue,
+        bucket_id=bucket_id,
     )
-    if not candidates:
+    if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
         raise WorkUnitNotFoundError(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={
@@ -299,20 +286,7 @@ def _work_unit_for_target(
                 "period": period.registry_token,
             },
         )
-    matching = tuple(unit for unit in candidates if unit.revision_id == registry_revision_id)
-    if len(matching) != 1:
-        stored = sorted(str(unit.revision_id) for unit in candidates)
-        raise WorkUnitRevisionDivergenceError(
-            translated_message="application.modelo.errors.work_unit_revision_divergence_candidates",
-            context={
-                "modelo": modelo,
-                "filing_year": filing_year,
-                "period": period.registry_token,
-                "stored_revision_ids": stored,
-                "resolved_revision_id": registry_revision_id,
-            },
-        )
-    return matching[0]
+    return resolution.work_unit
 
 
 def _current_revision(
@@ -690,7 +664,7 @@ def build_modelo_work_review(
         revision_id=selected_revision.id,
         grade=selected_revision.effective_authority_grade,
     )
-    work_repo = work_unit_repository
+    work_units = work_unit_repository.load()
     calculation_repo = calculation_repository
     verification_repo = verification_repository
     work_unit = _work_unit_for_target(
@@ -699,7 +673,7 @@ def build_modelo_work_review(
         filing_year=filing_year,
         period=period,
         registry_revision_id=snapshot.revision.id,
-        repository=work_repo,
+        catalogue=work_units,
     )
     revision = _current_revision(work_unit, calculation_repo)
     verification = _latest_verification(revision, verification_repo)

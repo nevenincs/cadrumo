@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from ...core.i18n import register_profile_language_resolver
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from .custody_ports import read_profile_output_language_hint
+from .login_session_port import profile_current_bucket_session
 
 __all__ = [
     "register_language_resolver",
@@ -31,9 +33,7 @@ def resolve_active_profile_output_language() -> str | None:
     When no bucket session is currently bound, reads the bucket-local
     non-secret language hint instead of the encrypted profile envelope.
     """
-    from ...adapters.persistence.storage.master_key import has_active_bucket_session
-
-    if not has_active_bucket_session():
+    if profile_current_bucket_session() is None:
         return resolve_active_profile_output_language_hint()
 
     from cadrumo.application.workflow.persistence import workflow_state_repository
@@ -62,13 +62,12 @@ def resolve_active_profile_output_language_hint() -> str | None:
 def resolve_profile_output_language_hint(bucket_id: str) -> str | None:
     """Return a named bucket's last-known output-language hint, if present."""
     try:
-        from ...adapters.persistence.storage.bucket import read_bucket_output_language_hint
         from ...core.config import load_settings
 
         trimmed = bucket_id.strip()
         if not trimmed:
             return None
-        return read_bucket_output_language_hint(
+        return read_profile_output_language_hint(
             storage_root=load_settings().cadrumo_local_storage_root,
             bucket_id=trimmed,
         )

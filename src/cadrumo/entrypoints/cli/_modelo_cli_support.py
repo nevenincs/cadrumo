@@ -28,9 +28,6 @@ from ...application.modelo import (
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloDetailRow,
     ModeloWorkAddressNotFoundError,
-    ModeloWorkRevisionConflictError,
-    ModeloWorkUnitCandidate,
-    ModeloWorkVisibleTargetAmbiguousError,
     WorkCalculateInputBundle,
     WorkUnitNotFoundError,
     build_work_calculate_input_bundle,
@@ -40,6 +37,11 @@ from ...application.modelo import (
     modelo_work_create_refusal_locale_key,
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
+)
+from ...application.modelo.work_unit_selection import (
+    ModeloWorkRevisionConflictError,
+    ModeloWorkUnitCandidate,
+    ModeloWorkVisibleTargetAmbiguousError,
 )
 from ...core import (
     HEX_PATTERN_64,

@@ -9,10 +9,6 @@ import typer
 
 from ...application.modelo import (
     ModeloWorkRegistryYearMismatchError,
-    ModeloWorkRevisionConflictError,
-    ModeloWorkSelectorContradictionError,
-    ModeloWorkUnitNotFoundError,
-    ModeloWorkVisibleTargetAmbiguousError,
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
@@ -28,6 +24,12 @@ from ...application.modelo import (
     require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
     resolve_registry_revision_for_work_target,
+)
+from ...application.modelo.work_unit_selection import (
+    ModeloWorkRevisionConflictError,
+    ModeloWorkSelectorContradictionError,
+    ModeloWorkUnitNotFoundError,
+    ModeloWorkVisibleTargetAmbiguousError,
 )
 from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage

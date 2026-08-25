@@ -781,7 +781,7 @@ def overview_prepare(
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
-    from ...application.modelo import list_work_units, registry_describe_modelo_for_scope
+    from ...application.modelo import registry_describe_modelo_for_scope
     from ...application.overview import build_data_prep_walkthrough
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -810,11 +810,7 @@ def overview_prepare(
         period=canonical_period,
         transaction_repository=transaction_repository,
     )
-    work_units = list_work_units(
-        bucket_id=bucket_id,
-        include_discarded=False,
-        repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
-    )
+    work_unit_catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
 
     walkthrough = build_data_prep_walkthrough(
         bucket_id=bucket_id,
@@ -824,7 +820,7 @@ def overview_prepare(
         invoice_catalogue=invoice_catalogue,
         evidence_records=evidence_records,
         preflight_report=preflight_report,
-        work_units=work_units,
+        work_unit_catalogue=work_unit_catalogue,
     )
 
     typed_result, lines, notices = overview_prepare_output(walkthrough)

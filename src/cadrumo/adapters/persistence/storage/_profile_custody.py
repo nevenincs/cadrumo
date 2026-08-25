@@ -560,6 +560,12 @@ class _PersistenceProfileCustody:
     def bucket_storage(self) -> ProfileBucketStoragePort:
         return _PersistenceProfileBucketStorage()
 
+    def read_output_language_hint(self, *, storage_root: Path, bucket_id: str) -> str | None:
+        return bucket.read_bucket_output_language_hint(
+            storage_root=storage_root,
+            bucket_id=bucket_id,
+        )
+
     def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
         return _PersistenceProfileSecureObjectInventory()
 

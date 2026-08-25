@@ -75,7 +75,6 @@ from ...domain.modelos import (
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     WorkUnit,
-    WorkUnitState,
     derive_calculation_revision_id,
     derive_filing_record_id,
     is_receipt_bound_external_evidence,
@@ -92,6 +91,13 @@ from ._revision_persistence import build_modelo_bucket_event as _build_bucket_ev
 from ._revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
 from ._work_addressing import resolve_registry_revision_for_work_target
 from ._work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
+from .work_unit_selection import (
+    ModeloWorkRevisionConflictError,
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorRequest,
+    ModeloWorkVisibleTargetAmbiguousError,
+    select_modelo_work_resolution,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -199,25 +205,30 @@ def import_external_filing_source(
     )
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
-    active_matches = tuple(
-        unit
-        for unit in wu_repo.load().values()
-        if unit.bucket_id == bucket_id
-        and unit.modelo == source.modelo
-        and unit.filing_year == source.filing_year
-        and unit.period == source.period
-        and unit.state is not WorkUnitState.DESCARTADO
-    )
-    if len(active_matches) > 1:
+    catalogue = wu_repo.load()
+    try:
+        resolution = select_modelo_work_resolution(
+            ModeloWorkSelectorRequest(
+                bucket_id=bucket_id,
+                modelo=source.modelo,
+                filing_year=source.filing_year,
+                period=source.period,
+                revision_id=source.registry_revision_id,
+            ),
+            catalogue=catalogue,
+            bucket_id=bucket_id,
+            mode=ModeloWorkSelectionMode.ACTIVE_NATURAL,
+        )
+    except ModeloWorkVisibleTargetAmbiguousError as exc:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_source_work_unit_ambiguous",
-        )
-    if active_matches:
-        work_unit = active_matches[0]
-        if source.registry_revision_id is not None and work_unit.revision_id != source.registry_revision_id:
-            raise ExternalModeloImportError(
-                translated_message="application.modelo.errors.external_import_source_revision_mismatch",
-            )
+        ) from exc
+    except ModeloWorkRevisionConflictError as exc:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_source_revision_mismatch",
+        ) from exc
+    if resolution.work_unit is not None:
+        work_unit = resolution.work_unit
     else:
         revision_id = resolve_registry_revision_for_work_target(
             modelo=source.modelo,

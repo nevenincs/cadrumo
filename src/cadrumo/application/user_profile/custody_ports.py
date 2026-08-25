@@ -990,6 +990,10 @@ class ProfileCustodyPort(Protocol):
         """Return canonical bucket path and lock operations."""
         ...
 
+    def read_output_language_hint(self, *, storage_root: Path, bucket_id: str) -> str | None:
+        """Read one bucket's non-secret failure-rendering language hint."""
+        ...
+
     def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
         """Return active-bucket namespace inventory."""
         ...
@@ -1178,6 +1182,14 @@ def inventory_committed_profile_custody(profile_id: UUID, *, root: Path | None =
 def default_profile_bucket_storage() -> ProfileBucketStoragePort:
     """Return canonical bucket layout and locking through the application port."""
     return profile_custody_port().bucket_storage()
+
+
+def read_profile_output_language_hint(*, storage_root: Path, bucket_id: str) -> str | None:
+    """Read one bucket's non-secret output-language hint through custody."""
+    return profile_custody_port().read_output_language_hint(
+        storage_root=storage_root,
+        bucket_id=bucket_id,
+    )
 
 
 def default_profile_secure_object_inventory() -> ProfileSecureObjectInventoryPort:
@@ -1502,6 +1514,7 @@ __all__ = [
     "profile_is_keyring_unavailable",
     "profile_is_persistence_failure",
     "prove_profile_recovery_artifact",
+    "read_profile_output_language_hint",
     "refuse_profile_login_without_password_channel",
     "replace_profile_custody_password_envelope",
     "unlock_profile_custody_password",

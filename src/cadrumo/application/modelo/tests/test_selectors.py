@@ -36,16 +36,7 @@ from .._selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
     ModeloCalculationRevisionSelectorStateError,
-    ModeloWorkRevisionConflictError,
-    ModeloWorkSelectorContradictionError,
-    ModeloWorkSelectorRequest,
-    ModeloWorkSelectorState,
-    ModeloWorkVisibleTargetAmbiguousError,
-    active_natural_target_work_units,
-    natural_target_work_units,
     resolve_modelo_calculation_revision_pick,
-    resolve_modelo_work_bucket,
-    resolve_modelo_work_unit,
     select_current_verified_revision,
     select_exportable_revision,
     select_modelo_calculation_revision,
@@ -55,6 +46,17 @@ from .._work_addressing import (
     resolve_exportable_modelo_calculation_revision_address,
     resolve_fileable_modelo_calculation_revision_address,
     resolve_verifiable_modelo_calculation_revision_address,
+)
+from ..work_unit_selection import (
+    ModeloWorkRevisionConflictError,
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorContradictionError,
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    ModeloWorkVisibleTargetAmbiguousError,
+    resolve_modelo_work_bucket,
+    resolve_modelo_work_unit,
+    select_modelo_work_resolution,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -229,8 +231,18 @@ def test_natural_target_resolution_retains_discarded_work_units_for_terminal_sta
     resolution = resolve_modelo_work_unit(_request(), repository=work_repo)
     assert resolution.state is ModeloWorkSelectorState.RESOLVED
     assert resolution.work_unit == discarded
-    assert natural_target_work_units(_request(), repository=work_repo) == (discarded,)
-    assert active_natural_target_work_units(_request(), repository=work_repo) == ()
+    captured_catalogue = work_repo.load()
+    assert select_modelo_work_resolution(
+        _request(),
+        catalogue=captured_catalogue,
+        bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
+    ).work_unit == discarded
+    assert select_modelo_work_resolution(
+        _request(),
+        catalogue=captured_catalogue,
+        bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
+        mode=ModeloWorkSelectionMode.ACTIVE_NATURAL,
+    ).state is ModeloWorkSelectorState.ABSENT
 
 
 def test_visible_target_resolution_returns_single_active_work_unit(work_repo: WorkUnitCatalogueRepository) -> None:

@@ -12,14 +12,16 @@ from ...application.modelo import (
     ModeloCalculationRevisionSelectorStateError,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
-    ModeloWorkRevisionConflictError,
-    ModeloWorkSelectorContradictionError,
-    ModeloWorkUnitNotFoundError,
-    ModeloWorkVisibleTargetAmbiguousError,
     declared_modelo_period_tokens,
     modelo_work_address_from_operator_target,
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
+)
+from ...application.modelo.work_unit_selection import (
+    ModeloWorkRevisionConflictError,
+    ModeloWorkSelectorContradictionError,
+    ModeloWorkUnitNotFoundError,
+    ModeloWorkVisibleTargetAmbiguousError,
 )
 from ...core import Period, PeriodError
 from ...core.bucket_pointer import resolve_active_bucket_id
