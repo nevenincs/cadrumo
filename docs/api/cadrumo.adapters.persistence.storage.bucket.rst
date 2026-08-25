@@ -13,7 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.adapters.persistence.storage.bucket._errors
    cadrumo.adapters.persistence.storage.bucket._export_header
    cadrumo.adapters.persistence.storage.bucket._keystore_paths
    cadrumo.adapters.persistence.storage.bucket._layout
@@ -22,3 +21,4 @@ Submodules
    cadrumo.adapters.persistence.storage.bucket._sealed_archive_errors
    cadrumo.adapters.persistence.storage.bucket._sealed_archive_reader
    cadrumo.adapters.persistence.storage.bucket._sealed_archive_writer
+   cadrumo.adapters.persistence.storage.bucket.errors

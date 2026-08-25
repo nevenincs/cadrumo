@@ -13,5 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.retention._errors
    cadrumo.domain.retention._floor
+   cadrumo.domain.retention.errors

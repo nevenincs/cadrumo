@@ -14,7 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.submission._engine
-   cadrumo.domain.submission._errors
    cadrumo.domain.submission._models
    cadrumo.domain.submission._preflight
    cadrumo.domain.submission._protocols
+   cadrumo.domain.submission.errors

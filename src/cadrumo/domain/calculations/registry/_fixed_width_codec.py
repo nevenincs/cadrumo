@@ -13,7 +13,6 @@ from ....core import CasillaId
 from ....core.decimal import coerce_fixed_width_decimal
 from ....core.errors import CadrumoError
 from ....core.money import round_to_cents
-from .errors import RegistryValidationError
 from ._export_value_policy import (
     ExportValuePolicy,
     ParsedExportPolicyValue,
@@ -22,6 +21,7 @@ from ._export_value_policy import (
     project_export_value,
     validate_export_wire_value,
 )
+from .errors import RegistryValidationError
 
 
 class ExportPadding(StrEnum):
@@ -203,7 +203,7 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
         return " " * field.length
     if kind == "literal":
         value = field.literal
-    if _is_absent_numeric_slot(field, value) and not policy_defines_absent_slot(field.value_policy):
+    if _is_absent_slot(field, value) and not policy_defines_absent_slot(field.value_policy):
         # Absence is settled BEFORE projection for every policy that does not
         # claim the empty slot. Every projector refuses ``None`` -- correctly, an
         # absent quantity is not a quantity -- so testing absence only after
@@ -211,15 +211,16 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
         # policy, and an optional casilla the taxpayer legitimately lacks could
         # not be exported at all. The post-projection test below is kept for a
         # policy that projects an empty slot through to an empty value.
-        rendered = _render_absent_numeric(field)
+        rendered = _render_absent_slot(field)
     else:
         value = project_export_value(field.value_policy, value)
-        if _is_absent_numeric_slot(field, value):
-            rendered = _render_absent_numeric(field)
+        if _is_absent_slot(field, value):
+            rendered = _render_absent_slot(field)
         else:
             _require_allowed_value(field, value)
             rendered = _render_typed_value(field, value)
-    validate_export_wire_value(field.value_policy, rendered)
+    if not _is_absent_slot(field, value):
+        validate_export_wire_value(field.value_policy, rendered)
     return rendered
 
 
@@ -490,29 +491,27 @@ def _require_allowed_value(field: _ExportField, value: object) -> None:
 _NUMERIC_DATA_TYPES = frozenset({"integer", "decimal", "money"})
 
 
-def _is_absent_numeric_slot(field: _ExportField, value: object) -> bool:
-    """Report a numeric slot carrying no value once its policy has projected.
+def _is_absent_slot(field: _ExportField, value: object) -> bool:
+    """Report a field slot carrying no value once its policy has projected.
 
     Absence is tested after projection so a value policy that assigns its own
     meaning to an empty slot keeps it: an unselected checkbox projects to its
     declared ``0`` and arrives here as a value, not an absence.
     """
-    if field.data_type not in _NUMERIC_DATA_TYPES:
-        return False
     return value is None or value == ""
 
 
-def _render_absent_numeric(field: _ExportField) -> str:
-    """Render an empty optional numeric slot as its declared blank fill.
+def _render_absent_slot(field: _ExportField) -> str:
+    """Render an empty optional slot as its declared width-correct blank fill.
 
     A fixed-width record gives every field its byte slot unconditionally, so an
     optional casilla the taxpayer legitimately lacks -- the birth year of a
-    descendant they do not have -- still has to occupy its width. AEAT's record
-    designs fill such a field with zeros ("los campos numéricos que no tengan
-    contenido se rellenarán a ceros"), which is exactly what the field's own
-    declared padding axis produces; the fill is therefore read from the registry
-    declaration rather than chosen here, and the absent value is never turned
-    into a value upstream.
+    descendant they do not have, or a regimen activity the authority cannot
+    identify -- still has to occupy its width. AEAT's record designs fill absent
+    numeric fields with zeros ("los campos numéricos que no tengan contenido se
+    rellenarán a ceros") and text fields with their declared space padding. The
+    fill is therefore read from the registry declaration rather than chosen
+    upstream, and absence is never turned into a semantic value.
 
     A field the layout declares ``required`` has no blank representation and
     refuses instead, so an omitted mandatory figure cannot reach the wire as a
@@ -522,7 +521,9 @@ def _render_absent_numeric(field: _ExportField) -> str:
         raise RegistryValidationError(
             f"required export field {field.id!r} has no value to render",
         )
-    return _render_numeric_digits(field, "", negative=False)
+    if field.data_type in _NUMERIC_DATA_TYPES:
+        return _render_numeric_digits(field, "", negative=False)
+    return _pad(field, "")
 
 
 def _render_integer(field: _ExportField, value: object) -> str:

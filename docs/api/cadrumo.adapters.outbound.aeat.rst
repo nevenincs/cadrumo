@@ -26,6 +26,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.outbound.aeat._html
-   cadrumo.adapters.outbound.aeat._operator_progress
    cadrumo.adapters.outbound.aeat._playwright
    cadrumo.adapters.outbound.aeat._representation_gate
+   cadrumo.adapters.outbound.aeat.operator_progress

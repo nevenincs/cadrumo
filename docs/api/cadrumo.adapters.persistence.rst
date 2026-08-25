@@ -16,3 +16,11 @@ Subpackages
    cadrumo.adapters.persistence.operations
    cadrumo.adapters.persistence.profile
    cadrumo.adapters.persistence.storage
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.adapters.persistence.workflow

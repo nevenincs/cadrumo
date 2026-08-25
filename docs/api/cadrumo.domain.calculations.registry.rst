@@ -43,7 +43,6 @@ Submodules
    cadrumo.domain.calculations.registry._deadline_coordinate
    cadrumo.domain.calculations.registry._detail_record_bindings
    cadrumo.domain.calculations.registry._donativo_bindings
-   cadrumo.domain.calculations.registry._errors
    cadrumo.domain.calculations.registry._export
    cadrumo.domain.calculations.registry._export_parse
    cadrumo.domain.calculations.registry._export_semantics
@@ -189,3 +188,4 @@ Submodules
    cadrumo.domain.calculations.registry._verification_tolerance
    cadrumo.domain.calculations.registry._withholding296_bindings
    cadrumo.domain.calculations.registry._withholding_bindings
+   cadrumo.domain.calculations.registry.errors

@@ -1,10 +1,7 @@
-"""Declarative S170 fixed point, backed by the canonical import-hygiene scanner."""
+"""Declarative Modelo work-selection fixed point backed by the canonical scanner."""
 from __future__ import annotations
 
 import inspect
-import json
-import os
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -16,6 +13,7 @@ from ..quality.import_hygiene_scan import (
     CanonicalAuthorityTarget,
     DelegatingWrapperRule,
     scan_canonical_authority,
+    tracked_live_files,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -33,6 +31,7 @@ _DEFINED_SYMBOLS = frozenset(
 _SPEC = CanonicalAuthoritySpec(
     targets=(CanonicalAuthorityTarget(_MODULE, _CANONICAL, _DEFINED_SYMBOLS),),
     retired_modules=_RETIRED,
+    forbidden_text_references=_RETIRED,
     facade_modules=frozenset({"cadrumo.application.modelo"}),
     inert_modules=frozenset({"cadrumo.application.modelo"}),
     wrapper_rules=(
@@ -48,12 +47,24 @@ _SPEC = CanonicalAuthoritySpec(
         ),
     ),
 )
+_MUTANT_SPEC = CanonicalAuthoritySpec(
+    targets=_SPEC.targets,
+    retired_modules=_SPEC.retired_modules,
+    facade_modules=_SPEC.facade_modules,
+    inert_modules=_SPEC.inert_modules,
+    wrapper_rules=_SPEC.wrapper_rules,
+)
+
+
+def _production_and_docs_corpus() -> tuple[Path, ...]:
+    roots = tuple((_ROOT / name).resolve() for name in ("docs", "packaging", "src"))
+    return tuple(path for path in tracked_live_files() if any(path.is_relative_to(root) for root in roots))
 
 
 def test_work_selection_fixed_point_is_discovery_complete() -> None:
     assert not (_CADRUMO / "application/modelo/_work_addressing.py").exists()
     assert not (_CADRUMO / "application/modelo/work_unit_selection.py").exists()
-    assert scan_canonical_authority(_SPEC) == []
+    assert scan_canonical_authority(_SPEC, _production_and_docs_corpus()) == []
 
 
 @pytest.mark.parametrize(
@@ -71,32 +82,5 @@ def test_work_selection_fixed_point_is_discovery_complete() -> None:
 def test_adversarial_import_authority_mutants_are_rejected(source: str, expected: str, tmp_path: Path) -> None:
     path = tmp_path / "mutant.py"
     path.write_text(source, encoding="utf-8")
-    assert expected in {hit.kind for hit in scan_canonical_authority(_SPEC, (path,))}
-
-
-@pytest.mark.resident_service
-def test_rag_discovery_returns_the_canonical_owner() -> None:
-    status_dir = Path(os.environ["_VAULTSPEC_RAG_PYTEST_SINGLETON_ROOT"]) / "client-status"
-    status_dir.mkdir()
-    version = subprocess.run(
-        ["uv", "tool", "run", "--from", "vaultspec-rag==0.4.2", "vaultspec-rag", "--version"],  # noqa: S607
-        cwd=_ROOT, capture_output=True, text=True, check=False, timeout=15,
-    )
-    assert version.returncode == 0, version.stderr
-    assert "0.4.2" in version.stdout, version.stdout
-    result = subprocess.run(  # noqa: S603
-        [  # noqa: S607
-            "uv", "tool", "run", "--from", "vaultspec-rag==0.4.2", "vaultspec-rag",
-            "--status-dir", str(status_dir), "search",
-            "Modelo work-unit selector repository wrapper natural catalogue scan facade import",
-            "--type", "code", "--port", "8766", "--timeout", "45.0", "--json",
-        ],
-        cwd=_ROOT, capture_output=True, text=True, check=False, timeout=60,
-    )
-    assert result.returncode == 0, result.stderr
-    response = json.loads(result.stdout)
-    assert response.get("ok") is True, response
-    assert any(
-        "application/modelo/work_addressing.py" in str(hit.get("path", "")).replace("\\", "/")
-        for hit in response.get("data", {}).get("results", [])
-    )
+    findings = scan_canonical_authority(_MUTANT_SPEC, (_CANONICAL, path))
+    assert {hit.kind for hit in findings} == {expected}

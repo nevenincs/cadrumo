@@ -21,7 +21,6 @@ Submodules
    cadrumo.domain.modelos._calculation_revision_m303_handoff
    cadrumo.domain.modelos._codes
    cadrumo.domain.modelos._dt12_reduccion
-   cadrumo.domain.modelos._errors
    cadrumo.domain.modelos._filing_record
    cadrumo.domain.modelos._filing_repository
    cadrumo.domain.modelos._iae_exemption
@@ -35,3 +34,5 @@ Submodules
    cadrumo.domain.modelos._verification_report
    cadrumo.domain.modelos._verification_repository
    cadrumo.domain.modelos._work_unit
+   cadrumo.domain.modelos.errors
+   cadrumo.domain.modelos.work_unit_repository

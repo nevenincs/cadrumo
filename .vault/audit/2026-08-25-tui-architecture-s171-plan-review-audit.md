@@ -94,4 +94,3 @@ baseline, bounded facets, and typed cursors remain assigned without overlap.
 PASS. Commit `a59df5c4eb` closes the prior HIGH and leaves one unambiguous
 direct-defining-module implementation order. No new finding remains in the
 reviewed remediation scope.
-

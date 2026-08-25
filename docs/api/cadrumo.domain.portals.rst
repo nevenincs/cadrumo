@@ -24,7 +24,7 @@ Submodules
    cadrumo.domain.portals._categories
    cadrumo.domain.portals._codes
    cadrumo.domain.portals._drift
-   cadrumo.domain.portals._errors
    cadrumo.domain.portals._hosts
    cadrumo.domain.portals._metadata
    cadrumo.domain.portals._registry
+   cadrumo.domain.portals.errors

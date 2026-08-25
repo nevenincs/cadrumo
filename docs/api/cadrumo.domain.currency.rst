@@ -13,6 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.currency._errors
    cadrumo.domain.currency._models
    cadrumo.domain.currency._service
+   cadrumo.domain.currency.errors

@@ -1,5 +1,5 @@
 cadrumo.application.wizard.status module
-=========================================
+========================================
 
 .. automodule:: cadrumo.application.wizard.status
    :members:

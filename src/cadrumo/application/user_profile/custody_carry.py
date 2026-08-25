@@ -84,7 +84,7 @@ from ..ledger.confirmation_record import ConfirmationRecordRepository
 from ..ledger.counterparty_establishment import ConfirmedCounterpartyFactsRepository
 from ..ledger.evidence import PurchaseInvoiceEvidenceRepository
 from ..ledger.extracted_document_cache import ExtractedDocumentCacheRepository
-from ..ledger.extraction_draft_store import ExtractionDraftRepository
+from ..ledger.extraction_draft_store import ExtractionDraftDocument, extraction_draft_object_key
 from ..ledger.rule_repository import LedgerClassificationRuleRepository
 from ..live.borrador_100 import Borrador100Snapshot, borrador_100_snapshot_object_key
 from ..live.deudas import PersistedDeudasSnapshot, deudas_snapshot_object_key
@@ -446,10 +446,11 @@ def _ledger_extraction_and_live_deudas_natural_key_resolvers() -> dict[str, Natu
         _extracted_document_cache_repo,
     )
 
-    def _extraction_draft_repo() -> ExtractionDraftRepository:
-        return ExtractionDraftRepository()
+    def _extraction_draft_key(record: SecureObjectRecord, _bucket_id: str) -> str:
+        document = _envelope_payload(record, ExtractionDraftDocument)
+        return extraction_draft_object_key(document)
 
-    resolvers["cadrumo.application.ledger.extraction_draft"] = _bound_resolver(_extraction_draft_repo)
+    resolvers["cadrumo.application.ledger.extraction_draft"] = _extraction_draft_key
 
     def _confirmation_record_repo() -> ConfirmationRecordRepository:
         return ConfirmationRecordRepository()

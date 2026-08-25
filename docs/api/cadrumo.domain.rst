@@ -48,7 +48,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain._errors
-   cadrumo.domain._identifiers
+   cadrumo.domain.errors
    cadrumo.domain.filing_evidence
+   cadrumo.domain.identifiers
    cadrumo.domain.period

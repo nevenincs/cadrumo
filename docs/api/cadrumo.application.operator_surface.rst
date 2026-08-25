@@ -18,8 +18,8 @@ Submodules
    cadrumo.application.operator_surface._contract
    cadrumo.application.operator_surface._crud_contract
    cadrumo.application.operator_surface._crud_registry
-   cadrumo.application.operator_surface._errors
    cadrumo.application.operator_surface._help
    cadrumo.application.operator_surface._help_models
    cadrumo.application.operator_surface._manifest
    cadrumo.application.operator_surface._models
+   cadrumo.application.operator_surface.errors

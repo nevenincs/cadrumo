@@ -184,6 +184,14 @@ def _project_record(
 ) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
     facts = _require_m303_projection_facts(producer_snapshot)
     ref_types = {type(ref) for ref in refs}
+    if ref_types == {M303ProrrataActivityProjectionRef, M303DifferentiatedDeductionProjectionRef}:
+        return _project_prorrata_and_differentiated_record(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            record=record,
+            refs=refs,
+            facts=facts,
+        )
     if ref_types == {M303ProrrataActivityProjectionRef}:
         return _project_prorrata_record(
             registry_snapshot=registry_snapshot,
@@ -225,6 +233,69 @@ def _project_record(
     raise FilingExportValidationError(
         f"projection record {record.id!r} mixes or uses an unsupported projection-reference family",
     )
+
+
+def _project_prorrata_and_differentiated_record(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+    record: ExportRecordDefinition,
+    refs: tuple[FilingProjectionRef, ...],
+    facts: M303FilingFacts,
+) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
+    """Compose the two independent DP30305 value families into its one occurrence.
+
+    The record layout owns the interleaving order.  Each canonical projector is
+    called exactly once over only its closed family; this dispatcher then binds
+    their typed results back to that authored order.  Any third family remains
+    outside this explicit composition and is refused by :func:`_project_record`.
+    """
+    prorrata_contexts, prorrata_values = _project_prorrata_record(
+        registry_snapshot=registry_snapshot,
+        layout=layout,
+        record=record,
+        refs=refs,
+        facts=facts,
+    )
+    differentiated_contexts, differentiated_values = _project_differentiated_record(
+        registry_snapshot=registry_snapshot,
+        layout=layout,
+        record=record,
+        refs=refs,
+        facts=facts,
+    )
+    contexts = _compose_single_occurrence_contexts(
+        record=record,
+        prorrata_contexts=prorrata_contexts,
+        differentiated_contexts=differentiated_contexts,
+    )
+    values_by_reference = {value.projection_ref: value for value in (*prorrata_values, *differentiated_values)}
+    if len(values_by_reference) != len(prorrata_values) + len(differentiated_values):
+        raise FilingExportValidationError(f"projection record {record.id!r} emitted duplicate typed projection values")
+    try:
+        return contexts, tuple(values_by_reference[reference] for reference in refs)
+    except KeyError as exc:
+        raise FilingExportValidationError(
+            f"projection record {record.id!r} did not emit every authored typed projection reference",
+        ) from exc
+
+
+def _compose_single_occurrence_contexts(
+    *,
+    record: ExportRecordDefinition,
+    prorrata_contexts: tuple[FilingRecordRenderContext, ...],
+    differentiated_contexts: tuple[FilingRecordRenderContext, ...],
+) -> tuple[FilingRecordRenderContext, ...]:
+    """Require both DP30305 families to describe its same one canonical occurrence."""
+    all_contexts = (*prorrata_contexts, *differentiated_contexts)
+    if not all_contexts:
+        return ()
+    by_address = {(context.record.id, context.occurrence): context for context in all_contexts}
+    if len(by_address) != 1:
+        raise FilingExportValidationError(
+            f"projection record {record.id!r} families do not resolve to one deterministic occurrence",
+        )
+    return tuple(by_address.values())
 
 
 def _require_m303_projection_facts(producer_snapshot: FilingProducerSnapshot) -> M303FilingFacts:

@@ -19,7 +19,6 @@ Submodules
    cadrumo.adapters.persistence.storage.custody._capsule_discovery
    cadrumo.adapters.persistence.storage.custody._capsule_records
    cadrumo.adapters.persistence.storage.custody._envelope
-   cadrumo.adapters.persistence.storage.custody._errors
    cadrumo.adapters.persistence.storage.custody._filesystem
    cadrumo.adapters.persistence.storage.custody._filesystem_primitives
    cadrumo.adapters.persistence.storage.custody._inventory
@@ -41,3 +40,4 @@ Submodules
    cadrumo.adapters.persistence.storage.custody._sentinel
    cadrumo.adapters.persistence.storage.custody._sentinel_contract
    cadrumo.adapters.persistence.storage.custody._zeroise
+   cadrumo.adapters.persistence.storage.custody.errors

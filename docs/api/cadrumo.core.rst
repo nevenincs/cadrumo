@@ -61,11 +61,9 @@ Submodules
    cadrumo.core._config_timeouts
    cadrumo.core._confirmation_gate
    cadrumo.core._corpus_sidecar
-   cadrumo.core.credentials
    cadrumo.core._declaracion_idioma
    cadrumo.core._descendant_relacion
    cadrumo.core._deuda_direccion
-   cadrumo.core.directory_scan
    cadrumo.core._document_shape
    cadrumo.core._draft_discrepancy
    cadrumo.core._estado_casilla_oficial
@@ -146,6 +144,8 @@ Submodules
    cadrumo.core.compatibility_lifecycle
    cadrumo.core.config
    cadrumo.core.corpus_text
+   cadrumo.core.credentials
+   cadrumo.core.directory_scan
    cadrumo.core.ed25519_signing
    cadrumo.core.external_constants
    cadrumo.core.file_permissions

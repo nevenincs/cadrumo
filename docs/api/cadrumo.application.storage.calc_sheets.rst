@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.storage.calc_sheets._engine
-   cadrumo.application.storage.calc_sheets._errors
    cadrumo.application.storage.calc_sheets._evidence
    cadrumo.application.storage.calc_sheets._export_service
    cadrumo.application.storage.calc_sheets._layout
@@ -26,3 +25,4 @@ Submodules
    cadrumo.application.storage.calc_sheets._theme
    cadrumo.application.storage.calc_sheets._translator
    cadrumo.application.storage.calc_sheets._workbook_export
+   cadrumo.application.storage.calc_sheets.errors

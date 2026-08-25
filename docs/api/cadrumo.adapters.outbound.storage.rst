@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.outbound.storage._drive_pagination
-   cadrumo.adapters.outbound.storage._errors
    cadrumo.adapters.outbound.storage._factory
    cadrumo.adapters.outbound.storage._google_drive
    cadrumo.adapters.outbound.storage._integrity
@@ -25,3 +24,4 @@ Submodules
    cadrumo.adapters.outbound.storage._path_budget
    cadrumo.adapters.outbound.storage._protocol
    cadrumo.adapters.outbound.storage._records
+   cadrumo.adapters.outbound.storage.errors

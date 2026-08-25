@@ -372,6 +372,14 @@ class _CanonicalAuthorityAnalyzer:
             return
         targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
         names = {target.id for target in targets if isinstance(target, ast.Name)}
+        for target in targets:
+            if (
+                isinstance(target, ast.Subscript)
+                and isinstance(target.value, ast.Call)
+                and _bare_callable_name(target.value.func) == "globals"
+                and _static_string(target.slice, scope) in self.targets
+            ):
+                self.add("dynamic authority export", node, _static_string(target.slice, scope) or "")
         for name in names & self.targets.keys():
             if self.path.resolve() != self.targets[name].path.resolve():
                 self.add("duplicate authority binding", node, name)
@@ -385,6 +393,16 @@ class _CanonicalAuthorityAnalyzer:
 
     def _check_dynamic_call(self, node: ast.Call, scope: _AuthorityScope) -> None:
         function = _qualified_value(node.func, scope)
+        if function == "setattr" and len(node.args) >= 2:
+            base = _qualified_value(node.args[0], scope)
+            attribute = _static_string(node.args[1], scope)
+            expression = f"{base}.{attribute}" if base and attribute else None
+            if expression in self.qualified_targets or any(
+                expression == f"{facade}.{symbol}"
+                for facade in self.spec.facade_modules
+                for symbol in self.targets
+            ):
+                self.add("dynamic authority export", node, expression or "")
         if function in {"importlib.import_module", "__import__"} and node.args:
             imported = _static_string(node.args[0], scope)
             if imported in self.spec.retired_modules:
@@ -494,37 +512,6 @@ def scan_canonical_authority(
                     )
                 )
     return sorted(violations, key=lambda item: (item.path.as_posix(), item.lineno, item.kind, item.detail))
-
-
-# Transitional type name retained for existing external consumers of the scanner API.
-AddressingBoundaryViolation = CanonicalAuthorityViolation
-
-
-def find_addressing_boundary_violations(
-    paths: Iterable[Path], *, canonical_path: Path, canonical_module: str, facade_module: str,
-    retired_modules: frozenset[str], addressing_symbols: frozenset[str],
-) -> list[CanonicalAuthorityViolation]:
-    """Compatibility entry point backed by the generic canonical-authority scanner."""
-    return scan_canonical_authority(
-        CanonicalAuthoritySpec(
-            targets=(CanonicalAuthorityTarget(canonical_module, canonical_path, addressing_symbols),),
-            retired_modules=retired_modules,
-            facade_modules=frozenset({facade_module}),
-            wrapper_rules=(
-                DelegatingWrapperRule(
-                    "repository-owning selector wrapper",
-                    "select_modelo_work_resolution",
-                    collaborator_symbols=frozenset({"WorkUnitCatalogueRepository"}),
-                ),
-                DelegatingWrapperRule(
-                    "catalogue preselection wrapper",
-                    "select_modelo_work_resolution",
-                    receiver_methods=frozenset({("catalogue", "get")}),
-                ),
-            ),
-        ),
-        paths,
-    )
 
 
 class TuiRetirementRemnantKind(StrEnum):

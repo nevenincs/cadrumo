@@ -18,7 +18,7 @@ Submodules
    cadrumo.application.review._aggregator
    cadrumo.application.review._edit
    cadrumo.application.review._enums
-   cadrumo.application.review._errors
    cadrumo.application.review._filter
    cadrumo.application.review._models
    cadrumo.application.review._operator
+   cadrumo.application.review.errors

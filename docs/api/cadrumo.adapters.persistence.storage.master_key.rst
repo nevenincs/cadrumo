@@ -15,7 +15,6 @@ Submodules
 
    cadrumo.adapters.persistence.storage.master_key._active_session
    cadrumo.adapters.persistence.storage.master_key._bucket_session
-   cadrumo.adapters.persistence.storage.master_key._errors
    cadrumo.adapters.persistence.storage.master_key._idle_timeout
    cadrumo.adapters.persistence.storage.master_key._kdf_params
    cadrumo.adapters.persistence.storage.master_key._live_sessions
@@ -25,3 +24,4 @@ Submodules
    cadrumo.adapters.persistence.storage.master_key._master_key_records
    cadrumo.adapters.persistence.storage.master_key._master_key_tax_id
    cadrumo.adapters.persistence.storage.master_key._provider_session
+   cadrumo.adapters.persistence.storage.master_key.errors
