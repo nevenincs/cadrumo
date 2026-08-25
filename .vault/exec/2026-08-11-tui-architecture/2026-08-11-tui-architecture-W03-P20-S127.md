@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:4356d5c809bb0ad73bd17407891dae0e32c08b8241fbde2e75f0087c1423be49'
+body_hash: 'sha256:fc2ed6afc8a3dca8f6228d2c61f062680f8b31d54714b7f98af806c91bc67ba3'
 step_id: 'S127'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -32,8 +32,9 @@ related:
 - Raw registry authoring, loaders, and private registry modules remain outside the application boundary.
 - Focused Ruff and ty passed. The focused live M303 integration lane passed 8 tests in 38.79 seconds.
 - Exact source census confirms one manifest owner module; the implementation consumes only the public calculation-registry facade and prior S125/S126 contracts.
+- Independent review approved the final traversal and projection remediation.
 
 ## Notes
 
-- S127 remains open pending independent review; no plan status was changed.
+- S127 is closed after independent approval.
 - No facade bridge or S128 assembly was introduced.
