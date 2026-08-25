@@ -124,7 +124,7 @@ def _dispatch_unprepared_m347_verify(runtime_profile: TestRuntimeProfile) -> tup
         [
             "--format", "json",
             "app", "modelo", "work", "create",
-            "--modelo", "347", "--year", "2024", "--period", "0A", "--revision", "2008-2024",
+            "--modelo", "347", "--year", "2024", "--period", "0A",
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output

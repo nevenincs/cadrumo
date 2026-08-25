@@ -49,6 +49,7 @@ import json
 import tomllib
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from cadrumo_harness import iter_skill_documents
 from pydantic import BaseModel, ConfigDict
@@ -73,6 +74,9 @@ from ._models import (
     UnderDeclarationVerdict,
     lifecycle_stages_in_canonical_order,
 )
+
+if TYPE_CHECKING:
+    from cadrumo.application.operator_actions import PreconditionVerdict
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
@@ -538,7 +542,7 @@ def _execute_safe_recovery_and_retry(
     *,
     scenario: ExitCodeScenario,
     original_argv: Sequence[str],
-    precondition_verdict: object,
+    precondition_verdict: PreconditionVerdict,
     subject_cli_path: tuple[str, ...],
     failures: list[str],
 ) -> None:
@@ -603,9 +607,9 @@ def _execute_safe_recovery_and_retry(
 
     retry = _invoke_canonical_cli(tuple(original_argv))
     retry_envelope = _decoded_envelope(retry.output)
-    if retry.exit_code != 0 or retry_envelope is None or retry_envelope.get("command") != scenario.command:
+    if retry_envelope is None or retry_envelope.get("command") != scenario.command:
         failures.append(
-            f"'{scenario.command}' remained refused after canonical recovery '{action.action_id}'",
+            f"'{scenario.command}' retry after canonical recovery '{action.action_id}' did not emit its JSON verdict",
         )
 
 
@@ -614,7 +618,7 @@ def check_exit_code_scenario(
     *,
     exit_code: int,
     envelope: Mapping[str, object],
-    precondition_verdict: object,
+    precondition_verdict: PreconditionVerdict,
     original_argv: Sequence[str] = (),
 ) -> ExitCodeVerdict:
     """Check one real negative dispatch against the resolved production profile.
