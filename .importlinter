@@ -457,19 +457,19 @@ ignore_imports =
     # path-safety utility import - a plain storage helper with no port to invert.
     cadrumo.application.aggregation._observation_window -> cadrumo.adapters.persistence.storage
     cadrumo.application.aggregation._withholding_source -> cadrumo.adapters.persistence.storage
-    cadrumo.application.auth._apoderado -> cadrumo.adapters.persistence.storage
-    cadrumo.application.auth._certificate_secret_backend -> cadrumo.adapters.persistence.**
-    cadrumo.application.auth._diagnostics -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth.apoderado_service -> cadrumo.adapters.persistence.storage
+    cadrumo.application.auth.certificate_secret_backend -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth.diagnostics -> cadrumo.adapters.persistence.**
     # AEAT authentication is an outbound integration and these modules are its
     # callers, so the edges are pinned at the named outbound packages rather
     # than a wildcard -- the sec. 538 outbound-wiring treatment.
-    cadrumo.application.auth._operator_probes -> cadrumo.adapters.outbound.aeat.auth
-    cadrumo.application.auth._operator_probes -> cadrumo.adapters.outbound.aeat.auth.certificate
-    cadrumo.application.auth._operator_probes -> cadrumo.adapters.persistence.**
-    cadrumo.application.auth._operator_scope -> cadrumo.adapters.persistence.**
-    cadrumo.application.auth._sessions -> cadrumo.adapters.outbound.aeat.auth
-    cadrumo.application.auth._sessions -> cadrumo.adapters.outbound.aeat.browser
-    cadrumo.application.auth._sessions -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth.operator_probes -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.auth.operator_probes -> cadrumo.adapters.outbound.aeat.auth.certificate
+    cadrumo.application.auth.operator_probes -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth.operator_scope -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth.sessions -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.auth.sessions -> cadrumo.adapters.outbound.aeat.browser
+    cadrumo.application.auth.sessions -> cadrumo.adapters.persistence.**
     cadrumo.application.bienes_inversion -> cadrumo.adapters.persistence.**
     cadrumo.application.bucket_maintenance._deletion_paths -> cadrumo.adapters.persistence.**
     cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
