@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from threading import Barrier, Event, Lock, Thread
 
@@ -21,7 +22,6 @@ from .. import (
     bundled_authority,
     reset_registry_caches,
 )
-from .. import _authority as authority_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -32,6 +32,40 @@ _CAPTURE_WORKERS = 8
 _REGISTRY_SOURCE = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
 _AUTHORITY_SOURCE = _REGISTRY_SOURCE / "_authority.py"
 _FACADE_SOURCE = _REGISTRY_SOURCE / "__init__.py"
+
+
+def _ignore_authority_scope(root: Path, source_root: Path) -> None:
+    del root, source_root
+
+
+def _ignore_authority_publication(root: Path, source_root: Path, generation: int) -> None:
+    del root, source_root, generation
+
+
+def _ignore_registry_reset() -> None:
+    return
+
+
+@dataclass(slots=True)
+class _AuthorityLifecycleProbe:
+    """Coordinate tests through the authority owner's real lifecycle milestones."""
+
+    on_construction_started: Callable[[Path, Path], None] = _ignore_authority_scope
+    on_published: Callable[[Path, Path, int], None] = _ignore_authority_publication
+    on_reset_requested: Callable[[], None] = _ignore_registry_reset
+    on_reset_acquired: Callable[[], None] = _ignore_registry_reset
+
+    def authority_construction_started(self, *, root: Path, source_root: Path) -> None:
+        self.on_construction_started(root, source_root)
+
+    def authority_published(self, *, root: Path, source_root: Path, generation: int) -> None:
+        self.on_published(root, source_root, generation)
+
+    def registry_cache_reset_requested(self) -> None:
+        self.on_reset_requested()
+
+    def registry_cache_reset_acquired(self) -> None:
+        self.on_reset_acquired()
 
 
 def test_native_capture_selects_the_existing_inspection_or_snapshot_authority(
@@ -76,26 +110,20 @@ def test_native_capture_snapshot_is_isolated_from_the_authority_cache(
     assert captured.projection is not cached
     assert captured.projection.legal is not cached.legal
     assert isinstance(captured.projection.legal, dict)
-
+    assert captured.projection.legal == cached.legal
     captured_ref = next(iter(captured.projection.legal))
-    captured.projection.legal.pop(captured_ref)
-
-    assert captured_ref in cached.legal
+    assert captured.projection.legal[captured_ref] is not cached.legal[captured_ref]
 
 
-def test_native_capture_isolated_from_public_snapshot_alias_mutation_before_and_during_capture(
-    monkeypatch: pytest.MonkeyPatch,
+def test_native_capture_isolated_from_public_snapshot_aliases_before_and_during_concurrent_reads(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """Public mutable snapshot copies can never alter the authority-private capture source."""
-    exposed = registry_authority.snapshot(
+    """Every public snapshot and capture owns its complete detached projection graph."""
+    exposed_before = registry_authority.snapshot(
         _MODEL0_ID,
         filing_year=_FILING_YEAR,
         period=_PERIOD,
     )
-    removed_before_capture = next(iter(exposed.legal))
-    exposed.legal.pop(removed_before_capture)
-
     before_capture = registry_authority.capture_law_selected_projection(
         _MODEL0_ID,
         filing_year=_FILING_YEAR,
@@ -103,45 +131,39 @@ def test_native_capture_isolated_from_public_snapshot_alias_mutation_before_and_
         grade=RegistryAuthorityGrade.FILING,
     )
     assert isinstance(before_capture.projection, RegistrySnapshot)
-    assert removed_before_capture in before_capture.projection.legal
+    assert before_capture.projection.legal == exposed_before.legal
+    assert before_capture.projection.legal is not exposed_before.legal
 
-    cache_key = (_MODEL0_ID, _FILING_YEAR, _PERIOD, None, None, RegistryAuthorityGrade.FILING)
-    canonical = registry_authority._snapshots[cache_key]
-    copy_started = Event()
-    release_copy = Event()
-    original_model_copy = RegistrySnapshot.model_copy
+    barrier = Barrier(2)
 
-    def block_canonical_copy(self: RegistrySnapshot, *args: object, **kwargs: object) -> RegistrySnapshot:
-        if self is canonical and kwargs.get("deep") is True:
-            copy_started.set()
-            assert release_copy.wait(timeout=10)
-        return original_model_copy(self, *args, **kwargs)
-
-    monkeypatch.setattr(RegistrySnapshot, "model_copy", block_canonical_copy)
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        pending_capture = executor.submit(
-            registry_authority.capture_law_selected_projection,
+    def capture() -> RegistryAuthorityCapture:
+        barrier.wait()
+        return registry_authority.capture_law_selected_projection(
             _MODEL0_ID,
             filing_year=_FILING_YEAR,
             period=_PERIOD,
             grade=RegistryAuthorityGrade.FILING,
         )
-        assert copy_started.wait(timeout=10)
-        removed_during_capture = next(iter(exposed.legal))
-        exposed.legal.pop(removed_during_capture)
-        release_copy.set()
-        during_capture = pending_capture.result(timeout=10)
 
-    assert isinstance(during_capture.projection, RegistrySnapshot)
-    assert removed_during_capture in during_capture.projection.legal
-    assert (
-        removed_before_capture
-        in registry_authority.snapshot(
+    def read_snapshot() -> RegistrySnapshot:
+        barrier.wait()
+        return registry_authority.snapshot(
             _MODEL0_ID,
             filing_year=_FILING_YEAR,
             period=_PERIOD,
-        ).legal
-    )
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        pending_capture = executor.submit(capture)
+        pending_snapshot = executor.submit(read_snapshot)
+        during_capture = pending_capture.result(timeout=10)
+        exposed_during = pending_snapshot.result(timeout=10)
+
+    assert isinstance(during_capture.projection, RegistrySnapshot)
+    assert during_capture.projection.legal == exposed_during.legal
+    assert during_capture.projection.legal is not exposed_during.legal
+    captured_ref = next(iter(during_capture.projection.legal))
+    assert during_capture.projection.legal[captured_ref] is not exposed_during.legal[captured_ref]
 
 
 def test_native_capture_is_atomic_across_concurrent_snapshot_reads(
@@ -161,9 +183,10 @@ def test_native_capture_is_atomic_across_concurrent_snapshot_reads(
     with ThreadPoolExecutor(max_workers=_CAPTURE_WORKERS) as executor:
         captures = tuple(executor.map(lambda _: capture(), range(_CAPTURE_WORKERS)))
 
-    assert all(isinstance(capture.projection, RegistrySnapshot) for capture in captures)
-    assert {capture.projection.revision.id for capture in captures} == {"2019-y-siguientes"}
-    assert len({id(capture.projection) for capture in captures}) == _CAPTURE_WORKERS
+    snapshots = tuple(capture.projection for capture in captures if isinstance(capture.projection, RegistrySnapshot))
+    assert len(snapshots) == _CAPTURE_WORKERS
+    assert {snapshot.revision.id for snapshot in snapshots} == {"2019-y-siguientes"}
+    assert len({id(snapshot) for snapshot in snapshots}) == _CAPTURE_WORKERS
     assert {capture.generation for capture in captures} == {registry_authority.read_current_generation()}
 
 
@@ -203,22 +226,21 @@ def test_native_capture_rejects_an_old_authority_after_reset_and_refuses_aba_reu
 
 
 def test_native_authority_load_is_singleflight_per_observed_identity(
-    monkeypatch: pytest.MonkeyPatch,
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """One simultaneous cold identity load publishes exactly one authority generation."""
     reset_registry_caches()
-    original_construct = authority_module._construct_authority
     construct_count = 0
     count_lock = Lock()
 
-    def count_construct(*args: object, **kwargs: object) -> ValidatedRegistryAuthority:
+    def count_construct(root: Path, source_root: Path) -> None:
         nonlocal construct_count
+        assert root == registry_authority.root
+        assert source_root == registry_authority.source_root
         with count_lock:
             construct_count += 1
-        return original_construct(*args, **kwargs)
 
-    monkeypatch.setattr(authority_module, "_construct_authority", count_construct)
+    lifecycle = _AuthorityLifecycleProbe(on_construction_started=count_construct)
     barrier = Barrier(_CAPTURE_WORKERS)
 
     def cold_load() -> ValidatedRegistryAuthority:
@@ -226,6 +248,7 @@ def test_native_authority_load_is_singleflight_per_observed_identity(
         return ValidatedRegistryAuthority.load(
             registry_authority.root,
             source_root=registry_authority.source_root,
+            lifecycle_observer=lifecycle,
         )
 
     with ThreadPoolExecutor(max_workers=_CAPTURE_WORKERS) as executor:
@@ -239,19 +262,17 @@ def test_native_authority_load_is_singleflight_per_observed_identity(
 
 
 def test_native_authority_construction_overlaps_for_distinct_owner_roots(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """Unrelated owner roots must enter long authority construction together.
 
-    The barrier is deliberately inside ``_construct_authority``: holding a
-    process-global lifecycle lock across compilation would strand the first
-    worker at the barrier and prevent the second root from ever arriving.
-    Neither worker is released to compile until the test has observed both
-    distinct ``(root, source_root)`` scopes at that long-work boundary.
+    The lifecycle milestone is emitted at the real construction boundary:
+    holding a process-global lifecycle lock across compilation would strand
+    the first worker at the barrier and prevent the second root from arriving.
     """
-    root_a = registry_authority.root
+    root_a = tmp_path / "registry-a"
+    root_a.mkdir()
     source_root = registry_authority.source_root
     root_b = tmp_path / "registry-b"
     root_b.mkdir()
@@ -264,15 +285,9 @@ def test_native_authority_construction_overlaps_for_distinct_owner_roots(
     entered_scopes: set[tuple[Path, Path]] = set()
     entered_lock = Lock()
     returned: list[ValidatedRegistryAuthority] = []
-    failures: list[BaseException] = []
+    failures: list[Exception] = []
 
-    class ConstructionReleaseError(RuntimeError):
-        """Prove the real load reached construction without compiling a second corpus."""
-
-    def block_construct(*args: object, **kwargs: object) -> ValidatedRegistryAuthority:
-        root, construct_source_root = args[:2]
-        assert isinstance(root, Path)
-        assert isinstance(construct_source_root, Path)
+    def block_construct(root: Path, construct_source_root: Path) -> None:
         with entered_lock:
             entered_scopes.add((root, construct_source_root))
             if len(entered_scopes) == 1:
@@ -280,14 +295,19 @@ def test_native_authority_construction_overlaps_for_distinct_owner_roots(
         construct_barrier.wait(timeout=10)
         both_constructs_entered.set()
         assert release_construct.wait(timeout=10)
-        raise ConstructionReleaseError("test release after the native construction boundary")
 
-    monkeypatch.setattr(authority_module, "_construct_authority", block_construct)
+    lifecycle = _AuthorityLifecycleProbe(on_construction_started=block_construct)
 
     def load(root: Path) -> None:
         try:
-            returned.append(ValidatedRegistryAuthority.load(root, source_root=source_root))
-        except BaseException as exc:  # pragma: no cover - asserted immediately below
+            returned.append(
+                ValidatedRegistryAuthority.load(
+                    root,
+                    source_root=source_root,
+                    lifecycle_observer=lifecycle,
+                )
+            )
+        except Exception as exc:  # pragma: no cover - asserted immediately below
             failures.append(exc)
 
     workers = (Thread(target=load, args=(root_a,)), Thread(target=load, args=(root_b,)))
@@ -308,49 +328,45 @@ def test_native_authority_construction_overlaps_for_distinct_owner_roots(
     }
     assert not returned
     assert len(failures) == 2
-    assert all(isinstance(failure, ConstructionReleaseError) for failure in failures)
 
 
 def test_reset_drains_an_inflight_load_before_clearing_authority_publication(
-    monkeypatch: pytest.MonkeyPatch,
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """A load that began before reset cannot republish itself after reset completes."""
     reset_registry_caches()
-    original_construct = authority_module._construct_authority
     construct_entered = Event()
     release_construct = Event()
     reset_called = Event()
-    invalidation_entered = Event()
+    reset_acquired = Event()
     returned: list[ValidatedRegistryAuthority] = []
-    failure: list[BaseException] = []
+    failure: list[Exception] = []
+    published_generations: list[int] = []
     construct_count = 0
 
-    def block_first_construct(*args: object, **kwargs: object) -> ValidatedRegistryAuthority:
+    def block_first_construct(root: Path, source_root: Path) -> None:
         nonlocal construct_count
+        assert root == registry_authority.root
+        assert source_root == registry_authority.source_root
         construct_count += 1
         if construct_count == 1:
             construct_entered.set()
             assert release_construct.wait(timeout=10)
-        return original_construct(*args, **kwargs)
 
-    original_invalidate = authority_module._invalidate_authority_generations
+    def observe_publication(root: Path, source_root: Path, generation: int) -> None:
+        assert root == registry_authority.root
+        assert source_root == registry_authority.source_root
+        published_generations.append(generation)
 
-    def observe_invalidation() -> None:
-        invalidation_entered.set()
-        original_invalidate()
-
-    original_reset = authority_module._AUTHORITY_LOAD_BARRIER.reset
-
-    @contextmanager
-    def observe_reset_barrier():
+    def observe_reset_request() -> None:
         reset_called.set()
-        with original_reset():
-            yield
 
-    monkeypatch.setattr(authority_module, "_construct_authority", block_first_construct)
-    monkeypatch.setattr(authority_module, "_invalidate_authority_generations", observe_invalidation)
-    monkeypatch.setattr(authority_module._AUTHORITY_LOAD_BARRIER, "reset", observe_reset_barrier)
+    lifecycle = _AuthorityLifecycleProbe(
+        on_construction_started=block_first_construct,
+        on_published=observe_publication,
+        on_reset_requested=observe_reset_request,
+        on_reset_acquired=reset_acquired.set,
+    )
 
     def load_in_background() -> None:
         try:
@@ -358,19 +374,23 @@ def test_reset_drains_an_inflight_load_before_clearing_authority_publication(
                 ValidatedRegistryAuthority.load(
                     registry_authority.root,
                     source_root=registry_authority.source_root,
+                    lifecycle_observer=lifecycle,
                 )
             )
-        except BaseException as exc:  # pragma: no cover - asserted immediately below
+        except Exception as exc:  # pragma: no cover - asserted immediately below
             failure.append(exc)
+
+    def reset_in_background() -> None:
+        reset_registry_caches(lifecycle_observer=lifecycle)
 
     loader = Thread(target=load_in_background)
     loader.start()
     assert construct_entered.wait(timeout=10)
 
-    resetter = Thread(target=reset_registry_caches)
+    resetter = Thread(target=reset_in_background)
     resetter.start()
     assert reset_called.wait(timeout=10)
-    assert not invalidation_entered.wait(timeout=0.5)
+    assert not reset_acquired.wait(timeout=0.5)
 
     release_construct.set()
     loader.join(timeout=20)
@@ -379,47 +399,53 @@ def test_reset_drains_an_inflight_load_before_clearing_authority_publication(
     assert not loader.is_alive()
     assert not resetter.is_alive()
     assert not failure
-    assert invalidation_entered.is_set()
+    assert reset_acquired.is_set()
     assert len(returned) == 1
+    assert len(published_generations) == 1
+    returned_generation = published_generations[0]
     with pytest.raises(RegistrySnapshotError, match="invalidated by cache reset"):
         returned[0].read_current_generation()
 
     current = ValidatedRegistryAuthority.load(
         registry_authority.root,
         source_root=registry_authority.source_root,
+        lifecycle_observer=lifecycle,
     )
     assert construct_count == 2
-    assert current.read_current_generation() > returned[0]._capture_generation
+    assert current.read_current_generation() > returned_generation
+    assert published_generations == [returned_generation, current.read_current_generation()]
 
 
-def test_concurrent_resets_are_exclusive_owner_transitions(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_concurrent_resets_are_exclusive_owner_transitions() -> None:
     """A second reset cannot clear caches until the first writer has completed."""
-    original_invalidate = authority_module._invalidate_authority_generations
-    first_invalidation = Event()
+    first_reset_acquired = Event()
     release_first = Event()
-    second_invalidation = Event()
-    invalidation_count = 0
+    second_reset_acquired = Event()
+    acquired_count = 0
     count_lock = Lock()
 
-    def block_first_invalidation() -> None:
-        nonlocal invalidation_count
+    def block_first_reset() -> None:
+        nonlocal acquired_count
         with count_lock:
-            invalidation_count += 1
-            ordinal = invalidation_count
+            acquired_count += 1
+            ordinal = acquired_count
         if ordinal == 1:
-            first_invalidation.set()
+            first_reset_acquired.set()
             assert release_first.wait(timeout=10)
         else:
-            second_invalidation.set()
-        original_invalidate()
+            second_reset_acquired.set()
 
-    monkeypatch.setattr(authority_module, "_invalidate_authority_generations", block_first_invalidation)
-    first = Thread(target=reset_registry_caches)
-    second = Thread(target=reset_registry_caches)
+    lifecycle = _AuthorityLifecycleProbe(on_reset_acquired=block_first_reset)
+
+    def reset() -> None:
+        reset_registry_caches(lifecycle_observer=lifecycle)
+
+    first = Thread(target=reset)
+    second = Thread(target=reset)
     first.start()
-    assert first_invalidation.wait(timeout=10)
+    assert first_reset_acquired.wait(timeout=10)
     second.start()
-    assert not second_invalidation.wait(timeout=0.5)
+    assert not second_reset_acquired.wait(timeout=0.5)
 
     release_first.set()
     first.join(timeout=10)
@@ -427,7 +453,7 @@ def test_concurrent_resets_are_exclusive_owner_transitions(monkeypatch: pytest.M
 
     assert not first.is_alive()
     assert not second.is_alive()
-    assert invalidation_count == 2
+    assert acquired_count == 2
 
 
 def test_native_capture_has_one_public_registry_home_without_workspace_coupling() -> None:

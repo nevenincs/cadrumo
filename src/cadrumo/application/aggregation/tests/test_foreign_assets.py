@@ -377,10 +377,11 @@ class TestForeignAssetSourceResolver:
         assert resolution.owned_sources == (BindingSourceKind.FOREIGN_ASSET,)
         assert resolution.binding_values == {}
         assert resolution.source_transaction_ids == (ledger_identity("tx-account-ad"),)
-        assert {item.source_ref for item in resolution.provenance} == {
-            f"ledger_transaction:{ledger_identity('tx-account-ad')}",
-            "payable_invoice:payable-account-ch",
-        }
+        # M720 is deliberately grounding-blocked: the resolver emits NO
+        # provenance because no upstream carrier id can truthfully stand in for
+        # an authoritative persisted identity of the resolved asset. The
+        # contributing sources stay visible through source_transaction_ids.
+        assert resolution.provenance == ()
 
         aggregation = aggregate_foreign_assets_720(observations, period=period)
         row_observations = _registry_observations_from_foreign_assets_aggregation(aggregation, observations)
