@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:597920cc74a55252a68525e62b431749c5ccc5a59e6453e9077d024a00fda767'
+body_hash: 'sha256:22e9f587ddc2bb20d6cc1fb56192847f97e471a691ee80bddf0010629696f943'
 related:
   - "[[2026-08-13-registry-suite-red-at-head-plan]]"
 ---
@@ -116,6 +116,29 @@ any future implementation must be enrolled under the owning production campaign.
 - Implement S08, S10, and S13 in that order without reviving superseded shapes.
 - Treat the isolated 2026-08-25 failure set, not the historical checkbox count, as
   the live closure baseline and re-run it after every cluster lands.
+
+## Tracker retirement update — 2026-08-25
+
+Fresh verification shows that `P03.S22` and `P03.S23` are permanent umbrella
+conditions rather than executable work owned by this campaign. The claimed-year
+gate reports nine passing tests and one failing aggregate containing twelve real
+divergences. Modelo 180 and Modelo 210 have left the historical fourteen-item
+inventory. The remaining Modelos 126, 128, 165, 181, 184, 270, 308, 309, 341,
+353, and 576 are owned by registry-temporal-coverage `W02.P05.S51`; Modelo 200
+is owned by aeat-export-fragment-generator-authority `W04.P08.S22` and `S34`.
+The test remains intentionally strong and was not rebaselined.
+
+The isolated-suite tracker in `P03.S23` likewise owns no repair boundary.
+Delivered clusters include bundled-design registration `W04.P07.S109`, parser
+completeness `W04.P07.S110`, and validator decomposition under temporal
+`W01.P04.S52`. Remaining failures stay with their existing temporal,
+completeness, deadline-window, and export rows. A fresh isolated and sequential
+green registry run is a completion gate of those owner campaigns and the
+registry-completeness roll-up, not perpetual work for this historical tracker.
+
+Both rows are therefore retired through the plan CLI and never checked. The
+plan may be archived as a reconciled historical tracker; its archive is not
+evidence that the registry is green.
 
 ## Reconciliation update — 2026-08-25
 
