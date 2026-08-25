@@ -19,8 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ...docs.preprocess import PreprocessOutput
 from ...docs.preprocess._html import build_outputs
 from ..extract_boe_article import (
