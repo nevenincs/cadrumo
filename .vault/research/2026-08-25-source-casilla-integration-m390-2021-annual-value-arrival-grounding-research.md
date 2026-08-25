@@ -5,9 +5,10 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:ee74126dc7084035257196026ff66dbef0e973ebc95fe57203e4ba1986dea3b7'
+body_hash: 'sha256:edcc22d9eb75ddb6fe075324f1ce35e3994aed8e26eb56802caca654afa5d51d'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
+  - '[[2026-08-25-source-casilla-integration-m390-2021-source-owner-deferral-adr]]'
 ---
 
 <!-- FRONTMATTER RULES:

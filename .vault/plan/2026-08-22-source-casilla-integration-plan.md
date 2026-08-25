@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
+modified: '2026-08-25'
+body_hash: 'sha256:c923a200e870337361c99542a6f6f0c8c291514b3b966e425e0419d36a799681'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -17,8 +19,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research]]'
   - '[[2026-08-25-source-casilla-integration-modelo-220-group-value-source-grounding-research]]'
-modified: '2026-08-25'
-body_hash: 'sha256:808e9d16ff8b545222d71a2ad7a61b259cd28ca681450a19569e86f8ee83f8f6'
+  - '[[2026-08-25-source-casilla-integration-m390-2021-annual-value-arrival-grounding-research]]'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -375,7 +376,7 @@ Repeat discovery and bounded delivery until the census reaches a stable, fully a
 - [ ] `W06.P20.S117` - prove the final census has no expired deferral, unexplained disappearance, or unsupported connected claim; `dev/source_connectivity/tests/test_campaign_close.py`.
 - [ ] `W06.P20.S226` - Adjudicate Modelo 187's non-substitutable payer and Article 42 RGAT entity/IIC value paths, including required type-1/type-2 filer facts, before defining a canonical source, binding, casilla, provenance, collision policy, or census disposition.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/187/`.
 - [x] `W06.P20.S227` - record the accepted M220 ingress-blocked source-owner deferral without source implementation; `M220 grounding research, accepted M220 deferral ADR, S227 exec, source plan, generated feature index`.
-- [ ] `W06.P20.S228` - Adjudicate Modelo 390 2021's complete annual casilla and value-arrival surface, including the source facts and filing omissions beyond its parser-only boxes, before any source taxonomy, registry linkage, producer, or layout is authored.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/390/`.
+- [x] `W06.P20.S228` - record the accepted M390 2021 grounding-blocked source-owner decision without source implementation; `M390-2021 grounding research, accepted M390-2021 deferral ADR, S228 exec, source plan, generated feature index`.
 - [ ] `W06.P20.S229` - Adjudicate Modelo 721's source facts, casillas, and value-arrival lifecycle separately for each exact structured-message contract era, without treating the XML/SOAP contract or export-plan S97-S99 as source evidence.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/721/`.
 - [ ] `W06.P20.S230` - After Modelo 763's period-aware eras are selected, determine whether any non-header filing value has a distinct authoritative source lifecycle and add a candidate only when its fact, grain, and destination are evidenced.; `.vault/research/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/763/`.
 - [ ] `W06.P20.S231` - Adjudicate Modelo 840 source and repeated-row value lifecycles independently from the generic CRLF transport bridge, then add only evidenced canonical bindings, provenance, and census dispositions without an M840-specific writer.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/840/`.

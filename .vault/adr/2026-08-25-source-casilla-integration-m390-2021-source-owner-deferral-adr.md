@@ -5,9 +5,10 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:8e20e8ab7a99de543c4b238a4cec11d940ff32984487abd4aee165c3686b5b0a'
+body_hash: 'sha256:e8132b6028d35feb774cf754f7e4eb440cac0f709512fa9c0a60cae5815f9076'
 related:
   - "[[2026-08-25-source-casilla-integration-m390-2021-annual-value-arrival-grounding-research]]"
+  - '[[2026-08-22-source-casilla-integration-adr]]'
 ---
 
 <!-- FRONTMATTER RULES:
@@ -104,17 +105,59 @@ and independent later-model routes, while refusing to claim they are a complete
 
 ## Implementation
 
-<!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condensed but clear prose that describes functionality layering.
+The complete Modelo 390 2021 annual casilla/value-arrival surface is
+`grounding_blocked`, owned by `source-connectivity-campaign`. This is a
+model-scoped refusal to connect, not a claim that
+the form, its fields, the parser, a manual path, or a later filing route is
+inapplicable. No census row is created by this decision; a later owner may add
+one only with the bounded follow-up and review fields required by the framework.
 
-Do not add code; code references must be persisted in a separate `{reference}` document. Important `{reference}` snippets must be summarized and referenced explicitly. -->
+The ten 2021 informational parser casillas remain observation-only. A secure
+filed-declaration observation remains usable only as read evidence under its
+own contract. Existing M390 routes remain exact to their declared revision and
+target. None is a resolver, producer, or export authority for the unconnected
+2021 annual surface.
+
+### Reopening predicate
+
+Reopen this boundary only for one bounded 2021 vertical slice that demonstrates
+all of the following:
+
+1. A field-complete 2021 semantic map for the required annual declaration scope,
+   including taxpayer/group and representative facts, repeated activity and
+   prorrata rows, sector/territory/regime grain, sign, units, rounding, and the
+   distinct zero, inapplicable, absent, and supplied-value semantics.
+2. Officially grounded source facts and authoritative encrypted carriers for
+   every admitted value family, with annual aggregation, durable provenance,
+   collision/override policy, and an explicit manual-by-design result wherever
+   automation is not justified. Quarterly Modelo 303 or later M390 routes may
+   be used only after this proof selects their exact 2021 facts and boundaries.
+3. An exact-2021, law-selected registry revision promoted only as evidence
+   permits, with the necessary casillas, bindings/formulas/relations, resolver
+   ownership, and non-casilla producer ownership.
+4. An operator-reachable encrypted calculation-revision lifecycle that persists,
+   reloads, replays, and reviews the same source-to-target identity and its
+   provenance.
+5. Separately grounded 2021 filing-layout and serializer evidence with complete
+   emitted-byte proof. Coordinates may validate the serialization only after the
+   preceding source proof; they cannot satisfy it.
 
 ## Rationale
 
-<!-- Why this option wins against the drivers: a knockout criterion or a
-     clear edge over the alternatives. Cite `{research}` findings and
-     grounding `{reference}` by stem; do not restate them. A new fact
-     surfacing here first belongs in the grounding document. -->
+`2026-08-25-source-casilla-integration-m390-2021-annual-value-arrival-grounding-research`
+eliminates the only shortcuts that could make an immediate connection look
+plausible. The accepted option preserves useful parser and historical evidence
+without turning an observation into a source fact or silently narrowing the
+official annual record. It is the only option consistent with the framework's
+losslessness and provenance requirements.
 
 ## Consequences
 
-<!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->
+- S228 closes as a grounded model-specific refusal, with no source-connectivity
+  or filing capability claim added.
+- Future work has a falsifiable reopening predicate and cannot back-project a
+  later M390 route or a PDF coordinate into 2021 ownership.
+- The 2021 parser and read-only filed-declaration evidence remain available for
+  their existing observation and reconciliation purposes.
+- A future implementation must be an explicitly authorized, full lifecycle
+  slice; a layout-only or parser-only change does not close this boundary.
