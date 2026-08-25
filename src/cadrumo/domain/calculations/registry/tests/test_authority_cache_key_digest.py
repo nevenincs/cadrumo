@@ -10,6 +10,8 @@ differently, so it misses the cache.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import pytest
 
 from .._authority import _fingerprint_key, _FingerprintKey
@@ -57,13 +59,16 @@ def test_equal_corpora_produce_one_cache_entry() -> None:
     ],
 )
 def test_any_corpus_change_changes_the_key(
-    mutate: object,
+    mutate: Callable[
+        [tuple[tuple[str, int, int, str], ...]],
+        tuple[tuple[str, int, int, str], ...],
+    ],
     reason: str,
 ) -> None:
     """Invalidation must not be weakened: every corpus edit must miss the cache."""
     rows = _fingerprints(8)
     original = _fingerprint_key(rows)
-    changed = _fingerprint_key(mutate(rows))  # type: ignore[operator]
+    changed = _fingerprint_key(mutate(rows))
     assert changed != original, f"{reason} still hit the cached authority"
     assert changed.digest != original.digest, f"{reason} produced a colliding digest"
 
@@ -84,5 +89,6 @@ def test_the_key_is_hashable_while_frozen() -> None:
     """The key must stay immutable, since a cache key that can be edited is a bug."""
     key = _fingerprint_key(_fingerprints(2))
     with pytest.raises(AttributeError):
-        key.digest = "tampered"  # type: ignore[misc]
+        field_name = "digest"
+        setattr(key, field_name, "tampered")
     assert isinstance(key, _FingerprintKey)
