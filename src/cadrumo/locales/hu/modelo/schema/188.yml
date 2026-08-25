@@ -5,7 +5,7 @@ modelo:
         official_name: null
         title: null
       revision:
-        2019-y-siguientes:
+        2023-y-siguientes:
           casilla:
             '01':
               help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja

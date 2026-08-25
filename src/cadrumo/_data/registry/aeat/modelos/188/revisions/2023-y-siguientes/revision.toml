@@ -14,17 +14,15 @@ agent: inspection-grade review; casillas 01-05 read from ANEXO IV of the Orden d
 grounded in AEAT's Calendario, because the orden's own plazo articles state 1-20 enero (papel) and 1 \
 enero-20 febrero (soporte) and were never amended; full-Diseno casilla-number coverage inapplicable \
 (design text-parsed in full, numbers nothing); the tipo-2 per-perceptor detail is NOT modelled and \
-no export layout is declared NOT CLAIMED -- SPAN: test_every_modelo_revision_span_is_corpus_proven \
-reports 0 comparable bundled design year(s) inside this revision's claimed span, so AEAT's published \
-record designs do not evidence the record layout for the years this revision covers; closing that \
-gap needs AEAT acquisition and is NOT something this review does. Stated because it is not a \
-discriminator: 60 of the 80 revisions stamped before 2026-08-21 carry the same flag and none of them \
-name it."""
+no export layout is declared NOT CLAIMED -- the 2023 source establishes only the selected design era, \
+while the tipo-1/tipo-2 value, semantic-map, generated-fragment and emitted-byte proof chain remains \
+absent. Stated because it is not a discriminator: 60 of the 80 revisions stamped before 2026-08-21 \
+carry the same flag and none of them name it."""
 reviewed_at = 2026-08-21
 
 [revisions."2023-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2023-y-siguientes' of modelo 188 has no strictly-earlier sibling revision of this modelo (valid_from 2019-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2023-y-siguientes' of modelo 188 has no strictly-earlier sibling revision of this modelo (valid_from 2023-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
 transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "orden-1999-11-17:apartado-quinto",

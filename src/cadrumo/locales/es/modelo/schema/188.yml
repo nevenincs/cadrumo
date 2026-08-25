@@ -7,7 +7,7 @@ modelo:
           o invalidez. Resumen anual.
         title: Retenciones capitalización y seguros de vida - resumen anual
       revision:
-        2019-y-siguientes:
+        2023-y-siguientes:
           casilla:
             '01':
               help: Número de perceptores (registros) cuya base de retenciones e ingresos
