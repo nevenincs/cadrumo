@@ -8,15 +8,6 @@
         "occurrence": 1,
         "target_mod": "cadrumo.entrypoints.cli._config._manager_actions",
         "imported_names": [
-          "logout_action"
-        ],
-        "reason": "White-box test reach: the manager app is built with the REAL logout door so the test asserts the actual session teardown (`logout_active_profile`) ran, not a stand-in's bookkeeping -- the whole point of the case is proving BOTH the session and the screen close, which a doubled action could satisfy while leaving session artefacts on disk. `logout_action` is the CLI's composition of the auth logout door onto the TUI screen, consumed in production only inside entrypoints.cli._config itself. Deliberately NOT promoted, for the reason recorded on the `manager_actions` entries below."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.entrypoints.cli._config._manager_actions",
-        "imported_names": [
           "_AUTH_CLAVE_MOVIL_ROUTE_PATH",
           "_AUTH_DNI_NIE_PATH",
           "_AUTH_FECHA_VALIDEZ_PATH",
