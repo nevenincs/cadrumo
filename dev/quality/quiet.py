@@ -21,7 +21,7 @@ import subprocess
 import sys
 from typing import Final, TextIO
 
-from dev._paths import UTF_8
+from .._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 

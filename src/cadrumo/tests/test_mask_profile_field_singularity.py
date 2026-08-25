@@ -281,7 +281,7 @@ def test_rule_fires_on_a_rival_masking_method() -> None:
     catch a method exactly as it catches a top-level function.
     """
     violations = masking_verdict_signature_violations(
-        "src/cadrumo/adapters/inbound/tui/_rows.py",
+        "src/cadrumo/adapters/inbound/_rows.py",
         _tree(_RIVAL_MASKING_METHOD),
         is_canonical=False,
     )
@@ -299,7 +299,7 @@ def test_rule_fires_on_typing_optional_spelling() -> None:
     protects against.
     """
     violations = masking_verdict_signature_violations(
-        "src/cadrumo/adapters/inbound/tui/_legacy_style.py",
+        "src/cadrumo/adapters/inbound/_style.py",
         _tree(_RIVAL_WITH_TYPING_OPTIONAL),
         is_canonical=False,
     )

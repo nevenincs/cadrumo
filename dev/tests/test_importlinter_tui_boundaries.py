@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from importlinter.cli import lint_imports
 
-from dev._paths import REPO_ROOT
+from .._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

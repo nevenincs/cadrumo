@@ -1,0 +1,46 @@
+"""Concrete runtime composition for installed and diagnostic TUI sessions."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from contextlib import ExitStack, contextmanager
+from pathlib import Path
+
+
+@contextmanager
+def profile_storage_scope(root: Path) -> Iterator[Path]:
+    """Bind persistent profile infrastructure rooted at ``root`` for one TUI run.
+
+    This is the sole TUI composition seam permitted to construct persistence
+    adapters. Screens and devtools receive application contracts after this
+    scope has bound them; neither needs to know which concrete adapter serves
+    the session.
+    """
+    from ...adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
+    from ...application.user_profile import bind_profile_custody_port, bind_profile_login_session_port
+    from ...core import STORAGE_TAXONOMY, StorageCategory, storage_location
+    from ...core.config import SecretStoreBackend, load_settings, override_settings
+
+    storage_root = root / "cadrumo-storage"
+    secret_field = STORAGE_TAXONOMY[StorageCategory.SECRETS].settings_field
+    if secret_field is None:
+        message = "the declared secret storage category has no settings field"
+        raise RuntimeError(message)
+    secret_path = root / storage_location(StorageCategory.SECRETS).relative_path()
+    with ExitStack() as composition:
+        composition.enter_context(
+            override_settings(
+                cadrumo_local_storage_root=storage_root,
+                cadrumo_active_profile=None,
+                cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
+                cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
+                cadrumo_profile_kdf_measure_calibration=False,
+                **{secret_field: secret_path},
+            )
+        )
+        composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
+        composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+        yield storage_root
+
+
+__all__ = ["profile_storage_scope"]

@@ -138,7 +138,7 @@ class ModeloWorkspaceProducerStampV1(_WorkspaceProducerModel):
 
 
 class ModeloWorkspaceEpochV1(_WorkspaceProducerModel):
-    """Owner-scoped monotonic generation that makes every ABA transition observable."""
+    """Owner generation that exposes every ABA transition within one process incarnation."""
 
     owner: _ProducerCode
     kind: ModeloWorkspaceEpochKindV1 = ModeloWorkspaceEpochKindV1.MONOTONIC_GENERATION
@@ -146,7 +146,7 @@ class ModeloWorkspaceEpochV1(_WorkspaceProducerModel):
     generation: Annotated[int, Field(ge=1)]
 
     def require_successor_of(self, predecessor: ModeloWorkspaceEpochV1) -> Self:
-        """Require one later generation for the same owner, even when values repeat."""
+        """Require a later same-owner generation within one process incarnation."""
         if self.owner != predecessor.owner:
             raise ValueError("workspace epochs can compare only within one owner")
         if self.kind is not predecessor.kind or self.schema_version != predecessor.schema_version:
@@ -157,7 +157,7 @@ class ModeloWorkspaceEpochV1(_WorkspaceProducerModel):
 
 
 class ModeloWorkspaceContributingProjectionV1[ProjectionT: BaseModel](_WorkspaceProducerModel):
-    """One projection, contract stamp, and ABA-safe epoch from a single atomic read."""
+    """One projection, stamp, and incarnation-scoped ABA-safe epoch from one atomic read."""
 
     projection: ProjectionT
     stamp: ModeloWorkspaceProducerStampV1

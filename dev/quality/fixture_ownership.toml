@@ -2041,9 +2041,9 @@ exact_body_group_id = ""
 exact_body_group_member_count = 1
 
 [[fixture]]
-id = "src/cadrumo/adapters/inbound/tui/tests/test_flow_tui_app.py:142:_flow_copy_catalogue"
+id = "src/cadrumo/entrypoints/tui/tests/test_flow_tui_app.py:142:_flow_copy_catalogue"
 effective_name = "_flow_copy_catalogue"
-owner = "src/cadrumo/adapters/inbound/tui/tests/test_flow_tui_app.py:142:_flow_copy_catalogue"
+owner = "src/cadrumo/entrypoints/tui/tests/test_flow_tui_app.py:142:_flow_copy_catalogue"
 disposition = "retained-current-owner"
 body_sha256 = "582abffc2694df9b67483011f0ef5c72b55026a309c9c5151395973af2a52275"
 scope = "function"
@@ -2066,9 +2066,9 @@ exact_body_group_id = ""
 exact_body_group_member_count = 1
 
 [[fixture]]
-id = "src/cadrumo/adapters/inbound/tui/tests/test_status_screen.py:100:_status_copy_catalogue"
+id = "src/cadrumo/entrypoints/tui/tests/test_status_screen.py:100:_status_copy_catalogue"
 effective_name = "_status_copy_catalogue"
-owner = "src/cadrumo/adapters/inbound/tui/tests/test_status_screen.py:100:_status_copy_catalogue"
+owner = "src/cadrumo/entrypoints/tui/tests/test_status_screen.py:100:_status_copy_catalogue"
 disposition = "retained-current-owner"
 body_sha256 = "708fdecc8324179f6eb4eb3a2c610b04469b62c8f45638193f45ed87a1d4312d"
 scope = "function"

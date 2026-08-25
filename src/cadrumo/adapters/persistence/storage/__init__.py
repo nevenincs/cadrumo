@@ -37,7 +37,7 @@ The public surface is grouped by contract:
 - Runtime and custody boundary — :class:`StorageRuntime`,
   :class:`StorageRuntimeReadiness`, runtime repository factories,
   :func:`activate_session`, :func:`get_active_master_key`,
-    :func:`resolve_attachment_store`, the one place a caller holding an optional
+  :func:`resolve_attachment_store`, the one place a caller holding an optional
   injected :class:`~domain.attachments.AttachmentStoreProtocol` turns it into a
   concrete :class:`AttachmentStore`.
 - Recovery — the low-level BIP-39 recovery helpers. The shared-master

@@ -10,8 +10,8 @@ from textwrap import dedent
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..fixture_census import FixtureCensusError, _read_trees, census, iter_source_files
 from ..fixture_ownership import (
     FixtureOwnershipError,

@@ -71,7 +71,8 @@ from typing import Final
 import grimp
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
+
+from ..._paths import REPO_ROOT
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src"
 ROOT_PACKAGE: Final[str] = "cadrumo"
@@ -650,7 +651,7 @@ def run_census() -> CensusReport:
         completeness is a static property, and binding a gate to a two-regime
         load trace would make it slow without making it stricter.
     """
-    from dev.registry.analysis.load_census_classification import classify_universe, stale_rules
+    from .load_census_classification import classify_universe, stale_rules
 
     graph = build_runtime_graph()
     closure = static_load_closure(graph)

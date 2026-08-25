@@ -359,12 +359,11 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # Non-ctx-scoped (one ExitStack spanning the command body) - the
         # surface the wrong-language bound was proven against:
         ("application/wizard/_commands.py", "_enter_requested_output_language"),
-        # Non-ctx-scoped, and reviewed: the credential screen has no ctx to
-        # scope to - it is an inbound TUI adapter, and reaching up into the
-        # entrypoint tier for one would invert the dependency direction. It
-        # holds the override on an ExitStack for the screen's lifetime so the
-        # operator sees the whole page re-render in the language they just
-        # picked, which is the point of the chooser.
+        # Non-ctx-scoped, and reviewed: the credential screen is an entrypoint
+        # TUI surface with no command context to scope to. It holds the
+        # override on an ExitStack for the screen's lifetime so the operator
+        # sees the whole page re-render in the language they just picked,
+        # which is the point of the chooser.
         #
         # It is bounded against the post-unwind hazard this gate exists
         # for, and the bound is structural rather than a promise. The
@@ -381,13 +380,13 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         #
         # The enforced guarantee is the outcome, not the means:
         # ``test_the_chosen_language_does_not_outlive_the_screen`` in
-        # ``adapters/inbound/tui/tests/test_registration_language_switch.py``
+        # ``entrypoints/tui/tests/test_registration_language_switch.py``
         # drives the real screen and fails if the caller's rendering
         # language moved. Swapping this site to a process-global mechanism
         # (an env var plus a settings-cache reset) reds it - that is the
         # substitution that would genuinely leak, and the one worth
         # catching.
-        ("entrypoints/tui/secret/registration.py", "_activate_output_language"),
+        ("entrypoints/tui/secret/app.py", "_activate_output_language"),
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
         ("entrypoints/cli/__init__.py", "_root"),

@@ -35,8 +35,8 @@ from ....application.user_profile import (
     login_profile,
     register_profile_with_credentials,
 )
-from ....application.user_profile.manager_projection import persist_active_profile_manager_field
 from ....core import require_active_bucket_id
+from ....entrypoints.cli import persist_active_profile_field
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..profile.overview import ProfileManagerApp
@@ -81,7 +81,7 @@ def _live_overview():
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
     _ensure_logged_in()
-    return persist_active_profile_manager_field(path, value, label=_LABEL)
+    return persist_active_profile_field(path, value, label=_LABEL)
 
 
 def _stored() -> dict[str, object | None]:

@@ -499,7 +499,13 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     write path are still exercised; only the directory is test-owned.
     """
     registry_root = tmp_path / "registry" / "aeat"
-    (registry_root / "legal").mkdir(parents=True)
+    legal_dir = registry_root / "legal"
+    legal_dir.mkdir(parents=True)
+    (legal_dir / "supported-filing-years.toml").write_text(
+        "[supported_filing_years]\nyears = [2025]\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     modelos_dir = registry_root / "modelos"
     modelos_dir.mkdir()
     (modelos_dir / "999.toml").write_text(
@@ -514,8 +520,10 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
         before = _bundled_registry_disk_cache_files(isolated_cache_dir)
         assert before == set(), "the test-owned cache directory must start empty for the assertion below to bite"
 
-        modelos, _catalogues = load_registry_tree(registry_root)
+        modelos, catalogues = load_registry_tree(registry_root)
         assert {modelo.id for modelo in modelos} == {"999"}
+        assert catalogues.supported_filing_years is not None
+        assert catalogues.supported_filing_years.years == (2025,)
 
         after = _bundled_registry_disk_cache_files(isolated_cache_dir)
         assert after == set(), (

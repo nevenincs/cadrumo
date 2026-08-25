@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from datetime import date
 
 import pytest
 from pydantic import ValidationError
@@ -100,13 +101,44 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
     assert actual_inspection_gap_coordinates == expected_inspection_gap_coordinates
 
     m038 = {modelo.id: modelo for modelo in modelos}["038"]
-    assert len(m038.revisions) == 1
-    m038_revision = next(iter(m038.revisions.values()))
-    m038_ledger = ledgers_by_coordinate[(m038.id, m038_revision.id)]
-    assert not (m038_revision.formulas or m038_revision.parameters or m038_revision.bindings or m038_revision.relations)
-    assert m038_ledger.authority_scope == "inspection_only"
-    assert m038_ledger.rows == ()
-    assert m038_ledger.gaps == ()
+    m038_revisions = tuple(sorted(m038.revisions.values(), key=lambda revision: revision.id))
+    assert {
+        revision.id: (
+            revision.valid_from,
+            revision.valid_to,
+            revision.period_selector.years,
+            revision.period_selector.year_from,
+            revision.period_selector.year_to,
+            revision.period_selector.periods,
+        )
+        for revision in m038_revisions
+    } == {
+        "2024-desde-06": (
+            date(2024, 6, 1),
+            date(2024, 12, 31),
+            (2024,),
+            None,
+            None,
+            ("06", "07", "08", "09", "10", "11", "12"),
+        ),
+        "2025-y-siguientes": (
+            date(2025, 1, 1),
+            None,
+            (),
+            2025,
+            None,
+            ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
+        ),
+    }
+
+    for m038_revision in m038_revisions:
+        m038_ledger = ledgers_by_coordinate[(m038.id, m038_revision.id)]
+        assert not (
+            m038_revision.formulas or m038_revision.parameters or m038_revision.bindings or m038_revision.relations
+        )
+        assert m038_ledger.authority_scope == "inspection_only"
+        assert m038_ledger.rows == ()
+        assert m038_ledger.gaps == ()
 
 
 def test_construct_evidence_rows_keep_incomplete_refs_explicit() -> None:

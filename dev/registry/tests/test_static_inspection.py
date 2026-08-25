@@ -13,7 +13,8 @@ from cadrumo.domain.calculations.registry import (
     RegistryRevisionInspection,
     bundled_revision_inspection,
 )
-from dev._paths import REPO_ROOT
+
+from ..._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 from typing import cast, get_args
 
@@ -21,8 +22,7 @@ from textual.widgets import (
     Static,
 )
 
-from ......application.modelo import ModeloWorkOriginAnomaly
-from ......application.modelo.tests._work_review_integration_fixture import build_real_modelo_work_review
+from ......application.modelo.work_review_projection import ModeloWorkOriginAnomaly
 from ......core import BindingSourceKind, EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
 from ......core.config import override_settings
 from ......core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
@@ -30,15 +30,17 @@ from ......domain.calculations.registry import InputKind, RelationConsumptionCha
 from ......domain.filing import ModeloValueKind
 from ......domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ......tests.locales_root_fixture import locales_root_scope
+from ......tests.modelo_work_review import build_real_modelo_work_review
 from ....components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
 )
 from ....components.widgets import ContentScroll
-from .. import ModeloWorkReviewApp
 from ..work_review import (
     _ABSENT,
     _PRESENT,
+    ModeloWorkReviewApp,
+    ModeloWorkReviewScreen,
     _enum_options,
     _presence_options,
     _relation_channel_options,
@@ -46,6 +48,17 @@ from ..work_review import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def test_modelo_view_namespace_is_inert_and_review_types_have_one_defining_module() -> None:
+    """The view package cannot become a second public screen home."""
+    namespace = importlib.import_module("cadrumo.entrypoints.tui.modelo.view")
+
+    assert namespace.__all__ == ()
+    assert "ModeloWorkReviewApp" not in vars(namespace)
+    assert "ModeloWorkReviewScreen" not in vars(namespace)
+    assert ModeloWorkReviewApp.__module__ == "cadrumo.entrypoints.tui.modelo.view.work_review"
+    assert ModeloWorkReviewScreen.__module__ == "cadrumo.entrypoints.tui.modelo.view.work_review"
 
 
 def _cells(table: DataTable[str]) -> tuple[str, ...]:

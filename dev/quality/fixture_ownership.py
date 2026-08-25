@@ -18,8 +18,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT
-
+from .._paths import REPO_ROOT
 from .fixture_census import (
     FactoryFixtureCandidate,
     FixtureCensus,

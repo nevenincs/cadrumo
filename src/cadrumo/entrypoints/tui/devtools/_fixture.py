@@ -9,18 +9,18 @@ stand-in, because a stand-in would make every reading about the stand-in.
 
 The root is the harness's own, never the operator's. Sensitive financial
 data stays where it always does — inside the encrypted store this root
-provides — and the root is gitignored, so nothing it holds is committable.
+provides — outside the source tree under the configured local-storage root.
 """
 
 from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from contextlib import ExitStack, contextmanager
+from contextlib import contextmanager
 from pathlib import Path
 
-from cadrumo.application.user_profile import logout_active_profile
-from cadrumo.core.config import load_settings
+from ....application.user_profile import logout_active_profile
+from ....core.config import load_settings
 
 WORKSPACE_ENV_VAR = "CADRUMO_TUI_WORKSPACE"
 
@@ -42,7 +42,7 @@ def workspace() -> Path:
 
 
 STATE_DIR = workspace()
-"""Where this caller keeps its root, session and screenshots. Gitignored."""
+"""Where this caller keeps its root, session and screenshots outside source."""
 
 PASSPHRASE_ENV_VAR = "CADRUMO_TUI_HARNESS_PASSPHRASE"  # noqa: S105 - the variable NAME, not a secret
 
@@ -73,37 +73,9 @@ def harness_storage(*, fresh: bool = False, namespace: str = "profile") -> Itera
         raise ValueError("devtool storage namespace must not be blank")
     root = workspace() / ("fresh" if fresh else namespace)
     root.mkdir(parents=True, exist_ok=True)
-    with _harness_storage_scope(root) as storage_root:
-        yield storage_root
+    from ..launcher import profile_storage_scope
 
-
-@contextmanager
-def _harness_storage_scope(root: Path) -> Iterator[Path]:
-    """Compose one persistent devtool root through public runtime contracts."""
-    from cadrumo.adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
-    from cadrumo.application.user_profile import bind_profile_custody_port, bind_profile_login_session_port
-    from cadrumo.core import STORAGE_TAXONOMY, StorageCategory, storage_location
-    from cadrumo.core.config import SecretStoreBackend, load_settings, override_settings
-
-    storage_root = root / "cadrumo-storage"
-    secret_field = STORAGE_TAXONOMY[StorageCategory.SECRETS].settings_field
-    if secret_field is None:
-        message = "the declared secret storage category has no settings field"
-        raise RuntimeError(message)
-    secret_path = root / storage_location(StorageCategory.SECRETS).relative_path()
-    with ExitStack() as composition:
-        composition.enter_context(
-            override_settings(
-                cadrumo_local_storage_root=storage_root,
-                cadrumo_active_profile=None,
-                cadrumo_secret_store_backend=SecretStoreBackend.AUTO,
-                cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
-                cadrumo_profile_kdf_measure_calibration=False,
-                **{secret_field: secret_path},
-            )
-        )
-        composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-        composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+    with profile_storage_scope(root) as storage_root:
         yield storage_root
 
 
@@ -114,14 +86,14 @@ def ensure_profile() -> str:
     again before returning so the login surface meets the locked machine
     it exists for. Caller must already be inside :func:`harness_storage`.
     """
-    from cadrumo.application.workflow import list_profile_buckets
+    from ....application.workflow import list_profile_buckets
 
     existing = list_profile_buckets()
     if existing:
         return next(iter(existing))
 
-    from cadrumo.application.user_profile import register_profile_with_credentials
-    from cadrumo.domain.user_profile import UserProfileFact
+    from ....application.user_profile import register_profile_with_credentials
+    from ....domain.user_profile import UserProfileFact
 
     outcome = register_profile_with_credentials(
         label=PROFILE_LABEL,
@@ -140,9 +112,9 @@ def registration_attempt(
     recovery_handover,
 ):
     """Adapt public profile registration into the TUI screen's result contract."""
-    from cadrumo.application.user_profile import ProfileRegistrationError, register_profile_with_credentials
-    from cadrumo.domain.user_profile import UserProfileFact
-    from cadrumo.entrypoints.tui.secret.registration import (
+    from ....application.user_profile import ProfileRegistrationError, register_profile_with_credentials
+    from ....domain.user_profile import UserProfileFact
+    from ....entrypoints.tui.secret.app import (
         RecoveryHandoverCancelledError,
         RegistrationAttempt,
         RegistrationRefusal,
@@ -182,7 +154,7 @@ def ensure_session() -> str:
     a surface rendered over a stand-in session would be a reading about
     the stand-in.
     """
-    from cadrumo.application.user_profile import login_profile
+    from ....application.user_profile import login_profile
 
     bucket_id = ensure_profile()
     login_profile(name=bucket_id, passphrase_callback=lambda *_args, **_kwargs: passphrase())

@@ -1,0 +1,16 @@
+cadrumo.entrypoints.tui.modelo package
+======================================
+
+.. automodule:: cadrumo.entrypoints.tui.modelo
+   :members:
+   :show-inheritance:
+   :ignore-module-all:
+
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.entrypoints.tui.modelo.view

@@ -28,9 +28,9 @@ from ....application.user_profile import (
     login_profile,
     register_profile_with_credentials,
 )
-from ....application.user_profile.manager_projection import persist_active_profile_manager_field
 from ....core import require_active_bucket_id
 from ....core.i18n import tr
+from ....entrypoints.cli import persist_active_profile_field
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..profile.overview import _LANGUAGE_KEY, _OUTPUT_LANGUAGE_PATH, ProfileManagerApp
@@ -108,7 +108,7 @@ def _manager() -> ProfileManagerApp:
     record = load_test_profile_record(require_active_bucket_id())
     return ProfileManagerApp(
         build_profile_overview(record, label=_LABEL),
-        persist=lambda path, value: persist_active_profile_manager_field(path, value, label=_LABEL),
+        persist=lambda path, value: persist_active_profile_field(path, value, label=_LABEL),
     )
 
 
@@ -148,7 +148,7 @@ async def _drained_footer(app: ProfileManagerApp, pilot) -> dict[str, str]:
     included.
 
     Kept here rather than folded into the shared
-    :func:`~cadrumo.entrypoints.tui.tests.profile.manager_pilot.wait_until_settled`, which waits on the page
+    :func:`~cadrumo.entrypoints.tui.tests.manager_pilot.wait_until_settled`, which waits on the page
     holding no unfinished background work. That is a different question
     with a different answer: the footer carries no such flag, and a
     recompose is not work anything is waiting on, so there is nothing to

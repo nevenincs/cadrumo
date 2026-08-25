@@ -21,7 +21,7 @@ from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  
 from ....tests.user_profile import register_cli_profile
 from .. import status_projection
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 if TYPE_CHECKING:
     from pathlib import Path

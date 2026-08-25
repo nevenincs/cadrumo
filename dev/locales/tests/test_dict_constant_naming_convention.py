@@ -15,7 +15,7 @@ the dict feeding it is a fully static literal.
 
 A commit that renamed the operation supervisor's lease mechanics
 (``5a6fcd09e4``) orphaned exactly this shape in
-``adapters/inbound/tui/_status_screen.py``: three ``flows.status.profiles.status.*``
+``entrypoints/tui/profile/status.py``: three ``flows.status.profiles.status.*``
 keys were dropped from a renamed, still-unsuffixed dict with no signal from
 any gate.
 
@@ -315,7 +315,7 @@ def test_rule_fires_through_the_failed_verdict_factory_indirection() -> None:
 def test_repo_real_historical_site_is_scanner_visible_end_to_end() -> None:
     """Sanity check against the ACTUAL repository: the residual live site round-trips.
 
-    ``adapters/inbound/tui/_status_screen.py`` still carries the
+    ``entrypoints/tui/profile/status.py`` carries the
     ``5a6fcd09e4`` shape's direct descendant (``_PROFILE_SETUP_STATE_KEYS``)
     at HEAD. This is not a vacuous "nothing in the tree matches" pass: the
     repo-wide keys this dict declares are genuinely discovered by

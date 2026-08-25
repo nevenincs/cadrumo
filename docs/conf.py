@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import os
 import tomllib
 import warnings
@@ -14,6 +15,7 @@ os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
 
 import sys
 from pathlib import Path
+from typing import TypeAliasType, TypeVar
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -23,6 +25,7 @@ from sphinx.deprecation import RemovedInSphinx90Warning
 _PROJECT_ROOT = Path(os.environ.get("CADRUMO_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
 sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 
+from cadrumo.core import scan_directory  # noqa: E402
 from cadrumo.core.external_constants import OutputLanguage  # noqa: E402
 from cadrumo.core.product_identity import PRODUCT_IDENTITY  # noqa: E402
 
@@ -224,7 +227,8 @@ autodoc_default_options = {
     # subclasses do not leak their full underscore-prefixed constructor
     # signature into the rendered Settings page.
     "exclude-members": (
-        "__init__,model_config,model_fields,model_computed_fields,"
+        "__init__,__pydantic_serializer__,__pydantic_validator__,"
+        "model_config,model_fields,model_computed_fields,"
         "Config,model_post_init,settings_customise_sources,model_validate,"
         "model_validate_json,model_validate_strings,model_dump,model_dump_json,"
         "model_copy,model_construct,model_extra,model_fields_set,"
@@ -240,6 +244,35 @@ autoclass_content = "class"
 
 autodoc_typehints = "description"
 autodoc_typehints_format = "short"
+
+_PUBLIC_TYPE_ALIAS_TARGETS = {
+    "CasillaId": "cadrumo.core.CasillaId",
+    "SubjectTaxId": "cadrumo.core.identity.SubjectTaxId",
+    "TaxIdIdentityToken": "cadrumo.core.identity.TaxIdIdentityToken",
+}
+
+
+def _format_project_type_alias(annotation, config=None):
+    """Link canonical public aliases and render implementation aliases literally.
+
+    PEP 695 aliases and generic type variables are not classes.  Rendering them
+    through the extension's default ``py:class`` role creates a dead link and,
+    for private callable aliases, falsely advertises a public object.  The two
+    intentionally public aliases have generator-owned ``py:data`` targets;
+    every other alias/type parameter remains readable code without acquiring a
+    public documentation identity.
+    """
+    if isinstance(annotation, TypeVar):
+        return f"``{annotation.__name__}``"
+    if isinstance(annotation, TypeAliasType):
+        target = _PUBLIC_TYPE_ALIAS_TARGETS.get(annotation.__name__)
+        if target is not None:
+            return f":py:data:`~{target}`"
+        return f"``{annotation.__name__}``"
+    return None
+
+
+typehints_formatter = _format_project_type_alias
 
 # Be tolerant of the wider AEAT dep tree at autodoc-import time. These are
 # either heavy native deps that pull a lot of platform-specific shared
@@ -939,6 +972,30 @@ def _should_resolve_deferred_models() -> bool:
 _PY_SUFFIX_INDEX: dict[str, list[str]] = {}
 
 
+def _declared_type_hint_names() -> frozenset[str]:
+    """Return source-declared aliases and TypeVars that are not API objects."""
+    names: set[str] = set()
+    source_root = _PROJECT_ROOT / "src" / "cadrumo"
+    for path in scan_directory(source_root, pattern="*.py", recursive=True):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+                names.add(node.name.id)
+            elif isinstance(node, ast.TypeVar):
+                names.add(node.name)
+            elif (
+                isinstance(node, ast.Assign)
+                and isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Name)
+                and node.value.func.id == "TypeVar"
+            ):
+                names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+    return frozenset(names - _PUBLIC_TYPE_ALIAS_TARGETS.keys())
+
+
+_LITERAL_TYPE_HINT_NAMES = _declared_type_hint_names()
+
+
 def _is_ordered_subsequence(needle: list[str], haystack: list[str]) -> bool:
     """Return whether every item of *needle* appears in *haystack*, in order.
 
@@ -1010,6 +1067,13 @@ def _resolve_short_reference(app, env, node, contnode):
         _PY_SUFFIX_INDEX.update(_build_py_suffix_index(env))
     candidates = _PY_SUFFIX_INDEX.get(short)
     if not candidates:
+        # Postponed annotations reach the extension as unresolved strings, so
+        # ``typehints_formatter`` cannot inspect their runtime TypeAliasType or
+        # TypeVar identity.  A source-declared alias with no documented object
+        # is implementation vocabulary, not a missing public class.  Preserve
+        # it as inline code; a real documented candidate always takes priority.
+        if short in _LITERAL_TYPE_HINT_NAMES:
+            return contnode
         return None
 
     # A public re-export path (``cadrumo.domain.iva.verify_catalogue``) maps onto a
@@ -1065,7 +1129,7 @@ def _convert_markdown_fences_in_inherited_docstrings(app, what, name, obj, optio
     instead of erroring the nitpicky gate.
 
     Textual documents ``Widget.compose`` — which every screen in
-    ``adapters.inbound.tui`` inherits — with a Markdown fenced block::
+    ``entrypoints.tui`` inherits — with a Markdown fenced block::
 
         ```python
         def compose(self) -> ComposeResult:

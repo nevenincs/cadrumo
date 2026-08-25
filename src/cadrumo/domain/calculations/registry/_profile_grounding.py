@@ -68,7 +68,7 @@ def build_profile_grounding_index(
     operator invocation. :class:`ValidatedRegistryAuthority` is an unhashable
     ``@dataclass(slots=True)`` with no ``__weakref__`` slot (its default
     ``eq``-driven ``__hash__ = None`` rules out ``functools.lru_cache``, and
-    its ``slots=True`` rules out :func:`weakref.finalize`-based eviction), so
+    its ``slots=True`` rules out :class:`weakref.finalize`-based eviction), so
     the cache keys on ``id(authority)`` in a small FIFO-bounded dict instead:
     at most :data:`_GROUNDING_INDEX_CACHE_MAXSIZE` entries are retained,
     evicting the oldest when a new authority instance is seen. In practice at

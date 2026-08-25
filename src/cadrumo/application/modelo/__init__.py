@@ -1,10 +1,9 @@
-"""Public application facade for modelo work-unit services.
+"""Modelo application namespace.
 
-This package is the canonical application-layer import boundary for modelo
-CLI transports and cross-package application services. Callers import from
-``cadrumo.application.modelo`` instead of private ``_...`` modules so work
-selection, registry revision checks, calculation, verification, filing,
-export, reconciliation, and storage orchestration stay behind one facade.
+Cross-package callers import contracts and services from their public defining
+modules rather than through this package. In particular, Modelo work-review
+projection is defined only by ``application.modelo.work_review_projection``;
+the namespace does not republish it.
 
 Bucket scoping is explicit at the API boundary. Services accept a caller
 provided ``bucket_id`` or a resolved work target; CLI modules may derive that
@@ -578,17 +577,6 @@ from ._work_plazo import (
     modelo_work_deadline_posture,
     validate_modelo_work_deadline_posture,
 )
-from ._work_review import (
-    BlockerRef,
-    ModeloWorkBindingOrigin,
-    ModeloWorkOriginAnomaly,
-    ModeloWorkProgress,
-    ModeloWorkProgressDenominator,
-    ModeloWorkRelationConsumption,
-    ModeloWorkReview,
-    ModeloWorkReviewCasilla,
-)
-from ._work_review_projection import build_modelo_work_review
 from ._workflow_gate import build_revision_deadline_window_checker, workflow_period_for_work_unit
 
 __all__ = [
@@ -619,7 +607,6 @@ __all__ = [
     "AmendmentOverrideCasillaError",
     "AmendmentTargetStateError",
     "AmendmentVerificationRefusedError",
-    "BlockerRef",
     "BucketAggregationCalculationResult",
     "CalculationRegistryUnavailableError",
     "CalculationResultSummary",
@@ -750,7 +737,6 @@ __all__ = [
     "ModeloVisibleFilingTarget",
     "ModeloWorkAddress",
     "ModeloWorkAddressNotFoundError",
-    "ModeloWorkBindingOrigin",
     "ModeloWorkCalculationServiceResult",
     "ModeloWorkConditionalRecargoPreview",
     "ModeloWorkCreateApplicabilityRefusal",
@@ -758,15 +744,9 @@ __all__ = [
     "ModeloWorkEnsureResult",
     "ModeloWorkLifecycleContinuation",
     "ModeloWorkNoActiveBucketError",
-    "ModeloWorkOriginAnomaly",
     "ModeloWorkPeriodTokenError",
-    "ModeloWorkProgress",
-    "ModeloWorkProgressDenominator",
     "ModeloWorkRegistryYearMismatchError",
-    "ModeloWorkRelationConsumption",
     "ModeloWorkResolution",
-    "ModeloWorkReview",
-    "ModeloWorkReviewCasilla",
     "ModeloWorkRevisionConflictError",
     "ModeloWorkSelectorContradictionError",
     "ModeloWorkSelectorError",
@@ -849,7 +829,6 @@ __all__ = [
     "build_feedback_package",
     "build_m145_communication_service_contract",
     "build_modelo_precondition_failure",
-    "build_modelo_work_review",
     "build_review_package",
     "build_revision_deadline_window_checker",
     "build_verification_precondition_failure",

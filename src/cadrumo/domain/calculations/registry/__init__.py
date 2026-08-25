@@ -129,6 +129,7 @@ from ._applicability import (
     taxpayer_model_is_declared,
 )
 from ._authority import (
+    RegistryAuthorityCapture,
     StampedRegistryRelease,
     ValidatedRegistryAuthority,
     bundled_authority,
@@ -1140,6 +1141,7 @@ __all__ = [
     "RecordDesignVariableTotalMarker",
     "RecordId",
     "RefundOperationObservation",
+    "RegistryAuthorityCapture",
     "RegistryCalculationEntry",
     "RegistryCalculationResult",
     "RegistryCalculationUnresolvedOutcome",

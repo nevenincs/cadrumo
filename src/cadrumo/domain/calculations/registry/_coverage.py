@@ -9,7 +9,7 @@ review-ineligible revisions use :class:`RegistryRevisionInspection` so
 static/audit evidence remains available without claiming filing authority.
 
 Three axes, deliberately not one
--------------------------------
+---------------------------------
 
 This module now answers three different questions about a revision, and they
 are easy to mistake for each other because all three sound like "is it

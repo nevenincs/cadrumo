@@ -6,7 +6,8 @@ row count — is stored alongside them so the registry binding resolver can look
 it up by a simple ``profile_key`` selector. Aggregates the ENGINE derives are
 not stored here; see the note below the fact table.
 
-Stored fact paths per descendant (n = 0-based index):
+Stored fact paths per descendant (n = 0-based index)::
+
   renta_family.descendiente.{n}.birth_date              ISO-8601 date string
   renta_family.descendiente.{n}.relacion                DescendantRelacion token (absent means ordinary)
   renta_family.descendiente.{n}.inscripcion_registro_civil
@@ -31,7 +32,8 @@ Stored fact paths per descendant (n = 0-based index):
                                                         canonical MM:AMOUNT[;MM:AMOUNT...] map or absent
   renta_family.descendiente.{n}.nif                     NIF string or absent
 
-Aggregate facts stored:
+Aggregate facts stored::
+
   renta_family.descendientes_count               int count
 
 The Art. 81.2 guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
@@ -593,7 +595,8 @@ def _flag_bool(raw: str, *, key: str) -> bool:
 def parse_descendiente_flag(raw: str) -> DescendantInfo:
     """Parse a ``--descendiente NACIMIENTO=YYYY-MM-DD,...`` flag value.
 
-    Accepted keys (case-insensitive):
+    Accepted keys (case-insensitive)::
+
       NACIMIENTO=YYYY-MM-DD  (required) birth date
       RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|
                acogimiento_temporal|tutela|guarda_y_custodia_judicial

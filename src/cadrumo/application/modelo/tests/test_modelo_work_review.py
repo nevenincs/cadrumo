@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from decimal import Decimal
 
 import pytest
@@ -9,7 +10,13 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind, ModeloWorkProgressState, Period
 from ....domain.calculations import RowSourceIdentity
-from ....domain.calculations.registry import CasillaObservation, InputKind, bundled_authority, revision_date_binding_ids
+from ....domain.calculations.registry import (
+    CasillaObservation,
+    InputKind,
+    bundled_authority,
+    revision_date_binding_ids,
+    select_revision,
+)
 from ....domain.filing import ModeloValueKind
 from ....domain.modelos import (
     CalculationRevision,
@@ -31,14 +38,14 @@ from ....domain.modelos import (
 )
 from ....domain.user_profile import UserProfileFact
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
-from .. import (
+from .._calculation_actions import calculate_modelo_revision
+from ..work_review_projection import (
+    ModeloWorkOriginAnomaly,
     ModeloWorkProgress,
     ModeloWorkProgressDenominator,
     ModeloWorkReview,
     build_modelo_work_review,
-    calculate_modelo_revision,
 )
-from .._work_review import ModeloWorkOriginAnomaly
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -56,6 +63,27 @@ _M130 = ModeloCode("130")
 _M130_INCOME_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 
 
+def test_review_projection_has_one_public_defining_module_and_no_package_facade() -> None:
+    """The application package cannot become a second home for review symbols."""
+    namespace = importlib.import_module("cadrumo.application.modelo")
+    review_symbols = (
+        "BlockerRef",
+        "ModeloWorkBindingOrigin",
+        "ModeloWorkFormulaOrigin",
+        "ModeloWorkOriginAnomaly",
+        "ModeloWorkProgress",
+        "ModeloWorkProgressDenominator",
+        "ModeloWorkRelationConsumption",
+        "ModeloWorkReview",
+        "ModeloWorkReviewCasilla",
+        "build_modelo_work_review",
+    )
+
+    assert set(review_symbols).isdisjoint(vars(namespace))
+    assert ModeloWorkReview.__module__ == "cadrumo.application.modelo.work_review_projection"
+    assert build_modelo_work_review.__module__ == "cadrumo.application.modelo.work_review_projection"
+
+
 def _persist_work_unit(
     repos: Repos,
     *,
@@ -65,15 +93,19 @@ def _persist_work_unit(
 ) -> WorkUnit:
     work_repo, _, _, _, _ = repos
     period = Period.from_year_and_code(filing_year, period_code)
-    revision_id = (
-        bundled_authority()
-        .snapshot(
-            modelo,
-            filing_year=filing_year,
-            period=period.registry_token,
-        )
-        .revision.id
+    authority = bundled_authority()
+    selected_revision = select_revision(
+        authority.validate_modelo(modelo),
+        filing_year=filing_year,
+        period=period.registry_token,
     )
+    revision_id = authority.snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=period.registry_token,
+        revision_id=selected_revision.id,
+        grade=selected_revision.effective_authority_grade,
+    ).revision.id
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,

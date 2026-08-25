@@ -22,8 +22,9 @@ from typing import Final
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
-from dev.ci.lane_reachability import tracked_test_files
+
+from .._paths import REPO_ROOT
+from ..ci.lane_reachability import tracked_test_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

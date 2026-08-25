@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.quality.regulatory_drift_census import (
+from ..quality.regulatory_drift_census import (
     Disposition,
     DriftCensusError,
     Finding,

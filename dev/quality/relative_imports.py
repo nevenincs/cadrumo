@@ -41,7 +41,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
+
+from .._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 SRC_CADRUMO = REPO_ROOT / "src" / "cadrumo"

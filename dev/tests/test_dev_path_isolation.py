@@ -45,8 +45,9 @@ from typing import Final
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
-from dev.quality.import_hygiene_scan import (
+
+from .._paths import REPO_ROOT
+from ..quality.import_hygiene_scan import (
     DevPathForm,
     find_dev_path_reach_violations,
     find_dev_prose_violations,

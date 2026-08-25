@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
+
 import pytest
 
 from ....domain.user_profile import ProfileNotFoundError
@@ -74,3 +77,18 @@ def test_attempt_returns_the_real_login_outcome_after_unlocking(tmp_path) -> Non
         assert attempt.refusal is None
         assert attempt.outcome is not None
         assert attempt.outcome.bucket_id == profile_id
+
+
+def test_attempt_catches_only_the_enrolled_authentication_refusal_family() -> None:
+    """Unrelated application errors remain outside the interaction-data boundary."""
+    function = ast.parse(inspect.getsource(attempt_profile_login)).body[0]
+    assert isinstance(function, ast.FunctionDef)
+    handlers = [node for node in ast.walk(function) if isinstance(node, ast.ExceptHandler)]
+    assert len(handlers) == 1
+    caught = handlers[0].type
+    assert isinstance(caught, ast.Tuple)
+    assert {node.id for node in caught.elts if isinstance(node, ast.Name)} == {
+        "ProfileAuthenticationRefusedError",
+        "ProfileLoginThrottledError",
+        "ProfileNotFoundError",
+    }

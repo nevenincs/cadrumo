@@ -22,6 +22,7 @@ renderer's behaviour, never a catalogue's current contents.
 from __future__ import annotations
 
 import re
+from typing import Any
 
 import pytest
 
@@ -68,7 +69,7 @@ _HELP = {
 
 def _record(**overrides: object) -> CasillaSearchRecord:
     """One fully populated casilla record with every language authored."""
-    fields: dict[str, object] = {
+    fields: dict[str, Any] = {
         "descriptions": dict(_LABELS),
         "modelo": Modelo.M130,
         "casilla_id": "03",
@@ -122,6 +123,21 @@ def test_page_renders_only_the_build_language(language: OutputLanguage) -> None:
             continue
         assert _LABELS[other] not in rst
         assert _HELP[other.value] not in rst
+
+
+def test_catalogue_line_wrapping_cannot_break_raw_html_cards_or_index() -> None:
+    """Authored multiline labels stay intact while generated HTML stays one line."""
+    record = _record(
+        descriptions={OutputLanguage.ES: "Etiqueta con\n  salto de línea"},
+        localized_help={OutputLanguage.ES.value: "Ayuda con\n  salto de línea"},
+    )
+
+    rst = _render((record,), OutputLanguage.ES)
+
+    assert "Etiqueta con salto de línea" in rst
+    assert "Ayuda con salto de línea" in rst
+    assert "Etiqueta con\n" not in rst
+    assert "Ayuda con\n" not in rst
 
 
 @pytest.mark.parametrize("language", [OutputLanguage.EN, OutputLanguage.CA, OutputLanguage.HU])

@@ -114,6 +114,25 @@ def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payment
         )
 
 
+def test_modelo_100_scenario_rejects_undeclared_hand_typed_inventory_acquisition_cost() -> None:
+    """Removing 0181's provenance declaration must reactivate the bound-input refusal."""
+    scenario = _normal_direct_estimation_payments_scenario()
+    without_0181 = {
+        casilla_id: reason for casilla_id, reason in scenario.hand_typed_bound_casillas.items() if casilla_id != "0181"
+    }
+    undeclared = scenario.model_copy(update={"hand_typed_bound_casillas": without_0181})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"0181 \(binding 'renta-2025-inventory-activity-acquisition-cost-0181'\)",
+    ):
+        run_registry_calculation_scenario(
+            undeclared,
+            registry_root=_REGISTRY_ROOT,
+            source_root=bundled_path(),
+        )
+
+
 def test_registry_scenario_reports_trace_contract_mismatches() -> None:
     scenario = _simplified_direct_estimation_cap_scenario().model_copy(
         update={

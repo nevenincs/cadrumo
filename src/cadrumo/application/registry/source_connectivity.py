@@ -175,6 +175,7 @@ class SourceConnectivityCensusEntry(SourceConnectivityCensusRow):
         default=None,
         pattern=r"^sha256:[0-9a-f]{64}$",
     )
+    expected_capability_count: int | None = Field(default=None, ge=0)
     advisory_destination_refs: tuple[str, ...] = ()
     registry_destination_candidates: tuple[RegistryDestinationCandidate, ...] = ()
 
@@ -190,8 +191,12 @@ class SourceConnectivityCensusEntry(SourceConnectivityCensusRow):
         if len(set(self.capability_ids)) != len(self.capability_ids):
             raise ValueError("connectivity census capability ids must be unique within one entry")
         if self.capability_selector is None:
-            if not self.capability_ids or self.expected_capability_digest is not None:
-                raise ValueError("explicit census coverage requires capability_ids and no expected digest")
+            if (
+                not self.capability_ids
+                or self.expected_capability_digest is not None
+                or self.expected_capability_count is not None
+            ):
+                raise ValueError("explicit census coverage requires capability_ids and no selector expectations")
         elif self.capability_ids or self.expected_capability_digest is None:
             raise ValueError("selector census coverage requires an expected digest and no explicit capability ids")
         return self

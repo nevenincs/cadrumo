@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.filing._export_producer import filing_producer_ownership
+from .._export_producer import filing_producer_ownership
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

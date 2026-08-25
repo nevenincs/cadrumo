@@ -788,6 +788,11 @@ def assign_capabilities_to_census(
                 f"capability coverage drift for {entry.candidate_id}: "
                 f"expected {entry.expected_capability_digest}, got {actual_digest}"
             )
+        if entry.expected_capability_count is not None and len(claimed) != entry.expected_capability_count:
+            raise ValueError(
+                f"capability coverage count drift for {entry.candidate_id}: "
+                f"expected {entry.expected_capability_count}, got {len(claimed)}"
+            )
         overlap = selector_claimed.intersection(claimed)
         if overlap:
             raise ValueError(f"capabilities match multiple census selectors: {sorted(overlap)!r}")

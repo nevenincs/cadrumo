@@ -21,4 +21,3 @@ Subpackages
    cadrumo.adapters.inbound.justificante
    cadrumo.adapters.inbound.notificacion
    cadrumo.adapters.inbound.pdf
-   cadrumo.adapters.inbound.tui

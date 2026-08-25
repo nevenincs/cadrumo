@@ -11,8 +11,9 @@ from cadrumo.application.registry import FilingExportProofAuthority
 from cadrumo.core import SourceConnectivityProofAuthority
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
-from dev.registry.filing_export_proof import canonical_live_filing_export_proof_authority
-from dev.source_connectivity.live_proof import canonical_live_connected_proof_authority
+
+from ...source_connectivity.live_proof import canonical_live_connected_proof_authority
+from ..filing_export_proof import canonical_live_filing_export_proof_authority
 
 __all__ = [
     "RegistryClosureAuthorities",

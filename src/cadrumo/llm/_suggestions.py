@@ -14,7 +14,7 @@ event without mutating the transaction, and regulated euro amounts / IVA rates
 are derived by the system rather than emitted by the model.
 
 PROVENANCE STAMP: ``llm:<transport>:<model>``
---------------------------------------------
+---------------------------------------------
 
 Every suggestion carries a ``provenance`` stamp recording which transport read
 the document and with which model, so a persisted classification can always

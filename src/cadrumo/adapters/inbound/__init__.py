@@ -4,8 +4,9 @@ This package root exports no parser classes. Focused child packages own the
 actual import contracts: :mod:`declaracion` for filed declaration PDFs,
 :mod:`borrador` for Renta draft PDFs, :mod:`justificante` for receipt metadata,
 :mod:`pdf` for shared PDF helpers, :mod:`financial` for bank-statement providers,
-:mod:`identity` for Spanish identity inputs, and :mod:`sanitizer` for
-deterministic fixture hygiene.
+:mod:`censo` for the Certificado de Situación Censal, :mod:`einvoice` for
+structured electronic invoices, and :mod:`notificacion` for AEAT notification
+documents.
 
 Inbound adapters translate outside artefacts into strict records consumed by
 :mod:`application` and :mod:`domain`. They observe and normalize source files;
@@ -18,9 +19,9 @@ See Also:
         in the architecture.
     :mod:`financial.providers`
         Provider registry for CSV, OFX, XLSX, and N26 PDF bank statements.
-    :mod:`sanitizer`
-        PDF sanitisation pipeline used to prepare committed regression
-        artefacts without leaking operator PII.
+    :mod:`notificacion`
+        Typed notification-document records read from already-custodied AEAT
+        artefact bytes.
     :mod:`domain.justificante`
         Domain receipt metadata records populated by the justificante parser.
     :mod:`application.filing`

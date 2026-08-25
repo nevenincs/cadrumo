@@ -58,7 +58,8 @@ from cadrumo.tests import (
     bare_utf8_literal_violations,
     non_test_package_python_files,
 )
-from dev._paths import REPO_ROOT
+
+from .._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

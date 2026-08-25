@@ -28,6 +28,11 @@ _Repos = tuple[
 ]
 
 _CLOCK = datetime(2026, 10, 15, 9, 0, 0, tzinfo=UTC)
+
+#: The profile capsule exists well before the 3T filing window the work target
+#: sits in. Seeding it at ``_CLOCK`` dated the profile's own creation to a
+#: future instant, which the record validator refuses outright.
+_PROFILE_SEEDED_AT = datetime(2026, 1, 5, 9, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "00000000-0000-4000-8000-000000000000"
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
@@ -76,8 +81,8 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_READY_PROFILE_FACTS,
-                created_at=_CLOCK,
-                updated_at=_CLOCK,
+                created_at=_PROFILE_SEEDED_AT,
+                updated_at=_PROFILE_SEEDED_AT,
             ),
         )
         wu = WorkUnitCatalogueRepository(objects=objects)

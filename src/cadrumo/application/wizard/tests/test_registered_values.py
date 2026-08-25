@@ -8,7 +8,7 @@ localized yes/no pair, a SECRET value passes through UNMASKED at this
 layer (the review screen owns masking, through its widget-kind lookup —
 that ownership is proven, not merely asserted, by
 ``test_secret_answer_is_masked_in_the_echo_and_the_review_table`` in
-``adapters/inbound/tui/tests/test_flow_tui_app.py``, which drives a real
+``entrypoints/tui/tests/test_flow_tui_app.py``, which drives a real
 SECRET page with a non-empty registered value through the rendered
 table), and the non-official-evidence suffix is appended exactly when the
 underlying fact carries the ``censo_artefact_g313`` provenance token.

@@ -44,11 +44,14 @@ def preselected_profile_login_id(name: str | None) -> str | None:
 
 def attempt_profile_login(profile_id: str, passphrase: str) -> ProfileLoginAttempt:
     """Unlock a chosen profile, converting expected operator refusals to data."""
-    from ...core.errors import CadrumoError, resolve_error_message
+    from ...core.errors import resolve_error_message
+    from ...domain.user_profile import ProfileNotFoundError
+    from ._authentication import ProfileAuthenticationRefusedError
+    from ._login_session import ProfileLoginThrottledError
 
     try:
         outcome = login_profile(name=profile_id, passphrase_callback=lambda: passphrase)
-    except CadrumoError as refusal:
+    except (ProfileAuthenticationRefusedError, ProfileLoginThrottledError, ProfileNotFoundError) as refusal:
         return ProfileLoginAttempt(refusal=resolve_error_message(refusal))
     return ProfileLoginAttempt(outcome=outcome)
 

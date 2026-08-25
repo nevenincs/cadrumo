@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.entrypoints.cli._command_runtime import resolve_deferred_target
-from cadrumo.entrypoints.cli._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
+from .._command_runtime import resolve_deferred_target
+from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

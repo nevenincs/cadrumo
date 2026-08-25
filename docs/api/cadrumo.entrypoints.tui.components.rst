@@ -16,7 +16,7 @@ Submodules
    cadrumo.entrypoints.tui.components._safe_text
    cadrumo.entrypoints.tui.components.dialogs
    cadrumo.entrypoints.tui.components.errors
-   cadrumo.entrypoints.tui.components.forms
+   cadrumo.entrypoints.tui.components.form_screen
    cadrumo.entrypoints.tui.components.logs
    cadrumo.entrypoints.tui.components.status
    cadrumo.entrypoints.tui.components.theme

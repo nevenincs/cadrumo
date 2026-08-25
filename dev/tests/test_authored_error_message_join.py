@@ -8,12 +8,12 @@ from textwrap import dedent
 
 import pytest
 
-from dev.quality.cli_action_census import (
+from ..quality.cli_action_census import (
     AuthoredErrorMessageCensusError,
     RegisteredErrorCode,
     authored_error_message_join,
 )
-from dev.quality.cli_action_census_dispositions import (
+from ..quality.cli_action_census_dispositions import (
     AuthoredMessageExclusion,
     DispositionValidationError,
     load_authored_message_exclusions,

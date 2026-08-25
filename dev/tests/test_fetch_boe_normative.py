@@ -25,8 +25,8 @@ import httpx
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
 
+from .._paths import REPO_ROOT
 from ..corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
     assert_boe_holds_no_consolidated_text,

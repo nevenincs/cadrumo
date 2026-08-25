@@ -52,8 +52,8 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-from dev.ci.lane_reachability import (
+from .._paths import REPO_ROOT
+from ..ci.lane_reachability import (
     Lane,
     analyse_reachability,
     ci_invoked_lanes,

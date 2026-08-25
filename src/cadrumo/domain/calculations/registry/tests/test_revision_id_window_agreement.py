@@ -22,34 +22,7 @@ from .._validate_revision_id_window_agreement import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-#: Revision-id tails this tree is known to use, beyond a bare four-digit year.
-#: Anything else is unrecognised vocabulary and must be classified before the
-#: marker can be trusted to have seen it.
-_KNOWN_ID_TAILS = frozenset(
-    {
-        "",
-        "-y-siguientes",
-        "-02-03-y-siguientes",
-        "-01-31-y-siguientes",
-        "-desde-09-y-3t",
-        "-hasta-08-y-2t",
-        "-2017",
-        "-2022",
-        "-2023",
-        "-2024",
-        # Introduced by this tree's span splits. Each names a CLOSED range or a
-        # period-scoped half -- modelo 185's 2003-2025, modelo 322 and 353's
-        # 2008-2025, modelo 490's 2022-1t and 2022-2t-4t -- and the marker was
-        # checked against all three before they were admitted here: none reads
-        # as an open-ended claim.
-        "-2025",
-        "-1t",
-        "-2t-4t",
-        "esquema-exterior",
-        "esquema-importacion",
-        "esquema-union",
-    },
-)
+_YEAR_KEYED_REVISION_ID = re.compile(r"^\d{4}(?P<tail>.*)$")
 
 
 def _committed_revisions():
@@ -57,27 +30,50 @@ def _committed_revisions():
     return tuple((modelo.id, revision) for modelo in modelos for revision in modelo.revisions.values())
 
 
-def test_no_revision_id_uses_vocabulary_the_marker_has_not_been_checked_against() -> None:
-    """A newly coined id tail must be classified, not silently unmatched.
+def _year_keyed_revision_id_tail(revision_id: str) -> str | None:
+    """Return the semantic tail of a dated revision id, excluding a bare year."""
+    match = _YEAR_KEYED_REVISION_ID.match(revision_id)
+    if match is None or not match.group("tail"):
+        return None
+    return match.group("tail")
 
-    This is what keeps the marker honest. The gate finds contradictions only among
-    ids it recognises as making a claim, so an unrecognised tail is indistinguishable
-    from a revision with nothing to check -- and a coinage such as ``-en-adelante``
-    would make the gate quietly stop covering it.
+
+def _classify_year_keyed_tail(revision) -> str | None:
+    """Classify a dated tail from the canonical declaration it must agree with."""
+    if _year_keyed_revision_id_tail(str(revision.id)) is None:
+        return None
+    if revision_id_claims_open_window(str(revision.id)):
+        return "open"
+    if revision_window_closures(revision):
+        return "bounded"
+    return "unclassified"
+
+
+def test_every_year_keyed_revision_tail_has_semantic_window_classification() -> None:
+    """A newly coined dated tail must be classified, not silently unmatched.
+
+    The classifier takes no modelo-specific or tail-vocabulary exceptions. A
+    nonempty tail is either an open-ended claim recognised by the canonical
+    marker, or a bounded/subyear scope demonstrated by the revision's selector
+    or date window. A tail that is neither is an ungrounded third statement
+    about applicability and must not look like a clean gate result.
     """
-    unrecognised = sorted(
-        {
-            f"{modelo_id}:{revision.id}"
-            for modelo_id, revision in _committed_revisions()
-            if re.sub(r"^\d{4}", "", str(revision.id)) not in _KNOWN_ID_TAILS
-        },
+    classifications = {
+        f"{modelo_id}:{revision.id}": classification
+        for modelo_id, revision in _committed_revisions()
+        if (classification := _classify_year_keyed_tail(revision)) is not None
+    }
+    unclassified = sorted(
+        subject for subject, classification in classifications.items() if classification == "unclassified"
     )
 
-    assert not unrecognised, (
-        "these revision ids carry a tail the window-agreement marker has never been checked "
-        "against. Decide whether each asserts an open-ended window: if it does, teach the "
-        "marker; if it does not, add the tail to the known set. Do not leave it unclassified, "
-        "because an unmatched id and a compliant one look identical from here:\n  " + "\n  ".join(unrecognised)
+    assert classifications, "the tree carries no year-keyed revision tails, so the classifier proves nothing"
+    assert {"open", "bounded"}.issubset(classifications.values()), (
+        "the classifier no longer spans both open-ended and bounded/subyear revision tails"
+    )
+    assert not unclassified, (
+        "these year-keyed revision tails do not agree with any canonical window meaning:\n  "
+        + "\n  ".join(unclassified)
     )
 
 
@@ -114,6 +110,25 @@ def test_a_mid_year_split_id_is_not_read_as_an_open_ended_claim() -> None:
     assert not revision_id_claims_open_window("2024-hasta-08-y-2t")
     assert revision_id_claims_open_window("2021-y-siguientes")
     assert revision_id_claims_open_window("2025-02-03-y-siguientes")
+
+
+def test_unknown_year_keyed_tails_are_classified_from_their_declared_windows() -> None:
+    """Planted open and bounded tails cannot become an unchecked vocabulary path."""
+    genuinely_open = next(
+        revision
+        for _modelo_id, revision in _committed_revisions()
+        if revision_id_claims_open_window(str(revision.id)) and not revision_window_closures(revision)
+    )
+    unknown_open = genuinely_open.model_copy(update={"id": "2097-en-adelante"})
+    unknown_bounded = genuinely_open.model_copy(
+        update={
+            "id": "2097-unknown-subyear",
+            "valid_to": date(2097, 9, 30),
+        }
+    )
+
+    assert _classify_year_keyed_tail(unknown_open) == "unclassified"
+    assert _classify_year_keyed_tail(unknown_bounded) == "bounded"
 
 
 def test_an_uninformative_id_is_neither_refused_nor_cleared() -> None:

@@ -7,8 +7,7 @@ from typing import Annotated
 
 import typer
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from .adjudications import DEFAULT_ADJUDICATIONS_FILENAME, load_adjudications
 from .manager import (
     AeipInventory,

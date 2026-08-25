@@ -6,7 +6,9 @@ experience, the correctness of the projection, and the cost of a keystroke —
 not for gating. It asserts nothing. The pass/fail authority stays with
 `src/cadrumo/entrypoints/tui/tests/`.
 
-Discardable: the whole harness is this directory plus a gitignored `.state/`.
+Discardable: the source is this directory; each harness workspace's disposable
+session, screenshots, and encrypted storage live outside the source tree under
+the configured local-storage root.
 
 ## Use
 
@@ -110,8 +112,9 @@ change did to the operator's experience.
 
 ## The profile
 
-Four surfaces need a real profile. The harness keeps its own storage root under
-`.state/` and creates one through the real registration door — real Argon2id,
-real AEAD, real manifest — reusing it across sessions. It is never the
-operator's root, and `.state/` is gitignored, so nothing it holds is
-committable. Override the passphrase with `CADRUMO_TUI_HARNESS_PASSPHRASE`.
+Four surfaces need a real profile. The harness creates it in its own external
+storage root under the configured local-storage root, through the real
+registration door — real Argon2id, real AEAD, real manifest — and reuses it
+across sessions. It is never the operator's root and never occupies a
+source-local `.state/` directory. Override the passphrase with
+`CADRUMO_TUI_HARNESS_PASSPHRASE`.

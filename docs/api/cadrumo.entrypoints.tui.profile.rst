@@ -13,7 +13,5 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.entrypoints.tui.profile.editor
    cadrumo.entrypoints.tui.profile.overview
    cadrumo.entrypoints.tui.profile.status
-   cadrumo.entrypoints.tui.profile.tasks

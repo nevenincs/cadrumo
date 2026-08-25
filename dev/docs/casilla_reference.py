@@ -888,11 +888,11 @@ def _render_entry(
         f'<span class="casilla-card__number">{html.escape(box_number)}</span>',
     ]
     if label is not None:
-        lines.append(f'<h3 class="casilla-card__title">{html.escape(label)}</h3>')
+        lines.append(f'<h3 class="casilla-card__title">{html.escape(" ".join(label.split()))}</h3>')
     lines.append("</header>")
     description = _description(help_text, box_number)
     if description:
-        lines.append(f'<p class="casilla-card__help">{html.escape(description)}</p>')
+        lines.append(f'<p class="casilla-card__help">{html.escape(" ".join(description.split()))}</p>')
     lines.extend(_fill_explanation(record, facts, numbers_by_id, language))
     chips = _fact_chips(record, facts, language)
     if chips:
@@ -965,7 +965,7 @@ def _casilla_index(
             facts = schema.casillas.get((modelo, str(record.casilla_id)))
             label, _help = _localised(record, language)
             anchor = casilla_page_anchor(record.modelo, record.casilla_id)
-            title = html.escape(label or str(record.casilla_id), quote=True)
+            title = html.escape(" ".join((label or str(record.casilla_id)).split()), quote=True)
             box = _box_number(record, facts)
             chip = (
                 f'<a class="casilla-index__chip" href="#{html.escape(anchor, quote=True)}" title="{title}">'

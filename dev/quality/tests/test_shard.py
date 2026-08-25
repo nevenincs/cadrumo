@@ -12,8 +12,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..shard import shard_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

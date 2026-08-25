@@ -1,4 +1,5 @@
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -9,7 +10,9 @@ from cadrumo.core import BindingSourceKind
 from cadrumo.core.resources import resources
 
 from ..check import SourceConnectivityCheckError, check_census_governance
-from ..live_proof import CONNECTED_PROOF_FIXTURES, connected_candidate_ids
+from ..live_proof import CONNECTED_PROOF_FIXTURES, canonical_live_connected_proof_authority, connected_candidate_ids
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_m296_registry_blocked_refusal_is_bounded_and_unconnected() -> None:
@@ -25,17 +28,32 @@ def test_m296_registry_blocked_refusal_is_bounded_and_unconnected() -> None:
     source = BindingSourceKind.WITHHOLDING296
     assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source].value == "deferred"
     assert all(source not in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
+    modelo_296 = next(modelo for modelo in resources().modelos.all() if str(modelo.id) == "296")
+    assert all(
+        all(binding.source is not source for binding in revision.bindings) for revision in modelo_296.revisions.values()
+    )
     assert "rows.withholding296" not in connected_candidate_ids()
     assert all(fixture.candidate_id != "rows.withholding296" for fixture in CONNECTED_PROOF_FIXTURES)
-    assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[BindingSourceKind.WITHHOLDING].value == "enrolled"
+    # Connected fixtures are the sole lifecycle authority for encrypted persistence,
+    # provenance, replay, review, and source-owned repeated-row export.
+    with canonical_live_connected_proof_authority(Path.cwd()) as proof_authority:
+        assert proof_authority is None
+    retenciones = BindingSourceKind.RETENCIONES_AGGREGATION
+    assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[retenciones].value == "enrolled"
+    assert any(retenciones in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
+    for modelo_id in ("180", "193"):
+        revision = resources().modelos.authority.snapshot(
+            modelo_id, filing_year=2025, period="0A"
+        ).revision
+        assert any(binding.source is retenciones for binding in revision.bindings)
     coverage = compose_source_connectivity_coverage(
         authority=resources().modelos.authority, census=load_source_connectivity_census(), as_of=date(2026, 8, 25)
     )
     limb = next(item for item in coverage.limbs if item.modelo == "296")
-    assert limb.outcome == "refused"
-    assert (
-        limb.refusal is not None and limb.refusal.disposition.work_item == "source-casilla.rows-withholding296-registry"
-    )
+    assert limb.outcome == "unmeasured"
+    assert limb.refusal is not None and limb.refusal.reason == "unmeasured"
+    assert entry.disposition.value == "registry_blocked"
+    assert entry.bounded_follow_up.action_id == "source-casilla.rows-withholding296-registry"
 
 
 def test_m296_refusal_expires() -> None:

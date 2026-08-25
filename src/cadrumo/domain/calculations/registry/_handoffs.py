@@ -14,7 +14,13 @@ from typing import Literal, NamedTuple
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, FilingPeriodCode, RegistrySelectorPeriodCode
+from ....core import (
+    STRICT_FROZEN_CONFIG,
+    CasillaId,
+    FilingPeriodCode,
+    RegistryAuthorityGrade,
+    RegistrySelectorPeriodCode,
+)
 from ....core.aggregation import BindingSourceKind, RelationAggregationOp
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import bound_casilla_binding_ids
@@ -396,7 +402,17 @@ def _self_consistent_snapshot(
         RegistryValidationError: When the law-determined resolution selects a
             different revision than the one declaring this period.
     """
-    snapshot = authority.snapshot(str(modelo.id), filing_year=filing_year, period=period)
+    # This audit reads relation requirements, bindings, and formula consumption;
+    # it neither renders nor validates a filing artefact.  Request the minimum
+    # calculation-grade authority through the canonical facade, so a legitimate
+    # calculation-only revision remains part of the inventory rather than being
+    # silently omitted or incorrectly required to have filing layouts.
+    snapshot = authority.snapshot(
+        str(modelo.id),
+        filing_year=filing_year,
+        period=period,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     if snapshot.revision.id != revision.id:
         raise RegistryValidationError(
             f"modelo {modelo.id} revision {revision.id}: law-determined "

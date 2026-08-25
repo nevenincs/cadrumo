@@ -28,7 +28,8 @@ from cadrumo.domain.calculations.registry import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
 )
-from dev.registry.filing_export_proof import (
+
+from ..filing_export_proof import (
     CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES,
     canonical_live_filing_export_proof_authority,
 )

@@ -32,8 +32,8 @@ import pytest
 
 from cadrumo.core import scan_directory
 from cadrumo.tests import ast_for_path, qualified_name, repo_relative
-from dev._paths import REPO_ROOT
 
+from .._paths import REPO_ROOT
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_CASES as _CAMPAIGN_METADATA_CASES
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_PATTERNS as _CAMPAIGN_METADATA_PATTERNS
 from ._marker_metadata_patterns import PROCESS_PLAN_CASE as _PROCESS_PLAN_CASE

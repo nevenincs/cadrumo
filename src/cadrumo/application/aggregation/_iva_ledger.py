@@ -1547,6 +1547,7 @@ def validate_intracom_export_counterparty(
     """Return a gate issue when the counterparty/category coupling is violated.
 
     Rules:
+
     - ``INTRA_COMMUNITY_SUPPLY`` requires a non-ES ``identification_state``.
     - Export and export-assimilated categories require the counterparty to be
       POSITIVELY established in a third country, and must carry no

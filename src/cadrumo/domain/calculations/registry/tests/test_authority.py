@@ -35,14 +35,16 @@ _M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15", surface="_M1
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_CASILLA")
 
 
-def test_authority_returns_cached_validated_snapshot_for_repeated_filing_context(
+def test_authority_returns_isolated_validated_snapshots_for_repeated_filing_context(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     authority = registry_authority
     first = authority.snapshot("130", filing_year=2026, period="1T")
     second = authority.snapshot("130", filing_year=2026, period="1T")
 
-    assert first is second
+    assert first is not second
+    assert first == second
+    assert first.legal is not second.legal
     assert first.revision.period_selector.includes_year(2026)
     assert "1T" in first.revision.period_selector.periods
 
@@ -88,9 +90,9 @@ def test_authority_snapshot_is_authority_owned_revision_projection(
     snapshot = authority.snapshot("130", filing_year=2026, period="1T")
     modelo = authority.modelo("130")
 
-    assert snapshot.modelo is modelo
+    assert snapshot.modelo == modelo
     assert snapshot.revision == modelo.revisions[snapshot.revision.id]
-    assert authority.snapshot("130", filing_year=2026, period="1T") is snapshot
+    assert authority.snapshot("130", filing_year=2026, period="1T") == snapshot
     assert "130" in authority._validated_modelos
 
 
@@ -269,8 +271,8 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: 
     assert tuple(casilla.id for casilla in second.modelo("999").revisions["2025"].casillas) == ("01", "02")
 
 
-def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_path: Path) -> None:
-    """Authority loading may cache in-process, but changed registry files must invalidate it."""
+def test_authority_uses_fingerprint_backed_process_cache_and_invalidates_real_aba_tree_cycle(tmp_path: Path) -> None:
+    """A real A -> B -> A tree cycle stales both earlier authority generations."""
     registry_root = tmp_path / "registry" / "aeat"
     legal_dir = registry_root / "legal"
     revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
@@ -297,6 +299,7 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_pat
     # Load 1: should run validation.
     auth1 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
     assert auth1._registry_validated is True
+    first_generation = auth1.read_current_generation()
 
     # Load 2: same fingerprint returns the in-process cached authority.
     auth2 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
@@ -314,6 +317,26 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_pat
     assert auth3._registry_validated is True
     assert auth3 is not auth1
     assert auth3.modelo("999").revisions["2025"].source_refs == ("test-source-002",)
+    second_generation = auth3.read_current_generation()
+    with pytest.raises(RegistrySnapshotError, match="observed registry identity transition"):
+        auth1.read_current_generation()
+
+    # Restore the exact original bytes rather than resetting caches: this is the
+    # real ABA state whose original object must never become current again.
+    write_fragmented_revision(
+        revision_dir,
+        _MINIMAL_REVISION_TOML_TEMPLATE.format(source_ref="test-source-001"),
+    )
+    clear_fingerprint_cache()
+
+    auth4 = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+
+    assert auth4 is not auth1
+    assert auth4 is not auth3
+    assert auth4.modelo("999").revisions["2025"].source_refs == ("test-source-001",)
+    assert auth4.read_current_generation() > second_generation > first_generation
+    with pytest.raises(RegistrySnapshotError, match="observed registry identity transition"):
+        auth3.read_current_generation()
 
 
 def test_authority_cache_invalidates_when_source_evidence_changes(tmp_path: Path) -> None:

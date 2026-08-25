@@ -122,8 +122,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
-from dev.quality.fixture_census import (
+from .._paths import REPO_ROOT, UTF_8
+from .fixture_census import (
     FixtureCensusError,
     _dotted_name,
     _executable_body,

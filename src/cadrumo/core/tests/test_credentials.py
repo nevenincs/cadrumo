@@ -6,7 +6,7 @@ from dataclasses import FrozenInstanceError, fields
 
 import pytest
 
-from cadrumo.core import (
+from .. import (
     PassphraseStrength,
     ProfilePasswordAssessment,
     ProfilePasswordRefusalReason,

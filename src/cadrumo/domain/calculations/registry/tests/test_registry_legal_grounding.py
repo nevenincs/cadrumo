@@ -200,26 +200,14 @@ def _direct_string_literals(node: ast.AST) -> tuple[tuple[str, int], ...]:
     return ()
 
 
-#: A name that HOLDS registry source references, as opposed to one that merely
-#: begins with the same letters. The token must end after ``SOURCE_REF`` or
-#: ``SOURCE_REFS`` -- at the end of the name or before an underscore -- so
-#: ``source_refs``, ``source_ref``, ``source_ref_ids`` and
-#: ``revision_source_refs`` all match while ``source_reference`` does not.
-#:
-#: The substring test this replaces flagged `SourceConnectivityGroundingLocatorKind
-#: .SOURCE_REFERENCE = "source_reference"`, an enum member of a closed
-#: locator-kind family, and reported its VALUE as a registry source ref missing
-#: from the catalogue. `source_reference` on the attachments models is the same
-#: shape: a document locator, not a registry source id.
-#:
-#: Measured before narrowing, so it is known to discard only those two families:
-#: of the production names containing ``SOURCE_REF``, this keeps
-#: ``source_ref``, ``source_refs``, ``source_ref_ids``,
-#: ``record_design_source_ref``, ``reduction_source_refs``,
-#: ``registry_source_refs``, ``revision_source_refs``, ``source_refs_by_key``,
-#: ``target_binding_source_refs`` and ``xsd_source_refs``, and drops only
-#: ``source_reference`` and ``source_reference_count``.
+#: A source-reference holder has both a data-shaped name and a data context.
+#: Module or function constants can declare source evidence through the holder
+#: name. Class bodies, however, also contain plain assignments for enum and
+#: condition values; those are evidence data only when their annotation carries
+#: a registry source-reference type. Constructor ``source_refs=`` remains an
+#: explicit data context regardless of its enclosing scope.
 _SOURCE_REF_HOLDER_NAME = re.compile(r"SOURCE_REFS?(?:_|$)")
+_SOURCE_REF_TYPE_NAMES = frozenset({"SourceRefId", "SourceRefs"})
 
 
 def _is_source_ref_holder(name: str) -> bool:
@@ -227,27 +215,53 @@ def _is_source_ref_holder(name: str) -> bool:
     return _SOURCE_REF_HOLDER_NAME.search(name.upper()) is not None
 
 
+def _annotation_carries_source_refs(annotation: ast.AST) -> bool:
+    """Whether an annotation makes a class attribute source-reference data."""
+    return any(isinstance(node, ast.Name) and node.id in _SOURCE_REF_TYPE_NAMES for node in ast.walk(annotation))
+
+
+def _is_class_body_assignment(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> bool:
+    """Whether ``node`` is declared directly in a class body."""
+    return isinstance(parents.get(node), ast.ClassDef)
+
+
+def _source_ref_value_nodes(tree: ast.AST) -> tuple[ast.AST, ...]:
+    """Return AST values that are actual source-reference data declarations."""
+    parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
+    values: list[ast.AST] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            names = [target.id for target in node.targets if isinstance(target, ast.Name)]
+            if any(_is_source_ref_holder(name) for name in names) and not _is_class_body_assignment(node, parents):
+                values.append(node.value)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            is_source_ref_holder = _is_source_ref_holder(node.target.id)
+            is_typed_class_data = _is_class_body_assignment(node, parents) and _annotation_carries_source_refs(
+                node.annotation
+            )
+            if (
+                node.value is not None
+                and is_source_ref_holder
+                and (not _is_class_body_assignment(node, parents) or is_typed_class_data)
+            ):
+                values.append(node.value)
+        elif isinstance(node, ast.keyword) and node.arg == "source_refs":
+            values.append(node.value)
+    return tuple(values)
+
+
+def _source_ref_literals(tree: ast.AST) -> tuple[tuple[str, int], ...]:
+    """Return directly-authored literals from source-reference data contexts."""
+    return tuple(literal for node in _source_ref_value_nodes(tree) for literal in _direct_string_literals(node))
+
+
 def _production_source_ref_literals() -> dict[str, tuple[str, ...]]:
     refs: dict[str, list[str]] = {}
     for path in scan_directory(_PRODUCTION_PACKAGE_ROOT, pattern="*.py", recursive=True, prune_directories=("tests",)):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            value_node: ast.AST | None = None
-            if isinstance(node, ast.Assign):
-                names = [target.id for target in node.targets if isinstance(target, ast.Name)]
-                if any(_is_source_ref_holder(name) for name in names):
-                    value_node = node.value
-            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-                target_is_source_ref = _is_source_ref_holder(node.target.id)
-                if node.value is not None and target_is_source_ref:
-                    value_node = node.value
-            elif isinstance(node, ast.keyword) and node.arg == "source_refs":
-                value_node = node.value
-            if value_node is None:
-                continue
-            location = path.relative_to(_PRODUCTION_PACKAGE_ROOT.parent).as_posix()
-            for value, line_number in _direct_string_literals(value_node):
-                refs.setdefault(value, []).append(f"{location}:{line_number}")
+        location = path.relative_to(_PRODUCTION_PACKAGE_ROOT.parent).as_posix()
+        for value, line_number in _source_ref_literals(tree):
+            refs.setdefault(value, []).append(f"{location}:{line_number}")
     return {ref: tuple(locations) for ref, locations in refs.items()}
 
 
@@ -305,6 +319,31 @@ def test_production_python_source_ref_literals_resolve_to_catalogue_and_corpus(
         f"{ref}: {refs_by_literal[ref]}" for ref in missing
     )
     verify_source_catalogue(bundled_path(), {ref: catalogues.sources[ref] for ref in refs})
+
+
+def test_source_ref_literal_scanner_reads_planted_data_but_not_condition_members() -> None:
+    """A source-ref-shaped condition name cannot hide or fabricate evidence data."""
+    literals = _source_ref_literals(
+        ast.parse(
+            """
+class Condition:
+    RELATION_SOURCE_REFS_VALID = "internal.condition.source_refs_valid"
+
+_MODULE_SOURCE_REFS = ("module-unregistered-source-ref",)
+
+class Evidence:
+    source_refs: tuple[SourceRefId, ...] = ("typed-unregistered-source-ref",)
+
+Finding(source_refs=("keyword-unregistered-source-ref",))
+"""
+        )
+    )
+
+    assert {value for value, _line_number in literals} == {
+        "module-unregistered-source-ref",
+        "typed-unregistered-source-ref",
+        "keyword-unregistered-source-ref",
+    }
 
 
 # --------------------------------------------------------------------------- #

@@ -841,7 +841,8 @@ class TaxpayerProfile(BaseModel):
 
         Args:
             today: Reference date for the window check (caller supplies
-                ``date.today()`` in production; tests supply a fixed date).
+                the canonical Europe/Madrid civil date in production; tests
+                supply a fixed date).
 
         Returns:
             True only when ``irpf_special_regime is IMPATRIADO`` and
