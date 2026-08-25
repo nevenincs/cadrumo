@@ -8,23 +8,25 @@ from types import ModuleType
 
 import pytest
 
-import cadrumo.application.workflow.abort as abort
-import cadrumo.application.workflow.active_profile as active_profile
-import cadrumo.application.workflow.adapters as adapters
-import cadrumo.application.workflow.engine as engine
-import cadrumo.application.workflow.engine_helpers as engine_helpers
-import cadrumo.application.workflow.engine_recording as engine_recording
-import cadrumo.application.workflow.errors as errors
-import cadrumo.application.workflow.events as events
-import cadrumo.application.workflow.persistence as persistence
-import cadrumo.application.workflow.profile_bucket_models as profile_bucket_models
-import cadrumo.application.workflow.profile_bucket_scan as profile_bucket_scan
-import cadrumo.application.workflow.profile_health as profile_health
-import cadrumo.application.workflow.protocols as protocols
-import cadrumo.application.workflow.resume as resume
-import cadrumo.application.workflow.review_models as review_models
-import cadrumo.application.workflow.run_models as run_models
-import cadrumo.application.workflow.state_models as state_models
+from .. import (
+    abort,
+    active_profile,
+    adapters,
+    engine,
+    engine_helpers,
+    engine_recording,
+    errors,
+    events,
+    persistence,
+    profile_bucket_models,
+    profile_bucket_scan,
+    profile_health,
+    protocols,
+    resume,
+    review_models,
+    run_models,
+    state_models,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
