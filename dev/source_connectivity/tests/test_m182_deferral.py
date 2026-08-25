@@ -6,7 +6,7 @@ from cadrumo.application.aggregation import collect_unhandled_source_diagnostics
 from cadrumo.application.modelo import CALCULATION_ROUTE_RESOLVER_OWNERSHIP, CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
-from cadrumo.core import BindingSourceKind
+from cadrumo.core import BindingSourceKind, RegistryAuthorityGrade
 from cadrumo.core.resources import resources
 
 from ..check import SourceConnectivityCheckError, check_census_governance
@@ -49,7 +49,12 @@ def test_m182_deferred_source_has_no_connected_downstream_lifecycle() -> None:
     candidate_id = "rows.donativo-donor"
     census = load_source_connectivity_census()
     entry = next(item for item in census.entries if item.candidate_id == candidate_id)
-    snapshot = resources().modelos.authority.snapshot("182", filing_year=2025, period="0A")
+    snapshot = resources().modelos.authority.snapshot(
+        "182",
+        filing_year=2025,
+        period="0A",
+        grade=RegistryAuthorityGrade.APPLICABILITY,
+    )
 
     assert any(binding.source is source_kind for binding in snapshot.revision.bindings)
     assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind].value == "deferred"
