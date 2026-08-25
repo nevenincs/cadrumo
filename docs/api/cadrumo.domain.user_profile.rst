@@ -13,10 +13,10 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.user_profile._errors
-   cadrumo.domain.user_profile._labels
-   cadrumo.domain.user_profile._loader
-   cadrumo.domain.user_profile._portable_export
-   cadrumo.domain.user_profile._registry_contract
-   cadrumo.domain.user_profile._schema
-   cadrumo.domain.user_profile._values
+   cadrumo.domain.user_profile.errors
+   cadrumo.domain.user_profile.labels
+   cadrumo.domain.user_profile.loader
+   cadrumo.domain.user_profile.portable_export
+   cadrumo.domain.user_profile.registry_contract
+   cadrumo.domain.user_profile.schema
+   cadrumo.domain.user_profile.values

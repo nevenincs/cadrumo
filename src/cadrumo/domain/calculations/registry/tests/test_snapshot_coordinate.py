@@ -14,7 +14,7 @@ from typing import Final
 
 import pytest
 
-from .._snapshot_coordinate import registry_snapshot_id
+from ..snapshot_coordinate import registry_snapshot_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

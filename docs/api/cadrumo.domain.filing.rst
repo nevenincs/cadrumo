@@ -22,7 +22,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.filing._amendment
-   cadrumo.domain.filing._errors
    cadrumo.domain.filing._protocols
    cadrumo.domain.filing._schema
    cadrumo.domain.filing._validator
+   cadrumo.domain.filing.errors

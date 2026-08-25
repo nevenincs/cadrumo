@@ -11,9 +11,9 @@ from __future__ import annotations
 from collections import defaultdict
 from itertools import pairwise
 
-from ._cross_revision_divergence import ordered_revisions, revisions_overlap
-from ._ids import RevisionId
-from ._schema import CasillaContinuidadEvolutionDefinition, ModeloDefinition, ModeloRevision
+from .cross_revision_divergence import ordered_revisions, revisions_overlap
+from .ids import RevisionId
+from .schema import CasillaContinuidadEvolutionDefinition, ModeloDefinition, ModeloRevision
 from ._validate_cross_revision_contiguity import strict_continuity_chain_contiguity_failures
 
 

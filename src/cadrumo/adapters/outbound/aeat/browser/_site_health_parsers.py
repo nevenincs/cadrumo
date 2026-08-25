@@ -17,7 +17,7 @@ observed mantenimiento, WAF, and rate-limit responses on AEAT Sede Electrónica.
 See Also:
     :class:`adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
         Frozen record returned by every positive parser classification.
-    :class:`adapters.outbound.aeat.browser._site_health.SiteHealthState`
+    :class:`core.errors.SiteHealthState`
         Closed state catalogue emitted by this parser suite.
 """
 
@@ -27,12 +27,12 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
+from .....core.errors import SiteHealthState
 from .....core.time import coerce_utc_aware, now
 from ._site_health import (
-    _URL_ADAPTER,
     SiteHealthEvidence,
-    SiteHealthState,
     SiteHealthStatus,
+    parse_site_health_url,
 )
 
 _MAX_FRAGMENT_CHARS = 4096
@@ -91,8 +91,6 @@ def _parse_http_date_retry_after(
     try:
         parsed = parsedate_to_datetime(value)
     except (TypeError, ValueError):
-        return None
-    if parsed is None:
         return None
     parsed = coerce_utc_aware(parsed)
     reference = coerce_utc_aware(now) if now is not None else datetime.now(tz=UTC)
@@ -241,7 +239,7 @@ def parse_mantenimiento_banner(
     return SiteHealthStatus(
         state=SiteHealthState.MANTENIMIENTO,
         evidence=SiteHealthEvidence(
-            url=_URL_ADAPTER.validate_python(url),
+            url=parse_site_health_url(url),
             http_status=http_status,
             html_fragment=_bounded_fragment(html),
             detected_markers=hits,
@@ -291,7 +289,7 @@ def parse_waf_challenge(
     return SiteHealthStatus(
         state=SiteHealthState.WAF_CHALLENGE,
         evidence=SiteHealthEvidence(
-            url=_URL_ADAPTER.validate_python(url),
+            url=parse_site_health_url(url),
             http_status=http_status,
             html_fragment=_bounded_fragment(html),
             detected_markers=body_hits,
@@ -377,7 +375,7 @@ def parse_rate_limit_response(
     return SiteHealthStatus(
         state=SiteHealthState.RATE_LIMITED,
         evidence=SiteHealthEvidence(
-            url=_URL_ADAPTER.validate_python(url),
+            url=parse_site_health_url(url),
             http_status=http_status,
             html_fragment=_bounded_fragment(html),
             detected_markers=(marker_value,),

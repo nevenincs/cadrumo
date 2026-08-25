@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._schema import ModeloRevision
-from .._schema_input_kind import InputKind
+from ..schema import ModeloRevision
+from ..schema_input_kind import InputKind
 from ._modelo_100_registry_support import _loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -31,7 +31,7 @@ import pytest
 
 from ..core import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ..core.directory_scan import scan_directory
-from ..domain.calculations.registry import RelatedPartyOperationObservation
+from cadrumo.domain.calculations.registry.bindings import RelatedPartyOperationObservation
 from ..domain.modelos import Modelo232VinculadaRow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

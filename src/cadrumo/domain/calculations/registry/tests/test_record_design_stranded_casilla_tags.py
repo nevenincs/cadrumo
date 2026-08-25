@@ -28,7 +28,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import extract_record_design
-from .._record_design import (
+from ..record_design import (
     _clean_pdf_line,
     _collapse_stuttered_row_prefix,
     _extract_pdf_text_lines,

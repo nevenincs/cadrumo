@@ -13,11 +13,11 @@ from pydantic import ValidationError
 
 from .....core.config import Settings
 from .._citation_blocklist import KnownBadCitation, _fold_diacritics, find_known_bad, known_bad_citations
-from .._corpus_catalogue import verify_source_catalogue, verify_source_file
+from ..corpus_catalogue import verify_source_catalogue, verify_source_file
 from ..errors import RegistryValidationError
-from .._legal import assert_legal_ref_ids_resolve, verify_legal_catalogue
-from .._schema import LegalReference, RegistryCatalogues, SourceCitation, SourceReference
-from .._validate import RegistryValidator
+from ..legal import assert_legal_ref_ids_resolve, verify_legal_catalogue
+from ..schema import LegalReference, RegistryCatalogues, SourceCitation, SourceReference
+from ..validate import RegistryValidator
 from .._validate_evidence import EvidenceValidator
 from ._registry_schema_support import _committed_registry_tree
 

@@ -24,7 +24,6 @@ from cadrumo.application.workflow.run_models import (
     WorkflowStep,
 )
 
-from ....adapters.outbound.aeat.browser import SiteHealthState
 from ....application.operator_actions import (
     ActionArgumentBinding,
     ActionReference,
@@ -40,6 +39,7 @@ from ....core import (
     NoRecoveryOutcome,
     Period,
 )
+from ....core.errors import SiteHealthState
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....domain.deadlines import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

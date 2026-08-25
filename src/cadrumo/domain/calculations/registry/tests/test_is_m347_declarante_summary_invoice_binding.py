@@ -29,7 +29,7 @@ import pytest
 
 from ..errors import RegistryValidationError
 from .._invoice_bindings import is_m347_declarante_summary_invoice_binding
-from .._schema import DataBindingDefinition
+from ..schema import DataBindingDefinition
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

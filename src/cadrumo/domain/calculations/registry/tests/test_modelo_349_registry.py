@@ -24,8 +24,8 @@ from .. import (
     resolve_export_layout,
     select_revision,
 )
-from .._corpus_catalogue import verify_source_file
-from .._legal import verify_legal_catalogue
+from ..corpus_catalogue import verify_source_file
+from ..legal import verify_legal_catalogue
 from ._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,

@@ -23,15 +23,13 @@ one.
 
 from __future__ import annotations
 
-from typing import override
+from collections.abc import Generator
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.storage import (
-    LEDGER_EXTRACTION_DRAFT_NAMESPACE,
-    SecureBoundRepository,
-    secure_object_repository_for_bucket,
-)
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.identity import BucketId
@@ -40,9 +38,12 @@ from .evidence_draft import InvoiceDraft
 
 __all__ = [
     "ExtractionDraftDocument",
-    "ExtractionDraftRepository",
+    "ExtractionDraftRepositoryFactory",
+    "ExtractionDraftRepositoryProtocol",
     "StoredExtractionDraft",
+    "bind_extraction_draft_repository_factory",
     "discard_extraction_draft",
+    "extraction_draft_object_key",
     "load_extraction_drafts",
     "read_extraction_draft",
     "write_extraction_draft",
@@ -94,26 +95,54 @@ class ExtractionDraftDocument(BaseModel):
     drafts: tuple[StoredExtractionDraft, ...] = ()
 
 
-class ExtractionDraftRepository(SecureBoundRepository[ExtractionDraftDocument]):
-    """Encrypted store for one bucket's pending extraction drafts.
-
-    The base wraps every document in an ``Envelope`` before it reaches disk, so
-    "no draft byte lands in the clear" is a property of the substrate rather
-    than of this module's diligence.
-    """
-
-    namespace = LEDGER_EXTRACTION_DRAFT_NAMESPACE.namespace
-    sensitivity = LEDGER_EXTRACTION_DRAFT_NAMESPACE.sensitivity
-    schema_version = LEDGER_EXTRACTION_DRAFT_NAMESPACE.schema_version
-    payload_type = ExtractionDraftDocument
-
-    @override
-    def extract_identifier(self, payload: ExtractionDraftDocument) -> str:
-        return payload.bucket_id
+def extraction_draft_object_key(document: ExtractionDraftDocument) -> str:
+    """Return the canonical natural object key for one draft document."""
+    return document.bucket_id
 
 
-def _repository(bucket_id: str, settings: Settings) -> ExtractionDraftRepository:
-    return ExtractionDraftRepository(objects=secure_object_repository_for_bucket(bucket_id, settings))
+class ExtractionDraftRepositoryProtocol(Protocol):
+    """Persistence operations required by extraction-draft application policy."""
+
+    def load(self, identifier: str) -> ExtractionDraftDocument | None:
+        """Load the document stored under ``identifier``, when present."""
+        ...
+
+    def save(self, payload: ExtractionDraftDocument) -> None:
+        """Persist one complete extraction-draft document."""
+        ...
+
+
+class ExtractionDraftRepositoryFactory(Protocol):
+    """Construct a repository port for one bucket and storage configuration."""
+
+    def __call__(self, *, bucket_id: str, settings: Settings) -> ExtractionDraftRepositoryProtocol:
+        """Return the encrypted repository for ``bucket_id``."""
+        ...
+
+
+_BOUND_EXTRACTION_DRAFT_REPOSITORY_FACTORY: ContextVar[ExtractionDraftRepositoryFactory] = ContextVar(
+    "cadrumo_extraction_draft_repository_factory"
+)
+
+
+@contextmanager
+def bind_extraction_draft_repository_factory(
+    factory: ExtractionDraftRepositoryFactory,
+) -> Generator[ExtractionDraftRepositoryFactory]:
+    """Bind one outward-composed repository factory for the host context."""
+    token = _BOUND_EXTRACTION_DRAFT_REPOSITORY_FACTORY.set(factory)
+    try:
+        yield factory
+    finally:
+        _BOUND_EXTRACTION_DRAFT_REPOSITORY_FACTORY.reset(token)
+
+
+def _repository(bucket_id: str, settings: Settings) -> ExtractionDraftRepositoryProtocol:
+    try:
+        factory = _BOUND_EXTRACTION_DRAFT_REPOSITORY_FACTORY.get()
+    except LookupError as error:
+        raise RuntimeError("extraction-draft persistence has not been composed") from error
+    return factory(bucket_id=bucket_id, settings=settings)
 
 
 def load_extraction_drafts(bucket_id: str, settings: Settings) -> ExtractionDraftDocument:

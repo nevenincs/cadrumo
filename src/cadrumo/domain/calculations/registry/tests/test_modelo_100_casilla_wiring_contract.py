@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from .. import RegistryValidationError
-from .._schema import RelationDefinition
-from .._schema_input_kind import InputKind
+from ..schema import RelationDefinition
+from ..schema_input_kind import InputKind
 from ._modelo_100_registry_support import _loaded_registry, _registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

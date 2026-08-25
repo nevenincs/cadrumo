@@ -21,7 +21,7 @@ Submodules
    cadrumo.application.overview._calendar_warnings
    cadrumo.application.overview._coverage
    cadrumo.application.overview._data_prep
-   cadrumo.application.overview._errors
    cadrumo.application.overview._explain
    cadrumo.application.overview._next_actions
    cadrumo.application.overview._pipeline_health
+   cadrumo.application.overview.errors

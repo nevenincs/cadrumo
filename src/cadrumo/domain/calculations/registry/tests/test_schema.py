@@ -17,8 +17,8 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from .....core import CasillaId, validated_casilla_id
-from .._ids import LegalRefId, SourceRefId
-from .._schema import (
+from ..ids import LegalRefId, SourceRefId
+from ..schema import (
     CasillaDefinition,
     CasillaFieldKind,
     ConstructDefinition,
@@ -28,7 +28,7 @@ from .._schema import (
     InputKind,
     RelationDefinition,
 )
-from .._schema_verification import (
+from ..schema_verification import (
     DiscrepancyCause,
     RegistryVerificationPolicy,
     VerificationExpectationDefinition,

@@ -34,7 +34,7 @@ from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....core import CasillaId, Period, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ...calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from .._schema import (
     ModeloApprovalBasis,
     ModeloCasillaProvenance,

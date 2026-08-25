@@ -26,13 +26,9 @@ from ....adapters.outbound.storage import (
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
-from ....domain.calculations.registry import (
-    BindingId,
-    RegistrySnapshotError,
-    RegistryValidationError,
-    RelationId,
-)
-from ....domain.calculations.registry import bundled_authority as _bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from cadrumo.domain.calculations.registry.authority import bundled_authority as _bundled_authority
 from .._common import emit_envelope
 from ..errors import CliRefusedBoundaryError
 from ._google_errors import _google_refusal
@@ -54,7 +50,7 @@ if TYPE_CHECKING:
         RowSetEdit,
     )
     from ....application.export import GoogleSheetsExportOperationResult
-    from ....domain.calculations.registry import RegistrySnapshot
+    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 
 def resolve_credentials_and_root(profile: str) -> tuple[object, str]:

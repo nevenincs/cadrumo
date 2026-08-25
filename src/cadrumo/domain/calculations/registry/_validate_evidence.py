@@ -22,7 +22,7 @@ from ....core import (
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.hashing import sha256_hex
 from ....core.resources import packaged_data, resolve_companion_binary
-from ._schema import LegalReference, SourceCitation, SourceReference
+from .schema import LegalReference, SourceCitation, SourceReference
 
 _SourceTextCacheKey = tuple[str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}

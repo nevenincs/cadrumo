@@ -21,7 +21,7 @@ import pytest
 from click.testing import Result
 
 from ....application.user_profile.preflight import build_profile_preflight_requirement
-from ....core.resources import resources
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.cli_runner import invoke_cached_cli
 from ._overview_calendar_support import calendar_backend_omitting_gating_facts
 
@@ -63,7 +63,7 @@ def _expected_label() -> str:
     """The operator label for the omitted field, read from the live schema."""
     return build_profile_preflight_requirement(
         _OMITTED_FACT_PATH,
-        schema=resources().user_profile_schema.singleton,
+        schema=load_user_profile_schema(),
         selector=_OMITTED_SELECTOR,
     ).label
 

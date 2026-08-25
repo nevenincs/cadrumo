@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core.directory_scan import scan_directory
 from .....core.decimal import coerce_fixed_width_decimal
+from .....core.directory_scan import scan_directory
 from .. import (
     ExportEncoding,
     ExportFieldDefinition,
@@ -445,6 +445,26 @@ def test_optional_numeric_slot_absent_renders_its_declared_blank_fill(
 
 
 @pytest.mark.parametrize("absent", (None, ""))
+def test_optional_text_slot_absent_renders_its_declared_blank_fill(absent: object) -> None:
+    """Optional identifier text still occupies its official fixed-width slot.
+
+    The identifier policy validates an actual activity identifier. It does not
+    invent one where the source authority has none, so an optional absent value
+    renders as the schema's two blank bytes rather than reaching that policy.
+    """
+    field = _field(
+        data_type="text",
+        length=2,
+        padding="none",
+        justification="none",
+        required=False,
+        value_policy=ExportValuePolicy.IDENTIFIER_DIGITS,
+    )
+
+    assert render_fixed_width_export_field(field, absent) == "  "
+
+
+@pytest.mark.parametrize("absent", (None, ""))
 @pytest.mark.parametrize(
     "overrides",
     (
@@ -464,6 +484,22 @@ def test_required_numeric_slot_absent_still_refuses(overrides: dict[str, object]
     precisely so this path refuses.
     """
     field = _field(required=True, **overrides)
+
+    with pytest.raises(RegistryValidationError, match="has no value to render"):
+        render_fixed_width_export_field(field, absent)
+
+
+@pytest.mark.parametrize("absent", (None, ""))
+def test_required_text_slot_absent_still_refuses(absent: object) -> None:
+    """Blank padding remains an optional-slot representation, never a default."""
+    field = _field(
+        data_type="text",
+        length=2,
+        padding="none",
+        justification="none",
+        required=True,
+        value_policy=ExportValuePolicy.IDENTIFIER_DIGITS,
+    )
 
     with pytest.raises(RegistryValidationError, match="has no value to render"):
         render_fixed_width_export_field(field, absent)

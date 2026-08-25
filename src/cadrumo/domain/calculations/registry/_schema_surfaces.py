@@ -16,7 +16,7 @@ from ....core import (
 from ....core.aggregation import RelationAggregation
 from ....core.identity import AeatBoxNumber, ContinuidadId
 from .errors import RegistryValidationError
-from ._ids import (
+from .ids import (
     BindingId,
     ExportFieldId,
     FormulaId,
@@ -26,11 +26,11 @@ from ._ids import (
     RevisionId,
     SourceRefId,
 )
-from ._modelo_localization import resolve_modelo_localization
+from .modelo_localization import resolve_modelo_localization
 from ._schema_base import LegalRefs, RegistryModel, SourceRefs
 from ._schema_export_exemption import ExportExemptionReasonValue
-from ._schema_input_kind import InputKind, InputKindValue
-from ._schema_scalars import DecimalValue
+from .schema_input_kind import InputKind, InputKindValue
+from .schema_scalars import DecimalValue
 
 __all__ = [
     "CalculationCompletenessCasilla",

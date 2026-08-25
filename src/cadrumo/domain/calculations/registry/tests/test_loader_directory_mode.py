@@ -20,7 +20,7 @@ import pytest
 
 from .....core.directory_scan import scan_directory
 from ..errors import RegistryFailureCondition, RegistryLoadError, RegistryValidationError
-from .._loader import (
+from ..loader import (
     ModeloSource,
     clear_fingerprint_cache,
     discover_modelo_sources,

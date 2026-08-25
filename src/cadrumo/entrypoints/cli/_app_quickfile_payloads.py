@@ -19,7 +19,7 @@ from ...application.state_projection import ProjectionModeloReadiness
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection, ResultDisposition
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
-from ...domain.calculations.registry import RevisionId
+from cadrumo.domain.calculations.registry.ids import RevisionId
 
 
 class QuickfileReadinessSummaryPayload(OutputSchema):

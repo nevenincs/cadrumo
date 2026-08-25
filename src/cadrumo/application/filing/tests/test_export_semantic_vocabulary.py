@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import inspect
-from importlib import import_module
 from hashlib import sha256
+from importlib import import_module
 
 import pytest
 
@@ -24,11 +24,11 @@ from .. import (
     export_draft,
     render_filing_envelope,
 )
-
-modelo_export_module = import_module("cadrumo.application.modelo._export")
 from .. import _export as export_module
 from .. import _export_producer as export_producer_module
 from .. import _record_renderer as record_renderer_module
+
+modelo_export_module = import_module("cadrumo.application.modelo._export")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

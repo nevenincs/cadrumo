@@ -8,6 +8,8 @@ from pydantic import ValidationError
 from ....core import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,
+    M303Exonerado390ActivityField,
+    M303Exonerado390ActivityProjectionRef,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
     Modelo,
@@ -180,12 +182,17 @@ def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authori
     )
     admitted_ref = context.record.fields[0].projection_ref
     assert admitted_ref is not None
+    unsupported_third_family = M303Exonerado390ActivityProjectionRef(
+        projection_kind="m303_exonerado_390_activity",
+        slot=1,
+        field=M303Exonerado390ActivityField.ACTIVITY_CODE,
+    )
     with pytest.raises(FilingExportValidationError, match="mixes or uses an unsupported"):
         _project_record(
             registry_snapshot=snapshot_2026,
             layout=context.layout,
             record=context.record,
-            refs=(admitted_ref, mixed_ref),
+            refs=(admitted_ref, mixed_ref, unsupported_third_family),
             producer_snapshot=producer,
         )
 

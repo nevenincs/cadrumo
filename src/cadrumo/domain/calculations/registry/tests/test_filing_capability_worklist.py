@@ -68,8 +68,8 @@ import pytest
 from .....core import Modelo
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from .._export import derive_export_layouts_from_bindings
-from .._schema import ModeloDefinition, ModeloRevision, SourceReference
+from ..export import derive_export_layouts_from_bindings
+from ..schema import ModeloDefinition, ModeloRevision, SourceReference
 from .test_cited_design_field_bounds_are_self_consistent import (
     _KNOWN_SELF_CONTRADICTING_DESIGN,
 )

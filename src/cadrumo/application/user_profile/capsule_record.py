@@ -125,6 +125,7 @@ class ProfileRecordSession:
         envelope: ProfileCustodyEnvelopePort,
         dek: bytes,
     ) -> ProfileRecordSession:
+        """Create a record authority from an unlocked envelope and its DEK."""
         if len(dek) != 32:
             raise ProfileRecordIntegrityError("profile record session requires a 32-byte DEK")
         return cls(
@@ -165,6 +166,7 @@ class ProfileRecordSession:
         return bytes(self._dek)
 
     def assert_initial_record(self, record: UserProfileRecord) -> None:
+        """Validate that a record is the first authenticated revision for this session."""
         if UUID(str(record.profile_id)) != self.profile_id:
             raise ProfileRecordIntegrityError("initial profile record UUID differs from its custody session")
         if record.record_revision != 1 or record.previous_record_digest is not None:
@@ -173,6 +175,7 @@ class ProfileRecordSession:
             )
 
     def assert_replacement(self, current: UserProfileRecord, replacement: UserProfileRecord) -> None:
+        """Validate that a replacement advances the authenticated current record."""
         if UUID(str(replacement.profile_id)) != self.profile_id:
             raise ProfileRecordIntegrityError("replacement profile record UUID differs from its custody session")
         if (
@@ -275,6 +278,7 @@ class ProfileRecordStore:
     """Strict current-record storage over the capsule's canonical secure DB."""
 
     def __init__(self, *, session: ProfileRecordSession, root: Path | None = None) -> None:
+        """Initialize storage for a session at the effective capsule root."""
         self.session = session
         self._root = effective_storage_root(root)
 

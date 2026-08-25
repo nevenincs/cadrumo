@@ -31,7 +31,6 @@ Submodules
    cadrumo.domain.contribuyente._descendant_madrid
    cadrumo.domain.contribuyente._descendant_maternity
    cadrumo.domain.contribuyente._descendant_record
-   cadrumo.domain.contribuyente._errors
    cadrumo.domain.contribuyente._family_profile
    cadrumo.domain.contribuyente._family_types
    cadrumo.domain.contribuyente._guarderia_mensual
@@ -40,3 +39,4 @@ Submodules
    cadrumo.domain.contribuyente._meses_trabajo
    cadrumo.domain.contribuyente._normalise
    cadrumo.domain.contribuyente._renta_codes
+   cadrumo.domain.contribuyente.errors

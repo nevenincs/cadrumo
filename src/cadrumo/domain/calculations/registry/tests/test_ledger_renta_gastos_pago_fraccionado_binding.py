@@ -29,7 +29,7 @@ from .. import (
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
     validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
 )
-from .._binding_selector_utils import selector_as_dict
+from ..binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

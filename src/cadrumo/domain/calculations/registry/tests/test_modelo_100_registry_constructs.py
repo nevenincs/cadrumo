@@ -34,7 +34,7 @@ from .. import (
     resolve_export_layout,
     resolve_revision_constructs,
 )
-from .._binding_selector_utils import selector_as_dict
+from ..binding_selector_utils import selector_as_dict
 from ._modelo_100_registry_support import (
     _DECLARATIONS_LISTING_URL,
     _MEMBER_GROUNDED_2025_CONSTRUCT_IDS,

@@ -12,17 +12,17 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.domain.calculations.registry import (
-    AeatNifIvaCheckerOracle,
+from cadrumo.domain.calculations.registry.aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
+from cadrumo.domain.calculations.registry.live_parity import (
     CrossReferenceApplicabilityDeclaracion,
-    GroiOracle,
     LiveParityCatalogue,
     OracleEnvironment,
     audit_registry_oracle_bindings,
     collect_applicability_declarations,
     collect_orphan_oracle_ids,
-    load_registry_tree,
 )
+from cadrumo.domain.calculations.registry.groi_oracle import GroiOracle
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
 from ._parity_tapes import (
     ParityTape,

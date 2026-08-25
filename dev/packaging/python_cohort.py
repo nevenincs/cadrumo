@@ -66,10 +66,8 @@ def cohort_stamped_wheel_data_paths() -> frozenset[str]:
     Returns:
         The wheel-relative paths of every stamped member.
     """
-    from cadrumo.domain.calculations.registry import (
-        registry_identity_stamp_location,
-        shipped_verdict_location,
-    )
+    from cadrumo.domain.calculations.registry.identity import registry_identity_stamp_location
+    from cadrumo.domain.calculations.registry.verdict_cache import shipped_verdict_location
 
     root = PurePosixPath(_WHEEL_REGISTRY_ROOT)
     return frozenset(
@@ -719,7 +717,7 @@ def _stamp_bundled_registry_records_into_build_tree(build_root: Path) -> frozens
         The wheel-relative paths of the stamped members, as the archive carries them.
     """
     from cadrumo import __version__
-    from cadrumo.domain.calculations.registry import stamp_bundled_registry_release
+    from cadrumo.domain.calculations.registry.authority import stamp_bundled_registry_release
 
     source_root = build_root / _BUILD_TREE_SOURCE_DIR
     registry_root = source_root / "cadrumo" / "_data" / "registry" / "aeat"

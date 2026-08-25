@@ -24,7 +24,6 @@ from ._repos import (
     ManualRepository,
     RecargoBandsRepository,
     TopicCatalogueRepository,
-    UserProfileSchemaRepository,
 )
 from ._repos.modelos import StaticModeloRepository
 
@@ -48,7 +47,6 @@ class ResourceRegistry:
     modelos: StaticModeloRepository = field(default_factory=StaticModeloRepository)
     recargo_bands: RecargoBandsRepository = field(default_factory=RecargoBandsRepository)
     topics: TopicCatalogueRepository = field(default_factory=TopicCatalogueRepository)
-    user_profile_schema: UserProfileSchemaRepository = field(default_factory=UserProfileSchemaRepository)
     iva_catalogues: IvaCatalogueRepository = field(default_factory=IvaCatalogueRepository)
     iva_rate_tables: IvaRateTableRepository = field(default_factory=IvaRateTableRepository)
 

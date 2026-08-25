@@ -42,7 +42,7 @@ from .....application.aggregation import (
 from .....application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .....core import BindingSourceKind
 from .. import InputKind, PeriodSelector
-from .._authority import bundled_authority
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

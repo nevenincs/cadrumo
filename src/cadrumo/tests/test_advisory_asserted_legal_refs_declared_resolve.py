@@ -43,13 +43,14 @@ from typing import TYPE_CHECKING, NamedTuple
 import pytest
 
 from ..core.resources import resources
-from ..domain.calculations.registry import RegistryValidationError, assert_legal_ref_ids_resolve
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.legal import assert_legal_ref_ids_resolve
 from ._inventory import production_ast_items, repo_relative
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
 
-    from ..domain.calculations.registry import LegalReference
+    from cadrumo.domain.calculations.registry.schema import LegalReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

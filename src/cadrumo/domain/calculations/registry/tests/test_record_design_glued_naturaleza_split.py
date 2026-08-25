@@ -30,7 +30,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import extract_record_design
-from .._record_design import _split_glued_naturaleza_rows
+from ..record_design import _split_glued_naturaleza_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

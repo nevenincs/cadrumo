@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry import BooleanBindingEncodedValue
+from cadrumo.domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
 from .._modelo_payloads import BindingEncodedOptionPayload
 from .._modelo_rendering import binding_encoded_option_lines, binding_encoded_option_payloads
 

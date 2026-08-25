@@ -42,8 +42,8 @@ import pytest
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RelationAggregationOp
 from .. import RegistrySnapshot, calculate_registry_snapshot
-from .._relation_aggregation import relation_aggregation_op
-from .._relations import resolve_relation_values
+from ..relation_aggregation import relation_aggregation_op
+from ..relations import resolve_relation_values
 from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -26,7 +26,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....core import CasillaId, Period, StorageCategory, storage_path, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from .._schema import (
     ModeloApprovalBasis,
     ModeloCasillaProvenance,
@@ -234,7 +234,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     """
 
     from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-    from ...calculations.registry import CasillaObservation
+    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
     from ...modelos import (
         CalculationRevision,
         CalculationRevisionCatalogue,

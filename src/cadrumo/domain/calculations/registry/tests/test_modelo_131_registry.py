@@ -10,8 +10,8 @@ import pytest
 from .....core import normalise_corpus_text
 from .....core.resources import bundled_path
 from .. import LegalRefId, ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
-from .._authority import bundled_authority
-from .._temporal import select_revision
+from ..authority import bundled_authority
+from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

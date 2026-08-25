@@ -13,18 +13,18 @@ from __future__ import annotations
 
 import pytest
 
-from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ..errors import RegistryValidationError
-from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
-from .._live_parity import (
+from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
+from ..live_parity import (
     LiveParityCatalogue,
     LiveParityOracle,
     OracleEnvironment,
     collect_orphan_oracle_ids,
     resolve_cross_reference_oracle,
 )
-from .._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
-from .._schema import LiveCrossReferenceDecision, ProfilePredicateDefinition
+from ..remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
+from ..schema import LiveCrossReferenceDecision, ProfilePredicateDefinition
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -12,9 +12,9 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ....core import CasillaId
-from ._casilla_membership import casillas_by_id, declared_casilla_ids
-from ._ids import BindingId, RelationId
-from ._schema import (
+from .casilla_membership import casillas_by_id, declared_casilla_ids
+from .ids import BindingId, RelationId
+from .schema import (
     ApplicationLinkDefinition,
     CasillaDefinition,
     ConstructDefinition,
@@ -31,8 +31,8 @@ from ._schema import (
     RelationDefinition,
     WorkbookParityReference,
 )
-from ._schema_verification import VerificationExpectationDefinition
-from ._validate_revision_identity import collect_record_id_lists
+from .schema_verification import VerificationExpectationDefinition
+from .validate_revision_identity import collect_record_id_lists
 
 
 class _IdentifiedRecord(Protocol):

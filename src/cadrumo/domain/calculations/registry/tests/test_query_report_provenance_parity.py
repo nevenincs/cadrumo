@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, validated_casilla_id
 from .._query_reports import CasillaGroundingReport, ModeloCasillaDetailReport, ModeloCasillaRow
-from .._schema import InputKind
+from ..schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -82,7 +82,7 @@ from datetime import date
 
 from ....core import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .errors import RegistryValidationError
-from ._ids import RevisionId
+from .ids import RevisionId
 
 REVISION_REVIEW_DATE_CEILING: date = date(2100, 1, 1)
 """Exclusive upper bound on a governance stamp's ``reviewed_at`` signoff date.

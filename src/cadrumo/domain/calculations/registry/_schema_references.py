@@ -22,7 +22,7 @@ from ....core.external_constants import (
 )
 from ....core.identity import ContentDigest
 from .errors import RegistryValidationError
-from ._ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
+from .ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from ._schema_base import DateAxis, EvidenceTier, LegalRefs, LegalReviewStatusField, RegistryModel, ReviewStatus
 
 __all__ = [

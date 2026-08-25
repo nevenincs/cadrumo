@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, BindingSourceKind
 from ...core.identity import ContentDigest
-from .registry import BindingId
+from cadrumo.domain.calculations.registry.ids import BindingId
 
 RowBindingKey = tuple[BindingId, int]
 OpaqueSourceRowIdentity = Annotated[str, StringConstraints(min_length=1, max_length=256)]

@@ -57,7 +57,7 @@ refuses on content, because size alone would misclassify a genuine layout that
 happens to be terse and would accept a long document that says nothing.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry._corpus_catalogue._validate_source_corpus_tier_declaration`
+    :func:`cadrumo.domain.calculations.registry.corpus_catalogue._validate_source_corpus_tier_declaration`
         The sibling check that verifies a declared ``corpus_tier`` against the
         bundled file rather than trusting the declaration.
 """
@@ -72,7 +72,7 @@ from typing import Final
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import resolve_companion_binary
-from ._schema import SourceReference
+from .schema import SourceReference
 
 #: The norm-text tree whose files are prose an author can under-transcribe. A
 #: layout artefact outside it is the layout itself and is not scanned.

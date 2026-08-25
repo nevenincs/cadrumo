@@ -23,8 +23,8 @@ import pytest
 from pydantic import AnyUrl
 
 from .....tests.aeat_literal_fixtures import aeat_host, aeat_url, configured_path
-from .._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
-from .._remote_state_guard import (
+from ..aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
+from ..remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
     RemoteStateGuardResult,

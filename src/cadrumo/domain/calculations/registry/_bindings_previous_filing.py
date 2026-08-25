@@ -9,11 +9,11 @@ requirements and resolved
 :class:`~cadrumo.domain.calculations.registry.BindingId` values.
 
 See Also:
-    :mod:`cadrumo.domain.calculations.registry._bindings`
+    :mod:`cadrumo.domain.calculations.registry.bindings`
         Public import surface that re-exports these previous-filing helpers.
-    :mod:`cadrumo.domain.calculations.registry._relations`
+    :mod:`cadrumo.domain.calculations.registry.relations`
         Relation-fold sibling that materialises cross-modelo source values.
-    :mod:`cadrumo.domain.calculations.registry._observation_fold`
+    :mod:`cadrumo.domain.calculations.registry.observation_fold`
         Shared fold helpers for observed casilla values.
 """
 
@@ -30,14 +30,14 @@ from pydantic import BaseModel, field_validator, model_validator
 from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, RegistrySelectorPeriodCode
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import invariant_diagnostics, selector_against_model
-from ._binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, selector_against_model
+from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
-from ._ids import BindingId, LegalRefId, ModeloId, SourceRefId
-from ._observation_fold import fold_sum_or_copy
-from ._period_offset_math import apply_period_offset, same_ejercicio_prior_quarter_anchors
-from ._relations import RegistryFoldRequirement
-from ._schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
+from .ids import BindingId, LegalRefId, ModeloId, SourceRefId
+from .observation_fold import fold_sum_or_copy
+from .period_offset_math import apply_period_offset, same_ejercicio_prior_quarter_anchors
+from .relations import RegistryFoldRequirement
+from .schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
 
 
 class _RegistryModeloObservationLike(Protocol):

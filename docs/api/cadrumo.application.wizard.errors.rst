@@ -1,5 +1,5 @@
 cadrumo.application.wizard.errors module
-=========================================
+========================================
 
 .. automodule:: cadrumo.application.wizard.errors
    :members:

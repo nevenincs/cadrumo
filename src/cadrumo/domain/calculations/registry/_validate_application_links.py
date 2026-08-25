@@ -6,10 +6,10 @@ matching application link, and that link combination rules are satisfied before
 the revision is accepted by the registry validator.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry._validate_revision_closure._validate_revision_closure_sections`
+    :func:`cadrumo.domain.calculations.registry.validate_revision_closure._validate_revision_closure_sections`
         Revision-level closure runner that invokes these application-link
         checks.
-    :func:`cadrumo.domain.calculations.registry._validate_surfaces.validate_application_link_section`
+    :func:`cadrumo.domain.calculations.registry.validate_surfaces.validate_application_link_section`
         Reference and evidence-tier validation for individual application-link
         declarations.
 """
@@ -19,7 +19,7 @@ from __future__ import annotations
 from collections.abc import Set as AbstractSet
 
 from ....core import Modelo, RegistryAuthorityGrade
-from ._schema import ModeloRevision
+from .schema import ModeloRevision
 
 _COMMUNICATION_SURFACES = {"communication", "payer_delivery"}
 

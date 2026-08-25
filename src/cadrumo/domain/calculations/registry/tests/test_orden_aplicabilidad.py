@@ -24,8 +24,8 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import ModeloDefinition, RegistryCatalogues, RegistryValidationError, build_snapshot
-from .._ids import LegalRefId, SourceRefId
-from .._schema import (
+from ..ids import LegalRefId, SourceRefId
+from ..schema import (
     LegalReference,
     ModeloRevision,
     PeriodSelector,

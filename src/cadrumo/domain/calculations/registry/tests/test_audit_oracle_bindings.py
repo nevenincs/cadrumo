@@ -11,14 +11,14 @@ from __future__ import annotations
 
 import pytest
 
-from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from .._live_parity import (
+from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from ..live_parity import (
     LiveParityCatalogue,
     OracleEnvironment,
     audit_oracle_bindings,
     audit_registry_oracle_bindings,
 )
-from .._schema import ModeloDefinition
+from ..schema import ModeloDefinition
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

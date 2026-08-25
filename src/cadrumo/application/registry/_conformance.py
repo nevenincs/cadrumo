@@ -44,7 +44,7 @@ reconciliation is the engine agreeing with itself, NOT that the revision
 computes a wrong number; a high value means more of it is cross-checked against
 AEAT's own published figures, NOT that it is correct. The quantity is derived
 from the canonical registry grounding projection in
-:mod:`~cadrumo.domain.calculations.registry._external_grounding`.
+:mod:`~cadrumo.domain.calculations.registry.external_grounding`.
 
 Scope of each composed axis
 ---------------------------

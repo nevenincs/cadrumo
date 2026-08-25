@@ -22,7 +22,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.core.resources._boundary
-   cadrumo.core.resources._errors
    cadrumo.core.resources._keys
    cadrumo.core.resources._registry
    cadrumo.core.resources._repository
+   cadrumo.core.resources.errors

@@ -13,7 +13,7 @@ import pytest
 
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import bundled_authority
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from .. import (
     audit_handbook,

@@ -15,8 +15,8 @@ import pytest
 
 from .....core import Modelo
 from .. import ApplicabilityRuleDefinition, ModeloRevision, RegistryLoadError, RegistryValidationError
-from .._applicability import ModeloApplicabilityRule, hydrate_applicability_rule
-from .._loader import load_modelo_directory
+from ..applicability import ModeloApplicabilityRule, hydrate_applicability_rule
+from ..loader import load_modelo_directory
 from .._schema_base import schema_family_enrollment_failures, schema_family_fields
 from .._validate_applicability_section import validate_applicability_section
 from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision

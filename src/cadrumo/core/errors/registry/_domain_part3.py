@@ -418,7 +418,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.calculations.registry._fixed_width_codec.FixedWidthRecordRenderError",
+        "cadrumo.domain.calculations.registry.fixed_width_codec.FixedWidthRecordRenderError",
         ErrorCode(
             code="FAIL_FIXED_WIDTH_RECORD_RENDER",
             category=ErrorCategory.FAIL,

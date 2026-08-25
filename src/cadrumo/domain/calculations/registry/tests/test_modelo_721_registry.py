@@ -10,12 +10,12 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
-from .._corpus_catalogue import verify_source_file
+from ..corpus_catalogue import verify_source_file
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from .._legal import verify_legal_catalogue
-from .._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from .._snapshot import _source_applies_across
-from .._temporal import select_revision
+from ..legal import verify_legal_catalogue
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..snapshot import _source_applies_across
+from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

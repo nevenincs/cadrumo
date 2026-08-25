@@ -20,7 +20,7 @@ from .....core.resources import bundled_path
 from .. import (
     ValidatedRegistryAuthority,
 )
-from .._schema_input_kind import InputKind
+from ..schema_input_kind import InputKind
 from ._manual_oracle_support import oracle_declared_figures, read_manual_worked_example
 from ._scenarios import (
     RegistryCalculationScenario,

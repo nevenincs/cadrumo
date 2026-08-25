@@ -44,7 +44,7 @@ import pytest
 from .....core import ExternalOracleCorpus
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
-from .._external_grounding import (
+from ..external_grounding import (
     audit_bundled_external_grounding,
     load_bundled_external_oracle_inventory,
 )

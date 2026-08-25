@@ -16,7 +16,7 @@ derived from the registry-owned censo foundation. Modelo 037 remains historical
 metadata and is intentionally outside this recording surface.
 
 See Also:
-    :mod:`cadrumo.domain.calculations.registry._censo_modelos`
+    :mod:`cadrumo.domain.calculations.registry.censo_modelos`
         Registry-owned Modelo 036 active-foundation and Modelo 037 historical
         routing.
     :mod:`cadrumo.entrypoints.cli._modelo_m036_cli`

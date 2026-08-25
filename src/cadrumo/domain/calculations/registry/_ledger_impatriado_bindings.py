@@ -31,15 +31,15 @@ from pydantic import BaseModel, ConfigDict, model_validator
 from ....core import CasillaId, Modelo
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import invariant_diagnostics, selector_against_model
-from ._binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, selector_against_model
+from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
-from ._ids import BindingId
-from ._ledger_binding_resolution import (
+from .ids import BindingId
+from .ledger_binding_resolution import (
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
-from ._schema import DataBindingDefinition, ModeloRevision
+from .schema import DataBindingDefinition, ModeloRevision
 
 # Ledger-aggregation binding source kinds. Re-exported from
 # :data:`cadrumo.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`, which derives the

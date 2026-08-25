@@ -22,15 +22,16 @@ import pytest
 
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import ModeloDefinition, load_registry_tree
-from cadrumo.domain.calculations.registry import _modelo_localization as modelo_localization
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+import cadrumo.domain.calculations.registry.modelo_localization as modelo_localization
 
 from ..._paths import REPO_ROOT
 from .. import scan_modelo_schema_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_CANONICAL_COMPILER = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry" / "_modelo_localization.py"
+_CANONICAL_COMPILER = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry" / "modelo_localization.py"
 _REDECLARATION_ROOTS = (
     REPO_ROOT / "src" / "cadrumo",
     REPO_ROOT / "dev" / "locales",

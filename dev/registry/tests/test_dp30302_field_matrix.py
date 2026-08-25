@@ -9,10 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core import M303RegimenSimplificadoFact, compile_filing_projection_ref
-from cadrumo.domain.calculations.registry import (
-    RegistryValidationError,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ..._paths import REPO_ROOT
 from ..analysis import _dp30302_field_matrix

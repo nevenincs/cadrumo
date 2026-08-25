@@ -1,5 +1,5 @@
 cadrumo.application.wizard.catalogue module
-============================================
+===========================================
 
 .. automodule:: cadrumo.application.wizard.catalogue
    :members:

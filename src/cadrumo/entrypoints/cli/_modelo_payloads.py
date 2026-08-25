@@ -60,17 +60,8 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.calculations.registry import (
-    BindingId,
-    FormulaId,
-    LegalRefId,
-    ParameterId,
-    RelationId,
-    RevisionId,
-    SourceRefId,
-    VerificationExpectationId,
-    WithholdingClaveBreakdown,
-)
+from cadrumo.domain.calculations.registry.bindings import WithholdingClaveBreakdown
+from cadrumo.domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, ParameterId, RelationId, RevisionId, SourceRefId, VerificationExpectationId
 from ...domain.modelos import (
     CalculationRevisionState,
     ExternalEvidenceKind,

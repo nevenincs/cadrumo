@@ -20,14 +20,8 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 if TYPE_CHECKING:  # pragma: no cover — type-only import
     from ...core import CasillaId, Period
     from ...core.identity import SubjectTaxId
-    from ..calculations.registry import (
-        BindingId,
-        CasillaConstraints,
-        FormulaId,
-        LegalRefId,
-        RelationId,
-        SourceRefId,
-    )
+    from cadrumo.domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
+    from cadrumo.domain.calculations.registry.schema import CasillaConstraints
 
 
 @runtime_checkable

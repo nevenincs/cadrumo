@@ -18,7 +18,7 @@ from typing import Literal, TypedDict, Unpack
 import pytest
 from pydantic import ValidationError
 
-from .._schema import CasillaConstraints
+from ..schema import CasillaConstraints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

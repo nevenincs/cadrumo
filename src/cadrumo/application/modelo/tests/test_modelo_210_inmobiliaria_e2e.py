@@ -21,7 +21,7 @@ back as ``text_values``.
 The silent-zero scenario: for M210 2025 with ``tipo_renta = "inmobiliaria"``,
 ``base_imponible = valor_catastral * coeficiente_imputacion_inmobiliaria *
 (dias_imputacion / days_in_filing_year)`` (``_evaluate_m210_resolve_base_imponible``
-in ``cadrumo.domain.calculations.registry._formula_runtime``). The formula runtime
+in ``cadrumo.domain.calculations.registry.formula_runtime``). The formula runtime
 validates ``dias_imputacion`` to a strictly positive integer in
 ``[1, days_in_year]`` and the coefficient to equal one of the two
 registry-authored LIRPF art. 85 rates — ``0.011`` (recent revision) or ``0.02``

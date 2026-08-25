@@ -17,8 +17,8 @@ from .. import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
-from .._binding_selector_utils import selector_as_dict
-from .._schema import DataBindingDefinition
+from ..binding_selector_utils import selector_as_dict
+from ..schema import DataBindingDefinition
 from ._modelo_349_registry_support import (
     _DECL_IMPORTE_OPERACIONES_CASILLA,
     _DECL_IMPORTE_RECTIFICACIONES_CASILLA,

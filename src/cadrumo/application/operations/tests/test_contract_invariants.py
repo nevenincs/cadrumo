@@ -8,21 +8,7 @@ from typing import TypedDict
 import pytest
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from cadrumo.application.operations.models import (
-    OperationIdentity,
-    OperationRequest,
-    OperationTerminalReceipt,
-)
-from cadrumo.application.operations.persistence.events import OperationDiagnosticEvent
-from cadrumo.core.operations import (
+from ....core.operations import (
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -31,9 +17,22 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-
+from ..capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
 from ..interactions import OperationApplyResponse
-from ..models import OperationSnapshot
+from ..models import (
+    OperationIdentity,
+    OperationRequest,
+    OperationSnapshot,
+    OperationTerminalReceipt,
+)
+from ..persistence.events import OperationDiagnosticEvent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

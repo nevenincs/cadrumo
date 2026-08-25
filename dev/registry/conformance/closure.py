@@ -35,7 +35,10 @@ from cadrumo.application.registry import (
     load_source_connectivity_census,
 )
 from cadrumo.core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade, SourceConnectivityProofAuthority
-from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+    bundled_authority,
+)
 
 __all__ = [
     "RegistryClosureJoinDisagreement",

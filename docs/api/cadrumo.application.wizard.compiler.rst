@@ -1,5 +1,5 @@
 cadrumo.application.wizard.compiler module
-===========================================
+==========================================
 
 .. automodule:: cadrumo.application.wizard.compiler
    :members:

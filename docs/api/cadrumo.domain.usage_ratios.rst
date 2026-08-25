@@ -13,6 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.usage_ratios._errors
    cadrumo.domain.usage_ratios._model
    cadrumo.domain.usage_ratios._service
+   cadrumo.domain.usage_ratios.errors

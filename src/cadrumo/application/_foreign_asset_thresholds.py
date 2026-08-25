@@ -10,14 +10,11 @@ from types import MappingProxyType
 
 from ..core import ForeignAssetObligationGroup, Modelo, RevisionReviewStatus
 from ..core.resources import bundled_path
-from ..domain.calculations.registry import (
-    ModeloRevision,
-    ParameterDefinition,
-    RegistryValidationError,
-    load_registry_tree,
-    resolve_parameter,
-    select_revision,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.schema import ModeloRevision, ParameterDefinition
+from cadrumo.domain.calculations.registry.temporal import select_revision
 
 _ANNUAL_PERIOD = "0A"
 _INITIAL_PARAMETER_IDS = {

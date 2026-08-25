@@ -34,7 +34,7 @@ from typing import TypedDict
 
 import pytest
 
-from cadrumo.domain.calculations.registry import bundled_authority
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ...._paths import REPO_ROOT
 from ...terminology_handbook import load_terminology_handbook

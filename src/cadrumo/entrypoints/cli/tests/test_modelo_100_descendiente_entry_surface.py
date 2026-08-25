@@ -32,7 +32,8 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
+from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices

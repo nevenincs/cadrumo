@@ -40,7 +40,7 @@ from ...core import M210GrossIncomeSourceMode, RescateType
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice
-from ...domain.calculations.registry import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ._common import activate_subcommand_output_language, emit_envelope
 from .errors import CliOutboundPayloadBoundaryError
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli

@@ -35,4 +35,5 @@ Submodules
    cadrumo.application.auth.probes
    cadrumo.application.auth.protocols
    cadrumo.application.auth.providers
+   cadrumo.application.auth.session_types
    cadrumo.application.auth.sessions

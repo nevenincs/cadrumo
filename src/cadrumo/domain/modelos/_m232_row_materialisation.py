@@ -23,7 +23,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core import CasillaId
-from ..calculations.registry import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ._row_models import Modelo232VinculadaRow
 
 M232_MAX_RELATED_PARTY_ROWS = 5

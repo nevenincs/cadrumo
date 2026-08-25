@@ -18,7 +18,7 @@ from .. import (
     previous_filing_source_reference,
     select_revision,
 )
-from .._snapshot import build_snapshot
+from ..snapshot import build_snapshot
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 

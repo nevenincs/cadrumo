@@ -39,13 +39,9 @@ import tomlkit
 from cadrumo.core import Modelo
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import (
-    ApplicabilityRuleDefinition,
-    ModeloApplicabilityRule,
-    hydrate_applicability_rule,
-    iter_modelo_applicability_rules,
-    load_modelo_directory,
-)
+from cadrumo.domain.calculations.registry.applicability import ModeloApplicabilityRule, hydrate_applicability_rule, iter_modelo_applicability_rules
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.schema import ApplicabilityRuleDefinition
 
 MODELOS_ROOT = bundled_path("registry", "aeat", "modelos")
 

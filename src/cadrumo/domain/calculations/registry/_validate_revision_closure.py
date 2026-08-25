@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ._schema import LegalReference, ModeloRevision, SourceReference
+from .schema import LegalReference, ModeloRevision, SourceReference
 from ._validate_application_links import validate_application_link_closure
 from ._validate_constructs import validate_construct_closure
 from ._validate_evidence import EvidenceValidator

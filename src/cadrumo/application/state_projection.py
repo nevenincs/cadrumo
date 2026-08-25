@@ -96,8 +96,8 @@ from ..core.errors import CadrumoError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
 from ..core.time import today_madrid
-from ..domain.calculations.registry import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
-from ..domain.calculations.registry import RevisionId
+from cadrumo.domain.calculations.registry.bindings import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
+from cadrumo.domain.calculations.registry.ids import RevisionId
 from ..domain.deadlines import (
     DeadlineEngine,
     ObligationStatus,
@@ -118,7 +118,7 @@ from .operator_actions import PreconditionVerdict
 from .user_profile.commands import ProfilePreflightRequirement
 
 if TYPE_CHECKING:
-    from ..domain.calculations.registry import RegistrySnapshot
+        from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 _log = get_logger(__name__)
 
@@ -827,7 +827,7 @@ def _resolve_modelo_readiness_registry(
     rest of the projection.
     """
     from ..core.resources import resources
-    from ..domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
+    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 
     period_token = period.registry_token
     try:
@@ -914,10 +914,7 @@ def _missing_calculation_bindings_for_readiness(
     so the readiness missing set and the calculate refusal set agree by
     construction (``aeat-calculation-aggregation``).
     """
-    from ..domain.calculations.registry import (
-        enum_consumed_binding_ids,
-        revision_date_binding_ids,
-    )
+    from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
     from .calculations import relation_prefill_period_zero_default_binding_ids
     from .modelo._profile_binding import (
         ProfileBindingResolutionError,

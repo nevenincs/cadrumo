@@ -15,12 +15,12 @@ from pydantic import ValidationError
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import ModeloDefinition, ModeloRevision, RegistryValidationError, RegistryValidator, applicable_filing_schedules
-from .._live_parity import (
+from ..live_parity import (
     CrossReferenceApplicability,
     evaluate_cross_reference_applicability,
 )
-from .._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
-from .._schema import LiveCrossReferenceDecision, ProfilePredicateDefinition
+from ..remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
+from ..schema import LiveCrossReferenceDecision, ProfilePredicateDefinition
 from ._registry_schema_support import _committed_modelo, _with_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -183,7 +183,7 @@ def _modelo_refs_from_registry() -> dict[str, tuple[str, ...]]:
     tree itself. No skip list is consulted, because a modelo absent from the
     registry is absent from the walk rather than something to except.
     """
-    from cadrumo.domain.calculations.registry import load_registry_tree
+    from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
     modelos, _catalogues = load_registry_tree(REPO_ROOT / REGISTRY_DIR)
     refs: dict[str, tuple[str, ...]] = {}

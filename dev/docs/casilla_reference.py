@@ -70,13 +70,8 @@ from .terminology._casilla_anchor import CASILLA_REFERENCE_DIR, casilla_page_anc
 
 if TYPE_CHECKING:
     from cadrumo.core.external_constants import OutputLanguage
-    from cadrumo.domain.calculations.registry import (
-        CasillaConstraints,
-        CasillaDefinition,
-        FormulaDefinition,
-        ModeloDefinition,
-        ValidatedRegistryAuthority,
-    )
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.schema import CasillaConstraints, CasillaDefinition, FormulaDefinition, ModeloDefinition
 
     from .legal_reference import LegalProvisionRecord
 
@@ -302,12 +297,8 @@ def display_locale_keys() -> tuple[str, ...]:
     from typing import get_args
 
     from cadrumo.core import BindingSourceKind
-    from cadrumo.domain.calculations.registry import (
-        CasillaConstraints,
-        CasillaDefinition,
-        InputKind,
-        ModeloDefinition,
-    )
+    from cadrumo.domain.calculations.registry.schema import CasillaConstraints, CasillaDefinition, ModeloDefinition
+    from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
     from .legal_reference import load_legal_provisions
 
@@ -543,7 +534,8 @@ def compile_schema(
         does not resolve is simply absent from the map, and its entry renders
         from the record alone.
     """
-    from cadrumo.domain.calculations.registry import bundled_authority, expression_casilla_refs
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+    from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 
     resolved = authority if authority is not None else bundled_authority()
     modelos = {modelo.id: modelo for modelo in resolved.modelos}

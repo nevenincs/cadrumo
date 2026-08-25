@@ -9,10 +9,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry import (
-    RegistryRevisionInspection,
-    bundled_revision_inspection,
-)
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 
 from ..._paths import REPO_ROOT
 
@@ -198,7 +196,7 @@ def test_inspection_census_understands_public_facade_and_private_module_aliases(
         "import cadrumo.domain.calculations.registry as registry\nvalue = registry.RegistryRevisionInspection\n"
     )
     module = ast.parse(
-        "import cadrumo.domain.calculations.registry._authority as authority\nvalue = authority.inspect_revision\n"
+        "import cadrumo.domain.calculations.registry.authority as authority\nvalue = authority.inspect_revision\n"
     )
     imported_public_facade = ast.parse(
         "from cadrumo.domain.calculations import registry as r\nvalue = r.RegistryRevisionInspection\n"
@@ -217,7 +215,7 @@ def test_inspection_census_understands_public_facade_and_private_module_aliases(
 def test_legacy_census_detects_private_module_alias_bypass() -> None:
     """A static compiler cannot restore snapshot/loaders through module aliases."""
     legacy_alias = ast.parse(
-        "import cadrumo.domain.calculations.registry._loader as loader\nvalue = loader.load_modelo_directory\n"
+        "import cadrumo.domain.calculations.registry.loader as loader\nvalue = loader.load_modelo_directory\n"
     )
     imported_legacy_alias = ast.parse(
         "from cadrumo.domain.calculations.registry import _loader as l\nvalue = l.load_modelo_directory\n"

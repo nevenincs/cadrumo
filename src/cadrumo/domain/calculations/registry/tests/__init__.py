@@ -20,7 +20,7 @@ snapshot without the filing-grade legal-review gate
 
 from __future__ import annotations
 
-from .._snapshot import build_snapshot
+from ..snapshot import build_snapshot
 from ._manual_oracle_support import oracle_declared_figures, read_manual_worked_example
 
 __all__ = [

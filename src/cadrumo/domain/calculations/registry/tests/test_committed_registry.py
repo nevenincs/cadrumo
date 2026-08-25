@@ -16,7 +16,7 @@ from .. import (
     resolve_export_layout,
     resolve_relation_values,
 )
-from .._schema import RegistrySnapshot
+from ..schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

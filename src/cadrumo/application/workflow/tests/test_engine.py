@@ -15,10 +15,6 @@ from datetime import date
 
 import pytest
 
-import cadrumo.application.workflow._deadline_stage as deadline_stage_module
-import cadrumo.application.workflow.engine as engine_module
-import cadrumo.application.workflow.engine_recording as engine_recording_module
-
 from ....application.state_projection import build_pending_obligations
 from ....core.errors import ErrorCategory, build_error_envelope
 from ....domain.calculations.registry import bundled_authority
@@ -29,6 +25,9 @@ from ....domain.deadlines import (
     TaxpayerProfile,
     compute_obligation_schedule,
 )
+from .. import _deadline_stage as deadline_stage_module
+from .. import engine as engine_module
+from .. import engine_recording as engine_recording_module
 from ..errors import UnhandledWorkflowError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

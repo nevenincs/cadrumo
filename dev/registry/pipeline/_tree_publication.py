@@ -40,7 +40,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from cadrumo.core import exclusive_file_lock, fsync_parent_dir
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import canonical_json_bytes, hash_file
-from cadrumo.domain.calculations.registry import RegistryValidationError, load_modelo_directory
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
 from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
 from ._export_tree import RenderedExportTree

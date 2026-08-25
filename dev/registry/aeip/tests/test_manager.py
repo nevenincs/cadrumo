@@ -21,7 +21,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.core.identity import ContinuidadId
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )

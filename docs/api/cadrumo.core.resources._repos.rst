@@ -23,4 +23,3 @@ Submodules
    cadrumo.core.resources._repos.modelos
    cadrumo.core.resources._repos.recargo_bands
    cadrumo.core.resources._repos.topics
-   cadrumo.core.resources._repos.user_profile

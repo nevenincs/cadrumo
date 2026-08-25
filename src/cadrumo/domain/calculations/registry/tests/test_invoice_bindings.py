@@ -16,15 +16,15 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .._binding_selector_utils import selector_as_dict
-from .._bindings import (
+from ..binding_selector_utils import selector_as_dict
+from ..bindings import (
     InvoiceObservation,
     invoice_binding_requirements,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
 from ..errors import RegistryValidationError
-from .._schema import DataBindingDefinition, ModeloRevision
+from ..schema import DataBindingDefinition, ModeloRevision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

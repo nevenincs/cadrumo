@@ -17,8 +17,8 @@ from pydantic import AnyUrl, BaseModel, Field, field_validator
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.identity import tax_id_identity_token
 from .errors import RegistryValidationError
-from ._ids import OracleId
-from ._live_parity import (
+from .ids import OracleId
+from .live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,
     ParityResult,
@@ -26,7 +26,7 @@ from ._live_parity import (
     assert_oracle_operations_allowed,
     decode_replay_json_payload,
 )
-from ._remote_state_guard import (
+from .remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
 )

@@ -52,7 +52,7 @@ from typing import Final
 import pytest
 
 from .....core.resources import bundled_path
-from .._authority import ValidatedRegistryAuthority
+from ..authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

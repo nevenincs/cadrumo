@@ -20,7 +20,7 @@ from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.logging import get_logger as _get_logger
-from ....domain.calculations.registry import RevisionId
+from cadrumo.domain.calculations.registry.ids import RevisionId
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope, no_active_profile_refusal
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -184,14 +184,10 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
     ``aeat app modelo describe <modelo>`` rather than emitting a bare error.
     """
     from ....application.modelo.work_addressing import (
-        ModeloWorkRegistryYearMismatchError as _ModeloWorkRegistryYearMismatchError,
+        ModeloWorkRegistryYearMismatchError,
+        resolve_registry_revision_for_work_target,
     )
-    from ....application.modelo.work_addressing import resolve_registry_revision_for_work_target
-    from ....domain.calculations.registry import (
-        AmbiguousRevisionSelectionError,
-        NoRevisionForPeriodError,
-        RegistrySnapshotError,
-    )
+    from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistrySnapshotError
 
     try:
         return resolve_registry_revision_for_work_target(
@@ -227,7 +223,7 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
             translated_message="cli.config.profile.preflight_revision_unresolved",
             context={"modelo": modelo, "filing_year": period.filing_year, "period": period.registry_token},
         ) from exc
-    except _ModeloWorkRegistryYearMismatchError as exc:
+    except ModeloWorkRegistryYearMismatchError as exc:
         # An explicit ``--revision-id`` override that is unknown to the
         # modelo or does not cover the filing year. List the registered
         # revisions so the operator can correct the override.

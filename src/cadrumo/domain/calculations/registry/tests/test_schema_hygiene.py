@@ -22,7 +22,7 @@ from .....core.aggregation import BindingTypedEnumKind
 from .....core.resources import bundled_path, resources
 from ..._export_field_kind import CasillaFieldKind
 from .. import revision_reference_identity_failures
-from .._schema import DataBindingDefinition, ModeloDefinition
+from ..schema import DataBindingDefinition, ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -61,7 +61,7 @@ def test_bundled_revisions_produce_no_ambiguous_reference_identity_failures() ->
 def test_operator_input_id_map_contains_only_casilla_ids() -> None:
     """The runtime input map must expose only canonical ``casilla.id`` keys."""
 
-    from .._runtime_graph import input_casilla_id_map
+    from ..runtime_graph import input_casilla_id_map
 
     offences: list[str] = []
     for modelo in _all_modelos():

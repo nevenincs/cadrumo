@@ -20,7 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import Period
-from ...calculations.registry import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from .._plazo import resolve_filing_closes_on
 from .._recargo import (
     build_recovery_for_overdue,

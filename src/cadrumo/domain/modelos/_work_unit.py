@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 from ...core import STRICT_FROZEN_CONFIG, Hex64Str, Period
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, WorkUnitId
-from ..calculations.registry import RevisionId
+from cadrumo.domain.calculations.registry.ids import RevisionId
 from ..contribuyente import CCAA
 from ._codes import ModeloCode
 from .errors import ModeloValidationError

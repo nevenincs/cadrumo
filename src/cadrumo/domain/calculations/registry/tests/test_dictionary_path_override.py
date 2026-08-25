@@ -25,7 +25,7 @@ import pytest
 from pydantic import ValidationError
 
 from .. import ExportLayoutDefinition, RegistryValidationError, xml_dictionary_entries
-from .._export_parse import XmlDictionaryEntry
+from ..export_parse import XmlDictionaryEntry
 from .._schema_exports import XmlDictionaryPathOverride
 from ._modelo_100_registry_support import _loaded_registry, _source_root
 

@@ -33,7 +33,7 @@ from ...application.modelo._projection import (
 )
 from ...core import CasillaId, Modelo
 from ...core.output_rendering import jsonable_output_payload
-from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ._common import emit_envelope
 from ._modelo_behavior_support import require_active_profile
 from ._modelo_cli_support import (

@@ -18,7 +18,6 @@ from .manuals import ManualKey, ManualRepository
 from .modelos import StaticModeloRepository
 from .recargo_bands import RecargoBandsRepository
 from .topics import TopicCatalogueRepository
-from .user_profile import UserProfileSchemaRepository
 
 __all__ = [
     "ApoderamientosRepository",
@@ -32,5 +31,4 @@ __all__ = [
     "RecargoBandsRepository",
     "StaticModeloRepository",
     "TopicCatalogueRepository",
-    "UserProfileSchemaRepository",
 ]

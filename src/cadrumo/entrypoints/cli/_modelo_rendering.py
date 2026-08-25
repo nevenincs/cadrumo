@@ -30,7 +30,8 @@ from ...application.modelo._work_plazo import (
 from ...core import CasillaId
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
-from ...domain.calculations.registry import BooleanBindingEncodedValue, CasillaObservation
+from cadrumo.domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

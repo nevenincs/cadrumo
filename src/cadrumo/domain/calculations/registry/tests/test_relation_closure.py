@@ -12,16 +12,16 @@ from .....core.aggregation import BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import RegistryCatalogues, RegistryValidationError
-from .._binding_selector_utils import selector_as_dict
-from .._bindings import RegistryModeloObservation
-from .._relations import (
+from ..binding_selector_utils import selector_as_dict
+from ..bindings import RegistryModeloObservation
+from ..relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
-from .._schema import ModeloDefinition, ModeloRevision
+from ..schema import ModeloDefinition, ModeloRevision
 from .._schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
-from .._validate import RegistryValidator
+from ..validate import RegistryValidator
 from .._validate_relation_sources import (
     RelationSourceYearCoverageAllowance,
     validate_relation_closure,

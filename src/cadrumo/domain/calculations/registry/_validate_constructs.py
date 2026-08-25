@@ -10,7 +10,7 @@ Construct member closure compares each member's
 refs declared by the owning construct.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry._validate_revision_closure._validate_revision_closure_sections`
+    :func:`cadrumo.domain.calculations.registry.validate_revision_closure._validate_revision_closure_sections`
         Revision-level runner that invokes the validator in this module.
     :func:`cadrumo.domain.calculations.registry.resolve_revision_constructs`
         Runtime projection of validated construct declarations.
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ._schema import LegalReference, ModeloRevision, SourceReference
+from .schema import LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_revision_context import ConstructMemberObject
@@ -58,7 +58,7 @@ def validate_construct_closure(
     construct declarations; ``member_objects`` is the prebuilt member index from
     the revision validation context. Each member's legal/source refs must be
     included by the construct that claims it, and
-    :class:`~cadrumo.domain.calculations.registry._validate_evidence.EvidenceValidator`
+    :class:`~cadrumo.domain.calculations.registry.validate_evidence.EvidenceValidator`
     enforces official-source grounding for the construct itself.
     """
     failures: list[str] = []

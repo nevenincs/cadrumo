@@ -9,14 +9,14 @@ import pytest
 from openpyxl import load_workbook
 
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.record_design import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
-    RegistryValidationError,
     extract_record_design,
-    load_catalogue_file,
-    resolve_record_design_binary,
 )
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
 
 from ..pipeline import _record_design_ir
 from ..pipeline._record_design_ir import (

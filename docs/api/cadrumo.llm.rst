@@ -24,7 +24,6 @@ Submodules
    cadrumo.llm._client
    cadrumo.llm._column_role_mapping
    cadrumo.llm._consent
-   cadrumo.llm._errors
    cadrumo.llm._evidence_draft_text
    cadrumo.llm._evidence_draft_vision
    cadrumo.llm._invoice_extraction_prompt
@@ -34,7 +33,8 @@ Submodules
    cadrumo.llm._preconditions
    cadrumo.llm._pricing
    cadrumo.llm._retention
-   cadrumo.llm._suggestions
    cadrumo.llm._supply_nature_proposal
    cadrumo.llm._text_classifier
    cadrumo.llm._vision_classifier
+   cadrumo.llm.errors
+   cadrumo.llm.suggestions

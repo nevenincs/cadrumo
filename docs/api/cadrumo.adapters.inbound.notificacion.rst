@@ -14,5 +14,5 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.inbound.notificacion._document_reader
-   cadrumo.adapters.inbound.notificacion._errors
    cadrumo.adapters.inbound.notificacion._sancion
+   cadrumo.adapters.inbound.notificacion.errors

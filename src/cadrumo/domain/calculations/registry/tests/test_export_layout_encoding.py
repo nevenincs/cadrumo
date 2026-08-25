@@ -16,7 +16,7 @@ from pydantic import ValidationError
 from .....core import ExportLayoutFormat
 from ..._export_field_kind import CasillaFieldKind
 from .. import bundled_authority
-from .._schema import (
+from ..schema import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,

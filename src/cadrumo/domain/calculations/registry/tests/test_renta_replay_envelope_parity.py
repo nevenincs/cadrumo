@@ -27,7 +27,7 @@ import json
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
-from .._external_grounding import (
+from ..external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
     RentaWebOpenReplayPayload,
 )

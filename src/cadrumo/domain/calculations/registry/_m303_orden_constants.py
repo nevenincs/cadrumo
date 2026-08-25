@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Protocol
 
 from .errors import RegistryValidationError
-from ._ids import RevisionId, SourceRefId
+from .ids import RevisionId, SourceRefId
 
 EXPECTED_ACTIVITY_COUNT = 49
 EXPECTED_MODULE_COUNT = 141

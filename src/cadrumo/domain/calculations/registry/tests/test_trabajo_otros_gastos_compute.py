@@ -32,7 +32,7 @@ from functools import lru_cache
 
 import pytest
 
-from .._schema import CasillaId, FormulaDefinition, ModeloRevision
+from ..schema import CasillaId, FormulaDefinition, ModeloRevision
 from ._formula_runtime_support import _evaluate
 from ._registry_schema_support import _committed_modelo
 

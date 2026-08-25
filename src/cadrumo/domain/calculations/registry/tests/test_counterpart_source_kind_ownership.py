@@ -1,6 +1,6 @@
 import pytest
 
-from .. import _bindings as bindings_mod
+from .. import bindings as bindings_mod
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

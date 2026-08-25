@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,9 @@ from cadrumo.application.registry.source_connectivity import (
 )
 from cadrumo.core import BindingSourceKind, Modelo, Period, SourceConnectivityGroundingLocatorKind
 from cadrumo.core.resources import bundled_path, resources
-from cadrumo.domain.calculations.registry import CensoModeloEventKind, load_modelo_directory, select_revision
+from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..check import SourceConnectivityCheckError, check_capability_locators
 from ..discovery import (
@@ -71,10 +74,12 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     manifest = load_source_connectivity_census()
     inventory = next(entry for entry in manifest.entries if entry.candidate_id == "inventory.stock-valuation")
 
-    assert inventory.disposition.value == "connect_candidate"
+    assert inventory.disposition.value == "registry_blocked"
+    assert inventory.expires_on == date(2026, 12, 31)
     assert "canonical inventory resolver" in inventory.review_condition
     assert "source-mesh enrollment" in inventory.review_condition
     assert "registry row bindings" in inventory.review_condition
+    assert "registry-blocked" in inventory.review_condition
     assert "repeated activity-row casillas" in inventory.review_condition
     assert "verified end to end" in inventory.review_condition
     assert "fabricated activity-envelope facts" in inventory.review_condition
@@ -84,6 +89,22 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     assert "schema-v3" in summaries
     assert "0181" in summaries
     assert "missing repeated-row materialization" in summaries
+
+
+def test_asset_amortization_census_retains_the_unimplemented_ingress_boundary() -> None:
+    manifest = load_source_connectivity_census()
+    amortization = next(
+        entry for entry in manifest.entries if entry.candidate_id == "assets.amortization-ledger"
+    )
+
+    assert amortization.disposition.value == "ingress_blocked"
+    assert amortization.expires_on == date(2026, 12, 31)
+    assert amortization.bounded_follow_up is not None
+    assert amortization.bounded_follow_up.action_id == "source-casilla.assets-amortization-ingress"
+    assert "exclusive future source" in amortization.review_condition
+    assert "casillas 0208 and 0227" in amortization.review_condition
+    assert "finca casilla 0131 separate" in amortization.review_condition
+    assert "current encrypted scalar ledger remains ingress-blocked" in amortization.review_condition
 
 
 def test_modelo_036_manual_profile_evidence_uses_its_exact_event_coordinate() -> None:

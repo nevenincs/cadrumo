@@ -14,4 +14,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.core.access_gate._authorization
-   cadrumo.core.access_gate._errors
+   cadrumo.core.access_gate.errors

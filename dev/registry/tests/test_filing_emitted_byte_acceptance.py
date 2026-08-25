@@ -22,9 +22,11 @@ import pytest
 from cadrumo.application.registry import RegistryClosureLimb, compose_filing_export_coverage
 from cadrumo.core import Modelo, RegistryAuthorityGrade
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
+)
+from cadrumo.domain.calculations.registry.temporal import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
 )

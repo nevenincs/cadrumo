@@ -17,12 +17,10 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.application.filing import render_envelope_prefix_field
 from cadrumo.core import AeatProductSoftwareIdentity, Modelo, Period, StandardPeriodCode, sha256_hex
-from cadrumo.domain.calculations.registry import (
-    RecordDesignAuxiliaryEnvelopeHeaderRole,
-    RegistryValidationError,
-    SourceReference,
-    resolve_record_design_binary,
-)
+from cadrumo.domain.calculations.registry.record_design import RecordDesignAuxiliaryEnvelopeHeaderRole
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import SourceReference
+from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
 from cadrumo.domain.filing import FilingExportValidationError
 
 from ._provenance_manifest import ExportFragmentTarget

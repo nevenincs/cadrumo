@@ -15,7 +15,7 @@ reason, rather than left empty and silent.
 from __future__ import annotations
 
 from ....core import RegistryAuthorityGrade
-from ._schema import ModeloRevision
+from .schema import ModeloRevision
 from ._schema_family_coverage import build_revision_coverage_manifest
 
 #: Families whose resolution the calculation rung specifically asserts.

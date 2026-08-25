@@ -28,7 +28,7 @@ from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
 if TYPE_CHECKING:
     # Type-only: importing these at runtime would close the cycle the local
     # imports in the grounding helpers below exist to avoid.
-    from ..calculations.registry import SourceReference
+    from cadrumo.domain.calculations.registry.schema import SourceReference
 
 
 _RATE_REGISTRY_MEMBER_STATES: frozenset[EUMemberState] = frozenset(
@@ -190,7 +190,8 @@ def _source_ref_failures(
     """
     # Keep this import local: registry binding modules consume the public IVA
     # facade, while the rate loader is also part of that facade.
-    from ..calculations.registry import RegistryValidationError, verify_source_file
+    from cadrumo.domain.calculations.registry.corpus_catalogue import verify_source_file
+    from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
     failures: list[str] = []
     row_sources: list[SourceReference] = []

@@ -49,7 +49,10 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+    bundled_authority,
+)
 
 from ..._paths import REPO_ROOT, UTF_8
 from ._casilla_projection import project_casilla_search_records

@@ -35,16 +35,16 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import (
+from .binding_selector_utils import (
     BindingExportDataType,
     invariant_diagnostics,
     selector_against_model,
     uppercase_alpha_code,
 )
-from ._binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
-from ._ids import BindingId
-from ._schema import DataBindingDefinition, ModeloRevision
+from .ids import BindingId
+from .schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
     "DonativoDonorObservation",

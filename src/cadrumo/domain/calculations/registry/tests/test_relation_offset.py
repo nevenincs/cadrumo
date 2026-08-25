@@ -7,8 +7,8 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, validated_casilla_id
 from ..errors import RegistryValidationError
-from .._relations import _derive_offset_source_anchor, derive_offset_source_period
-from .._schema import RelationDefinition
+from ..relations import _derive_offset_source_anchor, derive_offset_source_period
+from ..schema import RelationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

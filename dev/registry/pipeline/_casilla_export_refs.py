@@ -25,7 +25,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ._export_tree import RenderedExportTree
 

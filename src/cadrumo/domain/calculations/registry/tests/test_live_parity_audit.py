@@ -25,9 +25,9 @@ from collections.abc import Iterator
 
 import pytest
 
-from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
-from .._live_parity import (
+from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
+from ..live_parity import (
     CrossReferenceApplicabilityDeclaracion,
     LiveParityCatalogue,
     OracleEnvironment,
@@ -35,7 +35,7 @@ from .._live_parity import (
     collect_orphan_oracle_ids,
 )
 from .._renta_web_open_oracle import RentaWebOpenOracle
-from .._schema import ModeloDefinition
+from ..schema import ModeloDefinition
 from ._registry_schema_support import _committed_registry_tree
 
 # INTENTIONAL: unit because the audit helpers are pure and exercise the real oracle

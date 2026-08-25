@@ -38,7 +38,7 @@ from .....core import IvaDeductionFactKind
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 from .._ledger_bindings import iva_ledger_selector
-from .._loader import load_registry_tree
+from ..loader import load_registry_tree
 from ._gate_support import fragment_declaring
 from ._ledger_iva_aggregation_support import _deduction_provenance
 

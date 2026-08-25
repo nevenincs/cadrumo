@@ -39,24 +39,23 @@ if TYPE_CHECKING:
 from .....core import NoRecoveryOutcome
 from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
-from .....core.errors import SiteHealthError
+from .....core.errors import SiteHealthError, SiteHealthState
 from .....core.logging import get_logger
 from .....core.time import now
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..auth.providers import BrowserContextProvisioner
+from ._site_health import (
+    SiteHealthEvidence,
+    SiteHealthStatus,
+    parse_site_health_url,
+)
+from ._site_health_probe import probe_response
 from .errors import (
     BrowserError,
     BrowserFailureMode,
     BrowserPreconditionCondition,
     browser_no_action_verdict,
 )
-from ._site_health import (
-    _URL_ADAPTER,
-    SiteHealthEvidence,
-    SiteHealthState,
-    SiteHealthStatus,
-)
-from ._site_health_probe import probe_response
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
 
@@ -496,7 +495,7 @@ class BrowserSession:
         return SiteHealthStatus(
             state=SiteHealthState.UNREACHABLE,
             evidence=SiteHealthEvidence(
-                url=_URL_ADAPTER.validate_python(url),
+                url=parse_site_health_url(url),
                 http_status=599,
                 html_fragment="",
                 detected_markers=(f"failure-mode:{failure_mode.value}", f"transport-error:{exc_type_name}"),

@@ -7,7 +7,7 @@ import inspect
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..pipeline import _semantic_map_join
 from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat

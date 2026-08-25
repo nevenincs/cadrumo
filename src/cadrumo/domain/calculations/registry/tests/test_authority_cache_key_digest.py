@@ -14,7 +14,7 @@ from collections.abc import Callable
 
 import pytest
 
-from .._authority import _fingerprint_key, _FingerprintKey
+from ..authority import _fingerprint_key, _FingerprintKey
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

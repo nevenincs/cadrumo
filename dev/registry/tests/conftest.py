@@ -3,7 +3,7 @@
 import pytest
 
 from cadrumo.core.resources import resources
-from cadrumo.domain.calculations.registry import bundled_revision_inspection
+from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 
 
 @pytest.fixture(scope="session")

@@ -17,7 +17,7 @@ from .. import (
     RegistryValidator,
     build_snapshot,
 )
-from .._binding_selector_utils import selector_as_dict
+from ..binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

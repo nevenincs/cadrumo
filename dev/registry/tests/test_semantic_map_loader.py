@@ -10,7 +10,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import M303ProrrataActivityProjectionField, M303ProrrataActivityProjectionRef
-from cadrumo.domain.calculations.registry import ExportComputedKey, ExportDraftAttribute, RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import (
+    ExportComputedKey,
+    ExportDraftAttribute,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from .. import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
 

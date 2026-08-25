@@ -15,8 +15,8 @@ from .. import (
     bundled_authority,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from .._formula_runtime import calculate_registry_snapshot
-from .._temporal import select_revision
+from ..formula_runtime import calculate_registry_snapshot
+from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

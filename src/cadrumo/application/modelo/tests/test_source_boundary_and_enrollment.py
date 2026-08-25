@@ -38,6 +38,7 @@ from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.modelos import Modelo184MemberRow
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
@@ -336,7 +337,7 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
     # spelling of the label.
     expected_label = build_profile_preflight_requirement(
         missing_path,
-        schema=resources().user_profile_schema.singleton,
+        schema=load_user_profile_schema(),
     ).label
     assert expected_label != missing_path, "label collapsed to the raw path; the assertion below is vacuous"
     assert expected_label in str(context.get("missing", "")), context

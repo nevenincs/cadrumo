@@ -41,8 +41,8 @@ import pytest
 from .....core import RegistryAuthorityGrade
 from .....core.money import round_to_cents
 from .....tests.registry_tree import bundled_registry_tree
-from .._formula_runtime import calculate_registry_snapshot
-from .._temporal import select_revision
+from ..formula_runtime import calculate_registry_snapshot
+from ..temporal import select_revision
 from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.resources import resources
+from ...domain.user_profile.loader import load_user_profile_schema
 from ..diagnostics import _grounded_profile_key_summary
 from ..user_profile.preflight import build_profile_preflight_requirement
 
@@ -24,7 +24,7 @@ def test_the_known_path_has_a_label_that_differs_from_the_path() -> None:
     """Anchor the fixture: the assertions below are vacuous if they are equal."""
     requirement = build_profile_preflight_requirement(
         _KNOWN_PATH,
-        schema=resources().user_profile_schema.singleton,
+        schema=load_user_profile_schema(),
     )
 
     assert requirement.label != _KNOWN_PATH
@@ -36,7 +36,7 @@ def test_a_known_profile_path_is_rendered_with_its_operator_label() -> None:
 
     expected_label = build_profile_preflight_requirement(
         _KNOWN_PATH,
-        schema=resources().user_profile_schema.singleton,
+        schema=load_user_profile_schema(),
     ).label
     assert rendered.startswith(f"{_KNOWN_PATH} ")
     assert expected_label in rendered

@@ -150,8 +150,8 @@ from .....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .. import ModeloDefinition, ModeloRevision, SourceReference
-from .._authority import ValidatedRegistryAuthority
-from .._record_design import (
+from ..authority import ValidatedRegistryAuthority
+from ..record_design import (
     _clean_pdf_line,
     _extract_pdf_text_lines,
     extract_record_design_pdf,

@@ -9,7 +9,7 @@ import pytest
 from .....core.resources import bundled_path
 from .. import RegistryCatalogues, RegistryValidator
 from ..errors import RegistryValidationError
-from .._schema import ExtractionProfileDefinition, ExtractionTargetDefinition, ModeloDefinition
+from ..schema import ExtractionProfileDefinition, ExtractionTargetDefinition, ModeloDefinition
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

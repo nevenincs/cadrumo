@@ -8,8 +8,8 @@ import pytest
 
 from .....core import RegistryAuthorityGrade
 from .. import calculate_registry_snapshot
-from .._relations import relation_source_requirements, resolve_relation_values_from_observations
-from .._schema import RegistrySnapshot
+from ..relations import relation_source_requirements, resolve_relation_values_from_observations
+from ..schema import RegistrySnapshot
 from ._cross_dependency_calculation_support import (
     _M200_CUOTA_DIFERENCIAL_CASILLA,
     _M202_CUOTA_BASE_CASILLA,

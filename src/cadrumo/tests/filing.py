@@ -32,7 +32,7 @@ from ..application.filing import (
     empty_profile_activity_fingerprint,
 )
 from ..core import CasillaId, Period, validated_casilla_id
-from ..domain.calculations.registry import BindingId
+from cadrumo.domain.calculations.registry.ids import BindingId
 from ..domain.filing import ModeloBuilderError, ModeloDraft, ModeloInputs
 from ..domain.invoices import InvoiceCatalogue
 from ..domain.submission import ModeloDraftStatus

@@ -46,7 +46,8 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
-from ...domain.calculations.registry import RegistrySnapshotError, derive_taxpayer_files_economic_activity
+from cadrumo.domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos import CalculationRevisionState
 from ._common import _filing_taxpayer_or_refuse, activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli

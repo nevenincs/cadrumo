@@ -17,21 +17,21 @@ from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTE
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .....tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
-from .._authority import ValidatedRegistryAuthority, bundled_authority
-from .._corpus_catalogue import resolve_record_design_binary, verify_source_catalogue, verify_source_file
-from .._coverage import (
+from ..authority import ValidatedRegistryAuthority, bundled_authority
+from ..corpus_catalogue import resolve_record_design_binary, verify_source_catalogue, verify_source_file
+from ..coverage import (
     EvidenceTierCoverageGate,
     _snapshot_filing_review_proof,
     audit_registry_model_law_coverage,
     build_model_law_coverage_ledger,
 )
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from .._legal import verify_legal_catalogue_grounding
-from .._loader import clear_fingerprint_cache
-from .._schema import SourceReference, filing_period_from_scope
-from .._snapshot import build_snapshot, check_snapshot_filing_review_tier
-from .._temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
-from .._validate import RegistryValidator
+from ..legal import verify_legal_catalogue_grounding
+from ..loader import clear_fingerprint_cache
+from ..schema import SourceReference, filing_period_from_scope
+from ..snapshot import build_snapshot, check_snapshot_filing_review_tier
+from ..temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
+from ..validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 

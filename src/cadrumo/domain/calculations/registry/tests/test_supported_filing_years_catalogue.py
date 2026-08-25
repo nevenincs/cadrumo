@@ -8,10 +8,10 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources import bundled_path
-from .._authority import ValidatedRegistryAuthority
+from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryLoadError
-from .._loader import _load_shared_catalogue_files, load_registry_tree
-from .._schema import SupportedFilingYearsCatalogue
+from ..loader import _load_shared_catalogue_files, load_registry_tree
+from ..schema import SupportedFilingYearsCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

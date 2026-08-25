@@ -46,7 +46,8 @@ from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.core.i18n import MissingTranslationError
 from cadrumo.core.identity import ContinuidadId
-from cadrumo.domain.calculations.registry import RegistryLoadError, load_modelo_directory
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
 from .adjudications import AdjudicationSet
 

@@ -148,15 +148,21 @@ def compose_runtime_ports() -> Iterator[None]:
     """Compose real persistence and authentication adapters for tests."""
     from .adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from .adapters.outbound.aeat.auth.session_store import build_session_store
+    from .adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
+    from .adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from .adapters.persistence.workflow import build_workflow_persistence_port
     from .application.auth.protocols import bind_session_store
     from .application.auth.providers import bind_auth_provider_selector
+    from .application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory
+    from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .application.workflow.persistence import bind_workflow_persistence_port
     from .tests.profile_persistence import composed_profile_persistence_ports
 
     with (
         composed_profile_persistence_ports(),
         bind_workflow_persistence_port(build_workflow_persistence_port()),
+        bind_extraction_draft_repository_factory(ExtractionDraftRepository),
+        bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository),
         bind_auth_provider_selector(select_outbound_auth_provider),
         bind_session_store(build_session_store()),
     ):
@@ -256,7 +262,7 @@ def _isolate_registry_caches() -> Iterator[None]:
     is needed for correctness, only for tidiness the temp directory does not
     require.
     """
-    from .domain.calculations.registry import clear_fingerprint_cache
+    from cadrumo.domain.calculations.registry.loader import clear_fingerprint_cache
     from .domain.calculations.registry._loader import _load_registry_tree_cached
 
     def _reset() -> None:

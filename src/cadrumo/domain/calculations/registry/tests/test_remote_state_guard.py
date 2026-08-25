@@ -20,11 +20,11 @@ from .....tests.aeat_literal_fixtures import (
     configured_path,
 )
 from .. import ModeloDefinition, RegistryCatalogues, build_snapshot
-from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ..errors import RegistrySnapshotError, RegistryValidationError
-from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
-from .._live_parity import LiveParityCatalogue, OracleEnvironment
-from .._remote_state_guard import (
+from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
+from ..live_parity import LiveParityCatalogue, OracleEnvironment
+from ..remote_state_guard import (
     _FORBIDDEN_TOKENS,
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -34,7 +34,7 @@ from .._remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from .._renta_web_open_oracle import RentaWebOpenOracle
-from .._schema import LiveCrossReferenceDecision
+from ..schema import LiveCrossReferenceDecision
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

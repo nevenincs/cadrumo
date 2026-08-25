@@ -64,7 +64,7 @@ from ..core import (
 )
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
-from ..core.errors import SiteHealthError
+from ..core.errors import SiteHealthError, SiteHealthState
 from ..core.i18n import tr
 from ..core.logging import default_log_file_path, get_logger
 from ..core.redaction import CLI_PROFILE_ID_PLACEHOLDER
@@ -625,7 +625,7 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
 
 
 def _ok_site_health_status(url: str) -> SiteHealthStatus:
-    from ..adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthState, SiteHealthStatus
+    from ..adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthStatus
 
     return SiteHealthStatus(
         state=SiteHealthState.OK,
@@ -703,7 +703,7 @@ def _finding_tag(finding: DiagnosticFinding) -> str:
 
 
 def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSummary:
-    from ..domain.calculations.registry import ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
@@ -845,7 +845,8 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
     A failure routes the operator to a structured diagnostic rather
     than a runtime KeyError mid-calculation.
     """
-    from ..domain.calculations.registry import RegistryValidationError, ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
@@ -1162,10 +1163,10 @@ def _grounded_profile_key_summary(key: str) -> str:
     A key the schema does not resolve is returned unchanged rather than
     guessed at.
     """
-    from ..core.resources import resources
+    from ..domain.user_profile.loader import load_user_profile_schema
     from .user_profile.preflight import build_profile_preflight_requirement
 
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     requirement = build_profile_preflight_requirement(key, schema=schema)
     if requirement.label == key:
         return key

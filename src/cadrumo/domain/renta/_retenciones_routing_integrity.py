@@ -39,7 +39,8 @@ needs to express a second, independent domain fact.
 from __future__ import annotations
 
 from ...core import CasillaId, Modelo, validated_casilla_id
-from ..calculations.registry import BindingId, register_cross_domain_snapshot_check
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.validate_references import register_cross_domain_snapshot_check
 
 RENTA_130_RETENCIONES_OUTPUT_CASILLA: CasillaId = validated_casilla_id(
     "06",

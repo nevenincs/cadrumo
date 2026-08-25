@@ -8,7 +8,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import ModeloDefinition, RegistryCatalogues, build_snapshot, bundled_authority
-from .._temporal import select_revision
+from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

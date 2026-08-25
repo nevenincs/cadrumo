@@ -5,7 +5,7 @@ label patterns across all casillas in every :class:`ModeloDefinition`.
 
 The required-role hard-flip gate and the public cross-reference accessor
 are extracted into the sibling
-:mod:`~cadrumo.domain.calculations.registry._validate_semantic_role_required`
+:mod:`~cadrumo.domain.calculations.registry.validate_semantic_role_required`
 module and re-exported here for call-site stability.
 """
 
@@ -17,8 +17,8 @@ from collections.abc import Iterable, Mapping
 from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
 from . import _validate_semantic_role_typos as _semantic_role_typos
-from ._ids import RevisionId
-from ._schema import CasillaDefinition, ModeloDefinition
+from .ids import RevisionId
+from .schema import CasillaDefinition, ModeloDefinition
 from ._validate_semantic_role_required import REQUIRED_ROLE_LABEL_PATTERNS, required_role_declaration_failures
 from ._validate_semantic_role_required import (
     collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,

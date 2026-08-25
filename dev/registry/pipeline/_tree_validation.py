@@ -14,17 +14,19 @@ from datetime import date
 from pathlib import Path, PurePosixPath
 
 from cadrumo.core.directory_scan import iter_directory
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.schema import (
     ExportLayoutDefinition,
     ModeloDefinition,
     RegistrySnapshot,
-    RegistryValidationError,
-    ValidatedRegistryAuthority,
-    build_snapshot,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.loader import (
     load_modelo_directory,
     load_registry_tree,
 )
-from cadrumo.domain.calculations.registry._validate_registry_scope import validate_registry_scope
+from cadrumo.domain.calculations.registry.validate_registry_scope import validate_registry_scope
 
 from ._export_tree import RenderedExportTree
 from ._provenance_manifest import (

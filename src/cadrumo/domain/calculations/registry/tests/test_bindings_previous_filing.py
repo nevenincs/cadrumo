@@ -35,7 +35,7 @@ from .. import (
 )
 from .._bindings_previous_filing import PreviousModeloSelector, is_direct_previous_filing_binding
 from ..errors import RegistryValidationError
-from .._schema import BindingSelectorMap, PeriodSelector
+from ..schema import BindingSelectorMap, PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

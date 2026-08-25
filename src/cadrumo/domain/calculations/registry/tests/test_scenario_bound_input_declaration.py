@@ -54,7 +54,7 @@ from .....core.directory_scan import scan_directory
 from .....tests.registry_tree import bundled_registry_tree
 from .. import ModeloRevision, build_snapshot
 from ..errors import RegistryValidationError
-from .._schema_input_kind import InputKind
+from ..schema_input_kind import InputKind
 from ._registry_schema_support import _committed_modelo
 from ._scenarios import bound_casilla_ids, run_registry_calculation_scenario
 from .test_m100_2024_estimacion_directa_manual_worked_example import (

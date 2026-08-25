@@ -8,17 +8,17 @@ from datetime import date
 import pytest
 
 from .....core import BindingSourceKind, CasillaId, validated_casilla_id
-from .._binding_selector_utils import BindingFixedExportSelector
-from .._schema import (
+from ..binding_selector_utils import BindingFixedExportSelector
+from ..schema import (
     CasillaAlias,
     CasillaConstraints,
     DatedValue,
     ModeloDefinition,
     ProfilePredicateDefinition,
 )
-from .._schema_input_kind import InputKind
-from .._schema_verification import VerificationPredicateDefinition
-from .._validate import RegistryValidator
+from ..schema_input_kind import InputKind
+from ..schema_verification import VerificationPredicateDefinition
+from ..validate import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
@@ -425,7 +425,7 @@ def test_dangling_extraction_profile_target_casilla() -> None:
         surface="borrador_pdf",
         artefact_kind="declaration_pdf",
         accepted_artefact_kinds=("declaration_pdf",),
-        parser="cadrumo.domain.calculations.registry._validate.RegistryValidator",
+        parser="cadrumo.domain.calculations.registry.validate.RegistryValidator",
         target_casillas=(
             ExtractionTargetDefinition(
                 casilla_id=_NONEXISTENT_CASILLA,

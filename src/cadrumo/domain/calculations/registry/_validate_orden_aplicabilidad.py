@@ -1,7 +1,7 @@
 """The ``orden_aplicabilidad`` gate for a :class:`ModeloRevision`.
 
 Every revision's ``orden_aplicabilidad`` field declares the legal-catalogue
-:class:`~cadrumo.domain.calculations.registry._schema.LegalReference` id(s) of
+:class:`~cadrumo.domain.calculations.registry.schema.LegalReference` id(s) of
 the ordenes ministeriales that approve or amend the modelo form for this
 revision's applicability window.  The gate is strict:
 
@@ -17,7 +17,7 @@ MUST cite the orden establishing the open-ended applicability — the
 connective gate ensuring even the "y siguientes" claim is BOE-anchored.
 Per-year norm values *inside* the open-ended revision (rate brackets,
 thresholds) are the parameter-bracket layer's responsibility gated by
-:func:`~cadrumo.domain.calculations.registry._validate_revision_rules.validate_bracket_table_temporal_coverage`;
+:func:`~cadrumo.domain.calculations.registry.validate_revision_rules.validate_bracket_table_temporal_coverage`;
 a wrong-but-present bracket value is a legal-grounding defect, NOT a
 resolution defect.
 """
@@ -28,7 +28,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 
-from ._schema import LegalReference, ModeloRevision
+from .schema import LegalReference, ModeloRevision
 from ._schema_references import governed_period_span
 
 

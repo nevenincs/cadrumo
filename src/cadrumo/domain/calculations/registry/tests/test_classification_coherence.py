@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from .....core import TaxDomain
 from .....tests.registry_tree import bundled_registry_tree
-from .._classification_coherence import (
+from ..classification_coherence import (
     _MAX_DETAIL_LENGTH,
     _TRUNCATION_SUFFIX,
     ClassificationCoherenceFinding,
@@ -43,14 +43,14 @@ from .._classification_coherence import (
     audit_bundled_classification_coherence,
     build_classification_coherence_audit,
 )
-from .._schema import (
+from ..schema import (
     CasillaDefinition,
     DependencyClassificationDefinition,
     ModeloDefinition,
     ModeloRevision,
 )
 from .._schema_base import CalculationClass
-from .._schema_input_kind import InputKind
+from ..schema_input_kind import InputKind
 from .._schema_references import PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

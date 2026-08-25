@@ -149,7 +149,8 @@ def _legal_parameters() -> Mapping[str, object]:
     # Imported inside the function for the reason the retención-rate loader gives:
     # the registry import path reaches back into the domain packages this module
     # belongs to, and a module-level import would close that cycle.
-    from ..calculations.registry import RegistryError, load_legal_parameters_only
+    from cadrumo.domain.calculations.registry.errors import RegistryError
+    from cadrumo.domain.calculations.registry.loader import load_legal_parameters_only
 
     try:
         return load_legal_parameters_only(bundled_path("registry", "aeat"))

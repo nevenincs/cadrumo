@@ -771,12 +771,12 @@ def _profile_field_label(path: str) -> str:
     mid-sentence, where a trailing citation would read as part of the
     instruction.
     """
-    from ...core.resources import resources
+    from ...domain.user_profile.loader import load_user_profile_schema
     from ..user_profile.preflight import build_profile_preflight_requirement
 
     return build_profile_preflight_requirement(
         path,
-        schema=resources().user_profile_schema.singleton,
+        schema=load_user_profile_schema(),
     ).label
 
 
@@ -854,13 +854,13 @@ def _grounded_profile_identity_requirement() -> str:
     profile editor shows, and a name held in the locale catalogues cannot be
     kept in step with a schema rename.
     """
-    from ...core.resources import resources
+    from ...domain.user_profile.loader import load_user_profile_schema
     from ..user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement
 
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(
             _PROFILE_TAX_ID_PATH,
-            schema=resources().user_profile_schema.singleton,
+            schema=load_user_profile_schema(),
         ),
     )
 

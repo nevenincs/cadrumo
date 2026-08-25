@@ -1,5 +1,5 @@
 cadrumo.application.wizard.models module
-=========================================
+========================================
 
 .. automodule:: cadrumo.application.wizard.models
    :members:

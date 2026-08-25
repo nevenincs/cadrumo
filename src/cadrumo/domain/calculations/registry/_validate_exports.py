@@ -12,17 +12,17 @@ layout-authority evidence.
 
 Two of the field checks here are about a slot's SHAPE rather than its references,
 and belong to the same family as the byte-range overlap check in
-:mod:`cadrumo.domain.calculations.registry._export`: a literal may not be longer
+:mod:`cadrumo.domain.calculations.registry.export`: a literal may not be longer
 than the slot declared for it, and a draft attribute drawn from a typed
 fixed-width source must be bound to a slot of exactly that width
-(:func:`cadrumo.domain.calculations.registry._validate_export_field_widths.validate_draft_field_slot_width`,
+(:func:`cadrumo.domain.calculations.registry.validate_export_field_widths.validate_draft_field_slot_width`,
 extracted to its own module). Both run at registry build over every
 revision, where the overlap check runs at layout resolution -- so a width
 contradiction is refused when the registry is validated, not when a taxpayer's
 export happens to resolve that one layout.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+    :func:`cadrumo.domain.calculations.registry.validate_revision_sections.validate_revision_definition`
         Per-revision dispatcher that invokes this export validator.
     :func:`cadrumo.domain.calculations.registry.derive_export_layouts_from_bindings`
         Export-layout derivation path whose generated records must satisfy these
@@ -38,15 +38,15 @@ from pathlib import Path
 from ....core import CasillaId, FilingProjectionRef
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import (
+from .binding_selector_utils import (
     BindingExportSelector,
     BindingFixedExportSelector,
     binding_export_selector,
 )
-from ._corpus_catalogue import verify_source_file
+from .corpus_catalogue import verify_source_file
 from .errors import RegistryValidationError
-from ._ids import BindingId
-from ._schema import (
+from .ids import BindingId
+from .schema import (
     AuxiliaryEnvelopeHeaderDefinition,
     CasillaDefinition,
     CasillaFieldKind,
@@ -297,7 +297,7 @@ def _validate_export_record(
     """Append failures for one export record declaration.
 
     The
-    :class:`~cadrumo.domain.calculations.registry._schema.ExportRecordDefinition`
+    :class:`~cadrumo.domain.calculations.registry.schema.ExportRecordDefinition`
     is checked against the selected
     :class:`~cadrumo.domain.calculations.registry.ModeloRevision`, including
     binding-record derivation, positive-casilla gates, row-field casilla ids, and

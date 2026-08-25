@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import Modelo
-from ...calculations.registry import read_parameter
+from cadrumo.domain.calculations.registry.formula_runtime import read_parameter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

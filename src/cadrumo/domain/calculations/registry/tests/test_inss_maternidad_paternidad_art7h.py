@@ -37,7 +37,7 @@ import pytest
 from .....core.config import SecretStoreBackend
 from .....tests.secure_sql import dev_test_database_password
 from .. import FormulaDefinition
-from .._temporal import select_revision
+from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

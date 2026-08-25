@@ -20,7 +20,7 @@ import pytest
 
 from .. import ExportEncoding, ExportFieldDefinition, parse_fixed_width_export_field, xml_dictionary_entries
 from ..errors import RegistryValidationError
-from .._export_parse import (
+from ..export_parse import (
     _local_name,
     _parse_dictionary_casilla_id,
     _parse_xml_boolean,
@@ -285,8 +285,8 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
     that follow must still match their own literals, and a payload shorter than
     the declared prefix cannot satisfy them.
     """
-    from .._export_parse import parse_export_payload
-    from .._schema import (
+    from ..export_parse import parse_export_payload
+    from ..schema import (
         AuxiliaryEnvelopeHeaderDefinition,
         ExportLayoutDefinition,
         ExportRecordDefinition,

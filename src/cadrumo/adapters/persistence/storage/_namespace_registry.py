@@ -12,11 +12,11 @@ from pathlib import Path
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import StorageCustodyProfile
 from ....core.classification import SensitivityClass
 from ._namespace_taxonomy import (
     _CUSTODY_PROFILE_DISPOSITIONS,
     StorageCustodyDisposition,
-    StorageCustodyProfile,
     StorageNamespaceScope,
     StoragePathAnchor,
     StoragePathKind,
@@ -1339,7 +1339,6 @@ __all__ = [
     "WORKFLOW_STATE_NAMESPACE",
     "SecureObjectNamespaceDefinition",
     "StorageCustodyDisposition",
-    "StorageCustodyProfile",
     "StorageHierarchyRegistry",
     "StorageNamespaceScope",
     "StoragePathAnchor",

@@ -10,26 +10,6 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationSchemaBindingV1,
-    operation_public_schema_reference,
-)
-
 from ...core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,
@@ -44,7 +24,26 @@ from ...core.async_cleanup import AsyncCloseable
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity import ContentDigest, ContentDigestOrAbsent, ProfileId
 from ...domain.user_profile.values import UserProfileRecord
+from ..operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
+from ..operations.registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+    OperationSchemaBindingV1,
+    operation_public_schema_reference,
+)
 from .capsule_record import ProfileRecordConflictError
 from .censal_observation import CensalObservation
 from .censo_sync import (
@@ -351,6 +350,7 @@ class CensalOperationExecutor:
         apply: Callable[[CensalReviewedOperand], None] | None = None,
         before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
+        """Initialize the executor with its acquisition, apply, and boundary hooks."""
         self._acquire = acquire or _pull_censal_datos
         self._apply = apply or _apply_reviewed_cotejo
         self._before_irreversible_section = before_irreversible_section or _ready_for_irreversible_section
@@ -360,6 +360,7 @@ class CensalOperationExecutor:
         request: OperationRequest[CensalOperationRequest],
         context: OperationExecutorContext,
     ) -> str | None:
+        """Acquire the observation and publish one durable review checkpoint."""
         if await _acknowledge_if_cancelled(context):
             return None
         await context.events.phase(CENSAL_PHASE_PREFLIGHT)
@@ -422,6 +423,7 @@ class CensalOperationExecutor:
         checkpoint: OperationResumeCheckpoint,
         context: OperationExecutorContext,
     ) -> str | None:
+        """Resume a consumed review checkpoint and apply or reject its operand."""
         del request
         if await _acknowledge_if_cancelled(context):
             return None

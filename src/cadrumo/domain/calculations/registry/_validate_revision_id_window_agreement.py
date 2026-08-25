@@ -40,7 +40,7 @@ from __future__ import annotations
 
 import re
 
-from ._schema import ModeloRevision
+from .schema import ModeloRevision
 
 #: Matches a revision id whose trailing token claims the window continues.
 #:

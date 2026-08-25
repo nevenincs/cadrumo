@@ -22,7 +22,7 @@ import pytest
 
 from .....core import validated_casilla_id
 from ..errors import RegistryValidationError
-from .._schema_verification import (
+from ..schema_verification import (
     DiscrepancyCause,
     VerificationExpectationDefinition,
     fold_reconciliation_total_casilla_ids,

@@ -14,7 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.attachments._enums
-   cadrumo.domain.attachments._errors
    cadrumo.domain.attachments._models
    cadrumo.domain.attachments._protocols
    cadrumo.domain.attachments._service
+   cadrumo.domain.attachments.errors

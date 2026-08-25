@@ -6,10 +6,10 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 from ..core.resources import bundled_path
-from ..domain.calculations.registry import load_registry_tree
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
 if TYPE_CHECKING:
-    from ..domain.calculations.registry import ModeloDefinition, RegistryCatalogues
+        from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 
 
 @cache

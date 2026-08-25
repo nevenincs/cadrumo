@@ -33,8 +33,8 @@ from .....application.registry import (
 from .....core import BindingSourceKind, RegistryAuthorityGrade
 from .....domain.filing import ModeloBuilderError
 from .. import DataBindingDefinition, ModeloRevision, PeriodSelector, selector_model_for_source
-from .._authority import bundled_authority
-from .._bindings import validate_binding_selector_shape
+from ..authority import bundled_authority
+from ..bindings import validate_binding_selector_shape
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

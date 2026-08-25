@@ -18,7 +18,6 @@ Submodules
    cadrumo.domain.iva._components
    cadrumo.domain.iva._corpus
    cadrumo.domain.iva._deduction_facts
-   cadrumo.domain.iva._errors
    cadrumo.domain.iva._establishment
    cadrumo.domain.iva._flow
    cadrumo.domain.iva._grounding
@@ -39,4 +38,5 @@ Submodules
    cadrumo.domain.iva._schema
    cadrumo.domain.iva._sepa_marca
    cadrumo.domain.iva._supply_nature
-   cadrumo.domain.iva._verify
+   cadrumo.domain.iva.errors
+   cadrumo.domain.iva.verify

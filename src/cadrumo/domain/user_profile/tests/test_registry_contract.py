@@ -12,7 +12,8 @@ from pydantic import BaseModel, ValidationError
 from ....core import BindingSourceKind
 from ....core.errors import BaseSeverity
 from ....core.resources import resources
-from ...calculations.registry import DataBindingDefinition, ProfileSelector
+from cadrumo.domain.calculations.registry.bindings import ProfileSelector
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
 from ..loader import load_user_profile_schema
 from ..registry_contract import (
     UserProfileRegistryContractIssue,

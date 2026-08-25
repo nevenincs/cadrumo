@@ -23,6 +23,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.inbound.borrador._detect
-   cadrumo.adapters.inbound.borrador._errors
    cadrumo.adapters.inbound.borrador._parser
    cadrumo.adapters.inbound.borrador._schema
+   cadrumo.adapters.inbound.borrador.errors

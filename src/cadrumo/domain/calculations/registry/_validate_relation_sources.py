@@ -6,11 +6,11 @@ Validates cross-model relations declared on each
 coverage, source-casilla-id existence, and period alignment.
 
 See Also:
-    :mod:`cadrumo.domain.calculations.registry._validate_source_casilla_ids`
+    :mod:`cadrumo.domain.calculations.registry.validate_source_casilla_ids`
         Shared source-casilla membership and non-canonical token diagnostics.
-    :mod:`cadrumo.domain.calculations.registry._validate_relation_periods`
+    :mod:`cadrumo.domain.calculations.registry.validate_relation_periods`
         Source revision selection and period/year coverage gates.
-    :mod:`cadrumo.domain.calculations.registry._validate_previous_filing_sources`
+    :mod:`cadrumo.domain.calculations.registry.validate_previous_filing_sources`
         Sibling closure check for previous-filing binding selectors.
 """
 
@@ -22,14 +22,14 @@ from dataclasses import dataclass
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ._bindings_previous_filing import is_direct_previous_filing_binding
 from .errors import RegistryValidationError
-from ._ids import ModeloId, RelationId
-from ._iva_wallet_relation_targets import (
+from .ids import ModeloId, RelationId
+from .iva_wallet_relation_targets import (
     IvaWalletRevisionRelationTarget,
     iva_wallet_owned_relation_targets_for_revision,
 )
-from ._period_offset_math import apply_period_offset
-from ._relations import derive_offset_source_period
-from ._schema import (
+from .period_offset_math import apply_period_offset
+from .relations import derive_offset_source_period
+from .schema import (
     DataBindingDefinition,
     ModeloDefinition,
     ModeloRevision,

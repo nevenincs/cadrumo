@@ -12,7 +12,7 @@ from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.core import BindingSourceKind, RegistryAuthorityGrade
 from cadrumo.core.resources import resources
-from cadrumo.domain.calculations.registry import InputKind
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..check import (
     SourceConnectivityCheckError,

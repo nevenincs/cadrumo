@@ -44,11 +44,9 @@ from cadrumo.core import (
     SourceConnectivityDisposition,
 )
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import (
-    ExportValuePolicy,
-    RegistrySnapshotRef,
-    bundled_authority,
-)
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.deadlines import RefundAccount
 from cadrumo.domain.filing import ModeloDraft, ModeloValue, ModeloValueKind
 from cadrumo.domain.submission import ModeloDraftStatus

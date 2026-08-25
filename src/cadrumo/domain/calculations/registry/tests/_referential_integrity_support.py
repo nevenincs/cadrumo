@@ -24,7 +24,7 @@ from .. import (
     RegistryValidationError,
     ValidatedRegistryAuthority,
 )
-from .._schema import (
+from ..schema import (
     ApplicationLinkDefinition,
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,
@@ -51,9 +51,9 @@ from .._schema import (
     SourceReference,
     WorkbookParityReference,
 )
-from .._schema_verification import VerificationExpectationDefinition
-from .._snapshot import _build_validated_snapshot as build_snapshot_at_grade
-from .._validate_references import check_all_id_references
+from ..schema_verification import VerificationExpectationDefinition
+from ..snapshot import _build_validated_snapshot as build_snapshot_at_grade
+from ..validate_references import check_all_id_references
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -192,7 +192,7 @@ def _minimal_casilla(casilla_id: CasillaId = _DEFAULT_MINIMAL_CASILLA_ID) -> Cas
 
 
 def _minimal_workbook_ref(source_ref: str = _REFERENCE_WORKBOOK_SOURCE_ID) -> WorkbookParityReference:
-    from .._schema import WorkbookParityReference
+    from ..schema import WorkbookParityReference
 
     return WorkbookParityReference(
         id="wp.test",
@@ -249,7 +249,7 @@ def _minimal_revision(
     export_layouts: tuple[ExportLayoutDefinition, ...] = (),
     deadline_windows: tuple[DeadlineWindowDefinition, ...] = (),
 ) -> ModeloRevision:
-    from .._schema import PeriodSelector
+    from ..schema import PeriodSelector
 
     workbook_ref = extra_workbook_ref or _minimal_workbook_ref()
     casillas = casillas or (_minimal_casilla(),)

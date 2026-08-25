@@ -1,7 +1,7 @@
 """Slot-width validation for export fields bound to typed fixed-width sources.
 
 The slot-semantics sibling of the byte-range overlap check in
-:mod:`cadrumo.domain.calculations.registry._export`. Overlap asks whether two
+:mod:`cadrumo.domain.calculations.registry.export`. Overlap asks whether two
 fields claim the same bytes; this asks whether the bytes one field claims can
 hold what that field supplies. Neither can check that a slot's MEANING matches
 AEAT's published record design -- that cross-check needs the design itself --
@@ -14,7 +14,7 @@ validator calls :func:`validate_draft_field_slot_width` on every field it
 already walks, so there is no second traversal and no second dispatch.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry._validate_exports.validate_export_layout_section`
+    :func:`cadrumo.domain.calculations.registry.validate_exports.validate_export_layout_section`
         The registry-build export validator that invokes this check per field.
 """
 
@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ._schema import CasillaFieldKind, ExportDraftAttribute, ExportFieldDefinition
+from .schema import CasillaFieldKind, ExportDraftAttribute, ExportFieldDefinition
 
 #: Canonical character width of every export ``draft_attribute`` whose value is
 #: supplied by a typed, fixed-width domain source, keyed by the attribute token

@@ -10,7 +10,7 @@ import typer
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     M303RegimenSimplificadoScope,

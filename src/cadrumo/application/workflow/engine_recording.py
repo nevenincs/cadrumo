@@ -6,7 +6,6 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import NoReturn
 
-from ...adapters.outbound.aeat.browser import SiteHealthStatus
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors import SiteHealthError, build_error_envelope
 from ...core.logging import get_logger
@@ -74,7 +73,6 @@ def record_site_unavailable(
     current_run_id: Callable[[], str | None],
 ) -> NoReturn:
     """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
-    status = SiteHealthStatus.model_validate(exc.status, from_attributes=True)
     alert_run_id = current_run_id() or "-"
     steps.append(
         WorkflowStep(
@@ -90,7 +88,7 @@ def record_site_unavailable(
             precondition_verdict=_execution_failure_verdict("workflow.site.unavailable"),
             site_health_alert=SiteHealthAlert(
                 stage=stage,
-                status=WorkflowSiteHealthFacts.from_status(status),
+                status=WorkflowSiteHealthFacts.from_status(exc.status),
                 run_id=alert_run_id,
             ),
         ),

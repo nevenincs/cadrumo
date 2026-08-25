@@ -8,7 +8,8 @@ from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import FilingRecordId
-from ..calculations.registry import RegistrySnapshot, RevisionId, SourceReference
+from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot, SourceReference
 from .errors import ModeloValidationError
 
 

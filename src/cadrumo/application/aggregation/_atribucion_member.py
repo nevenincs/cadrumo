@@ -18,10 +18,10 @@ from typing import ClassVar
 from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...core.identity import tax_id_identity_token
-from ...core.resources import resources
 from ...domain.calculations.registry import AtributionMemberObservation, resolve_atribucion_binding_row_values
 from ...domain.modelos import Modelo184MemberRow
 from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import numeric_value_refusal
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from ..user_profile.profile_record_repository import ProfileRecordRepository
@@ -163,7 +163,7 @@ def _invalid_value_refusals(socio: _SocioFacts) -> tuple[str, ...]:
     door would not have written -- which keeps the two from disagreeing
     about the same stored fact.
     """
-    section = resources().user_profile_schema.singleton.section(_SOCIOS_SECTION_KEY)
+    section = load_user_profile_schema().section(_SOCIOS_SECTION_KEY)
     declared = {field.key: field for field in section.fields}
     return tuple(
         refusal

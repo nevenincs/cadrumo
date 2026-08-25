@@ -9,9 +9,8 @@ production health classifier used by ``BrowserSession.navigate``.
 import pytest
 
 from ......core.config import Settings
-from ......core.errors import SiteHealthError
+from ......core.errors import SiteHealthError, SiteHealthState
 from ......tests import FIXTURES_DIR
-from .._site_health import SiteHealthState
 from .._site_health_probe import probe_response
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

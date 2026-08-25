@@ -25,7 +25,8 @@ from ....core.directory_scan import (
 from ....core.resources import resources
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...calculations import RowSourceIdentity
-from ...calculations.registry import RelationId, resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.ids import RelationId
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...filing_evidence import FilingEvidenceReference
 from ...iva import (
     M303RegimenSimplificadoScope,
@@ -1128,7 +1129,7 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
     must equal the projection of observations. Matching pair validates clean."""
     from datetime import UTC, datetime
 
-    from ...calculations.registry import CasillaObservation
+    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
     from .._calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "d" * 64
@@ -1182,7 +1183,7 @@ def test_observations_consistency_validator_rejects_drift() -> None:
 
     import pydantic
 
-    from ...calculations.registry import CasillaObservation
+    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
     from .._calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "e" * 64

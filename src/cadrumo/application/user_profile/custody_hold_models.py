@@ -114,6 +114,7 @@ class ProfileCustodyHoldAssessment(BaseModel):
         legal: ProfileCustodyHoldEvidence,
         filing: ProfileCustodyHoldEvidence,
     ) -> ProfileCustodyHoldAssessment:
+        """Build an assessment from the legal and filing owner evidence."""
         if legal.profile_id != filing.profile_id:
             from .custody_transactions import ProfileCustodyTransactionCorruptError
 
@@ -179,16 +180,19 @@ class ProfileCustodyHoldEvidence(BaseModel):
 
     @property
     def blocks_local_deletion(self) -> bool:
+        """Return whether this owner's disposition blocks local deletion."""
         return self.disposition == "held"
 
     @property
     def canonical_payload(self) -> dict[str, object]:
+        """Return the evidence fields excluding the digest."""
         payload = cast(dict[str, object], self.model_dump(mode="json"))
         del payload["evidence_digest"]
         return payload
 
     @property
     def computed_evidence_digest(self) -> str:
+        """Compute the canonical digest for this evidence payload."""
         from .custody_transactions import canonical_payload_digest
 
         return canonical_payload_digest(self.canonical_payload, maximum_bytes=1024, subject="hold evidence")

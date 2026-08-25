@@ -17,8 +17,8 @@ from .. import (
     build_snapshot,
     resolve_export_layout,
 )
-from .._binding_selector_utils import BindingFixedExportSelector, binding_export_selector
-from .._record_design import (
+from ..binding_selector_utils import BindingFixedExportSelector, binding_export_selector
+from ..record_design import (
     build_diseno_coverage_report,
     calculation_closure_record_design_metadata,
     derive_calculation_completeness_casillas,
@@ -27,7 +27,7 @@ from .._record_design import (
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
 )
-from .._schema import DataBindingDefinition, ModeloRevision
+from ..schema import DataBindingDefinition, ModeloRevision
 from ._registry_schema_support import _committed_registry_tree
 
 __all__ = [

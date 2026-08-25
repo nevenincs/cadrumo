@@ -26,8 +26,8 @@ from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryLoadError
-from .._loader import load_modelo_directory
-from .._schema import (
+from ..loader import load_modelo_directory
+from ..schema import (
     REVISION_GOVERNANCE_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
     ModeloRevision,

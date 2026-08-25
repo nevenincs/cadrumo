@@ -14,19 +14,19 @@ from ....core.config import Settings
 from ....core.decimal import coerce_finite_european_decimal, normalize_decimal_separators
 from ....core.identity import AeatBoxNumber
 from .errors import RegistryValidationError
-from ._external_grounding import (
+from .external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
     require_bundled_oracle_evidence_locator,
 )
-from ._ids import OracleId
-from ._live_parity import (
+from .ids import OracleId
+from .live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,
     ParityResult,
     assert_oracle_operations_allowed,
     decode_replay_json_payload,
 )
-from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
+from .remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
 _RENTA_WEB_OPEN_DEFAULT_YEAR: Final[int] = 2025
 _RENTA_WEB_OPEN_ORACLE_ID: OracleId = "modelo-100-renta-web-open"

@@ -18,7 +18,7 @@ from decimal import Decimal
 import pytest
 
 from .....core import M720AssetClassCode
-from .._bindings import (
+from ..bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
     RefundOperationObservation,

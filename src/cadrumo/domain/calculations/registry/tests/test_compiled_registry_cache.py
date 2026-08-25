@@ -23,7 +23,7 @@ from .._compiled_cache import (
     load_compiled_registry_cache,
     store_compiled_registry_cache,
 )
-from .._loader import (
+from ..loader import (
     _collect_registry_tree_fingerprints,
     _load_registry_tree_cached,
     clear_fingerprint_cache,

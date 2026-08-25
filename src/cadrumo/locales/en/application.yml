@@ -1107,10 +1107,6 @@ application:
         registry revision %{work_unit_revision}, but the law-determined revision for
         modelo %{modelo} %{filing_year} %{period} is now %{law_revision}. Re-create
         the work unit to bind it to the current revision.
-      work_unit_revision_divergence_candidates: Persisted modelo work targets for
-        modelo %{modelo} %{filing_year} %{period} were created against registry revisions
-        %{stored_revision_ids}, but the law-determined revision is now %{resolved_revision_id}.
-        Re-create the work unit to bind it to the current revision.
       workflow_gate_no_pending_obligation: 'No pending filing obligation for this
         profile at the current date (the AEAT filing-obligation window is not open).
         Filing-to-fichero does not require this step: export the verified-complete

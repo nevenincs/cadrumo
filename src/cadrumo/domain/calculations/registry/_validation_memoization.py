@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ._schema import LegalReference, ModeloDefinition, SourceReference
+from .schema import LegalReference, ModeloDefinition, SourceReference
 from ._source_evidence_fingerprint import SourceEvidenceFingerprint
 
 _CatalogueCacheKey = tuple[int, int, str | None, SourceEvidenceFingerprint]

@@ -15,7 +15,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from .._schema import CasillaDefinition, ModeloYear, _coerce_modelo_year
+from ..schema import CasillaDefinition, ModeloYear, _coerce_modelo_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

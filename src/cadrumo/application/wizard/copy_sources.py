@@ -31,8 +31,8 @@ from __future__ import annotations
 from ...core import ConceptLifecycle
 from ...core.flows import CopyRefKind
 from ...core.i18n import output_language
-from ...core.resources import resources
 from ...domain.user_profile.errors import UserProfileError
+from ...domain.user_profile.loader import load_user_profile_schema
 from ..corpus_search import CorpusSearchInputError, lookup_terminology
 from ..flows.copy import register_copy_source
 
@@ -55,7 +55,7 @@ def resolve_profile_schema_copy(ref: str) -> str | None:
     path = ref[len(_SCHEMA_NAMESPACE) :]
     if "." not in path:
         return None
-    schema = resources().user_profile_schema.singleton
+    schema = load_user_profile_schema()
     try:
         field = schema.field(path)
     except UserProfileError:

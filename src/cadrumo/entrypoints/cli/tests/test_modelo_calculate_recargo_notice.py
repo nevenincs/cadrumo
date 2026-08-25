@@ -34,7 +34,7 @@ from ....application.modelo._work_plazo import ModeloWorkDeadlinePosture
 from ....core import Period, PeriodKind, registry_period_kind
 from ....core.resources import resources
 from ....core.time import MADRID_TZ, frozen_clock
-from ....domain.calculations.registry import select_revision
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....domain.deadlines import resolve_filing_closes_on
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _result

@@ -24,7 +24,7 @@ import pytest
 
 from .....application.wizard import compiler as _wizard  # noqa: F401  -- side-effect import: registers profile keys
 from .....core import RegistryAuthorityGrade
-from .._schema import RegistrySnapshot
+from ..schema import RegistrySnapshot
 from ._formula_runtime_support import (
     _committed_modelo_130_snapshot,
     _committed_modelo_180_snapshot,

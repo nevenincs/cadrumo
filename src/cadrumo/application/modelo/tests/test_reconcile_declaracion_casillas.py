@@ -28,11 +28,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ....adapters.inbound.declaracion import InboundDeclaracionObservation, TemplateRevision
 from ....adapters.inbound.pdf import ExtractedCasilla
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period, validated_casilla_id
+from ....core import Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import resources
 from ....core.time import now
 from ....domain.calculations.registry import RegistrySnapshotRef
@@ -48,7 +50,6 @@ from ....domain.modelos import (
 )
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.registry_observations import registry_grounded_observations
-from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._reconcile import (
     ReconciliationDeclaracionSourceUnsupportedError,
     _reconcile_parsed_declaracion,
@@ -78,7 +79,13 @@ _isolated_backend = active_profile_isolated_backend_fixture(
 )
 
 
-def _seed_work_unit(*, modelo: str = _MODELO_130, filing_year: int = _FILING_YEAR, period: str = _PERIOD) -> WorkUnit:
+def _seed_work_unit(
+    *,
+    modelo: str = _MODELO_130,
+    filing_year: int = _FILING_YEAR,
+    period: str = _PERIOD,
+    snapshot_grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+) -> WorkUnit:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
@@ -92,6 +99,7 @@ def _seed_work_unit(*, modelo: str = _MODELO_130, filing_year: int = _FILING_YEA
             modelo,
             filing_year=filing_year,
             period=typed_period.registry_token,
+            grade=snapshot_grade,
         )
         .revision.id
     )
@@ -165,6 +173,7 @@ def _synthetic_declaracion(
     ejercicio: str | None = None,
     period: Period | None = None,
     extraction_profile_provisional: bool = False,
+    snapshot_grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> InboundDeclaracionObservation:
     """Build a synthetic, in-memory declaración observation for Modelo 130.
 
@@ -178,6 +187,7 @@ def _synthetic_declaracion(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
+        grade=snapshot_grade,
     )
     return InboundDeclaracionObservation(
         modelo=modelo or str(work_unit.modelo),
@@ -217,7 +227,7 @@ def _synthetic_declaracion(
 
 def _reconcile(work_unit: WorkUnit, declaracion: InboundDeclaracionObservation):
     return _reconcile_parsed_declaracion(
-        work_unit_id=work_unit.work_unit_id,
+        work_unit=work_unit,
         source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
         source_ref="test://declaracion-130",
         actor="operator",
@@ -394,10 +404,20 @@ def test_unenrolled_modelo_refuses_casilla_level_declaration_reconcile() -> None
     is not enrolled in casilla-level declaración reconcile; the private seam
     itself refuses cleanly (defence in depth alongside the public
     ``modelo_reconcile`` pre-check)."""
-    work_unit = _seed_work_unit(modelo="200", filing_year=_FILING_YEAR, period="0A")
+    work_unit = _seed_work_unit(
+        modelo="200",
+        filing_year=_FILING_YEAR,
+        period="0A",
+        snapshot_grade=RegistryAuthorityGrade.CALCULATION,
+    )
 
     with pytest.raises(ReconciliationDeclaracionSourceUnsupportedError):
         _reconcile(
             work_unit,
-            _synthetic_declaracion(work_unit, values={"00552": Decimal("100.00")}, modelo="200"),
+            _synthetic_declaracion(
+                work_unit,
+                values={"00552": Decimal("100.00")},
+                modelo="200",
+                snapshot_grade=RegistryAuthorityGrade.CALCULATION,
+            ),
         )

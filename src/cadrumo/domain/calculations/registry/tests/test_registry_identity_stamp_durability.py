@@ -29,7 +29,7 @@ from ..... import __version__
 from .....core.atomic_write import atomic_write_best_effort_text
 from .....tests.attribute_scope import scoped_attribute
 from .. import _loader_cache as loader_cache
-from .._identity import (
+from ..identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     RegistryIdentityOrigin,
     RegistryIdentityStamp,
@@ -37,7 +37,7 @@ from .._identity import (
     registry_identity_stamp_location,
     resolve_registry_identity,
 )
-from .._loader import clear_fingerprint_cache
+from ..loader import clear_fingerprint_cache
 from .._loader_cache import _bundled_registry_root, _bundled_root_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

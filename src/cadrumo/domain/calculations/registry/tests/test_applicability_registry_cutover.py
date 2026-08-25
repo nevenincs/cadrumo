@@ -34,7 +34,7 @@ from .. import (
     ValidatedRegistryAuthority,
     resolve_applicability_rule_from_authority,
 )
-from .._applicability import ModeloApplicabilityRule
+from ..applicability import ModeloApplicabilityRule
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

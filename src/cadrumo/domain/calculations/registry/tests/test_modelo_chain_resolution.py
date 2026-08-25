@@ -8,9 +8,9 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from .._bindings import RegistryModeloObservation
-from .._relations import resolve_relation_values_from_observations
-from .._schema import ModeloDefinition, ModeloRevision
+from ..bindings import RegistryModeloObservation
+from ..relations import resolve_relation_values_from_observations
+from ..schema import ModeloDefinition, ModeloRevision
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

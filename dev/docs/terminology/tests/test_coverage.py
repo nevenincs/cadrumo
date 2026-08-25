@@ -20,7 +20,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 from .._casilla_projection import project_casilla_search_records
 from .._concept_cards import ConceptCardRecord, project_concept_cards

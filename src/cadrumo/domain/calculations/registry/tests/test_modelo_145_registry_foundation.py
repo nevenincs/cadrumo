@@ -28,9 +28,9 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .. import CasillaFieldKind, ExportFieldDefinition, resolve_export_layout
-from .._authority import bundled_authority
-from .._snapshot import build_snapshot
-from .._support_matrix import build_support_matrix
+from ..authority import bundled_authority
+from ..snapshot import build_snapshot
+from ..support_matrix import build_support_matrix
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

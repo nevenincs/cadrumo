@@ -58,7 +58,6 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...domain.modelos import WorkUnitCatalogue
@@ -125,9 +124,12 @@ _NON_RESUMABLE_REASONS: frozenset[WorkflowAbortReason] = frozenset(
 def _captured_work_catalogue(bucket_id: str | None) -> tuple[WorkUnitCatalogue, str]:
     """Capture the catalogue once at the workflow operation boundary."""
     from ..modelo.work_addressing import ModeloWorkSelectorRequest, resolve_modelo_work_bucket
+    from ..modelo.work_unit_repository import work_unit_catalogue_repository
 
     resolved_bucket_id = resolve_modelo_work_bucket(ModeloWorkSelectorRequest(bucket_id=bucket_id))
-    return (WorkUnitCatalogueRepository(bucket_id=resolved_bucket_id).load(), resolved_bucket_id)
+    return (work_unit_catalogue_repository(bucket_id=resolved_bucket_id).load(), resolved_bucket_id)
+
+
 _WORKFLOW_RUN_ID_RE = re.compile(HEX_PATTERN_16)
 _WORK_UNIT_ID_RE = re.compile(HEX_PATTERN_64)
 
@@ -586,11 +588,11 @@ def resolve_modelo_visible_workflow_run_for_resume(
     from ..modelo.work_addressing import ModeloVisibleFilingTarget
 
     target = ModeloVisibleFilingTarget(
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            registry_revision_id=registry_revision_id,
-            bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        registry_revision_id=registry_revision_id,
+        bucket_id=bucket_id,
     )
     catalogue, resolved_bucket_id = _captured_work_catalogue(bucket_id)
     return resolve_modelo_workflow_run_for_resume(

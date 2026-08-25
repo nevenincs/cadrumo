@@ -15,7 +15,9 @@ from ..adapters.persistence.profile.modelos_verification_reports import Verifica
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..application.modelo.work_review_projection import ModeloWorkReview, build_modelo_work_review
 from ..core import Period
-from ..domain.calculations.registry import CasillaObservation, bundled_authority, select_revision
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ..domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

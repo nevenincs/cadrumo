@@ -8,14 +8,14 @@ import pytest
 
 from .....core import CasillaId, Period, validated_casilla_id
 from ..._export_field_kind import CasillaFieldKind
-from .._schema import (
+from ..schema import (
     FormulaDefinition,
     FormulaExpression,
     ModeloDefinition,
     ModeloScheduleDefinition,
 )
-from .._schema_input_kind import InputKind
-from .._validate import RegistryValidator
+from ..schema_input_kind import InputKind
+from ..validate import RegistryValidator
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,

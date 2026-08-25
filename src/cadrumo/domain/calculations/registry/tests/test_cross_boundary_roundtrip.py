@@ -38,12 +38,12 @@ from ....modelos import (
 )
 from ....submission import ModeloDraftStatus
 from .. import RegistrySnapshotRef
-from .._bindings import (
+from ..bindings import (
     CasillaObservation,
     OracleModeloObservation,
     RegistryModeloObservation,
 )
-from .._schema import LiveCrossReferenceDecision
+from ..schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -267,7 +267,7 @@ def test_filing_draft_full_roundtrip() -> None:
     starts losing fields during the migration, this test will fail.
     """
 
-    from .._schema import RegistrySnapshotRef
+    from ..schema import RegistrySnapshotRef
 
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
@@ -332,7 +332,7 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
 
     import pytest as _pytest
 
-    from .._schema import RegistrySnapshotRef
+    from ..schema import RegistrySnapshotRef
 
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
@@ -372,7 +372,7 @@ def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
     ``subject_tax_id`` is validated.
     """
 
-    from .._schema import RegistrySnapshotRef
+    from ..schema import RegistrySnapshotRef
 
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
@@ -419,7 +419,7 @@ def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
 def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
     """A populated ``RegistrySnapshotRef`` survives strict JSON round-trip on ModeloDraft."""
 
-    from .._schema import RegistrySnapshotRef
+    from ..schema import RegistrySnapshotRef
 
     ref = RegistrySnapshotRef(
         modelo="303",
@@ -461,7 +461,7 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
     suffix were stripped silently.
     """
 
-    from .._schema import WorkbookParityReference
+    from ..schema import WorkbookParityReference
 
     original = WorkbookParityReference(
         id="m130-1t-parity",
@@ -497,7 +497,7 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
 
 
 def test_workbook_parity_reference_rejects_malformed_output_identifier() -> None:
-    from .._schema import WorkbookParityReference
+    from ..schema import WorkbookParityReference
 
     with pytest.raises(ValidationError):
         WorkbookParityReference(

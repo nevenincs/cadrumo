@@ -251,13 +251,13 @@ def _grounded_tax_id_requirement() -> str:
     schema. Reading the label from the schema is also what every other missing
     profile fact refusal in this codebase does.
     """
-    from ...core.resources import resources
+    from ...domain.user_profile.loader import load_user_profile_schema
     from ..user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement
 
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(
             _TAX_ID_PATH,
-            schema=resources().user_profile_schema.singleton,
+            schema=load_user_profile_schema(),
         ),
     )
 

@@ -22,7 +22,7 @@ from ...application.review import ReviewSeverity, ReviewState
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.time import UtcInstant
-from ...domain.calculations.registry import LegalRefId
+from cadrumo.domain.calculations.registry.ids import LegalRefId
 
 
 class ReviewQueueRowPayload(OutputSchema):

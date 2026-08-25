@@ -21,7 +21,7 @@ from pydantic import ValidationError
 
 from .....core import M720AssetClassCode
 from .....core.aggregation import RetencionClave
-from .._bindings import (
+from ..bindings import (
     AtributionMemberObservation,
     DonativoDonorObservation,
     Modelo720RowObservation,

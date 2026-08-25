@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from ._schema import ModeloRevision
+from .schema import ModeloRevision
 
 
 def revision_declares_single_annual_period(revision: ModeloRevision) -> bool:

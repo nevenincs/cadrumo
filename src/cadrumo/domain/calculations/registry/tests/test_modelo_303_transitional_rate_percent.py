@@ -64,7 +64,7 @@ from .. import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ..errors import RegistryValidationError
-from .._loader import load_registry_tree
+from ..loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -20,9 +20,9 @@ from .. import (
     RegistrySnapshot,
     calculate_registry_snapshot,
 )
-from .._authority import ValidatedRegistryAuthority
-from .._binding_selector_utils import selector_as_dict
-from .._relations import (
+from ..authority import ValidatedRegistryAuthority
+from ..binding_selector_utils import selector_as_dict
+from ..relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
     resolve_relation_values_from_observations,

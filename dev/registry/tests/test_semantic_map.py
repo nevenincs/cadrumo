@@ -11,7 +11,7 @@ from cadrumo.core import (
     M303ProrrataActivityProjectionRef,
     validated_casilla_id,
 )
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.schema import (
     CasillaFieldKind,
     ExportComputedKey,
     ExportDraftAttribute,

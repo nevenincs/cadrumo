@@ -36,11 +36,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 # a real, single class definition so the set cannot silently rot as the code
 # moves. Extend this mapping to bring more of the spine under the gate.
 CORE_STRUCTS: dict[str, str] = {
-    "ValidatedRegistryAuthority": "cadrumo.domain.calculations.registry._authority",
-    "RegistrySnapshot": "cadrumo.domain.calculations.registry._schema",
-    "ModeloDefinition": "cadrumo.domain.calculations.registry._schema",
-    "ModeloRevision": "cadrumo.domain.calculations.registry._schema",
-    "CasillaObservation": "cadrumo.domain.calculations.registry._bindings",
+    "ValidatedRegistryAuthority": "cadrumo.domain.calculations.registry.authority",
+    "RegistrySnapshot": "cadrumo.domain.calculations.registry.schema",
+    "ModeloDefinition": "cadrumo.domain.calculations.registry.schema",
+    "ModeloRevision": "cadrumo.domain.calculations.registry.schema",
+    "CasillaObservation": "cadrumo.domain.calculations.registry.bindings",
     "CalculationRevision": "cadrumo.domain.modelos._calculation_revision",
     "OutputSchema": "cadrumo.core.json_contract",
     "SchemaEnvelope": "cadrumo.core.json_contract",

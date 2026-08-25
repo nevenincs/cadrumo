@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
-from cadrumo.domain.calculations.registry import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..pipeline import _tree_check
 from ..pipeline._export_tree import ExportTreeTransportProfile

@@ -25,9 +25,9 @@ from .. import (
     calculate_registry_snapshot,
 )
 from ..errors import RegistryValidationError
-from .._legal import verify_legal_catalogue
-from .._runtime_graph import expression_casilla_refs
-from .._schema import InputKind
+from ..legal import verify_legal_catalogue
+from ..runtime_graph import expression_casilla_refs
+from ..schema import InputKind
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

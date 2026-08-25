@@ -6,9 +6,9 @@ checking casilla, binding, parameter, and relation reference closure and
 detecting cycles.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry._runtime_graph.expression_casilla_refs`
+    :func:`cadrumo.domain.calculations.registry.runtime_graph.expression_casilla_refs`
         Formula-expression walker used to derive target dependencies.
-    :func:`cadrumo.domain.calculations.registry._runtime_graph.formula_evaluation_order`
+    :func:`cadrumo.domain.calculations.registry.runtime_graph.formula_evaluation_order`
         Runtime topological order builder that assumes this validator has
         rejected cycles.
 """
@@ -19,9 +19,9 @@ from collections.abc import Mapping
 from graphlib import CycleError
 
 from ....core import CasillaId
-from ._ids import BindingId, RelationId
-from ._runtime_graph import formula_evaluation_order
-from ._schema import (
+from .ids import BindingId, RelationId
+from .runtime_graph import formula_evaluation_order
+from .schema import (
     CasillaDefinition,
     FormulaDefinition,
     FormulaExpression,
@@ -29,10 +29,10 @@ from ._schema import (
     ModeloRevision,
     SourceReference,
 )
-from ._schema_input_kind import InputKind
+from .schema_input_kind import InputKind
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs
-from ._validate_revision_identity import duplicates
+from .validate_revision_identity import duplicates
 
 
 def validate_formula_section(

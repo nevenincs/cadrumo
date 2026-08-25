@@ -12,7 +12,8 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, Period
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
-from ..calculations.registry import M303RegimenSimplificadoSnapshot, RevisionId
+from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ..filing_evidence import FilingEvidenceReference
 from ..identifiers import canonical_decimal_string as _canonical_decimal
 from ..iva import (

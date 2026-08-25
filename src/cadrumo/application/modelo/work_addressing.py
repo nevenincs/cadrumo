@@ -1128,7 +1128,7 @@ def resolve_registry_revision_for_work_target(
     ``(modelo, filing_year, period)`` is returned unconditionally.
 
     When ``registry_revision_id`` is supplied it is treated as an
-    *assertion parameter* (per :func:`~cadrumo.domain.calculations.registry._temporal.select_revision`):
+    *assertion parameter* (per :func:`~cadrumo.domain.calculations.registry.temporal.select_revision`):
     an explicit ``--revision`` is accepted only when it names exactly the revision
     that ``select_revision`` would pick from ``(filing_year, period)`` alone.  If
     the supplied id diverges from the law-determined revision the call refuses with
@@ -1142,7 +1142,7 @@ def resolve_registry_revision_for_work_target(
 
     Returns:
         The revision id selected by
-        :func:`~cadrumo.domain.calculations.registry._temporal.select_revision`.
+        :func:`~cadrumo.domain.calculations.registry.temporal.select_revision`.
 
     Raises:
         ModeloWorkRegistryYearMismatchError: The supplied revision id is not the

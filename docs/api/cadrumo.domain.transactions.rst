@@ -16,7 +16,6 @@ Submodules
    cadrumo.domain.transactions._classification_rule
    cadrumo.domain.transactions._dates
    cadrumo.domain.transactions._enums
-   cadrumo.domain.transactions._errors
    cadrumo.domain.transactions._irpf_categories
    cadrumo.domain.transactions._lineage_models
    cadrumo.domain.transactions._llm
@@ -31,3 +30,4 @@ Submodules
    cadrumo.domain.transactions._service
    cadrumo.domain.transactions._tipo_actividad_partitions
    cadrumo.domain.transactions._volumen_ingresos
+   cadrumo.domain.transactions.errors

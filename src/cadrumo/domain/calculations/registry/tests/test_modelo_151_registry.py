@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .._legal import verify_legal_catalogue
-from .._schema import ModeloDefinition, RegistryCatalogues
-from .._validate import RegistryValidator
+from ..legal import verify_legal_catalogue
+from ..schema import ModeloDefinition, RegistryCatalogues
+from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

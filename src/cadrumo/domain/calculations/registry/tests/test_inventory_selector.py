@@ -9,9 +9,9 @@ from pydantic import ValidationError
 
 from .....core import BindingSourceKind, Modelo
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .._binding_selector_utils import binding_row_set_selector
+from ..binding_selector_utils import binding_row_set_selector
 from .._inventory_bindings import InventorySelector, validate_inventory_binding
-from .._schema import DataBindingDefinition
+from ..schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

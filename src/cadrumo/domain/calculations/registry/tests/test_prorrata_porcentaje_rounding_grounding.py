@@ -57,7 +57,7 @@ from .. import (
     resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from .._formula_runtime_ops import apply_rounding
+from ..formula_runtime_ops import apply_rounding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

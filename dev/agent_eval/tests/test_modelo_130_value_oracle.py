@@ -30,7 +30,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources import resources
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
 )

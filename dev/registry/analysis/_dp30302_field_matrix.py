@@ -22,12 +22,12 @@ from typing import Final, Literal
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
-    RegistryValidationError,
     SourceRefId,
-    ValidatedRegistryAuthority,
 )
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 from ..pipeline._record_design_ir import (
     RecordDesignIntermediate,

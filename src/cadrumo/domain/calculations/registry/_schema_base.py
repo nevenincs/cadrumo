@@ -19,7 +19,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator
 from ....core import STRICT_FROZEN_CONFIG, LegalReviewStatus, RegistryAuthorityGrade, RevisionReviewStatus
 from ....core.classification import SensitivityClass
 from .errors import RegistryValidationError
-from ._ids import LegalRefId, SourceRefId
+from .ids import LegalRefId, SourceRefId
 
 __all__ = [
     "GOVERNANCE_STAMP",

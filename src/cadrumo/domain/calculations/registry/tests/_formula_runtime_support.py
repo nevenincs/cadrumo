@@ -6,8 +6,8 @@ from decimal import Decimal
 
 from .....core import RegistryAuthorityGrade, validated_casilla_id
 from .....core.resources import bundled_path
-from .._formula_runtime import _evaluate_expression
-from .._schema import (
+from ..formula_runtime import _evaluate_expression
+from ..schema import (
     CasillaId,
     DataBindingDefinition,
     FormulaExpression,
@@ -16,7 +16,7 @@ from .._schema import (
     RegistryCatalogues,
     RegistrySnapshot,
 )
-from .._snapshot import build_snapshot
+from ..snapshot import build_snapshot
 
 
 def _evaluate(

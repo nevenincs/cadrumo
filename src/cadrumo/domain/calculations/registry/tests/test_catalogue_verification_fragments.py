@@ -8,7 +8,7 @@ import pytest
 
 from .....core import normalise_corpus_text, resolve_anchored_extracted_unit
 from .....core.resources import bundled_path
-from .._legal import verify_legal_catalogue
+from ..legal import verify_legal_catalogue
 from ._catalogue_verification_support import _catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

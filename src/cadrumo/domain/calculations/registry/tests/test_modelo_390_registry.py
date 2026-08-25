@@ -23,8 +23,8 @@ from .. import (
     binding_source_casilla_ids,
     expression_casilla_refs,
 )
-from .._binding_selector_utils import selector_as_dict
-from .._bindings import binding_source_modelo
+from ..binding_selector_utils import selector_as_dict
+from ..bindings import binding_source_modelo
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

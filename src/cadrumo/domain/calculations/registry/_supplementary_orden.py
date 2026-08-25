@@ -14,16 +14,16 @@ from pathlib import Path
 from typing import Protocol
 
 from ....core import Modelo
-from ._ids import LegalRefId, SourceRefId
-from ._m303_orden_manifest import (
+from .ids import LegalRefId, SourceRefId
+from .m303_orden_manifest import (
     collect_m303_annual_orden_fingerprints,
     load_m303_annual_orden_authority,
 )
-from ._m303_orden_projection_models import (
+from .m303_orden_projection_models import (
     M303AnnualOrdenAuthority,
     M303AnnualOrdenCompilation,
 )
-from ._schema import LegalReference, ModeloDefinition, RegistryModel, SourceReference
+from .schema import LegalReference, ModeloDefinition, RegistryModel, SourceReference
 
 
 class SupplementaryOrdenCompiler(Protocol):

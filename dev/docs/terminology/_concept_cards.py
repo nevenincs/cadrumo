@@ -307,6 +307,6 @@ def _load_validated_handbook() -> TerminologyHandbook:
 
 
 def _bundled_legal_catalogue() -> object:
-    from cadrumo.domain.calculations.registry import bundled_authority
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     return bundled_authority().catalogues.legal

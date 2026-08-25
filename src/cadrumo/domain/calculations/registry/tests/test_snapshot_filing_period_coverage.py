@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 
 from .....core import RegistryAuthorityGrade
-from .._authority import ValidatedRegistryAuthority
+from ..authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

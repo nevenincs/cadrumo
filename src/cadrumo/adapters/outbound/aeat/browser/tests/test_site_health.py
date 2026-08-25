@@ -20,12 +20,12 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ......core.directory_scan import scan_directory
 from ......core.config import Settings
+from ......core.directory_scan import scan_directory
+from ......core.errors import SiteHealthState
 from ......tests import FIXTURES_DIR
 from .. import (
     SiteHealthEvidence,
-    SiteHealthState,
     SiteHealthStatus,
     evaluate_response,
 )
@@ -456,10 +456,10 @@ class TestRateLimitRetryAfter:
 
 
 def _evidence(**overrides: object) -> SiteHealthEvidence:
-    from .._site_health import _URL_ADAPTER
+    from .._site_health import parse_site_health_url
 
     base: dict[str, Any] = {
-        "url": _URL_ADAPTER.validate_python(_PROBE_URL),
+        "url": parse_site_health_url(_PROBE_URL),
         "http_status": 200,
         "html_fragment": "<html></html>",
         "detected_markers": ("marker",),
@@ -478,9 +478,9 @@ class TestSiteHealthModels:
         assert ev.detected_markers == ("marker",)
 
     def test_evidence_rejects_unknown_key(self) -> None:
-        from .._site_health import _URL_ADAPTER
+        from .._site_health import parse_site_health_url
 
-        valid_url = _URL_ADAPTER.validate_python(_PROBE_URL)
+        valid_url = parse_site_health_url(_PROBE_URL)
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             SiteHealthEvidence.model_validate(
                 {

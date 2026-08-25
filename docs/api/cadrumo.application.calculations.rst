@@ -17,7 +17,6 @@ Submodules
    cadrumo.application.calculations._binding_prefill
    cadrumo.application.calculations._cross_period_clean_state
    cadrumo.application.calculations._cross_period_models
-   cadrumo.application.calculations._errors
    cadrumo.application.calculations._foreign_asset_redeclaration
    cadrumo.application.calculations._iva_compensation_annual_partition
    cadrumo.application.calculations._iva_compensation_casillas
@@ -38,3 +37,4 @@ Submodules
    cadrumo.application.calculations._relation_prefill
    cadrumo.application.calculations._revision_carry_gate
    cadrumo.application.calculations._row_set_assembly
+   cadrumo.application.calculations.errors

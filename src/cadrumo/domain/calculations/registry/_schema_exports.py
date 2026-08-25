@@ -29,15 +29,15 @@ from ._export_semantics import (
     ExportSemanticPayloadAxis,
     export_semantic_payload_axis,
 )
-from ._export_value_policy import ExportValuePolicy, ExportValuePolicyValue, export_value_policy_wire_length
-from ._fixed_width_codec import (
+from .export_value_policy import ExportValuePolicy, ExportValuePolicyValue, export_value_policy_wire_length
+from .fixed_width_codec import (
     ExportEncodingValue,
     ExportJustificationValue,
     ExportPaddingValue,
     validate_fixed_width_shape,
 )
-from ._ids import BindingId, ExportFieldId, ExportLayoutId, RecordId, SourceRefId
-from ._record_spec import ENCODING_ALIAS_MAP
+from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId, SourceRefId
+from .record_spec import ENCODING_ALIAS_MAP
 from ._schema_base import LegalRefs, RegistryModel, SourceRefs
 
 __all__ = [

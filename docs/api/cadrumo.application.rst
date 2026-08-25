@@ -54,7 +54,6 @@ Submodules
    cadrumo.application._bucket_deletion_contracts
    cadrumo.application._config_reset_models
    cadrumo.application._config_reset_repository
-   cadrumo.application._errors
    cadrumo.application._foreign_asset_thresholds
    cadrumo.application._provisioning_contracts
    cadrumo.application._provisioning_runtime
@@ -66,6 +65,7 @@ Submodules
    cadrumo.application.diagnostics
    cadrumo.application.diagnostics_run_health
    cadrumo.application.diagnostics_telemetry
+   cadrumo.application.errors
    cadrumo.application.journal_repository
    cadrumo.application.preflight
    cadrumo.application.profile_deletion_hold_contract

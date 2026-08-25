@@ -23,8 +23,8 @@ from ....core import (
     RegistrySchemaFamilyDisposition,
 )
 from .errors import RegistryValidationError
-from ._ids import LegalRefId, SourceRefId
-from ._schema import REVISION_SCHEMA_FAMILY_FIELDS, ModeloRevision
+from .ids import LegalRefId, SourceRefId
+from .schema import REVISION_SCHEMA_FAMILY_FIELDS, ModeloRevision
 
 
 class CoverageModel(BaseModel):

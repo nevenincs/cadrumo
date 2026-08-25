@@ -11,11 +11,11 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Protocol
 
 from ....core import CasillaId
-from ._ids import LegalRefId, SourceRefId
-from ._schema import ModeloRevision
+from .ids import LegalRefId, SourceRefId
+from .schema import ModeloRevision
 
 if TYPE_CHECKING:
-    from ._snapshot import RegistrySnapshot
+    from .snapshot import RegistrySnapshot
 
 
 class _IdentifiedRecord(Protocol):

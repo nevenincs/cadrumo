@@ -18,8 +18,8 @@ from .. import (
     extract_record_design,
     resolve_record_design_binary,
 )
-from .. import _record_design as record_design_module
-from .._record_design import _unnamed_position_candidate
+from .. import record_design as record_design_module
+from ..record_design import _unnamed_position_candidate
 from .._record_design_schema import RecordDesignSinglePositionCorrection
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
@@ -1257,7 +1257,7 @@ def test_a_two_byte_closing_part_that_is_not_a_terminator_is_not_peeled() -> Non
     the record identifier. Peeling on width would silently truncate that closing and
     reclassify a real identifier component as physical padding.
     """
-    from .._record_design import _split_record_terminator
+    from ..record_design import _split_record_terminator
     from .._record_design_schema import RecordDesignRelativeSuffixMarker
 
     def suffix(length: int, description: str, ordinal: int) -> RecordDesignRelativeSuffixMarker:
@@ -1290,7 +1290,7 @@ def test_a_terminator_that_does_not_come_last_is_refused() -> None:
     declaring it early is either malformed or has been misread, and rearranging it
     would hide both.
     """
-    from .._record_design import _require_terminator_closes_the_record
+    from ..record_design import _require_terminator_closes_the_record
     from .._record_design_schema import RecordDesignRelativeSuffixMarker
 
     def suffix(ordinal: int, length: int, description: str) -> RecordDesignRelativeSuffixMarker:
@@ -1380,7 +1380,7 @@ def test_envelope_composition_order_is_checked_by_source_position_not_by_ordinal
     the authority never promised, and a string ordering would place ``2`` after
     ``10`` by construction.
     """
-    from .._record_design import _require_ordered_variable_envelope
+    from ..record_design import _require_ordered_variable_envelope
     from .._record_design_schema import (
         RecordDesignField,
         RecordDesignRelativeSuffixMarker,

@@ -43,7 +43,7 @@ from .python_cohort import assert_installed_cohort, load_python_cohort
 _COHORT_PROBE = """
 from importlib.metadata import requires, version
 
-from cadrumo.domain.calculations.registry import bundled_authority
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 root_version = version("cadrumo")
 expected = {
