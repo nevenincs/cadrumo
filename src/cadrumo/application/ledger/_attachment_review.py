@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import re
+from typing import Final
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.google import parse_drive_file_id
 from ...core import STRICT_FROZEN_CONFIG
 from ...domain.attachments import Attachment, AttachmentSource, AttachmentStoreProtocol
 
 __all__ = ["AttachmentReviewItem", "get_attachment_review_item", "list_attachment_review_queue"]
+
+_DRIVE_FILE_ID_RE: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9_-]{10,}")
 
 
 class AttachmentReviewItem(BaseModel):
@@ -60,7 +63,7 @@ def _drive_provider_locator(reference: str) -> str:
         if len(parts) != 4 or parts[:3] != ["", "file", "d"]:
             return "not-exposed"
         file_id = parts[3]
-        if not file_id or parse_drive_file_id(file_id) != file_id:
+        if _DRIVE_FILE_ID_RE.fullmatch(file_id) is None:
             return "not-exposed"
         return file_id
     except ValueError:
