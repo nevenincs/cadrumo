@@ -37,6 +37,8 @@ from ._modelo_cli_support import (
 )
 
 _log = get_logger(__name__)
+
+
 def work_address_for_cli(
     *,
     work_unit_id: str | None,
