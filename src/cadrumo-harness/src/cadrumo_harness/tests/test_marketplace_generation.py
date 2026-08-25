@@ -63,7 +63,9 @@ def test_marketplace_manifest_is_schema_shaped_and_resolves_to_the_plugin(
     assert manifest.plugin.agents_written > 0
 
 
-def test_served_plugin_equals_the_standalone_plugin_emission(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_served_plugin_equals_the_standalone_plugin_emission(
+    tmp_path: Path, plugin_cohort: TestPluginCohort
+) -> None:
     """No drift by construction: the served plugin is the standalone emission."""
     marketplace_dir = tmp_path / "marketplace"
     standalone_dir = tmp_path / "standalone"
@@ -84,7 +86,9 @@ def test_served_plugin_equals_the_standalone_plugin_emission(tmp_path: Path, plu
         assert served_path.read_bytes() == standalone[relative].read_bytes(), relative
 
 
-def test_checked_in_marketplace_scaffold_matches_the_generator(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_checked_in_marketplace_scaffold_matches_the_generator(
+    tmp_path: Path, plugin_cohort: TestPluginCohort
+) -> None:
     """The ``packaging/marketplace`` scaffold cannot drift from the generator."""
     output = tmp_path / "marketplace"
     materialise_marketplace(output, cohort=plugin_cohort)

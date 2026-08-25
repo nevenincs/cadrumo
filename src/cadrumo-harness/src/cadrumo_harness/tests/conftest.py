@@ -13,3 +13,4 @@ from ._plugin_cohort import TestPluginCohort, make_test_plugin_cohort
 def plugin_cohort(tmp_path: Path) -> TestPluginCohort:
     """Return a complete local wheel cohort outside each emitted tree."""
     return make_test_plugin_cohort(tmp_path / "sealed-input")
+

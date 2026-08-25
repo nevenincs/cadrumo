@@ -13,7 +13,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-25'
-body_hash: 'sha256:23d17aaa649e3a237cac2c56013ff71964a36df908b834cce8b7c4e1f6e1e078'
+body_hash: 'sha256:d536687eba8b1aa1a8ebea9d05947763da147d1de370fe6e4ac7029cca0eaeca'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -76,7 +76,7 @@ Remove stale copies and complete every officially supported periodic schedule.
 - [ ] `W02.P04.S13` - Re-adjudicate Modelo 322 deadlines for every supported filing year 2022-2026, remove stale copies, and materialise all 42 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/322/`.
 - [ ] `W02.P04.S14` - Re-adjudicate Modelo 353 deadlines for every supported filing year 2022-2026, remove stale copies, and materialise all 37 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/353/`.
 - [x] `W02.P04.S15` - Re-adjudicate Modelo 369 deadlines for every supported filing year 2022-2026 and materialise all 60 measured missing periodic cells only from bundled official-source evidence, using Vaultspec RAG plus exact-symbol confirmation to prove no modelo-specific selector, resolver, parser, cadence authority, horizon, or deadline catalogue is redeclared and never inferring a date; `src/cadrumo/_data/registry/aeat/modelos/369/`.
-- [ ] `W02.P04.S16` - Generate an auditable 559-cell before-and-after census for supported filing years 2022-2026 that accounts for all 294 measured missing cells and every removed, corrected, retained, materialised, or still-blocked deadline coordinate with its official source, reconciling M369 60, M111 48, M322 42, M353 37, M349 32, M303 22, M115 16, M123 12, M202 9, M130 8, M131 4, and M216 4 exactly; `dev/; .vault/audit/`.
+- [ ] `W02.P04.S16` - Generate an auditable 555-cell before-and-after census for supported filing years 2022-2026 that accounts for all 294 measured missing cells and every removed, corrected, retained, materialised, or still-blocked deadline coordinate with its official source, reconciling M369 60, M111 48, M322 42, M353 37, M349 32, M303 22, M115 16, M123 12, M202 9, M130 8, M131 4, and M216 4 exactly; `dev/; .vault/audit/`.
 
 ### Phase `W02.P05` - Modelo 210 qualified plazo repair
 

@@ -75,7 +75,9 @@ def test_plugin_manifest_carries_required_fields(tmp_path: Path, plugin_cohort: 
     assert "aeat Spanish-tax CLI" not in document["description"]
 
 
-def test_plugin_emits_the_skills_tree_from_the_authored_source(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_plugin_emits_the_skills_tree_from_the_authored_source(
+    tmp_path: Path, plugin_cohort: TestPluginCohort
+) -> None:
     output = tmp_path / "plugin"
     manifest = materialise_plugin(output, cohort=plugin_cohort)
     assert manifest.skills_written == len(_shipped_skill_names())
@@ -85,7 +87,9 @@ def test_plugin_emits_the_skills_tree_from_the_authored_source(tmp_path: Path, p
     assert (output / "skills" / "cadrumo-preparar-modelo-130" / "reference" / "casillas.md").is_file()
 
 
-def test_plugin_skill_document_matches_the_shipped_bytes(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_plugin_skill_document_matches_the_shipped_bytes(
+    tmp_path: Path, plugin_cohort: TestPluginCohort
+) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, cohort=plugin_cohort)
     shipped = harness_root().joinpath("skills", "cadrumo-preparar-modelo-130", "SKILL.md").read_text(encoding=_UTF_8)
@@ -93,7 +97,9 @@ def test_plugin_skill_document_matches_the_shipped_bytes(tmp_path: Path, plugin_
     assert written == shipped
 
 
-def test_plugin_agents_carry_claude_frontmatter_never_mode(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_plugin_agents_carry_claude_frontmatter_never_mode(
+    tmp_path: Path, plugin_cohort: TestPluginCohort
+) -> None:
     output = tmp_path / "plugin"
     manifest = materialise_plugin(output, cohort=plugin_cohort)
     slugs = _persona_slugs()
@@ -108,7 +114,9 @@ def test_plugin_agents_carry_claude_frontmatter_never_mode(tmp_path: Path, plugi
         assert "mode" not in frontmatter
 
 
-def test_read_only_persona_maps_to_a_disallowed_tools_denylist(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_read_only_persona_maps_to_a_disallowed_tools_denylist(
+    tmp_path: Path, plugin_cohort: TestPluginCohort
+) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, cohort=plugin_cohort)
     agents_dir = output / "agents"
@@ -120,7 +128,9 @@ def test_read_only_persona_maps_to_a_disallowed_tools_denylist(tmp_path: Path, p
     assert "disallowedTools" not in classifier
 
 
-def test_plugin_agent_body_preserves_the_shipped_persona_prose(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_plugin_agent_body_preserves_the_shipped_persona_prose(
+    tmp_path: Path, plugin_cohort: TestPluginCohort
+) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, cohort=plugin_cohort)
     written = (output / "agents" / "cadrumo-coordinator.md").read_text(encoding=_UTF_8)
@@ -162,7 +172,9 @@ def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(
         f"${{CLAUDE_PLUGIN_ROOT}}/artifacts/python/{plugin_cohort.official_wheel.name}",
         "cadrumo-mcp",
     ]
-    retained = json.loads((output / "artifacts" / "python" / "plugin-python-cohort.json").read_text(encoding=_UTF_8))
+    retained = json.loads(
+        (output / "artifacts" / "python" / "plugin-python-cohort.json").read_text(encoding=_UTF_8)
+    )
     assert set(retained) == {
         "artifacts",
         "harness_version",
@@ -196,7 +208,9 @@ def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(
     }
 
 
-def test_persona_default_interpolates_into_user_config(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_persona_default_interpolates_into_user_config(
+    tmp_path: Path, plugin_cohort: TestPluginCohort
+) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, persona_default="cadrumo-verifier", cohort=plugin_cohort)
     document = json.loads((output / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
@@ -249,7 +263,9 @@ def test_materialiser_has_no_cohortless_or_version_override_compatibility() -> N
     assert "version" not in parameters
 
 
-def test_foreign_harness_bytes_are_refused(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_foreign_harness_bytes_are_refused(
+    tmp_path: Path, plugin_cohort: TestPluginCohort
+) -> None:
     plugin_cohort.harness_wheel.write_bytes(b"foreign harness")
     with pytest.raises(ValueError, match="cadrumo-harness"):
         materialise_plugin(tmp_path / "plugin", cohort=plugin_cohort)

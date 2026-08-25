@@ -150,7 +150,6 @@ def _calc_sheets_pull_terminal_refusal(
         outcome=outcome,
     )
 
-
 # A single batch-get value-range entry from the Sheets API.
 # Shape: {"range": str, "values": list[list[object]]}
 ValueRange = dict[str, Any]

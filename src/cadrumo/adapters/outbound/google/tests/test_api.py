@@ -199,10 +199,7 @@ def _request_raising(exc: BaseException) -> AbstractContextManager[tuple[HttpReq
 
 @pytest.mark.parametrize("status", (401, 403), ids=("unauthorized", "forbidden"))
 def test_permission_http_errors_translate_to_permission_error(status: int) -> None:
-    with (
-        _request_raising(_make_http_error(status)) as (req, _paths),
-        pytest.raises(OutboundStoragePermissionError) as raised,
-    ):
+    with _request_raising(_make_http_error(status)) as (req, _paths), pytest.raises(OutboundStoragePermissionError) as raised:
         execute_request(req, action="drive.files.get")
     _assert_verdict(
         raised.value,
@@ -244,10 +241,7 @@ def test_http_429_translates_to_quota_error() -> None:
 
 
 def test_http_404_translates_to_not_found_error() -> None:
-    with (
-        _request_raising(_make_http_error(404)) as (req, _paths),
-        pytest.raises(OutboundStorageNotFoundError) as raised,
-    ):
+    with _request_raising(_make_http_error(404)) as (req, _paths), pytest.raises(OutboundStorageNotFoundError) as raised:
         execute_request(req, action="drive.files.get")
     _assert_verdict(
         raised.value,
@@ -269,10 +263,7 @@ def test_http_500_translates_to_network_error() -> None:
 
 
 def test_generic_exception_translates_to_network_error() -> None:
-    with (
-        _request_raising(ConnectionError("timeout")) as (req, _paths),
-        pytest.raises(OutboundStorageNetworkError) as raised,
-    ):
+    with _request_raising(ConnectionError("timeout")) as (req, _paths), pytest.raises(OutboundStorageNetworkError) as raised:
         execute_request(req, action="sheets.values.batchGet")
     _assert_verdict(
         raised.value,
