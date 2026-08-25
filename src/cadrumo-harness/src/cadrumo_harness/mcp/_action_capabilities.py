@@ -234,7 +234,10 @@ def build_mcp_action_input_schemas(
     )
     return {
         command_key: McpVerbInputSchema(
-            **{field_name: getattr(verb_schema, field_name) for field_name in VerbInputSchema.model_fields},
+            **{
+                field_name: getattr(verb_schema, field_name)
+                for field_name in VerbInputSchema.model_fields
+            },
             action_capabilities=capabilities_by_target.get(command_key, ()),
         )
         for command_key, verb_schema in verb_schemas.items()

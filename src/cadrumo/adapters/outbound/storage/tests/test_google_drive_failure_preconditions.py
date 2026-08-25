@@ -477,48 +477,12 @@ def test_drive_failure_carrier_totality_uses_the_canonical_no_action_authority()
 @pytest.mark.parametrize(
     ("status", "error_type", "condition", "outcome", "state_fact"),
     (
-        (
-            401,
-            OutboundStoragePermissionError,
-            DriveStoragePreconditionCondition.REQUEST_AUTHORIZED,
-            NoRecoveryOutcome.SAFETY,
-            ("authorization_sufficient", False),
-        ),
-        (
-            404,
-            OutboundStorageNotFoundError,
-            DriveStoragePreconditionCondition.TARGET_PRESENT,
-            NoRecoveryOutcome.OPERATOR_DECISION,
-            ("target_present", False),
-        ),
-        (
-            409,
-            OutboundStorageConflictError,
-            DriveStoragePreconditionCondition.REQUEST_CONFLICT_FREE,
-            NoRecoveryOutcome.OPERATOR_DECISION,
-            ("conflict_detected", True),
-        ),
-        (
-            429,
-            OutboundStorageQuotaError,
-            DriveStoragePreconditionCondition.REQUEST_WITHIN_QUOTA,
-            NoRecoveryOutcome.SAFETY,
-            ("quota_available", False),
-        ),
-        (
-            503,
-            OutboundStorageUnavailableError,
-            DriveStoragePreconditionCondition.REQUEST_AVAILABLE,
-            NoRecoveryOutcome.SAFETY,
-            ("available", False),
-        ),
-        (
-            418,
-            OutboundStorageNetworkError,
-            DriveStoragePreconditionCondition.REQUEST_TRANSPORT_AVAILABLE,
-            NoRecoveryOutcome.SAFETY,
-            ("transport_available", False),
-        ),
+        (401, OutboundStoragePermissionError, DriveStoragePreconditionCondition.REQUEST_AUTHORIZED, NoRecoveryOutcome.SAFETY, ("authorization_sufficient", False)),
+        (404, OutboundStorageNotFoundError, DriveStoragePreconditionCondition.TARGET_PRESENT, NoRecoveryOutcome.OPERATOR_DECISION, ("target_present", False)),
+        (409, OutboundStorageConflictError, DriveStoragePreconditionCondition.REQUEST_CONFLICT_FREE, NoRecoveryOutcome.OPERATOR_DECISION, ("conflict_detected", True)),
+        (429, OutboundStorageQuotaError, DriveStoragePreconditionCondition.REQUEST_WITHIN_QUOTA, NoRecoveryOutcome.SAFETY, ("quota_available", False)),
+        (503, OutboundStorageUnavailableError, DriveStoragePreconditionCondition.REQUEST_AVAILABLE, NoRecoveryOutcome.SAFETY, ("available", False)),
+        (418, OutboundStorageNetworkError, DriveStoragePreconditionCondition.REQUEST_TRANSPORT_AVAILABLE, NoRecoveryOutcome.SAFETY, ("transport_available", False)),
     ),
 )
 def test_real_drive_http_failures_have_exact_terminal_contracts(
@@ -620,16 +584,8 @@ def test_real_drive_absence_failures_have_exact_operator_decision_contracts(
     ("case", "condition", "facts"),
     (
         ("size", DriveStoragePreconditionCondition.METADATA_SIZE_VALID, {"field": "size", "valid": False}),
-        (
-            "modified-time",
-            DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID,
-            {"field": "modifiedTime", "valid": False},
-        ),
-        (
-            "app-properties",
-            DriveStoragePreconditionCondition.METADATA_APP_PROPERTIES_VALID,
-            {"field": "appProperties", "valid": False},
-        ),
+        ("modified-time", DriveStoragePreconditionCondition.METADATA_MODIFIED_TIME_VALID, {"field": "modifiedTime", "valid": False}),
+        ("app-properties", DriveStoragePreconditionCondition.METADATA_APP_PROPERTIES_VALID, {"field": "appProperties", "valid": False}),
     ),
 )
 def test_malformed_drive_metadata_has_exact_safety_contracts(

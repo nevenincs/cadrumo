@@ -228,7 +228,7 @@ def _google_auth_carriers() -> dict[str, ast.Call]:
                     carriers[key] = node
                 self.generic_visit(node)
 
-        Visitor(module.__name__.rsplit(".", maxsplit=1)[-1]).visit(tree)
+        Visitor(module.__name__.rsplit('.', maxsplit=1)[-1]).visit(tree)
     return carriers
 
 

@@ -124,7 +124,9 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_pro
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("21.00"),
                 iva_amount=Decimal("21.00"),
-                acquisition_cost=_acquisition_for(Decimal("100.00"), iva_rate=Decimal("21.00"), ratio=Decimal("1.00")),
+                acquisition_cost=_acquisition_for(
+                    Decimal("100.00"), iva_rate=Decimal("21.00"), ratio=Decimal("1.00")
+                ),
             ),
         ),
     )

@@ -338,7 +338,6 @@ async def _start_playwright() -> Playwright:
     :class:`BrowserError`, not a raw ``ModuleNotFoundError`` from the import below.
     """
     from .....core import BROWSER_EXTRA, MissingOptionalExtraError, require_optional_extra
-
     try:
         require_optional_extra(BROWSER_EXTRA)
     except MissingOptionalExtraError as exc:

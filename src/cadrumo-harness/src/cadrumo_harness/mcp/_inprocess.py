@@ -229,7 +229,9 @@ def parse_cli_envelope(run: CompletedCliRun) -> tuple[dict[str, object], bool]:
 
         command = envelope.get("command") if isinstance(envelope, dict) else None
         schema = (
-            command_schema_type(command) if isinstance(command, str) and envelope.get("status") != "error" else None
+            command_schema_type(command)
+            if isinstance(command, str) and envelope.get("status") != "error"
+            else None
         )
         validated = validate_registered_envelope_document(envelope, schema)
     except OutputSchemaError:

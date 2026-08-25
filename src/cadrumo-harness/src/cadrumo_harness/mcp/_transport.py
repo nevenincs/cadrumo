@@ -169,7 +169,9 @@ def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: fl
         command=command_key,
         tier=tier.value,
         seconds=int(timeout_s),
-        default=("'{command}' exceeded the {tier}-tier time limit ({seconds}s) and was cancelled."),
+        default=(
+            "'{command}' exceeded the {tier}-tier time limit ({seconds}s) and was cancelled."
+        ),
     )
     return _transport_error_envelope(
         command_key=command_key,

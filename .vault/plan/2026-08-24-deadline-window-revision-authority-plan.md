@@ -13,7 +13,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
 modified: '2026-08-25'
-body_hash: 'sha256:21f57940a7b05ccd84a00d41099b677f814f6f03e3d9986c88b575ed1299aa96'
+body_hash: 'sha256:23d17aaa649e3a237cac2c56013ff71964a36df908b834cce8b7c4e1f6e1e078'
 ---
 
 <!-- RETIRED: P06, P07, P09 -->
@@ -144,7 +144,7 @@ Verify the full consumer chain without local matching or multiplicity erasure.
 - [x] `W04.P12.S29` - Audit overview, agenda, backlog, workflow gates, filing-window lookup, and explain for exclusive consumption of canonical deadline APIs; `src/cadrumo/application/`.
 - [x] `W04.P12.S30` - Add overview and workflow regressions comparing ordered semantic coordinates without multiplicity-erasing assertions; `src/cadrumo/application/overview/tests/; src/cadrumo/application/modelo/tests/`.
 - [x] `W04.P12.S31` - Add real CLI JSON regressions for calendar, agenda, backlog, workflow, and explain including exactly four M303 quarterly obligations for 2025; `src/cadrumo/entrypoints/cli/tests/`.
-- [ ] `W04.P12.S32` - Add all-modelo parity coverage across registry, DeadlineEngine, overview, workflow, and real CLI for every supported filing year; `src/cadrumo/domain/deadlines/tests/; src/cadrumo/application/overview/tests/; src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W04.P12.S32` - Add all-modelo parity coverage across registry, DeadlineEngine, overview, workflow, and real CLI for every supported filing year; `src/cadrumo/domain/deadlines/tests/; src/cadrumo/application/overview/tests/; src/cadrumo/entrypoints/cli/tests/`.
 
 ### Phase `W04.P13` - exhaustive gates and formal review
 

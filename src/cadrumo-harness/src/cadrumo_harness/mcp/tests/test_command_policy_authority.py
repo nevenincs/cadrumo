@@ -94,9 +94,7 @@ def test_legacy_keyed_policy_authority_is_physically_absent() -> None:
                 continue
             text = source.read_text(encoding="utf-8")
             tree = ast.parse(text, filename=str(source))
-            strings = [
-                node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
-            ]
+            strings = [node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)]
             if any(token in text or any(token in value for value in strings) for token in banned):
                 offenders.append(str(source.relative_to(repository)))
     assert offenders == []

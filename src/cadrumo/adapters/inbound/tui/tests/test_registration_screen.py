@@ -166,7 +166,9 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
                     break
                 await pilot.pause(0.05)
             assert words is not None
-            recovery.query_one("#field-recovery-verification", Input).value = str(words.render())
+            recovery.query_one("#field-recovery-verification", Input).value = str(
+                words.render()
+            )
             await pilot.click("#btn-confirm-words")
             await app.workers.wait_for_complete()
             await pilot.pause()
