@@ -42,8 +42,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ...sanitizer import ResidualKind
 from .._tree_scan import (
     BLOCKING_KINDS,

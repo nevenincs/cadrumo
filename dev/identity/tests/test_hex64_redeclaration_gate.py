@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.identity.hex64_redeclaration_census import (
+from ..hex64_redeclaration_census import (
     CANONICAL_HOME,
     Declaration,
     DeclarationKind,

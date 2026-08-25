@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.identity.tax_id_respelling_census import (
+from ..tax_id_respelling_census import (
     EXEMPTIONS,
     Finding,
     census,
