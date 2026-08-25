@@ -502,6 +502,9 @@ if TYPE_CHECKING:
         ensure_profile_custody_owner_root as ensure_profile_custody_owner_root,
     )
     from ._custody_ports import (
+        inventory_committed_profile_custody as inventory_committed_profile_custody,
+    )
+    from ._custody_ports import (
         map_profile_authentication_proof_failure as map_profile_authentication_proof_failure,
     )
     from ._custody_ports import (
@@ -880,6 +883,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ensure_profile_custody_owner_root": "._custody_ports",
     "profile_custody_owner_root": "._custody_ports",
     "default_profile_bucket_storage": "._custody_ports",
+    "inventory_committed_profile_custody": "._custody_ports",
     "default_profile_secure_object_inventory": "._custody_ports",
     "profile_bind_bucket_session": "._custody_ports",
     "CENSAL_ADOPTABLE_PATHS": "._censo_sync",
