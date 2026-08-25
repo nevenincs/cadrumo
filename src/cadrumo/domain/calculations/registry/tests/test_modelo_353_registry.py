@@ -14,11 +14,11 @@ from .. import (
     RegistryCatalogues,
     RegistryValidationError,
     RegistryValidator,
-    build_snapshot,
     bundled_authority,
     previous_filing_source_reference,
     select_revision,
 )
+from .._snapshot import build_snapshot
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 
@@ -411,7 +411,7 @@ def test_modelo_353_2026_deadlines_are_exactly_grounded() -> None:
         "09": (date(2026, 10, 1), date(2026, 10, 30), date(2026, 10, 27)),
         "10": (date(2026, 11, 1), date(2026, 11, 30), date(2026, 11, 25)),
         "11": (date(2026, 12, 1), date(2026, 12, 30), date(2026, 12, 24)),
-        "12": (date(2027, 1, 1), date(2027, 2, 1), date(2027, 1, 27)),
+        "12": (date(2027, 1, 1), date(2027, 2, 1), date(2027, 1, 29)),
     }
 
     assert len(windows) == len(expected) == 12
@@ -424,9 +424,7 @@ def test_modelo_353_2026_deadlines_are_exactly_grounded() -> None:
         assert window.period_kind == "monthly"
         assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
         expected_source = (
-            "aeat-modelo-303-procedure"
-            if period == "12"
-            else "aeat-calendario-contribuyente-2026-domiciliacion"
+            "aeat-modelo-303-procedure" if period == "12" else "aeat-calendario-contribuyente-2026-domiciliacion"
         )
         assert expected_source in window.source_refs
 

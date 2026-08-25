@@ -23,6 +23,7 @@ from typing import NamedTuple
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .._authority import bundled_authority
 from .._validate import RegistryValidator
@@ -116,6 +117,35 @@ def test_modelo_220_annual_window_opens_july_and_closes_after_25_natural_days() 
     window = windows["modelo-220-2024-0a"]
     assert window.opens_on == date(2025, 7, 1)
     assert window.closes_on == date(2025, 7, 25)
+
+
+def test_modelo_220_2025_sources_match_the_revision_window() -> None:
+    """The 2025 revision cites its own design and period-scoped approving order."""
+    modelo, catalogues = _committed_modelo("220")
+    revision = modelo.revisions["2025"]
+
+    assert (revision.valid_from, revision.valid_to) == (date(2025, 1, 1), date(2025, 12, 31))
+    assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
+    assert "boe-modelo-220-2026-form" not in catalogues.sources
+    assert set(revision.source_refs) >= {
+        "aeat-dr-220-2025",
+        "boe-modelo-220-2025-form",
+    }
+    for source_id in ("aeat-dr-220-2025", "boe-modelo-220-2025-form"):
+        source = catalogues.sources[source_id]
+        assert (source.applies_from, source.applies_to) == (
+            revision.valid_from,
+            revision.valid_to,
+        )
+
+    snapshot = bundled_authority().snapshot(
+        "220",
+        filing_year=2025,
+        period="0A",
+        revision_id=revision.id,
+        grade=RegistryAuthorityGrade.APPLICABILITY,
+    )
+    assert snapshot.revision.id == revision.id
 
 
 def test_modelo_222_trimestral_windows_open_and_close_on_day_20() -> None:

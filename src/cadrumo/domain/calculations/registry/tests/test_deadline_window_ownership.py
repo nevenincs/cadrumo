@@ -14,7 +14,11 @@ from .._schema import (
     SupportedFilingYearsCatalogue,
 )
 from .._validate import RegistryValidator
-from .._validate_revision_rules import validate_deadline_window_ownership, validate_periodic_deadline_completeness
+from .._validate_revision_rules import (
+    validate_deadline_window_cadence,
+    validate_deadline_window_ownership,
+    validate_periodic_deadline_completeness,
+)
 from ._referential_integrity_support import (
     RegistryValidationError,
     minimal_catalogues,
@@ -88,6 +92,24 @@ def test_registry_build_routes_ownership_through_canonical_validation_pass() -> 
         RegistryValidationError,
         match=r"deadline window 'quarterly-window' belongs to canonically selected revision 'quarterly'",
     ):
+        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_registry_build_rejects_deadline_cadence_that_contradicts_canonical_period() -> None:
+    contradictory = _window("contradictory-window", "01").model_copy(update={"period_kind": "quarterly"})
+    revision = minimal_revision(deadline_windows=(contradictory,)).model_copy(
+        update={
+            "valid_from": date(2024, 1, 1),
+            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("01",)),
+        },
+    )
+    modelo = minimal_modelo(revision)
+
+    assert validate_deadline_window_cadence(modelo) == [
+        "modelo 130 revision test-revision: deadline window 'contradictory-window' "
+        "period_kind 'quarterly' contradicts period '01'",
+    ]
+    with pytest.raises(RegistryValidationError, match=r"period_kind 'quarterly' contradicts period '01'"):
         RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
 
 

@@ -13,10 +13,17 @@ from __future__ import annotations
 from collections.abc import Collection, Iterable
 from datetime import date, timedelta
 
-from ....core import M210_TIPO_RENTA_CODE_PROJECTION, registry_period_kind
+from ....core import M210_TIPO_RENTA_CODE_PROJECTION
 from ._deadline_coordinate import DeadlineSemanticCoordinate, deadline_window_semantic_coordinates
 from ._errors import RegistrySnapshotError
-from ._schema import DatedValue, InputKind, ModeloDefinition, ModeloRevision, ParameterDefinition
+from ._schema import (
+    DatedValue,
+    InputKind,
+    ModeloDefinition,
+    ModeloRevision,
+    ParameterDefinition,
+    filing_schedule_period_kind_mismatches,
+)
 from ._temporal import select_revision
 from ._validate_relation_sources import period_selectors_overlap
 
@@ -120,6 +127,25 @@ def validate_deadline_window_ownership(modelo: ModeloDefinition) -> list[str]:
     return failures
 
 
+def validate_deadline_window_cadence(modelo: ModeloDefinition) -> list[str]:
+    """Reject deadline cadence labels that contradict their canonical period.
+
+    Reuse the filing-schedule compatibility table so deadline rows and
+    schedules interpret monthly, quarterly, instalment, and extended tokens
+    through one vocabulary owner.
+    """
+    failures: list[str] = []
+    for revision in modelo.revisions.values():
+        for window in revision.deadline_windows:
+            period = window.period.registry_token
+            if filing_schedule_period_kind_mismatches(window.period_kind, (period,)):
+                failures.append(
+                    f"modelo {modelo.id} revision {revision.id}: deadline window {window.id!r} "
+                    f"period_kind {window.period_kind!r} contradicts period {period!r}",
+                )
+    return failures
+
+
 def validate_periodic_deadline_completeness(
     modelo: ModeloDefinition,
     *,
@@ -130,8 +156,8 @@ def validate_periodic_deadline_completeness(
     The supported-year horizon is supplied by the registry-wide catalogue.
     Candidate tokens come only from authored filing schedules, and
     :func:`select_revision` decides which revision governs each coordinate.
-    ``registry_period_kind`` validates the shared period vocabulary; it is not
-    replaced by a deadline-specific parser or cadence table.
+    The shared filing-schedule cadence compatibility gate validates the period
+    vocabulary; it is not replaced by a deadline-specific parser or table.
     """
     candidate_periods = sorted(
         {
@@ -156,9 +182,10 @@ def validate_periodic_deadline_completeness(
             )
             if not selected_schedules:
                 continue
-            registry_period_kind(period)
             if any(
-                window.filing_year == filing_year and window.period.registry_token == period
+                window.filing_year == filing_year
+                and window.period.registry_token == period
+                and not filing_schedule_period_kind_mismatches(window.period_kind, (period,))
                 for window in selected.deadline_windows
             ):
                 continue

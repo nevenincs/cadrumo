@@ -15,8 +15,8 @@ period = "2026 4T"
 period_kind = "quarterly"
 opens_on = 2027-01-01
 closes_on = 2027-02-01
-legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
-source_refs = ["aeat-modelo-349-procedure", "boe-modelo-349-form-2010"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93", "ley-39-2015:art-30.5"]
+source_refs = ["aeat-modelo-349-plazos-presentacion", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
 id = "modelo-349-2026-2t"

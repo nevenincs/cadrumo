@@ -12,6 +12,24 @@
 #   the diez-dias-naturales rechazo tacito window for a notification put
 #   at the taxpayer's disposal (DEHu) but not accessed.
 
+[legal."ley-39-2015:art-30.5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-39-2015.html#a30"
+document_id = "BOE-A-2015-10565"
+article = "30.5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a30"
+published_at = 2015-10-02
+effective_from = 2016-10-02
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "operator"
+notes = "Grounds the canonical next-working-day extension when an authored filing deadline ends on a non-working day."
+required_text = [
+    "Cuando el último día del plazo sea inhábil, se entenderá prorrogado al primer día hábil siguiente",
+]
+
 [legal."ley-39-2015:art-43.2"]
 evidence_tier = "legal_authority"
 authority = "boe"

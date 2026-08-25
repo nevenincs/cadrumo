@@ -1,7 +1,7 @@
 [[revisions."2025".constructs]]
 id = "modelo-220-declaration-construct"
 legal_refs = ["orden-hac-529-2026:art-6-3", "orden-hac-529-2026:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-modelo-200-manual-2025", "boe-modelo-220-2026-form", "aeat-dr-220-2025"]
+source_refs = ["aeat-modelo-200-manual-2025", "boe-modelo-220-2025-form", "aeat-dr-220-2025"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
 application_links = ["modelo-220-deadline", "modelo-220-filing", "modelo-220-workflow"]
 deadline_windows = ["modelo-220-2025-0a"]

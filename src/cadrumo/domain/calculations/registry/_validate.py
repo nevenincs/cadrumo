@@ -45,6 +45,7 @@ from ._validate_record_design_epochs import (
 )
 from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_rules import (
+    validate_deadline_window_cadence,
     validate_deadline_window_ownership,
     validate_deadline_window_uniqueness,
     validate_informative_class_invariant,
@@ -247,6 +248,7 @@ class RegistryValidator:
         failures.extend(self._validate_user_profile_contract((modelo,)))
         failures.extend(validate_revision_windows(modelo))
         failures.extend(validate_deadline_window_ownership(modelo))
+        failures.extend(validate_deadline_window_cadence(modelo))
         failures.extend(validate_deadline_window_uniqueness(modelo))
         failures.extend(
             validate_periodic_deadline_completeness(

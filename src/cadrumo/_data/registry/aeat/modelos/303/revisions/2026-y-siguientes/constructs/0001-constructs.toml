@@ -54,6 +54,7 @@ source_refs = [
     "boe-modelo-303-2008-form",
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
     "aeat-calendario-contribuyente-2026-domiciliacion",
+    "aeat-calendario-contribuyente-2026-hasta-1-febrero-2027",
     "boe-orden-hac-1425-2025-iva-authority",
 ]
 casilla_ids = [

@@ -13,11 +13,11 @@ from .. import (
     ModeloDefinition,
     RegistryCatalogues,
     RegistryValidator,
-    build_snapshot,
     bundled_authority,
     deadline_semantic_coordinate,
     select_revision,
 )
+from .._snapshot import build_snapshot
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 
@@ -235,16 +235,14 @@ def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned
         assert window.id == f"modelo-322-{year}-{period}"
         assert window.filing_year == window.period.filing_year == year
         assert window.period_kind == "monthly"
-        expected_payment = date(2027, 1, 27) if coordinate == (2026, "12") else None
+        expected_payment = date(2027, 1, 29) if coordinate == (2026, "12") else None
         assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == (
             opens_on,
             closes_on,
             expected_payment,
         )
         expected_source = (
-            "aeat-modelo-303-procedure"
-            if source_year == 2027
-            else f"aeat-calendario-contribuyente-{source_year}"
+            "aeat-modelo-303-procedure" if source_year == 2027 else f"aeat-calendario-contribuyente-{source_year}"
         )
         assert expected_source in window.source_refs
         assert select_revision(modelo, filing_year=year, period=period) is revision

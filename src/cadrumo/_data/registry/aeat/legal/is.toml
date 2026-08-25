@@ -1551,7 +1551,7 @@ required_text = [
     "con períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025",
 ]
 
-[sources."boe-modelo-220-2026-form"]
+[sources."boe-modelo-220-2025-form"]
 evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
@@ -1560,7 +1560,8 @@ sha256 = "c8b3eea25b45fc705bc3b3a1df6818c75490df58239ef1c816c43574d71649c5"
 bytes = 3227
 retrieved_at = 2026-08-22
 published_at = 2026-05-13
-applies_from = 2026-07-01
+applies_from = 2025-01-01
+applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
 review_status = "reviewed"
 

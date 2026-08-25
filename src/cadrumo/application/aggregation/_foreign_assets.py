@@ -34,16 +34,27 @@ from ...core import (
     foreign_asset_obligation_group,
 )
 from ...core.aggregation import ForeignAssetClass
+from ...core.hashing import canonical_json_digest
 from ...core.identity import TransactionId
 from ...core.parsing import IsoDateString, require_iso8601_date
-from ...domain.calculations.registry import Modelo720RowObservation, resolve_foreign_asset_binding_row_values
+from ...domain.calculations import RowSourceIdentity
+from ...domain.calculations.registry import (
+    Modelo720RowObservation,
+    binding_row_set_selector,
+    resolve_foreign_asset_binding_row_values,
+)
 from .._foreign_asset_thresholds import (
     ForeignAssetDeclarationThreshold,
     foreign_asset_declaration_thresholds,
     foreign_asset_declaration_thresholds_for_revision,
 )
 from ._grouping import assert_rollup_totals_match, group_observations
-from ._source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ._source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceLineageRole,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
 
 _CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
@@ -306,12 +317,21 @@ class ForeignAssetsAggregationSourceResolver:
     resolver_id: ClassVar[str] = "foreign_assets_aggregation"
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
 
-    def __init__(self, *, observations: Iterable[ForeignAssetIngestObservation] = ()) -> None:
+    def __init__(
+        self,
+        *,
+        observations: Iterable[ForeignAssetIngestObservation] = (),
+        row_observations: Iterable[Modelo720RowObservation] = (),
+    ) -> None:
         self._observations = tuple(observations)
+        self._row_observations = tuple(row_observations)
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not _foreign_asset_source_for_revision(context):
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
+
+        if self._row_observations:
+            return _worksheet_row_resolution(context, self._row_observations)
 
         aggregation = aggregate_foreign_assets_720(self._observations, period=context.period)
         thresholds = foreign_asset_declaration_thresholds_for_revision(
@@ -397,6 +417,73 @@ def _asset_class_code(asset_class: ForeignAssetClass) -> M720AssetClassCode:
         return MODELO_720_FOREIGN_ASSET_CLASS_CODES[asset_class]
     except KeyError as exc:
         raise ValueError(f"{asset_class.value!r} is not a Modelo 720 foreign-asset class") from exc
+
+
+def _worksheet_row_resolution(
+    context: CalculationSourceContext,
+    observations: tuple[Modelo720RowObservation, ...],
+) -> CalculationSourceResolution:
+    """Carry S90 worksheet rows through M720's established resolver.
+
+    The row-set assembler has already validated these observations against the
+    selected snapshot.  This resolver remains the sole M720 source-mesh owner;
+    it only retains the row coordinates and opaque source evidence that the
+    former aggregate-only handoff could not truthfully reconstruct.
+    """
+    row_binding_values = resolve_foreign_asset_binding_row_values(context.revision, observations)
+    row_bindings = tuple(
+        binding
+        for binding in context.revision.bindings
+        if binding.source is BindingSourceKind.FOREIGN_ASSET
+    )
+    groupings = {
+        selector.grouping
+        for binding in row_bindings
+        if (selector := binding_row_set_selector(binding)) is not None
+    }
+    if len(groupings) != 1:
+        raise ValueError("Modelo 720 foreign-asset row bindings must declare one row-set grouping")
+    grouping = next(iter(groupings))
+    ordered = tuple(
+        sorted(
+            observations,
+            key=lambda row: (row.country_code, row.asset_class_code, row.asset_identifier, row.acquisition_date.isoformat()),
+        )
+    )
+    row_source_identities = {
+        (binding.id, row_index): RowSourceIdentity(
+            source_kind=BindingSourceKind.FOREIGN_ASSET,
+            source_row_identity=row.source_id,
+            fingerprint=canonical_json_digest(
+                row.model_dump(mode="json"), maximum_bytes=4096, subject="modelo 720 worksheet row"
+            ),
+            row_set_grouping=grouping,
+        )
+        for row_index, row in enumerate(ordered, start=1)
+        for binding in row_bindings
+    }
+    provenance = tuple(
+        CalculationSourceProvenance(
+            resolver_id=ForeignAssetsAggregationSourceResolver.resolver_id,
+            resolved_binding_source=BindingSourceKind.FOREIGN_ASSET,
+            contributor_source_kind=BindingSourceKind.FOREIGN_ASSET.value,
+            contributor_binding_source=BindingSourceKind.FOREIGN_ASSET,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=f"worksheet:{row.source_id}",
+            parent_source_ref=None,
+            fingerprint=canonical_json_digest(
+                row.model_dump(mode="json"), maximum_bytes=4096, subject="modelo 720 worksheet row"
+            ),
+        )
+        for row in ordered
+    )
+    return CalculationSourceResolution(
+        resolver_id=ForeignAssetsAggregationSourceResolver.resolver_id,
+        owned_sources=ForeignAssetsAggregationSourceResolver.owned_sources,
+        row_binding_values=row_binding_values,
+        row_source_identities=row_source_identities,
+        provenance=provenance,
+    )
 
 
 __all__ = [
