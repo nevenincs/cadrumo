@@ -121,10 +121,9 @@ from .sessions import (
 )
 
 if TYPE_CHECKING:
-    from cadrumo.application.workflow.state_models import WorkflowState
-
     from ...domain.buckets import BucketEvent, BucketEventType
     from ..state_projection import OperatorStateProjection
+    from ..workflow.state_models import WorkflowState
 
 
 _build_auth_cleanup_intent = build_auth_cleanup_intent
@@ -173,10 +172,9 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
         :class:`application.workflow.ActiveProfileHealth`
             Redacted health verdict used to accept or refuse the active bucket.
     """
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-    from cadrumo.application.workflow.profile_health import assess_active_profile_health
-
     from ...domain.buckets import BucketEventType
+    from ..workflow.persistence import workflow_state_repository
+    from ..workflow.profile_health import assess_active_profile_health
 
     listing = _implemented_provider(provider)
     resolved_settings = load_settings()
@@ -763,9 +761,8 @@ async def login_operator_auth(
             certificate_credentials=certificate_credentials,
         )
 
-        from cadrumo.application.workflow.persistence import workflow_state_repository
-
         from ...domain.buckets import BucketEventType
+        from ..workflow.persistence import workflow_state_repository
 
         bucket_id = snapshot.bucket_id
         if bucket_id is None:
@@ -896,7 +893,7 @@ def logout_operator_auth(
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
             )
-        from cadrumo.application.workflow.persistence import workflow_state_repository
+        from ..workflow.persistence import workflow_state_repository
 
         with _auth_mutation_span(settings=resolved_settings, bucket_id=bucket_id):
             repository = workflow_state_repository()
@@ -1046,7 +1043,7 @@ def reset_operator_auth(
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
             )
-        from cadrumo.application.workflow.persistence import workflow_state_repository
+        from ..workflow.persistence import workflow_state_repository
 
         with _auth_mutation_span(settings=resolved_settings, bucket_id=bucket_id):
             repository = workflow_state_repository()
@@ -1230,7 +1227,7 @@ def _append_bucket_event(
     action: str,
     object_id: str,
 ) -> WorkflowState:
-    from cadrumo.application.workflow.review_models import WorkflowEvent
+    from ..workflow.review_models import WorkflowEvent
 
     # Auth flows can run before a profile is bound (e.g. `auth configure`
     # during initial setup). Falling back to the literal "default" silently
