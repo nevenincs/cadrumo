@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:317668eb1f69f93d02b8a89e934f1a448acbc0e44cd386b34e499f9662641f2e'
+body_hash: 'sha256:5cd1a0a5391cfcb703e4cd28d2cf60152ba5ae599a1eda79a9a4adf111dadecb'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -249,8 +249,11 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S240]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S241]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S242]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S243]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S244]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S245]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S246]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S247]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S248]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S249]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S250]]'
@@ -260,9 +263,16 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S254]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S255]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S256]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S257]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S258]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S259]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S260]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S261]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S262]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S263]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S267]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S268]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S269]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -319,9 +329,13 @@ related:
   - '[[2026-08-24-profile-password-custody-s242-golden-regeneration-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s248-registry-semantic-role-review-audit]]'
   - '[[2026-08-24-profile-password-custody-s249-provisioning-sequence-review-audit]]'
+  - '[[2026-08-25-profile-password-custody-audit]]'
   - '[[2026-08-25-profile-password-custody-modelo-220-source-grounding-review-audit]]'
+  - '[[2026-08-25-profile-password-custody-s243-localized-reference-review-audit]]'
+  - '[[2026-08-25-profile-password-custody-s244-api-docs-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s245-warm-runtime-recovery-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s246-watchdog-disarm-review-audit]]'
+  - '[[2026-08-25-profile-password-custody-s247-scoped-quality-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s250-operation-composition-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s251-filing-spine-cumulative-state-audit]]'
   - '[[2026-08-25-profile-password-custody-s252-registry-documentation-authority-review-audit]]'
@@ -330,6 +344,7 @@ related:
   - '[[2026-08-25-profile-password-custody-s258-grade-aware-preflight-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s259-m220-grounding-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s260-m182-deadline-review-audit]]'
+  - '[[2026-08-25-profile-password-custody-s262-localization-review-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -397,9 +412,13 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s242-golden-regeneration-review-audit` - `profile-password-custody` audit: `S242 golden regeneration formal review`
 - `2026-08-24-profile-password-custody-s248-registry-semantic-role-review-audit` - `profile-password-custody` audit: `S248 registry semantic-role review`
 - `2026-08-24-profile-password-custody-s249-provisioning-sequence-review-audit` - `profile-password-custody` audit: `S249 provisioning sequence review`
+- `2026-08-25-profile-password-custody-audit` - `profile-password-custody` audit: `s257-censal-operation-review`
 - `2026-08-25-profile-password-custody-modelo-220-source-grounding-review-audit` - `profile-password-custody` audit: `modelo 220 source grounding review`
+- `2026-08-25-profile-password-custody-s243-localized-reference-review-audit` - `profile-password-custody` audit: `s243 localized reference review`
+- `2026-08-25-profile-password-custody-s244-api-docs-review-audit` - `profile-password-custody` audit: `s244 api docs review`
 - `2026-08-25-profile-password-custody-s245-warm-runtime-recovery-review-audit` - `profile-password-custody` audit: `S245 warm-runtime recovery review`
 - `2026-08-25-profile-password-custody-s246-watchdog-disarm-review-audit` - `profile-password-custody` audit: `S246 watchdog disarm review`
+- `2026-08-25-profile-password-custody-s247-scoped-quality-review-audit` - `profile-password-custody` audit: `s247 scoped quality review`
 - `2026-08-25-profile-password-custody-s250-operation-composition-review-audit` - `profile-password-custody` audit: `S250 operation composition review`
 - `2026-08-25-profile-password-custody-s251-filing-spine-cumulative-state-audit` - `profile-password-custody` audit: `S251 filing-spine cumulative-state formal review`
 - `2026-08-25-profile-password-custody-s252-registry-documentation-authority-review-audit` - `profile-password-custody` audit: `s252 registry documentation authority review`
@@ -408,6 +427,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-25-profile-password-custody-s258-grade-aware-preflight-review-audit` - `profile-password-custody` audit: `S258 grade-aware preflight review`
 - `2026-08-25-profile-password-custody-s259-m220-grounding-review-audit` - `profile-password-custody` audit: `S259 M220 grounding review`
 - `2026-08-25-profile-password-custody-s260-m182-deadline-review-audit` - `profile-password-custody` audit: `S260 M182 deadline review`
+- `2026-08-25-profile-password-custody-s262-localization-review-audit` - `profile-password-custody` audit: `s262 localization review`
 
 ### exec
 
@@ -654,8 +674,11 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S242` - Regenerate every affected documentation sequence golden through the owning CLI after live behavior is adjudicated and reconcile frame counts without hand-authored output
 - `2026-08-13-profile-password-custody-W06-P12-S248` - Reconcile Modelo 303 2026 and Modelo 390 2022-2025 semantic-role constraint signatures against their official record-design authority so the shared-role validator passes without weakening compatibility checks
 - `2026-08-13-profile-password-custody-W06-P12-S249` - Reconcile profile and recovery provisioning sequences on check-aeat-notifications, quickstart, profile-setup, and troubleshooting with mandatory creation channels and current status/list composition
+- `2026-08-13-profile-password-custody-W06-P12-S243` - Repair Spanish, Catalan, and Hungarian localized reference tokens and generated CLI toctree integration so all localized nitpicky builds resolve current targets
+- `2026-08-13-profile-password-custody-W06-P12-S244` - Repair the main nitpicky API documentation cross-references and toctree ownership against current public module exports
 - `2026-08-13-profile-password-custody-W06-P12-S245` - Migrate harness warm-runtime profile provisioning to the mandatory verified recovery handoff and prove real runtime startup succeeds
 - `2026-08-13-profile-password-custody-W06-P12-S246` - Repair the harness serial watchdog kill-switch and disarm lifecycle so the full integration suite terminates cleanly without weakening timeout enforcement
+- `2026-08-13-profile-password-custody-W06-P12-S247` - Resolve changed-surface Ruff import order and partition every remaining type diagnostic to its owning implementation or fixture until the scoped global proof is clean
 - `2026-08-13-profile-password-custody-W06-P12-S250` - Restore or truthfully re-document operation composition projections on classify-with-llm, import-bank-statements, Modelo 390, and troubleshooting before regenerating their sequences
 - `2026-08-13-profile-password-custody-W06-P12-S251` - Repair filing-spine cumulative state so reused seed identity resolves the latest draft target and its documentation sequence proves the intended state transition
 - `2026-08-13-profile-password-custody-W06-P12-S252` - Adjudicate registry, revision, readiness, lifecycle, and modelo page contracts across the twelve residual registry-backed documentation pages against current authority
@@ -663,9 +686,16 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S254` - Reconcile verification-report history and provenance sequences with current Modelo 303 identifiers and authoritative frame structure
 - `2026-08-13-profile-password-custody-W06-P12-S255` - Reconcile the censo-update sequence with the current censal projection and reviewed-apply authority
 - `2026-08-13-profile-password-custody-W06-P12-S256` - Separate volatile workstation free-memory diagnostics from deterministic golden state while preserving real registry-integrity failures and host-health evidence
+- `2026-08-13-profile-password-custody-W06-P12-S257` - Route CLI and manager censal apply through the canonical user-profile.censo-review operation, preserving one acquisition, encrypted reviewed operand, exact baseline, resume-without-reread, and apply_cotejo sole-writer authority
 - `2026-08-13-profile-password-custody-W06-P12-S258` - Make registry referential-integrity preflight validate every revision at its declared authority grade while retaining full reference checks and real invalid-reference failures across applicability, calculation, and filing revisions
 - `2026-08-13-profile-password-custody-W06-P12-S259` - Correct Modelo 220 revision 2025 source grounding so it cites official authority applicable within its validity window and does not borrow the later 2026 form source
 - `2026-08-13-profile-password-custody-W06-P12-S260` - Reconcile Modelo 182 deadline windows with canonical revision ownership so no revision projects filing years outside its evidenced design era and unsupported 2026 remains refused
+- `2026-08-13-profile-password-custody-W06-P12-S261` - Compose the canonical profile-custody port in test capsule, documentation sequence, and harness profile fixtures so recovery enrollment uses the production owner without a parallel implementation, then rerun golden and harness proofs
+- `2026-08-13-profile-password-custody-W06-P12-S262` - Reconcile all four production catalogues with current source and registry revision ownership, including Modelo 038, Modelo 220, Modelo 763, missing and orphaned keys, then rerun audit, drift, completeness, and every nitpicky build
+- `2026-08-13-profile-password-custody-W06-P12-S263` - Remove the five newly introduced em dashes from environment-override prose and prove the documentation dash ratchet without widening its baseline
+- `2026-08-13-profile-password-custody-W06-P12-S267` - Reconcile feature and full Vaultspec warnings by exact document owner, removing scaffold annotations, reattesting modified bodies, refreshing indexes, and resolving only genuine corpus hygiene debt
+- `2026-08-13-profile-password-custody-W06-P12-S268` - Repair defining-source API docstring cross-references and public facade targets for every stable main nitpicky warning left after generated stub reconciliation, without promoting private implementation ownership
+- `2026-08-13-profile-password-custody-W06-P12-S269` - Move the documentation sequence runner to the canonical relocated profile-capsule runtime helper and repair its ownership link without recreating the retired test facade
 
 ### plan
 
