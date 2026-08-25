@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:3abed63fd61a6a801f6da843a4fec1386dde333ff98bf46fdc28c295d6b3dbdf'
+body_hash: 'sha256:8f6bee7472f1972df6e2368ca2b91c943fdb175d27b21bd7f1283d12deb6256b'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -379,7 +379,7 @@ Repeat discovery and bounded delivery until the census reaches a stable, fully a
 - [x] `W06.P20.S228` - record the accepted M390 2021 grounding-blocked source-owner decision without source implementation; `M390-2021 grounding research, accepted M390-2021 deferral ADR, S228 exec, source plan, generated feature index`.
 - [x] `W06.P20.S229` - Adjudicate Modelo 721's source facts, casillas, and value-arrival lifecycle separately for each exact structured-message contract era, without treating the XML/SOAP contract or export-plan S97-S99 as source evidence.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/721/`.
 - [x] `W06.P20.S230` - After Modelo 763's period-aware eras are selected, determine whether any non-header filing value has a distinct authoritative source lifecycle and add a candidate only when its fact, grain, and destination are evidenced.; `.vault/research/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/763/`.
-- [ ] `W06.P20.S231` - Adjudicate Modelo 840 source and repeated-row value lifecycles independently from the generic CRLF transport bridge, then add only evidenced canonical bindings, provenance, and census dispositions without an M840-specific writer.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/840/`.
+- [x] `W06.P20.S231` - Adjudicate Modelo 840 source and repeated-row value lifecycles independently from the generic CRLF transport bridge, then add only evidenced canonical bindings, provenance, and census dispositions without an M840-specific writer.; `.vault/research/; .vault/adr/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/840/`.
 - [ ] `W06.P20.S232` - After Modelo 188's exact historic design eras are selected, determine whether any required external value lifecycle exists and add no source kind, binding, casilla, or census candidate until official fact-to-destination evidence settles it.; `.vault/research/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/188/`.
 - [ ] `W06.P20.S233` - After Modelo 194's 2019-2024 source eras are selected, determine whether any required external value lifecycle exists and add no source kind, binding, casilla, or census candidate until official fact-to-destination evidence settles it.; `.vault/research/; src/cadrumo/_data/source_connectivity/census.toml; src/cadrumo/_data/registry/aeat/modelos/194/`.
 

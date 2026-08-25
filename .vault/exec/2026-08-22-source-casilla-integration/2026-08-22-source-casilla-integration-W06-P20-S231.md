@@ -5,48 +5,12 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:13720908a73029a4599cdfd316f3abe3af2aad2b8da482083609f94c5540205c'
+body_hash: 'sha256:20fa4d232b649c3bbb5907363abcf54aa28b3f7a7716222dd409c85a17239ae6'
 step_id: 'S231'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
+  - '[[2026-08-25-source-casilla-integration-modelo-840-source-and-repeated-row-owner-deferral-adr]]'
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace source-casilla-integration with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S231 and 2026-08-22-source-casilla-integration-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Adjudicate Modelo 840 source and repeated-row value lifecycles independently from the generic CRLF transport bridge, then add only evidenced canonical bindings, provenance, and census dispositions without an M840-specific writer. and ## Scope
-
-- `.vault/research/`
-- `.vault/adr/`
-- `src/cadrumo/_data/source_connectivity/census.toml`
-- `src/cadrumo/_data/registry/aeat/modelos/840/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Adjudicate Modelo 840 source and repeated-row value lifecycles independently from the generic CRLF transport bridge, then add only evidenced canonical bindings, provenance, and census dispositions without an M840-specific writer.
 
 ## Scope
@@ -58,10 +22,55 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Discover the governing source-connectivity decision, M840 registry and
+  source-mesh surfaces, generic producer/terminator boundary, and prior M840
+  record-extent reference before exact-symbol confirmation.
+- Re-fetch the BOE order/form and AEAT procedure/design, record the published
+  form and record-design hashes, and distinguish filing targets from source
+  acquisition.
+- Inspect the whole `2003-y-siguientes` registry lifecycle and exact-search for
+  an M840 source owner, resolver, binding, row carrier, producer values, or
+  census candidate.
+- Record the factual result in model-scoped research and the normative
+  `grounding_blocked` result in the accepted M840 ADR; preserve the independent
+  generic CRLF transport owner.
+- Correct the accidentally mixed blank scaffold from `eb732c9db9`, check S231
+  through the approved CLI, regenerate the feature index, and run bounded
+  registry/continuity and Vault checks.
 
 ## Outcome
 
+S231 adds no source-connectivity candidate.  Official M840 artefacts establish
+two real source familiesâ€”declaration/activity facts and individually repeated
+`RelaciÃ³n de locales` factsâ€”but no authoritative, non-lossy encrypted owner
+for either.  The accepted model-scoped ADR classifies both as
+`grounding_blocked`, owned by `source-connectivity-campaign`, with no binding,
+resolver, fixture, M840 writer, source-owned repeated-record export, registry,
+or census change.
+
+The existing informational registry targets, narrow secure IAE threshold
+observation, and generic CRLF bridge retain their existing contracts.  None is
+reclassified as a complete M840 source or direct/manual lifecycle.  Reopening
+requires a family-specific authorized carrier, durable identity, full native
+value/absence semantics, selected destinations, encrypted provenance and
+replay/review route, plus separately grounded export proof if export is later
+proposed.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+`eb732c9db9` was a shared mixed-worktree commit whose M763-labelled change set
+inadvertently included blank S231 research/exec scaffolds and an unaccepted,
+genericly named ADR scaffold.  Exact reference search found no inbound
+references and no accepted decision in that erroneous file.  This step removes
+only that scaffold, creates the correct model-scoped ADR, and records the
+provenance rather than attributing the earlier mixed commit to S231.
+
+The focused registry suite passed 10 tests and Ruff passed.  The five IAE
+continuity tests fail before their assertions because shared validation now
+refuses a `filing` snapshot for M840's declared `applicability` authority grade;
+S231 changes no registry/runtime authority and does not mask that unrelated
+failure.  The path-scoped Vault check has no errors: S231 frontmatter, schema,
+ADR status, exec mapping, links, modified stamps, body sections, and
+placeholders pass.  It reports 35 pre-existing feature warningsâ€”24 template
+annotations, eight markdown-hygiene warnings, and three unrelated research
+reference warningsâ€”none in S231.
