@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#schema-hardening'
 date: '2026-06-02'
-modified: '2026-08-15'
+modified: '2026-08-25'
 body_hash: 'sha256:693a7d7adc3e2a1d77f0f0d7b6f58e944124dcf990f43f2c44d6de49b402e764'
 tier: L3
 related:
@@ -12,6 +12,7 @@ related:
   - '[[2026-06-02-schema-hardening-m100-legal-ref-continuity-candidate-research]]'
   - '[[2026-08-05-schema-hardening-aeip-event-keyed-continuity-research]]'
   - '[[2026-08-05-schema-hardening-compiled-casilla-order-research]]'
+  - '[[2026-06-04-registry-hardening-next-work-adr]]'
 ---
 # `schema-hardening` `registry hardening next work` plan
 
