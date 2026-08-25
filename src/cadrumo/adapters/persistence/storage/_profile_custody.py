@@ -9,8 +9,35 @@ from pathlib import Path
 from typing import Literal, NoReturn
 from uuid import UUID
 
-from ....application.user_profile.custody_ports import ProfileBucketStoragePathsPort, ProfileBucketStoragePort, ProfileCapsuleArchiveContentsMaterial, ProfileCapsuleArchiveHeaderMaterial, ProfileCustodyBucketEventHistoryPort, ProfileCustodyCapsuleLabelPort, ProfileCustodyCapsuleSourceMaterial, ProfileCustodyEnvelopePort, ProfileCustodyInventoryPort, ProfileCustodyLocalRecordStore, ProfileCustodyPasswordMaterialPort, ProfileCustodyPasswordProofMaterialPort, ProfileCustodyPort, ProfileCustodyRecoveryArtifactExportReceiptPort, ProfileCustodyRecoveryEnrollmentMaterial, ProfileCustodyRecoveryEnvelopePort, ProfileCustodyRecoveryUnlockPort, ProfileCustodyRegistrationMaterial, ProfileCustodySecureObjectNamespace, ProfileCustodySecureObjectRepositoryPort, ProfileCustodySentinelPort, ProfileCustodyUnlockPort, ProfileRecordCryptoError, ProfileRecordCryptoPort, ProfileRecordEncryptedBlob, ProfileSecureObjectInventoryPort
 from ....application.user_profile.authentication import ProfilePasswordProofOperation
+from ....application.user_profile.custody_ports import (
+    ProfileBucketStoragePathsPort,
+    ProfileBucketStoragePort,
+    ProfileCapsuleArchiveContentsMaterial,
+    ProfileCapsuleArchiveHeaderMaterial,
+    ProfileCustodyBucketEventHistoryPort,
+    ProfileCustodyCapsuleLabelPort,
+    ProfileCustodyCapsuleSourceMaterial,
+    ProfileCustodyEnvelopePort,
+    ProfileCustodyInventoryPort,
+    ProfileCustodyLocalRecordStore,
+    ProfileCustodyPasswordMaterialPort,
+    ProfileCustodyPasswordProofMaterialPort,
+    ProfileCustodyPort,
+    ProfileCustodyRecoveryArtifactExportReceiptPort,
+    ProfileCustodyRecoveryEnrollmentMaterial,
+    ProfileCustodyRecoveryEnvelopePort,
+    ProfileCustodyRecoveryUnlockPort,
+    ProfileCustodyRegistrationMaterial,
+    ProfileCustodySecureObjectNamespace,
+    ProfileCustodySecureObjectRepositoryPort,
+    ProfileCustodySentinelPort,
+    ProfileCustodyUnlockPort,
+    ProfileRecordCryptoError,
+    ProfileRecordCryptoPort,
+    ProfileRecordEncryptedBlob,
+    ProfileSecureObjectInventoryPort,
+)
 from ....core import StorageCategory, storage_location
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
@@ -20,6 +47,7 @@ from . import (
     USER_PROFILE_VALUE_NAMESPACE,
     KeyringUnavailableError,
     MasterKeyMaterialMissingError,
+    PersistenceError,
     SecureObjectRepository,
     bucket,
     crypto,
@@ -586,6 +614,9 @@ class _PersistenceProfileCustody:
 
     def is_keyring_unavailable(self, error: BaseException) -> bool:
         return isinstance(error, KeyringUnavailableError)
+
+    def is_persistence_failure(self, error: BaseException) -> bool:
+        return isinstance(error, PersistenceError)
 
     def secure_object_namespace(self) -> ProfileCustodySecureObjectNamespace:
         return ProfileCustodySecureObjectNamespace(

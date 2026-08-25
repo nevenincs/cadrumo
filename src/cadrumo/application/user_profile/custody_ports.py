@@ -1046,6 +1046,10 @@ class ProfileCustodyPort(Protocol):
         """Recognise an unavailable keychain provider."""
         ...
 
+    def is_persistence_failure(self, error: BaseException) -> bool:
+        """Recognise a governed persistence failure without leaking adapter types."""
+        ...
+
     def secure_object_namespace(self) -> ProfileCustodySecureObjectNamespace:
         """Return the registered current-profile value namespace."""
         ...
@@ -1331,6 +1335,11 @@ def profile_is_keyring_unavailable(error: BaseException) -> bool:
     return profile_custody_port().is_keyring_unavailable(error)
 
 
+def profile_is_persistence_failure(error: BaseException) -> bool:
+    """Recognise the storage failure family through the composed custody port."""
+    return profile_custody_port().is_persistence_failure(error)
+
+
 def profile_custody_secure_object_namespace() -> ProfileCustodySecureObjectNamespace:
     """Resolve the registered current-profile value namespace at the app boundary."""
     return profile_custody_port().secure_object_namespace()
@@ -1416,6 +1425,7 @@ __all__ = [
     "profile_custody_secure_object_repository",
     "profile_is_authentication_failure",
     "profile_is_keyring_unavailable",
+    "profile_is_persistence_failure",
     "prove_profile_recovery_artifact",
     "refuse_profile_login_without_password_channel",
     "replace_profile_custody_password_envelope",

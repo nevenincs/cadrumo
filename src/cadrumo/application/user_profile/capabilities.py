@@ -32,6 +32,8 @@ from ...core import STRICT_FROZEN_CONFIG, ServiceCapability
 from ...core.config import Settings, load_settings
 from ...core.parsing import parse_bool
 from ...domain.user_profile import UserProfileRecord
+from .custody_ports import profile_is_persistence_failure
+from .login_session_port import profile_current_bucket_session
 from .projections import record_to_path_values
 
 __all__ = [
@@ -194,13 +196,13 @@ def _active_profile_record() -> UserProfileRecord | None:
     workstation running ``aeat config check``). A diagnostic/gate resolves to the
     conservative global default rather than crashing when the profile is locked.
     """
-    from ...adapters.persistence.storage import PersistenceError, has_active_bucket_session
-
     try:
-        if not has_active_bucket_session():
+        if profile_current_bucket_session() is None:
             return None
         from cadrumo.application.workflow.persistence import workflow_state_repository
 
         return workflow_state_repository().load().active_profile_record()
-    except PersistenceError:
-        return None
+    except Exception as exc:
+        if profile_is_persistence_failure(exc):
+            return None
+        raise
