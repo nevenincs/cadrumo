@@ -2363,6 +2363,17 @@ applies_from = 2014-09-27
 # upper bound moves to meet it. Only the overlap is removed; applies_from is
 # left as declared.
 applies_to = 2022-12-31
+# applies_from is the orden's legal-effective date while applies_to is an
+# ejercicio bound, so this window is mixed-axis. An axis heuristic reading the
+# START alone classifies the whole window as presentation-scoped and then asks
+# whether it covers presentation year 2023 -- but modelo 180 declares only 0A,
+# so no filing period can begin on 27 September and that date can only be the
+# orden's effective date. Declaring the selector states the ejercicio span this
+# source governs, the same defence "aeat-dr-210-2022" already carries. It
+# transcribes what Orden HFP/1284/2023 disposicion final unica already
+# establishes -- the successor first applies to ejercicio 2023 -- and adds no
+# claim of its own.
+period_selector = { year_from = 2014, year_to = 2022, periods = ["0A"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/180.pdf"
 review_status = "reviewed"
 
