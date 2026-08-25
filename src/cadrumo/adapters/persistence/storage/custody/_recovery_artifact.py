@@ -9,13 +9,13 @@ import stat
 from contextlib import contextmanager
 from ctypes import wintypes
 from dataclasses import dataclass
-from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal, cast
 from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
+from .....application.user_profile._recovery_contracts import ProfileCustodyRecoveryArtifactWarning
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
@@ -144,15 +144,6 @@ class ProfileCustodyRecoveryArtifact(_RecoveryArtifactPayload):
             )
         except (ValidationError, ValueError, TypeError) as exc:
             raise ProfileCustodyRecordError("cannot construct a profile recovery artifact") from exc
-
-
-class ProfileCustodyRecoveryArtifactWarning(StrEnum):
-    """Stable operator warnings that accompany every recovery artifact export."""
-
-    OFFLINE_GUESSING_EXPOSURE = "OFFLINE_GUESSING_EXPOSURE"
-    STORE_SEPARATELY = "STORE_SEPARATELY"
-    RETAINED_EXPORTED_COPY = "RETAINED_EXPORTED_COPY"
-    LOSS_DOES_NOT_BLOCK_PASSWORD_LOGIN = "LOSS_DOES_NOT_BLOCK_PASSWORD_LOGIN"  # noqa: S105 - warning code
 
 
 @dataclass(frozen=True, slots=True)
