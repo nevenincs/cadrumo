@@ -39,6 +39,26 @@ def test_global_tui_request_refuses_unimplemented_facets_before_their_preconditi
     assert result.stdout == ""
 
 
+@pytest.mark.parametrize(
+    ("command", "identity"),
+    (
+        (("app", "modelo", "work", "wizard"), "modelo.work.wizard"),
+        (("app", "modelo", "work", "amend-wizard"), "modelo.work.amend_wizard"),
+    ),
+)
+def test_global_tui_request_refuses_wizard_routes_with_their_declared_identities(
+    command: tuple[str, ...], identity: str
+) -> None:
+    result = invoke_cached_cli(("--language", "en", "--format", "json", "--tui", *command))
+
+    assert result.exit_code != 0
+    document = json.loads(result.stderr)
+    assert document["command"] == identity
+    assert document["error"]["code"] == "TUI_NOT_IMPLEMENTED"
+    assert document["error"]["context"]["command"] == identity
+    assert result.stdout == ""
+
+
 def test_tui_is_global_only() -> None:
     root_help = invoke_cached_cli(("--language", "en", "--help"))
     local_help = invoke_cached_cli(("--language", "en", "config", "profile", "create", "--help"))

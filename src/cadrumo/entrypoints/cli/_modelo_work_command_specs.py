@@ -405,6 +405,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _WIZARD,
         "cadrumo.entrypoints.cli._modelo_work_wizard_payloads",
         "WorkWizardResult",
+        tui_capability=TuiCapability.NOT_IMPLEMENTED,
     ),
 )
 

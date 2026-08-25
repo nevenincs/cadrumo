@@ -324,7 +324,8 @@ def test_calendar_text_localizes_shift_label_but_json_keeps_token() -> None:
     assert detail["action"]["action_id"] == "operator.overview.explain"
     assert detail["action"]["cli_path"] == ["app", "overview", "explain"]
     assert {binding["argument_name"]: binding["value"] for binding in detail["argument_bindings"]} == {
-        "modelo": "303"
+        "modelo": "303",
+        "year": 2025,
     }
 
 

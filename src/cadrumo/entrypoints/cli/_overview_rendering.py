@@ -212,6 +212,13 @@ def _calendar_entry_detail_action(entry: OverviewCalendarEntry) -> ResolvedNotic
                 source=ActionArgumentSource.VERDICT_CONTEXT,
                 source_key="modelo",
             ),
+            ResolvedActionArgument(
+                argument_name="year",
+                status=ActionArgumentStatus.RESOLVED,
+                value=entry.filing_year,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="year",
+            ),
         ),
     )
 
@@ -524,7 +531,9 @@ def overview_calendar_output(
             summary=str(event.summary),
             reference_id=event.reference_id,
             status=event.status,
-            aeat_submission_state=event.aeat_submission_state,
+            aeat_submission_state=(
+                event.aeat_submission_state.value if event.aeat_submission_state is not None else None
+            ),
             aeat_submitted_at=(
                 event.aeat_submitted_at.isoformat().replace("+00:00", "Z")
                 if event.aeat_submitted_at is not None
