@@ -172,6 +172,11 @@ def _runtime_repository_factory(settings: Settings) -> InventoryRepositoryFactor
     return _factory
 
 
+def inventory_ledger_repository_for_bucket(bucket_id: str) -> InventoryLedgerRepository:
+    """Compose the encrypted inventory repository for one explicit bucket."""
+    return InventoryLedgerRepository(objects=secure_object_repository_for_bucket(bucket_id))
+
+
 def _find_ledger(document: InventoryLedgerDocument, actividad_id: str, year: int) -> InventoryLedger | None:
     for ledger in document.ledgers:
         if ledger.actividad_id == actividad_id and ledger.year == year:
@@ -494,4 +499,5 @@ __all__ = [
     "InventoryService",
     "InventoryValuationPreview",
     "InventoryValuationPreviewResult",
+    "inventory_ledger_repository_for_bucket",
 ]

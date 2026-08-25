@@ -52,6 +52,7 @@ from ._service import (
     InventoryService,
     InventoryValuationPreview,
     InventoryValuationPreviewResult,
+    inventory_ledger_repository_for_bucket,
 )
 from ._source_readiness import (
     InventorySourceReadiness,
@@ -69,5 +70,6 @@ __all__ = [
     "InventorySourceReadiness",
     "InventoryValuationPreview",
     "InventoryValuationPreviewResult",
+    "inventory_ledger_repository_for_bucket",
     "inventory_source_readiness",
 ]
