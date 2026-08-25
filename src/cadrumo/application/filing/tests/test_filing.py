@@ -837,7 +837,9 @@ def test_approve_draft_rejects_schema_version_mismatch() -> None:
             transaction_catalogue=TransactionCatalogue(),
         )
     assert exc_info.value.translated_message == "application.filing.review.errors.registry_review_mismatch"
-    context = dict(exc_info.value.context)
+    context = exc_info.value.context
+    assert context is not None
+    context = dict(context)
     assert context["codes"] == ("filing-schema-version-mismatch",)
     assert context["modelo"] == "130"
     assert context["finding_count"] == 1
@@ -862,7 +864,9 @@ def test_approve_draft_rejects_formula_trace_mismatch() -> None:
             transaction_catalogue=TransactionCatalogue(),
         )
     assert exc_info.value.translated_message == "application.filing.review.errors.registry_review_mismatch"
-    context = dict(exc_info.value.context)
+    context = exc_info.value.context
+    assert context is not None
+    context = dict(context)
     assert context["codes"] == ("formula-divergence",)
     assert context["modelo"] == "130"
     assert context["finding_count"] == 1
