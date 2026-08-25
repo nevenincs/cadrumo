@@ -1,10 +1,9 @@
-"""Public application facade for modelo work-unit services.
+"""Modelo application namespace.
 
-This package is the canonical application-layer import boundary for modelo
-CLI transports and cross-package application services. Callers import from
-``cadrumo.application.modelo`` instead of private ``_...`` modules so work
-selection, registry revision checks, calculation, verification, filing,
-export, reconciliation, and storage orchestration stay behind one facade.
+Cross-package callers import contracts and services from their public defining
+modules rather than through this package. In particular, Modelo work-review
+projection is defined only by ``application.modelo.work_review_projection``;
+the namespace does not republish it.
 
 Bucket scoping is explicit at the API boundary. Services accept a caller
 provided ``bucket_id`` or a resolved work target; CLI modules may derive that

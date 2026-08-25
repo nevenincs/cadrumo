@@ -129,13 +129,14 @@ def _record_design_windows() -> dict[str, tuple[int | None, int | None]]:
 def _ejercicio_scoped_designs() -> frozenset[str]:
     """Return the designs whose window states an EJERCICIO rather than a legal date.
 
-    ``applies_from``/``applies_to`` carry two different meanings in this catalogue,
-    and the authoring already distinguishes them: a design scoped to the ejercicio
-    it governs is stamped on 1 January, while one scoped to the date its orden took
-    effect carries that real date -- Modelo 720's ``aeat-dr-720`` is stamped
-    2013-02-01, and Orden HAP/72/2013's disposicion final unica states it first
-    applies to the declaracion of ejercicio 2012. Reading the day of the month is
-    therefore reading the authoring's own declaration, not inferring one.
+    ``applies_from``/``applies_to`` carry two different meanings in this catalogue.
+    An explicit source ``period_selector`` whose first claimed year equals the
+    ``applies_from`` year declares that the bounds govern filing periods,
+    including a mid-year cutover such as Modelo 210's 2022 design. Without that
+    agreement, the established date-shape fallback treats a 1 January start as
+    ejercicio-scoped and a real mid-year legal-effective date as presentation-
+    scoped. Modelo 720 proves why selector presence alone is insufficient: its
+    selector starts at ejercicio 2012 while its orden took effect on 2013-02-01.
 
     The distinction decides which axis the coverage comparison may use. Comparing a
     PRESENTATION year against an ejercicio-scoped window is cross-axis: it clears
@@ -149,7 +150,14 @@ def _ejercicio_scoped_designs() -> frozenset[str]:
         if getattr(source, "kind", None) != "record_design":
             continue
         start = getattr(source, "applies_from", None)
-        if isinstance(start, date) and (start.month, start.day) == (1, 1):
+        selector = source.period_selector
+        selector_start = (
+            selector.years[0]
+            if selector is not None and selector.years
+            else selector.year_from if selector is not None else None
+        )
+        selector_declares_bound_axis = isinstance(start, date) and selector_start == start.year
+        if selector_declares_bound_axis or (isinstance(start, date) and (start.month, start.day) == (1, 1)):
             scoped.add(str(source_id))
     return frozenset(scoped)
 
@@ -414,6 +422,52 @@ def test_modelo_720_design_is_read_as_legal_effect_scoped_not_ejercicio_scoped()
 
     start, _end = _record_design_windows()["aeat-dr-720"]
     assert start == 2013, "the reasoning above depends on the design starting a year after ejercicio 2012"
+
+
+def test_modelo_210_midyear_design_declares_and_uses_the_filing_period_axis() -> None:
+    """A long refund window must not turn a devengo design into presentation authority."""
+    modelo = next(candidate for candidate in _authority().modelos if candidate.id == "210")
+    revision = modelo.revisions["2025"]
+    _modelos, catalogues = bundled_registry_tree()
+    design = catalogues.sources["aeat-dr-210-2022"]
+
+    assert design.applies_from == date(2022, 6, 1)
+    assert design.applies_to == date(2025, 12, 31)
+    assert design.period_selector is not None
+    assert design.period_selector.includes_year(2025)
+    assert set(design.period_selector.periods) == {"EVENT-N", "0A"}
+    assert max(window.closes_on for window in revision.deadline_windows) == date(2030, 2, 1)
+    assert design.id in _ejercicio_scoped_designs()
+
+    compared, divergences = _revision_divergences(
+        modelo.id,
+        revision.id,
+        revision,
+        _record_design_windows(),
+        _ejercicio_scoped_designs(),
+    )
+    assert compared == 1
+    assert divergences == []
+
+
+def test_modelo_210_midyear_design_axis_gate_bites_without_its_declared_selector() -> None:
+    """Removing the explicit devengo-axis declaration restores the real divergence."""
+    modelo = next(candidate for candidate in _authority().modelos if candidate.id == "210")
+    revision = modelo.revisions["2025"]
+    ejercicio_scoped = _ejercicio_scoped_designs() - {"aeat-dr-210-2022"}
+
+    compared, divergences = _revision_divergences(
+        modelo.id,
+        revision.id,
+        revision,
+        _record_design_windows(),
+        ejercicio_scoped,
+    )
+
+    assert compared == 1
+    assert len(divergences) == 1
+    assert "presented in calendar year(s) 2026-2030" in divergences[0]
+    assert "[compared on the presentation axis]" in divergences[0]
 
 
 def test_the_ejercicio_axis_classification_splits_the_catalogue_both_ways() -> None:

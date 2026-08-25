@@ -9,12 +9,12 @@ produces :class:`RegistrySnapshot` instances on demand for each filing context.
 from __future__ import annotations
 
 import hashlib
-from contextlib import AbstractContextManager
+from collections.abc import Generator
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
 from datetime import date
-from functools import lru_cache
 from pathlib import Path
-from threading import RLock
+from threading import Condition, RLock
 
 from .... import __version__
 from ....core import RegistryAuthorityGrade
@@ -37,7 +37,7 @@ from ._identity import (
 from ._ids import RevisionId
 from ._loader import collect_registry_tree_fingerprints, load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
-from ._snapshot import _build_validated_snapshot
+from ._snapshot import _build_validated_snapshot  # pyright: ignore[reportPrivateUsage]  # the registry authority owns snapshot admission
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._static_inspection import RegistryRevisionInspection
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
@@ -77,25 +77,6 @@ _SnapshotKey = tuple[str, int, str, date | None, str | None, RegistryAuthorityGr
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
 _RegistryFingerprints = tuple[tuple[str, int, int, str], ...]
 _SourceEvidenceFingerprints = tuple[tuple[str, int, int], ...]
-
-
-_AUTHORITY_CAPTURE_LOCK = RLock()
-_authority_generation = 0
-_authority_reset_epoch = 0
-
-
-def _allocate_authority_generation() -> tuple[int, int]:
-    """Allocate one non-reusable process-local generation for a new authority."""
-    global _authority_generation
-    _authority_generation += 1
-    return _authority_generation, _authority_reset_epoch
-
-
-def _invalidate_authority_generations() -> None:
-    """Invalidate every extant capture coordinate after a registry-cache reset."""
-    global _authority_generation, _authority_reset_epoch
-    _authority_generation += 1
-    _authority_reset_epoch += 1
 
 
 type RegistryAuthorityProjection = RegistryRevisionInspection | RegistrySnapshot
@@ -141,6 +122,116 @@ def _fingerprint_key[T: tuple[tuple[object, ...], ...]](fingerprints: T) -> _Fin
     return _FingerprintKey(digest=digest.hexdigest(), fingerprints=fingerprints)
 
 
+_AuthorityRootKey = tuple[Path, Path]
+_AuthorityLoadKey = tuple[RegistryIdentity, _FingerprintKey[_SourceEvidenceFingerprints]]
+
+
+@dataclass(slots=True)
+class _AuthorityLoadState:
+    """The one live cache slot and transition lock for one registry/source root."""
+
+    lock: AbstractContextManager[object] = field(default_factory=RLock, repr=False)
+    current_key: _AuthorityLoadKey | None = None
+    current_authority: ValidatedRegistryAuthority | None = None
+    current_failure: Exception | None = None
+    generation: int = 0
+    reset_epoch: int = 0
+
+
+class _AuthorityLoadBarrier:
+    """Allow concurrent root loads while making reset an exclusive transition."""
+
+    def __init__(self) -> None:
+        self._condition = Condition(RLock())
+        self._active_readers = 0
+        self._reset_pending = False
+
+    @contextmanager
+    def read(self) -> Generator[None]:
+        """Enter one load/capture/read operation that reset must drain."""
+        with self._condition:
+            while self._reset_pending:
+                self._condition.wait()
+            self._active_readers += 1
+        try:
+            yield
+        finally:
+            with self._condition:
+                self._active_readers -= 1
+                if self._active_readers == 0:
+                    self._condition.notify_all()
+
+    @contextmanager
+    def reset(self) -> Generator[None]:
+        """Exclude and drain readers while every registry cache is cleared."""
+        with self._condition:
+            self._reset_pending = True
+            while self._active_readers:
+                self._condition.wait()
+        try:
+            yield
+        finally:
+            with self._condition:
+                self._reset_pending = False
+                self._condition.notify_all()
+
+
+_AUTHORITY_STATE_LOCK = RLock()
+_AUTHORITY_LOAD_BARRIER = _AuthorityLoadBarrier()
+_AUTHORITY_LOAD_STATES: dict[_AuthorityRootKey, _AuthorityLoadState] = {}
+_authority_generation = 0
+_authority_reset_epoch = 0
+
+
+def _authority_root_key(root: Path, source_root: Path) -> _AuthorityRootKey:
+    """Return the exact owner scope whose projections a load can change."""
+    return root, source_root
+
+
+def _authority_load_state(root_key: _AuthorityRootKey) -> _AuthorityLoadState:
+    """Return the one transition state for an authority owner scope."""
+    with _AUTHORITY_STATE_LOCK:
+        return _AUTHORITY_LOAD_STATES.setdefault(root_key, _AuthorityLoadState())
+
+
+def _begin_authority_transition(state: _AuthorityLoadState, key: _AuthorityLoadKey) -> None:
+    """Invalidate a root's prior authority before building the observed state."""
+    global _authority_generation
+    with _AUTHORITY_STATE_LOCK:
+        _authority_generation += 1
+        state.current_key = key
+        state.current_authority = None
+        state.current_failure = None
+        state.generation = _authority_generation
+        state.reset_epoch = _authority_reset_epoch
+
+
+def _publish_authority(state: _AuthorityLoadState, authority: ValidatedRegistryAuthority) -> None:
+    """Publish the one constructed authority for the already-observed state."""
+    with _AUTHORITY_STATE_LOCK:
+        authority._bind_capture_incarnation(  # pyright: ignore[reportPrivateUsage]  # owner-controlled publication binds a new private instance
+            state=state,
+            generation=state.generation,
+            reset_epoch=state.reset_epoch,
+        )
+        state.current_authority = authority
+
+
+def _publish_authority_failure(state: _AuthorityLoadState, failure: Exception) -> None:
+    """Publish a deterministic refusal for the already-observed state."""
+    with _AUTHORITY_STATE_LOCK:
+        state.current_failure = failure
+
+
+def _invalidate_authority_generations() -> None:
+    """Invalidate all authority incarnations as one exclusive reset transition."""
+    global _authority_generation, _authority_reset_epoch
+    with _AUTHORITY_STATE_LOCK:
+        _authority_generation += 1
+        _authority_reset_epoch += 1
+        _AUTHORITY_LOAD_STATES.clear()
+
+
 @dataclass(slots=True)
 class ValidatedRegistryAuthority:
     """Load, validate, and cache registry material behind one access point."""
@@ -156,29 +247,31 @@ class ValidatedRegistryAuthority:
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
     _authorization_manifest: AuthorizationManifest
     _supported_filing_year_gaps: tuple[SupportedFilingYearGap, ...]
-    _capture_generation: int = field(init=False, repr=False)
-    _capture_reset_epoch: int = field(init=False, repr=False)
+    _capture_generation: int = field(default=0, init=False, repr=False)
+    _capture_reset_epoch: int = field(default=0, init=False, repr=False)
+    _capture_state: _AuthorityLoadState | None = field(default=None, init=False, repr=False)
+    _capture_root_key: _AuthorityRootKey | None = field(default=None, init=False, repr=False)
     _state_lock: AbstractContextManager[object] = field(default_factory=RLock, init=False, repr=False)
-
-    def __post_init__(self) -> None:
-        """Bind this authority incarnation to one process-local capture generation."""
-        with _AUTHORITY_CAPTURE_LOCK:
-            self._capture_generation, self._capture_reset_epoch = _allocate_authority_generation()
 
     @classmethod
     def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
         """Load registry TOML and construct a reusable :class:`ValidatedRegistryAuthority` instance."""
         resolved_root = root.expanduser().resolve()
         resolved_source_root = source_root.expanduser().resolve()
-        return _load_authority(
-            resolved_root,
-            resolved_source_root,
-            resolve_registry_identity(
-                resolved_root,
-                collect_fingerprints=collect_registry_identity_fingerprints,
-            ),
-            _fingerprint_key(collect_source_evidence_fingerprints(resolved_source_root)),
-        )
+        return _load_authority(resolved_root, resolved_source_root)
+
+    def _bind_capture_incarnation(
+        self,
+        *,
+        state: _AuthorityLoadState,
+        generation: int,
+        reset_epoch: int,
+    ) -> None:
+        """Bind this newly constructed object to the owner's current generation."""
+        self._capture_state = state
+        self._capture_root_key = _authority_root_key(self.root, self.source_root)
+        self._capture_generation = generation
+        self._capture_reset_epoch = reset_epoch
 
     def modelo(self, modelo_id: str) -> ModeloDefinition:
         """Return a modelo definition by id.
@@ -197,7 +290,7 @@ class ValidatedRegistryAuthority:
         Returns:
             The validated :class:`ModeloDefinition` for ``modelo_id``.
         """
-        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+        with self._state_lock:
             modelo = self.modelo(modelo_id)
             if not self._registry_validated and modelo_id not in self._validated_modelos:
                 try:
@@ -223,7 +316,7 @@ class ValidatedRegistryAuthority:
         a :class:`RegistrySnapshot`; callers that need filing eligibility must
         use :meth:`snapshot` instead.
         """
-        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+        with self._state_lock:
             self.validate_registry()
             modelo = self.modelo(modelo_id)
             revision = select_revision(modelo, filing_year=filing_year, period=period, on=on)
@@ -237,7 +330,7 @@ class ValidatedRegistryAuthority:
 
     def validate_registry(self) -> None:
         """Validate the full registry tree once."""
-        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+        with self._state_lock:
             if self._registry_validated:
                 return
             try:
@@ -261,7 +354,7 @@ class ValidatedRegistryAuthority:
 
     def mark_registry_validated(self) -> None:
         """Mark this authority as validated after a certified verdict."""
-        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+        with self._state_lock:
             self._mark_registry_validated()
 
     @property
@@ -335,7 +428,7 @@ class ValidatedRegistryAuthority:
         revision_id: RevisionId | None = None,
         grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     ) -> RegistrySnapshot:
-        """Return a cached validated :class:`RegistrySnapshot` for one filing context.
+        """Return an isolated copy of the cached validated snapshot for one filing context.
 
         ``grade`` names the rung of authority the CALLER needs and defaults to the
         strictest one, so a caller that says nothing is unchanged. It exists because
@@ -349,23 +442,50 @@ class ValidatedRegistryAuthority:
         would be served to a caller asking for another, which is precisely the silent
         capability claim the grade exists to prevent.
         """
-        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
-            key = (modelo_id, filing_year, period, on, revision_id, grade)
-            cached = self._snapshots.get(key)
-            if cached is not None:
-                return cached
-            modelo = self.validate_modelo(modelo_id)
-            snapshot = _build_validated_snapshot(
-                modelo,
-                self.catalogues,
+        with self._state_lock:
+            return self._cached_snapshot(
+                modelo_id,
                 filing_year=filing_year,
                 period=period,
                 on=on,
                 revision_id=revision_id,
                 grade=grade,
-            )
-            self._snapshots[key] = snapshot
-            return snapshot
+            ).model_copy(deep=True)
+
+    def _cached_snapshot(
+        self,
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None,
+        revision_id: RevisionId | None,
+        grade: RegistryAuthorityGrade,
+    ) -> RegistrySnapshot:
+        """Return the authority-private cache entry used by every snapshot read.
+
+        The cache remains the single native snapshot authority. Its value never
+        crosses the public boundary directly because ``RegistrySnapshot`` has
+        mutable nested maps; callers receive isolated copies from
+        :meth:`snapshot`, while native capture copies this same entry under the
+        owner lock.
+        """
+        key = (modelo_id, filing_year, period, on, revision_id, grade)
+        cached = self._snapshots.get(key)
+        if cached is not None:
+            return cached
+        modelo = self.validate_modelo(modelo_id)
+        snapshot = _build_validated_snapshot(
+            modelo,
+            self.catalogues,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+            grade=grade,
+        )
+        self._snapshots[key] = snapshot
+        return snapshot
 
     def capture_law_selected_projection(
         self,
@@ -383,7 +503,10 @@ class ValidatedRegistryAuthority:
         returned value is deep-copied so a consumer cannot mutate a cached
         registry projection after the capture has completed.
         """
-        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+        state = self._capture_state
+        if state is None:
+            raise RegistrySnapshotError("registry authority has no published capture incarnation")
+        with _AUTHORITY_LOAD_BARRIER.read(), state.lock, self._state_lock:
             self._require_current_capture_incarnation()
             projection = (
                 self.inspect_revision(
@@ -393,16 +516,19 @@ class ValidatedRegistryAuthority:
                     on=on,
                 )
                 if grade is None
-                else self.snapshot(
+                else self._cached_snapshot(
                     modelo_id,
                     filing_year=filing_year,
                     period=period,
                     on=on,
+                    revision_id=None,
                     grade=grade,
                 )
             )
+            isolated_projection = projection.model_copy(deep=True)
+            self._require_current_capture_incarnation()
             return RegistryAuthorityCapture(
-                projection=projection.model_copy(deep=True),
+                projection=isolated_projection,
                 generation=self._capture_generation,
             )
 
@@ -412,16 +538,34 @@ class ValidatedRegistryAuthority:
         A registry-cache reset invalidates the instance rather than letting an
         old projection claim the next authority incarnation's generation.
         """
-        with _AUTHORITY_CAPTURE_LOCK:
+        state = self._capture_state
+        if state is None:
+            raise RegistrySnapshotError("registry authority has no published capture incarnation")
+        with _AUTHORITY_LOAD_BARRIER.read(), state.lock:
             self._require_current_capture_incarnation()
             return self._capture_generation
 
     def _require_current_capture_incarnation(self) -> None:
-        """Refuse native capture after this authority's cache epoch was reset."""
-        if self._capture_reset_epoch != _authority_reset_epoch:
-            raise RegistrySnapshotError(
-                "registry authority capture was invalidated by cache reset; load a current authority"
-            )
+        """Refuse capture when reset or an observed identity change made it stale."""
+        state = self._capture_state
+        root_key = self._capture_root_key
+        with _AUTHORITY_STATE_LOCK:
+            if self._capture_reset_epoch != _authority_reset_epoch:
+                raise RegistrySnapshotError(
+                    "registry authority capture was invalidated by cache reset; load a current authority"
+                )
+            if (
+                state is None
+                or root_key is None
+                or _AUTHORITY_LOAD_STATES.get(root_key) is not state
+                or state.current_authority is not self
+                or state.generation != self._capture_generation
+                or state.reset_epoch != self._capture_reset_epoch
+            ):
+                raise RegistrySnapshotError(
+                    "registry authority capture was invalidated by an observed registry identity transition; "
+                    "load a current authority"
+                )
 
     def deadline_windows(
         self,
@@ -499,8 +643,8 @@ def bundled_authority() -> ValidatedRegistryAuthority:
 
     Callers that always load the same default registry path use this
     instead of writing the bundled-path boilerplate inline.  The result
-    is backed by :func:`_load_authority`'s LRU cache, so repeated calls
-    within one process are free.
+    is backed by the canonical authority owner's current-identity slot, so
+    repeated calls within one process share the same published authority.
 
     Returns:
         A :class:`ValidatedRegistryAuthority` loaded from the bundled registry tree.
@@ -532,52 +676,41 @@ def bundled_revision_inspection(
     )
 
 
-#: Refusals from :func:`_load_authority`, keyed exactly as its ``lru_cache`` is.
-#:
-#: ``lru_cache`` memoises returns and NOT exceptions, so a registry that refuses
-#: re-runs the whole multi-second validation for every caller. That is invisible
-#: while the tree is green and pathological the moment it is not: with validation
-#: failing, a full test collection re-validated per module and stopped terminating.
-#: Caching the refusal changes nothing about the verdict -- the same error, with
-#: the same enumeration, is raised on every call -- it is computed once.
-_AUTHORITY_LOAD_FAILURES: dict[
-    tuple[Path, Path, RegistryIdentity, _FingerprintKey[_SourceEvidenceFingerprints]],
-    Exception,
-] = {}
-
-
 def _load_authority(
     root: Path,
     source_root: Path,
-    identity: RegistryIdentity,
-    source_evidence_key: _FingerprintKey[_SourceEvidenceFingerprints],
 ) -> ValidatedRegistryAuthority:
-    """Load and validate one authority, memoising refusal as well as success."""
-    failure_key = (root, source_root, identity, source_evidence_key)
-    cached_failure = _AUTHORITY_LOAD_FAILURES.get(failure_key)
-    if cached_failure is not None:
-        raise cached_failure
-    try:
-        return _load_validated_authority(root, source_root, identity, source_evidence_key)
-    except Exception as exc:
-        _AUTHORITY_LOAD_FAILURES[failure_key] = exc
-        raise
+    """Load one root through its sole current-identity authority slot.
 
-
-def _clear_authority_load_caches() -> None:
-    """Drop both memoised outcomes, successes and refusals together.
-
-    Clearing only the success cache would leave a refusal from a previous tree
-    state answering for a tree that has since been repaired, which is the exact
-    staleness a cache clear exists to remove.
+    Identity collection, result/failure reuse, construction, and publication
+    share one root-scoped lock.  The reset barrier lets unrelated roots proceed
+    in parallel but drains this complete protocol before any cache clear.
     """
-    with _AUTHORITY_CAPTURE_LOCK:
-        _invalidate_authority_generations()
-        _load_validated_authority.cache_clear()
-        _AUTHORITY_LOAD_FAILURES.clear()
+    root_key = _authority_root_key(root, source_root)
+    with _AUTHORITY_LOAD_BARRIER.read():
+        state = _authority_load_state(root_key)
+        with state.lock:
+            identity = resolve_registry_identity(
+                root,
+                collect_fingerprints=collect_registry_identity_fingerprints,
+            )
+            source_evidence_key = _fingerprint_key(collect_source_evidence_fingerprints(source_root))
+            key = (identity, source_evidence_key)
+            if state.current_key == key:
+                if state.current_failure is not None:
+                    raise state.current_failure
+                if state.current_authority is not None:
+                    return state.current_authority
+                raise RuntimeError("registry authority transition has no published outcome")
 
-
-_load_authority.cache_clear = _clear_authority_load_caches  # type: ignore[attr-defined]
+            _begin_authority_transition(state, key)
+            try:
+                authority = _load_validated_authority(root, source_root, identity, source_evidence_key)
+            except Exception as exc:
+                _publish_authority_failure(state, exc)
+                raise
+            _publish_authority(state, authority)
+            return authority
 
 
 def reset_registry_caches() -> None:
@@ -589,15 +722,15 @@ def reset_registry_caches() -> None:
     that swap the registry root or rewrite bundled TOML need all three, so the
     package exposes the whole reset rather than its parts.
     """
-    from ._loader import _load_registry_tree_cached
+    from ._loader import _load_registry_tree_cached  # pyright: ignore[reportPrivateUsage]  # reset owns the complete registry cache surface
     from ._loader_fingerprints import clear_fingerprint_cache
 
-    _clear_authority_load_caches()
-    _load_registry_tree_cached.cache_clear()
-    clear_fingerprint_cache()
+    with _AUTHORITY_LOAD_BARRIER.reset():
+        _invalidate_authority_generations()
+        _load_registry_tree_cached.cache_clear()
+        clear_fingerprint_cache()
 
 
-@lru_cache(maxsize=16)
 def _load_validated_authority(
     root: Path,
     source_root: Path,
@@ -606,11 +739,11 @@ def _load_validated_authority(
 ) -> ValidatedRegistryAuthority:
     _source_evidence_fingerprint = source_evidence_key.fingerprints
     authority = _construct_authority(root, source_root, _source_evidence_fingerprint, identity=identity)
-    # A persisted green verdict keyed by the same tree identity this lru_cache
-    # keys on lets an immutable tree skip the multi-second re-validation. The
-    # build and continuous integration are the validation gate; the runtime
-    # asserts identity only. A mismatch or a foreign verdict re-validates in
-    # full and rewrites the verdict.
+    # A persisted green verdict keyed by the observed identity lets an
+    # immutable tree skip the multi-second re-validation. The build and
+    # continuous integration are the validation gate; the runtime asserts
+    # identity only. A mismatch or a foreign verdict re-validates in full and
+    # rewrites the verdict.
     verdict_key = compute_verdict_key(
         identity_digest=identity.digest,
         source_evidence_fingerprints=_source_evidence_fingerprint,
@@ -642,14 +775,15 @@ def _construct_authority(
     # the shared legal/ catalogue (which resolves to bundled BOE corpus text).
     convenio = load_convenio_authority(root / "treaties")
     validate_convenio_legal_refs(convenio, frozenset(catalogues.legal))
-    if catalogues.supported_filing_years is None:
+    supported_filing_years = catalogues.supported_filing_years
+    if supported_filing_years is None:
         raise RegistryValidationError("registry has no supported_filing_years catalogue")
     supplementary_ordenes = compile_supplementary_ordenes(
         root,
         source_root=source_root,
         modelos=modelos,
         sources=catalogues.sources,
-        supported_filing_years=catalogues.supported_filing_years.years,
+        supported_filing_years=supported_filing_years.years,
     )
     duplicate_legal_refs = set(catalogues.legal).intersection(supplementary_ordenes.legal)
     if duplicate_legal_refs:
@@ -681,11 +815,11 @@ def _construct_authority(
         # Authorization is derived at this boundary from the manifest
         # (default-deny-by-absence: an absent manifest authorizes nothing).
         # The manifest is fingerprinted into _collect_registry_tree_fingerprints
-        # so this lru_cache invalidates when the manifest changes on disk.
+        # so the current-identity slot invalidates when the manifest changes on disk.
         _authorization_manifest=load_authorization_manifest(root),
         _supported_filing_year_gaps=audit_supported_filing_years(
             modelos,
-            catalogue=catalogues.supported_filing_years,
+            catalogue=supported_filing_years,
             sources=catalogues.sources,
         ),
     )

@@ -39,11 +39,12 @@ class AcceleratorKind(StrEnum):
     provisioning decision it fails **closed** at the act: "could not tell" is
     precisely the state that must not be read as headroom.
 
-    Members:
-        NONE: The accelerator library initialised and reported zero devices.
-        NVIDIA_CUDA: One or more NVML-visible NVIDIA devices were enumerated.
-        UNKNOWN: No reading was obtainable -- NVML absent, uninitialisable, or a
-            non-NVIDIA accelerator this build cannot measure.
+    The members distinguish three measured states:
+
+    - ``NONE`` — the accelerator library initialised and reported zero devices.
+    - ``NVIDIA_CUDA`` — one or more NVML-visible NVIDIA devices were enumerated.
+    - ``UNKNOWN`` — no reading was obtainable: NVML was absent or
+      uninitialisable, or the build cannot measure the non-NVIDIA accelerator.
     """
 
     NONE = "none"
@@ -65,6 +66,7 @@ class ContentionCause(StrEnum):
     shortfall alone.
 
     Members:
+
         RUNTIME_RESIDENT: The local model runtime's resident models account for
             the shortfall; the explicit unload action applies.
         PEER_PROCESS: Device memory is held by processes outside the local model
@@ -95,6 +97,7 @@ class HardwareTier(StrEnum):
     of a measurement, never a measured zero.
 
     Members:
+
         UNMEASURED: Free memory in the binding arena could not be read.
         CONSTRAINED: Below :data:`HARDWARE_TIER_MODEST_FLOOR_BYTES` free.
         MODEST: At the modest floor, below :data:`HARDWARE_TIER_CAPABLE_FLOOR_BYTES`.

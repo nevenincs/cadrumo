@@ -32,7 +32,7 @@ tightens exactly where the stakes rise: mark such a casilla ``required`` and it
 must justify its exemption from that moment.
 
 The scan is casilla-keyed, and that is a blind spot in the instrument
--------------------------------------------------------------------
+--------------------------------------------------------------------
 
 "No record addresses it" means no record addresses it BY CASILLA ID. A
 ``BINDING``-kind export field names the binding, not the casilla, so a value the

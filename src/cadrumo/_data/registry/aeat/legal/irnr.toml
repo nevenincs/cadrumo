@@ -796,6 +796,7 @@ applies_from = 2022-06-01
 # title ("entre 01-06-2022 y 01-01-2026") states its upper bound as the
 # SUCCESSOR'S START, not as its own last day. Closed the day before.
 applies_to = 2025-12-31
+period_selector = { year_from = 2022, year_to = 2025, periods = ["EVENT-N", "0A"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/dr210e22.xls"
 review_status = "reviewed"
 

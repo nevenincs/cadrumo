@@ -17,7 +17,6 @@ from .._schema import DataBindingDefinition
 from .._schema_exports import FilingEnvelopePrefixRole
 from .._validate_export_field_widths import DRAFT_ATTRIBUTE_CANONICAL_WIDTHS, validate_draft_field_slot_width
 from ._registry_schema_support import (
-    _EXPECTED_DEADLINE_WINDOWS,
     _EXPECTED_LIVE_CROSS_REFERENCES,
     _NUMERIC_CASILLA_01,
     _REQUIRED_APPLICATION_LINKS,
@@ -53,6 +52,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MISSING_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_CASILLA")
 _NAMED_LABEL_CASILLA: CasillaId = validated_casilla_id("my-label", surface="_NAMED_LABEL_CASILLA")
 _DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="_DECL_CNAE_CASILLA")
+_EXPECTED_COMMITTED_M130_DEADLINE_WINDOWS = (
+    "modelo-130-2022-1t",
+    "modelo-130-2022-2t",
+    "modelo-130-2022-3t",
+    "modelo-130-2022-4t",
+    "modelo-130-2023-1t",
+    "modelo-130-2023-2t",
+    "modelo-130-2023-3t",
+    "modelo-130-2023-4t",
+    "modelo-130-2024-1t",
+    "modelo-130-2024-2t",
+    "modelo-130-2024-3t",
+    "modelo-130-2024-4t",
+    "modelo-130-2025-1t",
+    "modelo-130-2025-2t",
+    "modelo-130-2025-3t",
+    "modelo-130-2025-4t",
+    "modelo-130-2026-1t",
+    "modelo-130-2026-2t",
+    "modelo-130-2026-3t",
+    "modelo-130-2026-4t",
+)
 
 
 def _validate_modelo(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -> None:
@@ -141,7 +162,7 @@ def test_committed_snapshot_exposes_expected_metadata(
         "modelo-130-calculation-verification",
         "modelo-130-2019-y-siguientes-reconcile-when-present",
     )
-    assert tuple(modelo_130_snapshot.deadline_windows) == _EXPECTED_DEADLINE_WINDOWS
+    assert tuple(modelo_130_snapshot.deadline_windows) == _EXPECTED_COMMITTED_M130_DEADLINE_WINDOWS
     assert set(modelo_130_snapshot.application_links) >= _REQUIRED_APPLICATION_LINKS
 
 
@@ -215,8 +236,10 @@ def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> 
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="3T")
     source_id, source = next(iter(snapshot.sources.items()))
     workbook_id, workbook = next(iter(snapshot.workbook_parity_refs.items()))
+    workbook_source = snapshot.sources[workbook.workbook_source]
     cross_reference_id, cross_reference = next(iter(snapshot.live_cross_references.items()))
     parity_source = source.model_copy(update={"evidence_tier": "executable_parity_evidence"})
+    parity_workbook_source = workbook_source.model_copy(update={"evidence_tier": "executable_parity_evidence"})
     parity_workbook = workbook.model_copy(
         update={
             "formula_coverage": "formula_form",
@@ -227,7 +250,10 @@ def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> 
     guidance_cross_reference = cross_reference.model_copy(update={"evidence_tier": "official_source_guidance"})
     parity_snapshot = snapshot.model_copy(
         update={
-            "sources": {source_id: parity_source},
+            "sources": {
+                source_id: parity_source,
+                workbook.workbook_source: parity_workbook_source,
+            },
             "workbook_parity_refs": {workbook_id: parity_workbook},
             "live_cross_references": {cross_reference_id: guidance_cross_reference},
         },

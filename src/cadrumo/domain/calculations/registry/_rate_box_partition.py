@@ -14,7 +14,7 @@ every other axis and disagree only there are the same quantity read twice, once
 whole and once per rate. That agreement is the partition key.
 
 Why the layers can disagree, and why the difference is not an error to hide
---------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 An observation whose ``applied_rate`` is unknown matches the blind binding and
 no rate-specific one, deliberately: admitting it would place an unmeasured line

@@ -91,6 +91,7 @@ class ModelRole(StrEnum):
     independently rather than inheriting the harder role's model.
 
     Members:
+
         VISION_TRANSCRIPTION: Reading a scanned or photographed document page.
         TEXT_EXTRACTION: Classifying an already-extracted text layer.
         COLUMN_ROLE_MAPPING: Naming what each column of a delimited table
@@ -133,6 +134,7 @@ class ModelRuntime(StrEnum):
     service.
 
     Members:
+
         LOCAL_OLLAMA: Weights pulled and run on the operator's own machine.
         CLOUD_ANTHROPIC: A hosted Anthropic API model; nothing runs on-host.
     """
@@ -150,6 +152,7 @@ class LicenceVerification(StrEnum):
     member names the artefact that was actually read.
 
     Members:
+
         PUBLISHER_LICENCE_FILE: The publisher's own LICENSE text was read.
         PUBLISHER_MODEL_CARD: The publisher's model card licence field was read.
         PUBLISHER_SERVICE_TERMS: The publisher's terms of service were read. The
@@ -176,6 +179,7 @@ class DeploymentLicencePosture(StrEnum):
     strict.
 
     Members:
+
         COMMERCIAL: Only candidates whose licence permits commercial use.
         NON_COMMERCIAL: Research-licensed candidates are additionally eligible.
     """
@@ -192,6 +196,7 @@ class ModelSelectionAdvisory(StrEnum):
     reason rather than re-deriving it from the selection's shape.
 
     Members:
+
         LICENCE_COMMERCIAL_USE_BARRED: The selected model's licence bars
             commercial use under the active posture. Only reachable through an
             explicit override; automatic selection excludes such candidates.

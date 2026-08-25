@@ -31,10 +31,10 @@ Grounded verbatim from the bundled official diseños
   y N (negativa)".
 - M200: "I (Ingreso), U (Domiciliación), N (Negativa/Resultado cero),
   D (Solicitud de devolución), R (Renuncia a la devolución), G/V/X (CCT / extranjero)".
-   - M202: "I (ingreso), U (domiciliación), G (Ingreso en C.C.T.) y
-     N (Negativa/Sin actividad/Resultado cero)".
-   - M210: casilla 31 "Resultado de la autoliquidación"; positive is ingreso,
-     zero is cuota cero, and negative is solicitud de devolución.
+- M202: "I (ingreso), U (domiciliación), G (Ingreso en C.C.T.) y
+  N (Negativa/Sin actividad/Resultado cero)".
+- M210: casilla 31 "Resultado de la autoliquidación"; positive is ingreso,
+  zero is cuota cero, and negative is solicitud de devolución.
 """
 
 from __future__ import annotations
