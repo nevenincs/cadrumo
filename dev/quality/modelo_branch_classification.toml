@@ -428,20 +428,20 @@ group = "modelo-scope-guard"
 selects = "resolve"
 
 [[branch]]
-path = "src/cadrumo/application/live/_filed_observation_persistence.py"
+path = "src/cadrumo/application/live/filed_observation_persistence.py"
 enclosing_symbol = "_filed_observation_history_period_sort_key"
 modelo_codes = "M303"
 group = "official-design-convention"
 
 [[branch]]
-path = "src/cadrumo/application/live/_filed_observation_persistence.py"
+path = "src/cadrumo/application/live/filed_observation_persistence.py"
 enclosing_symbol = "persist_filed_calculation_observation"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
 selects = "persist_filed_calculation_observation"
 
 [[branch]]
-path = "src/cadrumo/application/live/_filed_observation_persistence.py"
+path = "src/cadrumo/application/live/filed_observation_persistence.py"
 enclosing_symbol = "persist_iva_compensation_history_observations_strict"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
