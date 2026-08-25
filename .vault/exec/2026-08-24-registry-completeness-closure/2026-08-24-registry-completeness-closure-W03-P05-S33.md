@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:a17285e522adbc9cc89b1a94630e812965be85defee9cea7e31de28a65694dff'
+body_hash: 'sha256:6fd0e1f7ae29a6fcfa780db3efb00faed13d2e6940b0912cb47f3743d9ef8351'
 step_id: 'S33'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
@@ -15,21 +15,33 @@ related:
 
 ## Scope
 
-Current revalidation of `W03.P05.S33` against the canonical filing-export chain. This record reports an open verification result only. It does not create a modelo layout, renderer, producer, semantic map, render profile, production draft, acceptance payload, official offset probe, plan check, or generated index update.
+- `dev/registry/filing_export_proof.py`
+- `dev/registry/tests/test_filing_emitted_byte_acceptance.py`
+- `.vault/reference/2026-08-25-registry-completeness-closure-production-emission-proof-reference.md`
 
 ## Description
 
-- Derived the filing-grade denominator from `ValidatedRegistryAuthority` and each revision's canonical law-selection coordinates.
-- Rechecked selected layout identity, layout-authority bytes, and the exhaustive filing-producer ownership map for every derived member.
-- Composed the complete filing-export coverage report through the sole canonical live proof authority.
-- Ran the existing full-denominator emitted-byte integration gate without masking its stale expectation.
+- Re-run semantic discovery over the validated authority, filing-export closure composer, canonical `export_draft` renderer, live proof authority, generated provenance manifest, `ModeloDraft`, `FilingProducerSnapshot`, producer ownership, and the prior Modelo 130 golden scenario.
+- Derive the filing-grade denominator, generation-ready subset, producer-key surface, and every proof outcome from the current validated authority without a representative year or hard-coded completion count.
+- Audit every apparent positive filing fixture for source ownership and independent acceptance; reject synthetic taxpayer, account, casilla, hash, extent, and offset values as canonical proof.
+- Repair the stale Modelo 353 assertion so each real revision retains a disjoint law-selection coordinate and independently reaches its current production-emission-proof refusal.
 
 ## Outcome
 
-The current authority derives 66 filing-grade revisions. All 66 select their own revision at every assessment coordinate, carry nonempty official layouts with current layout-authority bytes, and reach the verified-layout boundary. Fifty-eight revisions cite 662 producer keys, all owned by the canonical shared snapshot; eight cite no producer key.
+The current validated authority derives 66 filing-grade revisions. Every one selects an exact loaded layout and source bytes and every canonical live proof lookup remains explicitly refused at `production-emission-proof`; `CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES` remains empty.
 
-The canonical live proof tuple has zero entries. Therefore no revision has the source-owned production draft, producer snapshot, accepted emitted payload, or official-offset probe required to invoke `export_draft` as filing evidence. The closure report returns 66 explicit `missing_evidence` refusals, each owned by `aeat-export-fragment-generator-authority:production-emission-proof`. `S33` remains unchecked. No designless deferred S96â€“S108 row was promoted or treated as a layout or byte proof.
+Twenty-five revisions have canonical generated provenance plus a first-record positioned literal suitable for generator verification and dynamic probe-candidate derivation. The other 41, including Modelo 130, lack generated provenance. Zero revisions have the repository-owned production `ModeloDraft`, `FilingProducerSnapshot`, and independently accepted payload digest and extent required for a complete `FilingExportLiveProofEntry`.
+
+The producer inventory does not close this gap. Fifty-eight revisions cite 662 keys resolved by the shared snapshot and eight cite no producer keys, but resolver availability is not evidence for any taxpayer's filing-instance values. Existing Modelo 151, 200, 111, and 130 examples are synthetic mechanism or refusal fixtures and cannot be promoted.
+
+No canonical proof entry was authored, no applicability-only modelo was promoted, and no second writer or modelo-specific layout was introduced. S33 remains open. The exact blocker and ADR-authorable successor boundary are recorded in `2026-08-25-registry-completeness-closure-production-emission-proof-reference`.
+
+The corrected S33 integration gate passes all three cases sequentially, and Ruff passes on the changed test. The current proof subset is therefore 25 generation/probe-ready revisions and zero production-emission-ready revisions.
 
 ## Notes
 
-The full integration module produced two passing dynamic proof-gate cases and one failing stale M353-specific expectation: the test expected a pre-2026 `filing-layout` refusal, while the current authority now reaches the common production-emission proof refusal for every filing revision. That failure is recorded rather than hidden; it requires a narrowly scoped verifier-test correction. The missing proof authority is broader Sol-level export enrollment work, not an S33 verifier patch.
+The canonical architecture already has the correct cross-layer shape: law-selected snapshot identity, canonical generation-manifest verification, production `export_draft` execution, receipt-to-file consistency, independent payload digest and extent, and official literal-offset checks. The missing authority is upstream filing-instance evidence, not a missing renderer branch.
+
+The source-tree proof can become authorable only after either provenance-stamped non-sensitive official specimens and independently accepted outputs exist, or an accepted ADR changes the predicate to separate value-independent renderer conformance from secure operator-specific replay. Deriving values from defaults, allowed values, or zeros would fabricate a filing; deriving acceptance hashes from the just-emitted payload would be tautological.
+
+The wider unit proof module is not green at current HEAD: eight Modelo 200 mechanism cases fail before exercising proof behavior because the filing runtime now correctly excludes its calculation-grade revision. Repointing those cases requires another synthetic filing instance, which this Step is not authorized to invent. Three non-M200 proof tests pass and two integration-marked producer tests are deselected in that unit invocation. This does not weaken the passing full-denominator S33 integration gate, but it remains explicit test debt under the proof owner.
