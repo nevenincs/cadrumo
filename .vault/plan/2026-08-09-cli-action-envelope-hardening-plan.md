@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-25'
-body_hash: 'sha256:f01f2a2a707058c71efaa063612ae2d3dbd4bc2cf7018d31082c708e81fc6dc7'
+body_hash: 'sha256:c657fb48c8f0c398624539f9e90623b7df6b94e7f4f67281c24f6ea293e2bb9c'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -261,7 +261,7 @@ Replace scenario-authored expectations with production-derived condition and act
 - [x] `W06.P11.S42` - Generate the leaf-condition-scenario matrix from live surface and production verdict declarations; `dev/agent_eval/_action_coverage.py [new]; src/cadrumo/application/operator_surface/_manifest.py; src/cadrumo/application/operator_surface/_models.py; src/cadrumo/application/operator_actions`.
 - [x] `W06.P11.S43` - Replace scenario-owned expected actions with observed production condition and action assertions; `dev/agent_eval/_models.py`.
 - [x] `W06.P11.S44` - Dispatch negative cases validate bindings execute safe recovery and retry original leaves; `dev/agent_eval/_runner.py`.
-- [ ] `W06.P11.S45` - Enforce the bidirectional declaration and observation join, removing retired error-registry-suggestion test references so only the live canonical citation gate remains.; `dev/tests/test_suggestion_command_conformance.py`.
+- [x] `W06.P11.S45` - Enforce the bidirectional declaration and observation join, removing retired error-registry-suggestion test references so only the live canonical citation gate remains.; `dev/tests/test_suggestion_command_conformance.py`.
 
 ### Phase `W06.P12` - Fixed-point closure and campaign honesty
 
