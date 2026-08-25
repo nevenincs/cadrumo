@@ -1,4 +1,5 @@
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -9,7 +10,12 @@ from cadrumo.application.registry.source_connectivity import load_source_connect
 from cadrumo.core import BindingSourceKind, RegistryAuthorityGrade
 from cadrumo.core.resources import resources
 
-from ..check import SourceConnectivityCheckError, check_census_governance
+from ..check import (
+    SourceConnectivityCheckError,
+    check_capability_locators,
+    check_census_governance,
+)
+from ..discovery import discovered_source_capability_evidence
 from ..live_proof import CONNECTED_PROOF_FIXTURES, connected_candidate_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -41,6 +47,22 @@ def test_m182_remains_measurably_ingress_blocked_until_its_missing_authority_exi
         "donor-detail carriers, secure owner(s), durable immutable identity/fingerprint, and lifecycle/export proof "
         "must all exist before resolver enrollment or any connected claim."
     )
+
+    repo_root = Path.cwd()
+    m182_census = load_source_connectivity_census().model_copy(update={"entries": (entry,)})
+    capability_evidence = discovered_source_capability_evidence(repo_root)
+    check_capability_locators(repo_root, m182_census, capability_evidence=capability_evidence)
+
+    stale_entry = entry.model_copy(
+        update={
+            "capability_locators": (
+                "src/cadrumo/application/calculations/_row_set_assembly.py:176",
+            ),
+        },
+    )
+    stale_census = m182_census.model_copy(update={"entries": (stale_entry,)})
+    with pytest.raises(SourceConnectivityCheckError, match="capability locator drift"):
+        check_capability_locators(repo_root, stale_census, capability_evidence=capability_evidence)
 
 
 def test_m182_deferred_source_has_no_connected_downstream_lifecycle() -> None:

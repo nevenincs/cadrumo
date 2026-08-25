@@ -273,7 +273,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Donor bindings and worksheet assembler are only a partial type-2 carrier, not distinct non-lossy type-1 declarant/header and type-2 donor-detail carriers. Reopen only when secure owner(s) retain both at native grain, with nature-3 administrator/holder identity, durable immutable identity/fingerprint, and lifecycle proof through diagnostics, provenance, encrypted revision persistence/replay, and review. Export stays negative until supported; then it needs positive non-lossy repeated-record proof."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/application/calculations/_row_set_assembly.py:176",
+  "src/cadrumo/application/calculations/_row_set_assembly.py:178",
 ]
 capability_ids = ["row_assembler:per_donativo_donor"]
 advisory_destination_refs = ["modelo:182:rows:donativo-donor"]
@@ -288,7 +288,7 @@ summary = "Validated Modelo 182 bindings already declare the donor source family
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/calculations/_row_set_assembly.py:176"
+reference = "src/cadrumo/application/calculations/_row_set_assembly.py:178"
 summary = "Worksheet rows dispatch to the typed donor observation assembler."
 
 [entries.bounded_follow_up]
