@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Generator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import cast
@@ -67,6 +67,7 @@ from ...domain.user_profile import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
 from ...tests.secure_sql import isolated_profile_storage_root
 from .. import build_production_operation_registry
+from .._censal_review import _run as run_censal_review_through_services
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -384,6 +385,82 @@ def _runtime(
                 yield _ExecutionDriver(services=services), registry, profile_id
             finally:
                 asyncio.run(services.shutdown())
+
+
+@pytest.mark.parametrize("apply", [True, False], ids=["apply", "reject"])
+def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection(
+    tmp_path: Path,
+    apply: bool,
+) -> None:
+    """The public frontend driver answers the encrypted exact proposal once."""
+    cleanup = _CloseWitness()
+    with _runtime(tmp_path / f"frontend-{apply}", cleanup=cleanup) as (driver, _registry, profile_id):
+        repository = ProfileRecordRepository.for_current_session(profile_id)
+        before = repository.load(profile_id)
+        decisions: list[tuple[str | None, ...]] = []
+
+        def decide(projection) -> bool:
+            decisions.append(tuple(field.observed_value for field in projection.fields))
+            return apply
+
+        result = asyncio.run(
+            run_censal_review_through_services(
+                actor_ref="operator:frontend-test",
+                decide=decide,
+                services=driver.services,
+            )
+        )
+
+        assert result.applied is apply
+        assert len(decisions) == 1
+        assert len(decisions[0]) == len(CENSAL_ADOPTABLE_PATHS)
+        assert decisions[0][0]
+        assert decisions[0][1] == "28013"
+        assert cleanup.closed is True
+        after = repository.load(profile_id)
+        if apply:
+            assert after.record_revision == before.record_revision + 1
+            assert after.content_digest != before.content_digest
+        else:
+            assert after == before
+
+
+def test_censal_frontend_driver_never_reports_a_failed_terminal_as_applied(tmp_path: Path) -> None:
+    """An accepted response followed by a failed continuation stays a failure."""
+    cleanup = _CloseWitness()
+    with _runtime(tmp_path / "frontend-failed", cleanup=cleanup) as (driver, _registry, _profile_id):
+        delegate = driver.services.observation
+
+        class _FailedTerminalObservation:
+            async def observe(self, request):
+                observed = await delegate.observe(request)
+                if (
+                    isinstance(observed, OperationObservationSuccessV1)
+                    and observed.projection.lifecycle is OperationLifecycle.TERMINAL
+                ):
+                    return observed.model_copy(
+                        update={
+                            "projection": observed.projection.model_copy(
+                                update={
+                                    "terminal_condition": OperationTerminalCondition.FAILED,
+                                    "effect": OperationEffect.UNKNOWN,
+                                    "result_ref": None,
+                                    "diagnostic_ref": "diagnostic:censo-stale",
+                                }
+                            )
+                        }
+                    )
+                return observed
+
+        failed_services = replace(driver.services, observation=_FailedTerminalObservation())
+        with pytest.raises(RuntimeError, match="did not succeed"):
+            asyncio.run(
+                run_censal_review_through_services(
+                    actor_ref="operator:frontend-failed-test",
+                    decide=lambda _projection: True,
+                    services=failed_services,
+                )
+            )
 
 
 @pytest.mark.parametrize("case", _MATRIX, ids=lambda case: case.definition_id)
