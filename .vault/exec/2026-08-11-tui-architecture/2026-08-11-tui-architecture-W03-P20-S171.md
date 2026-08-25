@@ -34,7 +34,7 @@ related:
 
 ## Outcome
 
-- Focused integration suites passed: Workspace models 22, producer contracts 6, and field manifest 8.
+- Focused integration suites passed: Workspace models 28, producer contracts 6, and field manifest 8.
 - Scoped compilation, Ruff, whitespace, exact AST import, exact private-path, and semantic discovery checks passed. The AST census found five direct public-module consumers and no private import edge.
 - The record remains open for independent code review; this execution does not close the plan row.
 
@@ -43,3 +43,4 @@ related:
 - Shared commit `3ec3f7908a` swept the filesystem renames before the S171 consumer and schema cutover. The current commit records the direct-import and validation closure from that provenance.
 - Shared commit `06e55cfadd` swept the required-nullable source-model correction before its negative test proof could be committed; the follow-up commit records that proof.
 - API-stub scaffolding initially produced unrelated shared-tree drift. The 234 tracked and 161 untracked non-S171 generator outputs were restored or removed using the captured pre-run clean status; only the two S171 generated stubs remain in scope.
+- The independent review's cursor-coordinate finding is remediated with one-coordinate typed-cursor mutations for baseline identity, contract version, selected revision, schema identity, facet, and contributor epoch digest; both `has_more` disagreement directions, baseline-to-facet epoch drift, and unavailable-with-cursor payloads now refuse through their validators.

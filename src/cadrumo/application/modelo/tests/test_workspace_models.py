@@ -624,7 +624,20 @@ def test_workspace_revision_mismatch_refusal_preserves_both_axes_and_every_misma
         )
 
 
-def test_workspace_cursor_binds_each_baseline_coordinate_and_unavailable_facets_have_no_cursor() -> None:
+@pytest.mark.parametrize(
+    ("coordinate", "error"),
+    (
+        ("baseline", "complete facet consistency coordinate"),
+        ("contract_version", "cursor baseline must retain the V1 contract version"),
+        ("selected_revision_id", "cursor baseline must retain the selected revision"),
+        ("schema_identity", "cursor baseline must retain the schema identity and fingerprint"),
+        ("facet", "complete facet consistency coordinate"),
+        ("contributor_epoch_digest", "cursor baseline must retain the contributor epoch digest"),
+    ),
+)
+def test_workspace_cursor_coordinate_mutations_are_refused_by_the_bounded_facet(
+    coordinate: str, error: str
+) -> None:
     target = _target()
     schema_identity = _schema_identity()
     baseline = _baseline(target, schema_identity)
@@ -646,32 +659,75 @@ def test_workspace_cursor_binds_each_baseline_coordinate_and_unavailable_facets_
     assert ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate_json(
         available.model_dump_json()
     ) == available
-    with pytest.raises(ValidationError, match="complete facet consistency coordinate"):
+
+    alternatives = {
+        "baseline": baseline.model_copy(update={"token": "b" * 64}),
+        "contract_version": 2,
+        "selected_revision_id": "2024-y-siguientes",
+        "schema_identity": schema_identity.model_copy(update={"schema_fingerprint": "b" * 64}),
+        "facet": ModeloWorkspaceFacetName.PROVENANCE,
+        "contributor_epoch_digest": "b" * 64,
+    }
+    altered_cursor = cursor.model_copy(update={coordinate: alternatives[coordinate]})
+
+    assert {
+        field
+        for field in (
+            "baseline",
+            "contract_version",
+            "selected_revision_id",
+            "schema_identity",
+            "facet",
+            "contributor_epoch_digest",
+        )
+        if getattr(altered_cursor, field) != getattr(cursor, field)
+    } == {coordinate}
+    with pytest.raises(ValidationError, match=error):
         ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
             **{
                 **available.model_dump(),
-                "next_cursor": cursor.model_copy(update={"facet": ModeloWorkspaceFacetName.PROVENANCE}),
+                "next_cursor": altered_cursor,
             }
+        )
+
+
+def test_workspace_cursor_page_state_and_unavailable_cursor_mutations_are_refused() -> None:
+    target = _target()
+    schema_identity = _schema_identity()
+    baseline = _baseline(target, schema_identity)
+    contributors = _contributors()
+    cursor = _cursor(target, schema_identity, baseline)
+    available = ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+        selected_revision_id=target.law_selected_revision_id,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributor_epoch_digest=baseline.contributor_epoch_digest,
+        contributors=contributors,
+        facet=ModeloWorkspaceFacetName.SCHEMA,
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        page_size=1,
+        has_more=True,
+        next_cursor=cursor,
+    )
+
+    with pytest.raises(ValidationError, match="has_more must agree with next_cursor"):
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate(
+            {**available.model_dump(), "next_cursor": None}
+        )
+    with pytest.raises(ValidationError, match="has_more must agree with next_cursor"):
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate(
+            {**available.model_dump(), "has_more": False}
         )
     with pytest.raises(ValidationError, match="contributor epoch digest"):
-        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
-            **{
-                **available.model_dump(),
-                "contributor_epoch_digest": "b" * 64,
-            }
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate(
+            {**available.model_dump(), "contributor_epoch_digest": "b" * 64}
         )
     with pytest.raises(ValidationError, match="unavailable workspace facets"):
-        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
-            selected_revision_id=target.law_selected_revision_id,
-            schema_identity=schema_identity,
-            baseline=baseline,
-            contributor_epoch_digest=baseline.contributor_epoch_digest,
-            contributors=contributors,
-            facet=ModeloWorkspaceFacetName.SCHEMA,
-            disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
-            page_size=1,
-            has_more=True,
-            next_cursor=cursor,
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1].model_validate(
+            {
+                **available.model_dump(),
+                "disposition": ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+            }
         )
 
 
