@@ -3,18 +3,19 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
+modified: '2026-08-25'
+body_hash: 'sha256:e7faa0bb15f3890ac7b46b52f7ff9af9919857e7dd8b32356220394d7b998bc9'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-research]]'
   - '[[2026-08-22-source-casilla-integration-m182-row-source-grounding-research]]'
+  - '[[2026-08-25-source-casilla-integration-m193-row-source-grounding-research]]'
   - '[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]'
   - '[[2026-08-23-inventory-casilla-mapping-adr]]'
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
-modified: '2026-08-25'
-body_hash: 'sha256:38bda458c3e01055a6ed070eb1101250586e2f2adecf1b575e67314dfece7d2a'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -341,7 +342,7 @@ settles their source and record semantics.
 
 Adjudicate, connect or close, persist, and review the M193 row source.
 
-- [ ] `W05.P18.S104` - adjudicate M193 contributor-expense semantics and source ownership from official evidence; `.vault/research/2026-08-22-m193-row-source-grounding-research.md`.
+- [x] `W05.P18.S104` - adjudicate M193 contributor-expense semantics and source ownership from official evidence; `.vault/research/2026-08-25-source-casilla-integration-m193-row-source-grounding-research.md`.
 - [ ] `W05.P18.S105` - enroll the contributor-expense resolver and remove its deferral; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [ ] `W05.P18.S106` - prove row persistence, diagnostics, provenance, replay, review, and export for M193; `src/cadrumo/application/modelo/tests/test_m193_row_source.py`.
 - [ ] `W05.P18.S107` - close the M193 census disposition and obtain formal review; `.vault/audit/2026-08-22-m193-row-source-code-review.md`.

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:0b0b35997823987640fd8e130b295c990488a5e25efbc929e411bc6e20887b35'
+body_hash: 'sha256:875e022de0f458fbae3bbd10f4abe19a0131cdd5efefd9c53b58d440ec7725f6'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -123,6 +123,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P17-S102]]'
   - '[[2026-08-22-source-casilla-integration-W05-P17-S103]]'
   - '[[2026-08-22-source-casilla-integration-W05-P17-summary]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P18-S104]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -172,6 +173,7 @@ related:
   - '[[2026-08-23-source-casilla-integration-s41-inventory-runtime-composition-review-audit]]'
   - '[[2026-08-23-source-casilla-integration-s42-inventory-source-ownership-review-audit]]'
   - '[[2026-08-23-source-casilla-integration-s43-inventory-binding-templates-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-m193-row-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-s100-m182-row-source-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s101-m182-terminal-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-followup-audit]]'
@@ -189,6 +191,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-s97-m360-terminal-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s98-m360-terminal-refusal-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s99-m360-terminal-closure-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-w05-p17-m182-terminal-closure-final-audit]]'
 ---
 
 # `source-casilla-integration` feature index
@@ -262,6 +265,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s97-m360-terminal-deferral-review-audit` - `source-casilla-integration` audit: `S97 M360 terminal deferral review`
 - `2026-08-25-source-casilla-integration-s98-m360-terminal-refusal-review-audit` - `source-casilla-integration` audit: `S98 M360 terminal refusal review`
 - `2026-08-25-source-casilla-integration-s99-m360-terminal-closure-review-audit` - `source-casilla-integration` audit: `S99 M360 terminal deferral closure review`
+- `2026-08-25-source-casilla-integration-w05-p17-m182-terminal-closure-final-audit` - `source-casilla-integration` audit: `W05 P17 Modelo 182 terminal closure final review`
 
 ### exec
 
@@ -380,6 +384,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P17-S102` - prove the Modelo 182 donor source remains refused at calculation ingress and unavailable to connected encrypted persistence, provenance, replay, review, or repeated-record export until S101's reopening predicate is satisfied, while the five direct manual type-2 casillas remain available and no type-1/header support is claimed
 - `2026-08-22-source-casilla-integration-W05-P17-S103` - formally close the reviewed terminal Modelo 182 ingress-blocked census disposition, retain its owner, expiry, reopening predicate, no-connected-route boundary, and reviewed S100-S102 evidence, then hand the closure to independent final review
 - `2026-08-22-source-casilla-integration-W05-P17-summary` - `source-casilla-integration` `W05.P17` summary
+- `2026-08-22-source-casilla-integration-W05-P18-S104` - adjudicate M193 contributor-expense semantics and source ownership from official evidence
 
 ### plan
 
@@ -392,3 +397,4 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-m232-row-source-grounding-research` - `source-casilla-integration` research: `m232 row source grounding`
 - `2026-08-22-source-casilla-integration-m360-row-source-grounding-research` - `source-casilla-integration` research: `m360 row source grounding`
 - `2026-08-22-source-casilla-integration-research` - `source-casilla-integration` research: `recurring discovery and enrollment of disconnected calculation sources`
+- `2026-08-25-source-casilla-integration-m193-row-source-grounding-research` - `source-casilla-integration` research: `Modelo 193 contributor-expense row source grounding`
