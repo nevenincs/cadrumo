@@ -21,11 +21,9 @@ from ._credential_screen import (
 )
 from ._field_edit_screen import FieldEditScreen, accepted_shape_hint
 from ._form_screen import (
-    ChoiceEditScreen,
     FormApp,
     FormPresenter,
     FormScreen,
-    TextEditScreen,
     active_form_presenter,
     presenting_forms_through,
     run_form_tui,
@@ -65,7 +63,6 @@ from ._status_screen import (
 
 __all__ = [
     "CREDENTIAL_PANEL_CSS",
-    "ChoiceEditScreen",
     "ConfirmScreen",
     "CredentialApp",
     "CredentialAttempt",
@@ -96,7 +93,6 @@ __all__ = [
     "StatusPageData",
     "StatusProfileRow",
     "StatusTone",
-    "TextEditScreen",
     "accepted_shape_hint",
     "active_form_presenter",
     "confirm_restart_dialog",

@@ -32,9 +32,10 @@ from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.events import DescendantFocus
 from textual.screen import ModalScreen, Screen
-from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, SelectionList, Static
+from textual.widgets import Button, DataTable, Footer, Static
 
 from ....core.i18n import tr
+from ....entrypoints.tui.components.dialogs import ChoiceEditScreen, OneChoiceEditScreen, TextEditScreen
 from ....entrypoints.tui.components.forms import (
     FormChoice,
     FormField,
@@ -64,10 +65,6 @@ shape whether or not the page regenerates itself.
 """
 
 
-_MULTI_CHOICE_SEPARATOR = ","
-"""Token separator for a multi-choice value, matching the CHECKBOX
-convention the profile facts already store."""
-
 _MASKED_TABLE_VALUE = "••••••••"
 """What a ``secret`` field's row shows once it holds a value.
 
@@ -91,166 +88,6 @@ def _display_value(form_field: FormField, value: str) -> str:
     tokens = multi_choice_tokens(value) if form_field.kind is FormFieldKind.MULTI_CHOICE else (value,)
     unavailable = tr("flows.manager.choice_unavailable")
     return ", ".join(labels_by_value.get(token, unavailable) for token in tokens)
-
-
-_EDIT_DIALOG_CSS = """
-#edit-dialog {
-    border: thick $accent;
-    background: $surface;
-    padding: 0 1;
-    width: 100%;
-    height: auto;
-}
-#edit-label { text-style: bold; }
-#edit-path { color: $text-muted; margin: 0; }
-#edit-refusal { color: $error; }
-#edit-dialog Input { margin: 0; }
-#edit-actions { height: auto; align-horizontal: right; margin: 0; }
-#edit-actions Button { margin: 0 0 0 1; }
-"""
-"""Dialog styling carried by the edit screens themselves.
-
-These rules used to live on the host application's ``CSS``, which was
-enough while the only host was :class:`FormApp`. The page is now also
-pushed into the profile manager, and a dialog that took its appearance
-from whichever application happened to be hosting it would render
-unstyled in the second one. Carrying the rules on the screens makes them
-self-sufficient in any host.
-"""
-
-
-class TextEditScreen(ModalScreen[str | None]):
-    """Type one text value. Dismisses with the new value, or ``None``."""
-
-    DEFAULT_CSS = _EDIT_DIALOG_CSS
-    BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
-
-    def __init__(self, field: FormField) -> None:
-        super().__init__()
-        self._field = field
-
-    @override
-    def compose(self) -> ComposeResult:
-        with Vertical(id="edit-dialog"):
-            yield Label(self._field.label, id="edit-label")
-            if self._field.hint:
-                yield Static(self._field.hint, id="edit-path")
-            yield Input(value=self._field.value, password=self._field.secret, id="edit-input")
-            yield Static(id="edit-refusal")
-            with Horizontal(id="edit-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
-                yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
-
-    def on_mount(self) -> None:
-        self.query_one("#edit-input", Input).focus()
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "btn-edit-save":
-            self._submit()
-        else:
-            self.dismiss(None)
-
-    def on_input_submitted(self, event: Input.Submitted) -> None:
-        self._submit()
-
-    def _submit(self) -> None:
-        """Accept the typed value, or hold the dialog open showing why not."""
-        candidate = self.query_one("#edit-input", Input).value
-        refusal = self._field.validate(candidate) if self._field.validate is not None else None
-        if refusal is not None:
-            self.query_one("#edit-refusal", Static).update(refusal)
-            return
-        self.dismiss(candidate)
-
-    def action_cancel(self) -> None:
-        self.dismiss(None)
-
-
-class ChoiceEditScreen(ModalScreen[str | None]):
-    """Pick any number of options. Dismisses with a comma-joined token list."""
-
-    DEFAULT_CSS = _EDIT_DIALOG_CSS
-    BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
-
-    def __init__(self, field: FormField) -> None:
-        super().__init__()
-        self._field = field
-
-    @override
-    def compose(self) -> ComposeResult:
-        selected = {token for token in self._field.value.split(_MULTI_CHOICE_SEPARATOR) if token}
-        with Vertical(id="edit-dialog"):
-            yield Label(self._field.label, id="edit-label")
-            if self._field.hint:
-                yield Static(self._field.hint, id="edit-path")
-            yield SelectionList[str](
-                *[(choice.label, choice.value, choice.value in selected) for choice in self._field.choices],
-                id="edit-choices",
-            )
-            with Horizontal(id="edit-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
-                yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
-
-    def on_mount(self) -> None:
-        self.query_one("#edit-choices", SelectionList).focus()
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id != "btn-edit-save":
-            self.dismiss(None)
-            return
-        picked = self.query_one("#edit-choices", SelectionList).selected
-        self.dismiss(_MULTI_CHOICE_SEPARATOR.join(str(token) for token in picked))
-
-
-class OneChoiceEditScreen(ModalScreen[str | None]):
-    """Pick exactly one option. Dismisses with its token."""
-
-    DEFAULT_CSS = _EDIT_DIALOG_CSS
-    BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
-
-    def __init__(self, field: FormField) -> None:
-        super().__init__()
-        self._field = field
-
-    @override
-    def compose(self) -> ComposeResult:
-        with Vertical(id="edit-dialog"):
-            yield Label(self._field.label, id="edit-label")
-            if self._field.hint:
-                yield Static(self._field.hint, id="edit-path")
-            yield OptionList(*[choice.label for choice in self._field.choices], id="edit-options")
-            with Horizontal(id="edit-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
-                yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
-
-    def on_mount(self) -> None:
-        options = self.query_one("#edit-options", OptionList)
-        current = next(
-            (index for index, choice in enumerate(self._field.choices) if choice.value == self._field.value),
-            None,
-        )
-        if current is not None:
-            options.highlighted = current
-        options.focus()
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id != "btn-edit-save":
-            self.dismiss(None)
-            return
-        self._dismiss_highlighted()
-
-    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
-        self._dismiss_highlighted()
-
-    def _dismiss_highlighted(self) -> None:
-        highlighted = self.query_one("#edit-options", OptionList).highlighted
-        if highlighted is None:
-            self.dismiss(None)
-            return
-        self.dismiss(self._field.choices[highlighted].value)
-
-    def action_cancel(self) -> None:
-        self.dismiss(None)
 
 
 def _edit_screen_for(field: FormField) -> ModalScreen[str | None]:
@@ -540,7 +377,6 @@ def active_form_presenter() -> FormPresenter | None:
 
 
 __all__ = [
-    "ChoiceEditScreen",
     "FormApp",
     "FormChoice",
     "FormField",
@@ -548,8 +384,6 @@ __all__ = [
     "FormPage",
     "FormPresenter",
     "FormScreen",
-    "OneChoiceEditScreen",
-    "TextEditScreen",
     "active_form_presenter",
     "form_choices",
     "multi_choice_tokens",
