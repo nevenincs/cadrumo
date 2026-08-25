@@ -15,7 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...adapters.persistence.storage.bucket import bucket_paths
-from ...core import StorageCategory, scan_directory, storage_location
+from ...core import BucketPointer, StorageCategory, scan_directory, storage_location
 from ...domain.user_profile import ProfileSetupState
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from .._config_reset_models import (
@@ -60,7 +60,7 @@ def _operation(*, updated_offset: int = 0) -> ConfigResetOperation:
         status=ConfigResetOperationStatus.INCOMPLETE,
         started_at=started_at,
         updated_at=started_at + timedelta(seconds=updated_offset),
-        pointer_snapshot=ConfigResetPointerSnapshot(present=False),
+        pointer_snapshot=ConfigResetPointerSnapshot(record=BucketPointer.absent(transition_revision=0)),
         targets=(
             ConfigResetTarget(
                 bucket_id=_BUCKET_ID,
@@ -117,9 +117,7 @@ def test_create_persists_canonical_bucket_identities(
         started_at=started_at,
         updated_at=started_at,
         pointer_snapshot=ConfigResetPointerSnapshot(
-            present=True,
-            bucket_id=wrapped_bucket_id,
-            content_sha256="a" * 64,
+            record=BucketPointer.selected(bucket_id=wrapped_bucket_id, transition_revision=0),
         ),
         targets=(
             ConfigResetTarget(
@@ -153,7 +151,8 @@ def test_create_persists_canonical_bucket_identities(
     repository.create(operation)
 
     document = json.loads(repository.path_for(operation.operation_id).read_text(encoding="utf-8"))
-    assert document["pointer_snapshot"]["bucket_id"] == _BUCKET_ID
+    assert document["pointer_snapshot"]["record"]["selection"] == "selected"
+    assert document["pointer_snapshot"]["record"]["bucket_id"] == _BUCKET_ID
     assert document["targets"][0]["bucket_id"] == _BUCKET_ID
     assert document["targets"][0]["deletion_marker"]["bucket_id"] == _BUCKET_ID
     assert document["paused_target_ids"] == [_BUCKET_ID]
