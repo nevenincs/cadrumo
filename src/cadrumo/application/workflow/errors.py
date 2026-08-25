@@ -76,7 +76,7 @@ class UnhandledWorkflowError(WorkflowComponentError):
     """Raised when a workflow stage propagates an exception with no typed handler.
 
     Wraps every bare ``except Exception`` catch inside
-    ``cadrumo.application.workflow._engine.WorkflowEngine._record_unhandled``
+    ``cadrumo.application.workflow.engine.WorkflowEngine._record_unhandled``
     so the unhandled path produces a structured :class:`ErrorEnvelope` with
     a stable ``INTERNAL_WORKFLOW_UNHANDLED`` code rather than an opaque
     ``UNHANDLED_EXCEPTION`` abort reason alone.

@@ -18,12 +18,10 @@ import pytest
 from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
-from ....application.user_profile import (
-    apply_manager_profile_field_mutation,
-    build_profile_overview,
-    login_profile,
-    register_profile_with_credentials,
-)
+from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
+from ....application.user_profile.overview import build_profile_overview
+from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n import tr
 from ....tests.profile_capsule import load_test_profile_record
@@ -368,7 +366,7 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
     moment the operator pressed save, silently overwriting the secret with
     a row of bullets.
     """
-    from ....application.user_profile import MASKED_PLACEHOLDER, ProfileFieldView
+    from ....application.user_profile.overview import MASKED_PLACEHOLDER, ProfileFieldView
     from ..profile.overview import FieldEditScreen
 
     masked = ProfileFieldView(

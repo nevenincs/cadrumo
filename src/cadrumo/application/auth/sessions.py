@@ -30,6 +30,8 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, TypeAdapter, ValidationError
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind, ClaveMovilRoute
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ...core.errors import CadrumoError
@@ -43,7 +45,6 @@ from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
 from ...domain.user_profile import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
-from ._workflow_repository import workflow_state_repository as _workflow_state_repository
 from .acquisition_lock import (
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockStatus,
@@ -403,7 +404,7 @@ async def ensure_authenticated_aeat_session(
                 translated_message="application.auth.sessions.errors.no_session",
             )
         with auth_mutation_span(settings=settings, bucket_id=bucket_id):
-            assert_auth_recovery_not_in_progress(_workflow_state_repository().load())
+            assert_auth_recovery_not_in_progress(workflow_state_repository().load())
             return await _ensure_authenticated_aeat_session_locked(
                 settings,
                 kind=kind,
@@ -778,7 +779,7 @@ def _profile_field_label(path: str) -> str:
     instruction.
     """
     from ...core.resources import resources
-    from ..user_profile import build_profile_preflight_requirement
+    from ..user_profile.preflight import build_profile_preflight_requirement
 
     return build_profile_preflight_requirement(
         path,
@@ -861,10 +862,7 @@ def _grounded_profile_identity_requirement() -> str:
     kept in step with a schema rename.
     """
     from ...core.resources import resources
-    from ..user_profile import (
-        build_profile_preflight_requirement,
-        format_profile_preflight_requirement,
-    )
+    from ..user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement
 
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(
@@ -902,7 +900,7 @@ def _assert_active_profile_identity_matches_provider(
     belong to the profile at all, so it refuses rather than comparing.
 
     This mirrors the censal-read ownership guard in
-    :mod:`application.user_profile._censo_sync`, which resolves the same
+    :mod:`application.user_profile.censo_sync`, which resolves the same
     question against the same authority.
     """
     if credentials is None:
@@ -1039,11 +1037,8 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import (
-        ProfileRecordRepository,
-        record_to_path_values,
-        record_to_values,
-    )
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_path_values, record_to_values
 
     bucket_id = resolve_active_bucket_id()
     # Read through the ambient session only when it is THIS bucket's; a session

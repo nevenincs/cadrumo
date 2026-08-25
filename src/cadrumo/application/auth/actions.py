@@ -1,7 +1,7 @@
 """State transitions for workflow-owned authentication readiness.
 
 :func:`update_auth` returns a new :class:`application.workflow.WorkflowState`
-whose :class:`application.workflow.AuthState` snapshot reflects provider
+whose :class:`application.auth.models.AuthState` snapshot reflects provider
 configuration, authentication, or subject changes.
 """
 
@@ -13,7 +13,7 @@ from ...core.time import now as utc_now
 from .models import AuthState
 
 if TYPE_CHECKING:
-    from ..workflow import WorkflowState
+    from cadrumo.application.workflow.state_models import WorkflowState
 
 
 def update_auth(

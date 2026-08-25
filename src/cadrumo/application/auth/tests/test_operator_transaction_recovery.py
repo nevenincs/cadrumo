@@ -14,6 +14,10 @@ from threading import Barrier, Event
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.application.auth.models import AuthCleanupOperationKind, CertificateSecretMutationEventKind
+from cadrumo.application.workflow.persistence import WorkflowStateRepository, workflow_state_repository
+from cadrumo.application.workflow.state_models import WorkflowState
+
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage import RepositoryError
@@ -26,13 +30,6 @@ from ....domain.contribuyente import required_profile_keys
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import (
-    AuthCleanupOperationKind,
-    CertificateSecretMutationEventKind,
-    WorkflowState,
-    WorkflowStateRepository,
-    workflow_state_repository,
-)
 from ..acquisition_lock import acquire_auth_acquisition_lock
 from ..actions import update_auth
 from ..certificate_source_operations import (

@@ -56,7 +56,7 @@ def _assert_registered_and_roundtrip(cls: type) -> None:
 
 
 def test_profile_registration_error_is_registered_and_roundtrips() -> None:
-    from ..user_profile import ProfileRegistrationError
+    from ..user_profile.registration import ProfileRegistrationError
 
     _assert_registered_and_roundtrip(ProfileRegistrationError)
 
@@ -157,7 +157,7 @@ def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
 
 
 def test_workflow_input_mismatch_error_is_registered_and_roundtrips() -> None:
-    from ..workflow import WorkflowInputMismatchError
+    from cadrumo.application.workflow.errors import WorkflowInputMismatchError
 
     _assert_registered_and_roundtrip(WorkflowInputMismatchError)
 

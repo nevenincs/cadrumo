@@ -33,7 +33,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests import FIXTURES_DIR
-from ...workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
     modelo_reconcile,

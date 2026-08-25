@@ -11,7 +11,7 @@ See Also:
     :class:`~cadrumo.application.workflow.WorkflowStateRepository`
         Computes :class:`WorkflowStateResetFingerprint` records and calls this
         module before deleting the workflow-state envelope.
-    :func:`cadrumo.application.workflow._persistence.reset_workflow_state`
+    :func:`cadrumo.application.workflow.persistence.reset_workflow_state`
         Public helper used by the ``config repair reset-progress`` command to
         execute the emit-before-delete recovery route.
     :class:`~cadrumo.domain.buckets.BucketEvent`

@@ -49,8 +49,8 @@ from ...domain.submission import ModeloDraftStatus
 from ..operator_actions import ConditionEvidence, PreconditionVerdict
 from ._engine_helpers import CertificateSeverityValue, DeadlineRole, FilingWindowState
 from ._identity import period_identity_segment
-from .profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
 from .abort import WorkflowAbortReason as WorkflowAbortReason
+from .profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
 
 _log = get_logger(__name__)
 

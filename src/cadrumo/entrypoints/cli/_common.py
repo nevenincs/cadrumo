@@ -149,7 +149,7 @@ if TYPE_CHECKING:
         ResultSchemaInventoryRow,
         SurfaceExposureInventoryRow,
     )
-    from ...application.workflow import WorkflowState
+    from cadrumo.application.workflow.state_models import WorkflowState
     from ...core import Period
     from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
     from ...domain.deadlines import TaxpayerProfile
@@ -1127,7 +1127,7 @@ def active_profile_label() -> str | None:
     profile manifests.
     """
     from ...adapters.persistence.storage import StorageValidationError
-    from ...application.workflow import resolve_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core import FormerProductStateError
     from ...core.bucket_pointer import resolve_active_bucket_id
 
@@ -1166,7 +1166,7 @@ def _no_active_profile_refusal() -> Exception:
     never unlocks a bucket, so this check is cheap.
     """
     from ...application.profile_preconditions import inspect_active_profile_precondition
-    from ...application.workflow import list_profile_buckets
+    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
     from ._errors import CliRefusedBoundaryError
 
     registered_profile_count = len(list_profile_buckets())
@@ -1191,7 +1191,7 @@ no_active_profile_refusal = _no_active_profile_refusal
 
 
 def _state() -> WorkflowState:
-    from ...application.workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     # Without an active profile there is no bucket database to open;
@@ -1540,7 +1540,7 @@ def resolve_pull_year_range(
 
 
 def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
-    from ...application.user_profile import projection_for_taxpayer
+    from ...application.user_profile.projections import projection_for_taxpayer
 
     record = state.active_profile_record()
     if record is None:
@@ -1560,7 +1560,7 @@ def _declared_tax_id(record: UserProfileRecord | None) -> str:
     absence to survive, so this returns the empty string and lets the owning
     application service raise its own grounded refusal naming the missing fact.
     """
-    from ...application.user_profile import fact_value
+    from ...application.user_profile.projections import fact_value
 
     return (fact_value(record, "identity.tax_id") or "").strip()
 
@@ -1586,7 +1586,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     once rather than at each call site.
     """
     from ...application.profile_preconditions import inspect_filing_taxpayer_identity_precondition
-    from ...application.user_profile import format_profile_selector_requirements
+    from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
     from ._errors import CliRefusedBoundaryError
@@ -1642,7 +1642,7 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
 
 
 def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
-    from ...application.workflow import active_transaction_catalogue_repository
+    from cadrumo.application.workflow.state_models import active_transaction_catalogue_repository
     from ...domain.transactions import LedgerNoActiveBucketError
 
     try:

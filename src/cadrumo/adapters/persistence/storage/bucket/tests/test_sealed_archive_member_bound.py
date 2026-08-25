@@ -86,6 +86,6 @@ def test_sealed_archive_member_bound_matches_the_writer_cap() -> None:
     produced -- a failure that would surface as an operator unable to restore a
     legitimate backup, long after the change that caused it.
     """
-    from ......application.user_profile import PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES
+    from ......application.user_profile.capsule_archive import PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES
 
     assert _MAX_MEMBER_BYTES == PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES

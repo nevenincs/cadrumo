@@ -9,35 +9,8 @@ from pathlib import Path
 from typing import Literal, NoReturn
 from uuid import UUID
 
-from ....application.user_profile import (
-    ProfileBucketStoragePathsPort,
-    ProfileBucketStoragePort,
-    ProfileCapsuleArchiveContentsMaterial,
-    ProfileCapsuleArchiveHeaderMaterial,
-    ProfileCustodyBucketEventHistoryPort,
-    ProfileCustodyCapsuleLabelPort,
-    ProfileCustodyCapsuleSourceMaterial,
-    ProfileCustodyEnvelopePort,
-    ProfileCustodyInventoryPort,
-    ProfileCustodyLocalRecordStore,
-    ProfileCustodyPasswordMaterialPort,
-    ProfileCustodyPasswordProofMaterialPort,
-    ProfileCustodyPort,
-    ProfileCustodyRecoveryArtifactExportReceiptPort,
-    ProfileCustodyRecoveryEnrollmentMaterial,
-    ProfileCustodyRecoveryEnvelopePort,
-    ProfileCustodyRecoveryUnlockPort,
-    ProfileCustodyRegistrationMaterial,
-    ProfileCustodySecureObjectNamespace,
-    ProfileCustodySecureObjectRepositoryPort,
-    ProfileCustodySentinelPort,
-    ProfileCustodyUnlockPort,
-    ProfilePasswordProofOperation,
-    ProfileRecordCryptoError,
-    ProfileRecordCryptoPort,
-    ProfileRecordEncryptedBlob,
-    ProfileSecureObjectInventoryPort,
-)
+from ....application.user_profile.custody_ports import ProfileBucketStoragePathsPort, ProfileBucketStoragePort, ProfileCapsuleArchiveContentsMaterial, ProfileCapsuleArchiveHeaderMaterial, ProfileCustodyBucketEventHistoryPort, ProfileCustodyCapsuleLabelPort, ProfileCustodyCapsuleSourceMaterial, ProfileCustodyEnvelopePort, ProfileCustodyInventoryPort, ProfileCustodyLocalRecordStore, ProfileCustodyPasswordMaterialPort, ProfileCustodyPasswordProofMaterialPort, ProfileCustodyPort, ProfileCustodyRecoveryArtifactExportReceiptPort, ProfileCustodyRecoveryEnrollmentMaterial, ProfileCustodyRecoveryEnvelopePort, ProfileCustodyRecoveryUnlockPort, ProfileCustodyRegistrationMaterial, ProfileCustodySecureObjectNamespace, ProfileCustodySecureObjectRepositoryPort, ProfileCustodySentinelPort, ProfileCustodyUnlockPort, ProfileRecordCryptoError, ProfileRecordCryptoPort, ProfileRecordEncryptedBlob, ProfileSecureObjectInventoryPort
+from ....application.user_profile.authentication import ProfilePasswordProofOperation
 from ....core import StorageCategory, storage_location
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest

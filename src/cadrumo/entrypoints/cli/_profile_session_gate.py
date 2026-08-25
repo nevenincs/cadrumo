@@ -59,7 +59,8 @@ def bind_profile_target(ctx: typer.Context, *, bucket_id: str) -> None:
 
 def normalize_ambient_profile(ctx: typer.Context) -> None:
     """Normalize an ambient label pointer to the canonical live bucket UUID."""
-    from ...application.workflow import ProfileLabelAmbiguousError, resolve_profile_bucket
+    from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
+    from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config import override_settings
     from ...core.errors import CadrumoError
@@ -179,7 +180,7 @@ def _resume_or_authenticate(
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...adapters.persistence.storage.errors import KeyringUnavailableError
     from ...application.profile_preconditions import profile_session_failure_verdict
-    from ...application.user_profile import bind_resumed_profile_session
+    from ...application.user_profile.login_session import bind_resumed_profile_session
 
     refusal = bind_resumed_profile_session(bucket_id=bucket_id)
     if refusal is None:
@@ -224,7 +225,7 @@ def authenticate_profile_for_manager(ctx: typer.Context, *, bucket_id: str) -> b
 def resume_registered_profile_for_manager(ctx: typer.Context, *, bucket_id: str) -> None:
     """Resume and bind a profile just registered by the manager frontend."""
     from ...adapters.persistence.storage import active_bucket_session_serves
-    from ...application.user_profile import bind_resumed_profile_session
+    from ...application.user_profile.login_session import bind_resumed_profile_session
 
     refusal = bind_resumed_profile_session(bucket_id=bucket_id)
     if refusal is not None or not active_bucket_session_serves(bucket_id):

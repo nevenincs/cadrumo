@@ -13,7 +13,7 @@ See Also:
         Canonical readiness projection consumed by status and test results.
     :class:`application.workflow.WorkflowState`
         Encrypted state envelope carrying the persisted
-        :class:`application.workflow.AuthState`.
+        :class:`application.auth.models.AuthState`.
     :class:`core.AuthProviderDescription`
         Provider-readiness description that feeds provider catalogue output.
     :class:`application.auth.AuthenticatedAeatSessionResult`
@@ -89,7 +89,7 @@ class AuthConfigureResult(BaseModel):
     """Result of configuring an auth provider in workflow state.
 
     The provider selection has already been written to
-    :class:`application.workflow.AuthState` inside
+    :class:`application.auth.models.AuthState` inside
     :class:`application.workflow.WorkflowState` when this result is
     returned.
 
@@ -307,7 +307,7 @@ class CertificateSourceNotFoundError(CadrumoError, KeyError):
 class CertificateSourcePayload(BaseModel):
     """One registered certificate source, operator-facing.
 
-    Projects :class:`application.workflow.CertificateSourceRecord` for the
+    Projects :class:`application.auth.models.CertificateSourceRecord` for the
     ``certificate register`` / ``certificate list`` verbs. Never carries
     certificate passwords or key material — only the filesystem
     reference already stored in workflow state.
@@ -350,7 +350,7 @@ class CertificateSourceCheckEntry(BaseModel):
     single-certificate provider path (``ok`` / ``expiring`` / ``expired`` /
     ``corrupt`` / ``unreadable`` / ``file_missing``), applied per named
     source in the ``certificate_sources`` registry on
-    :class:`application.workflow.AuthState`
+    :class:`application.auth.models.AuthState`
     rather than only the active ``certificate_path``. Never carries
     certificate passwords or key material.
 

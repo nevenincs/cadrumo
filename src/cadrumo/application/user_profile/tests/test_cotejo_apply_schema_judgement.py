@@ -51,12 +51,12 @@ from ....domain.user_profile import (
 )
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import complete_profile_facts
-from ...workflow import WorkflowState
-from .._capsule_record import ProfileRecordSession
-from .._cotejo_apply import CensoDivergence, apply_cotejo
-from .._profile_record_repository import ProfileRecordRepository, bound_profile_record_session
-from .._registration import register_profile_with_credentials
-from .._validation import DATE_VALUE_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE
+from cadrumo.application.workflow.state_models import WorkflowState
+from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
+from cadrumo.application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository, bound_profile_record_session
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.application.user_profile.validation import DATE_VALUE_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

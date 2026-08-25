@@ -19,14 +19,8 @@ from ..application.operations.frontend_contracts import (
     OperationReviewProjectionSuccessV1,
 )
 from ..application.operations.models import OperationRequest
-from ..application.user_profile import (
-    CENSAL_OPERATION_DEFINITION_ID,
-    CensalOperationOutcome,
-    CensalOperationResult,
-    CensalReviewProjectionV1,
-    ProfileRecordRepository,
-    build_censal_operation_request,
-)
+from ..application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION_ID, CensalOperationOutcome, CensalOperationResult, CensalReviewProjectionV1, build_censal_operation_request
+from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.operations import (
     OperationEffect,

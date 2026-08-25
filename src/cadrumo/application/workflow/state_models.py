@@ -129,6 +129,7 @@ class ActiveProfileRecordResolution:
     unavailability: ProfileRecordUnavailability | None = None
 
     def __post_init__(self) -> None:
+        """Require exactly one of a resolved record or an unavailability reason."""
         if (self.record is None) == (self.unavailability is None):
             raise ValueError("an active-profile record resolution carries either a record or one reason, never both")
 
@@ -158,7 +159,7 @@ def resolve_active_profile_record() -> ActiveProfileRecordResolution:
     to no committed capsule is that.
     """
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import ProfileRecordRepository, profile_record_session_if_authenticated
+    from ..user_profile.profile_record_repository import ProfileRecordRepository, profile_record_session_if_authenticated
 
     identifier, bucket_id = _active_profile_selection()
     if bucket_id is None:

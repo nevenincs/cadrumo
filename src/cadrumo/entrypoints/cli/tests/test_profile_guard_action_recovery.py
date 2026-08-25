@@ -10,7 +10,7 @@ import pytest
 
 from ....adapters.persistence.storage.master_key import close_active_bucket_session
 from ....application.operator_actions import OPERATOR_ACTION_CATALOGUE
-from ....application.workflow import read_profile_bucket
+from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 from ....core.bucket_pointer import read_pointer
 from ....core.errors import ErrorCategory, get_error_exit_code
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output

@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.user_profile._overview import _MASK_KEYWORDS
+from ....application.user_profile.overview import _MASK_KEYWORDS
 from ....core.logging import SCRUB_FIELD_PATTERNS
 from ....core.redaction import ALWAYS_REDACT_KEY_TERMS
 from .._remote_state_outcomes import (

@@ -29,10 +29,8 @@ from cadrumo.adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
-from cadrumo.application.user_profile import (
-    profile_bind_bucket_session,
-    register_profile_with_credentials,
-)
+from cadrumo.application.user_profile.login_session_port import profile_bind_bucket_session
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
 
 from ... import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text

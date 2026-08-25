@@ -347,8 +347,8 @@ def _resolve_review_active_tax_id(settings: Settings) -> str | None:
     """Return the active profile's tax id, or ``None`` when unknown."""
     del settings
     try:
-        from ..user_profile import fact_value
-        from ..workflow import workflow_state_repository
+        from ..user_profile.projections import fact_value
+        from cadrumo.application.workflow.persistence import workflow_state_repository
     except ImportError:
         _LOGGER.debug("review adapters could not import workflow status helpers", exc_info=True)
         return None

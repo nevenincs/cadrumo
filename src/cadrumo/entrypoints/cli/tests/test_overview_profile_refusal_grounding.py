@@ -19,11 +19,7 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from ....application.user_profile import (
-    build_profile_preflight_requirement,
-    format_profile_preflight_requirement,
-    format_profile_selector_requirements,
-)
+from ....application.user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement, format_profile_selector_requirements
 from ....core.resources import resources
 from ....domain.calculations.registry import build_profile_grounding_index
 from ....tests.cli_runner import invoke_cached_cli

@@ -48,7 +48,7 @@ def descendant_clearing_facts(
     """
     if record is None or DESCENDANTS_COUNT_PAGE_ID not in answers:
         return ()
-    from ..user_profile import record_to_path_values
+    from ..user_profile.projections import record_to_path_values
     from ._persistence import descendant_facts_from_answers
 
     projected = {path for path, _ in descendant_facts_from_answers(answers)}

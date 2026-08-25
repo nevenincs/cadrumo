@@ -232,7 +232,7 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     Returns the empty string when no key resolves, which lets the caller fall
     back to the binding ids rather than emit a warning naming nothing.
     """
-    from ...application.user_profile import format_profile_path_requirements
+    from ...application.user_profile.preflight import format_profile_path_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
 

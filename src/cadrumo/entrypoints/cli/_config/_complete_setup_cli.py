@@ -41,11 +41,8 @@ def _still_missing(record: object) -> tuple[str, ...]:
     answered (an IRNR representative, a socio's country). Reporting only one of
     them would send the operator to fix a field and meet the same refusal again.
     """
-    from ....application.user_profile import (
-        conditional_profile_missing_required,
-        missing_required_field_paths,
-        record_to_path_values,
-    )
+    from ....application.user_profile.completeness import conditional_profile_missing_required, missing_required_field_paths
+    from ....application.user_profile.projections import record_to_path_values
     from ....domain.user_profile import UserProfileRecord, load_user_profile_schema
 
     values = record_to_path_values(cast(UserProfileRecord, record))
@@ -58,7 +55,7 @@ def _still_missing(record: object) -> tuple[str, ...]:
 
 def profile_complete_setup(ctx: typer.Context) -> None:
     """Promote the active profile's setup state to complete."""
-    from ....application.user_profile import ProfileRecordRepository
+    from ....application.user_profile.profile_record_repository import ProfileRecordRepository
     from ....domain.user_profile import ProfileSchemaValidationError, ProfileSetupState
     from .._common import _no_active_profile_refusal
 

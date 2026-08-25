@@ -16,11 +16,8 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Static
 
-from ....application.user_profile import (
-    close_profile_session_artefacts,
-    login_profile,
-    register_profile_with_credentials,
-)
+from ....application.user_profile.login_session import close_profile_session_artefacts, login_profile
+from ....application.user_profile.registration import register_profile_with_credentials
 from ....application.user_profile.status_projection import build_status_page_data
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..profile.status import StatusApp

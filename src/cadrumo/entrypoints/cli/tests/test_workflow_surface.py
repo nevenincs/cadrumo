@@ -140,8 +140,8 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
     from ....application.filing import load_default_filing_profile
-    from ....application.user_profile import fact_value
-    from ....application.workflow import workflow_state_repository
+    from ....application.user_profile.projections import fact_value
+    from cadrumo.application.workflow.persistence import workflow_state_repository
     from ....tests.profile_capsule import load_test_profile_record
 
     register_cli_profile(
@@ -181,7 +181,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
         ],
     )
     assert declare_result.exit_code == 0, declare_result.output
-    from ....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
     from ....domain.user_profile import UserProfileFact
 
     # Profile identity is an immutable UUIDv4 minted at creation; the
@@ -761,8 +761,8 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     encrypted_user_cli: Path,
 ) -> None:
     """Profile creation normalizes lowercase ``iva.regime`` for the deadline engine."""
-    from ....application.user_profile import projection_for_taxpayer
-    from ....application.workflow import workflow_state_repository
+    from ....application.user_profile.projections import projection_for_taxpayer
+    from cadrumo.application.workflow.persistence import workflow_state_repository
     from ....domain.deadlines import IVARegime
 
     bucket_id = register_cli_profile(
@@ -795,8 +795,8 @@ def test_config_profile_create_persists_situacion_familiar(
     encrypted_user_cli: Path,
 ) -> None:
     """The exposed Art. 82 situacion-familiar flag must persist to a schema-backed fact."""
-    from ....application.user_profile import record_to_path_values
-    from ....application.workflow import workflow_state_repository
+    from ....application.user_profile.projections import record_to_path_values
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     bucket_id = register_cli_profile(
         label="operator",
@@ -822,8 +822,8 @@ def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_eng
     encrypted_user_cli: Path,
 ) -> None:
     """Boolean profile flags must survive creation and reach the engine."""
-    from ....application.user_profile import projection_for_taxpayer
-    from ....application.workflow import workflow_state_repository
+    from ....application.user_profile.projections import projection_for_taxpayer
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     bucket_id = register_cli_profile(
         label="operator",

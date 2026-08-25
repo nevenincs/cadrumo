@@ -409,7 +409,7 @@ def _reconcile_parsed_justificante(
     justificante: Justificante,
 ) -> ModeloReconciliationReport:
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ..workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if active_bucket_id is None:
@@ -472,7 +472,7 @@ def _reconcile_parsed_declaracion(
     declaracion: InboundDeclaracionObservation,
 ) -> ModeloReconciliationReport:
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ..workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     if active_bucket_id is None:
@@ -1183,7 +1183,8 @@ def _bounded_payload_reference(reference: str) -> str:
 
 
 def _active_profile_tax_id(bucket_id: str) -> str:
-    from ..user_profile import ProfileRecordRepository, record_to_path_values, record_to_values
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_path_values, record_to_values
 
     record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
     path_values = record_to_path_values(record)

@@ -274,7 +274,7 @@ def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.application.modelo.work_review_projection import ModeloWorkOriginAnomaly
     from cadrumo.core import BindingSourceKind, EstadoCasillaOficial, OperatorActionAxis
     from cadrumo.domain.calculations.registry import InputKind, RelationConsumptionChannel
-    from cadrumo.domain.filing import ModeloValueKind
+ from cadrumo.domain.filing import ModeloValueKind
     from cadrumo.domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 
     axes = (

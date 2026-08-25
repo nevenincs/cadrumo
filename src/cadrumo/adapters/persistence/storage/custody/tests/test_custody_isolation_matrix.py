@@ -19,16 +19,12 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from ......application.user_profile import (
-    ProfileCapsuleLifecycle,
-    ProfileRecordSession,
-    create_profile_custody_registration_material,
-    export_profile_recovery_artifact,
-    mint_profile_creation_recovery,
-    register_profile_with_credentials,
-    restore_profile_from_source_with_recovery_artifact,
-    unlock_profile_custody_password,
-)
+from ......application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from ......application.user_profile.capsule_record import ProfileRecordSession
+from ......application.user_profile.custody_ports import create_profile_custody_registration_material, unlock_profile_custody_password
+from ......application.user_profile.recovery_custody import export_profile_recovery_artifact, mint_profile_creation_recovery
+from ......application.user_profile.registration import register_profile_with_credentials
+from ......application.user_profile.capsule_restore import restore_profile_from_source_with_recovery_artifact
 from ......domain.user_profile import ProfileSetupState, UserProfileRecord
 from ......tests.secure_sql import isolated_profile_storage_root
 from .. import (

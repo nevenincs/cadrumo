@@ -19,8 +19,8 @@ from ....adapters.persistence.storage.custody import (
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
-from .._capsule_record import ProfileRecordIntegrityError, ProfileRecordSession, ProfileRecordStore
-from .._lifecycle import ProfileCapsuleLifecycle
+from cadrumo.application.user_profile.capsule_record import ProfileRecordIntegrityError, ProfileRecordSession, ProfileRecordStore
+from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

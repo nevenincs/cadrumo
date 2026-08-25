@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from ...application.user_profile import ProfileBundleExportPurpose
+from ...application.user_profile.bundle_export import ProfileBundleExportPurpose
 from ...core import Hex64Str
 from ...core.json_contract import OutputSchema
 

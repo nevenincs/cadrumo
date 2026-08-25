@@ -33,7 +33,8 @@ from ....core.json_contract import NoticeSeverity, OutputSchemaError
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import ProfileCapsuleLifecycle, ProfileRecordSession
+from ...user_profile.lifecycle import ProfileCapsuleLifecycle
+from ...user_profile.capsule_record import ProfileRecordSession
 from ...wizard import ConfigProfileCreateResult, ProfileWizardStatus
 from .. import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
 

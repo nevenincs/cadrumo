@@ -50,7 +50,7 @@ from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 if TYPE_CHECKING:
     from datetime import date
 
-    from ....application.workflow import ProfileBucketPointer
+    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
     from ....core.json_contract import Notice
 
 
@@ -107,7 +107,7 @@ def _write_descendientes(bucket_id: str, descendientes: tuple[DescendantInfo, ..
     clears = tuple(UserProfileFact(path=path, value=None) for path in stale_paths if path not in new_pairs)
     upserts = tuple(UserProfileFact(path=path, value=value) for path, value in new_pairs.items())
 
-    from ....application.user_profile import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ....application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 
     apply_profile_fact_changes(
         profile_id=bucket_id,
@@ -289,19 +289,11 @@ def descendiente_door(
 def _run_descendant_door(ctx: typer.Context) -> None:
     """Drive the descendant application flow through its line-mode frontend."""
     from ....application.wizard.descendant_door import run_descendant_door
-    from ....application.workflow import workflow_state_repository
-    from ....domain.user_profile import ProfileNotFoundError
-    from ._profile_readiness import _read_profile_record
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()
-    try:
-        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
-    except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.no_active_profile",
-        ) from exc
-    _state, _projection, _persisted = run_descendant_door(record)
+    _state, _projection, _persisted = run_descendant_door()
     _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
 
 

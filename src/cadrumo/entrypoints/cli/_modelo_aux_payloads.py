@@ -21,12 +21,7 @@ from typing import Annotated
 from pydantic import Field
 
 from ...application.evidence import BundleVerificationState
-from ...application.workflow import (
-    SiteHealthAlert,
-    WorkflowObligationFacts,
-    WorkflowStage,
-    WorkflowStepDetails,
-)
+from cadrumo.application.workflow.run_models import SiteHealthAlert, WorkflowObligationFacts, WorkflowStage, WorkflowStepDetails
 from ...core import Hex64Str, Period
 from ...core.aggregation import RetencionClave
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId

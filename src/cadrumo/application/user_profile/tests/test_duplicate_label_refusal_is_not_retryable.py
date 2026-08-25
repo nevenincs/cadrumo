@@ -23,10 +23,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors import get_registered_error_code
-from .._custody_transactions import (
-    ProfileCustodyDuplicateLabelError,
-    ProfileCustodyTransactionConflictError,
-)
+from cadrumo.application.user_profile.custody_transactions import ProfileCustodyDuplicateLabelError, ProfileCustodyTransactionConflictError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

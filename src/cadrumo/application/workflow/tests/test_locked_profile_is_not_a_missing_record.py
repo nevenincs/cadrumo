@@ -33,8 +33,9 @@ from ....adapters.persistence.storage import master_key
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import override_settings
 from ....tests.subprocess_cli import run_subprocess_cli_harness
-from ...user_profile import close_active_profile_record_session, profile_bind_bucket_session
-from .._profile_health import assess_active_profile_health
+from ...user_profile.profile_record_repository import close_active_profile_record_session
+from ...user_profile.login_session_port import profile_bind_bucket_session
+from ..profile_health import assess_active_profile_health
 from ._locked_profile_support import DEK, PROFILE_ID, PROFILE_LABEL, RECORD_NAMESPACE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -161,7 +162,7 @@ def test_a_locked_profile_reports_the_same_lock_when_the_caller_supplies_state(t
     load runs first and is refused by the same absent session. The two paths
     once produced different false diagnostics for one profile.
     """
-    from .._state_models import WorkflowState
+    from ..state_models import WorkflowState
 
     _publish_in_a_separate_process(tmp_path)
 

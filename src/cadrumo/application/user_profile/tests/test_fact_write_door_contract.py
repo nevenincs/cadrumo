@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....core import scan_directory
-from .._fact_write import ProfileFactWriteDoor
+from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

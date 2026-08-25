@@ -13,9 +13,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.inbound.pdf import source_pdf_reference_path
-from ....application.user_profile import (
-    CENSO_SOURCE_TAG,
-)
+from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.justificante import Justificante
 from ....domain.modelos import (

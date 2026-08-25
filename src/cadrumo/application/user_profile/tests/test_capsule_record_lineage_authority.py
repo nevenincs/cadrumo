@@ -32,7 +32,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
-from .._capsule_record import ProfileRecordIntegrityError, ProfileRecordSession
+from cadrumo.application.user_profile.capsule_record import ProfileRecordIntegrityError, ProfileRecordSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -6,9 +6,12 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from pydantic import SecretStr
+
+from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
+from cadrumo.application.workflow.state_models import WorkflowState
 
 from ...core import AuthProviderKind
 from ...core.config import Settings, load_settings, override_settings
@@ -17,13 +20,9 @@ from ..auth_credentials import (
     ActiveCertificateCredentials,
     unnamed_certificate_credentials,
 )
-from ._workflow_repository import workflow_state_repository as _workflow_state_repository
 from .certificate_secret_backend import SecureStorageCertificateSecretBackend
 from .certificate_sources import active_certificate_source
 from .operator_scope import active_profile_storage_span
-
-if TYPE_CHECKING:
-    from ..workflow import WorkflowState
 
 
 def resolve_certificate_source_secret(
@@ -99,8 +98,6 @@ def _bucket_has_a_committed_capsule(bucket_id: str) -> bool:
     The same resolution the profile-health assessment uses, so a projection and
     the verdict it carries cannot disagree about whether the pointer resolves.
     """
-    from ..workflow import resolve_profile_bucket
-
     return resolve_profile_bucket(bucket_id) is not None
 
 
@@ -153,7 +150,7 @@ def active_auth_projection_span(
             )
             return
         with override_settings(cadrumo_active_profile=bucket_id):
-            state = _workflow_state_repository().load()
+            state = workflow_state_repository().load()
             provider = _project_provider_kind(requested_provider or state.auth.provider or fallback_provider)
             credentials = (
                 _resolve_witnessed_certificate_credentials(

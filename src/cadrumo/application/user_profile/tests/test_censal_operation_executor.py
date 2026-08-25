@@ -35,24 +35,13 @@ from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._capsule_record import ProfileRecordSession, ProfileRecordStore
-from .._censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
-from .._censal_operation import (
-    CENSAL_OPERATION_DEFINITION,
-    CENSAL_PHASE_SETTLEMENT,
-    CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
-    CensalFieldIntent,
-    CensalOperationExecutor,
-    CensalOperationRequest,
-    CensalProfileBaseline,
-    CensalReviewedFieldIntent,
-    CensalReviewedOperand,
-    build_censal_operation_registration,
-)
-from .._cotejo_apply import apply_cotejo
-from .._custody_ports import profile_custody_secure_object_repository
-from .._profile_record_repository import ProfileRecordRepository, bound_profile_record_session
-from .._registration import register_profile_with_credentials
+from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
+from cadrumo.application.user_profile.censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
+from cadrumo.application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, CENSAL_PHASE_SETTLEMENT, CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING, CensalFieldIntent, CensalOperationExecutor, CensalOperationRequest, CensalProfileBaseline, CensalReviewedFieldIntent, CensalReviewedOperand, build_censal_operation_registration
+from cadrumo.application.user_profile.cotejo_apply import apply_cotejo
+from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository, bound_profile_record_session
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

@@ -51,13 +51,12 @@ from ..state_projection import (
     build_operator_state_projection,
     modelo_requires_ledger_preflight,
 )
-from ..user_profile import (
-    close_active_profile_record_session,
-    profile_bind_bucket_session,
-    register_profile_with_credentials,
-)
+from ..user_profile.profile_record_repository import close_active_profile_record_session
+from ..user_profile.login_session_port import profile_bind_bucket_session
+from ..user_profile.registration import register_profile_with_credentials
 from ..wizard import WIZARD_FLOWS
-from ..workflow import WorkflowState, workflow_state_repository
+from cadrumo.application.workflow.state_models import WorkflowState
+from cadrumo.application.workflow.persistence import workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

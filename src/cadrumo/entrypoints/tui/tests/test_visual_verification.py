@@ -31,12 +31,10 @@ from textual.css.query import NoMatches
 from textual.widgets import Button, Input, Static
 
 from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
-from ....application.user_profile import (
-    apply_manager_profile_field_mutation,
-    build_profile_overview,
-    login_profile,
-    register_profile_with_credentials,
-)
+from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
+from ....application.user_profile.overview import build_profile_overview
+from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.registration import register_profile_with_credentials
 from ....application.user_profile.status_projection import StatusFactRow, StatusPageData
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
@@ -136,7 +134,7 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     stand-in storage.
 
     """
-    from ....application.user_profile import register_profile_with_credentials
+    from ....application.user_profile.registration import register_profile_with_credentials
     from ....tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -175,7 +173,8 @@ def _login(tmp_path: Path) -> Iterator[LoginApp]:
     choice list or a dropped preselection is the identical stand-in shape
     that bug was.
     """
-    from ....application.user_profile import logout_active_profile, register_profile_with_credentials
+    from ....application.user_profile.login_session import logout_active_profile
+    from ....application.user_profile.registration import register_profile_with_credentials
     from ....application.user_profile.login_interaction import (
         attempt_profile_login,
         preselected_profile_login_id,
@@ -247,7 +246,7 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     made a socio row require a ``clave`` this fixture would otherwise have
     to track.
     """
-    from ....application.user_profile import add_profile_repeatable_section_row
+    from ....application.user_profile.section_rows import add_profile_repeatable_section_row
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(

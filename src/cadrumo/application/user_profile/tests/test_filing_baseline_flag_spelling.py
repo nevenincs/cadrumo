@@ -12,10 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ...wizard import SETUP_OPTION_INFOS
-from .._filing_baseline import (
-    _profile_path_flag,
-    missing_filing_baseline_flags,
-)
+from cadrumo.application.user_profile.filing_baseline import _profile_path_flag, missing_filing_baseline_flags
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -47,7 +47,7 @@ from ..storage.calc_sheets import (
     SheetExportPlan,
     build_export_plan,
 )
-from ..user_profile import resolve_active_capability
+from ..user_profile.capabilities import resolve_active_capability
 
 GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID = "export.google-sheets"
 GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT = "export.google-sheets.preflight"

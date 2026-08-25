@@ -189,7 +189,7 @@ class FlowRepeatingGroup(BaseModel):
     max_instances: int = Field(default=50, ge=1)
 
 
-FlowItem = Union[FlowPage, FlowRepeatingGroup]  # noqa: UP007 - pydantic discriminates the runtime union
+type FlowItem = Union[FlowPage, FlowRepeatingGroup]  # noqa: UP007 - pydantic discriminates the runtime union
 
 
 class FlowSection(BaseModel):

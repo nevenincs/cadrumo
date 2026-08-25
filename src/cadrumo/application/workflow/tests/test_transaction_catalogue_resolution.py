@@ -20,7 +20,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import WorkflowState, active_transaction_catalogue_repository
+from cadrumo.application.workflow.state_models import WorkflowState, active_transaction_catalogue_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

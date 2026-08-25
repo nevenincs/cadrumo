@@ -44,12 +44,8 @@ from ...core import (
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.time import now
 from ..operations.owner import OperationExecutorContext
-from ..user_profile import (
-    ProfileLoginOutcome,
-    ProfilePassphraseRotationOutcome,
-    login_profile,
-    rotate_profile_passphrase,
-)
+from ..user_profile.login_session import ProfileLoginOutcome, login_profile
+from ..user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome, rotate_profile_passphrase
 from .operator import configure_operator_auth, login_operator_auth, logout_operator_auth, reset_operator_auth
 from .operator_results import AuthConfigureResult, AuthLoginResult, AuthLogoutResult, AuthResetResult
 

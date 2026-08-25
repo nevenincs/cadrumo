@@ -18,7 +18,8 @@ from ....core.i18n import output_language
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .. import login_profile, register_profile_with_credentials
+from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -56,7 +57,7 @@ def _seed_profile_language(language: str, *, profile_id: str) -> None:
 def test_output_language_reads_active_profile_without_emitting_bucket_events(
     isolated_language_state: str,
 ) -> None:
-    from ...workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     _seed_profile_language("ca", profile_id=isolated_language_state)
     repository = workflow_state_repository()

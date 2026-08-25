@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
@@ -23,7 +25,6 @@ from ....domain.submission import ModeloDraftStatus
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ..._state_projection_auth import ProjectionAuthReadiness
-from ...workflow import workflow_state_repository
 from ..acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
 from ..certificate_source_operations import register_operator_certificate_source, set_operator_certificate_source_secret
 from ..credentials import active_auth_projection_span, resolve_certificate_source_secret

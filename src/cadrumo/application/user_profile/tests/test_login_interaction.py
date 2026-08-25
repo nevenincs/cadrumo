@@ -9,7 +9,8 @@ import pytest
 
 from ....domain.user_profile import ProfileNotFoundError
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import logout_active_profile, register_profile_with_credentials
+from cadrumo.application.user_profile.login_session import logout_active_profile
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from ..login_interaction import (
     ProfileLoginAttempt,
     ProfileLoginChoice,

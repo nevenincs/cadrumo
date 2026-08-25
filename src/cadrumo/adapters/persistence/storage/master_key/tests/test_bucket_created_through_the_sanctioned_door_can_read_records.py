@@ -33,8 +33,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ......application.user_profile import login_profile, register_profile_with_credentials
-from ......application.workflow import workflow_state_repository
+from ......application.user_profile.login_session import login_profile
+from ......application.user_profile.registration import register_profile_with_credentials
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from ......domain.user_profile import ProfileSetupState
 from ......tests.secure_sql import isolated_profile_storage_root
 from ...custody import ProfileCustodyRecordError

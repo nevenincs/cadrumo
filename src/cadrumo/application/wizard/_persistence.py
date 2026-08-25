@@ -33,7 +33,8 @@ from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
 from ...core.time import today_madrid
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
-from ..workflow import WorkflowInputMismatchError, WorkflowState
+from cadrumo.application.workflow.errors import WorkflowInputMismatchError
+from cadrumo.application.workflow.state_models import WorkflowState
 from ._descendant_group import (
     DESCENDANT_PAGE_IDS,
     DESCENDANTS_COUNT_PAGE_ID,
@@ -134,11 +135,11 @@ def persist_answers(
 
     Returns the updated :class:`WorkflowState` after persisting the answers.
     """
-    from ..user_profile import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 
     if mode == "create":
         del flow, answers, profile_name, routing_profile_id
-        from ..user_profile import ProfileRegistrationError
+        from ..user_profile.registration import ProfileRegistrationError
 
         raise ProfileRegistrationError(
             "wizard profile creation is unavailable; register with credentials before setup",
@@ -199,7 +200,7 @@ def persist_patch(
     question with no ``profile_key`` is not a profile fact and is
     skipped.
     """
-    from ..user_profile import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 
     facts = tuple(
         UserProfileFact(path=path, value=value) for path, value in profile_values_from_patch(flow, supplied).items()
@@ -551,7 +552,7 @@ def descendant_answers_from_record(record: UserProfileRecord | None) -> dict[str
     if record is None:
         return {}
     from ...domain.contribuyente import descendant_list_from_facts
-    from ..user_profile import record_to_path_values
+    from ..user_profile.projections import record_to_path_values
 
     descendientes = descendant_list_from_facts(record_to_path_values(record))
     if not descendientes:

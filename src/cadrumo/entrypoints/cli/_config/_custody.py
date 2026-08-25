@@ -14,7 +14,7 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._common import active_profile_label, emit_envelope
 
 if TYPE_CHECKING:
-    from ....application.user_profile import ProfileLoginOutcome
+    from ....application.user_profile.login_session import ProfileLoginOutcome
 
 
 from ._secure_input import MachineSecretPayload, MachineSecretSelection
@@ -58,8 +58,8 @@ def _hint_via_label(name: str) -> str | None:
     unwrapping the bucket's DEK, so this does not depend on the target
     bucket's DEK being intact.
     """
-    from ....application.user_profile import resolve_profile_output_language_hint
-    from ....application.workflow import read_profile_bucket
+    from ....application.user_profile.language_resolver import resolve_profile_output_language_hint
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     pointer = read_profile_bucket(name)
     if pointer is None:
@@ -90,7 +90,7 @@ def _pin_render_language_to_target_bucket(ctx: typer.Context, *, bucket_id: str)
     if _settings_has_explicit_output_language():
         return
 
-    from ....application.user_profile import resolve_profile_output_language_hint
+    from ....application.user_profile.language_resolver import resolve_profile_output_language_hint
     from ....core.config import override_settings
     from ....core.i18n import clear_output_language_cache
 
@@ -168,7 +168,8 @@ def _login_through_the_prompt(
     application and storage code cannot silently redeclare transport policy.
     """
     from ....adapters.persistence.storage.custody import ProfileCustodyPasswordError
-    from ....application.user_profile import ProfileAuthenticationRefusedError, login_profile
+    from ....application.user_profile.authentication import ProfileAuthenticationRefusedError
+    from ....application.user_profile.login_session import login_profile
     from .._errors import CliRefusedBoundaryError
     from ._secure_input import (
         prompt_secret_no_echo,
@@ -266,7 +267,7 @@ def config_logout(
 ) -> None:
     """Strong-close the profile session: seal, delete both halves, clear the pointer."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import logout_active_profile
+    from ....application.user_profile.login_session import logout_active_profile
 
     signed_out_label = active_profile_label()
     signed_out = logout_active_profile()

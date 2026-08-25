@@ -338,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._censo_errors.CensoSyncError",
+        "cadrumo.application.user_profile.censo_errors.CensoSyncError",
         ErrorCode(
             code="FAIL_CENSO_SYNC",
             category=ErrorCategory.FAIL,
@@ -348,7 +348,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._censo_sync.CensalIdentityMismatchError",
+        "cadrumo.application.user_profile.censo_sync.CensalIdentityMismatchError",
         ErrorCode(
             code="REFUSED_CENSAL_READ_IDENTITY",
             category=ErrorCategory.REFUSED,
@@ -368,7 +368,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._custody_transactions.ProfileCustodyTransactionError",
+        "cadrumo.application.user_profile.custody_transactions.ProfileCustodyTransactionError",
         ErrorCode(
             code="FAIL_PROFILE_CUSTODY_TRANSACTION",
             category=ErrorCategory.FAIL,
@@ -378,7 +378,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._custody_transactions.ProfileCustodyTransactionConflictError",
+        "cadrumo.application.user_profile.custody_transactions.ProfileCustodyTransactionConflictError",
         ErrorCode(
             code="REFUSED_PROFILE_CUSTODY_TRANSACTION_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -388,7 +388,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._custody_transactions.ProfileCustodyDuplicateLabelError",
+        "cadrumo.application.user_profile.custody_transactions.ProfileCustodyDuplicateLabelError",
         ErrorCode(
             code="REFUSED_PROFILE_CUSTODY_DUPLICATE_LABEL",
             category=ErrorCategory.REFUSED,
@@ -403,7 +403,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._custody_service.ProfileCustodyDisplacedSessionRetirementError",
+        "cadrumo.application.user_profile.custody_service.ProfileCustodyDisplacedSessionRetirementError",
         ErrorCode(
             code="REFUSED_PROFILE_CUSTODY_DISPLACED_SESSION_RETIREMENT",
             category=ErrorCategory.REFUSED,
@@ -413,7 +413,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._custody_transactions.ProfileCustodyTransactionRefusalError",
+        "cadrumo.application.user_profile.custody_transactions.ProfileCustodyTransactionRefusalError",
         ErrorCode(
             code="REFUSED_PROFILE_CUSTODY_TRANSACTION",
             category=ErrorCategory.REFUSED,
@@ -423,7 +423,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._custody_transactions.ProfileCustodyTransactionCorruptError",
+        "cadrumo.application.user_profile.custody_transactions.ProfileCustodyTransactionCorruptError",
         ErrorCode(
             code="INTEGRITY_PROFILE_CUSTODY_TRANSACTION",
             category=ErrorCategory.INTEGRITY,
@@ -433,7 +433,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._authentication.ProfileAuthenticationRefusedError",
+        "cadrumo.application.user_profile.authentication.ProfileAuthenticationRefusedError",
         ErrorCode(
             code="REFUSED_PROFILE_AUTHENTICATION",
             category=ErrorCategory.REFUSED,
@@ -443,7 +443,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._registration.ProfileRegistrationConflictError",
+        "cadrumo.application.user_profile.registration.ProfileRegistrationConflictError",
         ErrorCode(
             code="REFUSED_PROFILE_REGISTRATION_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -453,7 +453,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._registration.ProfileRegistrationError",
+        "cadrumo.application.user_profile.registration.ProfileRegistrationError",
         ErrorCode(
             code="REFUSED_PROFILE_REGISTRATION",
             category=ErrorCategory.REFUSED,
@@ -463,7 +463,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._capsule_archive.ProfileCapsuleArchiveError",
+        "cadrumo.application.user_profile.capsule_archive.ProfileCapsuleArchiveError",
         ErrorCode(
             code="REFUSED_PROFILE_CAPSULE_ARCHIVE",
             category=ErrorCategory.REFUSED,
@@ -473,7 +473,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._capsule_restore.ProfileCapsuleSourceError",
+        "cadrumo.application.user_profile.capsule_restore.ProfileCapsuleSourceError",
         ErrorCode(
             code="REFUSED_PROFILE_CAPSULE_SOURCE",
             category=ErrorCategory.REFUSED,
@@ -483,7 +483,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._passphrase_rotation.ProfilePassphraseRotationError",
+        "cadrumo.application.user_profile.passphrase_rotation.ProfilePassphraseRotationError",
         ErrorCode(
             code="REFUSED_PROFILE_PASSPHRASE_ROTATION",
             category=ErrorCategory.REFUSED,
@@ -493,7 +493,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._login_session.ProfileLoginThrottledError",
+        "cadrumo.application.user_profile.login_session.ProfileLoginThrottledError",
         ErrorCode(
             code="REFUSED_PROFILE_LOGIN_THROTTLED",
             category=ErrorCategory.REFUSED,
@@ -594,7 +594,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._custody_ports.ProfileRecordCryptoError",
+        "cadrumo.application.user_profile.custody_ports.ProfileRecordCryptoError",
         ErrorCode(
             code="INTEGRITY_PROFILE_RECORD_CRYPTO",
             category=ErrorCategory.INTEGRITY,
@@ -604,7 +604,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._capsule_record.ProfileRecordConflictError",
+        "cadrumo.application.user_profile.capsule_record.ProfileRecordConflictError",
         ErrorCode(
             code="FAIL_PROFILE_RECORD_CONFLICT",
             category=ErrorCategory.FAIL,
@@ -614,7 +614,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._capsule_record.ProfileRecordIntegrityError",
+        "cadrumo.application.user_profile.capsule_record.ProfileRecordIntegrityError",
         ErrorCode(
             code="INTEGRITY_PROFILE_RECORD",
             category=ErrorCategory.INTEGRITY,
@@ -714,7 +714,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._bundle.UnsupportedBundleSchemaVersionError",
+        "cadrumo.application.user_profile.bundle.UnsupportedBundleSchemaVersionError",
         ErrorCode(
             code="REFUSED_USER_PROFILE_BUNDLE_SCHEMA_VERSION",
             category=ErrorCategory.REFUSED,
@@ -724,7 +724,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.WorkflowInputMismatchError",
+        "cadrumo.application.workflow.errors.WorkflowInputMismatchError",
         ErrorCode(
             code="REFUSED_WORKFLOW_INPUT_MISMATCH",
             category=ErrorCategory.REFUSED,
@@ -1094,7 +1094,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._bundle_export_operation.ProfileBundleExportJournalError",
+        "cadrumo.application.user_profile.bundle_export_operation.ProfileBundleExportJournalError",
         ErrorCode(
             code="ERROR_PROFILE_EXPORT_JOURNAL",
             category=ErrorCategory.ERROR,
@@ -1104,7 +1104,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._bundle_export_operation.ProfileBundleExportJournalNotFoundError",
+        "cadrumo.application.user_profile.bundle_export_operation.ProfileBundleExportJournalNotFoundError",
         ErrorCode(
             code="ERROR_PROFILE_EXPORT_JOURNAL_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -1114,7 +1114,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile._bundle_export_operation.ProfileBundleExportJournalCorruptError",
+        "cadrumo.application.user_profile.bundle_export_operation.ProfileBundleExportJournalCorruptError",
         ErrorCode(
             code="ERROR_PROFILE_EXPORT_JOURNAL_CORRUPT",
             category=ErrorCategory.ERROR,

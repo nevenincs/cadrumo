@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import typer
 
 if TYPE_CHECKING:
-    from ....application.workflow import ProfileBucketPointer
+    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
@@ -98,7 +98,7 @@ def apoderado_configure(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.apoderado_flow import run_apoderado_flow
     from ....application.auth.apoderado_service import ApoderadoRepresentedNifInvalidError, ApoderadoService
-    from ....application.workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()
@@ -165,7 +165,7 @@ def apoderado_clear(
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.apoderado_service import ApoderadoService
-    from ....application.workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
     from .._config_payloads import ApoderadoClearResult
 
     workflow_state_repository().load()
@@ -187,7 +187,7 @@ def apoderado_check(
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.apoderado_service import ApoderadoService
-    from ....application.workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()

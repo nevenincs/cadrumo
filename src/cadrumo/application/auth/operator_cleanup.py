@@ -8,13 +8,6 @@ from ...core import AuthProviderKind
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from .models import (
-    AuthCleanupCertificateSource,
-    AuthCleanupIntent,
-    AuthCleanupOperationKind,
-    AuthState,
-    CertificateSourceRecord,
-)
 from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from .acquisition_lock import (
     AuthAcquisitionLockState,
@@ -23,6 +16,13 @@ from .acquisition_lock import (
 )
 from .catalogue import get_auth_provider
 from .certificate_secret_backend import SecureStorageCertificateSecretBackend
+from .models import (
+    AuthCleanupCertificateSource,
+    AuthCleanupIntent,
+    AuthCleanupOperationKind,
+    AuthState,
+    CertificateSourceRecord,
+)
 from .operator_results import AuthOperationScopeConflictError
 from .sessions import delete_persisted_session, persisted_session_exists
 

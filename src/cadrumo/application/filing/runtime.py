@@ -427,7 +427,7 @@ def load_default_filing_profile(
         WizardStatusError,
         load_active_taxpayer_profile,
     )
-    from ..workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     try:

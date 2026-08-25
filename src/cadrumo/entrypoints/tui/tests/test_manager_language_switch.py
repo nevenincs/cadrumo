@@ -23,12 +23,10 @@ import pytest
 from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
 
-from ....application.user_profile import (
-    apply_manager_profile_field_mutation,
-    build_profile_overview,
-    login_profile,
-    register_profile_with_credentials,
-)
+from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
+from ....application.user_profile.overview import build_profile_overview
+from ....application.user_profile.login_session import login_profile
+from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH

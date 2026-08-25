@@ -69,7 +69,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
@@ -233,6 +233,7 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
                         _PRIOR_SALDO_FINAL_NO_CUMPLIDO: _PRIOR_DOTACIONES_NO_CUMPLIDO,
                         _PRIOR_SALDO_FINAL_CUMPLIDO: _PRIOR_DOTACIONES_CUMPLIDO,
                     },
+                    grade=RegistryAuthorityGrade.CALCULATION,
                 ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
@@ -297,7 +298,12 @@ def _calculate_m200(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot(_M200, filing_year=_FILING_YEAR, period="0A")
+    snapshot = resources().modelos.authority.snapshot(
+        _M200,
+        filing_year=_FILING_YEAR,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M200,

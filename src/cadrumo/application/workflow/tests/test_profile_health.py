@@ -19,19 +19,17 @@ from ....adapters.persistence.storage.custody import (
     create_profile_custody_sentinel,
 )
 from ....application.state_projection import _build_active_profile
-from ....application.user_profile import (
-    ProfileCapsuleLifecycle,
-    ProfileRecordSession,
-    bound_profile_record_session,
-)
+from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from ....application.user_profile.capsule_record import ProfileRecordSession
+from ....application.user_profile.profile_record_repository import bound_profile_record_session
 from ....application.user_profile.profile_pointer import active_profile_pointer_transaction
 from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
-from ...user_profile import profile_bind_bucket_session
-from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
-from .._state_models import WorkflowState
+from ...user_profile.login_session_port import profile_bind_bucket_session
+from ..profile_health import assess_active_profile_health, repair_active_profile_pointer
+from ..state_models import WorkflowState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

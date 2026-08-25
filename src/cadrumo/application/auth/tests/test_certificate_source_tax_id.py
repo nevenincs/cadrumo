@@ -26,11 +26,12 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ....adapters.outbound.aeat.auth.certificate import read_certificate_subject_nif
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
-from ...workflow import workflow_state_repository
 from ..certificate_source_operations import (
     certificate_source_tax_id,
     register_operator_certificate_source,

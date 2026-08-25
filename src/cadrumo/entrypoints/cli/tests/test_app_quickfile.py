@@ -597,7 +597,7 @@ def test_quickfile_result_payload_summarises_the_readiness_report_when_ready() -
 
 def test_quickfile_result_payload_summarises_a_missing_profile_requirement() -> None:
     """A missing profile fact is retained as an axis verdict and blocker count."""
-    from ....application.user_profile import ProfilePreflightRequirement
+    from ....application.user_profile.commands import ProfilePreflightRequirement
     from .._app_quickfile_payloads import QuickfileReadinessSummaryPayload, QuickfileResultPayload
 
     not_ready = _readiness(

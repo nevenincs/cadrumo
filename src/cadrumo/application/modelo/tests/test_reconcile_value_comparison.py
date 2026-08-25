@@ -41,7 +41,7 @@ from ....domain.modelos import (
 )
 from ....tests import FIXTURES_DIR
 from ....tests.registry_observations import registry_grounded_observations
-from ...workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._reconcile import (
     _reconcile_parsed_justificante,
 )

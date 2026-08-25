@@ -11,7 +11,13 @@ from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 
 from ....application.flows.errors import FlowRunAbandonedError
-from ....application.wizard.descendant_door import run_descendant_door
+from ....application.wizard.descendant_door import (
+    build_descendant_door,
+    load_active_descendant_record,
+    persist_descendant_door_answers,
+    run_descendant_door,
+)
+from ....core.errors import CadrumoError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.serial]
@@ -25,16 +31,12 @@ def isolated_profile(tmp_path: Path) -> TestRuntimeProfile:
         yield profile
 
 
-def _run(record: Any, keys: str) -> tuple[Any, Any, Any, str]:
+def _run(keys: str) -> tuple[Any, Any, Any, str]:
     output = StringIO()
     with create_pipe_input() as pipe:
         pipe.send_text(keys)
         pipe.close()
-        state, projection, persisted = run_descendant_door(
-            record,
-            input=pipe,
-            output=PlainTextOutput(output),
-        )
+        state, projection, persisted = run_descendant_door(input=pipe, output=PlainTextOutput(output))
     return state, projection, persisted, output.getvalue()
 
 
@@ -78,7 +80,7 @@ def _facts(record: Any) -> dict[str, str]:
 
 
 def test_happy_path_returns_and_persists_the_production_record(isolated_profile: TestRuntimeProfile) -> None:
-    _state, projection, persisted, output = _run(None, _one_descendant_keys())
+    _state, projection, persisted, output = _run(_one_descendant_keys())
 
     facts = _facts(persisted)
     assert projection.submit_eligible
@@ -89,13 +91,12 @@ def test_happy_path_returns_and_persists_the_production_record(isolated_profile:
 
 
 def test_edit_path_returns_the_updated_record(isolated_profile: TestRuntimeProfile) -> None:
-    _state, _projection, created, _output = _run(None, _one_descendant_keys())
+    _state, _projection, created, _output = _run(_one_descendant_keys())
 
     # Sparse persisted facts leave optional answers unknown, so the production
     # door asks them before review. Then edit row 2 (the birth date) and submit.
     _state, projection, edited, _output = _run(
-        created,
-        _resume_missing_optional_answers() + "\x1b[B\r2\r\x152021-02-02\r\r",
+        _resume_missing_optional_answers() + "\x1b[B\r2\r\x152021-02-02\r\r"
     )
 
     assert projection.submit_eligible
@@ -104,14 +105,13 @@ def test_edit_path_returns_the_updated_record(isolated_profile: TestRuntimeProfi
 
 
 def test_restart_shrink_returns_a_record_without_orphaned_rows(isolated_profile: TestRuntimeProfile) -> None:
-    _state, _projection, created, _output = _run(None, _one_descendant_keys())
+    _state, _projection, created, _output = _run(_one_descendant_keys())
 
     # Complete sparse optional answers -> review -> restart -> confirm ->
     # count zero -> submit. The second run proves the writer clears orphaned
     # indexed facts from the record currently stored by the first run.
     _state, projection, shrunk, _output = _run(
-        created,
-        _resume_missing_optional_answers() + "\x1b[B\x1b[B\ry\r0\r\r",
+        _resume_missing_optional_answers() + "\x1b[B\x1b[B\ry\r0\r\r"
     )
 
     facts = _facts(shrunk)
@@ -122,16 +122,29 @@ def test_restart_shrink_returns_a_record_without_orphaned_rows(isolated_profile:
 
 
 def test_abandoned_edit_refuses_before_the_atomic_write(isolated_profile: TestRuntimeProfile) -> None:
-    _state, _projection, created, _output = _run(None, _one_descendant_keys())
+    _state, _projection, created, _output = _run(_one_descendant_keys())
     before = _facts(created)
     before_revision = created.record_revision
 
     with pytest.raises(FlowRunAbandonedError) as excinfo:
-        _run(
-            created,
-            _resume_missing_optional_answers() + "\x1b[B\r2\r\x03",
-        )
+        _run(_resume_missing_optional_answers() + "\x1b[B\r2\r\x03")
 
     assert excinfo.value.translated_message == "errors.refused.refused_flow_run_abandoned"
-    assert _facts(created) == before
-    assert created.record_revision == before_revision
+    reloaded = load_active_descendant_record()
+    assert _facts(reloaded) == before
+    assert reloaded.record_revision == before_revision
+
+
+def test_stale_prompt_baseline_refuses_without_overwriting_the_newer_record(
+    isolated_profile: TestRuntimeProfile,
+) -> None:
+    _state, _projection, baseline, _output = _run(_one_descendant_keys())
+    _definition, resumed = build_descendant_door(baseline)
+    concurrent = persist_descendant_door_answers(resumed.answers, baseline=baseline)
+
+    with pytest.raises(CadrumoError, match="compare-and-swap") as excinfo:
+        persist_descendant_door_answers(resumed.answers, baseline=baseline)
+    assert type(excinfo.value).__name__ == "ProfileRecordConflictError"
+
+    reloaded = load_active_descendant_record()
+    assert reloaded == concurrent

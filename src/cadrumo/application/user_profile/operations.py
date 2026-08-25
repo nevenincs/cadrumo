@@ -30,16 +30,16 @@ from cadrumo.application.operations.registry import (
 )
 from cadrumo.application.operations.secret_submission import OperationEphemeralSecretDeclaration
 from ..operations.owner import OperationExecutorContext
-from ._bundle_export import (
+from .bundle_export import (
     ProfileBundleExportPurpose,
     ProfileBundleExportRequest,
     ProfileBundleExportResult,
     ProfileBundleExportTransport,
     export_profile_bundle,
 )
-from ._fact_write import apply_manager_profile_field_mutation
-from ._login_session import logout_active_profile
-from ._section_rows import add_profile_repeatable_section_row
+from .fact_write import apply_manager_profile_field_mutation
+from .login_session import logout_active_profile
+from .section_rows import add_profile_repeatable_section_row
 
 PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID = "user-profile.field-mutation"
 PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID = "user-profile.repeatable-row-mutation"

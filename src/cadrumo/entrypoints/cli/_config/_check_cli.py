@@ -88,7 +88,7 @@ def config_check(ctx: typer.Context) -> None:
         probe_optional_extras,
         probe_playwright_browser,
     )
-    from ....application.user_profile import resolve_active_capability
+    from ....application.user_profile.capabilities import resolve_active_capability
     from ....core.config import load_settings
     from ._check_hardware_rows import contention_row
 

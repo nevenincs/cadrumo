@@ -22,7 +22,7 @@ selector, or backend factory: secure storage is the single authority for a
 named certificate secret, and the master-key OS-keyring custody backend (a
 separate concern) is untouched by this module.
 
-Never store a resolved secret in :class:`~application.workflow.AuthState` or
+Never store a resolved secret in :class:`~application.auth.models.AuthState` or
 any other persisted workflow-state record — the secret lives ONLY inside
 the backend; workflow state at most records which named sources exist,
 never their passphrases (``sensitive-financial-data-secure-storage-only``).
@@ -44,6 +44,8 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import SecretStr, TypeAdapter
 
+from cadrumo.application.auth.models import CertificateSourceName
+
 from ...adapters.persistence.storage import (
     SecretNotFoundError,
     SecretRecord,
@@ -53,7 +55,6 @@ from ...adapters.persistence.storage import (
 )
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
-from ..workflow import CertificateSourceName
 
 if TYPE_CHECKING:
     from ...core.config import Settings
@@ -82,7 +83,7 @@ class CertificateSecretBackend(Protocol):
 
     Every method is keyed by the certificate source's registered
     ``name`` (the key carried by
-    :class:`~application.workflow.CertificateSourceRecord`), scoping the
+    :class:`~application.auth.models.CertificateSourceRecord`), scoping the
     secret to that one source. The sole implementation
     (:class:`~application.auth.SecureStorageCertificateSecretBackend`)
     scopes storage to the active profile bucket so two profiles never share
@@ -127,7 +128,7 @@ def _secret_store_key(*, bucket_id: str, name: str) -> str:
 
     Bucket-scoped so two profiles' certificate secrets never collide in
     the shared digest-keyed index. The name is canonicalized through the same
-    :data:`~application.workflow.CertificateSourceName` contract the durable
+    :data:`~application.auth.models.CertificateSourceName` contract the durable
     registry record carries, so the key cannot address a spelling the registry
     would refuse — a locally-stripping key would otherwise file two distinct
     persisted spellings under one secret.

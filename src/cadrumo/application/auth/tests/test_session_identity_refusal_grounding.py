@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import resources
-from ...user_profile import build_profile_preflight_requirement
+from ...user_profile.preflight import build_profile_preflight_requirement
 from ..sessions import (
     _PROFILE_TAX_ID_PATH,
     _grounded_profile_identity_requirement,

@@ -36,7 +36,7 @@ from ...core import ActionEvidenceProvenance
 from ...core.errors import CoreNotFoundError
 from ...domain.modelos import ModeloError
 from ..operator_actions import PreconditionVerdict
-from ..workflow import WorkflowResult
+from cadrumo.application.workflow.run_models import WorkflowResult
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (

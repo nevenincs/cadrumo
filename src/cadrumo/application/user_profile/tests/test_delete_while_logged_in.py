@@ -33,15 +33,12 @@ from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...evidence import LegalHoldCaseAuthority
 from ...filing import FilingRetentionAuthority
-from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
-from .._custody_transactions import (
-    ProfileCustodyTransactionConflictError,
-    ProfileCustodyTransactionState,
-)
-from .._lifecycle import ProfileCapsuleLifecycle
-from .._login_session import login_profile
-from .._profile_record_repository import close_active_profile_record_session
-from .._registration import register_profile_with_credentials
+from cadrumo.application.user_profile.custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
+from cadrumo.application.user_profile.custody_transactions import ProfileCustodyTransactionConflictError, ProfileCustodyTransactionState
+from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

@@ -36,7 +36,7 @@ from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from ....application.diagnostics import ConfigRepairReport
-    from ....application.workflow import WorkflowStateResetFingerprint
+    from cadrumo.application.workflow.events import WorkflowStateResetFingerprint
     from .._config_payloads import ConfigRepairResult, WorkflowFingerprintPayload
 
 
@@ -265,7 +265,7 @@ def repair_reset_progress(
             lines=("reset\tfalse", "reason\tnothing to reset"),
         )
         return
-    from ....application.workflow import fingerprint_workflow_state, reset_workflow_state
+    from cadrumo.application.workflow.persistence import fingerprint_workflow_state, reset_workflow_state
 
     if dry_run:
         fingerprint = fingerprint_workflow_state()

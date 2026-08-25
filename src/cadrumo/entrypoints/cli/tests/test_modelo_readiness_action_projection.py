@@ -10,7 +10,7 @@ from ....application.state_projection import (
     ProjectionModeloBindingRequirement,
     ProjectionModeloReadiness,
 )
-from ....application.user_profile import ProfilePreflightRequirement
+from ....application.user_profile.commands import ProfilePreflightRequirement
 from ....core import BindingSourceKind, Period
 from ....core.i18n import tr
 from .._modelo_readiness_cli import _readiness_result

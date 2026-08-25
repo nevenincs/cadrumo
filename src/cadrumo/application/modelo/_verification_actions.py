@@ -119,7 +119,9 @@ from ..calculations import (
     CrossPeriodExpectedMemberSet,
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
-from ..workflow import WorkflowEngine, WorkflowPurpose, WorkflowRunRepository
+from cadrumo.application.workflow.engine import WorkflowEngine
+from cadrumo.application.workflow.run_models import WorkflowPurpose
+from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from ._action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
     CalculationRevisionNotFoundError,

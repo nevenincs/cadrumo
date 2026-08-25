@@ -51,7 +51,8 @@ import pytest
 from mcp.server import Server
 
 from cadrumo.adapters.persistence.storage import master_key
-from cadrumo.application.user_profile import close_profile_session_artefacts, register_profile_with_credentials
+from cadrumo.application.user_profile.login_session import close_profile_session_artefacts
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
 from cadrumo.tests import temporary_env
 from cadrumo.tests.profile_persistence import composed_profile_persistence_ports

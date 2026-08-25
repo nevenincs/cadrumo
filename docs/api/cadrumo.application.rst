@@ -62,8 +62,6 @@ Submodules
    cadrumo.application._provisioning_runtime
    cadrumo.application._state_projection_auth
    cadrumo.application._state_projection_readiness
-   cadrumo.application._workflow_auth_models
-   cadrumo.application._workflow_review_models
    cadrumo.application.auth_credentials
    cadrumo.application.cli_exception_preconditions
    cadrumo.application.config_reset

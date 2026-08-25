@@ -175,7 +175,8 @@ def _modelo_100_obligation_advisory_output(unit) -> tuple[list[Notice], list[str
     if unit.modelo != Modelo.M100:
         return ([], [])
     from ...application.overview import build_filing_obligation_advisories
-    from ...application.user_profile import ProfileRecordRepository, record_to_values
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ...application.user_profile.projections import record_to_values
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     bucket = resolve_active_bucket_id()

@@ -57,7 +57,7 @@ from ....tests.profile_capsule import (
 )
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import record_to_path_values
+from ...user_profile.projections import record_to_path_values
 from .. import calculate_modelo_revision_from_bucket_aggregation, create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

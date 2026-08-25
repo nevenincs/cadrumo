@@ -16,15 +16,9 @@ import pytest
 from ....adapters.persistence.storage.bucket import bucket_paths
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....core import scan_directory
-from .. import (
-    WorkflowResult,
-    WorkflowStage,
-    WorkflowStep,
-    list_runs,
-    load_run,
-    save_run,
-)
-from .._errors import WorkflowError
+from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
+from cadrumo.application.workflow.persistence import list_runs, load_run, save_run
+from ..errors import WorkflowError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -134,8 +128,8 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
     """
 
     from ....adapters.persistence.storage import WORKFLOW_STATE_NAMESPACE
-    from .._persistence import WorkflowStateRepository
-    from .._state_models import WorkflowState
+    from ..persistence import WorkflowStateRepository
+    from ..state_models import WorkflowState
 
     def _raise(**_: object) -> None:
         raise _EmitError("simulated downstream emit failure")
@@ -168,8 +162,8 @@ def test_fingerprint_state_classifies_healthy_envelope_as_readable() -> None:
     classification must reflect that.
     """
 
-    from .._persistence import WorkflowStateRepository
-    from .._state_models import WorkflowState
+    from ..persistence import WorkflowStateRepository
+    from ..state_models import WorkflowState
 
     repository = WorkflowStateRepository()
     repository.save(WorkflowState())
@@ -184,7 +178,7 @@ def test_fingerprint_state_classifies_healthy_envelope_as_readable() -> None:
 def test_fingerprint_state_classifies_absent_envelope_as_absent() -> None:
     """With no state envelope persisted the fingerprint classifies as ``absent``."""
 
-    from .._persistence import WorkflowStateRepository
+    from ..persistence import WorkflowStateRepository
 
     fingerprint = WorkflowStateRepository().fingerprint_state()
 
@@ -196,8 +190,8 @@ def test_fingerprint_state_classifies_absent_envelope_as_absent() -> None:
 def test_fingerprint_state_honours_explicit_reason_class_override() -> None:
     """An explicit ``reason_class`` from a caller that knows the trigger wins."""
 
-    from .._persistence import WorkflowStateRepository
-    from .._state_models import WorkflowState
+    from ..persistence import WorkflowStateRepository
+    from ..state_models import WorkflowState
 
     repository = WorkflowStateRepository()
     repository.save(WorkflowState())

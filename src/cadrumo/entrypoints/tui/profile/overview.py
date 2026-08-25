@@ -39,7 +39,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, Static
 from textual.worker import Worker, WorkerState
 
-from ....application.user_profile import notice_presentation, profile_field_shape_hint
+from ....application.user_profile.presentation import notice_presentation, profile_field_shape_hint
 from ....core.i18n import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.tui.components.status import PinnedStatusBar
@@ -56,7 +56,7 @@ if TYPE_CHECKING:
 
     from textual.widgets.data_table import ColumnKey
 
-    from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
+    from ....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
 
 
 _PRESENT_GLYPH = "●"

@@ -44,10 +44,10 @@ from ....domain.user_profile import (
 )
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import complete_profile_facts
-from .._capsule_record import ProfileRecordSession
-from .._profile_record_repository import ProfileRecordRepository, bound_profile_record_session
-from .._registration import register_profile_with_credentials
-from .._validation import CONDITIONAL_REQUIRED_FIELD_MISSING_CODE, REQUIRED_FIELD_MISSING_CODE
+from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository, bound_profile_record_session
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.application.user_profile.validation import CONDITIONAL_REQUIRED_FIELD_MISSING_CODE, REQUIRED_FIELD_MISSING_CODE
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

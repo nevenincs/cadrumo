@@ -36,16 +36,13 @@ from cadrumo.application.operations.persistence.journal import OperationPersiste
 from ....core.bucket_pointer import read_pointer
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._bundle_export_contracts import (
-    ProfileBundleExportPurpose,
-    ProfileBundleExportResult,
-)
-from .._bundle_export_operation import ProfileBundleExportJournalRepository
-from .._custody_ports import ProfileCustodySecureObjectRepositoryPort, profile_custody_secure_object_repository
-from .._login_session import login_profile
-from .._profile_record_repository import ProfileRecordRepository
-from .._projections import record_to_path_values
-from .._registration import register_profile_with_credentials
+from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportResult
+from cadrumo.application.user_profile.bundle_export_operation import ProfileBundleExportJournalRepository
+from cadrumo.application.user_profile.custody_ports import ProfileCustodySecureObjectRepositoryPort, profile_custody_secure_object_repository
+from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from ..operations import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,

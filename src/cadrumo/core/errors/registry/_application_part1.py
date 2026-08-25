@@ -468,7 +468,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.BootstrapAlreadyCompleteError",
+        "cadrumo.application.workflow.errors.BootstrapAlreadyCompleteError",
         ErrorCode(
             code="REFUSED_BOOTSTRAP_ALREADY_COMPLETE",
             category=ErrorCategory.REFUSED,
@@ -478,7 +478,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.ProfileNameCollisionError",
+        "cadrumo.application.workflow.errors.ProfileNameCollisionError",
         ErrorCode(
             code="REFUSED_PROFILE_NAME_COLLISION",
             category=ErrorCategory.REFUSED,
@@ -488,7 +488,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.ProfileLockedError",
+        "cadrumo.application.workflow.errors.ProfileLockedError",
         ErrorCode(
             code="REFUSED_PROFILE_LOCKED",
             category=ErrorCategory.REFUSED,
@@ -498,7 +498,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.WorkflowAbortedError",
+        "cadrumo.application.workflow.errors.WorkflowAbortedError",
         ErrorCode(
             code="REFUSED_WORKFLOW_ABORTED",
             category=ErrorCategory.REFUSED,
@@ -508,7 +508,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.WorkflowComponentError",
+        "cadrumo.application.workflow.errors.WorkflowComponentError",
         ErrorCode(
             code="ERROR_WORKFLOW_COMPONENT",
             category=ErrorCategory.ERROR,
@@ -518,7 +518,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.WorkflowError",
+        "cadrumo.application.workflow.errors.WorkflowError",
         ErrorCode(
             code="ERROR_WORKFLOW",
             category=ErrorCategory.ERROR,
@@ -528,7 +528,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._resume.WorkflowResumeRefusedError",
+        "cadrumo.application.workflow.resume.WorkflowResumeRefusedError",
         ErrorCode(
             code="REFUSED_WORKFLOW_RESUME",
             category=ErrorCategory.REFUSED,
@@ -538,7 +538,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._resume.WorkflowResumeRunAmbiguousError",
+        "cadrumo.application.workflow.resume.WorkflowResumeRunAmbiguousError",
         ErrorCode(
             code="REFUSED_WORKFLOW_RESUME_RUN_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -578,7 +578,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.ProfileLabelAmbiguousError",
+        "cadrumo.application.workflow.errors.ProfileLabelAmbiguousError",
         ErrorCode(
             code="REFUSED_PROFILE_LABEL_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -588,7 +588,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.WorkflowAbortSignalError",
+        "cadrumo.application.workflow.errors.WorkflowAbortSignalError",
         ErrorCode(
             code="INTERNAL_WORKFLOW_ABORT_SIGNAL",
             category=ErrorCategory.INTERNAL,
@@ -598,7 +598,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.workflow._errors.UnhandledWorkflowError",
+        "cadrumo.application.workflow.errors.UnhandledWorkflowError",
         ErrorCode(
             code="INTERNAL_WORKFLOW_UNHANDLED",
             category=ErrorCategory.INTERNAL,

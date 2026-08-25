@@ -19,8 +19,8 @@ from ...core.config import load_settings
 from ...core.errors import CadrumoError
 from ...core.locks_errors import LockAcquisitionError
 from ...core.paths import effective_storage_root
-from ._custody_ports import default_profile_custody_local_record_store
-from ._profile_pointer_ports import ProfileCustodyRootLockPort
+from .custody_ports import default_profile_custody_local_record_store
+from .profile_pointer_ports import ProfileCustodyRootLockPort
 
 
 class ActiveProfilePointerTransactionError(CadrumoError):

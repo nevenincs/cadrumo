@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from .. import default_engine
-from .._engine import WorkflowEngine
-from .._errors import WorkflowError
-from .._protocols import (
+from cadrumo.application.workflow.adapters import default_engine
+from ..engine import WorkflowEngine
+from ..errors import WorkflowError
+from ..protocols import (
     DeadlineEngineProtocol,
     ModeloDraftBuilderProtocol,
     ModeloInputsProviderProtocol,

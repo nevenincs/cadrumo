@@ -36,9 +36,9 @@ from ....core import ProfileSessionRefusalReason
 from ....core.bucket_pointer import read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._login_session import bind_resumed_profile_session, login_profile, logout_active_profile
-from .._profile_record_repository import close_active_profile_record_session
-from .._registration import register_profile_with_credentials
+from cadrumo.application.user_profile.login_session import bind_resumed_profile_session, login_profile, logout_active_profile
+from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

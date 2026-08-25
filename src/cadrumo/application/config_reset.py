@@ -39,12 +39,10 @@ from .bucket_maintenance import (
     BucketDeletionAssessment,
     BucketMaintenanceService,
 )
-from .user_profile import (
-    ProfileCapsuleLifecycle,
-    ProfileCustodyRetentionOverride,
-)
+from .user_profile.lifecycle import ProfileCapsuleLifecycle
+from .user_profile.custody_hold_models import ProfileCustodyRetentionOverride
 from .user_profile.profile_pointer import active_profile_pointer_transaction
-from .workflow import list_profile_buckets
+from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
 
 class ConfigResetError(CadrumoError):

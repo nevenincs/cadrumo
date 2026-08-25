@@ -40,7 +40,7 @@ from .....domain.buckets import BucketEventType
 from .....tests.profile_capsule import open_test_profile_session
 from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
-from ....workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._persist import record_sync_run
 from .._records import (
     SyncRunCoverage,

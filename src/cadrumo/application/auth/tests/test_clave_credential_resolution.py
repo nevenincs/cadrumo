@@ -24,7 +24,7 @@ from ....core.config import override_settings
 from ....core.resources import resources
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
-from ...user_profile import build_profile_preflight_requirement
+from ...user_profile.preflight import build_profile_preflight_requirement
 from ..sessions import (
     AuthProfileIdentityMismatchError,
     ClaveCredentialsIncompleteError,

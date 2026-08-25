@@ -36,7 +36,7 @@ import pytest
 
 from ....core.errors import BaseSeverity
 from ....domain.user_profile import UserProfileFact, load_user_profile_schema
-from .._validation import DERIVED_FIELD_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE, ProfileValidationService
+from cadrumo.application.user_profile.validation import DERIVED_FIELD_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE, ProfileValidationService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

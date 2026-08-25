@@ -130,7 +130,7 @@ def _destroy(bucket_id: str, *, label: str) -> str:
     """
     from uuid import UUID
 
-    from ....application.user_profile import ProfileCapsuleLifecycle
+    from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
     from ....application.user_profile.profile_pointer import active_profile_pointer_transaction
 
     with active_profile_pointer_transaction():

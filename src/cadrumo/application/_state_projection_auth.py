@@ -22,7 +22,7 @@ from .auth.operator_probes import bind_profile_auth_settings, probe_provider_cre
 from .auth.probes import ProviderProbeResult
 from .auth.providers import select_provider
 from .auth_credentials import ActiveCertificateCredentials
-from .workflow import WorkflowState
+from cadrumo.application.workflow.state_models import WorkflowState
 
 _log = get_logger(__name__)
 

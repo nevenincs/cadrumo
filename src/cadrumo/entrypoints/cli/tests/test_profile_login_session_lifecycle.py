@@ -106,7 +106,7 @@ def _envelope(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
 def _create_profile(storage_root: Path) -> str:
     """Register one capsule through the current credential-only creation door."""
     from ....adapters.persistence.storage.master_key import close_active_bucket_session
-    from ....application.user_profile import register_profile_with_credentials
+    from ....application.user_profile.registration import register_profile_with_credentials
     from ....core.config import override_settings
 
     with override_settings(cadrumo_local_storage_root=storage_root):

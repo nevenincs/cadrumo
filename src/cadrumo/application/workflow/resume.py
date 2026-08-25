@@ -96,6 +96,7 @@ class WorkflowResumeRunAmbiguousError(WorkflowError):
         period: Period,
         candidates: tuple[WorkflowResumeRunCandidate, ...],
     ) -> None:
+        """Capture the ambiguous modelo, period, and matching run candidates."""
         self.modelo = modelo
         self.period = period
         self.candidates = candidates

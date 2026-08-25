@@ -22,7 +22,7 @@ import pytest
 from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
 
-from ....application.user_profile import login_profile
+from ....application.user_profile.login_session import login_profile
 from ....core import assess_profile_password
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n import output_language, tr

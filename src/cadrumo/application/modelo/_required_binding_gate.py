@@ -33,7 +33,7 @@ from ...core.resources import bundled_path
 from ...domain.calculations.registry import BindingId, ModeloRevision, load_registry_tree, select_revision
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, load_user_profile_schema
-from ..user_profile import ProfileRecordRepository
+from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ._action_errors import ModeloRequiredBindingsMissingError
 from ._preconditions import build_modelo_precondition_failure
 from ._profile_binding import profile_fact_index, resolve_profile_binding_value

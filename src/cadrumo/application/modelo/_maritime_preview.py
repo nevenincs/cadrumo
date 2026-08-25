@@ -33,8 +33,8 @@ from decimal import Decimal
 from typing import Literal
 
 from ...application.calculations import resolve_maritime_exemption
-from ...application.user_profile import fact_value
-from ...application.workflow import workflow_state_repository
+from ...application.user_profile.projections import fact_value
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from ...core.parsing import parse_bool
 from ...domain.renta import MaritimeWorkerFacts, ProfileCompletenessError
 from ..calculations import MaritimeExemptionResult

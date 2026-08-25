@@ -142,8 +142,9 @@ def resolve_active_tax_id(profile_id: str) -> str:
             When the profile bucket manifest or canonical profile-record
             session cannot be resolved.
     """
-    from ....application.user_profile import ProfileRecordRepository, record_to_path_values
-    from ....application.workflow import read_profile_bucket_by_id
+    from ....application.user_profile.profile_record_repository import ProfileRecordRepository
+    from ....application.user_profile.projections import record_to_path_values
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(profile_id)
     if pointer is None:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ._login_session import ProfileLoginOutcome, login_profile, resolve_login_target
+from .login_session import ProfileLoginOutcome, login_profile, resolve_login_target
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,7 +25,7 @@ class ProfileLoginAttempt:
 
 def profile_login_choices() -> tuple[ProfileLoginChoice, ...]:
     """Return committed profiles in the stable chooser order."""
-    from ..workflow import list_profile_buckets
+    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
     return tuple(
         ProfileLoginChoice(profile_id=pointer.bucket_id, label=pointer.label)
@@ -46,8 +46,8 @@ def attempt_profile_login(profile_id: str, passphrase: str) -> ProfileLoginAttem
     """Unlock a chosen profile, converting expected operator refusals to data."""
     from ...core.errors import resolve_error_message
     from ...domain.user_profile import ProfileNotFoundError
-    from ._authentication import ProfileAuthenticationRefusedError
-    from ._login_session import ProfileLoginThrottledError
+    from .authentication import ProfileAuthenticationRefusedError
+    from .login_session import ProfileLoginThrottledError
 
     try:
         outcome = login_profile(name=profile_id, passphrase_callback=lambda: passphrase)

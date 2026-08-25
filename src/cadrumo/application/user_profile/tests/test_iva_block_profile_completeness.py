@@ -23,8 +23,8 @@ from ....domain.deadlines import (
     taxpayer_profile_from_mapping,
 )
 from ... import wizard as _wizard  # noqa: F401 - registers compiled profile keys
-from .._completeness import conditional_profile_missing_required
-from .._keys_validation import validate_profile_values
+from cadrumo.application.user_profile.completeness import conditional_profile_missing_required
+from cadrumo.application.user_profile.keys_validation import validate_profile_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

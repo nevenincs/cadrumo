@@ -4,13 +4,13 @@ A gestor managing several taxpayers typically holds several PKCS#12
 certificates — their own personal certificate plus one apoderado
 certificate per represented entity. Before this module, the certificate
 auth provider carried exactly one ``certificate_path`` on
-:class:`~application.workflow.AuthState`, configured through
+:class:`~application.auth.models.AuthState`, configured through
 ``aeat config auth configure --provider certificate --file PATH``: adopting
 a different certificate meant re-running that command and losing track of
 the previous path.
 
 This module adds a named ``certificate_sources`` registry to
-:class:`~application.workflow.AuthState`:
+:class:`~application.auth.models.AuthState`:
 :func:`~application.auth.certificate_sources.register_certificate_source` adds
 or re-points a named source,
 :func:`~application.auth.certificate_sources.list_certificate_sources`
@@ -26,7 +26,7 @@ backends, and service-account impersonation UX are explicitly out of scope
 for this module.
 
 See Also:
-    :class:`~application.workflow.AuthState`
+    :class:`~application.auth.models.AuthState`
         Persisted local auth selection embedded in workflow state.
     :func:`~application.auth.configure_operator_auth`
         Configures the active auth *provider*; this module manages
@@ -43,7 +43,7 @@ from .models import AuthState, CertificateSourceRecord
 from .operator_results import CertificateSourceNotFoundError
 
 if TYPE_CHECKING:
-    from ..workflow import WorkflowState
+    from cadrumo.application.workflow.state_models import WorkflowState
 
 
 class CertificateSourceNoActiveBucketError(Exception):
@@ -105,13 +105,13 @@ def register_certificate_source(
 
 
 def list_certificate_sources(state: WorkflowState) -> tuple[CertificateSourceRecord, ...]:
-    """Return every registered :class:`~application.workflow.CertificateSourceRecord`."""
+    """Return every registered :class:`~application.auth.models.CertificateSourceRecord`."""
     auth = auth_state(state)
     return tuple(sorted(auth.certificate_sources.values(), key=lambda record: record.name))
 
 
 def active_certificate_source(state: WorkflowState) -> CertificateSourceRecord | None:
-    """Return the active :class:`~application.workflow.CertificateSourceRecord`, if any."""
+    """Return the active :class:`~application.auth.models.CertificateSourceRecord`, if any."""
     auth = auth_state(state)
     if auth.active_certificate_source is None:
         return None

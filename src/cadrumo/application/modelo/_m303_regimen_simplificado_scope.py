@@ -9,7 +9,8 @@ from ...domain.deadlines import M303RegimeComposition, TaxpayerProfile
 from ...domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState
-from ..user_profile import ProfileRecordRepository, projection_for_taxpayer
+from ..user_profile.profile_record_repository import ProfileRecordRepository
+from ..user_profile.projections import projection_for_taxpayer
 from ._action_errors import ModeloProfileReadinessError
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 

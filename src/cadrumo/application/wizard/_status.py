@@ -18,14 +18,10 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...domain.deadlines import TaxpayerProfile
 from ..operator_actions import DeclaredNextAction
 from ..state_projection import build_auth_readiness
-from ..user_profile import (
-    iva_regime_required,
-    list_profile_key_records,
-    projection_for_taxpayer,
-    record_to_path_values,
-    validate_profile_values,
-)
-from ..workflow import WorkflowState
+from ..user_profile.completeness import iva_regime_required
+from ..user_profile.keys_validation import list_profile_key_records, validate_profile_values
+from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
+from cadrumo.application.workflow.state_models import WorkflowState
 from ._compiler import ensure_profile_keys_registered
 from ._errors import WizardError, WizardPreconditionCondition, wizard_no_action_verdict
 
@@ -255,10 +251,7 @@ def _grounded_tax_id_requirement() -> str:
     profile fact refusal in this codebase does.
     """
     from ...core.resources import resources
-    from ..user_profile import (
-        build_profile_preflight_requirement,
-        format_profile_preflight_requirement,
-    )
+    from ..user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement
 
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(

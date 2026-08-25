@@ -12,7 +12,7 @@ from .._common import activate_subcommand_output_language as _activate_output_la
 from .._common import emit_envelope
 
 if TYPE_CHECKING:
-    from ....application.workflow import ProfileBucketPointer
+    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
 
 
 def profile_list_lines(
@@ -35,7 +35,7 @@ def config_list(
 ) -> None:
     """List committed profile pointers without importing sibling commands."""
     _activate_output_language(ctx, output_language)
-    from ....application.workflow import list_profile_buckets
+    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
     from ....core.bucket_pointer import resolve_active_bucket_id
     from .._config_payloads import ConfigListResult, ProfilePointerPayload
 

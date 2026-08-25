@@ -21,7 +21,7 @@ Three ratcheting/pinned checks, backed by the checked-in
   structurally removed by extracting the four mutually-needed runtime-bound
   names (``WorkflowEvent``, ``utc_now``, ``InvoiceReviewRecord``,
   ``LedgerReviewRecord``) into a shared leaf module,
-  ``cadrumo.application._workflow_review_models``, that neither package depends
+  ``cadrumo.application.workflow.review_models``, that neither package depends
   on. The baseline's ``sites`` list is now permanently ``[]``. The gate keeps
   its ratchet/named-set-equality shape (count may not exceed the baseline;
   every current violation must be a named baseline entry) rather than a bare
@@ -351,7 +351,7 @@ def test_production_family1_baseline_is_hard_zero() -> None:
 
     The ``application.review`` <-> ``application.workflow`` cycle-break this
     baseline used to carry has been structurally removed (see the shared
-    ``cadrumo.application._workflow_review_models`` leaf module). ``sites`` is
+    ``cadrumo.application.workflow.review_models`` leaf module). ``sites`` is
     now a permanent ``[]``; this pins that the baseline itself has not
     regressed back to a ratchet allowlist for that specific exception.
     """

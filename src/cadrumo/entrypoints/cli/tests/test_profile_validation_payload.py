@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....application.user_profile import ProfileValidationIssue
+from ....application.user_profile.commands import ProfileValidationIssue
 from ....core.errors import BaseSeverity
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from .._config_payloads import ProfileIssuePayload

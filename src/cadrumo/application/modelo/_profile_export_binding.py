@@ -227,7 +227,7 @@ def _load_profile_record(*, bucket_id: str, profile_record: object | None) -> ob
     """Load the active profile only when the caller did not provide it."""
     if profile_record is not None:
         return profile_record
-    from ..user_profile import ProfileRecordRepository
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
 
     try:
         return ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
@@ -325,7 +325,7 @@ def _resolve_profile_export_values(
         return {}
     record = profile_record
     if record is None:
-        from ..user_profile import ProfileRecordRepository
+        from ..user_profile.profile_record_repository import ProfileRecordRepository
 
         try:
             record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)

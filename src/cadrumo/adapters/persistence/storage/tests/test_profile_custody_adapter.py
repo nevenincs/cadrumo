@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .....application.user_profile import ProfileRecordCryptoError, ProfileRecordEncryptedBlob
+from .....application.user_profile.custody_ports import ProfileRecordCryptoError, ProfileRecordEncryptedBlob
 from .. import build_profile_custody_port
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

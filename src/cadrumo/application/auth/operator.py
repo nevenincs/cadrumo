@@ -14,7 +14,7 @@ producer, then narrow its
 operator-facing result records.
 
 See Also:
-    :class:`application.workflow.AuthState`
+    :class:`application.auth.models.AuthState`
         Workflow-owned persisted authentication readiness.
     :class:`application.auth.AuthStatusResult`
         CLI readiness result emitted by ``auth status``.
@@ -41,9 +41,6 @@ from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.identity import tax_id_identity_token
 from ...core.time import now
-from .models import (
-    AuthCleanupOperationKind,
-)
 from ..auth_credentials import ActiveCertificateCredentials
 from ..operator_actions import (
     PreconditionVerdict,
@@ -56,6 +53,9 @@ from .catalogue import AuthProviderListing, get_auth_provider, list_auth_provide
 from .credentials import (
     ActiveAuthProjectionSnapshot,
     active_auth_projection_span,
+)
+from .models import (
+    AuthCleanupOperationKind,
 )
 from .operator_cleanup import (
     apply_auth_cleanup_intent,
@@ -121,9 +121,10 @@ from .sessions import (
 )
 
 if TYPE_CHECKING:
+    from cadrumo.application.workflow.state_models import WorkflowState
+
     from ...domain.buckets import BucketEvent, BucketEventType
     from ..state_projection import OperatorStateProjection
-    from ..workflow import WorkflowState
 
 
 _build_auth_cleanup_intent = build_auth_cleanup_intent
@@ -172,8 +173,10 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
         :class:`application.workflow.ActiveProfileHealth`
             Redacted health verdict used to accept or refuse the active bucket.
     """
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from cadrumo.application.workflow.profile_health import assess_active_profile_health
+
     from ...domain.buckets import BucketEventType
-    from ..workflow import assess_active_profile_health, workflow_state_repository
 
     listing = _implemented_provider(provider)
     resolved_settings = load_settings()
@@ -307,7 +310,7 @@ def _auth_configure_result(
     certificate_path: Path | None,
 ) -> AuthConfigureResult:
     """Build a redacted configuration result that exposes identity readiness."""
-    from ..user_profile import record_to_path_values
+    from ..user_profile.projections import record_to_path_values
 
     record = state.active_profile_record()
     values = record_to_path_values(record)
@@ -612,7 +615,7 @@ def build_live_auth_preflight_report(
         :func:`test_operator_auth`
             Shared provider-readiness probe that supplies the preflight base.
     """
-    from ..user_profile import profile_current_bucket_session
+    from ..user_profile.login_session_port import profile_current_bucket_session
     from .operator_results import AuthOperationRequiresCustodySessionError
 
     try:
@@ -760,8 +763,9 @@ async def login_operator_auth(
             certificate_credentials=certificate_credentials,
         )
 
+        from cadrumo.application.workflow.persistence import workflow_state_repository
+
         from ...domain.buckets import BucketEventType
-        from ..workflow import workflow_state_repository
 
         bucket_id = snapshot.bucket_id
         if bucket_id is None:
@@ -892,7 +896,7 @@ def logout_operator_auth(
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
             )
-        from ..workflow import workflow_state_repository
+        from cadrumo.application.workflow.persistence import workflow_state_repository
 
         with _auth_mutation_span(settings=resolved_settings, bucket_id=bucket_id):
             repository = workflow_state_repository()
@@ -1042,7 +1046,7 @@ def reset_operator_auth(
             raise AuthConfigureNoActiveBucketError(
                 translated_message="application.auth.operator.errors.no_active_bucket",
             )
-        from ..workflow import workflow_state_repository
+        from cadrumo.application.workflow.persistence import workflow_state_repository
 
         with _auth_mutation_span(settings=resolved_settings, bucket_id=bucket_id):
             repository = workflow_state_repository()
@@ -1226,7 +1230,7 @@ def _append_bucket_event(
     action: str,
     object_id: str,
 ) -> WorkflowState:
-    from ..workflow import WorkflowEvent
+    from cadrumo.application.workflow.review_models import WorkflowEvent
 
     # Auth flows can run before a profile is bound (e.g. `auth configure`
     # during initial setup). Falling back to the literal "default" silently

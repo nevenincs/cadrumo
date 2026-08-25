@@ -14,7 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.auth._mutation
-   cadrumo.application.auth._workflow_repository
    cadrumo.application.auth.acquisition_lock
    cadrumo.application.auth.actions
    cadrumo.application.auth.apoderado_flow
@@ -26,6 +25,7 @@ Submodules
    cadrumo.application.auth.credentials
    cadrumo.application.auth.diagnostics
    cadrumo.application.auth.errors
+   cadrumo.application.auth.models
    cadrumo.application.auth.operation_definitions
    cadrumo.application.auth.operator
    cadrumo.application.auth.operator_cleanup

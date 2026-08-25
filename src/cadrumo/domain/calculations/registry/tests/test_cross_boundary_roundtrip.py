@@ -562,12 +562,7 @@ def test_workflow_step_details_typed_envelope_roundtrip() -> None:
 
     from datetime import timedelta
 
-    from .....application.workflow import (
-        WorkflowAuthCheckDetails,
-        WorkflowDiagnosticSkipReason,
-        WorkflowStage,
-        WorkflowStep,
-    )
+    from cadrumo.application.workflow.run_models import WorkflowAuthCheckDetails, WorkflowDiagnosticSkipReason, WorkflowStage, WorkflowStep
 
     original = WorkflowStep(
         stage=WorkflowStage.RUNNING_PREFLIGHT,

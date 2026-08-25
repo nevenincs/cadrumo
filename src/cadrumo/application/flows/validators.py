@@ -56,10 +56,10 @@ class ValidationVerdict(BaseModel):
         return cls(ok=False, message_key=message_key, context=redact_validation_context(dict(context)))
 
 
-AnswerValidator = Callable[[FlowPage, str], ValidationVerdict]
+type AnswerValidator = Callable[[FlowPage, str], ValidationVerdict]
 """Commit-time validator over one page's canonical raw token."""
 
-CrossFieldValidator = Callable[[Mapping[str, str]], tuple[ValidationVerdict, ...]]
+type CrossFieldValidator = Callable[[Mapping[str, str]], tuple[ValidationVerdict, ...]]
 """Section-exit / flow-scope validator over the canonical answer map."""
 
 _ANSWER_VALIDATORS: dict[str, AnswerValidator] = {}

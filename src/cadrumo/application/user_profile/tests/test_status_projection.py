@@ -298,7 +298,8 @@ def _fact_rows_over_a_real_profile() -> tuple[tuple[StatusFactRow, ...], UserPro
     The record is returned alongside its rows so a caller can project the
     SAME record through another surface and compare the two readings.
     """
-    from ...workflow import read_profile_bucket, workflow_state_repository
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     _create_profile()
     pointer = read_profile_bucket("operator")

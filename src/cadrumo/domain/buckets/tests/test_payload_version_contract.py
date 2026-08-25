@@ -73,10 +73,8 @@ def test_the_shared_primitive_requires_an_explicit_payload_version() -> None:
 
 def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
     """Registering a profile writes the profile-lifecycle payload contract."""
-    from ....application.user_profile import (
-        login_profile,
-        register_profile_with_credentials,
-    )
+    from ....application.user_profile.login_session import login_profile
+    from ....application.user_profile.registration import register_profile_with_credentials
 
     label = "Payload version probe"
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -98,7 +96,7 @@ def test_profile_lifecycle_events_persist_version_one(tmp_path: Path) -> None:
 
 def test_workflow_state_reset_persists_version_one(tmp_path: Path) -> None:
     """The workflow-reset audit event writes the workflow payload contract."""
-    from ....application.workflow import reset_workflow_state
+    from cadrumo.application.workflow.persistence import reset_workflow_state
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         reset_workflow_state(actor="operator", source="payload-version-probe")

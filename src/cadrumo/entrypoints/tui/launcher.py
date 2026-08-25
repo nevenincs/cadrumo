@@ -17,7 +17,8 @@ def profile_storage_scope(root: Path) -> Iterator[Path]:
     the session.
     """
     from ...adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
-    from ...application.user_profile import bind_profile_custody_port, bind_profile_login_session_port
+    from ...application.user_profile.custody_ports import bind_profile_custody_port
+    from ...application.user_profile.login_session_port import bind_profile_login_session_port
     from ...core import STORAGE_TAXONOMY, StorageCategory, storage_location
     from ...core.config import SecretStoreBackend, load_settings, override_settings
 

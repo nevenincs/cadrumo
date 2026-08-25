@@ -1,6 +1,6 @@
 """Masking-verdict singularity gate: one authority decides what an operator screen hides.
 
-``mask_profile_field`` (:mod:`cadrumo.application.user_profile._overview`) is
+``mask_profile_field`` (:mod:`cadrumo.application.user_profile.overview`) is
 the single masking authority for every surface that projects profile facts —
 its own docstring says so, and until recently a cross-reference proved it: a
 test imported both the public re-export and the private definition side by

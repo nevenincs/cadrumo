@@ -85,7 +85,7 @@ def _delete_profile_through_custody(profile_id: str, *, root: Path) -> None:
     """
     from ..evidence import LegalHoldCaseAuthority
     from ..filing import FilingRetentionAuthority
-    from ..user_profile import ProfileCapsuleLifecycle
+    from ..user_profile.lifecycle import ProfileCapsuleLifecycle
 
     observed_at = datetime.now(UTC)
     identity = UUID(profile_id)

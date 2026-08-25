@@ -17,7 +17,7 @@ def test_financial_validation_error_typing_and_registry() -> None:
 
 
 def test_censo_sync_error_typing() -> None:
-    from ..application.user_profile import CensoSyncError
+    from ..application.user_profile.censo_errors import CensoSyncError
     from ..core.errors import CadrumoError
 
     assert issubclass(CensoSyncError, CadrumoError)

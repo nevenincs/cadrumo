@@ -29,7 +29,8 @@ from ....tests.live_gate import requires_live_enabled
 from ...calculations import IvaWalletDecisionRepository
 from ...modelo import ModeloIvaWalletReconciliationBlocked
 from ...modelo import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
-from ...user_profile import ProfileRecordRepository, record_to_path_values
+from ...user_profile.profile_record_repository import ProfileRecordRepository
+from ...user_profile.projections import record_to_path_values
 from .. import capture_iva_compensation_wallet
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]

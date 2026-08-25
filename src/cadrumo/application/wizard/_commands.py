@@ -655,7 +655,7 @@ def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tupl
     they must leave a taxpayer-type axis and a filing identity, otherwise
     modelo work would fail later against an already-committed profile.
     """
-    from ..user_profile import missing_filing_baseline_flags as _missing_profile_filing_baseline_flags
+    from ..user_profile.filing_baseline import missing_filing_baseline_flags as _missing_profile_filing_baseline_flags
     from ._persistence import serialise_answers
 
     return _missing_profile_filing_baseline_flags(serialise_answers(flow, answers))
@@ -1069,12 +1069,9 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
     from ...domain.user_profile import UserProfileFact
-    from ..user_profile import (
-        ProfileFactWriteDoor,
-        ProfileRecordRepository,
-        apply_profile_fact_changes,
-        record_to_path_values,
-    )
+    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_path_values
     from ._persistence import (
         profile_values_from_patch,
         project_answers,
@@ -1117,13 +1114,10 @@ def _run_full_flow(
 
     """
     from ...domain.user_profile import UserProfileFact
-    from ..user_profile import (
-        ProfileFactWriteDoor,
-        ProfileRecordRepository,
-        ProfileRegistrationError,
-        apply_profile_fact_changes,
-        record_to_path_values,
-    )
+    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.registration import ProfileRegistrationError
+    from ..user_profile.projections import record_to_path_values
     from ._persistence import (
         project_answers,
         serialise_answers,
@@ -1279,7 +1273,7 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     missing-flag refusal.
     """
     from ...domain.user_profile import new_profile_id
-    from ..workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     if mode == "create":
         _require_profile_label_available(
@@ -1349,7 +1343,7 @@ def _resolve_profile_target_for_mode(
         return profile_name, _resolve_profile_id_for_mode(flow, mode, profile_name)
 
     from ...core.bucket_pointer import require_active_bucket_id
-    from ..user_profile import resolve_login_target
+    from ..user_profile.login_session import resolve_login_target
 
     target = resolve_login_target(require_active_bucket_id())
     return target.label, target.bucket_id

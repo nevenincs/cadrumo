@@ -98,7 +98,7 @@ def test_a_fresh_sociedades_profile_gets_the_history_notice_with_no_action() -> 
 def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_too() -> None:
     """The predicate stays official-source membership, not a Sociedades-only exemption."""
     from ....application.calculations import CalculationObservationRepository
-    from ....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
     from ....domain.calculations.registry import RegistryModeloObservation
 
     _seed_profile("webco-with-history", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)

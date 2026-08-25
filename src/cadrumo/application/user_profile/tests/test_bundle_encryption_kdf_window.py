@@ -36,12 +36,7 @@ from ....adapters.persistence.storage.master_key import (
     KdfParams,
 )
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfilePortableExport, UserProfileRecord
-from .._bundle_encryption import (
-    EncryptedProfileBundleError,
-    EncryptedProfileBundleExport,
-    decrypt_profile_bundle_with_passphrase,
-    encrypt_profile_bundle_for_passphrase,
-)
+from cadrumo.application.user_profile.bundle_encryption import EncryptedProfileBundleError, EncryptedProfileBundleExport, decrypt_profile_bundle_with_passphrase, encrypt_profile_bundle_for_passphrase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

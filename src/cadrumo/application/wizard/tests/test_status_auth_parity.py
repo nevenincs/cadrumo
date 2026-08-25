@@ -20,7 +20,7 @@ import pytest
 
 from ....tests.secure_sql import isolated_profile_storage
 from ...state_projection import build_auth_readiness
-from ...workflow import WorkflowState
+from cadrumo.application.workflow.state_models import WorkflowState
 from .._status import build_wizard_status
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

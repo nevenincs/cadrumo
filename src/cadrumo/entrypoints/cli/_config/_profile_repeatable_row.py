@@ -35,7 +35,7 @@ def profile_add_row(
 ) -> None:
     """Add one row through the application-owned schema and atomic writer."""
     activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile import add_profile_repeatable_section_row
+    from ....application.user_profile.section_rows import add_profile_repeatable_section_row
     from .._config_payloads import ConfigProfileAddRowResult
     from ._profile_support import resolve_active_profile_pointer
 

@@ -25,11 +25,12 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
 from ....core import AuthProviderKind
 from ....core.config import override_settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
-from ...workflow import workflow_state_repository
 from ..actions import update_auth
 from ..sessions import _resolve_provider_kind
 

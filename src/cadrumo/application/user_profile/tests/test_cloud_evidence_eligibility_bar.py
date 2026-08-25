@@ -46,7 +46,7 @@ from ....core import ServiceCapability, scan_directory
 from ....core.config import Settings, load_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....llm import EvidenceConsentToken, LLMConsentError, cloud_evidence_read_permitted, mint_evidence_consent_token
-from .. import CapabilitySource, resolve_capability
+from cadrumo.application.user_profile.capabilities import CapabilitySource, resolve_capability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -226,7 +226,7 @@ def test_every_minting_surface_sources_eligibility_from_the_canonical_resolver()
 
 def test_the_canonical_resolver_reads_the_capability_it_claims_to() -> None:
     """Anchor the resolver to its capability, so a rename cannot make the sweep pass vacuously."""
-    from .._capabilities import cloud_evidence_upload_eligible_for_active_profile
+    from cadrumo.application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
 
     source = inspect.getsource(cloud_evidence_upload_eligible_for_active_profile)
     assert "ServiceCapability.CLOUD_EVIDENCE_UPLOAD" in source

@@ -20,7 +20,7 @@ from ....adapters.persistence.storage import SensitivityClass
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....application.live import ExpedientesCapture, ExpedientesService, NotificationsService
 from ....application.overview import OverviewCalendarRange, build_overview_calendar
-from ....application.user_profile import record_to_values
+from ....application.user_profile.projections import record_to_values
 from ....core import Period
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
@@ -911,7 +911,7 @@ def test_operator_manual_censo_facts_are_never_treated_as_aeat_verified() -> Non
     nothing stamps the verified censo tags, so the verified-key set stays empty
     for a hand-entered profile and the calendar keeps its unverified posture.
     """
-    from ....application.user_profile import CENSO_SOURCE_TAG
+    from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
     from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
     from ....domain.user_profile import UserProfileFact, UserProfileRecord
 

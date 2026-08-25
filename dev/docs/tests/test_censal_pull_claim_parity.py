@@ -26,7 +26,7 @@ import re
 
 import pytest
 
-from cadrumo.application.user_profile import CENSAL_ADOPTABLE_PATHS
+from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 
 from ..._paths import REPO_ROOT
 

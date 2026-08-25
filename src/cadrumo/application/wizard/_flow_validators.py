@@ -26,7 +26,7 @@ from ...core import OBJECT_TUPLE_ADAPTER
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ..flows.definition import FlowDefinition, FlowPage, FlowRepeatingGroup
 from ..flows.validators import CrossFieldValidator, ValidationVerdict, register_cross_field_validator
-from ..user_profile import projection_for_taxpayer
+from ..user_profile.projections import projection_for_taxpayer
 
 TAXPAYER_PROJECTION_VALIDATOR_ID = "taxpayer-projection-constructs"
 """Registered id of the single flow-scope taxpayer-construction validator."""

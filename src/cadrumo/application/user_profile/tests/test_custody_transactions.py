@@ -44,17 +44,9 @@ from ....domain.modelos import ModeloCode, ModeloRecord, derive_filing_record_id
 from ... import user_profile as user_profiles
 from ...evidence import LegalHoldCaseAuthority
 from ...filing import FilingRetentionAuthority
-from .._custody_repository import profile_custody_transaction_lock
-from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
-from .._custody_transactions import (
-    ProfileCustodyHoldEvidence,
-    ProfileCustodyTransactionConflictError,
-    ProfileCustodyTransactionCorruptError,
-    ProfileCustodyTransactionJournal,
-    ProfileCustodyTransactionOperation,
-    ProfileCustodyTransactionRefusalError,
-    ProfileCustodyTransactionState,
-)
+from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
+from cadrumo.application.user_profile.custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
+from cadrumo.application.user_profile.custody_transactions import ProfileCustodyHoldEvidence, ProfileCustodyTransactionConflictError, ProfileCustodyTransactionCorruptError, ProfileCustodyTransactionJournal, ProfileCustodyTransactionOperation, ProfileCustodyTransactionRefusalError, ProfileCustodyTransactionState
 from ..profile_pointer import ActiveProfilePointerTransactionError, active_profile_pointer_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -223,7 +215,7 @@ def _hold_transaction_lock_in_sibling(
     swallow any window short enough to be a useful contention probe.
     """
     from ....tests.profile_persistence import composed_profile_persistence_ports
-    from .._custody_repository import profile_custody_transaction_lock
+    from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
 
     with composed_profile_persistence_ports():
         result_queue.put("ready")

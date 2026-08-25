@@ -148,7 +148,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     """
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...application.operator_surface import build_root_landing_report
-    from ...application.workflow import list_profile_buckets
+    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ._root_landing import render_cli_root_landing_lines
     from ._root_payloads import RootStatusResult
@@ -181,7 +181,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     # but are deferred until a verb that actually needs them is
     # invoked.
     from ...application.overview import build_overview_status_report
-    from ...application.workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     workflow_state = workflow_state_repository().load()
     overview_report = build_overview_status_report(state=workflow_state)
@@ -198,7 +198,8 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
     bucket id, then pins the override to the resolved UUID.
     """
     from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
-    from ...application.workflow import ProfileLabelAmbiguousError, resolve_profile_bucket
+    from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
+    from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.config import override_settings
     from ._errors import CliRefusedBoundaryError
 
@@ -272,10 +273,8 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     an arbitrary pick.
     """
     from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
-    from ...application.workflow import (
-        ProfileLabelAmbiguousError,
-        resolve_profile_bucket,
-    )
+    from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
+    from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config import override_settings
     from ...core.errors import CadrumoError

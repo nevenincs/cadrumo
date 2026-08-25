@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.user_profile import projection_for_taxpayer
+from ....application.user_profile.projections import projection_for_taxpayer
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._common import _declared_tax_id
 

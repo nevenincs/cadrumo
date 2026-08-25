@@ -92,7 +92,7 @@ def project_registered_values(
     localized non-official-evidence suffix is appended to the string so the
     operator sees the provenance without a separate channel.
     """
-    from ..user_profile import record_to_effective_facts
+    from ..user_profile.projections import record_to_effective_facts
 
     effective = record_to_effective_facts(record)
     registered: dict[str, str] = {}

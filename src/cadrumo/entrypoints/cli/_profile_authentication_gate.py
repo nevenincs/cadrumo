@@ -30,7 +30,7 @@ from ._profile_authentication_contract import (
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from ...application.workflow import ProfileBucketPointer
+    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
 
 
 _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
@@ -122,8 +122,8 @@ def _resolve_login_target_or_refuse(raw: str):
         ProfileSelectionFailure,
         profile_selection_failure_verdict,
     )
-    from ...application.user_profile import resolve_login_target
-    from ...application.workflow import ProfileLabelAmbiguousError
+    from ...application.user_profile.login_session import resolve_login_target
+    from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
     from ...domain.user_profile import ProfileNotFoundError
     from ._common import attach_cli_policy_verdict
     from ._errors import CliRefusedBoundaryError
@@ -222,7 +222,7 @@ def preflight_parsed_leaf(
         )
 
     if spec.allow_unregistered_profile_diagnostic:
-        from ...application.workflow import read_profile_bucket_by_id
+        from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
         from ...core.bucket_pointer import resolve_active_bucket_id
 
         active = resolve_active_bucket_id()
@@ -274,7 +274,7 @@ def resolved_command_profile_target(ctx: typer.Context) -> ProfileBucketPointer 
     value = cast("dict[str, object]", ctx.find_root().ensure_object(dict)).get(_RESOLVED_PROFILE_TARGET_KEY)
     if value is None:
         return None
-    from ...application.workflow import ProfileBucketPointer
+    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
 
     if not isinstance(value, ProfileBucketPointer):
         raise TypeError("resolved command profile target has an invalid type")
@@ -292,7 +292,7 @@ def consume_root_fallback(
 ) -> None:
     """Read all required payloads, authenticate exactly, and assert the session."""
     from ...adapters.persistence.storage import active_bucket_session_serves
-    from ...application.user_profile import login_profile
+    from ...application.user_profile.login_session import login_profile
 
     _read_and_stage_leaf(spec=spec, arguments=arguments, selection=leaf)
     payload = read_profile_secret_payload(root_profile_secret_model(), selection=root)

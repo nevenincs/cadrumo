@@ -23,15 +23,7 @@ from ...core.time import validate_utc_aware
 from ...domain.modelos import ModeloRecord
 from ...domain.retention import RetentionFloorAssessment, assess_retention_floor
 from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
-from ..user_profile import (
-    ProfileCustodyLocalRecordStore,
-    canonical_snapshot_bytes,
-    canonical_snapshot_digest,
-    canonical_snapshot_payload,
-    default_profile_custody_local_record_store,
-    ensure_profile_custody_owner_root,
-    profile_custody_owner_root,
-)
+from ..user_profile.custody_ports import ProfileCustodyLocalRecordStore, canonical_snapshot_bytes, canonical_snapshot_digest, canonical_snapshot_payload, default_profile_custody_local_record_store, ensure_profile_custody_owner_root, profile_custody_owner_root
 
 _MAX_BYTES = 32 * 1024
 

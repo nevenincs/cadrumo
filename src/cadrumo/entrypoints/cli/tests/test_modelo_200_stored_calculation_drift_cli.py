@@ -86,7 +86,7 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
     )
     assert profile_edit.exit_code == 0, profile_edit.output
 
-    caplog.set_level(logging.WARNING, logger="cadrumo.application.workflow._engine")
+    caplog.set_level(logging.WARNING, logger="cadrumo.application.workflow.engine")
     verification = _invoke(
         [
             "app", "modelo", "work", "verify",

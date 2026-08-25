@@ -98,9 +98,9 @@ def _has_params(value: object) -> TypeGuard[_CommandWithParams]:
 # each resolves; a rename of the cited command reds this list, which is exactly
 # the protection the rename safety net depends on.
 _LITERAL_HINT_STRINGS: tuple[str, ...] = (
-    # cadrumo.application.workflow._engine: draft-build-refused next_action.
+    # cadrumo.application.workflow.engine: draft-build-refused next_action.
     "aeat app modelo work calculate",
-    # cadrumo.application.workflow._engine: draft-has-errors next_action.
+    # cadrumo.application.workflow.engine: draft-has-errors next_action.
     "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
     # cadrumo.entrypoints.cli._modelo_rendering: local-finish-line guidance.
     "aeat app modelo export",

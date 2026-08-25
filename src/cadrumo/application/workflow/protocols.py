@@ -6,7 +6,7 @@ surfaces — not concrete classes — for two reasons:
 1. **Cross-subpackage decoupling.** Each Protocol lets the workflow
    engine integrate with an in-house subpackage without forcing a
    hard import dependency at the engine layer; adapters in
-   :mod:`application.workflow._adapters` translate the richer real surfaces
+   :mod:`application.workflow.adapters` translate the richer real surfaces
    onto these narrow Protocols.
 2. **Protocol-shaped tests.** Tests can supply narrow
    Protocol-conforming classes per scenario without importing the
@@ -20,7 +20,7 @@ for a given :class:`TaxpayerProfile`.
 See Also:
     :class:`~application.workflow.WorkflowEngine`
         Orchestrates these contracts stage by stage.
-    :mod:`application.workflow._adapters`
+    :mod:`application.workflow.adapters`
         Adapts production deadline, draft-building, submission, and live-read
         components to these contracts.
     :class:`~domain.submission.SubmissionEngine`

@@ -16,7 +16,7 @@ See Also:
         :class:`WorkflowStateRepository`.
     :class:`~application.workflow.WorkflowStateResetFingerprint`
         Row-level, plaintext-free reset audit summary emitted before deletion.
-    :func:`application.workflow._events.emit_workflow_state_reset`
+    :func:`application.workflow.events.emit_workflow_state_reset`
         Writes the append-only ``workflow_state.reset`` bucket event before the
         state row is removed.
     :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`
@@ -158,6 +158,7 @@ class WorkflowStateRepository:
         objects: SecureObjectRepository | None = None,
         emit_reset: Callable[..., object] = emit_workflow_state_reset,
     ) -> None:
+        """Bind the active-bucket store and the reset-event emitter."""
         self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
         # Injectable so the emit-first ordering contract in
         # reset_workflow_state can be exercised with a real failing
@@ -435,6 +436,7 @@ class WorkflowRunRepository:
     """Encrypted secure-object repository for :class:`WorkflowResult` runs."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        """Bind the active-bucket secure-object store for workflow runs."""
         self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     def save(self, result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:

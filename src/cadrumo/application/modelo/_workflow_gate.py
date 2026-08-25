@@ -24,7 +24,7 @@ mark-as-filed persistence. Aborted workflow runs are persisted for audit and the
 surfaced as :class:`~cadrumo.application.modelo.ModeloWorkflowGateError`.
 
 See Also:
-    :mod:`~cadrumo.application.workflow._engine`:
+    :mod:`~cadrumo.application.workflow.engine`:
         Owns deadline-independence for VERIFY and late-local FILE behavior.
     :mod:`~cadrumo.application.workflow._deadline_stage`:
         Selects the workflow obligation before submission preflight is reached.
@@ -60,17 +60,13 @@ from ..filing import (
     build_runtime_schema_provider,
     filing_profile_from_taxpayer,
 )
-from ..workflow import (
-    DeadlineEngineAdapter,
-    ModeloInputs,
-    RegistryModeloDraftProtocol,
-    WorkflowEngine,
-    WorkflowInputMismatchError,
-    WorkflowPurpose,
-    WorkflowResult,
-    WorkflowRunRepository,
-    WorkflowStage,
-)
+from cadrumo.application.workflow.adapters import DeadlineEngineAdapter
+from cadrumo.domain.filing import ModeloInputs
+from cadrumo.application.workflow.protocols import RegistryModeloDraftProtocol
+from cadrumo.application.workflow.engine import WorkflowEngine
+from cadrumo.application.workflow.errors import WorkflowInputMismatchError
+from cadrumo.application.workflow.run_models import WorkflowPurpose, WorkflowResult, WorkflowStage
+from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from ._action_errors import ModeloWorkflowGateError
 from ._revision_replay_inputs import revision_filing_replay_inputs
 from ._row_source_identity_replay import attach_revision_row_source_identities

@@ -1,5 +1,5 @@
 """Unit tests for the strict pydantic v2 records in
-:mod:`cadrumo.application.workflow._run_models`.
+:mod:`cadrumo.application.workflow.run_models`.
 
 Exercises :func:`cadrumo.application.workflow.compute_run_id` hash
 stability and the validators on :class:`cadrumo.application.workflow.WorkflowStep`,
@@ -38,19 +38,9 @@ from ...operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from .. import (
-    SiteHealthAlert,
-    WorkflowAbortReason,
-    WorkflowDeadlineContextDetails,
-    WorkflowObligationFacts,
-    WorkflowResult,
-    WorkflowSiteHealthFacts,
-    WorkflowStage,
-    WorkflowStep,
-    WorkflowValidationFailedDetails,
-    compute_run_id,
-)
-from .._engine_helpers import DeadlineRole
+from cadrumo.application.workflow.run_models import SiteHealthAlert, WorkflowDeadlineContextDetails, WorkflowObligationFacts, WorkflowResult, WorkflowSiteHealthFacts, WorkflowStage, WorkflowStep, WorkflowValidationFailedDetails, compute_run_id
+from cadrumo.application.workflow.abort import WorkflowAbortReason
+from ..engine_helpers import DeadlineRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -246,7 +246,7 @@ def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_writer(
     from ...adapters.persistence.storage.bucket import bucket_paths, lock_path
     from ...core.bucket_pointer import pointer_path
     from .._config_reset_repository import ConfigResetJournalRepository
-    from ..workflow import read_profile_bucket_by_id
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")

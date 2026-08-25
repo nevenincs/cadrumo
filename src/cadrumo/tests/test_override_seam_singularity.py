@@ -26,7 +26,7 @@ It is a scoped context manager (not a swappable slot) backed by a
 ``contextvars.ContextVar`` named ``_settings_override`` — NOT an ``_override_*``
 global, so rule 1 never touches it — and it has real production callers
 (``application.auth.sessions``, ``operator_scope``, ``credentials``,
-``application.workflow._profile_health``) that scope active-profile settings for
+``application.workflow.profile_health``) that scope active-profile settings for
 one call tree. The carve-out is pinned to exactly one function name in exactly
 one module, so a second ``override_*`` cannot hide behind it: an
 ``override_settings`` defined anywhere else, or any other ``override_*`` in

@@ -294,7 +294,7 @@ def _resolve_evidence(
     # profile's llm_vision capability — opting out disables scanned/image reading
     # entirely (a typed refusal, never a silent skip).
     from ...core import ServiceCapability
-    from ..user_profile import resolve_active_capability
+    from ..user_profile.capabilities import resolve_active_capability
 
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         raise PurchaseInvoiceEvidenceInputError(

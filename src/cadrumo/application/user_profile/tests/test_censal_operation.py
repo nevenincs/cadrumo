@@ -23,18 +23,12 @@ from ....adapters.outbound.aeat.sede import parse_censal_datos
 from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ....domain.buckets import BucketEventType
 from ....tests import FIXTURES_DIR
-from .._capsule_record import ProfileRecordStore
-from .._censal_operation import (
-    CENSAL_OPERATION_DEFINITION,
-    CensalFieldIntent,
-    CensalOperationAcquisition,
-    CensalOperationExecutor,
-    CensalReviewedFieldIntent,
-)
-from .._censo_sync import CENSO_SOURCE_TAG
-from .._cotejo_apply import CensoDivergence, apply_cotejo, open_censo_divergences
-from .._profile_record_repository import ProfileRecordRepository
-from .._projections import record_to_path_values
+from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
+from cadrumo.application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, CensalFieldIntent, CensalOperationAcquisition, CensalOperationExecutor, CensalReviewedFieldIntent
+from cadrumo.application.user_profile.censo_sync import CENSO_SOURCE_TAG
+from cadrumo.application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo, open_censo_divergences
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.application.user_profile.projections import record_to_path_values
 from .test_censal_operation_executor import (
     _NOW,
     _RESPONSE_TOKEN,

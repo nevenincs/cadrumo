@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.workflow import read_profile_bucket
+from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage
 

@@ -89,9 +89,9 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from ...application.overview import CalendarWarning
-    from ...application.user_profile import ProfileRecordRepository
-    from ...application.workflow import ProfileBucketPointer as _ProfileBucketPointer
-    from ...application.workflow import WorkflowState
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
+    from cadrumo.application.workflow.state_models import WorkflowState
     from ...domain.deadlines import TaxpayerProfile
     from ._errors import CliRefusedBoundaryError
 
@@ -111,7 +111,7 @@ def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
     resolve to nothing and pass through verbatim, which is what this surface
     already showed for them.
     """
-    from ...application.user_profile import format_profile_selector_requirements
+    from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
 
@@ -179,7 +179,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
         CliExceptionPrecondition,
         cli_exception_no_recovery_verdict,
     )
-    from ...application.user_profile import format_profile_selector_requirements
+    from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
     from ...domain.deadlines import EntityType
@@ -326,7 +326,7 @@ def overview_status(
     :func:`build_overview_status_report`; the period branch emits only the
     matching draft rows.
     """
-    from ...application.user_profile import record_to_values
+    from ...application.user_profile.projections import record_to_values
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     current = _state() if resolve_active_bucket_id() is not None else None
@@ -369,7 +369,7 @@ def overview_calendar(
     persisted :class:`OverviewCalendarEvent` and filing-evidence rows, and then
     delegates the legal calendar projection to :func:`build_overview_calendar`.
     """
-    from ...application.user_profile import record_to_values
+    from ...application.user_profile.projections import record_to_values
 
     activate_subcommand_output_language(ctx, output_language)
 
@@ -493,7 +493,7 @@ def _profile_calendar_inputs(
     calendars in one payload, and each loader still returns schedule-only
     evidence rather than raising.
     """
-    from ...application.user_profile import projection_for_taxpayer, record_to_values
+    from ...application.user_profile.projections import projection_for_taxpayer, record_to_values
 
     try:
         record = repository.load(bucket_id)
@@ -533,7 +533,7 @@ def _calendar_profile_groups(
     active_bucket_id: str | None,
 ) -> tuple[dict[str, _ProfileBucketPointer], list[_ProfileBucketPointer], list[_ProfileBucketPointer]]:
     """Classify registered profiles without treating labels as readiness authority."""
-    from ...application.user_profile import ProfileRecordRepository
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...domain.user_profile import ProfileNotFoundError, ProfileSetupState
 
     active: dict[str, _ProfileBucketPointer] = {}
@@ -567,7 +567,7 @@ def _profile_calendar_projection(
     show_suppressed: bool,
 ) -> tuple[dict[str, object], list[str], list[Notice]] | None:
     """Build one profile calendar block, or return ``None`` for a skipped bucket."""
-    from ...application.user_profile import ProfileRecordRepository
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 
     inputs = _profile_calendar_inputs(
         ProfileRecordRepository.for_current_session(bucket_id),
@@ -609,7 +609,7 @@ def _overview_calendar_all_profiles(
     :class:`OverviewCalendarResult` schema declared for
     ``overview.calendar``.
     """
-    from ...application.workflow import list_profile_buckets
+    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     today = today_madrid()
@@ -665,7 +665,7 @@ def overview_agenda(
     lines.
     """
     from ...application.overview import build_overview_agenda
-    from ...application.user_profile import record_to_values
+    from ...application.user_profile.projections import record_to_values
 
     current = _state()
     as_of_date = _parse_iso_date(as_of, label="--date") if as_of else today_madrid()
@@ -706,7 +706,7 @@ def overview_backlog(
     workflows.
     """
     from ...application.overview import build_overview_backlog
-    from ...application.user_profile import record_to_values
+    from ...application.user_profile.projections import record_to_values
 
     current = _state()
     parsed_from = _parse_iso_date(from_date, label="--from") if from_date else None

@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 #: that either paints a minted secret or drives a terminal write out from under
 #: the compositor. Both are the failure this gate exists to catch.
 _MINTING_CALLABLES: tuple[tuple[str, str], ...] = (
-    ("cadrumo.application.user_profile._custody_ports", "create_profile_recovery_enrollment_material"),
+    ("cadrumo.application.user_profile.custody_ports", "create_profile_recovery_enrollment_material"),
     ("cadrumo.application.user_profile", "mint_profile_creation_recovery"),
     # The primitive beneath both, and a SECOND reachable path: it is exported from
     # the storage facade in its own right, so a prohibition naming only

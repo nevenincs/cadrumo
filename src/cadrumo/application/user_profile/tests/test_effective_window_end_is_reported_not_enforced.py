@@ -33,7 +33,8 @@ from ....domain.user_profile import (
     UserProfileRecord,
     load_user_profile_schema,
 )
-from .. import ProfileValidationService, record_to_path_values
+from cadrumo.application.user_profile.validation import ProfileValidationService
+from cadrumo.application.user_profile.projections import record_to_path_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

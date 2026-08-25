@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from dataclasses import fields, is_dataclass
 from inspect import signature
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
@@ -12,6 +15,7 @@ from cadrumo.application.filing import FilingExportProofChannel, FilingExportPro
 from cadrumo.core import RegistryAuthorityGrade
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
+    RegistryDiagnosticFilingRevision,
     RegistryValidationError,
     ValidatedRegistryAuthority,
     bundled_authority,
@@ -20,6 +24,9 @@ from cadrumo.domain.calculations.registry import (
 
 from ..filing_export_proof import (
     CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
+    FilingExportConformanceEnrollmentReport,
+    FilingExportConformanceVector,
+    _derive_static_filing_export_conformance_enrollment,
     canonical_two_channel_filing_export_proof_authority,
     derive_diagnostic_filing_export_conformance_enrollment,
 )
@@ -27,6 +34,22 @@ from ..filing_export_proof import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+
+
+def _static_data_graph(value: object) -> Iterator[object]:
+    """Walk only values stored in the static diagnostic projection."""
+    yield value
+    if isinstance(value, (str, int, float, bool, type(None))):
+        return
+    if isinstance(value, tuple):
+        for item in value:
+            yield from _static_data_graph(item)
+        return
+    if is_dataclass(value) and not isinstance(value, type):
+        for field in fields(value):
+            yield from _static_data_graph(getattr(value, field.name))
+        return
+    raise AssertionError(f"diagnostic projection retained a non-static value: {type(value).__name__}")
 
 
 def test_canonical_authority_cannot_accept_a_preconstructed_replay_receipt() -> None:
@@ -58,7 +81,11 @@ def test_diagnostic_classification_has_no_runtime_authority_or_success_path() ->
 
     assert not isinstance(classification, ValidatedRegistryAuthority)
     assert not {"_authority", "snapshot", "modelo", "catalogues", "validate_modelo"}.intersection(dir(classification))
-    assert not hasattr(classification, "_authority")
+    with pytest.raises(AttributeError):
+        object.__getattribute__(classification, "_authority")
+    projection_values = tuple(_static_data_graph(classification))
+    assert not any(isinstance(value, ValidatedRegistryAuthority) for value in projection_values)
+    assert not any(callable(value) for value in projection_values)
     with pytest.raises(TypeError, match="requires a validated registry authority"):
         canonical_two_channel_filing_export_proof_authority(
             workspace_root=_REPOSITORY_ROOT,
@@ -80,6 +107,52 @@ def test_diagnostic_classification_has_no_runtime_authority_or_success_path() ->
     assert enrollment.residues
 
 
+def test_static_projection_has_one_residue_classifier_and_strict_failure_cannot_materialize() -> None:
+    """Identical static facts preserve residue while strict failure closes success."""
+    selected = RegistryDiagnosticFilingRevision(
+        modelo="100",
+        revision="static-refusal",
+        selection_coordinates=(),
+        layout_ids=(),
+        layout_json=None,
+        inspection_json=None,
+        refusal_reason="law_selection_failed",
+        refusal_detail="synthetic static selection failure",
+    )
+    strict_report = _derive_static_filing_export_conformance_enrollment(
+        workspace_root=_REPOSITORY_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        revisions=(selected,),
+        vectors=(),
+        strict_validation_error=None,
+        validated_authority=None,
+    )
+    diagnostic_report = _derive_static_filing_export_conformance_enrollment(
+        workspace_root=_REPOSITORY_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        revisions=(selected,),
+        vectors=(),
+        strict_validation_error="whole-registry validation failed",
+        validated_authority=None,
+    )
+
+    assert diagnostic_report.residues == strict_report.residues
+    assert not diagnostic_report.materializable_vectors
+    blocked_vector = cast(
+        FilingExportConformanceVector,
+        SimpleNamespace(evidence=SimpleNamespace(coordinate=SimpleNamespace(modelo="100", revision="static-refusal"))),
+    )
+    with pytest.raises(ValueError, match="cannot materialize"):
+        FilingExportConformanceEnrollmentReport(
+            full_registry_validation_error="whole-registry validation failed",
+            provenance_candidates=(),
+            materializable_vectors=(blocked_vector,),
+            residues=(),
+        )
+
+
 def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:
     """Every public candidate retains its exact refusal residue."""
     try:
@@ -98,7 +171,7 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
             vectors=CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
         )
         selected_coordinates = {
-            (str(selected.modelo), str(selected.revision.id)) for selected in classification.filing_revisions()
+            (str(selected.modelo), str(selected.revision)) for selected in classification.filing_revisions
         }
         materialized_coordinates = {
             (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))

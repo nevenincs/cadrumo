@@ -364,7 +364,7 @@ def google_sync_probe(
     resolves to a real folder, and (when `--no-read-only`) a sentinel
     file round-trips into `_probe/`.
     """
-    from ....application.user_profile import resolve_active_capability
+    from ....application.user_profile.capabilities import resolve_active_capability
     from ....core import ServiceCapability
 
     # The read-only probe is a pure connectivity read and stays ungated. The
@@ -934,7 +934,7 @@ def _inspect_pushed_remote_mirror(
 
 
 def _google_sync_push_context() -> tuple[str, StorageProvider, str]:
-    from ....application.user_profile import resolve_active_capability
+    from ....application.user_profile.capabilities import resolve_active_capability
     from ....core import ServiceCapability
 
     if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:

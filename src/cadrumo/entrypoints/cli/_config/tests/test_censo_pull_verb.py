@@ -30,12 +30,8 @@ import typer
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
-from .....application.user_profile import (
-    CENSO_SOURCE_TAG,
-    CensalFieldIntent,
-    CensalReviewFieldProjectionV1,
-    CensalReviewProjectionV1,
-)
+from .....application.user_profile.censo_sync import CENSO_SOURCE_TAG
+from .....application.user_profile.censal_operation import CensalFieldIntent, CensalReviewFieldProjectionV1, CensalReviewProjectionV1
 from .....core.config import Settings
 from .....tests.cli_runner import invoke_cached_cli
 from ... import app as _live_app
@@ -248,7 +244,7 @@ def test_the_fiscal_identity_is_reported_in_none_of_the_three_outcomes() -> None
     Scoping the derivation to the adoptable paths is what keeps the three
     outcomes about fields the reconciliation actually decides.
     """
-    from .....application.user_profile import CENSAL_ADOPTABLE_PATHS, CensalReconciliation
+    from .....application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CensalReconciliation
     from .....domain.user_profile import UserProfileFact
 
     assert "identity.tax_id" not in CENSAL_ADOPTABLE_PATHS

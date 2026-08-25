@@ -32,12 +32,8 @@ from ...operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from ...workflow import (
-    WorkflowAbortReason,
-    WorkflowResult,
-    WorkflowStage,
-    WorkflowStep,
-)
+from cadrumo.application.workflow.abort import WorkflowAbortReason
+from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
 from .. import ModeloWorkflowGateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

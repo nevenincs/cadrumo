@@ -2,7 +2,7 @@
 
 Each adapter is a thin translation layer: no domain decisions live here,
 only the minimal surface normalisation required by the narrow Protocols
-in :mod:`application.workflow._protocols`. The
+in :mod:`application.workflow.protocols`. The
 :func:`default_engine` factory composes the adapters into a
 :class:`~application.workflow.WorkflowEngine` and is the entry point
 production call sites (notably the CLI) use to obtain a fully-wired
@@ -16,7 +16,7 @@ each and records the skipped stages as "not wired" diagnostics rather
 than failing.
 
 See Also:
-    :mod:`application.workflow._protocols`
+    :mod:`application.workflow.protocols`
         Declares the narrow contracts each adapter satisfies.
     :class:`~application.workflow.WorkflowEngine`
         Consumes the adapted deadline, draft-building, submission, and live

@@ -47,7 +47,7 @@ from ...domain.modelos import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.user_profile import ProfileNotFoundError, UserProfileFact, UserProfileRecord
-from ..user_profile import ProfileRecordRepository
+from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
 if TYPE_CHECKING:

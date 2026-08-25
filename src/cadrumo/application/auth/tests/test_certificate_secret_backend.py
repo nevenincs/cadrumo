@@ -312,7 +312,7 @@ class TestSecretStoreNaturalKey:
     """The secret key addresses exactly the spellings the registry can persist.
 
     The key helper used to strip for itself while the durable
-    :class:`~application.workflow.CertificateSourceRecord` preserved padding.
+    :class:`~application.auth.models.CertificateSourceRecord` preserved padding.
     A source persisted as ``" personal "`` therefore had its passphrase filed
     under ``"personal"``, so two distinct persisted names aliased onto one
     secret. Both sides now share the canonical name contract, so the key can

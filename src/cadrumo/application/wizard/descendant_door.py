@@ -159,7 +159,20 @@ def build_descendant_door(record: UserProfileRecord | None) -> tuple[FlowDefinit
     return definition, resume_state
 
 
-def persist_descendant_door_answers(answers: Mapping[str, str]) -> UserProfileRecord:
+def load_active_descendant_record() -> UserProfileRecord:
+    """Load the authoritative record that one descendant-door run will edit."""
+    from ...core.bucket_pointer import require_active_bucket_id
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+
+    profile_id = require_active_bucket_id()
+    return ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+
+
+def persist_descendant_door_answers(
+    answers: Mapping[str, str],
+    *,
+    baseline: UserProfileRecord,
+) -> UserProfileRecord:
     """Commit the door's submitted answers as the full descendant fact set.
 
     Projects the committed page-keyed answers into the canonical
@@ -174,38 +187,38 @@ def persist_descendant_door_answers(answers: Mapping[str, str]) -> UserProfileRe
     """
     from ...core.bucket_pointer import require_active_bucket_id
     from ...domain.user_profile import UserProfileFact
-    from ..user_profile import (
-        ProfileFactWriteDoor,
-        ProfileRecordRepository,
-        apply_profile_fact_changes,
-    )
+    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+
     profile_id = require_active_bucket_id()
-    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    if str(baseline.profile_id) != profile_id:
+        raise ValueError("descendant door baseline does not belong to the active profile")
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_answers(answers))
-    clearing = descendant_clearing_facts(record, answers)
+    clearing = descendant_clearing_facts(baseline, answers)
     return apply_profile_fact_changes(
         profile_id=profile_id,
         changes=(*facts, *clearing),
         door=ProfileFactWriteDoor.DESCENDANTS,
+        expected_record=baseline,
     )
 
 
 def run_descendant_door(
-    record: UserProfileRecord | None,
     *,
     input: Input | None = None,
     output: Output | None = None,
 ) -> tuple[FlowState, ReviewProjection, UserProfileRecord]:
     """Drive and persist one descendant door invocation through the real line frontend.
 
-    The CLI supplies the current profile record and leaves ``input``/``output``
-    unbound for a real terminal. Headless callers bind prompt-toolkit devices,
+    The door resolves and loads the authenticated active profile itself before
+    prompting, binding the submitted write to that exact revision and digest.
+    Headless callers bind prompt-toolkit devices,
     which exercises the same production frontend and the same atomic profile
     writer without replacing either boundary with a test callback.
     """
     from ..flows.line_frontend import LineFlowFrontend
 
-    definition, resume_state = build_descendant_door(record)
+    baseline = load_active_descendant_record()
+    definition, resume_state = build_descendant_door(baseline)
     state, projection = LineFlowFrontend(
         definition,
         input=input,
@@ -214,7 +227,7 @@ def run_descendant_door(
         mode=FlowMode.MODIFY,
         resume_state=resume_state,
     )
-    persisted = persist_descendant_door_answers(state.answers)
+    persisted = persist_descendant_door_answers(state.answers, baseline=baseline)
     return state, projection, persisted
 
 
@@ -224,6 +237,7 @@ __all__ = [
     "DescendantDoorAnswers",
     "build_descendant_door",
     "build_descendant_door_definition",
+    "load_active_descendant_record",
     "persist_descendant_door_answers",
     "run_descendant_door",
 ]

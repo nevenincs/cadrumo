@@ -19,7 +19,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from ....application.user_profile import logout_active_profile
+from ....application.user_profile.login_session import logout_active_profile
 from ....core.config import load_settings
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
@@ -87,13 +87,13 @@ def ensure_profile() -> str:
     again before returning so the login surface meets the locked machine
     it exists for. Caller must already be inside :func:`harness_storage`.
     """
-    from ....application.workflow import list_profile_buckets
+    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
     existing = list_profile_buckets()
     if existing:
         return next(iter(existing))
 
-    from ....application.user_profile import register_profile_with_credentials
+    from ....application.user_profile.registration import register_profile_with_credentials
     from ....domain.user_profile import UserProfileFact
 
     outcome = register_profile_with_credentials(
@@ -113,7 +113,7 @@ def registration_attempt(
     recovery_handover,
 ):
     """Adapt public profile registration into the TUI screen's result contract."""
-    from ....application.user_profile import ProfileRegistrationError, register_profile_with_credentials
+    from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
     from ....domain.user_profile import UserProfileFact
     from ....entrypoints.tui.secret.app import (
         RecoveryHandoverCancelledError,
@@ -155,7 +155,7 @@ def ensure_session() -> str:
     a surface rendered over a stand-in session would be a reading about
     the stand-in.
     """
-    from ....application.user_profile import login_profile
+    from ....application.user_profile.login_session import login_profile
 
     bucket_id = ensure_profile()
     login_profile(name=bucket_id, passphrase_callback=lambda *_args, **_kwargs: passphrase())

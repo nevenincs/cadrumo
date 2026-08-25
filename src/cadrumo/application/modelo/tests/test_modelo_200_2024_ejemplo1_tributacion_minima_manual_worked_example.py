@@ -131,7 +131,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
@@ -286,7 +286,12 @@ def _calculate_m200(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot(_M200, filing_year=_FILING_YEAR, period="0A")
+    snapshot = resources().modelos.authority.snapshot(
+        _M200,
+        filing_year=_FILING_YEAR,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M200,
@@ -404,7 +409,12 @@ def test_m200_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
     fixture.
     """
     authority = ValidatedRegistryAuthority.load(_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
-    snapshot = authority.snapshot(_M200, filing_year=_FILING_YEAR, period="0A")
+    snapshot = authority.snapshot(
+        _M200,
+        filing_year=_FILING_YEAR,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     policy = snapshot.verification_policy()
 
     for casilla_id in (_CASILLA_CUOTA_INTEGRA, _CASILLA_CUOTA_LIQUIDA, _CASILLA_CUOTA_DIFERENCIAL):

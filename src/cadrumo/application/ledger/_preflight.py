@@ -285,7 +285,7 @@ _HOME_OFFICE_FAMILIES = frozenset(
 
 
 def _bound_raw_afectacion_ratio(*, bucket_id: str) -> Decimal | None:
-    from ..user_profile import CensoSyncService
+    from ..user_profile.censo_sync import CensoSyncService
 
     return CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(profile_id=bucket_id)
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import CasillaId
-from ...workflow import WorkflowDeadlineContextDetails
+from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,

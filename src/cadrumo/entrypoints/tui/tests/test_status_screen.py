@@ -23,7 +23,7 @@ import pytest
 import yaml
 from textual.widgets import DataTable, Static
 
-from ....application.user_profile import notice_presentation
+from ....application.user_profile.presentation import notice_presentation
 from ....application.user_profile.status_projection import (
     StatusAuthView,
     StatusFactRow,

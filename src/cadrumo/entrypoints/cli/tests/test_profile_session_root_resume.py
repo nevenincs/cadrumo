@@ -75,7 +75,7 @@ def _isolated_root(tmp_path: Path) -> Iterator[Path]:
 
 
 def _bucket_id_or_none(label: str = _LABEL) -> str | None:
-    from ....application.workflow import read_profile_bucket
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
     pointer = read_profile_bucket(label)
     return pointer.bucket_id if pointer is not None else None
@@ -83,7 +83,7 @@ def _bucket_id_or_none(label: str = _LABEL) -> str | None:
 
 def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
     """Register one current credential capsule and return its immutable UUID."""
-    from ....application.user_profile import register_profile_with_credentials
+    from ....application.user_profile.registration import register_profile_with_credentials
 
     del tax_id  # Current registration creates the initial incomplete fact record.
     created = register_profile_with_credentials(
@@ -96,7 +96,7 @@ def _create_profile(label: str = _LABEL, *, tax_id: str = "12345678Z") -> str:
 
 def _login() -> None:
     """Establish the persisted session through the application login door."""
-    from ....application.user_profile import login_profile
+    from ....application.user_profile.login_session import login_profile
 
     login_profile(passphrase_callback=lambda: _PASSPHRASE)
 
@@ -119,7 +119,7 @@ def _login_and_require_persistence(storage_root: Path, bucket_id: str) -> None:
 
 def _resume(bucket_id: str) -> ProfileSessionRefusalReason | None:
     """Drive the shared resume authority the root callback itself calls."""
-    from ....application.user_profile import bind_resumed_profile_session
+    from ....application.user_profile.login_session import bind_resumed_profile_session
 
     return bind_resumed_profile_session(bucket_id=bucket_id)
 
@@ -183,7 +183,7 @@ class TestSilentResume:
         result = _invoke_decrypting_verb_without_the_secret_channel()
         assert result.exit_code == 0, result.output
 
-        from ....application.user_profile import bind_resumed_profile_session
+        from ....application.user_profile.login_session import bind_resumed_profile_session
 
         close_active_bucket_session()
         assert bind_resumed_profile_session(bucket_id=bucket_id) is None

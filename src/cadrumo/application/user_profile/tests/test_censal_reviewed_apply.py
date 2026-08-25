@@ -18,18 +18,13 @@ from ....domain.buckets import BucketEventType
 from ....domain.user_profile import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...workflow import WorkflowState
-from .._capsule_record import ProfileRecordConflictError, ProfileRecordSession, ProfileRecordStore
-from .._censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
-from .._censal_operation import (
-    CensalFieldIntent,
-    CensalProfileBaseline,
-    CensalReviewedFieldIntent,
-    CensalReviewedOperand,
-)
-from .._cotejo_apply import apply_cotejo
-from .._profile_record_repository import ProfileRecordRepository, bound_profile_record_session
-from .._registration import register_profile_with_credentials
+from cadrumo.application.workflow.state_models import WorkflowState
+from cadrumo.application.user_profile.capsule_record import ProfileRecordConflictError, ProfileRecordSession, ProfileRecordStore
+from cadrumo.application.user_profile.censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
+from cadrumo.application.user_profile.censal_operation import CensalFieldIntent, CensalProfileBaseline, CensalReviewedFieldIntent, CensalReviewedOperand
+from cadrumo.application.user_profile.cotejo_apply import apply_cotejo
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository, bound_profile_record_session
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

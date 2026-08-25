@@ -265,7 +265,7 @@ def test_repository_excludes_non_journals_and_bucket_discovery(
     tmp_path: Path,
 ) -> None:
     """External journal files are neither bucket targets nor repository members."""
-    from ..workflow import list_profile_buckets
+    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
     repository = ConfigResetJournalRepository(storage_root=tmp_path)
     operation = _operation()

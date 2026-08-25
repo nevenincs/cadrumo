@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from ...core.presentation import NoticePresentation
 
 if TYPE_CHECKING:
-    from ...application.workflow import WorkflowState
+    from cadrumo.application.workflow.state_models import WorkflowState
     from ...core.json_contract import Notice
     from ...domain.user_profile import ProfileFieldView, ProfileSchemaDefinition, UserProfileRecord
 
@@ -62,7 +62,7 @@ def build_status_page_data() -> StatusPageData:
     or unavailable live session therefore leaves only that zone unavailable;
     the projection never turns an operator-facing status read into a traceback.
     """
-    from ._presentation import notice_presentation
+    from .presentation import notice_presentation
 
     active_uuid, active_label = _resolve_active_identity()
     state = _load_workflow_state()
@@ -92,7 +92,7 @@ def _guarded_read_errors() -> tuple[type[BaseException], ...]:
 def _resolve_active_identity() -> tuple[str | None, str | None]:
     """Return the active profile identifier and display label, or no identity."""
     from ...core.bucket_pointer import resolve_active_bucket_id
-    from ..workflow import read_profile_bucket_by_id
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     try:
         active_uuid = resolve_active_bucket_id()
@@ -106,7 +106,7 @@ def _resolve_active_identity() -> tuple[str | None, str | None]:
 
 def _load_workflow_state() -> WorkflowState | None:
     """Load workflow state without turning unavailable custody into a failure."""
-    from ..workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     try:
         return workflow_state_repository().load()
@@ -130,7 +130,7 @@ def _build_profile_rows(
     record: UserProfileRecord | None = None,
 ) -> tuple[StatusProfileRow, ...]:
     """Project registered buckets while keeping locked records opaque."""
-    from ..workflow import list_profile_buckets
+    from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
     try:
         pointers = sorted(list_profile_buckets().values(), key=lambda pointer: pointer.label.casefold())
@@ -150,7 +150,7 @@ def _build_auth_view(state: WorkflowState | None, *, active_uuid: str | None) ->
     """Project application auth state and the live unlock-session deadlines."""
     from ...core.i18n import tr
     from ...domain.user_profile import load_user_profile_schema
-    from ._overview import profile_field_choices
+    from .overview import profile_field_choices
 
     idle_deadline, absolute_deadline = _active_profile_session_deadlines(active_uuid)
     if state is None:
@@ -178,7 +178,7 @@ def _build_auth_view(state: WorkflowState | None, *, active_uuid: str | None) ->
 
 def _active_profile_session_deadlines(active_uuid: str | None) -> tuple[datetime | None, datetime | None]:
     """Return live-session deadlines only when the session serves this profile."""
-    from ._login_session_port import profile_current_bucket_session, profile_session_serves_bucket
+    from .login_session_port import profile_current_bucket_session, profile_session_serves_bucket
 
     if active_uuid is None:
         return None, None
@@ -195,7 +195,7 @@ def build_active_profile_notices(record: UserProfileRecord | None) -> tuple[Noti
     """Return operator advisories shared by status and profile overview surfaces."""
     if record is None:
         return ()
-    from ._cotejo_apply import censo_divergence_notice
+    from .cotejo_apply import censo_divergence_notice
 
     notices: list[Notice] = []
     divergence_notice = censo_divergence_notice(record)
@@ -214,7 +214,7 @@ def _no_aeat_history_notice(record: UserProfileRecord) -> Notice | None:
     from ...domain.calculations.registry import derive_tax_route
     from ..calculations import CalculationObservationRepository
     from ..overview import no_aeat_history_notice
-    from ._projections import projection_for_taxpayer
+    from .projections import projection_for_taxpayer
 
     try:
         tax_route = derive_tax_route(projection_for_taxpayer(record))
@@ -234,8 +234,8 @@ def _build_fact_rows(
 ) -> tuple[StatusFactRow, ...]:
     """Project facts with the same schema labels and masking as profile overview."""
     from ...domain.user_profile import load_user_profile_schema
-    from ._overview import build_profile_overview
-    from ._projections import record_to_path_values
+    from .overview import build_profile_overview
+    from .projections import record_to_path_values
 
     if record is None:
         return ()
@@ -257,7 +257,7 @@ def _build_fact_row(
     """Render one stored field from its declared label, choice, and sensitivity."""
     from ...core.i18n import tr
     from ...domain.user_profile import UserProfileError, section_field_key
-    from ._overview import mask_profile_field
+    from .overview import mask_profile_field
 
     try:
         field_def = schema.field(section_field_key(path))

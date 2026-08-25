@@ -37,10 +37,7 @@ from ..application.live import (
     build_filed_history_operation_registration,
 )
 from ..application.storage.calc_sheets import SheetExportPlan, TabName, export_modelo_to_sheets
-from ..application.user_profile import (
-    CENSAL_OPERATION_DEFINITION,
-    build_censal_operation_registration,
-)
+from ..application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
 from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,

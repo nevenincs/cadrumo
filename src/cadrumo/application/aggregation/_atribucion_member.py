@@ -27,7 +27,7 @@ from ...domain.user_profile import (
     UserProfileRecord,
     numeric_value_refusal,
 )
-from ..user_profile import ProfileRecordRepository
+from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,

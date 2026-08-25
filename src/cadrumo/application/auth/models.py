@@ -1,10 +1,4 @@
-"""Internal definitions for workflow-owned persisted authentication records.
-
-The public contract is exported by :mod:`application.workflow`. This shared
-leaf defines :class:`AuthState`, :class:`CertificateSourceRecord`, and the
-durable cleanup and certificate-secret mutation intents without creating an
-import cycle between workflow persistence and auth services.
-"""
+"""Canonical persisted authentication contracts."""
 
 from __future__ import annotations
 
@@ -14,11 +8,11 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ..core import STRICT_FROZEN_CONFIG, Hex64Str
-from ..core.identity import BucketId
-from ..core.time import validate_utc_aware
+from ...core import STRICT_FROZEN_CONFIG, Hex64Str
+from ...core.identity import BucketId
+from ...core.time import validate_utc_aware
 
-_AuthOperationId = Hex64Str
+type _AuthOperationId = Hex64Str
 """Identity of one durable auth operation.
 
 Producers derive it as ``hashlib.sha256(...).hexdigest()``, so the value is
@@ -28,7 +22,7 @@ fail to match against the operation it was meant to continue.
 """
 
 
-CertificateSourceName = Annotated[
+type CertificateSourceName = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=160),
 ]
@@ -175,3 +169,15 @@ class AuthState(BaseModel):
         """Reject any populated auth-state instant that is naive or not UTC."""
         _require_utc(self.configured_at, self.authenticated_at)
         return self
+
+
+__all__ = [
+    "AuthCleanupCertificateSource",
+    "AuthCleanupIntent",
+    "AuthCleanupOperationKind",
+    "AuthState",
+    "CertificateSecretMutationEventKind",
+    "CertificateSecretMutationIntent",
+    "CertificateSourceName",
+    "CertificateSourceRecord",
+]

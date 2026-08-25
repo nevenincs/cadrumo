@@ -13,7 +13,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....application.workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from ....domain.buckets import (
     BucketEvent,
     BucketEventHistoryCatalogue,

@@ -1,18 +1,15 @@
 """Anti-regression tests for the workflow declaration-pointer surface.
 
-The public facade and engine must use the canonical state-contract helpers,
+The engine must use the canonical state-contract helpers,
 and ``declaration_key`` stores the filing year and bare registry token as
 separate key segments, never as a combined token such as ``2025Q1``.
 
 See Also:
-    :func:`~application.workflow.declaration_key`
-        Public facade helper that must remain the single declaration-key entry
-        point for callers.
-    :func:`~application.workflow._state_models.declaration_key`
+    :func:`~application.workflow.state_models.declaration_key`
         Canonical model helper whose separated period identity is under test.
-    :func:`~application.workflow._state_models.update_declaration_pointer`
+    :func:`~application.workflow.state_models.update_declaration_pointer`
         Pointer upsert helper that writes keys through the same canonical path.
-    :class:`~application.workflow.WorkflowState`
+    :class:`~application.workflow.state_models.WorkflowState`
         Immutable state record whose ``declarations`` map is keyed by
         ``declaration_key``.
     :class:`~core.Period`
@@ -29,32 +26,22 @@ from pydantic import ValidationError
 
 from ....core import Modelo, Period
 from ....domain.submission import ModeloDraftStatus
-from .. import (
-    WorkflowResult,
-    WorkflowState,
-    _engine,
-    _run_models,
-    _state_models,
-    declaration_key,
-    update_declaration_pointer,
-)
+from cadrumo.application.workflow.run_models import WorkflowResult
+from cadrumo.application.workflow.state_models import WorkflowState, declaration_key, update_declaration_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_workflow_declaration_pointer_surface_uses_canonical_helpers() -> None:
     """Public and engine call sites use the canonical model helpers."""
-    assert declaration_key is _state_models.declaration_key
-    assert update_declaration_pointer is _state_models.update_declaration_pointer
-    assert _engine.declaration_key is declaration_key
+    assert declaration_key.__module__ == "cadrumo.application.workflow.state_models"
+    assert update_declaration_pointer.__module__ == "cadrumo.application.workflow.state_models"
 
 
-def test_workflow_facade_resolves_contracts_from_their_canonical_owners() -> None:
+def test_workflow_contracts_have_canonical_defining_modules() -> None:
     """State and run symbols resolve directly from their cohesive owners."""
-    assert WorkflowState is _state_models.WorkflowState
-    assert WorkflowState.__module__ == "cadrumo.application.workflow._state_models"
-    assert WorkflowResult is _run_models.WorkflowResult
-    assert WorkflowResult.__module__ == "cadrumo.application.workflow._run_models"
+    assert WorkflowState.__module__ == "cadrumo.application.workflow.state_models"
+    assert WorkflowResult.__module__ == "cadrumo.application.workflow.run_models"
 
 
 def test_declaration_key_uses_separated_period_identity() -> None:

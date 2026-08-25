@@ -38,7 +38,7 @@ def test_config_profile_export_result_refuses_malformed_transport_and_reconcile_
     is also rejected. A permissive ``str``/``dict`` shell -- the defect this
     finding reported -- would have accepted all of these.
     """
-    from ....application.user_profile import ProfileBundleExportPurpose, ProfileBundleExportTransport
+    from ....application.user_profile.bundle_export import ProfileBundleExportPurpose, ProfileBundleExportTransport
     from .._config_payloads import ConfigProfileExportReconcileFailurePayload, ConfigProfileExportResult
 
     base_kwargs = {

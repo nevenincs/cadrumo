@@ -16,7 +16,7 @@ resolved posture is computed by
 
 from __future__ import annotations
 
-from ....application.user_profile import CapabilitySource
+from ....application.user_profile.capabilities import CapabilitySource
 from ....core import ServiceCapability
 from ....core.identity import ProfileId
 from ....core.json_contract import OutputSchema

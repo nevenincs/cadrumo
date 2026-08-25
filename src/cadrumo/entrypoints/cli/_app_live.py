@@ -1024,7 +1024,7 @@ def _active_taxpayer_profile_or_none() -> TaxpayerProfile | None:
     answer, which is what the caveat notices exist to prevent.
     """
     from ...application.wizard import load_active_taxpayer_profile
-    from ...application.workflow import workflow_state_repository
+    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     try:
         return load_active_taxpayer_profile(workflow_state_repository().load())

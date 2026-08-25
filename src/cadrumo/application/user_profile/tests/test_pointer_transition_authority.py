@@ -85,7 +85,7 @@ def test_defining_modules_are_the_only_public_pointer_transition_surface() -> No
     """Only defining modules own pointer contracts; package namespaces are inert."""
     import cadrumo.application.user_profile as user_profile
     import cadrumo.core as core
-    from cadrumo.application.user_profile import profile_pointer
+    import cadrumo.application.user_profile.profile_pointer as profile_pointer
     from cadrumo.core import bucket_pointer
 
     assert profile_pointer.active_profile_pointer_transaction.__module__.endswith("profile_pointer")

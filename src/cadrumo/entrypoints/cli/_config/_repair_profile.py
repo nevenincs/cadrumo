@@ -24,7 +24,8 @@ from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._status_rendering import precondition_action_lines
 
 if typing.TYPE_CHECKING:
-    from ....application.workflow import ActiveProfileHealth, ProfileBucketPointer
+    from cadrumo.application.workflow.profile_health import ActiveProfileHealth
+    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
     from ....domain.user_profile import UserProfileRecord
 
 
@@ -87,7 +88,7 @@ def _validate_repair_action_preconditions(
 
 def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: bool) -> None:
     """Repair a degraded active-profile pointer and emit the health result."""
-    from ....application.workflow import repair_active_profile_pointer
+    from cadrumo.application.workflow.profile_health import repair_active_profile_pointer
     from .._config_payloads import RepairProfileResult
 
     result = repair_active_profile_pointer(clear_active=clear_active, confirmed=confirmed)
@@ -166,7 +167,7 @@ def _emit_profile_record_status(
     read_profile_record: ProfileRecordReader,
 ) -> None:
     """Emit a non-secret status report for one registered profile bucket."""
-    from ....application.workflow import unavailable_profile_record_verdict
+    from cadrumo.application.workflow.profile_health import unavailable_profile_record_verdict
     from ....domain.user_profile import ProfileNotFoundError
     from .._config_payloads import RepairProfileResult
 
@@ -258,7 +259,7 @@ def _emit_profile_record_unreadable_repair(
     profile_id: str,
     error: Exception,
 ) -> None:
-    from ....application.workflow import unavailable_profile_record_verdict
+    from cadrumo.application.workflow.profile_health import unavailable_profile_record_verdict
     from .._config_payloads import RepairProfileResult
 
     payload = {

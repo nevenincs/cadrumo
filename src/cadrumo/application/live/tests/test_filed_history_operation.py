@@ -583,15 +583,15 @@ def test_public_registration_uses_a_strict_profile_free_request_schema(tmp_path:
     assert "TaxpayerProfile" not in request_schema.get("$defs", {})
 
 
-def test_active_profile_resolution_uses_the_workflow_public_facade() -> None:
-    """The live operation must not reach through workflow's persistence module."""
+def test_active_profile_resolution_uses_the_workflow_persistence_definition() -> None:
+    """The live operation imports the repository from its defining module."""
     module = importlib.import_module(".._filed_history_operation", package=__package__)
     module_file = module.__file__
     assert module_file is not None
     source = Path(module_file).read_text(encoding="utf-8")
 
-    assert "from ..workflow import workflow_state_repository" in source
-    assert "from ..workflow._persistence import workflow_state_repository" not in source
+    assert "from cadrumo.application.workflow.persistence import workflow_state_repository" in source
+    assert "from ..workflow import workflow_state_repository" not in source
 
 
 def test_filed_history_operation_facade_does_not_publish_executor_or_phase_internals() -> None:

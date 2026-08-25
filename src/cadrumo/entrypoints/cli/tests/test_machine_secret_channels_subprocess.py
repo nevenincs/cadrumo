@@ -26,11 +26,8 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage.master_key import close_active_bucket_session
-from ....application.user_profile import (
-    ProfileRecoveryEnrollment,
-    export_profile_recovery_artifact,
-    register_profile_with_credentials,
-)
+from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment, export_profile_recovery_artifact
+from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.config import override_settings
 from ....tests import SRC_CADRUMO
 from ....tests.secure_sql import reap_profile_session_keys

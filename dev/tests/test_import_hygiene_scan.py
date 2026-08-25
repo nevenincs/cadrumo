@@ -491,7 +491,7 @@ def test_module_import_bindings_prefer_the_runtime_binding_over_the_guarded_one(
         "from typing import TYPE_CHECKING\n"
         "from cadrumo.adapters.persistence.storage import read_record\n"
         "if TYPE_CHECKING:\n"
-        "    from cadrumo.application.user_profile._ports import read_record\n"
+        "    from cadrumo.application.user_profile.ports import read_record\n"
     )
 
     bindings = module_import_bindings(tree, "cadrumo.application.ports", is_package=False)

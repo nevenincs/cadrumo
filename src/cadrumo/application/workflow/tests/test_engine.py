@@ -25,10 +25,10 @@ from ....domain.deadlines import (
     TaxpayerProfile,
     compute_obligation_schedule,
 )
-from .. import _deadline_stage as deadline_stage_module
-from .. import _engine as engine_module
-from .. import _engine_recording as engine_recording_module
-from .._errors import UnhandledWorkflowError
+import cadrumo.application.workflow._deadline_stage as deadline_stage_module
+import cadrumo.application.workflow._engine_recording as engine_recording_module
+import cadrumo.application.workflow.engine as engine_module
+from ..errors import UnhandledWorkflowError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

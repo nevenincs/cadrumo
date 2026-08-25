@@ -161,7 +161,7 @@ def resolve_filer_tax_id(*, profile_record: UserProfileRecord | None) -> str | N
     # Imported here rather than at module scope for the cycle-break the sibling
     # below documents: the user-profile application package reaches back into
     # this one. Read exactly as if written at module scope.
-    from ..user_profile import fact_value
+    from ..user_profile.projections import fact_value
 
     if profile_record is None:
         return None
@@ -182,7 +182,7 @@ def _declared_postcode(profile_record: UserProfileRecord | None) -> str | None:
     # Imported here rather than at module scope: the user-profile application
     # package reaches back into the ledger package, so a module-scope import
     # closes a cycle at import time. Read exactly as if written at module scope.
-    from ..user_profile import fact_value
+    from ..user_profile.projections import fact_value
 
     if profile_record is None:
         return None

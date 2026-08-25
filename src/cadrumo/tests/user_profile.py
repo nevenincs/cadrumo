@@ -14,12 +14,9 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ..application.user_profile import (
-    COMPLETENESS_ISSUE_CODES,
-    ProfileCapsuleLifecycle,
-    ProfileValidationService,
-    conditional_profile_missing_required,
-)
+from ..application.user_profile.validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
+from ..application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from ..application.user_profile.completeness import conditional_profile_missing_required
 from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ..core.hashing import sha256_hex
 from ..core.identity import nif_check_letter
@@ -216,7 +213,8 @@ def register_cli_profile(*, label: str, facts: Mapping[str, str] | None = None, 
     """
     from uuid import UUID as _UUID
 
-    from ..application.user_profile import login_profile, register_profile_with_credentials
+    from ..application.user_profile.login_session import login_profile
+    from ..application.user_profile.registration import register_profile_with_credentials
     from ..core.config import load_settings, override_settings
     from .profile_capsule import bound_test_profile_record
 

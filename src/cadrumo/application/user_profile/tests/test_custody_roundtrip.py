@@ -30,7 +30,7 @@ from ....domain.buckets import (
 )
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_two_bucket_runtime
-from .._custody_carry import restore_carried_objects, serialize_carried_objects
+from cadrumo.application.user_profile.custody_carry import restore_carried_objects, serialize_carried_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

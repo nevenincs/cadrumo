@@ -26,7 +26,7 @@ from ...core.i18n import tr
 from .definition import CopyRef, FlowDefinition, FlowPage
 from .errors import FlowCopyResolutionError
 
-CopySourceResolver = Callable[[str], "str | None"]
+type CopySourceResolver = Callable[[str], "str | None"]
 """Resolver for one :class:`CopyRefKind`: reference id in, display text or None."""
 
 _UNRESOLVED_SENTINEL = "\x00cadrumo-flows-copy-unresolved\x00"

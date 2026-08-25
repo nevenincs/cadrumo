@@ -53,7 +53,7 @@ from ....domain.modelos import (
 )
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.registry_observations import registry_grounded_observations
-from ...workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._reconcile import (
     _reconcile_parsed_declaracion,
 )

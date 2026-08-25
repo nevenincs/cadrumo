@@ -53,7 +53,8 @@ def m111_no_retenciones_periods_for_bucket(bucket_id: str) -> frozenset[tuple[in
     Missing profiles fail closed to an empty set.
     """
     from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile import ProfileRecordRepository, record_to_path_values
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_path_values
 
     try:
         record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)

@@ -18,10 +18,10 @@ from ...review import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
 )
-from .. import AuthState
-from .._persistence import WorkflowStateRepository
-from .._profile_bucket_scan import list_profile_buckets
-from .._state_models import (
+from cadrumo.application.auth.models import AuthState
+from ..persistence import WorkflowStateRepository
+from ..profile_bucket_scan import list_profile_buckets
+from ..state_models import (
     DeclaracionPointer,
     WorkflowEvent,
     WorkflowState,

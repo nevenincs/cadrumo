@@ -25,7 +25,8 @@ from __future__ import annotations
 
 import pytest
 
-from ...workflow import WorkflowState
+from cadrumo.application.workflow.state_models import WorkflowState
+
 from ..actions import update_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

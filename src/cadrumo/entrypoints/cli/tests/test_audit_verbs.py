@@ -18,7 +18,7 @@ import pytest
 from click.testing import Result
 
 from ....application.evidence import EvidenceBundleService
-from ....application.workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session

@@ -45,7 +45,7 @@ from ....domain.buckets import BucketEventType
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
 from ....tests import FIXTURES_DIR
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
-from ...workflow import workflow_state_repository
+from cadrumo.application.workflow.persistence import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
     _reconcile_parsed_justificante,

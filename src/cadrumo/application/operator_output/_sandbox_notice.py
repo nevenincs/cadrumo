@@ -32,7 +32,7 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
     projection is deliberately re-read on every call (no caching) so a
     mid-process ``switch`` is reflected on the very next command.
     """
-    from ...application.user_profile import CommittedProfileRepository, ProfileNotFoundError
+    from ...application.user_profile.profile_repository import CommittedProfileRepository, ProfileNotFoundError
     from ...core import FormerProductStateError
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.external_constants import SANDBOX_LABEL_PREFIX

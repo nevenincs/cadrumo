@@ -8,9 +8,10 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ... import wizard as _wizard  # noqa: F401 - registers compiled profile keys
-from .. import ProfilePreflightService, ProfileValidationService
-from .._completeness import conditional_profile_missing_required
-from .._keys_validation import validate_profile_values
+from cadrumo.application.user_profile.preflight import ProfilePreflightService
+from cadrumo.application.user_profile.validation import ProfileValidationService
+from cadrumo.application.user_profile.completeness import conditional_profile_missing_required
+from cadrumo.application.user_profile.keys_validation import validate_profile_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
