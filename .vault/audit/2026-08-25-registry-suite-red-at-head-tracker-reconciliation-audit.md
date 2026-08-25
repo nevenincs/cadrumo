@@ -96,6 +96,14 @@ work; its baseline may not simply be raised. The roll-up's temporal predecessor
 close row `W03.P06.S34` is reopened because an open predicate-relevant temporal row
 and the new `W02.P05.S51` make that closure claim false.
 
+Four further isolated gates contradict checked predecessor claims and are reopened:
+registry-temporal-coverage `W02.P05.S44` because the M182 public accessor proof no
+longer demonstrates the claimed operator-reviewed authority state, `W02.P05.S47`
+because Modelo 194 has filing-year holes for 2020-2022 and 2025, and `W02.P05.S49`
+because Modelo 721 has a 2025 hole. Registry-completeness-closure `W02.P04.S80` is
+reopened because the structured-message export-exemption gate still finds no cited
+layout-authority source. These are owning-row regressions, not new registry-red work.
+
 ### non-executable-rows | medium | Two checked findings were not plan work
 
 `P03.S19` and `P03.S20` described adjudication findings and explicitly stated that
