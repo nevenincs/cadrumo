@@ -387,6 +387,10 @@ class ProfileCustodyLocalRecordStore(Protocol):
         """Return the anchored local-record lock context."""
         ...
 
+    def root_lock(self, root: Path) -> AbstractContextManager[None]:
+        """Return the canonical profile-custody root lock context."""
+        ...
+
     def read(self, path: Path, *, maximum_bytes: int) -> bytes:
         """Read one bounded, no-follow local record."""
         ...
@@ -501,6 +505,9 @@ class _PersistenceProfileCustodyLocalRecordStore:
 
     def lock(self, path: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
         return custody.profile_custody_local_lock(path, timeout_seconds=timeout_seconds)
+
+    def root_lock(self, root: Path) -> AbstractContextManager[None]:
+        return custody.profile_custody_root_lock(root)
 
     def read(self, path: Path, *, maximum_bytes: int) -> bytes:
         return custody.read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)

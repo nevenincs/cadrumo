@@ -8,10 +8,10 @@ from pathlib import Path
 
 from pydantic import BaseModel, model_validator
 
-from ...adapters.persistence.storage import custody
 from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
 from ...core.hashing import prefixed_digest as _digest
 from ...core.paths import effective_storage_root
+from ._custody_ports import default_profile_custody_local_record_store
 
 
 def _corrupt(message: str) -> Exception:
@@ -45,14 +45,14 @@ class ProfileCustodyPointerSnapshot(BaseModel):
     @classmethod
     def capture(cls, root: Path) -> ProfileCustodyPointerSnapshot:
         storage_root = effective_storage_root(root)
-        adapters = custody
-        with adapters.profile_custody_root_lock(storage_root):
+        store = default_profile_custody_local_record_store()
+        with store.root_lock(storage_root):
             target = storage_root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
             if not os.path.lexists(target):
                 captured = None
             else:
                 try:
-                    captured = adapters.read_profile_custody_local_record(target, maximum_bytes=1024)
+                    captured = store.read(target, maximum_bytes=1024)
                 except Exception as exc:
                     raise _corrupt("active profile pointer cannot be no-follow captured") from exc
         if captured is None:
