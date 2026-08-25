@@ -7,11 +7,13 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import typer
+
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import strict_round_trip
-from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import emit_envelope, resolve_cli_precondition_action
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._status_rendering import precondition_action_lines
 
@@ -99,7 +101,7 @@ def _run_provider_auth_operation[AuthResultT](
 
 
 def auth_providers(
-    ctx: object,
+    ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List supported authentication providers from the backend catalogue."""
@@ -119,11 +121,11 @@ def auth_providers(
                 f" ({tr('cli.config.auth.providers.status_unavailable_gloss')})"
             )
         rows.append(f"{provider.id}\t{status_token}\t{tr(str(provider.label))}")
-    _emit_envelope(ctx, command="config.auth.providers", result=result, lines=tuple(rows))
+    emit_envelope(ctx, command="config.auth.providers", result=result, lines=tuple(rows))
 
 
 def auth_configure(
-    ctx: object,
+    ctx: typer.Context,
     provider: str,
     file: Path | None = None,
     output_language: OutputLanguage | None = None,
@@ -166,11 +168,11 @@ def auth_configure(
     )
     lines = _auth_configure_lines(configure_result)
     lines.extend(precondition_action_lines(precondition_action))
-    _emit_envelope(ctx, command="config.auth.configure", result=auth_configure_payload, lines=lines)
+    emit_envelope(ctx, command="config.auth.configure", result=auth_configure_payload, lines=lines)
 
 
 def auth_status(
-    ctx: object,
+    ctx: typer.Context,
     provider: str | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
@@ -196,7 +198,7 @@ def auth_status(
         active_profile_precondition_action=precondition_action,
     )
     payload = envelope_result.model_dump(mode="json")
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.status",
         result=envelope_result,
@@ -232,7 +234,7 @@ def _auth_status_summary_line(payload: dict[str, object]) -> str:
 
 
 def auth_test(
-    ctx: object,
+    ctx: typer.Context,
     provider: str | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
@@ -263,7 +265,7 @@ def auth_test(
         active_profile_precondition_action=precondition_action,
     )
     payload = envelope_result.model_dump(mode="json")
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.test",
         result=envelope_result,
@@ -275,7 +277,7 @@ def auth_test(
 
 
 def auth_login(
-    ctx: object,
+    ctx: typer.Context,
     provider: str | None = None,
     fresh: bool = False,
     reset_lock: bool = False,
@@ -303,7 +305,7 @@ def auth_login(
         ) from exc
     payload = result.model_dump(mode="json")
     envelope_result = AuthLoginPayload.model_validate_json(result.model_dump_json())
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.login",
         result=envelope_result,
@@ -312,7 +314,7 @@ def auth_login(
 
 
 def auth_logout(
-    ctx: object,
+    ctx: typer.Context,
     provider: str | None = None,
     all_providers: bool = False,
     output_language: OutputLanguage | None = None,
@@ -329,7 +331,7 @@ def auth_logout(
     from .._config_payloads import AuthLogoutPayload
 
     payload = strict_round_trip(AuthLogoutPayload, result)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.logout",
         result=payload,
@@ -343,7 +345,7 @@ def auth_logout(
 
 
 def auth_reset(
-    ctx: object,
+    ctx: typer.Context,
     provider: str | None = None,
     all_providers: bool = False,
     yes: bool = False,
@@ -365,7 +367,7 @@ def auth_reset(
     from .._config_payloads import AuthResetPayload
 
     payload = strict_round_trip(AuthResetPayload, result)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.reset",
         result=payload,
