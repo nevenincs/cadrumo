@@ -333,6 +333,81 @@ def test_resolved_annual_orden_snapshot_carries_source_derived_identity_and_mini
     assert activity.cuota_minima_pct == 20
 
 
+def test_every_pinned_annual_orden_source_has_unambiguous_iae_discriminators(
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """Every pinned source retains the discriminator for each repeated IAE epigraph."""
+    modelos, catalogues = registry_tree
+    manifest = check_m303_annual_orden_manifest(
+        manifest_path=bundled_path("registry", "aeat", "m303_orden_anual", "manifest.toml"),
+        source_root=bundled_path(),
+        sources=catalogues.sources,
+    )
+    compilation = load_m303_annual_orden_authority(
+        bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        modelos=modelos,
+        sources=catalogues.sources,
+    )
+    projections_by_source: dict[str, list[object]] = {}
+    for projection in compilation.authority.projections:
+        projections_by_source.setdefault(projection.source_ref, []).append(projection)
+
+    assert set(projections_by_source) == {source.source_ref for source in manifest.sources}
+    for source in manifest.sources:
+        projections = projections_by_source[source.source_ref]
+        assert {projection.ejercicio for projection in projections} == {source.ejercicio}
+        for projection in projections:
+            identities = tuple(
+                (activity.iae_epigrafe, activity.auxiliary_activity_indicator)
+                for activity in projection.activities
+                if activity.kind == "no_agricola"
+            )
+            assert len(identities) == len(set(identities))
+            repeated_indicators = {
+                iae_epigrafe: frozenset(
+                    indicator for current_iae, indicator in identities if current_iae == iae_epigrafe
+                )
+                for iae_epigrafe in ("691.9", "722")
+            }
+            assert repeated_indicators == {"691.9": frozenset({"1", "2"}), "722": frozenset({"1", "2"})}
+
+
+@pytest.mark.parametrize(
+    ("iae_epigrafe", "mutation"),
+    (("691.9", "missing"), ("691.9", "duplicate"), ("722", "missing"), ("722", "duplicate")),
+)
+def test_annual_orden_projection_refuses_missing_or_duplicate_iae_discriminators(
+    iae_epigrafe: str,
+    mutation: str,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """The live collision pairs cannot be accepted without their exact discriminator."""
+    modelos, catalogues = registry_tree
+    compilation = load_m303_annual_orden_authority(
+        bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        modelos=modelos,
+        sources=catalogues.sources,
+    )
+    projection = next(item for item in compilation.authority.projections if item.ejercicio == 2026)
+    payload = projection.model_dump(mode="python")
+    collision_indices = [
+        index for index, activity in enumerate(payload["activities"]) if activity["iae_epigrafe"] == iae_epigrafe
+    ]
+    assert len(collision_indices) == 2
+    first, second = collision_indices
+    if mutation == "missing":
+        payload["activities"][first]["auxiliary_activity_indicator"] = None
+    else:
+        payload["activities"][second]["auxiliary_activity_indicator"] = payload["activities"][first][
+            "auxiliary_activity_indicator"
+        ]
+
+    with pytest.raises(ValidationError, match="ambiguous non-agricultural activity identities"):
+        type(projection).model_validate(payload)
+
+
 def test_2022_snapshot_carries_lorca_authority_and_crosswalk_refusal_with_exact_sources() -> None:
     """The 2022 snapshot keeps the available reduction separate from the unavailable crosswalk."""
     registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2022, period="4T")
