@@ -7,8 +7,11 @@ from pathlib import Path
 
 import pytest
 
+from .....core.resources import resources
 from .._applicability_modelo202 import Modelo202Modality, modelo_202_modality_from_inputs
-from .._errors import RegistryFailureCondition
+from .._errors import RegistryFailureCondition, RegistryValidationError
+from .._queries import RegistryQueryService, _casilla_detail_report
+from .._snapshot import _check_snapshot_filing_capability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -78,6 +81,45 @@ def test_modelo_202_missing_incn_exposes_domain_facts_without_a_command() -> Non
         "entity_type_legal": True,
     }
     assert "aeat" not in verdict.reason.casefold()
+
+
+def test_unknown_casilla_exposes_exact_domain_facts_without_a_list_command() -> None:
+    """The query records the absent declaration; it does not direct the operator."""
+    authority = resources().modelos.authority
+    context = RegistryQueryService(authority)._resolve_revision("303", period="1T", as_of=None)
+
+    with pytest.raises(RegistryValidationError) as caught:
+        _casilla_detail_report(context, "not-a-casilla")
+
+    failure = caught.value.registry_failure
+    assert failure is not None
+    assert failure.condition is RegistryFailureCondition.QUERY_CASILLA_DECLARED
+    assert failure.facts == {
+        "modelo": str(context.definition.id),
+        "revision": str(context.revision.id),
+        "casilla": "not-a-casilla",
+        "casilla_declared": False,
+    }
+
+
+def test_missing_export_layout_exposes_exact_domain_facts_without_a_layout_directive() -> None:
+    """A filing capability refusal names only the observed layout facts."""
+    modelo = resources().modelos.authority.modelo("182")
+    revision = modelo.revisions["2025"]
+    assert not revision.export_layouts, "fixture drift: select a layoutless revision"
+
+    with pytest.raises(RegistryValidationError) as caught:
+        _check_snapshot_filing_capability(modelo, revision)
+
+    failure = caught.value.registry_failure
+    assert failure is not None
+    assert failure.condition is RegistryFailureCondition.SNAPSHOT_EXPORT_LAYOUT_DECLARED
+    assert failure.facts == {
+        "modelo": str(modelo.id),
+        "revision": str(revision.id),
+        "export_layout_declared": False,
+        "filing_artifact_supported": False,
+    }
 
 
 def test_domain_registry_modules_do_not_import_application_policy() -> None:
