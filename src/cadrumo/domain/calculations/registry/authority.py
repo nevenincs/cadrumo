@@ -9,18 +9,17 @@ produces :class:`RegistrySnapshot` instances on demand for each filing context.
 from __future__ import annotations
 
 import hashlib
-from secrets import token_bytes
 from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
+from secrets import token_bytes
 from threading import Condition, RLock
 from typing import Protocol, override
 
 from .... import __version__
 from ....core import RegistryAuthorityGrade
-from ....core.identity import ContentDigest
 from ....core.access_gate import (
     AuthorizationManifest,
     ModeloAuthorization,
@@ -28,8 +27,13 @@ from ....core.access_gate import (
     load_authorization_manifest,
 )
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.identity import ContentDigest
 from ....core.resources import bundled_path as _bundled_path
+from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
+from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
+from ._validate_evidence import flush_corpus_text_cache
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
+from .errors import RegistrySnapshotError, RegistryValidationError
 from .identity import (
     FingerprintTuples,
     RegistryIdentity,
@@ -38,7 +42,6 @@ from .identity import (
     write_registry_identity_stamp,
 )
 from .ids import ModeloId, RevisionId
-from .loader import collect_registry_tree_fingerprints, load_registry_tree
 from .schema import (
     DeadlineWindowDefinition,
     ModeloDefinition,
@@ -49,13 +52,10 @@ from .schema import (
 from .snapshot import (
     _build_validated_snapshot,  # pyright: ignore[reportPrivateUsage]  # the registry authority owns snapshot admission
 )
-from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from .static_inspection import RegistryRevisionInspection, StaticGeneratedArtifactInspection
-from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
 from .supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
 from .temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
 from .validate import RegistryValidator
-from ._validate_evidence import flush_corpus_text_cache
 from .verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
@@ -63,7 +63,6 @@ from .verdict_cache import (
     shipped_verdict_location,
     stamp_bundled_verdict,
 )
-from .errors import RegistrySnapshotError, RegistryValidationError
 
 
 def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTuples:
@@ -78,6 +77,8 @@ def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTu
     Returns:
         The concatenated fingerprint tuples for ``resolved_root``.
     """
+    from .loader import collect_registry_tree_fingerprints
+
     return (
         collect_registry_tree_fingerprints(resolved_root)
         + collect_convenio_fingerprints(resolved_root)
@@ -1093,6 +1094,8 @@ def _construct_authority(
     identity: RegistryIdentity,
 ) -> ValidatedRegistryAuthority:
     """Compile registry material before either filing or inspection admission."""
+    from .loader import load_registry_tree
+
     modelos, catalogues = load_registry_tree(root, identity=identity)
     # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
     # onto the shared catalogues so every snapshot projects the same authority.
