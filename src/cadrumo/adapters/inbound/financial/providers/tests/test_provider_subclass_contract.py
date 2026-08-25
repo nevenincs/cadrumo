@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import override
 
 import pytest
 
@@ -13,11 +12,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 class _ProviderMethods:
-    @override
     def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
         return iter(())
 
-    @override
     def validate_source(self, path: Path) -> ProviderValidation:
         return ProviderValidation(is_valid=True)
 
