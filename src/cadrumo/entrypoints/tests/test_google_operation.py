@@ -18,15 +18,13 @@ from ...adapters.persistence.operations import (
 )
 from ...application.export import (
     GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
+    GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
+    GOOGLE_SHEETS_EXPORT_PHASE_PLAN,
+    GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT,
     GoogleSheetsExportOperationRequest,
     build_google_sheets_export_operation_definition,
     build_google_sheets_export_operation_registration,
     build_google_sheets_export_service,
-)
-from ...application.export._google_operation import (
-    GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
-    GOOGLE_SHEETS_EXPORT_PHASE_PLAN,
-    GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT,
 )
 from ...application.operations import (
     OperationEffect,
