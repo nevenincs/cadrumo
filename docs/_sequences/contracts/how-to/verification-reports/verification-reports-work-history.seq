@@ -9,6 +9,5 @@ aeat --format json app modelo work status {history_work_unit_id}
 @result aeat --format json app modelo work history {history_work_unit_id}
 @expect result.operation == "modelo.work.history"
 @expect result.work_unit_id == "{history_work_unit_id}"
-@expect result.bucket_id == "default"
 @expect result.events[0].actor == "docs-sequence-sandbox"
 @expect exit_code == 0

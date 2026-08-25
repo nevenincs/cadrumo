@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:1608bdb2c78d3b5b43e934b67821c7fb9099f8dc7face780907d7616eaba5d41'
+body_hash: 'sha256:0003d6ad86722c53975041a6518e791f00a7c6e13f136533f4ed326129497d4a'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -255,6 +255,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S251]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S252]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S253]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S254]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -636,6 +637,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S251` - Repair filing-spine cumulative state so reused seed identity resolves the latest draft target and its documentation sequence proves the intended state transition
 - `2026-08-13-profile-password-custody-W06-P12-S252` - Adjudicate registry, revision, readiness, lifecycle, and modelo page contracts across the twelve residual registry-backed documentation pages against current authority
 - `2026-08-13-profile-password-custody-W06-P12-S253` - Replace stale ledger-evidence and invoice output assumptions with stable authority-backed dynamic witnesses on ledger-evidence and manage-invoices
+- `2026-08-13-profile-password-custody-W06-P12-S254` - Reconcile verification-report history and provenance sequences with current Modelo 303 identifiers and authoritative frame structure
 
 ### plan
 

@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-25'
-body_hash: 'sha256:8888fb3f2b5096c51054c3dce75d2d1f2405d8809460d4758b5f7315917b8e18'
+body_hash: 'sha256:5c64177a9b97fde7047ab6e06d3c769a37a24cd83360a0bcde7022492ed1b3c4'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -362,6 +362,6 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S251` - Repair filing-spine cumulative state so reused seed identity resolves the latest draft target and its documentation sequence proves the intended state transition; `docs/_sequences/contracts/filing-spine/ and src/cadrumo/application/`.
 - [x] `W06.P12.S252` - Adjudicate registry, revision, readiness, lifecycle, and modelo page contracts across the twelve residual registry-backed documentation pages against current authority; `docs/_sequences/contracts/ and docs/how-to/ and docs/reference/`.
 - [x] `W06.P12.S253` - Replace stale ledger-evidence and invoice output assumptions with stable authority-backed dynamic witnesses on ledger-evidence and manage-invoices; `docs/_sequences/contracts/ledger-evidence/ and docs/_sequences/contracts/manage-invoices/`.
-- [ ] `W06.P12.S254` - Reconcile verification-report history and provenance sequences with current Modelo 303 identifiers and authoritative frame structure; `docs/_sequences/contracts/verification-reports/ and src/cadrumo/application/verification/`.
+- [x] `W06.P12.S254` - Reconcile verification-report history and provenance sequences with current Modelo 303 identifiers and authoritative frame structure; `docs/_sequences/contracts/verification-reports/ and src/cadrumo/application/verification/`.
 - [ ] `W06.P12.S255` - Reconcile the censo-update sequence with the current censal projection and reviewed-apply authority; `docs/_sequences/contracts/censo-update/ and src/cadrumo/application/user_profile/`.
 - [ ] `W06.P12.S256` - Separate volatile workstation free-memory diagnostics from deterministic golden state while preserving real registry-integrity failures and host-health evidence; `docs/_sequences/contracts/workstation-setup/ and src/cadrumo/application/diagnostics.py and src/cadrumo/core/observability/`.
