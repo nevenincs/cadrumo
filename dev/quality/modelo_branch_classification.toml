@@ -975,3 +975,30 @@ enclosing_symbol = "_modelo_100_obligation_advisory_output"
 modelo_codes = "M100"
 group = "modelo-scope-guard"
 selects = "_modelo_100_obligation_advisory_output"
+
+[[branch]]
+path = "src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py"
+enclosing_symbol = "_m303_motive_page"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_m303_motive_page"
+
+[[branch]]
+path = "dev/registry/analysis/transcribe_structural_family_dispositions.py"
+enclosing_symbol = "compute_dispositions"
+modelo_codes = "M303"
+classification = "orchestration_routing"
+selects = "projection_endpoints_evidence"
+justification = """
+The discriminator is a TYPE in this codebase, not a provision. ``FilingProjectionRef``
+(:mod:`cadrumo.core`) is a closed discriminated union whose seven members are all
+prefixed ``m303_``, so ``ProjectionEndpointDeclaration.projection_ref`` structurally
+cannot name any other modelo. This transcriber derives a not_applicable disposition
+for the projection_endpoints family from exactly that closure, and excludes 303
+because 303 is the one modelo for which the family can be genuinely populated --
+so for 303 there is nothing to auto-derive and the evidence path runs instead.
+The script's own refusal prose says so, citing the union rather than any article.
+No provision states that only modelo 303 has projection endpoints; the union does.
+Widen that union and this branch must be made again, which is why the citation
+names the evidence resolver the branch selects rather than the guard.
+"""
