@@ -38,6 +38,7 @@ from ....application.user_profile import (
     ProfileRecordEncryptedBlob,
     ProfileSecureObjectInventoryPort,
 )
+from ....core import StorageCategory, storage_location
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
 from ....core.time import now as _utc_now
@@ -56,6 +57,16 @@ from . import (
     secure_object_repository_for_bucket,
     secure_object_repository_for_staged_bucket,
 )
+
+
+def _capsule_relative(category: StorageCategory) -> Path:
+    """Return the capsule-relative subpath the storage taxonomy declares for ``category``.
+
+    A capsule is read from a supplied source directory rather than the operator's
+    storage root, so these are joined onto that source -- but the subpath itself is
+    still the taxonomy's to declare, not this module's to spell.
+    """
+    return storage_location(category).relative_path()
 
 
 def _recovery_artifact_receipt(value: object) -> ProfileCustodyRecoveryArtifactExportReceiptPort:
@@ -241,20 +252,22 @@ class _PersistenceProfileCustody:
 
         envelope = custody.parse_profile_custody_envelope(
             required(
-                Path("custody/envelope.v1.json"),
+                _capsule_relative(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE),
                 custody.PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
                 "password envelope",
             )
         )
         sentinel = custody.parse_profile_custody_sentinel_record(
             required(
-                Path("data/dek.sentinel.v1.json"),
+                _capsule_relative(StorageCategory.PROFILE_CAPSULE_DATA) / custody.PROFILE_CUSTODY_SENTINEL_FILENAME,
                 custody.PROFILE_CUSTODY_SENTINEL_MAX_BYTES,
                 "DEK sentinel",
             )
         )
         database_bytes = required(
-            Path("db/cadrumo.db"), custody.PROFILE_CUSTODY_DATA_FILE_MAX_BYTES, "profile database"
+            _capsule_relative(StorageCategory.BUCKET_DATABASE_FILE),
+            custody.PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
+            "profile database",
         )
         return ProfileCustodyCapsuleSourceMaterial(envelope, sentinel, database_bytes)
 

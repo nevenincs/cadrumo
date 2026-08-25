@@ -453,8 +453,8 @@ class Settings(CadrumoLlmSettings):
         default=None,
         description=(
             "Passphrase that derives the encrypted-secret-store master key. "
-            "Default None — the master-key loader refuses operation on None or "
-            "empty value to preserve fail-closed behaviour. The environment name "
+            "With the default of None, the master-key loader refuses operation on None or "
+            "empty values to preserve fail-closed behaviour. The environment name "
             "CADRUMO_SECRET_PASSPHRASE belongs to the separately governed "
             "programmatic substrate; CLI secret input uses explicit stdin or "
             "descriptor channels and does not fall back to this setting."
@@ -526,9 +526,9 @@ class Settings(CadrumoLlmSettings):
             "is the only production posture: with it unset the wallet read "
             "path is byte-for-byte unchanged. When set via "
             "``CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`` the read writes one redacted "
-            "structural-shape summary per captured page and frame — URL "
+            "structural-shape summary per captured page and frame (URL "
             "without query, heading/table/form/input counts, form action "
-            "paths, input identifiers, and a content hash — to this directory "
+            "paths, input identifiers, and a content hash) to this directory "
             "so AEAT DOM drift on the cartera surface can be diagnosed "
             "offline. It never writes raw HTML, frame HTML, screenshots, "
             "input values, or wallet amounts, so the capture carries no live "
@@ -698,7 +698,7 @@ class Settings(CadrumoLlmSettings):
     aeat_sede_expedientes_path: str = Field(
         default_factory=_default_sede_expedientes_path,
         description=(
-            "AEAT Sede path for 'Mis expedientes' — the default post-auth "
+            "AEAT Sede path for 'Mis expedientes'; the default post-auth "
             "target used by Cl@ve Móvil login and the expedientes reader."
         ),
     )

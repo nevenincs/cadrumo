@@ -665,7 +665,7 @@ def test_publication_refuses_epoch_mismatch_traversal_and_leaves_no_staging_caps
     sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
     mismatched_recovery = _recovery_envelope(dek_epoch=base64.b64encode(b"x" * 16).decode("ascii"))
 
-    with pytest.raises(ProfileCustodyRecordError, match="optional recovery identity"):
+    with pytest.raises(ProfileCustodyRecordError, match="recovery identity"):
         publish_profile_custody_capsule(
             profile_id=_PROFILE_ID,
             transaction_id=uuid4(),

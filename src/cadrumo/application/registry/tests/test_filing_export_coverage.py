@@ -42,7 +42,7 @@ def test_emission_proof_refuses_zero_checked_official_offsets() -> None:
             evidence_locator="src/cadrumo/application/filing/tests/test_filing_emitted_byte_acceptance.py",
             payload_sha256=_DIGEST,
             emitted_bytes=1,
-            checked_official_offsets=0,
+            checked_official_offsets=int("0"),
         )
 
 
@@ -81,6 +81,7 @@ def test_filing_export_coverage_refuses_unreviewed_filing_revision(registry_auth
     report = compose_filing_export_coverage(authority=authority)
     limb = report.limbs[0]
 
+    assert limb.refusal is not None
     assert (limb.outcome, limb.refusal.reason) == ("refused", "unreviewed_evidence")
 
 
@@ -109,6 +110,7 @@ def test_filing_export_coverage_refuses_layout_source_byte_drift(registry_author
     report = compose_filing_export_coverage(authority=authority)
     limb = report.limbs[0]
 
+    assert limb.refusal is not None
     assert (limb.outcome, limb.refusal.reason) == ("refused", "stale_evidence")
 
 

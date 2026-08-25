@@ -393,7 +393,7 @@ def parse_profile_custody_capsule_label(value: bytes) -> ProfileCustodyCapsuleLa
 
 @dataclass(frozen=True, slots=True)
 class ProfileCustodyPasswordMaterial:
-    """The exact normal-password read set, intentionally excluding optional recovery."""
+    """The exact normal-password read set, intentionally excluding recovery material."""
 
     capsule_path: Path
     commit: ProfileCustodyCommit
