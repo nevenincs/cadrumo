@@ -11,44 +11,44 @@ related:
   - "[[2026-08-22-source-casilla-integration-W05-P17-S101]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace source-casilla-integration with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `source-casilla-integration` audit: `S101 M182 terminal deferral review`
 
 ## Scope
 
-<!-- What was audited and why -->
+Independent current-head review of the mixed S101 implementation and tracking
+commits `5ccbc15a69`, `a8377a6d0f`, `474f7fe37e`, `da8ad39cb3`, and
+`3aefd321ea`. The review covers the canonical Modelo 182 census disposition,
+the existing donor carrier and source mesh, the official 2025 type-1/type-2
+evidence, the closure projection, execution record, and plan state.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### S101 M182 terminal deferral review | medium | The reviewed census locator had drifted from the canonical donor dispatch
 
-       ### S101 M182 terminal deferral review | {level} | {summary}
+The Modelo 182 row entry still named the refund dispatch, while live source
+discovery resolves `row_assembler:per_donativo_donor` at the donor dispatch.
+The stale locator made the Modelo 182-specific capability proof and the
+tree-wide census comparison fail closed. This review corrects both the
+capability and grounding locators and adds a direct Modelo 182 locator check
+with a stale-locator mutation bite. No source resolver, binding, persistence
+route, connected claim, or export layout is introduced by the correction.
 
-     followed by a paragraph carrying the detail. S101 M182 terminal deferral review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+No other critical, high, medium, or low finding remains. The actual current
+carrier is still the pre-existing deferred donor worksheet path: it is not
+owned by a live mesh resolver, is excluded from connected proof fixtures,
+produces the standing unhandled-source diagnostic, and the applicability-grade
+2025 snapshot has no export layouts. The S100 evidence remains accurately
+carried: the official 2025 design distinguishes type-1 declarant controls and
+type-2 declared-person records, including nature-3 administrator/holder fields
+and non-lossy record cardinality. S101 preserves, rather than replaces, real
+manual and direct input surfaces.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Approve S101 after the corrected focused test and Modelo 182-specific locator
+proof pass. Keep S102 and S103 open: only accepted secure type-1 and type-2
+carriers with durable identity/fingerprint and the required lifecycle and
+repeated-record export proof may reconsider the current `ingress_blocked`
+disposition. The tree-wide comparison remains separately refused by the
+out-of-scope `inventory.stock-valuation` locator drift; that row's owner must
+repair and revalidate it independently.
