@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:110b43d798032660943d955abfdca0353a89d5004c30f8ab69299733ef60c1f7'
+body_hash: 'sha256:d12faa966ff5c9ba2f456f17802e4668d8f0b059c65d71bb1306df4d608101c3'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
@@ -143,3 +143,92 @@ while reset is not linearized against authority publication. Concurrent cold
 loads and mutable cached aliases add false-generation and isolation failures.
 The process-global lock has a consistent order and no observed deadlock, but
 unnecessarily serializes all registry validation and snapshot work.
+
+## Remediation re-review - 2026-08-25
+
+### Scope and evidence
+
+Fresh independent re-review of the remediated S159 implementation carried by
+`d8d47ee410` and the concurrent-reset correction `45b1948b28`, with the final
+source reread at current HEAD `57559437ef0`. The later S159-file delta is
+formatting-only. The plan Step remains open. This section preserves the
+historical FAIL findings above and reports their current disposition; it does
+not rewrite the earlier evidence.
+
+Vaultspec RAG semantic discovery initially located the governing Workspace
+owner-seam ADR, this audit, the S159 Step and execution record, and the native
+authority implementation. At final re-query the `0.4.2` client refused the
+shared `0.4.1` daemon rather than silently dropping request fields, while the
+available local publication reported zero of its declared 104,579 code points.
+The semantic index was therefore treated as lagging discovery evidence only.
+Every current-state and absence conclusion below comes from whole-file reads
+and an exact committed-source census at current HEAD.
+
+### Prior findings after remediation
+
+- `authority-identity` is resolved. One root-and-source-root state owns the
+  current key, authority, failure, generation and transition lock. Every
+  observed A to B to A change invalidates the predecessor before construction,
+  allocates a strictly later process-local generation, and never revives an
+  identity-keyed historical object.
+- `reset-linearization` is resolved. The reader/writer barrier covers identity
+  collection, construction, success or failure publication, invalidation and
+  every registry cache clear. Reset drains in-flight publication and concurrent
+  reset writers exclude one another.
+- `cache-singleflight` is resolved. The root-scoped transition lock admits one
+  construction for one observed key and reuses exactly one published success
+  or deterministic failure.
+- `snapshot-isolation` is resolved. The authority-private snapshot is the sole
+  cache entry; public snapshot reads and native captures return distinct deep
+  copies, so mutation of a caller-held public alias before or during capture
+  cannot change or tear the captured owner value.
+- `global-lock-scope` is resolved in production behavior. Long identity,
+  compilation, validation, snapshot and copy work runs under root-scoped or
+  per-authority locks. The process-global state lock protects only short
+  generation and publication transitions, and unrelated roots reached
+  construction concurrently in the reviewer probe.
+
+### unrelated-root-overlap-regression | low | Concurrent-root independence lacks a committed biting regression gate
+
+The remediated production implementation permits unrelated roots to perform
+long construction concurrently, and an independent barrier probe proved both
+distinct roots entered `_construct_authority` before either was released.
+However, no committed S159 test encodes that property. The nine focused native
+capture tests can all pass if a future change restores a process-global lock
+around long registry work. The earlier audit explicitly required an overlap
+proof, and the execution record now claims this behavior. Add the same
+two-root barrier proof to
+`src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py`
+so re-serialization makes the durable gate red.
+
+### Verification
+
+- Ruff passed for the authority, facade and both focused authority test files.
+- Basedpyright passed the same surface with zero errors and warnings.
+- The native capture suite passed 9 tests. The authority, cache-key digest,
+  read-parameter invalidation and validation-verdict lanes passed 27 tests.
+- Independent probes passed eight physical A/B alternations with generations
+  `2` through `9` and predecessor refusal; concurrent same-key failure
+  singleflight, replay and reset clearing; reset versus blocked failure
+  publication; two-root long-work overlap; and 12 reset writers completing amid
+  24 continuous readers without observed deadlock or starvation.
+- The exact committed-source census found one production
+  `RegistryAuthorityCapture`, `capture_law_selected_projection` and
+  `read_current_generation` home in `_authority.py`, one permitted canonical
+  package-facade promotion, zero lower-layer `ModeloWorkspace` or producer
+  contract references, and no legacy global capture lock, authority LRU,
+  detached failure cache, alias, fallback, shim or non-facade re-export bridge.
+- The tree-wide import-hygiene checkpoint passed 51 tests and failed 4 on
+  concurrent TUI test-only private imports in `test_relocation_parity.py` and a
+  component-test import in `test_component_boundary.py`. None names, imports or
+  traverses the S159 registry surface; the scoped S159 boundary and exact
+  census remain green. These external failures are not absorbed into the S159
+  verdict.
+
+### Remediation re-review disposition
+
+CONDITIONAL PASS, NOT CLOSURE. The production implementation resolves every
+historical HIGH and MEDIUM finding and no current production defect was found.
+S159 must remain unchecked until the LOW unrelated-root overlap proof is a
+committed regression test and a focused final verification confirms that gate
+bites while all S159 checks remain green.
