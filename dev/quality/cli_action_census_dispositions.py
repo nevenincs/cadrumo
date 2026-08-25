@@ -23,10 +23,19 @@ from typing import Final, cast
 from cadrumo.core import scan_directory
 from dev._paths import UTF_8
 
-from .cli_action_census import REPO_ROOT, SOURCE_ROOT, CandidateRecord, census
+from .cli_action_census import (
+    REPO_ROOT,
+    SOURCE_ROOT,
+    AuthoredErrorMessageJoin,
+    AuthoredErrorMessageSite,
+    CandidateRecord,
+    census,
+)
 
 __all__ = [
     "DEFAULT_DISPOSITIONS_PATH",
+    "AuthoredMessageExclusion",
+    "AuthoredMessagePartition",
     "CandidateDisposition",
     "CandidateKey",
     "DispositionRole",
@@ -36,16 +45,18 @@ __all__ = [
     "ExclusionGrounding",
     "checked_in_dispositions",
     "current_exception_override_observations",
+    "load_authored_message_exclusions",
     "load_dispositions",
     "render_dispositions",
+    "validate_authored_error_message_join",
     "validate_dispositions",
     "validate_exception_override_owners",
 ]
 
 
 _UTF_8: Final[str] = UTF_8
-_SCHEMA_VERSION: Final[int] = 2
-_TOP_LEVEL_FIELDS: Final[frozenset[str]] = frozenset({"meta", "disposition"})
+_SCHEMA_VERSION: Final[int] = 3
+_TOP_LEVEL_FIELDS: Final[frozenset[str]] = frozenset({"meta", "disposition", "authored_message_exclusion"})
 _META_FIELDS: Final[frozenset[str]] = frozenset({"schema_version"})
 _ROW_FIELDS: Final[frozenset[str]] = frozenset(
     {
@@ -61,6 +72,7 @@ _ROW_FIELDS: Final[frozenset[str]] = frozenset(
         "exception_observations",
     },
 )
+_AUTHORED_MESSAGE_EXCLUSION_FIELDS: Final[frozenset[str]] = frozenset({"fingerprint", "reason"})
 
 DEFAULT_DISPOSITIONS_PATH: Final[Path] = Path(__file__).with_suffix(".toml")
 """The checked-in ledger path to be populated after the model is established."""
@@ -159,6 +171,23 @@ class CandidateDisposition:
     reason: str
     exclusion: ExclusionGrounding | None = None
     exception_observations: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class AuthoredMessageExclusion:
+    """One grounded exception to the registered authored-message ownership join."""
+
+    fingerprint: str
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class AuthoredMessagePartition:
+    """The exhaustive clean/excluded/owned result of one validated message join."""
+
+    clean_codes: tuple[str, ...]
+    excluded_sites: tuple[AuthoredErrorMessageSite, ...]
+    owned_sites: tuple[AuthoredErrorMessageSite, ...]
 
 
 class DispositionValidationError(ValueError):
@@ -301,14 +330,31 @@ def _parse_disposition_row(
     )
 
 
-def load_dispositions(path: Path) -> tuple[CandidateDisposition, ...]:
-    """Read one strict TOML adjudication ledger without claiming coverage.
+def _parse_authored_message_exclusion(
+    row: dict[str, object],
+    *,
+    context: str,
+    errors: list[str],
+) -> AuthoredMessageExclusion | None:
+    """Read one exact source-derived exemption, never a broad path allowance."""
+    unknown = sorted(set(row) - _AUTHORED_MESSAGE_EXCLUSION_FIELDS)
+    if unknown:
+        errors.append(f"{context}: unrecognized field(s): {', '.join(unknown)}")
+    fingerprint = _require_identity_text(row, "fingerprint", context=context, errors=errors)
+    reason = _require_reason(row, context=context, errors=errors)
+    if fingerprint is None or reason is None:
+        return None
+    return AuthoredMessageExclusion(fingerprint=fingerprint, reason=reason)
 
-    Loading checks the representation itself.  :func:`validate_dispositions`
-    separately compares the parsed records with the current real census, so a
-    caller cannot mistake a well-formed partial migration ledger for complete
-    coverage.
-    """
+
+@dataclass(frozen=True, slots=True)
+class _DispositionDocument:
+    dispositions: tuple[CandidateDisposition, ...]
+    authored_message_exclusions: tuple[AuthoredMessageExclusion, ...]
+
+
+def _load_disposition_document(path: Path) -> _DispositionDocument:
+    """Read the strict shared ledger representation before either consumer validates it."""
     try:
         data = cast(dict[str, object], tomllib.loads(path.read_text(encoding=_UTF_8)))
     except (OSError, tomllib.TOMLDecodeError) as error:
@@ -337,7 +383,6 @@ def load_dispositions(path: Path) -> tuple[CandidateDisposition, ...]:
         rows: list[object] = []
     else:
         rows = cast(list[object], raw_rows)
-
     parsed: list[CandidateDisposition] = []
     for index, raw_row in enumerate(rows, start=1):
         context = f"{path} [[disposition]] #{index}"
@@ -348,9 +393,45 @@ def load_dispositions(path: Path) -> tuple[CandidateDisposition, ...]:
         if record is not None:
             parsed.append(record)
 
+    raw_exclusions: object = data.get("authored_message_exclusion", [])
+    if not isinstance(raw_exclusions, list):
+        errors.append(f"{path}: 'authored_message_exclusion' must be an array of tables")
+        exclusions: list[object] = []
+    else:
+        exclusions = cast(list[object], raw_exclusions)
+    parsed_exclusions: list[AuthoredMessageExclusion] = []
+    for index, raw_exclusion in enumerate(exclusions, start=1):
+        context = f"{path} [[authored_message_exclusion]] #{index}"
+        if not isinstance(raw_exclusion, dict):
+            errors.append(f"{context}: must be a table")
+            continue
+        record = _parse_authored_message_exclusion(
+            cast(dict[str, object], raw_exclusion),
+            context=context,
+            errors=errors,
+        )
+        if record is not None:
+            parsed_exclusions.append(record)
+
     if errors:
         raise DispositionValidationError(errors)
-    return tuple(parsed)
+    return _DispositionDocument(tuple(parsed), tuple(parsed_exclusions))
+
+
+def load_dispositions(path: Path) -> tuple[CandidateDisposition, ...]:
+    """Read the existing action-candidate rows without claiming coverage.
+
+    Loading checks the representation itself.  :func:`validate_dispositions`
+    separately compares the parsed records with the current real census, so a
+    caller cannot mistake a well-formed partial migration ledger for complete
+    coverage.
+    """
+    return _load_disposition_document(path).dispositions
+
+
+def load_authored_message_exclusions(path: Path) -> tuple[AuthoredMessageExclusion, ...]:
+    """Read only the exact exclusions belonging to the registered-message join."""
+    return _load_disposition_document(path).authored_message_exclusions
 
 
 def _terminal_name(node: ast.expr) -> str | None:
@@ -661,6 +742,70 @@ def validate_exception_override_owners(
     if errors:
         raise DispositionValidationError(errors)
     return observations
+
+
+def validate_authored_error_message_join(
+    join: AuthoredErrorMessageJoin,
+    exclusions: Iterable[AuthoredMessageExclusion],
+) -> AuthoredMessagePartition:
+    """Require every direct message site to be clean, excluded, or singly owned.
+
+    A registered constructor has its code owner mechanically; it must not be
+    hidden behind a ledger row.  The only permitted ledger use is a narrowly
+    fingerprinted exclusion for an otherwise ownerless known error call.  This
+    makes new unresolved sites, stale exemptions, and ambiguous dataflow fail
+    in the same pass.
+    """
+    registered = {record.error_qualname for record in join.registered_codes}
+    sites_by_fingerprint: dict[str, list[AuthoredErrorMessageSite]] = {}
+    for site in join.sites:
+        sites_by_fingerprint.setdefault(site.fingerprint, []).append(site)
+    declared: dict[str, list[AuthoredMessageExclusion]] = {}
+    for exclusion in exclusions:
+        declared.setdefault(exclusion.fingerprint, []).append(exclusion)
+
+    errors: list[str] = []
+    excluded: list[AuthoredErrorMessageSite] = []
+    owned: list[AuthoredErrorMessageSite] = []
+    for fingerprint, sites in sorted(sites_by_fingerprint.items()):
+        if len(sites) != 1:
+            errors.append(f"authored message fingerprint is multiply observed: {fingerprint}")
+            continue
+        site = sites[0]
+        owner_count = len(site.owner_qualnames)
+        rows = declared.get(fingerprint, [])
+        if owner_count > 1:
+            errors.append(
+                f"authored message site has {owner_count} registered-code owners: {fingerprint}",
+            )
+            continue
+        if owner_count == 1:
+            owner = site.owner_qualnames[0]
+            if owner not in registered:
+                errors.append(f"authored message site has an undeclared registered-code owner: {fingerprint}")
+            if rows:
+                errors.append(f"authored message exclusion masks a singly owned site: {fingerprint}")
+            owned.append(site)
+            continue
+        if len(rows) != 1:
+            errors.append(f"authored message site has {len(rows)} exclusions instead of one: {fingerprint}")
+            continue
+        excluded.append(site)
+
+    for fingerprint, rows in sorted(declared.items()):
+        if len(rows) > 1:
+            errors.append(f"duplicate authored message exclusions ({len(rows)} rows): {fingerprint}")
+        sites = sites_by_fingerprint.get(fingerprint, [])
+        if len(sites) != 1 or sites[0].owner_qualnames:
+            errors.append(f"stale authored message exclusion has no ownerless current site: {fingerprint}")
+
+    if errors:
+        raise DispositionValidationError(errors)
+    return AuthoredMessagePartition(
+        clean_codes=tuple(code.code for code in join.clean_codes),
+        excluded_sites=tuple(sorted(excluded, key=lambda site: site.fingerprint)),
+        owned_sites=tuple(sorted(owned, key=lambda site: site.fingerprint)),
+    )
 
 
 def _key_errors(key: CandidateKey, *, context: str) -> tuple[str, ...]:

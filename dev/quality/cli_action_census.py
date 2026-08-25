@@ -39,7 +39,6 @@ from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
 from cadrumo.core import scan_directory
 from cadrumo.core.errors import declared_error_codes
-
 from dev._paths import REPO_ROOT, UTF_8
 
 SOURCE_ROOT: Final[str] = "src/cadrumo"
@@ -1155,6 +1154,8 @@ def _authored_message_import_module(
     imported: str | None,
 ) -> str:
     """Resolve an import statement's lexical module without importing source."""
+    if not level:
+        return imported or ""
     package = module if is_package else module.rpartition(".")[0]
     parts = package.split(".") if package else []
     if level:
@@ -1200,6 +1201,86 @@ def _authored_message_sources(root: Path) -> tuple[tuple[str, str, str, bool], .
     if not sources:
         raise AuthoredErrorMessageCensusError(f"authored-message census found no production modules: {source_root}")
     return tuple(sorted(sources))
+
+
+class _SourceFacadeReexportResolver:
+    """Resolve named ``cadrumo`` facade exports from source, never imports.
+
+    Public packages routinely re-export a registered error from a private
+    module.  Consumers of that public package must still join to the private
+    registry owner.  This intentionally recognizes only source-level named
+    imports (and their re-export chains); a recursive branch carries its
+    ancestry so a malformed cycle cannot cause a recursive scan or be
+    mistaken for a real owner.
+    """
+
+    def __init__(
+        self,
+        *,
+        modules: Mapping[str, tuple[ast.Module, bool]],
+        registered_qualnames: frozenset[str],
+    ) -> None:
+        self._modules = modules
+        self._known_qualnames = registered_qualnames | {_CADRUMO_ERROR_QUALNAME}
+        self._known_names = frozenset(qualname.rpartition(".")[2] for qualname in self._known_qualnames)
+        self._cache: dict[tuple[str, str], _ErrorReference] = {}
+
+    def is_source_module(self, module: str) -> bool:
+        """Return whether ``module`` has a scanned production source file."""
+        return module in self._modules
+
+    def is_possible_registered_name(self, name: str) -> bool:
+        """Return whether a name could bind a live registered error class."""
+        return name in self._known_names
+
+    def resolve(self, module: str, name: str) -> _ErrorReference:
+        """Resolve one possible facade export through a cycle-safe AST walk."""
+        return self._resolve(module, name, ancestry=frozenset())
+
+    def _resolve(
+        self,
+        module: str,
+        name: str,
+        *,
+        ancestry: frozenset[tuple[str, str]],
+    ) -> _ErrorReference:
+        key = (module, name)
+        if key in self._cache:
+            return self._cache[key]
+        if key in ancestry:
+            return _EMPTY_ERROR_REFERENCE
+
+        direct_qualname = f"{module}.{name}"
+        if direct_qualname in self._known_qualnames:
+            reference = _ErrorReference(error_qualnames=frozenset({direct_qualname}))
+            self._cache[key] = reference
+            return reference
+
+        source_module = self._modules.get(module)
+        if source_module is None:
+            return _EMPTY_ERROR_REFERENCE
+        tree, is_package = source_module
+        reference = _EMPTY_ERROR_REFERENCE
+        next_ancestry = ancestry | {key}
+        for statement in tree.body:
+            if not isinstance(statement, ast.ImportFrom):
+                continue
+            source = _authored_message_import_module(
+                module=module,
+                is_package=is_package,
+                level=statement.level,
+                imported=statement.module,
+            )
+            for imported in statement.names:
+                exported_name = imported.asname or imported.name
+                if imported.name != "*" and exported_name != name:
+                    continue
+                imported_name = name if imported.name == "*" else imported.name
+                reference = reference.merged(
+                    self._resolve(source, imported_name, ancestry=next_ancestry),
+                )
+        self._cache[key] = reference
+        return reference
 
 
 def _authored_message_call_hash(node: ast.Call) -> str:
@@ -1293,7 +1374,9 @@ class _AuthoredMessageVisitor(ast.NodeVisitor):
         if not isinstance(node.func, ast.Attribute) or node.func.attr != "__init__" or not self._classes:
             return None
         receiver = node.func.value
-        direct_super = isinstance(receiver, ast.Call) and isinstance(receiver.func, ast.Name) and receiver.func.id == "super"
+        direct_super = (
+            isinstance(receiver, ast.Call) and isinstance(receiver.func, ast.Name) and receiver.func.id == "super"
+        )
         cast_super = (
             isinstance(receiver, ast.Call)
             and isinstance(receiver.func, ast.Name)
@@ -1304,7 +1387,8 @@ class _AuthoredMessageVisitor(ast.NodeVisitor):
             and receiver.args[1].func.id == "super"
         )
         if direct_super or cast_super:
-            return self._classes[-1].error_qualnames
+            owners = self._classes[-1].error_qualnames
+            return owners or None
         return None
 
     def visit_Import(self, node: ast.Import) -> None:
