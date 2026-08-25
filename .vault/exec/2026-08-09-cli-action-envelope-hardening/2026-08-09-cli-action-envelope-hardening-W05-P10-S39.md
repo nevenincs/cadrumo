@@ -2,49 +2,39 @@
 tags:
   - '#exec'
   - '#cli-action-envelope-hardening'
-date: '2026-08-13'
-modified: '2026-08-13'
+date: '2026-08-25'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:24b507169386dfb1450e4c486efb900789d14921261289504d4ec5586cef1523'
+body_hash: 'sha256:5dda6bf71d0dd337758ef58727d508ca0a5bf59f3910fe70f2c5d0747b7656b1'
 step_id: 'S39'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
-
-# Migrate deadline recovery commands and overdue continuations
+# Replace deadline recovery command transport with a canonical overview action
 
 ## Scope
 
-- `src/cadrumo/domain/deadlines`
+- `src/cadrumo/domain/deadlines/_models.py`
+- `src/cadrumo/domain/deadlines/_recargo.py`
+- `src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py`
+- `src/cadrumo/domain/deadlines/tests/test_recargo.py`
+- `src/cadrumo/application/overview`
+- `src/cadrumo/entrypoints/cli/_overview_payloads.py`
+- `src/cadrumo/entrypoints/cli/_overview_rendering.py`
+- `src/cadrumo/entrypoints/cli/tests/test_overview_recovery_payload_parity.py`
 
 ## Description
 
-- Locate the adjudicated refusal surface: two rehoming rows, six fingerprints, five of them constructor sites in the deadline engine and one a class-declaration reference.
-- Replace the authored English sentence at each of the five constructor sites with the class's registered locale key plus locale-neutral machine facts, preserving the underlying registry failure through exception chaining.
-- Pin every migrated site with an absence assertion and a structural sweep, and record what the migration changes about the owned rehoming rows.
-- Classify the remaining deadline surfaces that carry prose or a command literal, and name the one that cannot be migrated inside the declared scope.
+- Delete `Recovery.next_command` so the deadline domain retains legal recovery facts only.
+- Declare `operator.modelo.work.create` in the application overview with modelo, year, and period bindings.
+- Resolve that declaration through the existing CLI action authority and reject retired raw command payloads.
 
 ## Outcome
 
-- Five engine refusal producers now construct with a keyword-only registered key and a typed context: the registry-load failure, the missing-windows refusal in schedule computation, the missing-windows refusal in applicability explanation, the registry-validation failure behind the window lookup, and the profile-condition evaluation failure. No site passes a positional argument.
-- The two keys are the ones already registered against the error classes, so no locale key was added, no catalogue was touched, and no untranslated string entered the tree. Two module constants state the keys at the raise sites, and a test holds each constant equal to the class's own registered key so the two spellings cannot drift.
-- The facts each refusal now carries are the registry stage, the filing year, the modelo, the condition count and mode, and the underlying registry error type. The original registry exception is preserved as the cause rather than flattened into a sentence.
-- The whole-tree recovery-rehoming gate cleared the exact finding this Step was dispatched against. Before the change the gate reported an owner-closed finding naming the missing-windows error against an already-closed workflow Step; after the change that finding is absent, because the gate's producer test is whether any site of the qualname still passes a positional argument, and none does. Both owned qualnames now report zero authored-message groups where they previously reported two and three.
-- Four of the five sites are proven at runtime by absence assertions requiring the rendered exception text to equal the key exactly, driven by real behaviour: a year with no registered windows, an unknown modelo, a real on-disk registry whose manifest cannot be parsed, and a validly-typed profile predicate naming a fact the taxpayer profile does not declare. No mock, stub, patch or skip is used.
-- The fifth site, the validation-stage refusal behind the window lookup, is not reachable from a test, because the validated registry authority validates eagerly at load, so a registry that would fail per-modelo validation is refused at the load stage instead. It is covered by the structural sweep, and the sweep's docstring states that limitation rather than implying runtime coverage.
-- The structural sweep parses the engine module and, for every raise of either pinned class, refuses a positional argument, refuses a translated message that is not one of the two registered keys, and refuses command prose inside the fact values. It is anchored to the set of enclosing functions expected to raise, so a rename cannot make it pass vacuously, and it gates no count.
-- The sweep was proven to bite. Three separate mutations were applied to a scratch copy of the engine source from an out-of-repo pytest plugin, with nothing under the source tree modified: a positional sentence restored alongside the key, a command string added to the facts, and an unregistered key substituted. Each mutation reddened exactly one distinct assertion and left the other ten green; restoring the source returned all eleven to green.
-- The defect class this campaign twice failed to catch was reproduced directly to confirm the assertion shape is the right one. Constructing the missing-windows error with an English sentence positionally alongside the registered key leaves a key-and-context assertion green while the rendered exception text is the English sentence; the absence assertion is false for exactly that construction and true for the migrated one.
+Commit `7c104ceb6e` removed the raw deadline recovery command carrier and projects overdue pre-work recovery through the canonical `operator.modelo.work.create` action. The payload requires a resolved action and mutation-sensitive coverage rejects `next_command`.
+
+VaultSpec RAG and independent review found no catalogue, verdict, evidence, or action-authority redeclaration. The focused owner proof passes 29 tests. The broader declared suite passes 40 tests and has five unrelated failures confined to the concurrently changing `_plazo.py` and registry deadline-window semantics.
 
 ## Notes
 
-- Deliberately left as primary structured result data, not migrated. The recargo band carries a stable band identifier, a completed-months window, a surcharge percentage, an interest flag and a stable legal reference; all of it is locale-neutral machine fact that the overdue surface exists to produce. The applicability text returned by the explanation verb is likewise the deliverable the verb is named for, sourced from registry condition explanations, not an incidental diagnostic. Neither belongs in a notice channel and neither was moved.
-- Deliberately left, classified as a non-refusal invariant. The deadline validation error guards caller-supplied construction arguments, registry shape and holiday-calendar integrity. It carries no registered recovery, holds no rehoming row and contributes no census candidate, and its messages are addressed to whoever authored the bad input rather than to the operator. The structural sweep names the two pinned classes explicitly and states this exclusion rather than hiding it behind a matcher.
-- Deliberately left, and this one is a real gap rather than a classification. The taxpayer-profile resolution errors in the profiles module do author English sentences at seven sites, and they are operator-facing: they name the accepted values for an undeclared or unsupported profile axis. They carry a registered key of their own but no rehoming row and no census candidate, so the campaign's own adjudication never enrolled them. Migrating them is defensible and was not done, to keep this Step's blast radius on its adjudicated surface. No row currently covers them; if the standing goal is that every reachable failed precondition emits a stable condition identity, these seven remain outstanding.
-- Blocked, and the blocker is a scope boundary rather than a difficulty. The overdue recovery payload still carries a hardcoded operator command as a free-form string, assigned in the recargo module and declared as an unconstrained field on the recovery model. Both are named in the action census as producer rows. The canonical migration is to replace that free-form command with a stable action identity the command surface resolves at the boundary, and an existing catalogue action already covers the calculate verb, so nothing would need inventing. It cannot be landed here: the recovery model is projected across the boundary by a strict round trip into the overview calendar result payload, whose recovery schema declares the same field and is exercised by a parity test, and both of those files are outside this Step's exclusive scope and belong to the open overview Steps. Renaming or removing the field inside the domain alone would fail that round trip at runtime; adding a second action carrier beside it would create two competing action authorities in one payload, which the campaign forbids. The correct shape is one atomic change spanning the domain model, the recovery producer, the calendar payload schema and its parity test, owned jointly with the overview surface. It is recorded here rather than half-done.
-- What the migration changes about the owned rehoming rows, for the serialized ledger regeneration. Both owned rows keep their fingerprint counts, six and four, and every fingerprint keeps its path, role and lexical owner. What changed is the normalised syntax hash of the five constructor sites, so the gate now reports a fingerprint multiset divergence on both owned qualnames until the ledger is regenerated. Neither row's disposition was edited and the ledger writer was not run. After regeneration both rows should re-derive as non-authoring, which is what retires the owner-closed finding permanently rather than incidentally.
-- Gate results, with the peer failures separated from the owner surface. The scoped package suite runs 214 passed and 4 failed; all four fail identically against the unmodified engine and test bytes taken from the commit this work started from, so none is owner surface. Three are a duplicate-period expectation over two registry revisions that both declare windows for one filing year, and one is a profile-axis conformance set that names three peer test files added outside this package. The recovery-rehoming gate runs 71 passed and 4 failed both before and after, with the owned finding cleared and the expected ledger divergence introduced. The action census gates run 19 passed and 12 failed, and no failure names this package at all. The import-hygiene gate fails on three assertions, all naming peer test files reaching into this package's private profiles module; the files added here appear nowhere in that output. The type checkers report no diagnostic for any file in this package. Lint and format are clean across the package.
-- Locale catalogues were not touched. No key was added, because both refusals resolve through keys already registered and already present in all four catalogues. The catalogue parity check is currently red on overview next-step keys belonging to an in-flight peer Step; that state is unchanged by this work.
-- Deadline windows and their dates were not altered. Only refusal messaging changed. The filing year a refusal reports is the canonical year the caller asked for, and a test holds it equal to the canonical period's filing year rather than to any re-derived span.
-- One incident worth recording. Partway through, the whole source tree became unimportable because a peer's symbol relocation had removed an identifier from a private module while its package facade still imported it. Nothing was touched; the state resolved on its own within one polling interval and the work resumed. A separate peer landing between the two gate runs cleared one unrelated owner-closed finding and introduced one unrelated fingerprint divergence, which is why the gate's totals moved by more than this Step's own contribution; the per-finding difference is reported above rather than the totals.
-- The plan checkbox is deliberately left unchecked, pending adjudication of the scope-blocked recovery payload.
+- S39 was closed only after the implementation commit was present, focused verification ran, and an independent Sol closure review returned PASS.
