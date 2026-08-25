@@ -294,7 +294,7 @@ def _observation(**overrides: object) -> WithholdingObservation:
         "clave": RetencionClave.A,
     }
     base.update(overrides)
-    return WithholdingObservation(**base)
+    return WithholdingObservation.model_validate(base)
 
 
 def _build(*observations: WithholdingObservation, declared: bool = True) -> tuple[dict[str, object], ...]:
