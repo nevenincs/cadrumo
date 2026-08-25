@@ -221,9 +221,11 @@ def _run_work_calculate(
 def _work_calculate_saved_confirmation(revision: CalculationRevision, work_unit: WorkUnit) -> str:
     return tr(
         "cli.app.modelo.work.calculate_saved",
-        default="Saved as draft calculation revision %{revision_id} (state: %{state}). It is persisted and can be resumed later.",
         revision_id=revision.calculation_revision_id,
         state=calculation_revision_state_label(revision.state.value),
+        modelo=work_unit.modelo,
+        year=work_unit.filing_year,
+        period=work_unit.period,
     )
 
 

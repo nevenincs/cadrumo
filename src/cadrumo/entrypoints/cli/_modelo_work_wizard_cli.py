@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """Behavior for the guided Modelo work wizard command.
 
 An operator knows "gross income" and "deductible expenses" in plain language, not
@@ -256,9 +255,11 @@ def _emit_wizard_result(
     calculation_revision = calculation_result.revision
     saved_confirmation = tr(
         "cli.app.modelo.work.wizard_saved",
-        default="Saved as draft calculation revision %{revision_id} (state: %{state}). It is persisted and can be resumed later.",
         revision_id=calculation_revision.calculation_revision_id,
         state=calculation_revision.state.value,
+        modelo=calculation_result.work_unit.modelo,
+        year=calculation_result.work_unit.filing_year,
+        period=calculation_result.work_unit.period,
     )
     prompted_payload = tuple(
         (
