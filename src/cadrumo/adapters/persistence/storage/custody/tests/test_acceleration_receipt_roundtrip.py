@@ -549,7 +549,6 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
             assert not path.exists()
 
 
-@pytest.mark.os_keychain
 class TestProfileSessionAcceleration:
     """Production mint/resume/revocation through the platform keychain."""
 
@@ -567,6 +566,7 @@ class TestProfileSessionAcceleration:
         )
         return record, dek
 
+    @pytest.mark.os_keychain
     def test_mint_uses_random_session_id_and_exact_keychain_account(self, tmp_path: Path) -> None:
         profile_id = _profile_id()
         first, _ = self._mint(tmp_path, profile_id)
@@ -591,6 +591,7 @@ class TestProfileSessionAcceleration:
         finally:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 
+    @pytest.mark.os_keychain
     def test_mint_then_resume_binds_exact_current_envelope_metadata(self, tmp_path: Path) -> None:
         profile_id = _profile_id()
         record, dek = self._mint(tmp_path, profile_id)
@@ -608,6 +609,7 @@ class TestProfileSessionAcceleration:
         finally:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 
+    @pytest.mark.os_keychain
     def test_custody_rotation_revokes_old_receipt(self, tmp_path: Path) -> None:
         profile_id = _profile_id()
         record, _ = self._mint(tmp_path, profile_id)
@@ -633,6 +635,7 @@ class TestProfileSessionAcceleration:
         finally:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 
+    @pytest.mark.os_keychain
     def test_expired_receipt_removes_only_its_own_keychain_entry(self, tmp_path: Path) -> None:
         profile_id = _profile_id()
         record, _ = self._mint(tmp_path, profile_id)
@@ -666,6 +669,7 @@ class TestProfileSessionAcceleration:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
             delete_profile_session(storage_root=tmp_path, profile_id=other_profile)
 
+    @pytest.mark.os_keychain
     def test_tampered_aad_record_is_refused_and_cleaned(self, tmp_path: Path) -> None:
         """A canonical receipt whose AAD-bound field was altered fails authentication.
 
@@ -711,6 +715,7 @@ class TestProfileSessionAcceleration:
         finally:
             delete_profile_session(storage_root=tmp_path, profile_id=profile_id)
 
+    @pytest.mark.os_keychain
     def test_receipt_never_writes_plaintext_dek(self, tmp_path: Path) -> None:
         profile_id = _profile_id()
         record, dek = self._mint(tmp_path, profile_id)

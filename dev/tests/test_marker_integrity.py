@@ -154,8 +154,6 @@ _EXPECTED_OS_KEYCHAIN_TEST_IDS = frozenset(
         "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
         "::TestProfileSessionAcceleration::test_mint_uses_random_session_id_and_exact_keychain_account",
         "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
-        "::TestProfileSessionAcceleration::test_nonpositive_windows_refuse_before_keychain_write",
-        "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
         "::TestProfileSessionAcceleration::test_receipt_never_writes_plaintext_dek",
         "src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py"
         "::TestProfileSessionAcceleration::test_tampered_aad_record_is_refused_and_cleaned",
@@ -178,6 +176,35 @@ _EXPECTED_OS_KEYCHAIN_TEST_IDS = frozenset(
         "::test_delete_owner_receipts_are_durable_and_idempotent",
         "src/cadrumo/application/user_profile/tests/test_custody_transactions.py"
         "::test_owner_receipts_resume_after_owner_effect_precedes_journal_state",
+        # Cross-process handover and registration proofs establish, resume, or
+        # revoke real acceleration receipts. Their assertions are not
+        # reproducible on a host without the credential store.
+        "src/cadrumo/application/user_profile/tests/test_login_handover.py"
+        "::test_handover_leaves_no_resumable_session_material_for_the_retired_profile",
+        "src/cadrumo/application/user_profile/tests/test_login_handover.py"
+        "::test_same_profile_relogin_in_a_new_process_keeps_its_own_session_material",
+        "src/cadrumo/application/user_profile/tests/test_login_handover.py"
+        "::test_crash_at_each_durable_handover_phase_recovers_selected_b",
+        "src/cadrumo/application/user_profile/tests/test_login_handover_sequential_registration.py"
+        "::test_registration_displaced_profile_keeps_no_resumable_material_after_the_next_login",
+        "src/cadrumo/application/user_profile/tests/test_login_handover_sequential_registration.py"
+        "::test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_retired_profile",
+        "src/cadrumo/application/user_profile/tests/test_registration_retires_displaced_profile.py"
+        "::test_registration_retires_the_profile_it_displaces_without_waiting_for_a_login",
+        "src/cadrumo/application/user_profile/tests/test_registration_retires_displaced_profile.py"
+        "::test_the_displaced_profile_is_resumable_until_the_registration_displaces_it",
+        "src/cadrumo/application/user_profile/tests/test_registration_retires_displaced_profile.py"
+        "::test_the_entering_profile_keeps_the_session_the_registration_gave_it",
+        "src/cadrumo/application/user_profile/tests/test_registration_retires_displaced_profile.py"
+        "::test_a_retirement_that_cannot_complete_refuses_the_registration_in_its_own_words",
+        "src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py"
+        "::test_registered_profile_custody_survives_logout_and_reopens_on_login",
+        "src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py"
+        "::test_valid_resumed_session_refuses_root_source_unread",
+        "src/cadrumo/entrypoints/cli/tests/test_named_profile_resolution_cross_process.py"
+        "::test_a_named_profile_resolves_in_a_process_that_did_not_write_it",
+        "src/cadrumo/entrypoints/cli/tests/test_named_profile_resolution_cross_process.py"
+        "::test_the_named_and_active_paths_agree_about_the_same_record",
         # Fail-closed CLI refusals reached through a REAL profile session: the
         # absent/expired states under test are states OF the keychain-backed
         # session half, so establishing them needs a store to have held one.
