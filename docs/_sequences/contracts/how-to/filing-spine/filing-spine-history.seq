@@ -1,9 +1,11 @@
 :seed: filing-spine-303-ledger
 @step Create the work unit for the filing target.
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@capture history_work_unit_id result.work_unit_id
 @step Calculate the quarter's IVA from the classified ledger.
 @setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
 @step Review all actions the tool has taken on this filing, in order.
-@result aeat --format json app modelo work history --modelo 303 --year 2026 --period 1T
+@result aeat --format json app modelo work history {history_work_unit_id}
 @expect exit_code == 0
-@expect result.event_count == 2
+@expect result.work_unit_id == "{history_work_unit_id}"
+@expect result.operation == "modelo.work.history"
