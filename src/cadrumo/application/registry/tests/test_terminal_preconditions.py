@@ -6,7 +6,7 @@ import ast
 import json
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import cast
+from typing import override
 
 import pytest
 
@@ -117,7 +117,7 @@ def test_filed_state_casilla_refusals_classify_input_identity_and_declaration() 
     snapshot = bundled_authority().snapshot("303", filing_year=2023, period="1T")
     common_facts = {"modelo": "303", "revision_id": str(snapshot.revision.id)}
 
-    malformed = _refusal_error(lambda: _verified_required_casilla_ids((cast(object, object()),), snapshot=snapshot))
+    malformed = _refusal_error(lambda: _verified_required_casilla_ids((object(),), snapshot=snapshot))
     _assert_no_action_contract(
         malformed,
         condition_id="registry.filed_state.casilla_id.canonical",
@@ -299,12 +299,14 @@ def _terminal_refusal_calls(path: Path) -> set[tuple[str, str, str, str, str, st
     class _Visitor(ast.NodeVisitor):
         scope = "<module>"
 
+        @override
         def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
             previous_scope = self.scope
             self.scope = node.name
             self.generic_visit(node)
             self.scope = previous_scope
 
+        @override
         def visit_Call(self, node: ast.Call) -> None:
             if isinstance(node.func, ast.Name) and node.func.id == "registry_terminal_refusal":
                 calls.add(
