@@ -18,24 +18,24 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from dev.registry.filing_export_proof import (
-    CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES,
-    canonical_live_filing_export_proof_authority,
-)
 
-from ....application.registry import RegistryClosureLimb, compose_filing_export_coverage
-from ....core import Modelo, RegistryAuthorityGrade
-from ....core.resources import bundled_path
-from ....domain.calculations.registry import (
+from cadrumo.application.registry import RegistryClosureLimb, compose_filing_export_coverage
+from cadrumo.core import Modelo, RegistryAuthorityGrade
+from cadrumo.core.resources import bundled_path
+from cadrumo.domain.calculations.registry import (
     ValidatedRegistryAuthority,
     bundled_authority,
     coverage_assessment_horizon,
     revision_selection_coordinates,
 )
+from dev.registry.filing_export_proof import (
+    CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES,
+    canonical_live_filing_export_proof_authority,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 _EXPORT_OWNER = "aeat-export-fragment-generator-authority"
 
 
