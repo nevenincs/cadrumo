@@ -8,8 +8,18 @@ from typing import Annotated, TypedDict
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
-import cadrumo.application.operations.frontend_contracts as frontend_contracts
-from cadrumo.application.operations.capabilities import (
+from ....core import OperationEventKind, OperationInteractionKind, OperationLifecycle
+from ....core.operations import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationTerminalCondition,
+)
+from .. import frontend_contracts
+from .._model_contract import require_strict_frozen_operation_model_graph
+from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
@@ -17,7 +27,7 @@ from cadrumo.application.operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from cadrumo.application.operations.frontend_contracts import (
+from ..frontend_contracts import (
     OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
     OperationCancellationVersionHeader,
@@ -52,9 +62,10 @@ from cadrumo.application.operations.frontend_contracts import (
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
+from ..models import OperationRequest
+from ..owner import OperationExecutorContext
+from ..persistence.replay import OperationReplayStatus
+from ..registry import (
     OperationDefinition,
     OperationExecutorFactory,
     OperationFrontendProjection,
@@ -65,18 +76,6 @@ from cadrumo.application.operations.registry import (
     OperationSchemaBindingV1,
     OperationSchemaIdentityV1,
 )
-from cadrumo.core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationTerminalCondition,
-)
-
-from ....core import OperationEventKind, OperationInteractionKind, OperationLifecycle
-from .._model_contract import require_strict_frozen_operation_model_graph
-from ..owner import OperationExecutorContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
