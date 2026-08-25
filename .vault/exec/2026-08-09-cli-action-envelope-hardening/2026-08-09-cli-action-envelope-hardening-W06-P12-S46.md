@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:6ef9525081f112412ad65fc0dc7d5b634889cad873c1e4026176a130a643b53e'
+body_hash: 'sha256:6e71a15f00a3f8f7d869f1486e2af382536276d65de212187bb34fdac9d392b7'
 step_id: 'S46'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -32,10 +32,11 @@ related:
 
 ## Outcome
 
-Commits `2be1f36529` and `f42a65e588` reconcile an exact 203-row live partition: eight canonical owners, 23 producers, four transformers, and 168 grounded exclusions. All 41 former exception-owner rows are retired because the live AST observation set is empty.
+Commits `2be1f36529`, `f42a65e588`, and final refresh `f8a9eb9523` reconcile an exact 196-row live partition after S75, S84, and S91: seven canonical owners, 20 producers, three transformers, and 166 grounded exclusions. All 41 former exception-owner rows remain retired because the live AST observation set is empty.
 
-Canonical re-rendering is byte-identical to the TOML. The complete census/disposition selection passes 30 tests, with seven additional authored-message join proofs passing; Ruff, format, and diff checks pass.
+Canonical re-rendering is byte-identical to the TOML. The final combined census, disposition, authored-message, and closure selection passes 42 tests; Ruff, format, and diff checks pass.
 
 ## Notes
 
 - Wizard `next_command` is a localized success-text hint and is grounded as excluded; the typed `next_action` declaration remains the canonical recovery authority.
+- The final refresh removes five retired S75 continuation rows and two retired S91 command-prose rows and grounds the concurrently relocated TUI command literal at its live widget owner.

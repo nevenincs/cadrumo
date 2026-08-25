@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:225788581b58e5899265a336a8c4a7eee61094dc2fa628adea18dd45b0a5f447'
+body_hash: 'sha256:810782a982b11cd1601d1de8073095a7791b35439759160f329b726306e81bee'
 step_id: 'S47'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -33,7 +33,7 @@ related:
 
 Shared commit `e319e84957` and correction commit `f6b54f7917` establish the code-only closure gate. It resolves every catalogue entry and production profile, derives synthetic inputs only from canonical argument specifications, and contains no copied action, command, or schema authority.
 
-Five closure tests pass in the independent run; Ruff, format, and diff checks pass. Independent review found no remaining escape or lifecycle-document dependency.
+Five closure tests pass again after the final producer migrations; Ruff, format, and diff checks pass. The final production matrix is a bijective 127-row fixed point with eight actionable and 119 explicit no-action outcomes. Independent review found no remaining escape or lifecycle-document dependency.
 
 ## Notes
 
