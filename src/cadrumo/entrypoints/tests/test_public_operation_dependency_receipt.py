@@ -15,7 +15,11 @@ from typing import Annotated, Literal
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...application.operations import OperationPublicContractSetV1, OperationSchemaIdentityV1
+from ...application.operations import (
+    OperationPublicContractSetV1,
+    OperationPublicDefinitionContractV1,
+    OperationSchemaIdentityV1,
+)
 from ...application.operations import __all__ as operation_public_exports
 from ...core import content_hash_hex
 from ...tests.secure_sql import isolated_runtime_profile
@@ -33,7 +37,9 @@ _STAGING_ADR_STEM = "2026-08-24-tui-operation-observation-adr"
 _RECEIPT_PATH = ".vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md"
 _GIT_EXECUTABLE = shutil.which("git")
 _UVX_EXECUTABLE = shutil.which("uvx")
-_SEMANTIC_PRODUCER_QUERY = "public operation observation immutable snapshot progress fold safe review workspace refresh authority only:prod exclude:tests"
+_SEMANTIC_PRODUCER_QUERY: Literal[
+    "public operation observation immutable snapshot progress fold safe review workspace refresh authority only:prod exclude:tests"
+] = "public operation observation immutable snapshot progress fold safe review workspace refresh authority only:prod exclude:tests"
 
 
 class TuiOperationReceiptDocumentProvenanceV1(BaseModel):
@@ -91,7 +97,9 @@ class TuiOperationSemanticProducerCensusV1(BaseModel):
     tool_name: Literal["vaultspec-rag"] = "vaultspec-rag"
     result_schema: Literal["vaultspec-rag.search.code.v1"] = "vaultspec-rag.search.code.v1"
     tool_version: Annotated[str, Field(min_length=1, max_length=80)]
-    query: Literal[_SEMANTIC_PRODUCER_QUERY] = _SEMANTIC_PRODUCER_QUERY
+    query: Literal[
+        "public operation observation immutable snapshot progress fold safe review workspace refresh authority only:prod exclude:tests"
+    ] = _SEMANTIC_PRODUCER_QUERY
     disposition: Literal["success"] = "success"
     source_tree_digest: _DIGEST
     discovered_paths: tuple[Annotated[str, Field(pattern=r"^src/cadrumo/application/operations/.+\.py$")], ...] = Field(
@@ -322,7 +330,7 @@ def _manifest_digest(items: Iterable[BaseModel]) -> str:
 
 
 def _definition_digests(
-    contracts: tuple[object, ...],
+    contracts: tuple[OperationPublicDefinitionContractV1, ...],
 ) -> tuple[TuiOperationDefinitionDigestV1, ...]:
     return tuple(
         TuiOperationDefinitionDigestV1(
@@ -333,7 +341,9 @@ def _definition_digests(
     )
 
 
-def _schema_identities(contracts: tuple[object, ...]) -> tuple[OperationSchemaIdentityV1, ...]:
+def _schema_identities(
+    contracts: tuple[OperationPublicDefinitionContractV1, ...],
+) -> tuple[OperationSchemaIdentityV1, ...]:
     identities = {
         (identity.schema_id, identity.schema_version): identity
         for contract in contracts
@@ -349,7 +359,9 @@ def _schema_identities(contracts: tuple[object, ...]) -> tuple[OperationSchemaId
     return tuple(identities[key] for key in sorted(identities))
 
 
-def _capability_inventory(contracts: tuple[object, ...]) -> tuple[TuiOperationCapabilityInventoryV1, ...]:
+def _capability_inventory(
+    contracts: tuple[OperationPublicDefinitionContractV1, ...],
+) -> tuple[TuiOperationCapabilityInventoryV1, ...]:
     return tuple(
         TuiOperationCapabilityInventoryV1(
             definition_id=contract.definition_id,
@@ -484,18 +496,29 @@ def _semantic_census(
     source_tree_digest: str,
     discovered_paths: tuple[str, ...],
 ) -> TuiOperationSemanticProducerCensusV1:
+    schema_version: Literal[1] = 1
+    tool_name: Literal["vaultspec-rag"] = "vaultspec-rag"
+    result_schema: Literal["vaultspec-rag.search.code.v1"] = "vaultspec-rag.search.code.v1"
+    disposition: Literal["success"] = "success"
     payload = {
-        "schema_version": 1,
-        "tool_name": "vaultspec-rag",
-        "result_schema": "vaultspec-rag.search.code.v1",
+        "schema_version": schema_version,
+        "tool_name": tool_name,
+        "result_schema": result_schema,
         "tool_version": tool_version,
         "query": _SEMANTIC_PRODUCER_QUERY,
-        "disposition": "success",
+        "disposition": disposition,
         "source_tree_digest": source_tree_digest,
         "discovered_paths": discovered_paths,
     }
     return TuiOperationSemanticProducerCensusV1(
-        **payload,
+        schema_version=schema_version,
+        tool_name=tool_name,
+        result_schema=result_schema,
+        tool_version=tool_version,
+        query=_SEMANTIC_PRODUCER_QUERY,
+        disposition=disposition,
+        source_tree_digest=source_tree_digest,
+        discovered_paths=discovered_paths,
         result_digest=content_hash_hex(payload),
     )
 
