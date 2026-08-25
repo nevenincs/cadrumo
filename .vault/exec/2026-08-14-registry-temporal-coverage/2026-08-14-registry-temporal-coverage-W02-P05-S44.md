@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:3039cd7b68847ac87aa1b1379cfdd6fe4cbe047251566fef4e932c0af032b7ba'
+body_hash: 'sha256:ad15497051707a3aa7ad714e7b050f04a53c68e0cfa79290afac463713194b51'
 step_id: 'S44'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -16,19 +16,25 @@ related:
 
 - `src/cadrumo/_data/registry/aeat/modelos/182/`
 - `src/cadrumo/_data/registry/aeat/legal/modelo-182.toml`
-- `src/cadrumo/domain/calculations/registry/tests/`
+- `src/cadrumo/domain/calculations/registry/tests/test_legal_review_authority_scope.py`
 
 ## Description
 
-- Reconcile the hash-pinned 2024 and 2025 AEAT designs with their exact legal applicability evidence.
-- Select only the 2025 design era, which has the existing canonical BOE amendment and first-application provision.
-- Refuse unevidenced 2007--2023, 2024, and 2026-onward selector years without promoting grade or adding an export layout.
+- Confirm the exact 2025 AEAT record design remains the sole selected M182 design era, with the canonical HAC/1430/2025 amendment and first-application authority; the 2024 design remains hash-pinned catalogue evidence but is not selected.
+- Reconcile the public authority-scope proof with the live legal catalogue: four legacy legal refs are operator-reviewed, while HAC/1430/2025 article 2 and final provision are agent-reviewed.
+- Prove neither reviewed-reference category promotes M182's agent-reviewed applicability-grade revision. The public accessor continues to refuse it at the authority-grade boundary; the pending-review and agent-review mutations retain their distinct refusal paths.
 
 ## Outcome
 
-Modelo 182 now has only a `2025` applicability-grade revision. It cites the exact 2025 AEAT design, the Modelo-182 amendment in Orden HAC/1430/2025 article 2, and the existing canonical final provision which applies the change first to exercise 2025. The 2024 PDF remains hash-pinned catalogue evidence but is not selected because no exact legal approval/amendment provision was established. No filing or export capability was added.
+Modelo 182 remains one `2025` applicability-grade revision with no export layout or filing promotion. Its exact source applies only to 2025, while 2007-2024 and 2026 onward remain unsupported. The legal-review test now fails on a changed legacy/amendment review partition instead of falsely requiring all six refs to be operator-reviewed.
+
+## Verification
+
+- `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_legal_review_authority_scope.py` - 6 passed.
+- `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_modelo_182_temporal_grounding.py src/cadrumo/domain/calculations/registry/tests/test_record_design.py -k '182 or modelo_182'` - 2 passed, 81 deselected.
+- `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification.py::test_committed_registry_tree_has_coherent_shared_catalogues` - 1 passed.
+- Scoped Ruff format, Ruff check, and diff check passed.
 
 ## Notes
 
-- The exact registry load proof and the export-exemption selection test passed.
-- The full legal-reference pytest worker did not return within the bounded gate; no broad gate was used.
+- Agent-reviewed legal amendment evidence is not a filing-authority upgrade. No registry data change was necessary.
