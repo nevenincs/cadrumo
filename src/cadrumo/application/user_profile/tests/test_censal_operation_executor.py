@@ -14,15 +14,6 @@ import pytest
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from ....adapters.persistence.storage.custody import (
-    load_committed_profile_password_material,
-    unlock_profile_custody,
-)
-from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ....core.config import override_settings
-from ....domain.user_profile import UserProfileFact
-from ....tests.aeat_literal_fixtures import aeat_url
-from ....tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operations.interactions import (
     OperationApplyResponse,
     OperationRejectResponse,
@@ -34,6 +25,16 @@ from cadrumo.application.operations.registry import (
     operation_public_schema_reference,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
+
+from ....adapters.persistence.storage.custody import (
+    load_committed_profile_password_material,
+    unlock_profile_custody,
+)
+from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ....core.config import override_settings
+from ....domain.user_profile import UserProfileFact
+from ....tests.aeat_literal_fixtures import aeat_url
+from ....tests.secure_sql import isolated_profile_storage_root
 from .._capsule_record import ProfileRecordSession, ProfileRecordStore
 from .._censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
 from .._censal_operation import (
