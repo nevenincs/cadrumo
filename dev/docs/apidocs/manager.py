@@ -71,7 +71,7 @@ _UTF_8: str = UTF_8_ENCODING
 # exactly one canonical ``py:data`` target at its public facade.
 _PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
     "cadrumo.core": ("CasillaId",),
-    "cadrumo.core.identity": ("SubjectTaxId", "TaxIdIdentityToken"),
+    "cadrumo.core.identity": ("ContentDigest", "SubjectTaxId", "TaxIdIdentityToken"),
 }
 _PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {
     "cadrumo.domain.calculations.registry": ("collect_registry_tree_fingerprints",),

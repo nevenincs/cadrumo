@@ -297,7 +297,7 @@ def test_config_locale_keys_are_symmetric_resolved_and_consumed() -> None:
     key_sets = {
         locale: {
             key
-            for key in manager.get_yaml_keys(manager.load_locale(_LOCALES_ROOT / f"{locale}.yml"))
+            for key in manager.get_yaml_keys(manager.load_locale(_LOCALES_ROOT / locale))
             if key.startswith("cli.config.")
         }
         for locale in ("ca", "en", "es", "hu")

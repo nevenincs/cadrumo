@@ -25,9 +25,11 @@ def test_public_type_aliases_have_one_canonical_facade_target(tmp_path: pytest.T
     assert ".. py:data:: CasillaId\n   :module: cadrumo.core" in core_api_text
     assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity" in identity_api_text
     assert ".. py:data:: SubjectTaxId\n   :module: cadrumo.core.identity" in identity_api_text
+    assert ".. py:data:: ContentDigest\n   :module: cadrumo.core.identity" in identity_api_text
     assert all_stub_text.count(".. py:data:: CasillaId\n") == 1
     assert all_stub_text.count(".. py:data:: TaxIdIdentityToken\n") == 1
     assert all_stub_text.count(".. py:data:: SubjectTaxId\n") == 1
+    assert all_stub_text.count(".. py:data:: ContentDigest\n") == 1
     assert ".. py:function:: collect_registry_tree_fingerprints" in registry_api_text
     assert all_stub_text.count(".. py:function:: collect_registry_tree_fingerprints\n") == 1
 

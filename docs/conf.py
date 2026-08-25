@@ -1097,6 +1097,10 @@ def _resolve_short_reference(app, env, node, contnode):
     short = parts[-1] if parts else ""
     if not short or not short.isidentifier():
         return None
+    # ``country`` is an upstream locale-library annotation, not the unrelated
+    # in-tree callable that happens to share its final component.
+    if target == "country":
+        return contnode
 
     if not _PY_SUFFIX_INDEX:
         _PY_SUFFIX_INDEX.update(_build_py_suffix_index(env))
@@ -1334,8 +1338,11 @@ def setup(app):
         if not _should_resolve_deferred_models():
             return
         from cadrumo.application import diagnostics
+        from cadrumo.core.errors import ErrorEnvelope
 
         diagnostics._ensure_models_rebuilt()
+        if not ErrorEnvelope.__pydantic_complete__:
+            raise RuntimeError("the canonical ErrorEnvelope model did not resolve for API documentation")
 
     def _generate_cli_reference(app):
         """Render the CLI reference fresh from the live command tree.
