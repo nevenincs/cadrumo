@@ -4,7 +4,7 @@ tags:
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
 modified: '2026-08-25'
-body_hash: 'sha256:8929564552e1e59db682a57e4e4a0c9c45ec809bda3d06e74972a29b447464e9'
+body_hash: 'sha256:d052747e042e2f7af45368af262ad773165f2944a1f64cf324bab21b17efd4e0'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -158,6 +158,7 @@ Close against fleet invariants, source evidence, repository rules, and architect
 - [x] `W04.P13.S45` - Make deadline reference-date semantics canonical and deterministic. Correct stale date.today() documentation, replace direct wall-clock reads in deadline-path tests with explicit or frozen today_madrid() input, and derive exercised filing years from the supported-filing-year catalogue while preserving literal official dates only in source-fidelity tests; `src/cadrumo/domain/deadlines/, src/cadrumo/entrypoints/cli/tests/, .vault/audit/`.
 - [x] `W04.P13.S47` - Restore canonical formatting on the shared registry authority after concurrent capture work introduced mixed line endings, then rerun focused authority Ruff, format, and deadline ownership tests without changing behavior; `src/cadrumo/domain/calculations/registry/_authority.py, src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W04.P13.S48` - Restore canonical formatting on the M210 claimed-year design-axis proof introduced by S46, preserving its generalized mutation-bite semantics; `src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py`.
+- [x] `W04.P13.S49` - Restore canonical formatting after the concurrent authority-reset fix landed unformatted on the registry authority and its native-capture proof, preserving reset linearization behavior; `src/cadrumo/domain/calculations/registry/_authority.py, src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py`.
 
 ## Parallelization
 

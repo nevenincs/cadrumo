@@ -133,11 +133,14 @@ def test_native_capture_isolated_from_public_snapshot_alias_mutation_before_and_
 
     assert isinstance(during_capture.projection, RegistrySnapshot)
     assert removed_during_capture in during_capture.projection.legal
-    assert removed_before_capture in registry_authority.snapshot(
-        _MODEL0_ID,
-        filing_year=_FILING_YEAR,
-        period=_PERIOD,
-    ).legal
+    assert (
+        removed_before_capture
+        in registry_authority.snapshot(
+            _MODEL0_ID,
+            filing_year=_FILING_YEAR,
+            period=_PERIOD,
+        ).legal
+    )
 
 
 def test_native_capture_is_atomic_across_concurrent_snapshot_reads(
@@ -367,7 +370,8 @@ def test_native_capture_has_one_public_registry_home_without_workspace_coupling(
     authority_methods = {
         node.name
         for node in ast.walk(authority_tree)
-        if isinstance(node, ast.FunctionDef) and node.name in {"capture_law_selected_projection", "read_current_generation"}
+        if isinstance(node, ast.FunctionDef)
+        and node.name in {"capture_law_selected_projection", "read_current_generation"}
     }
     assert authority_methods == {"capture_law_selected_projection", "read_current_generation"}
 
