@@ -28,6 +28,13 @@ from pydantic import BaseModel
 from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Input, Label, OptionList, ProgressBar, Static
 
+from cadrumo.entrypoints.tui.components import (
+    CADRUMO_DARK_THEME_NAME,
+    CADRUMO_LIGHT_THEME_NAME,
+    ContentScroll,
+    install_cadrumo_themes,
+)
+
 from .....application.flows import (
     CopyRef,
     FlowCheckpointError,
@@ -55,14 +62,7 @@ from .....core.i18n import (
 )
 from .....tests.env_scope import activate_output_language, output_language_scope
 from .....tests.locales_root_fixture import locales_root_scope
-from .. import (
-    CADRUMO_DARK_THEME_NAME,
-    CADRUMO_LIGHT_THEME_NAME,
-    FlowTuiApp,
-    install_cadrumo_themes,
-    run_flow_tui,
-)
-from .._theme import ContentScroll
+from .. import FlowTuiApp, run_flow_tui
 
 pytestmark = [
     pytest.mark.unit,

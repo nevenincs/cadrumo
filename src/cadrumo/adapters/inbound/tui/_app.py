@@ -52,10 +52,10 @@ from ....application.flows import (
 )
 from ....core.flows import REPEATING_INSTANCE_SEPARATOR, FlowMode, FlowWidgetKind, PageStatus
 from ....core.i18n import tr
+from ....entrypoints.tui.components import BASE_CSS as _BASE_CSS
+from ....entrypoints.tui.components import install_cadrumo_themes, toggle_appearance
 from ._question_screen import QuestionScreen
 from ._review_screen import ReviewScreen
-from ._theme import BASE_CSS as _BASE_CSS
-from ._theme import install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
     from ....application.flows import CheckpointStore, FlowDefinition, FlowState, VisiblePage

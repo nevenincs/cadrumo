@@ -52,13 +52,13 @@ from ....core import (
 from ....core.config import override_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
+from ....entrypoints.tui.components import BASE_CSS, ContentScroll, install_cadrumo_themes
 from ._credential_screen import (
     CREDENTIAL_PANEL_CSS,
     CredentialApp,
     run_credential_app,
 )
 from ._status_bar import PinnedStatusBar
-from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes
 
 if TYPE_CHECKING:
     from collections.abc import Callable

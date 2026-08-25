@@ -17,7 +17,7 @@ its raw value never reaches a widget, so a SECRET-shaped or otherwise
 key-like fact can never appear on screen (or in a captured session log).
 
 The notices zone is this surface's share of the shared
-:class:`~cadrumo.adapters.inbound.tui.NoticeBand` — the same typed
+:class:`~cadrumo.entrypoints.tui.components.NoticeBand` — the same typed
 ``Notice`` objects a CLI envelope carries on its ``notices`` channel,
 rendered here rather than re-modelled as a bespoke TUI-only advisory.
 """
@@ -35,7 +35,7 @@ from textual.widgets import Footer, Static
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice
-from ._theme import (
+from ....entrypoints.tui.components import (
     BASE_CSS,
     NOTICE_BAND_CSS,
     ContentDataTable,

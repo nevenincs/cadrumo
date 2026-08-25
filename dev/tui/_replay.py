@@ -30,8 +30,8 @@ def _theme_name(appearance: str) -> str:
     here: the harness must render under exactly the theme an operator
     with that preference gets.
     """
-    from cadrumo.adapters.inbound.tui import resolve_theme_name
     from cadrumo.core.config import TuiAppearance
+    from cadrumo.entrypoints.tui.components import resolve_theme_name
 
     return resolve_theme_name(TuiAppearance(appearance))
 

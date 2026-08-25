@@ -26,8 +26,8 @@ from textual.binding import Binding
 from textual.worker import Worker, WorkerState
 
 from ....core.i18n import tr
+from ....entrypoints.tui.components import toggle_appearance
 from ._status_bar import PinnedStatusBar
-from ._theme import toggle_appearance
 
 if TYPE_CHECKING:
     from collections.abc import Callable

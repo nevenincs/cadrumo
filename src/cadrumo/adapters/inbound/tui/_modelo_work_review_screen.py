@@ -41,7 +41,13 @@ from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ._theme import BASE_CSS, ContentDataTable, ContentScroll, install_cadrumo_themes, toggle_appearance
+from ....entrypoints.tui.components import (
+    BASE_CSS,
+    ContentDataTable,
+    ContentScroll,
+    install_cadrumo_themes,
+    toggle_appearance,
+)
 
 _PRESENT = "present"
 _ABSENT = "absent"

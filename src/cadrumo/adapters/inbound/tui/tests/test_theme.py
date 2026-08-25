@@ -25,21 +25,20 @@ import pytest
 from textual.containers import Vertical
 from textual.theme import Theme
 
-from .....core import scan_directory
-from .....core.config import TuiAppearance
-from .. import (
+from cadrumo.entrypoints.tui.components import (
     CADRUMO_DARK,
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT,
     CADRUMO_LIGHT_THEME_NAME,
     CADRUMO_THEMES,
     CONTENT_WIDTH_PERCENT,
-    RegistrationApp,
-    StatusApp,
-    StatusPageData,
     resolve_theme_name,
 )
-from .._theme import BASE_CSS, SCROLLBAR_CELLS
+from cadrumo.entrypoints.tui.components.theme import BASE_CSS, SCROLLBAR_CELLS
+
+from .....core import scan_directory
+from .....core.config import TuiAppearance
+from .. import RegistrationApp, StatusApp, StatusPageData
 
 pytestmark = [
     pytest.mark.unit,

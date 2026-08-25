@@ -36,7 +36,13 @@ from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, SelectionList, Static
 
 from ....core.i18n import tr
-from ._theme import BASE_CSS, ContentDataTable, ContentScroll, install_cadrumo_themes, toggle_appearance
+from ....entrypoints.tui.components import (
+    BASE_CSS,
+    ContentDataTable,
+    ContentScroll,
+    install_cadrumo_themes,
+    toggle_appearance,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping, Sequence

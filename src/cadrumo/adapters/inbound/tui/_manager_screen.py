@@ -43,10 +43,7 @@ from textual.worker import Worker, WorkerState
 
 from ....core import OperatorProgress
 from ....core.i18n import tr
-from ._field_edit_screen import FieldEditScreen
-from ._form_screen import FormScreen, presenting_forms_through
-from ._status_bar import PinnedStatusBar
-from ._theme import (
+from ....entrypoints.tui.components import (
     BASE_CSS,
     NOTICE_BAND_CSS,
     ContentDataTable,
@@ -55,6 +52,9 @@ from ._theme import (
     install_cadrumo_themes,
     toggle_appearance,
 )
+from ._field_edit_screen import FieldEditScreen
+from ._form_screen import FormScreen, presenting_forms_through
+from ._status_bar import PinnedStatusBar
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence

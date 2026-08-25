@@ -23,6 +23,8 @@ from textual.widgets import (
     Static,
 )
 
+from cadrumo.entrypoints.tui.components import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME, ContentScroll
+
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -65,7 +67,6 @@ from .._modelo_work_review_screen import (
     _relation_channel_options,
     _resolved_options,
 )
-from .._theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME, ContentScroll
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 
