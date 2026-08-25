@@ -5,13 +5,12 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:9da84029ad0bcad8da3f5e87c44c32f07cdbcefa3af98b3d7abe7997121f91a2'
+body_hash: 'sha256:284b3de8648a4bb4fc5cbdfd778f1fefd0a975a388101534c3858dc7074ace36'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-24-registry-completeness-closure-W03-P05-S85]]"
   - "[[2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-adr]]"
 ---
-
 # `registry-completeness-closure` audit: `S85 independent classification review`
 
 ## Scope
@@ -47,3 +46,4 @@ The S85 classifier does prevent this object from materializing a vector when `fu
 - Exact ownership sweep found one dynamic enrollment implementation, one canonical two-channel proof authority, one conformance proof function, one secure replay proof function, and empty canonical success-entry tuples.
 - `uv run --no-sync pytest -n 0 -q -m integration dev/registry/tests/test_filing_export_two_channel_proof.py`: 3 passed, one third-party `openpyxl` print-area warning, 115.07 seconds. This does not mitigate either static HIGH finding.
 - `uv run --no-sync pytest -n 0 -q src/cadrumo/application/filing/tests/test_export_proof_contracts.py src/cadrumo/adapters/persistence/profile/tests/test_filing_export_replay_custody.py`: collection failed before tests because concurrent relocation WIP has removed `cadrumo.core._bucket_pointer_io`; this is outside the committed S85 review surface and is not attributed to S85.
+
