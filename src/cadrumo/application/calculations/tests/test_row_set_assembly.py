@@ -286,7 +286,7 @@ def test_assemble_refund_parses_iso_operation_date() -> None:
 
 
 def test_assemble_donativo_groups_two_donors_into_two_observations() -> None:
-    revision = _modelo("182", "2007-y-siguientes")
+    revision = _modelo("182", "2025")
     cells = (
         RowSetCellEdit(binding="modelo-182-donor-row-nif", row_index=1, value="11111111A"),
         RowSetCellEdit(binding="modelo-182-donor-row-name", row_index=1, value="Donor One"),
@@ -316,7 +316,7 @@ def test_assemble_donativo_groups_two_donors_into_two_observations() -> None:
 def test_assemble_observations_for_grouping_dispatches_per_donativo_donor() -> None:
     from ....domain.calculations.registry import DonativoDonorObservation
 
-    revision = _modelo("182", "2007-y-siguientes")
+    revision = _modelo("182", "2025")
     cells = (
         RowSetCellEdit(binding="modelo-182-donor-row-nif", row_index=1, value="11111111A"),
         RowSetCellEdit(binding="modelo-182-donor-row-amount", row_index=1, value=Decimal("100")),
