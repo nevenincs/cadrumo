@@ -78,3 +78,45 @@ retrieved_at = 2026-07-21
 applies_from = 2022-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/DR_181_2022.pdf"
 review_status = "reviewed"
+
+[sources."aeat-dr-181-2009"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2009"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_181/files/02-181-orden-eha-3514-2009.pdf"
+sha256 = "77979c8208c1125c26b1f39216b61ad0eaeeb0af676dddd1a327b119c5c5e0fd"
+bytes = 392260
+retrieved_at = 2026-08-25
+applies_from = 2009-01-01
+applies_to = 2009-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr181.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-181-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_181/files/04-181-orden-eha-3514-2009-actualizado-por-orden-hfp-1923-2016.pdf"
+sha256 = "b28134673be0bd502a3572cd9ad349861fa76630c3e652cd5f76df34171be32e"
+bytes = 166481
+retrieved_at = 2026-08-25
+applies_from = 2016-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR181_2016.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-181-2017"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2017"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_181/files/03-181-orden-eha-3514-2009-ejercicio-2017.pdf"
+sha256 = "78820e54a2aa9303f53d187e37cb770c8c513f73dfcc9e7bf4ce8b4c786400b1"
+bytes = 366939
+retrieved_at = 2026-08-25
+applies_from = 2017-01-01
+applies_to = 2017-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_17/DR181_2017.pdf"
+review_status = "reviewed"

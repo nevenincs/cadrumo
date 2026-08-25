@@ -29,7 +29,7 @@ from ..packaging._hashing import sha256_path  # noqa: E402
 
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 _HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"
-_RETRIEVED_AT = "2026-08-15"
+_RETRIEVED_AT = "2026-08-25"
 _STATIC = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro"
 _INDEX = "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro"
 _PAGES = {
@@ -198,6 +198,36 @@ _REQUIRED = (
         "184",
         "184 - Orden HAP/2250/2015 actualizada por Orden HFP/1284/2023",
         "DR_100_199/archivos_23/DR_Mod_184_2023.pdf",
+        "h100",
+    ),
+    _RequiredArtifact(
+        "126",
+        "126 - Orden EHA/3435/2007 (Ejercicios 2015 a 2019)",
+        "ant_100_199/archivos/DR-126e16_v1.05.pdf",
+        "h100",
+    ),
+    _RequiredArtifact(
+        "128",
+        "128 - Orden EHA/3435/2007 (Ejercicios 2015 a 2019)",
+        "ant_100_199/archivos/DR-128e16_v1.05.pdf",
+        "h100",
+    ),
+    _RequiredArtifact(
+        "181",
+        "181 - Orden EHA/3514/2009",
+        "ant_100_199/archivos/dr181.pdf",
+        "h100",
+    ),
+    _RequiredArtifact(
+        "181",
+        "181 - Orden EHA/3514/2009 (Ejercicio 2017)",
+        "DR_100_199/archivos_17/DR181_2017.pdf",
+        "h100",
+    ),
+    _RequiredArtifact(
+        "181",
+        "181 - Orden EHA/3514/2009 (actualizado por Orden HFP/1923/2016)",
+        "ant_100_199/archivos/DR181_2016.pdf",
         "h100",
     ),
     _RequiredArtifact(
