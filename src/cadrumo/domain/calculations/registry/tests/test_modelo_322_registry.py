@@ -15,6 +15,7 @@ from .. import (
     RegistryValidator,
     build_snapshot,
     bundled_authority,
+    deadline_semantic_coordinate,
     select_revision,
 )
 from ._ledger_iva_aggregation_support import _deduction_provenance
@@ -242,7 +243,12 @@ def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned
         projected = bundled_authority().deadline_windows(year, modelos=("322",))
         expected_count = 11 if year == 2026 else 12
         assert len(projected) == expected_count
-        assert len({window.semantic_coordinate for _, _, window in projected}) == expected_count
+        assert len(
+            {
+                deadline_semantic_coordinate("322", window.period, None, None)
+                for _, _, window in projected
+            },
+        ) == expected_count
 
 
 def test_modelo_322_deadline_sources_and_construct_links_are_closed() -> None:
