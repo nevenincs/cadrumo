@@ -177,12 +177,24 @@ def test_inventory_repository_ownership_uses_its_live_discovery_locator() -> Non
     focused_manifest = manifest.model_copy(update={"entries": (entry,)})
     evidence = discovered_source_capability_evidence(REPO_ROOT)
     repository_locator = "src/cadrumo/adapters/persistence/profile/inventory.py:121"
+    projection_locator = "src/cadrumo/domain/contribuyente/inventory/__init__.py:1370"
+    create_locator = "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:4866"
+    movement_locator = "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:7118"
 
     assert repository_locator in entry.capability_locators
+    assert projection_locator in entry.capability_locators
+    assert create_locator in entry.capability_locators
+    assert movement_locator in entry.capability_locators
     check_capability_locators(REPO_ROOT, focused_manifest, capability_evidence=evidence)
 
     stale = entry.model_copy(
-        update={"capability_locators": tuple(item for item in entry.capability_locators if item != repository_locator)}
+        update={
+            "capability_locators": tuple(
+                item
+                for item in entry.capability_locators
+                if item not in {repository_locator, projection_locator, create_locator, movement_locator}
+            )
+        }
     )
     with pytest.raises(SourceConnectivityCheckError, match="census capability locator drift"):
         check_capability_locators(

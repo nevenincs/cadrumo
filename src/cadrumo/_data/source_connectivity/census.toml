@@ -60,9 +60,10 @@ capability_locators = [
   "src/cadrumo/adapters/persistence/profile/inventory.py:121",
   "src/cadrumo/application/inventory/_source_readiness.py:33",
   "src/cadrumo/domain/contribuyente/inventory/__init__.py:1160",
-  "src/cadrumo/domain/contribuyente/inventory/__init__.py:1363",
+  "src/cadrumo/domain/contribuyente/inventory/__init__.py:1370",
   "src/cadrumo/application/inventory/_service.py:413",
-  "src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py:237",
+  "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:4866",
+  "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:7118",
 ]
 capability_ids = [
   "secure_repository:src/cadrumo/adapters/persistence/profile/inventory.py:InventoryLedgerRepository",
@@ -95,7 +96,7 @@ summary = "Executable readiness acknowledges completed encrypted persistence whi
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/domain/contribuyente/inventory/__init__.py:1363"
+reference = "src/cadrumo/domain/contribuyente/inventory/__init__.py:1370"
 summary = "The strict 2025 source-owned projection emits complete acquisition cost to 0181 and the mutually exclusive authoritative closing variation to 0177 or 0182 with continuity and conflict provenance."
 
 [[entries.grounding]]

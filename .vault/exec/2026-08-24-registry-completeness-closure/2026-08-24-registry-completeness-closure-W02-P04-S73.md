@@ -3,12 +3,13 @@ tags:
   - '#exec'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:f64ab2ed194146a7161a95e584de23817e53d045f1293eb1f14bba398c653a15'
+body_hash: 'sha256:d3cedbf9ebb9ef0027ac0a3f4fdf2547de21200a701512cdc664fe1330cdb36d'
 step_id: 'S73'
 related:
-  - "[[2026-08-24-registry-completeness-closure-plan]]"
+  - '[[2026-08-24-registry-completeness-closure-plan]]'
+  - '[[2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit]]'
 ---
 # Adjudicate real below-filing source-connectivity participation and evidence for candidate revisions starting with Modelo 036, route accepted evidence or an ADR-authorized disposition into source-casilla-integration, and return the canonical proof to S72 and S11 without treating an empty candidate set as satisfied
 
@@ -39,3 +40,12 @@ S72 and S11 remain open. The canonical full report cannot yet validate because e
 ## Notes
 
 The two blockers are retained as failures rather than absorbed into this source slice: Modelo 303 revision `2023` and Modelo 322 revision `2008-2022` claim filing grade while deadline windows are blocked; the full source census reports expected calculation-helper digest `sha256:1bd52137591b1878c9240528c0c9c63b753c074c0dca6a5e2b437f25a04ad541` versus current `sha256:e5a85c1679b69c5d516fd4bc2fe4a93ef0067284f35a395dbe519f7ac0979709`. Re-run canonical closure only after those owners restore their authority and coverage contracts.
+## Revalidation 2026-08-25
+
+This revalidation supersedes the two historical blockers in the earlier Outcome and Notes for S73 acceptance only. The live source-connectivity authority now validates all 15 bundled entries, the canonical Modelo 036 row remains revision-scoped `manual_by_design`, and the full exact-one census reports `capabilities=474 assignments=474 entries=15`.
+
+The helper and ingress selector differences were traced through the canonical discovery generator rather than accepted by hash alone. `resolve_inventory_authoritative_closing` has one explicit inventory owner; deadline-coordinate and source-presence validation helpers are the reviewed non-source remainder. The retained calculation-helper digest is `sha256:3ddcba1760dbb46f65c8a1edd558516c24edb093348516bc01f1da73969aaddb`, and the retained ingress digest is `sha256:e46792929eaccb593e16d999a5a41929f3e3c2f826d80985cbd5df08a9bd09c1`. Live locator validation, bundled authority validation, targeted ownership and selector mutation bites, and Ruff pass.
+
+A Vaultspec-RAG, whole-file, and targeted search audit confirms that this repair introduces no second M036 source, resolver, producer, dispatch path, event-coordinate authority, or registry authority. The mutation proof covers stale M036 source-route evidence, removal of the inventory closing-helper owner, and injected helper and ingress identities. The feature-scoped Vault check exits successfully with only shared feature-index and S32 stamp warnings, none owned by S73.
+
+S73 is therefore complete and returns the canonical source proof to the composed closure work. This does not close S72 or S11; they retain their own composed-closure acceptance obligations.
