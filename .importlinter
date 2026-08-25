@@ -767,7 +767,6 @@ ignore_imports =
     cadrumo.application.modelo._history -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._iva_wallet_seed -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._participation_index_rebuild -> cadrumo.adapters.persistence.profile.modelos_work_units
-    cadrumo.application.modelo._selectors -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._taxation_comparison -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.modelos_work_units
     cadrumo.application.modelo._work_lifecycle -> cadrumo.adapters.persistence.profile.modelos_work_units
