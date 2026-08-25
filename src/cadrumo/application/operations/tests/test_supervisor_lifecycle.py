@@ -48,9 +48,9 @@ from .. import (
     OperationTerminalReceipt,
 )
 from .._events import OperationTerminalEvent
-from .._executor import OperationExecutorContext
 from .._journal import OperationPersistedSnapshot
 from .._supervisor import OperationSupervisor
+from ..owner import OperationExecutorContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

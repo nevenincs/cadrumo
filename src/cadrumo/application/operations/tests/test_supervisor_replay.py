@@ -37,10 +37,10 @@ from .. import (
     OperationSchemaBindingV1,
     OperationSensitiveInputPolicy,
 )
-from .._executor import OperationExecutorContext
 from .._journal import OperationSecureReferenceStore
 from .._replay import OperationReplayStatus
 from .._supervisor import OperationSupervisor
+from ..owner import OperationExecutorContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

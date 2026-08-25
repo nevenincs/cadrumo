@@ -33,7 +33,6 @@ from ._events import (
     OperationTerminalEvent,
 )
 from ._execution_context import DefinitionBoundContext, OperationDeclarationError
-from ._executor import OperationResumableExecutor
 from ._interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
@@ -74,6 +73,7 @@ from ._secret_submission import (
     zeroize_secret_buffer,
 )
 from ._supervisor_lease import OperationSupervisorLeaseMixin
+from .owner import OperationResumableExecutor
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25

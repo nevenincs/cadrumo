@@ -22,7 +22,15 @@ from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
 from typing import Literal, TypeGuard
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    TypeAdapter,
+    ValidationError,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from ....core import (
     OBJECT_TUPLE_ADAPTER,
@@ -492,11 +500,17 @@ class RegistryModeloObservation(BaseModel):
             return data
         try:
             filing_period = Period.from_year_and_code(filing_year, period)
-        except ValueError:
+        except ValueError as exc:
             # An administrative coordinate has no calendar span, so a
-            # non-filing modelo simply carries no filing_period. A token that
-            # is not a registry period at all is still refused, by the field
-            # validator that runs after this one.
+            # non-filing modelo simply carries no filing_period. Anything
+            # else that cannot form a Period -- a combined display form such
+            # as "2025 1T" -- is drift and is still refused here.
+            try:
+                TypeAdapter(RegistryPeriodCode).validate_python(period)
+            except ValidationError:
+                raise RegistryValidationError(
+                    "observation period must be a bare registry period token",
+                ) from exc
             return data
         return {**payload, "filing_period": filing_period}
 

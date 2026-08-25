@@ -38,7 +38,6 @@ from ._capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ._events import OperationEventCode
-from ._executor import OperationExecutor, OperationResumableExecutor
 from ._interactions import OperationInteractionRequest
 from ._model_contract import require_strict_frozen_operation_model_graph
 from ._models import (
@@ -50,6 +49,7 @@ from ._models import (
     OperationTerminalReceipt,
 )
 from ._secret_submission import OperationEphemeralSecretDeclaration
+from .owner import OperationExecutor, OperationResumableExecutor
 
 _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
     {
