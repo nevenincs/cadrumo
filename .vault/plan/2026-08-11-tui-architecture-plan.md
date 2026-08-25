@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-25'
-body_hash: 'sha256:cda2d1633f7ab555acf0ebe170cafa2302d276ad1b3abf1be8d732c59c25cb78'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -13,6 +11,8 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
+modified: '2026-08-25'
+body_hash: 'sha256:b306007db8d3158f6c97978efb47318b9b2b07ba22b4f1ca882141eec39ec85a'
 ---
 
 # `tui-architecture` plan
@@ -214,7 +214,7 @@ Mechanically relocate profile, secret, flow, test, and development surfaces with
 - [x] `W04.P10.S54` - Relocate profile overview, editor, status, and task projections without changing profile policy; `src/cadrumo/entrypoints/tui/profile`.
 - [x] `W04.P10.S55` - Relocate credential, login, registration, and passphrase projections while keeping secrets ephemeral; `src/cadrumo/entrypoints/tui/secret`.
 - [x] `W04.P10.S56` - Relocate the existing flow renderer mechanically without changing application flow or wizard semantics; `src/cadrumo/entrypoints/tui/flows`.
-- [ ] `W04.P10.S57` - Relocate TUI-owned pilot, replay, screenshot, and terminal-surface tooling; `src/cadrumo/entrypoints/tui/devtools`.
+- [x] `W04.P10.S57` - Relocate TUI-owned pilot, replay, screenshot, and terminal-surface tooling; `src/cadrumo/entrypoints/tui/devtools`.
 - [x] `W04.P10.S104` - Relocate the sole Casilla review screen and tests to the canonical Modelo view as a read-only consumer of the public application.modelo.work_review_projection defining module, preserve named-outlier evidence, delete the legacy inbound screen, package exports, private review modules, and locale references atomically without compatibility, and provide the zero-remnant migration evidence consumed by the interface C1 exit validator; `src/cadrumo/entrypoints/tui/modelo/view and src/cadrumo/adapters/inbound/tui/_modelo_work_review_screen.py`.
 - [x] `W04.P10.S58` - Move presentation tests under the canonical owning packages and remove backend imports of TUI test helpers; `src/cadrumo/entrypoints/tui/tests`.
 - [x] `W04.P10.S59` - Prove the relocation is behavior-preserving before any root app or navigation join is introduced; `src/cadrumo/entrypoints/tui/tests/test_relocation_parity.py`.
