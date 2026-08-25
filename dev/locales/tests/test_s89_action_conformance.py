@@ -40,7 +40,7 @@ _CONFIG_MODULE_NAMES = frozenset(
         "_capabilities_payloads.py",
         "_censo_file.py",
         "_censo_payloads.py",
-        "_censo_review_ui.py",
+        "_censo_review_cli.py",
         "_certificate.py",
         "_check_cli.py",
         "_check_command_specs.py",
