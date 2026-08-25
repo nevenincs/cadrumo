@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:69076b0b5e6f9ca59b05ef364087c2b675ba039486d6a8f282f819b7ab4c8608'
+body_hash: 'sha256:9c6599c4261ee9d43c64b244f077d0da6d0d7781690336d1dd1ad468990a26e3'
 step_id: 'S125'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -18,23 +18,22 @@ related:
 
 ## Description
 
-- Grounded the Workspace V1 boundary in the approved plan, workspace and registry ADRs, audit corpus, and semantic code census before declaring its model family.
-- Reused canonical `ModeloVisibleFilingTarget`, `ModeloExactWorkUnitTarget`, `ModeloWorkReview`, core identity and authority values, registry identifiers, filing scalar, locale, lineage, and operator-action reference rather than redeclaring equivalent concepts.
-- Defined strict frozen V1 request, admission, projection, bounded facet, schema, provenance, capability, refusal, locale, and baseline records in the owning `application.modelo` module.
-- Separated static inspection from graded snapshots, prohibited static materialization and review disclosure, and required the closed producer-declared capability denominator on successful projections.
-- Added focused contract tests for canonical target wire adaptation, strict/frozen request behavior, discriminated version refusal handling, and unavailable bounded facets.
-- Corrected independent-review findings by embedding the exact canonical `CalculationSourceRef`; pinning every facet to V1, selected revision, schema identity/fingerprint, baseline, and contributor identities; preserving the exact readiness projection and registry closure limbs; binding capabilities to the exact resolved target; and expanding schema references for continuity, formula operands, relation endpoints, applicability, constraints, and export exposure.
-- Promoted the existing canonical `ContinuidadId` through the `domain.calculations.registry` facade and its existing public-boundary assertion, without copying the declaration or changing concurrent registry edits.
-- Replaced unsafe mixed fact values with strict discriminated text, count, and flag branches, and added adversarial coverage for each corrective boundary.
+- Grounded the Workspace V1 boundary in the accepted registry API ADR, Workspace V1 contract reference, S125 audit, semantic RAG, and exact source census.
+- Kept canonical `ModeloVisibleFilingTarget` and `ModeloExactWorkUnitTarget` as the operands of narrow literal-tagged Workspace arms. The public request and domain refusal now carry the tagged arms; they do not shape-sniff, reparse, or reconstruct a parallel target grammar.
+- Bound every capability to its exact resolved target and explicit selected revision. Baselines and all bounded facets carry and validate the V1 version, selected revision, schema identity and fingerprint, baseline, and sorted contributor tuple.
+- Added typed schema destinations for continuity, applicability, constraints, formula operands, relation endpoints, and export exposure, with executable finite bounds for eager nested collections.
+- Replaced nullable materialization payloads with strict scalar and repeated-row discriminated record arms.
+- Kept provenance as a bounded redacted Workspace DTO: canonical resolver/source kinds and lineage role, safe reference, optional fingerprint, and parent reference are preserved without raw `CalculationSourceRef` or source-object identity.
+- Added a strict typed Workspace readiness projection that preserves the canonical profile, registry, binding, ledger-preflight, nullable ledger verdict, issue, and aggregate-ready axes without collapsing them into generic facts or inferring capability availability.
+- Bounded localized values, cursors, facts, evidence references, facet records, contributors, schema relationships, repeated rows, provenance rows, readiness rows, family dispositions, and closure limbs.
+- Added integration-marked adversarial tests for tagged target parsing, safe provenance, typed schema relationship destinations, real materialization discrimination, collection and cursor limits, exact capability-revision binding, and projection coordinate drift.
 
 ## Outcome
 
-Corrected implementation is review-ready. The S125 checkbox remains open pending independent re-review. The public application facade and executable workspace service are deferred to their separately owned plan steps; this step adds neither a shim nor a cross-owner private import.
+Corrected implementation is review-ready. S125 remains open pending independent re-review; no plan checkbox or status was closed. The public application facade and executable workspace service remain separately owned, and this step adds no compatibility shim, fallback parser, duplicate owner, or facade re-export.
 
 ## Notes
 
-Semantic RAG returned an incomplete code index warning for absent-result searches, so exact source census was used alongside positive semantic findings. The adjudicated existing owners were `ModeloWorkReview` for the review facet, `_work_addressing` for request targets, `CalculationSourceRef` for persisted source lineage, `ProjectionModeloReadiness` for readiness axes, `RegistryClosureLimb` for production closure facts, core for identity/authority/locale primitives, `domain.calculations.registry` for schema identities, and `application.operator_actions` for recovery references. No duplicate Workspace V1 model family was found in production `application.modelo` sources.
+Vaultspec RAG confirmed the governing Workspace decision and canonical model family before the correction. The final code-index query was temporarily unavailable while the shared index refreshed; exact `rg` census is the closing redeclaration evidence: every `ModeloWorkspace*` definition is in the one canonical model module, no production compatibility bridge exists, and the removed `_target_from_mapping`, `_adapt_wire_target`, raw `CalculationSourceRef`, and raw `ProjectionModeloReadiness` references have zero matches there.
 
-Corrective focused evidence: `uv run ruff check` passed; `uv run ty check` passed; `uv run pytest -q -o addopts='' -m integration src/cadrumo/application/modelo/tests/test_workspace_models.py` passed with 13 tests; `test_registry_casilla_continuity_reports_are_public_api` passed; `git diff --check` passed for owned paths.
-
-The full registry public-boundary module remains red for pre-existing non-S125 debt: `test_unsupported_design_span_policy.py` imports private `cadrumo.domain.calculations.registry._authority` and `_errors`, which the global scanner reports. S125 neither introduced nor changes those imports, so this record does not claim the full module suite is green.
+Focused evidence: `uv run --no-sync ruff check src/cadrumo/application/modelo/_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_models.py` passed; `uv run --no-sync basedpyright src/cadrumo/application/modelo/_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_models.py` passed with 0 errors; `uv run --no-sync pytest -q -o addopts='' -m integration src/cadrumo/application/modelo/tests/test_workspace_models.py` passed with 16 tests; `git diff --check` passed for the owned paths.

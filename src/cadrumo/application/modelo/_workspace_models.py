@@ -8,9 +8,9 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import (
+    STRICT_FROZEN_CONFIG,
     BindingSourceKind,
     CalculationSourceLineageRole,
-    STRICT_FROZEN_CONFIG,
     CasillaId,
     OutputLanguage,
     Period,
@@ -46,9 +46,6 @@ _MAX_SCHEMA_RELATIONSHIPS = 128
 _MAX_SCHEMA_EVIDENCE_REFERENCES = 64
 _MAX_REPEATED_ROW_VALUES = 200
 _MAX_PROVENANCE_RECORDS = 64
-_MAX_READINESS_REQUIREMENTS = 128
-_MAX_READINESS_BINDINGS = 128
-_MAX_READINESS_LEDGER_ISSUES = 128
 _MAX_CLOSURE_LIMBS = 16
 _MAX_SAFE_FACTS = 32
 _MAX_SAFE_FACT_TEXT_LENGTH = 256
@@ -604,6 +601,12 @@ class ModeloWorkspaceBaselineV1(_WorkspaceModel):
     schema_identity: ModeloWorkspaceSchemaIdentityV1
     locale_catalogue_digest: ContentDigest
 
+    @model_validator(mode="after")
+    def _require_exact_baseline_coordinate(self) -> ModeloWorkspaceBaselineV1:
+        if self.selected_revision_id != self.target.law_selected_revision_id:
+            raise ValueError("workspace baseline selected_revision_id must equal the target law-selected revision")
+        return self
+
 
 class ModeloWorkspaceContributorIdentityV1(_WorkspaceModel):
     """One producer identity captured in a baseline-pinned Workspace read."""
@@ -628,10 +631,13 @@ class ModeloWorkspaceCapabilityV1(_WorkspaceModel):
     capability: ModeloWorkspaceCapabilityName
     disposition: ModeloWorkspaceCapabilityDisposition
     target: ModeloWorkspaceResolvedTargetV1
+    selected_revision_id: RevisionId
     producer_owner: _BoundedCode
     producer: _BoundedCode
-    evidence: tuple[ModeloWorkspaceEvidenceReferenceV1, ...] = ()
-    facts: tuple[ModeloWorkspaceEvidenceFactV1, ...] = ()
+    evidence: Annotated[
+        tuple[ModeloWorkspaceEvidenceReferenceV1, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)
+    ] = ()
+    facts: Annotated[tuple[ModeloWorkspaceEvidenceFactV1, ...], Field(max_length=_MAX_SAFE_FACTS)] = ()
     source_disposition: RegistrySchemaFamilyDisposition | None = None
     recovery_action: ActionReference | None = None
 
@@ -646,6 +652,12 @@ class ModeloWorkspaceCapabilityV1(_WorkspaceModel):
             raise ValueError("workspace capability fact names must be unique")
         return tuple(sorted(value, key=lambda fact: fact.name))
 
+    @model_validator(mode="after")
+    def _require_exact_capability_coordinate(self) -> ModeloWorkspaceCapabilityV1:
+        if self.selected_revision_id != self.target.law_selected_revision_id:
+            raise ValueError("workspace capability selected_revision_id must equal the target law-selected revision")
+        return self
+
 
 def _complete_capability_denominator(
     value: tuple[ModeloWorkspaceCapabilityV1, ...],
@@ -657,19 +669,21 @@ def _complete_capability_denominator(
     return tuple(sorted(value, key=lambda capability: capability.capability.value))
 
 
-class ModeloWorkspaceBoundedFacetV1[RecordT: BaseModel](_WorkspaceModel):
+class ModeloWorkspaceBoundedFacetV1[RecordT](_WorkspaceModel):
     """A baseline-pinned, finite page from one workspace facet."""
 
     contract_version: Literal[1] = 1
     selected_revision_id: RevisionId
     schema_identity: ModeloWorkspaceSchemaIdentityV1
     baseline: ModeloWorkspaceBaselineV1
-    contributors: tuple[ModeloWorkspaceContributorIdentityV1, ...]
+    contributors: Annotated[
+        tuple[ModeloWorkspaceContributorIdentityV1, ...], Field(min_length=1, max_length=_MAX_CONTRIBUTORS)
+    ]
     facet: ModeloWorkspaceFacetName
     disposition: ModeloWorkspaceCapabilityDisposition
-    records: tuple[RecordT, ...] = ()
+    records: Annotated[tuple[RecordT, ...], Field(max_length=_MAX_FACET_PAGE_SIZE)] = ()
     page_size: Annotated[int, Field(ge=1, le=_MAX_FACET_PAGE_SIZE)]
-    next_cursor: str | None = None
+    next_cursor: _BoundedText | None = None
     has_more: bool = False
 
     @field_validator("contributors")
@@ -714,8 +728,65 @@ class ModeloWorkspaceWorkReviewFacetV1(_WorkspaceModel):
 class ModeloWorkspaceEvidenceHorizonV1(_WorkspaceModel):
     """The safe evidence coordinates on which the admitted projection rests."""
 
-    source_refs: tuple[SourceRefId, ...]
+    source_refs: _BoundedRefList[SourceRefId]
     evidence_digest: ContentDigest
+
+
+class ModeloWorkspaceProfileRequirementV1(_WorkspaceModel):
+    """One bounded profile requirement from the canonical readiness axis."""
+
+    selector: Annotated[str, Field(min_length=1, max_length=128)]
+    section_key: Annotated[str, Field(min_length=1, max_length=64)]
+    field_key: Annotated[str, Field(min_length=1, max_length=128)]
+    label: _BoundedLocalizedText
+    legal_refs: Annotated[tuple[LegalRefId, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)] = ()
+    modelos: Annotated[tuple[ModeloCode, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)] = ()
+
+
+class ModeloWorkspaceBindingRequirementV1(_WorkspaceModel):
+    """One missing canonical calculation-binding requirement from readiness."""
+
+    binding_id: BindingId
+    source: BindingSourceKind
+    input_channel: Annotated[str, Field(min_length=1, max_length=16)]
+
+
+class ModeloWorkspaceLedgerIssueV1(_WorkspaceModel):
+    """One bounded ledger-preflight issue preserving its canonical typed axis."""
+
+    transaction_id: TransactionId
+    reason: LedgerPreflightIssueReason
+    detail: _BoundedLocalizedText
+
+
+class ModeloWorkspaceReadinessV1(_WorkspaceModel):
+    """Typed, axis-preserving Workspace projection of canonical Modelo readiness."""
+
+    profile_id: ProfileId
+    modelo: ModeloCode
+    revision_id: RevisionId
+    filing_year: Annotated[int, Field(ge=2000, le=2100)]
+    period: Period
+    missing: Annotated[tuple[ModeloWorkspaceProfileRequirementV1, ...], Field(max_length=128)] = ()
+    profile_ready: bool
+    per_operation_requirements_assessed: bool
+    profile_refusal: Annotated[str, Field(max_length=512)] = ""
+    registry_ready: bool = True
+    registry_refusal: Annotated[str, Field(max_length=512)] = ""
+    binding_ready: bool = True
+    missing_bindings: Annotated[tuple[ModeloWorkspaceBindingRequirementV1, ...], Field(max_length=128)] = ()
+    ledger_preflight_required: bool = False
+    ledger_ready: bool | None = None
+    ledger_period: Period | None = None
+    ledger_checked_transaction_count: Annotated[int, Field(ge=0)] = 0
+    ledger_issues: Annotated[tuple[ModeloWorkspaceLedgerIssueV1, ...], Field(max_length=128)] = ()
+    ready: bool
+
+    @model_validator(mode="after")
+    def _require_period_to_match_readiness_year(self) -> ModeloWorkspaceReadinessV1:
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("workspace readiness filing_year must match period.filing_year")
+        return self
 
 
 class ModeloWorkspaceSnapshotScopeV1(_WorkspaceModel):
@@ -757,16 +828,23 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
     schema_identity: ModeloWorkspaceSchemaIdentityV1
     locale: ModeloWorkspaceLocaleSummaryV1
     evidence_horizon: ModeloWorkspaceEvidenceHorizonV1
-    family_dispositions: tuple[ModeloWorkspaceFamilyDispositionV1, ...]
-    contributors: tuple[ModeloWorkspaceContributorIdentityV1, ...]
+    family_dispositions: Annotated[
+        tuple[ModeloWorkspaceFamilyDispositionV1, ...], Field(max_length=_MAX_SCHEMA_RELATIONSHIPS)
+    ]
+    contributors: Annotated[
+        tuple[ModeloWorkspaceContributorIdentityV1, ...], Field(min_length=1, max_length=_MAX_CONTRIBUTORS)
+    ]
     baseline: ModeloWorkspaceBaselineV1
     schema_facet: ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1]
     materialization_facet: ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1] | None = None
     provenance_facet: ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1] | None = None
     work_review: ModeloWorkspaceWorkReviewFacetV1
-    readiness: ProjectionModeloReadiness | None = None
-    registry_closure_limbs: tuple[RegistryClosureLimb, ...] = ()
-    capabilities: tuple[ModeloWorkspaceCapabilityV1, ...]
+    readiness: ModeloWorkspaceReadinessV1 | None = None
+    registry_closure_limbs: Annotated[tuple[RegistryClosureLimb, ...], Field(max_length=_MAX_CLOSURE_LIMBS)] = ()
+    capabilities: Annotated[
+        tuple[ModeloWorkspaceCapabilityV1, ...],
+        Field(min_length=len(ModeloWorkspaceCapabilityName), max_length=len(ModeloWorkspaceCapabilityName)),
+    ]
 
     @field_validator("capabilities")
     @classmethod
@@ -821,7 +899,10 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
         if self.schema_facet.contributors != self.contributors:
             raise ValueError("workspace schema facet must retain the contributor tuple")
         for capability in self.capabilities:
-            if capability.target != self.target:
+            if (
+                capability.target != self.target
+                or capability.selected_revision_id != self.target.law_selected_revision_id
+            ):
                 raise ValueError("workspace capabilities must retain the exact target and revision coordinate")
         if self.readiness is not None and (
             self.readiness.modelo != self.target.modelo
@@ -909,19 +990,14 @@ class ModeloWorkspaceDomainRefusalV1(_WorkspaceModel):
     code: ModeloWorkspaceRefusalCode
     boundary: Literal["admission", "capability", "consistency", "locale", "schema"]
     capability: ModeloWorkspaceCapabilityName | None = None
-    requested_target: _WorkspaceTarget
+    requested_target: ModeloWorkspaceTargetV1
     selected_target: ModeloWorkspaceResolvedTargetV1 | None = None
-    facts: tuple[ModeloWorkspaceEvidenceFactV1, ...] = ()
-    evidence: tuple[ModeloWorkspaceEvidenceReferenceV1, ...] = ()
+    facts: Annotated[tuple[ModeloWorkspaceEvidenceFactV1, ...], Field(max_length=_MAX_SAFE_FACTS)] = ()
+    evidence: _BoundedRefList[ModeloWorkspaceEvidenceReferenceV1] = ()
     responsible_owner: _BoundedCode
     source_disposition: RegistrySchemaFamilyDisposition | None = None
     reconsideration_condition: _BoundedText
     recovery_action: ActionReference | None = None
-
-    @field_validator("requested_target", mode="before")
-    @classmethod
-    def _adapt_refusal_target(cls, value: object) -> _WorkspaceTarget:
-        return ModeloWorkspaceRequestV1._adapt_wire_target(value)
 
     @field_validator("facts")
     @classmethod
@@ -960,6 +1036,7 @@ __all__ = [
     "ModeloWorkspaceApplicabilityReferenceV1",
     "ModeloWorkspaceBaselineV1",
     "ModeloWorkspaceBindingReferenceV1",
+    "ModeloWorkspaceBindingRequirementV1",
     "ModeloWorkspaceBoundedFacetV1",
     "ModeloWorkspaceCapabilityDisposition",
     "ModeloWorkspaceCapabilityName",
@@ -974,6 +1051,7 @@ __all__ = [
     "ModeloWorkspaceEvidenceFactValueV1",
     "ModeloWorkspaceEvidenceHorizonV1",
     "ModeloWorkspaceEvidenceReferenceV1",
+    "ModeloWorkspaceExactWorkUnitTargetV1",
     "ModeloWorkspaceExportExposureReferenceV1",
     "ModeloWorkspaceExportFieldReferenceV1",
     "ModeloWorkspaceFacetName",
@@ -991,15 +1069,18 @@ __all__ = [
     "ModeloWorkspaceGradedSnapshotAdmissionV1",
     "ModeloWorkspaceGradedSnapshotResultV1",
     "ModeloWorkspaceGradedSnapshotScopeV1",
+    "ModeloWorkspaceLedgerIssueV1",
     "ModeloWorkspaceLegalEvidenceReferenceV1",
     "ModeloWorkspaceLocaleDisposition",
     "ModeloWorkspaceLocaleSummaryV1",
     "ModeloWorkspaceLocalizedTextV1",
     "ModeloWorkspaceMaterializationRecordV1",
     "ModeloWorkspaceParameterReferenceV1",
+    "ModeloWorkspaceProfileRequirementV1",
     "ModeloWorkspaceProjectionAdmissionV1",
     "ModeloWorkspaceProjectionV1",
     "ModeloWorkspaceProvenanceRecordV1",
+    "ModeloWorkspaceReadinessV1",
     "ModeloWorkspaceRefusalCode",
     "ModeloWorkspaceRefusalV1",
     "ModeloWorkspaceRefusedResultV1",
@@ -1007,12 +1088,14 @@ __all__ = [
     "ModeloWorkspaceRelationReferenceV1",
     "ModeloWorkspaceRelationSourceEndpointReferenceV1",
     "ModeloWorkspaceRelationTargetEndpointReferenceV1",
+    "ModeloWorkspaceRepeatedRowMaterializationRecordV1",
     "ModeloWorkspaceRepeatedRowMaterializationV1",
     "ModeloWorkspaceRequestV1",
     "ModeloWorkspaceResolvedTargetV1",
     "ModeloWorkspaceResultV1",
     "ModeloWorkspaceRevisionAssertionDisposition",
     "ModeloWorkspaceRevisionAssertionV1",
+    "ModeloWorkspaceScalarMaterializationRecordV1",
     "ModeloWorkspaceScalarMaterializationV1",
     "ModeloWorkspaceSchemaClassification",
     "ModeloWorkspaceSchemaIdentityV1",
@@ -1023,8 +1106,10 @@ __all__ = [
     "ModeloWorkspaceStaticInspectionAdmissionV1",
     "ModeloWorkspaceStaticInspectionResultV1",
     "ModeloWorkspaceStaticInspectionScopeV1",
+    "ModeloWorkspaceTargetV1",
     "ModeloWorkspaceTextFactValueV1",
     "ModeloWorkspaceVersionHeader",
     "ModeloWorkspaceVersionRefusalV1",
+    "ModeloWorkspaceVisibleFilingTargetV1",
     "ModeloWorkspaceWorkReviewFacetV1",
 ]

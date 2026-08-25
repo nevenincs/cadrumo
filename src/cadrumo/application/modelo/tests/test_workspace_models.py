@@ -10,11 +10,10 @@ from ....core import (
     CalculationSourceLineageRole,
     OutputLanguage,
     Period,
+    RegistrySchemaFamilyDisposition,
     RevisionReviewStatus,
 )
-from ....domain.modelos import CalculationSourceRef
 from ...registry import RegistryClosureLimb, RegistryClosureOwnerDisposition, RegistryClosureRefusal
-from ...state_projection import ProjectionModeloReadiness
 from .._work_addressing import ModeloVisibleFilingTarget
 from .._workspace_models import (
     ModeloWorkspaceBaselineV1,
@@ -31,20 +30,25 @@ from .._workspace_models import (
     ModeloWorkspaceFlagFactValueV1,
     ModeloWorkspaceLocaleDisposition,
     ModeloWorkspaceLocaleSummaryV1,
+    ModeloWorkspaceMaterializationRecordV1,
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceProvenanceRecordV1,
+    ModeloWorkspaceReadinessV1,
     ModeloWorkspaceRefusedResultV1,
     ModeloWorkspaceRequestV1,
     ModeloWorkspaceResolvedTargetV1,
     ModeloWorkspaceResultV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionV1,
+    ModeloWorkspaceScalarMaterializationRecordV1,
+    ModeloWorkspaceSchemaClassification,
     ModeloWorkspaceSchemaIdentityV1,
     ModeloWorkspaceSchemaRecordV1,
     ModeloWorkspaceSchemaReferenceV1,
     ModeloWorkspaceStaticInspectionScopeV1,
     ModeloWorkspaceTextFactValueV1,
     ModeloWorkspaceVersionRefusalV1,
+    ModeloWorkspaceVisibleFilingTargetV1,
     ModeloWorkspaceWorkReviewFacetV1,
 )
 
@@ -121,6 +125,7 @@ def _capabilities(
             capability=capability,
             disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
             target=target,
+            selected_revision_id=target.law_selected_revision_id,
             producer_owner="workspace",
             producer="workspace.capability",
         )
@@ -128,8 +133,8 @@ def _capabilities(
     )
 
 
-def _readiness(target: ModeloWorkspaceResolvedTargetV1) -> ProjectionModeloReadiness:
-    return ProjectionModeloReadiness(
+def _readiness(target: ModeloWorkspaceResolvedTargetV1) -> ModeloWorkspaceReadinessV1:
+    return ModeloWorkspaceReadinessV1(
         profile_id="11111111-1111-4111-8111-111111111111",
         modelo=str(target.modelo),
         revision_id=target.law_selected_revision_id,
@@ -164,7 +169,7 @@ def _closure_limb(target: ModeloWorkspaceResolvedTargetV1) -> RegistryClosureLim
 def _static_projection(
     *,
     target: ModeloWorkspaceResolvedTargetV1 | None = None,
-    readiness: ProjectionModeloReadiness | None = None,
+    readiness: ModeloWorkspaceReadinessV1 | None = None,
     registry_closure_limbs: tuple[RegistryClosureLimb, ...] | None = None,
     capabilities: tuple[ModeloWorkspaceCapabilityV1, ...] | None = None,
 ) -> ModeloWorkspaceProjectionV1:
@@ -202,15 +207,19 @@ def test_workspace_request_preserves_the_canonical_visible_target_through_a_stri
     request = ModeloWorkspaceRequestV1.model_validate_json(
         """{
             "contract_version": 1,
-            "target": {"modelo": "130", "filing_year": 2025, "period": "1T"},
+            "target": {
+                "kind": "visible_filing",
+                "target": {"modelo": "130", "filing_year": 2025, "period": {"filing_year": 2025, "code": "1T"}}
+            },
             "admission": {"kind": "static_inspection"},
             "output_language": "es"
         }"""
     )
 
-    assert isinstance(request.target, ModeloVisibleFilingTarget)
-    assert request.target.period.filing_year == 2025
-    assert request.target.period == Period.from_year_and_code(2025, "1T")
+    assert isinstance(request.target, ModeloWorkspaceVisibleFilingTargetV1)
+    assert isinstance(request.target.target, ModeloVisibleFilingTarget)
+    assert request.target.target.period.filing_year == 2025
+    assert request.target.target.period == Period.from_year_and_code(2025, "1T")
     assert request.output_language is OutputLanguage.ES
     assert ModeloWorkspaceRequestV1.model_validate_json(request.model_dump_json()) == request
     with pytest.raises(ValidationError):
@@ -278,37 +287,35 @@ def test_workspace_bounded_facet_pins_all_root_consistency_coordinates() -> None
         )
 
 
-def test_workspace_provenance_embeds_the_exact_canonical_calculation_source_ref() -> None:
-    calculation_source = CalculationSourceRef(
-        resolver_id="ledger-iva",
-        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        contributor_source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION.value,
-        contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        lineage_role=CalculationSourceLineageRole.PRIMARY,
-        source_ref="transaction:ledger-transaction-42",
-        parent_source_ref=None,
-        fingerprint=None,
-    )
+def test_workspace_provenance_retains_only_redacted_canonical_lineage_coordinates() -> None:
     provenance = ModeloWorkspaceProvenanceRecordV1(
         subject=ModeloWorkspaceCasillaReferenceV1(casilla_id="0001"),
-        calculation_source=calculation_source,
-    )
-
-    assert provenance.calculation_source == calculation_source
-    assert provenance.calculation_source.source_ref == "transaction:ledger-transaction-42"
-    assert provenance.calculation_source.fingerprint is None
-    contributor = CalculationSourceRef(
         resolver_id="ledger-iva",
-        resolved_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        contributor_source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION.value,
-        contributor_binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        lineage_role=CalculationSourceLineageRole.CONTRIBUTOR,
-        source_ref="transaction:ledger-transaction-43",
-        parent_source_ref="transaction:ledger-transaction-42",
-        fingerprint=None,
+        lineage_role=CalculationSourceLineageRole.PRIMARY,
+        resolved_source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        contributor_source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        source_ref="aeat-dr-303-2025-v2",
+        parent_source_ref=None,
+        fingerprint=_DIGEST,
     )
 
-    assert contributor.parent_source_ref == "transaction:ledger-transaction-42"
+    assert provenance.source_ref == "aeat-dr-303-2025-v2"
+    assert provenance.fingerprint == _DIGEST
+    assert "calculation_source" not in provenance.model_dump()
+    with pytest.raises(ValidationError, match="primary workspace provenance"):
+        ModeloWorkspaceProvenanceRecordV1.model_validate(
+            {**provenance.model_dump(), "parent_source_ref": "aeat-dr-303-2025-v1"}
+        )
+    contributor = ModeloWorkspaceProvenanceRecordV1(
+        subject=ModeloWorkspaceCasillaReferenceV1(casilla_id="0001"),
+        resolver_id="ledger-iva",
+        lineage_role=CalculationSourceLineageRole.CONTRIBUTOR,
+        resolved_source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        source_ref="aeat-dr-303-2025-v1",
+        parent_source_ref="aeat-dr-303-2025-v2",
+    )
+
+    assert contributor.parent_source_ref == "aeat-dr-303-2025-v2"
 
 
 @pytest.mark.parametrize(
@@ -334,6 +341,64 @@ def test_workspace_schema_reference_refuses_an_unclassified_formula_operand() ->
     with pytest.raises(ValidationError):
         TypeAdapter(ModeloWorkspaceSchemaReferenceV1).validate_python(
             {"kind": "formula_operand_unknown", "formula_id": "formula-1"},
+        )
+
+
+def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_relationship() -> None:
+    record = ModeloWorkspaceSchemaRecordV1.model_validate(
+        {
+            "reference": {"kind": "casilla", "casilla_id": "0001"},
+            "section_path": ("filing", "income"),
+            "data_type": "decimal",
+            "label": {
+                "locale_key": "casilla.0001.label",
+                "value": "Base imponible",
+                "locale": {
+                    "requested_language": OutputLanguage.ES,
+                    "resolved_language": OutputLanguage.ES,
+                    "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
+                    "catalogue_digest": _DIGEST,
+                },
+            },
+            "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
+            "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
+            "continuity": ({"kind": "continuity", "continuidad_id": "income-base"},),
+            "applicability": ({"kind": "applicability", "applicability_rule_id": "income-only"},),
+            "constraints": ({"kind": "constraint", "casilla_id": "0001"},),
+            "formula_operands": (
+                {"kind": "formula_operand_binding", "formula_id": "base-formula", "binding_id": "income-base"}
+            ,),
+            "relation_endpoints": (
+                {"kind": "relation_target_binding", "relation_id": "income-relation", "binding_id": "income-base"}
+            ,),
+            "export_exposure": ({"kind": "export_exposure", "casilla_id": "0001", "export_field_id": "BASE_01"},),
+        }
+    )
+
+    assert record.continuity[0].continuidad_id == "income-base"
+    assert record.applicability[0].applicability_rule_id == "income-only"
+    assert record.constraints[0].casilla_id == "0001"
+    assert record.formula_operands[0].kind == "formula_operand_binding"
+    assert record.relation_endpoints[0].kind == "relation_target_binding"
+    assert record.export_exposure[0].export_field_id == "BASE_01"
+    with pytest.raises(ValidationError, match="at most 16 items"):
+        ModeloWorkspaceSchemaRecordV1.model_validate({**record.model_dump(), "section_path": ("section",) * 17})
+
+
+def test_workspace_materialization_is_a_true_discriminated_union() -> None:
+    scalar = TypeAdapter(ModeloWorkspaceMaterializationRecordV1).validate_python(
+        {"kind": "scalar", "scalar": {"casilla_id": "0001", "value": "safe-value"}}
+    )
+
+    assert isinstance(scalar, ModeloWorkspaceScalarMaterializationRecordV1)
+    assert scalar.scalar.value == "safe-value"
+    with pytest.raises(ValidationError):
+        TypeAdapter(ModeloWorkspaceMaterializationRecordV1).validate_python(
+            {
+                "kind": "scalar",
+                "scalar": {"casilla_id": "0001", "value": "safe-value"},
+                "repeated_row": {"binding_id": "income-base", "row_index": 1, "values": []},
+            }
         )
 
 
@@ -369,7 +434,9 @@ def test_workspace_projection_preserves_canonical_readiness_closure_and_capabili
     assert all(capability.target == projection.target for capability in projection.capabilities)
     mismatched_target = _target(revision_id="2024-y-siguientes")
     mismatched_capabilities = (
-        projection.capabilities[0].model_copy(update={"target": mismatched_target}),
+        projection.capabilities[0].model_copy(
+            update={"target": mismatched_target, "selected_revision_id": mismatched_target.law_selected_revision_id}
+        ),
         *projection.capabilities[1:],
     )
 
@@ -379,3 +446,31 @@ def test_workspace_projection_preserves_canonical_readiness_closure_and_capabili
         _static_projection(readiness=_readiness(mismatched_target))
     with pytest.raises(ValidationError, match="registry closure limbs must retain"):
         _static_projection(registry_closure_limbs=(_closure_limb(mismatched_target),))
+
+
+def test_workspace_rejects_unbounded_localized_text_cursor_and_capability_revision_drift() -> None:
+    target = _target()
+    schema_identity = _schema_identity()
+    baseline = _baseline(target, schema_identity)
+    contributors = _contributors()
+    with pytest.raises(ValidationError):
+        ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1](
+            selected_revision_id=target.law_selected_revision_id,
+            schema_identity=schema_identity,
+            baseline=baseline,
+            contributors=contributors,
+            facet=ModeloWorkspaceFacetName.SCHEMA,
+            disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+            page_size=1,
+            has_more=True,
+            next_cursor="x" * 257,
+        )
+    with pytest.raises(ValidationError, match="selected_revision_id"):
+        ModeloWorkspaceCapabilityV1(
+            capability=ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION,
+            disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+            target=target,
+            selected_revision_id="2024-y-siguientes",
+            producer_owner="workspace",
+            producer="workspace.capability",
+        )
