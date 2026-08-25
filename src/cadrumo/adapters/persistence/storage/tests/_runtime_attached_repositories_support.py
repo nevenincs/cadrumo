@@ -13,10 +13,6 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from cadrumo.application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
-from cadrumo.application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
-from cadrumo.application.workflow.state_models import DeclaracionPointer, WorkflowState
-
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
@@ -51,6 +47,9 @@ from .....application.repair_integrity import (
     RepairRemediationDecisionRepository,
     repair_remediation_decision_id,
 )
+from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
+from .....application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
+from .....application.workflow.state_models import DeclaracionPointer, WorkflowState
 from .....core import CasillaId, IvaCompensationStateProvenance, validated_casilla_id
 from .....core import Period as _Period
 from .....core.config import override_settings
