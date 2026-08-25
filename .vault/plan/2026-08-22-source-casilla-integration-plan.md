@@ -15,7 +15,7 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
 modified: '2026-08-25'
-body_hash: 'sha256:e295353bbfe6c2baa0e24442c2170708ab8c54e3366a7362bb71b2ea656bb01d'
+body_hash: 'sha256:3cd9b5b6bf842ca66b674d0c77c08585f823c63c7f2ce013944bedbb2c316f6c'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -343,7 +343,7 @@ settles their source and record semantics.
 Adjudicate, connect or close, persist, and review the M193 row source.
 
 - [x] `W05.P18.S104` - adjudicate M193 contributor-expense semantics and source ownership from official evidence; `.vault/research/2026-08-25-source-casilla-integration-m193-row-source-grounding-research.md`.
-- [ ] `W05.P18.S105` - recast the Modelo 193 contributor-expense source as a bounded terminal ingress-blocked deferral pending canonical gasto193_contributor alignment, non-synthetic durable contributor and representative identity, a secure persistence owner, and resolver/provenance/replay/review plus supported repeated-record export proof, while preserving direct manual gasto casillas and the distinct withholding repository; `src/cadrumo/_data/source_connectivity/census.toml; dev/source_connectivity/tests/test_m193_deferral.py`.
+- [x] `W05.P18.S105` - recast the Modelo 193 contributor-expense source as a bounded terminal ingress-blocked deferral pending canonical gasto193_contributor alignment, non-synthetic durable contributor and representative identity, a secure persistence owner, and resolver/provenance/replay/review plus supported repeated-record export proof, while preserving direct manual gasto casillas and the distinct withholding repository; `src/cadrumo/_data/source_connectivity/census.toml; dev/source_connectivity/tests/test_m193_deferral.py`.
 - [ ] `W05.P18.S106` - prove row persistence, diagnostics, provenance, replay, review, and export for M193; `src/cadrumo/application/modelo/tests/test_m193_row_source.py`.
 - [ ] `W05.P18.S107` - close the M193 census disposition and obtain formal review; `.vault/audit/2026-08-22-m193-row-source-code-review.md`.
 

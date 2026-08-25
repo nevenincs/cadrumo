@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:f4d6d77738049819a50319c1689485b77cfd4b954e34c615f8f5dd17390799c7'
+body_hash: 'sha256:f6ef7b9df6292d4c88fe7afeb0aac69845da87b85b408f8721aa48d1a5993136'
 step_id: 'S105'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -33,4 +33,4 @@ The Modelo 193 contributor-expense source remains a bounded `ingress_blocked` ca
 
 - The encrypted withholding repository remains a separate source and is not evidence of contributor-expense ownership.
 - Independent review remains outside this implementation step.
-- The focused gate could not collect because concurrent shared work removed `cadrumo.application.operations._profile_manager`; it failed before this test executed. The plan step remains open pending that external repair and a successful rerun.
+- After the shared import chain was restored, the focused three-test gate passed; the plan step may close on this correction.

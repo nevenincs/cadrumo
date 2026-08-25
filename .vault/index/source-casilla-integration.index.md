@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:bd1bb288d5d5aa3a977e92f88fa30b69374d8143dc98eb90ecda747c9b381bea'
+body_hash: 'sha256:06fde2fb18fcc524f390a31c5adc069e74e3bc5df058e404aea8bc15479a1f96'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -125,6 +125,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P17-summary]]'
   - '[[2026-08-22-source-casilla-integration-W05-P18-S104]]'
   - '[[2026-08-22-source-casilla-integration-W05-P18-S105]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P19-S108]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -175,6 +176,7 @@ related:
   - '[[2026-08-23-source-casilla-integration-s42-inventory-source-ownership-review-audit]]'
   - '[[2026-08-23-source-casilla-integration-s43-inventory-binding-templates-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-m193-row-source-grounding-research]]'
+  - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-s100-m182-row-source-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s101-m182-terminal-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-followup-audit]]'
@@ -389,6 +391,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P17-summary` - `source-casilla-integration` `W05.P17` summary
 - `2026-08-22-source-casilla-integration-W05-P18-S104` - adjudicate M193 contributor-expense semantics and source ownership from official evidence
 - `2026-08-22-source-casilla-integration-W05-P18-S105` - recast the Modelo 193 contributor-expense source as a bounded terminal ingress-blocked deferral pending canonical gasto193_contributor alignment, non-synthetic durable contributor and representative identity, a secure persistence owner, and resolver/provenance/replay/review plus supported repeated-record export proof, while preserving direct manual gasto casillas and the distinct withholding repository
+- `2026-08-22-source-casilla-integration-W05-P19-S108` - adjudicate M296 withholding-row semantics and source ownership from official evidence
 
 ### plan
 
@@ -402,3 +405,4 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-m360-row-source-grounding-research` - `source-casilla-integration` research: `m360 row source grounding`
 - `2026-08-22-source-casilla-integration-research` - `source-casilla-integration` research: `recurring discovery and enrollment of disconnected calculation sources`
 - `2026-08-25-source-casilla-integration-m193-row-source-grounding-research` - `source-casilla-integration` research: `Modelo 193 contributor-expense row source grounding`
+- `2026-08-25-source-casilla-integration-m296-row-source-grounding-research` - `source-casilla-integration` research: `Modelo 296 withholding row source grounding`

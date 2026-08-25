@@ -17,6 +17,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_m193_remains_measurably_ingress_blocked_until_its_missing_authority_exists() -> None:
+    reopening_predicate = (
+        "Manual M193 gasto casillas remain direct entry, not source ownership; withholding storage is separate. Reopen "
+        "only when a secure owner retains a non-synthetic contributor/representative carrier with durable "
+        "identity/fingerprint and capture provenance, a resolver resolves canonical gasto193_contributor, and "
+        "diagnostics, provenance, encrypted persistence/replay, review, and supported repeated-record export are "
+        "proven for both revisions."
+    )
     entry = next(
         item for item in load_source_connectivity_census().entries if item.candidate_id == "rows.gasto193-contributor"
     )
@@ -24,11 +31,8 @@ def test_m193_remains_measurably_ingress_blocked_until_its_missing_authority_exi
     assert entry.disposition.value == "ingress_blocked"
     assert entry.owner == "source-connectivity-campaign"
     assert entry.expires_on == date(2026, 12, 31)
-    assert entry.review_condition is not None
-    assert "gasto193_contributor" in entry.review_condition
-    assert "non-synthetic durable contributor and representative identity/fingerprint" in entry.review_condition
-    assert "encrypted revision persistence/replay" in entry.review_condition
-    assert "separate withholding repository is not a contributor-expense owner" in entry.review_condition
+    assert entry.review_condition == reopening_predicate
+    assert len(entry.review_condition) == len(reopening_predicate) <= 500
     assert entry.bounded_follow_up is not None
     assert entry.bounded_follow_up.action_id == "source-casilla.rows-gasto193-ingress"
     assert entry.bounded_follow_up.owner == "source-connectivity-campaign"
