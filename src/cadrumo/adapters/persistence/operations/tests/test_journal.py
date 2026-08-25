@@ -15,15 +15,13 @@ from queue import Empty
 import pytest
 
 from .....application.operations import (
-    OperationIdentity,
-    OperationRequestStoragePolicy,
-    OperationTerminalReceipt,
-)
-from .....application.operations._interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
+    OperationIdentity,
     OperationInteractionRequest,
     OperationPendingInteraction,
+    OperationRequestStoragePolicy,
+    OperationTerminalReceipt,
 )
 from .....application.operations.persistence import (
     OperationIdempotencyClaim,

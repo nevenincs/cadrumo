@@ -23,9 +23,9 @@ from ....application.operations import (
     OperationRegistry,
     OperationRequest,
     OperationRequestStoragePolicy,
+    OperationSupervisor,
     OperationTerminalCondition,
 )
-from ....application.operations._supervisor import OperationSupervisor
 from ....core import AuthProviderKind
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...user_profile import (
