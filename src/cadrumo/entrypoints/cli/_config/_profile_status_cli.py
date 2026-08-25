@@ -20,9 +20,9 @@ def config_status(
 
     from ....application.user_profile.projections import record_to_path_values
     from ....application.wizard.persistence import project_answers
-    from cadrumo.application.workflow.profile_health import assess_active_profile_health
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-    from cadrumo.application.workflow.persistence import workflow_state_repository
+    from ....application.workflow.persistence import workflow_state_repository
+    from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+    from ....application.workflow.profile_health import assess_active_profile_health
     from ....core.logging import get_logger
     from ....core.wizard_catalogue import get_setup_flow
     from .._config_payloads import ConfigStatusResult
