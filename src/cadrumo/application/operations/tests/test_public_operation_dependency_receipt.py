@@ -16,7 +16,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core import content_hash_hex
-from ....entrypoints._operation_composition import compose_operation_dependencies
+from ....entrypoints import compose_operation_dependencies
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import OperationPublicContractSetV1, OperationSchemaIdentityV1
 from .. import __all__ as operation_public_exports

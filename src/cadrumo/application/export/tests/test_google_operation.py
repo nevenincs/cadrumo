@@ -25,7 +25,7 @@ from ....application.operations import (
     OperationTerminalCondition,
     compose_operation_services,
 )
-from ....entrypoints._operation_composition import compose_operation_dependencies
+from ....entrypoints import compose_operation_dependencies
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
