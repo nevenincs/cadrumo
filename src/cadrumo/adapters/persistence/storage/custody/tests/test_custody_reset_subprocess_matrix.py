@@ -37,7 +37,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _PROFILE_ID = UUID("06648eb9-e60e-46d2-bd35-9aaf55a92e24")
 _LEGACY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
-_RESET_CHILD = r"""
+_PROFILE_COMPOSITION_CHILD = r"""
+from contextlib import ExitStack
+
+from cadrumo.adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
+from cadrumo.application.user_profile import bind_profile_custody_port, bind_profile_login_session_port
+
+composition = ExitStack()
+composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
+composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+"""
+
+_RESET_CHILD = (
+    _PROFILE_COMPOSITION_CHILD
+    + r"""
 import sys
 
 from cadrumo.application.config_reset import (
@@ -60,8 +73,11 @@ for _ in range(8):
 print(operation.status.value, flush=True)
 sys.exit(0 if operation.status is ConfigResetOperationStatus.COMPLETE else 9)
 """
+)
 
-_LEGACY_REFUSAL_CHILD = r"""
+_LEGACY_REFUSAL_CHILD = (
+    _PROFILE_COMPOSITION_CHILD
+    + r"""
 import sys
 from pathlib import Path
 
@@ -82,8 +98,11 @@ except ProfileCustodyRefusedError as exc:
 print("no-refusal", flush=True)
 sys.exit(8)
 """
+)
 
-_DELETE_CRASH_CHILD = r"""
+_DELETE_CRASH_CHILD = (
+    _PROFILE_COMPOSITION_CHILD
+    + r"""
 import os
 import sys
 from pathlib import Path
@@ -103,6 +122,7 @@ confirmation = lifecycle.confirm_delete(journal)
 print(journal.transaction_id, flush=True)
 os._exit(97)
 """
+)
 
 
 def _child_env(root: Path) -> dict[str, str]:

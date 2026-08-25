@@ -95,9 +95,11 @@ def _recovery_envelope(profile_id: UUID, dek_epoch: str) -> ProfileCustodyRecove
 
 def _crash_between_label_record_and_head(root_text: str, profile_id_text: str) -> None:
     """Durably replace the label after its pending head witness, then terminate."""
+    from ....tests.profile_persistence import composed_profile_persistence_ports
+
     root = Path(root_text)
     profile_id = UUID(profile_id_text)
-    with profile_custody_transaction_lock(root, profile_id):
+    with composed_profile_persistence_ports(), profile_custody_transaction_lock(root, profile_id):
         current = load_committed_profile_custody_label_record(profile_id, root=root)
         heads = ProfileLabelHeadRepository(root=root)
         current_head = heads.recover_advance(profile_id=profile_id, current_label=current)

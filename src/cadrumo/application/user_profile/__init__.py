@@ -203,6 +203,9 @@ if TYPE_CHECKING:
         resolve_capability as resolve_capability,
     )
     from ._capsule_archive import (
+        PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES as PROFILE_CAPSULE_ARCHIVE_MAX_PAYLOAD_BYTES,
+    )
+    from ._capsule_archive import (
         ProfileCapsuleArchiveError as ProfileCapsuleArchiveError,
     )
     from ._capsule_archive import (
@@ -410,10 +413,22 @@ if TYPE_CHECKING:
         ProfileBucketStoragePort as ProfileBucketStoragePort,
     )
     from ._custody_ports import (
+        ProfileCapsuleArchiveContentsMaterial as ProfileCapsuleArchiveContentsMaterial,
+    )
+    from ._custody_ports import (
+        ProfileCapsuleArchiveHeaderMaterial as ProfileCapsuleArchiveHeaderMaterial,
+    )
+    from ._custody_ports import (
         ProfileCustodyBucketEventHistoryPort as ProfileCustodyBucketEventHistoryPort,
     )
     from ._custody_ports import (
+        ProfileCustodyCapsuleSourceMaterial as ProfileCustodyCapsuleSourceMaterial,
+    )
+    from ._custody_ports import (
         ProfileCustodyEnvelopePort as ProfileCustodyEnvelopePort,
+    )
+    from ._custody_ports import (
+        ProfileCustodyInventoryPort as ProfileCustodyInventoryPort,
     )
     from ._custody_ports import (
         ProfileCustodyLocalRecordStore as ProfileCustodyLocalRecordStore,
@@ -422,13 +437,28 @@ if TYPE_CHECKING:
         ProfileCustodyPasswordMaterialPort as ProfileCustodyPasswordMaterialPort,
     )
     from ._custody_ports import (
+        ProfileCustodyPasswordProofMaterialPort as ProfileCustodyPasswordProofMaterialPort,
+    )
+    from ._custody_ports import (
+        ProfileCustodyPort as ProfileCustodyPort,
+    )
+    from ._custody_ports import (
         ProfileCustodyRecordSessionMaterial as ProfileCustodyRecordSessionMaterial,
+    )
+    from ._custody_ports import (
+        ProfileCustodyRecoveryArtifactExportReceiptPort as ProfileCustodyRecoveryArtifactExportReceiptPort,
+    )
+    from ._custody_ports import (
+        ProfileCustodyRecoveryArtifactPort as ProfileCustodyRecoveryArtifactPort,
     )
     from ._custody_ports import (
         ProfileCustodyRecoveryEnrollmentMaterial as ProfileCustodyRecoveryEnrollmentMaterial,
     )
     from ._custody_ports import (
         ProfileCustodyRecoveryEnvelopePort as ProfileCustodyRecoveryEnvelopePort,
+    )
+    from ._custody_ports import (
+        ProfileCustodyRecoveryUnlockPort as ProfileCustodyRecoveryUnlockPort,
     )
     from ._custody_ports import (
         ProfileCustodyRegistrationMaterial as ProfileCustodyRegistrationMaterial,
@@ -461,7 +491,13 @@ if TYPE_CHECKING:
         ProfileRecordEncryptedBlob as ProfileRecordEncryptedBlob,
     )
     from ._custody_ports import (
+        ProfileRecoveryKeyPort as ProfileRecoveryKeyPort,
+    )
+    from ._custody_ports import (
         ProfileSecureObjectInventoryPort as ProfileSecureObjectInventoryPort,
+    )
+    from ._custody_ports import (
+        bind_profile_custody_port as bind_profile_custody_port,
     )
     from ._custody_ports import (
         canonical_snapshot_bytes as canonical_snapshot_bytes,
@@ -501,6 +537,9 @@ if TYPE_CHECKING:
     )
     from ._custody_ports import (
         profile_custody_owner_root as profile_custody_owner_root,
+    )
+    from ._custody_ports import (
+        profile_custody_port as profile_custody_port,
     )
     from ._custody_ports import (
         profile_custody_record_session_material as profile_custody_record_session_material,
@@ -769,6 +808,9 @@ if TYPE_CHECKING:
     from ._prospective_password import (
         prospective_profile_password_refusal as prospective_profile_password_refusal,
     )
+    from ._recovery_contracts import (
+        ProfileCustodyRecoveryArtifactWarning as ProfileCustodyRecoveryArtifactWarning,
+    )
     from ._recovery_custody import (
         ProfileRecoveryArtifactReceipt as ProfileRecoveryArtifactReceipt,
     )
@@ -860,9 +902,18 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileCustodyRecoveryArtifactWarning": "._recovery_contracts",
     "ProfileBucketStoragePathsPort": "._custody_ports",
     "ProfileBucketStoragePort": "._custody_ports",
+    "ProfileCapsuleArchiveContentsMaterial": "._custody_ports",
+    "ProfileCapsuleArchiveHeaderMaterial": "._custody_ports",
     "ProfileCustodyBucketEventHistoryPort": "._custody_ports",
+    "ProfileCustodyCapsuleSourceMaterial": "._custody_ports",
+    "ProfileCustodyInventoryPort": "._custody_ports",
     "ProfileCustodyRecordSessionMaterial": "._custody_ports",
+    "ProfileCustodyPasswordProofMaterialPort": "._custody_ports",
+    "ProfileCustodyPort": "._custody_ports",
+    "ProfileCustodyRecoveryArtifactExportReceiptPort": "._custody_ports",
+    "ProfileCustodyRecoveryArtifactPort": "._custody_ports",
     "ProfileCustodyRecoveryEnrollmentMaterial": "._custody_ports",
+    "ProfileCustodyRecoveryUnlockPort": "._custody_ports",
     "ProfileCustodyRegistrationMaterial": "._custody_ports",
     "ProfileCustodySecureObjectNamespace": "._custody_ports",
     "ProfileCustodySecureObjectRawRowPort": "._custody_ports",
@@ -873,6 +924,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileRecordCryptoError": "._custody_ports",
     "ProfileRecordCryptoPort": "._custody_ports",
     "ProfileRecordEncryptedBlob": "._custody_ports",
+    "ProfileRecoveryKeyPort": "._custody_ports",
     "ProfileSecureObjectInventoryPort": "._custody_ports",
     "create_profile_custody_registration_material": "._custody_ports",
     "default_profile_bucket_event_history_repository": "._custody_ports",
@@ -899,9 +951,11 @@ _LAZY_EXPORTS: dict[str, str] = {
     "canonical_snapshot_digest": "._custody_ports",
     "canonical_snapshot_payload": "._custody_ports",
     "default_profile_custody_local_record_store": "._custody_ports",
+    "bind_profile_custody_port": "._custody_ports",
     "bind_profile_login_session_port": "._login_session_port",
     "ensure_profile_custody_owner_root": "._custody_ports",
     "profile_custody_owner_root": "._custody_ports",
+    "profile_custody_port": "._custody_ports",
     "default_profile_bucket_storage": "._custody_ports",
     "inventory_committed_profile_custody": "._custody_ports",
     "default_profile_secure_object_inventory": "._custody_ports",
@@ -1176,6 +1230,8 @@ __all__ = [
     "PreparedProfileExport",
     "ProfileAuthenticationRefusedError",
     "ProfileBucketSessionPort",
+    "ProfileBucketStoragePathsPort",
+    "ProfileBucketStoragePort",
     "ProfileBundleExportJournalRepository",
     "ProfileBundleExportPurpose",
     "ProfileBundleExportReconcileFailure",
@@ -1184,22 +1240,36 @@ __all__ = [
     "ProfileBundleExportResult",
     "ProfileBundleExportTarget",
     "ProfileBundleExportTransport",
+    "ProfileCapsuleArchiveContentsMaterial",
     "ProfileCapsuleArchiveError",
+    "ProfileCapsuleArchiveHeaderMaterial",
     "ProfileCapsuleArchiveInspection",
     "ProfileCapsuleArchiveReceipt",
     "ProfileCapsuleLifecycle",
     "ProfileCapsuleSource",
     "ProfileCapsuleSourceError",
+    "ProfileCustodyBucketEventHistoryPort",
+    "ProfileCustodyCapsuleSourceMaterial",
     "ProfileCustodyDeleteConfirmation",
     "ProfileCustodyEnvelopePort",
     "ProfileCustodyHoldAssessment",
     "ProfileCustodyHoldEvidence",
+    "ProfileCustodyInventoryPort",
     "ProfileCustodyInventoryWitness",
+    "ProfileCustodyLocalRecordStore",
     "ProfileCustodyPasswordMaterialPort",
+    "ProfileCustodyPasswordProofMaterialPort",
     "ProfileCustodyPointerSnapshot",
+    "ProfileCustodyPort",
+    "ProfileCustodyRecoveryArtifactExportReceiptPort",
+    "ProfileCustodyRecoveryArtifactPort",
     "ProfileCustodyRecoveryArtifactWarning",
+    "ProfileCustodyRecoveryEnrollmentMaterial",
     "ProfileCustodyRecoveryEnvelopePort",
+    "ProfileCustodyRecoveryUnlockPort",
+    "ProfileCustodyRegistrationMaterial",
     "ProfileCustodyRetentionOverride",
+    "ProfileCustodySecureObjectNamespace",
     "ProfileCustodySecureObjectRepositoryPort",
     "ProfileCustodySentinelPort",
     "ProfileCustodyTransactionConflictError",
@@ -1211,6 +1281,7 @@ __all__ = [
     "ProfileCustodyTransactionRefusalError",
     "ProfileCustodyTransactionRepository",
     "ProfileCustodyTransactionState",
+    "ProfileCustodyUnlockPort",
     "ProfileFactWriteDoor",
     "ProfileFieldChoice",
     "ProfileFieldView",
@@ -1228,11 +1299,15 @@ __all__ = [
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
+    "ProfileRecordCryptoError",
+    "ProfileRecordCryptoPort",
+    "ProfileRecordEncryptedBlob",
     "ProfileRecordIntegrityError",
     "ProfileRecordRepository",
     "ProfileRecordSession",
     "ProfileRecoveryArtifactReceipt",
     "ProfileRecoveryEnrollment",
+    "ProfileRecoveryKeyPort",
     "ProfileRegistrationConflictError",
     "ProfileRegistrationError",
     "ProfileRegistrationOutcome",
@@ -1240,6 +1315,7 @@ __all__ = [
     "ProfileRestoreAuthority",
     "ProfileRestoreOutcome",
     "ProfileSectionView",
+    "ProfileSecureObjectInventoryPort",
     "ProfileSessionResumeOutcomePort",
     "ProfileSnapshot",
     "ProfileStaleCheckReport",
@@ -1259,6 +1335,7 @@ __all__ = [
     "apply_cotejo",
     "apply_manager_profile_field_mutation",
     "apply_profile_fact_changes",
+    "bind_profile_custody_port",
     "bind_profile_login_session_port",
     "bind_resumed_profile_session",
     "bound_profile_record_session",
@@ -1304,6 +1381,7 @@ __all__ = [
     "next_section_row_index",
     "open_censo_divergences",
     "prepare_profile_export",
+    "profile_custody_port",
     "profile_custody_transaction_lock",
     "profile_field_choices",
     "profile_record_session_if_authenticated",

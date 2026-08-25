@@ -200,12 +200,14 @@ def _hold_transaction_lock_in_sibling(
     is timing a Windows spawn plus a cadrumo import -- seconds of startup that
     swallow any window short enough to be a useful contention probe.
     """
+    from ....tests.profile_persistence import composed_profile_persistence_ports
     from .._custody_repository import profile_custody_transaction_lock
 
-    result_queue.put("ready")
-    with profile_custody_transaction_lock(Path(root_text), UUID(profile_id_text)):
-        result_queue.put("locked")
-        release_event.wait(30)
+    with composed_profile_persistence_ports():
+        result_queue.put("ready")
+        with profile_custody_transaction_lock(Path(root_text), UUID(profile_id_text)):
+            result_queue.put("locked")
+            release_event.wait(30)
 
 
 def _write_active_pointer_in_sibling(root_text: str, bucket_id_text: str, result_queue: Any) -> None:
@@ -216,16 +218,22 @@ def _write_active_pointer_in_sibling(root_text: str, bucket_id_text: str, result
     in?" measures the lock rather than the seconds a spawn spends importing.
     """
     from ....core import BucketPointer
+    from ....tests.profile_persistence import composed_profile_persistence_ports
     from .._profile_pointer_transaction import active_profile_pointer_transaction
 
-    result_queue.put("ready")
-    with active_profile_pointer_transaction(Path(root_text)) as pointer_transaction:
-        pointer_transaction.write(BucketPointer(bucket_id=bucket_id_text, schema_version=1))
-    result_queue.put("written")
+    with composed_profile_persistence_ports():
+        result_queue.put("ready")
+        with active_profile_pointer_transaction(Path(root_text)) as pointer_transaction:
+            pointer_transaction.write(BucketPointer(bucket_id=bucket_id_text, schema_version=1))
+        result_queue.put("written")
 
 
 def _crash_create_at_durable_boundary(root_text: str, transaction_id_text: str, boundary: str) -> None:
     """Persist one real create boundary in a child, then terminate without cleanup."""
+    from ....tests.profile_persistence import composed_profile_persistence_ports
+
+    composition = composed_profile_persistence_ports()
+    composition.__enter__()
     root = Path(root_text)
     transaction_id = UUID(transaction_id_text)
     service = ProfileCustodyTransactionService(root=root)
@@ -303,24 +311,34 @@ def _create_labeled_capsule_in_sibling(
     whenever their own KDF setup happens to finish, so the race is loose and
     the collision is decided by scheduling luck rather than by the lock.
     """
+    from ....tests.profile_capsule import mint_test_profile_recovery_envelope
+    from ....tests.profile_persistence import composed_profile_persistence_ports
+
     root = Path(root_text)
     profile_id = UUID(profile_id_text)
     envelope, sentinel, data_files = _create_capsule_input(profile_id=profile_id)
-    if barrier is not None:
-        barrier.wait(60)
-    try:
-        ProfileCustodyTransactionService(root=root).create_capsule(
-            profile_id=profile_id,
-            password_envelope=envelope,
-            sentinel=sentinel,
-            data_files=data_files,
-            label=label,
-            now=_INSTANT,
+    with composed_profile_persistence_ports():
+        recovery_envelope = mint_test_profile_recovery_envelope(
+            profile_id,
+            dek=bytes(range(32)),
+            dek_epoch=envelope.dek_epoch,
         )
-    except ProfileCustodyTransactionConflictError:
-        result_queue.put("collision")
-    else:
-        result_queue.put("published")
+        if barrier is not None:
+            barrier.wait(60)
+        try:
+            ProfileCustodyTransactionService(root=root).create_capsule(
+                profile_id=profile_id,
+                password_envelope=envelope,
+                sentinel=sentinel,
+                data_files=data_files,
+                recovery_envelope=recovery_envelope,
+                label=label,
+                now=_INSTANT,
+            )
+        except ProfileCustodyTransactionConflictError:
+            result_queue.put("collision")
+        else:
+            result_queue.put("published")
 
 
 def test_confirmed_local_delete_is_atomic_receipted_and_idempotent(tmp_path: Path) -> None:

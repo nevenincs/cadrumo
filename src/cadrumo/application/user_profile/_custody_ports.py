@@ -8,13 +8,13 @@ infrastructure for its lifetime through the single aggregate port below.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn, Protocol, Self, cast
+from typing import TYPE_CHECKING, NoReturn, Protocol, Self, cast, runtime_checkable
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -64,7 +64,7 @@ class ProfileCustodyPasswordMaterialPort(Protocol):
         ...
 
 
-class _ProfileCustodyPasswordProofMaterialPort(Protocol):
+class ProfileCustodyPasswordProofMaterialPort(Protocol):
     """Only the two records a password proof reads."""
 
     @property
@@ -590,6 +590,7 @@ class ProfileCustodyRecoveryArtifactPort(Protocol):
         ...
 
 
+@runtime_checkable
 class ProfileCustodyRecoveryArtifactExportReceiptPort(Protocol):
     """Durable artifact export result consumed by application policy."""
 
@@ -728,82 +729,237 @@ class ProfileCustodyInventoryPort(Protocol):
     def digest_entries(self) -> tuple[ProfileCustodyInventoryEntryPort, ...]: ...
 
 
+class ProfileCustodyPort(Protocol):
+    """Complete persistence capability required by profile-custody policy."""
+
+    def local_record_store(self) -> ProfileCustodyLocalRecordStore:
+        """Return the canonical anchored local-record store."""
+        ...
+
+    def archive_schema_version(self) -> int:
+        """Return the current sealed-profile archive schema version."""
+        ...
+
+    def write_archive_container(
+        self,
+        target: Path,
+        *,
+        header: ProfileCapsuleArchiveHeaderMaterial,
+        payload_bytes: bytes,
+    ) -> None:
+        """Write one opaque sealed profile archive."""
+        ...
+
+    def read_archive_container(self, source: Path) -> ProfileCapsuleArchiveContentsMaterial:
+        """Read one opaque sealed profile archive."""
+        ...
+
+    def parse_capsule_members(
+        self,
+        *,
+        envelope_bytes: bytes,
+        sentinel_bytes: bytes,
+        database_bytes: bytes,
+    ) -> ProfileCustodyCapsuleSourceMaterial:
+        """Parse archive-carried custody records through their owner."""
+        ...
+
+    def read_capsule_source(self, source: Path) -> ProfileCustodyCapsuleSourceMaterial:
+        """Read and parse one unpublished capsule directory."""
+        ...
+
+    def inventory_committed(self, profile_id: UUID, *, root: Path | None = None) -> ProfileCustodyInventoryPort:
+        """Observe the canonical committed-capsule inventory."""
+        ...
+
+    def bucket_storage(self) -> ProfileBucketStoragePort:
+        """Return canonical bucket path and lock operations."""
+        ...
+
+    def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
+        """Return active-bucket namespace inventory."""
+        ...
+
+    def record_crypto(self) -> ProfileRecordCryptoPort:
+        """Return the profile-record AEAD adapter."""
+        ...
+
+    def create_registration_material(
+        self,
+        *,
+        profile_id: UUID,
+        password: str,
+        dek: bytes,
+        dek_epoch: str,
+        salt: bytes,
+        password_generation: int,
+    ) -> ProfileCustodyRegistrationMaterial:
+        """Mint a password envelope and its DEK sentinel."""
+        ...
+
+    def create_recovery_enrollment_material(
+        self,
+        *,
+        profile_id: UUID,
+        dek: bytes,
+        dek_epoch: str,
+        salt: bytes,
+    ) -> ProfileCustodyRecoveryEnrollmentMaterial:
+        """Mint a recovery wrapper and its wipeable secret."""
+        ...
+
+    def export_recovery_artifact(
+        self,
+        recovery_envelope: ProfileCustodyRecoveryEnvelopePort,
+        *,
+        current_password: str,
+        password_envelope: ProfileCustodyEnvelopePort,
+        sentinel: ProfileCustodySentinelPort,
+        target: Path,
+    ) -> ProfileCustodyRecoveryArtifactExportReceiptPort:
+        """Prove and durably export one portable recovery artifact."""
+        ...
+
+    def prove_recovery_artifact(
+        self,
+        source: Path,
+        *,
+        recovery_secret: str,
+        expected_profile_id: UUID,
+        expected_dek_epoch: str,
+        sentinel: ProfileCustodySentinelPort,
+    ) -> ProfileCustodyRecoveryUnlockPort:
+        """Read and prove one named recovery artifact."""
+        ...
+
+    def verify_dek_against_sentinel(
+        self,
+        *,
+        dek: bytes,
+        profile_id: UUID,
+        dek_epoch: str,
+        sentinel: ProfileCustodySentinelPort,
+    ) -> None:
+        """Prove that a DEK opens the exact profile sentinel."""
+        ...
+
+    def recovery_envelope_path(self, capsule_path: Path) -> Path:
+        """Return the current-format recovery-envelope path."""
+        ...
+
+    def unlock_password(
+        self,
+        material: ProfileCustodyPasswordProofMaterialPort,
+        *,
+        password: str,
+    ) -> ProfileCustodyUnlockPort:
+        """Authenticate one committed password envelope and sentinel."""
+        ...
+
+    def replace_password_envelope(
+        self,
+        *,
+        profile_id: UUID,
+        current: ProfileCustodyEnvelopePort,
+        rotated: ProfileCustodyEnvelopePort,
+        root: Path,
+    ) -> None:
+        """CAS-replace exactly one committed password envelope."""
+        ...
+
+    def load_password_material(
+        self,
+        profile_id: UUID,
+        *,
+        root: Path | None = None,
+    ) -> ProfileCustodyPasswordMaterialPort:
+        """Load the committed password proof material for one profile."""
+        ...
+
+    def is_authentication_proof_failure(
+        self,
+        error: BaseException,
+        *,
+        operation: ProfilePasswordProofOperation,
+    ) -> bool:
+        """Recognise a password or recovery proof refusal."""
+        ...
+
+    def refuse_login_without_password_channel(self) -> NoReturn:
+        """Raise the canonical refusal for an absent password channel."""
+        ...
+
+    def is_authentication_failure(self, error: BaseException) -> bool:
+        """Recognise a key-provider authentication failure."""
+        ...
+
+    def is_keyring_unavailable(self, error: BaseException) -> bool:
+        """Recognise an unavailable keychain provider."""
+        ...
+
+    def secure_object_namespace(self) -> ProfileCustodySecureObjectNamespace:
+        """Return the registered current-profile value namespace."""
+        ...
+
+    def secure_object_repository(
+        self,
+        *,
+        profile_id: UUID,
+        dek: bytes,
+        root: Path,
+        database_file: Path | None = None,
+    ) -> AbstractContextManager[ProfileCustodySecureObjectRepositoryPort]:
+        """Open the canonical encrypted-object repository for one capsule."""
+        ...
+
+    def bucket_event_history_repository(
+        self,
+        *,
+        objects: ProfileCustodySecureObjectRepositoryPort | None = None,
+    ) -> ProfileCustodyBucketEventHistoryPort:
+        """Return the canonical encrypted bucket-event repository."""
+        ...
+
+
+_BOUND_PROFILE_CUSTODY_PORT: ContextVar[ProfileCustodyPort] = ContextVar("cadrumo_profile_custody_port")
+
+
+@contextmanager
+def bind_profile_custody_port(port: ProfileCustodyPort) -> Generator[ProfileCustodyPort]:
+    """Bind one outward-composed custody port for the host execution context."""
+    token = _BOUND_PROFILE_CUSTODY_PORT.set(port)
+    try:
+        yield port
+    finally:
+        _BOUND_PROFILE_CUSTODY_PORT.reset(token)
+
+
+def profile_custody_port() -> ProfileCustodyPort:
+    """Resolve the explicitly composed custody port for the current host."""
+    try:
+        return _BOUND_PROFILE_CUSTODY_PORT.get()
+    except LookupError as error:
+        raise RuntimeError("profile custody infrastructure has not been composed") from error
+
+
 def inventory_committed_profile_custody(profile_id: UUID, *, root: Path | None = None) -> ProfileCustodyInventoryPort:
     """Observe one committed capsule through the custody persistence boundary."""
-    return custody.inventory_committed_profile_custody_capsule(profile_id, root=root)
-
-
-class _PersistenceProfileBucketStorage:
-    """Adapt canonical bucket layout and locking to the application port."""
-
-    def resolve(self, root: Path, bucket_id: str) -> ProfileBucketStoragePathsPort:
-        return bucket.bucket_paths(root, bucket_id)
-
-    def acquire_lock(self, paths: ProfileBucketStoragePathsPort, *, wait_seconds: float) -> None:
-        bucket.acquire_lock(paths, wait_seconds=wait_seconds)
-
-    def release_lock(self, paths: ProfileBucketStoragePathsPort) -> None:
-        bucket.release_lock(paths)
-
-
-class _PersistenceProfileSecureObjectInventory:
-    """Adapt the active runtime repository to the inventory port."""
-
-    def __init__(self) -> None:
-        repository = secure_object_repository_for_active_bucket()
-        self._list_namespaces = repository.list_namespaces
-        self._list_keys = repository.list_keys
-
-    def list_namespaces(self) -> tuple[str, ...]:
-        return self._list_namespaces()
-
-    def list_keys(self, namespace: str) -> tuple[str, ...]:
-        return self._list_keys(namespace)
-
-
-class _PersistenceProfileRecordCrypto:
-    """Adapt the real persistence crypto facade to the application port."""
-
-    def encrypt_record(
-        self,
-        plaintext: bytes,
-        *,
-        key: bytes,
-        associated_data: bytes | None = None,
-    ) -> ProfileRecordEncryptedBlob:
-        try:
-            blob = crypto.encrypt_record(plaintext, key=key, associated_data=associated_data)
-            return ProfileRecordEncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
-        except Exception as exc:
-            raise ProfileRecordCryptoError("profile record encryption failed") from exc
-
-    def decrypt_record(
-        self,
-        blob: ProfileRecordEncryptedBlob,
-        *,
-        key: bytes,
-        associated_data: bytes | None = None,
-    ) -> bytes:
-        try:
-            adapter_blob = crypto.EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
-            return crypto.decrypt_record(adapter_blob, key=key, associated_data=associated_data)
-        except Exception as exc:
-            raise ProfileRecordCryptoError("profile record decryption failed") from exc
+    return profile_custody_port().inventory_committed(profile_id, root=root)
 
 
 def default_profile_bucket_storage() -> ProfileBucketStoragePort:
     """Return canonical bucket layout and locking through the application port."""
-    return _PersistenceProfileBucketStorage()
+    return profile_custody_port().bucket_storage()
 
 
 def default_profile_secure_object_inventory() -> ProfileSecureObjectInventoryPort:
     """Return active-bucket namespace inventory through the application port."""
-    return _PersistenceProfileSecureObjectInventory()
+    return profile_custody_port().secure_object_inventory()
 
 
 def default_profile_record_crypto_port() -> ProfileRecordCryptoPort:
     """Return the production crypto adapter through the application port."""
-    return _PersistenceProfileRecordCrypto()
+    return profile_custody_port().record_crypto()
 
 
 def create_profile_custody_registration_material(
@@ -822,17 +978,14 @@ def create_profile_custody_registration_material(
     re-wrapped under a new password, which is why this mint serves both doors
     instead of a rotation growing a parallel one.
     """
-    calibration = custody.calibrate_profile_kdf(salt=salt)
-    envelope = custody.create_profile_custody_password_envelope(
+    return profile_custody_port().create_registration_material(
         profile_id=profile_id,
         password=password,
         dek=dek,
         dek_epoch=dek_epoch,
-        kdf=calibration.parameters,
+        salt=salt,
         password_generation=password_generation,
     )
-    sentinel = custody.create_profile_custody_sentinel(envelope=envelope, dek=dek)
-    return ProfileCustodyRegistrationMaterial(envelope=envelope, sentinel=sentinel)
 
 
 """The closed set of warnings every recovery-artifact export must surface.
@@ -865,20 +1018,12 @@ def create_profile_recovery_enrollment_material(
     genuinely independent derivations, so compromising one KDF input cannot
     shorten an attack on the other.
     """
-    calibration = custody.calibrate_profile_kdf(salt=salt)
-    recovery_key = generate_recovery_key()
-    try:
-        envelope = custody.create_profile_custody_recovery_envelope(
-            profile_id=profile_id,
-            recovery_secret=recovery_key.mnemonic,
-            dek=dek,
-            dek_epoch=dek_epoch,
-            kdf=calibration.parameters,
-        )
-    except BaseException:
-        recovery_key.wipe()
-        raise
-    return ProfileCustodyRecoveryEnrollmentMaterial(envelope=envelope, recovery_key=recovery_key)
+    return profile_custody_port().create_recovery_enrollment_material(
+        profile_id=profile_id,
+        dek=dek,
+        dek_epoch=dek_epoch,
+        salt=salt,
+    )
 
 
 def export_profile_recovery_artifact(
@@ -888,7 +1033,7 @@ def export_profile_recovery_artifact(
     password_envelope: ProfileCustodyEnvelopePort,
     sentinel: ProfileCustodySentinelPort,
     target: Path,
-) -> custody.ProfileCustodyRecoveryArtifactExportReceipt:
+) -> ProfileCustodyRecoveryArtifactExportReceiptPort:
     """Write one durable external recovery artifact through the custody owner.
 
     The destination guard, the current-password proof, and the exclusive
@@ -896,11 +1041,11 @@ def export_profile_recovery_artifact(
     this boundary only narrows the application's ports back to the
     substrate records that module requires.
     """
-    return custody.export_profile_custody_recovery_artifact(
-        _substrate_handle(recovery_envelope, custody.ProfileCustodyRecoveryEnvelope, "recovery envelope"),
+    return profile_custody_port().export_recovery_artifact(
+        recovery_envelope,
         current_password=current_password,
-        password_envelope=_substrate_handle(password_envelope, custody.ProfileCustodyEnvelope, "password envelope"),
-        sentinel=_substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
+        password_envelope=password_envelope,
+        sentinel=sentinel,
         target=target,
     )
 
@@ -912,7 +1057,7 @@ def prove_profile_recovery_artifact(
     expected_profile_id: UUID,
     expected_dek_epoch: str,
     sentinel: ProfileCustodySentinelPort,
-) -> custody.ProfileCustodyRecoveryUnlock:
+) -> ProfileCustodyRecoveryUnlockPort:
     """Read one artifact and prove it against its named identity and sentinel.
 
     Import and unlock are kept as one boundary call because a parsed but
@@ -924,18 +1069,12 @@ def prove_profile_recovery_artifact(
     This installs nothing. Proving an artifact does not enroll it, does not
     overwrite committed recovery, and does not change any key schedule.
     """
-    substrate_sentinel = _substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel")
-    artifact = custody.import_profile_custody_recovery_artifact(
+    return profile_custody_port().prove_recovery_artifact(
         source,
+        recovery_secret=recovery_secret,
         expected_profile_id=expected_profile_id,
         expected_dek_epoch=expected_dek_epoch,
-    )
-    return custody.unlock_imported_profile_custody_recovery_artifact(
-        artifact,
-        recovery_secret,
-        sentinel=substrate_sentinel,
-        expected_profile_id=expected_profile_id,
-        expected_dek_epoch=expected_dek_epoch,
+        sentinel=sentinel,
     )
 
 
@@ -947,11 +1086,11 @@ def verify_profile_custody_dek_against_sentinel(
     sentinel: ProfileCustodySentinelPort,
 ) -> None:
     """Prove a key opens this exact profile before anything is published."""
-    custody.verify_profile_custody_sentinel(
+    profile_custody_port().verify_dek_against_sentinel(
         dek=dek,
         profile_id=profile_id,
         dek_epoch=dek_epoch,
-        sentinel=_substrate_handle(sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
+        sentinel=sentinel,
     )
 
 
@@ -962,11 +1101,11 @@ def verify_profile_custody_dek_against_sentinel(
 
 def profile_custody_recovery_envelope_path(capsule_path: Path) -> Path:
     """Return where a creation-published capsule keeps its recovery wrapper."""
-    return capsule_path / "custody" / custody.PROFILE_CUSTODY_RECOVERY_FILENAME
+    return profile_custody_port().recovery_envelope_path(capsule_path)
 
 
 def unlock_profile_custody_password(
-    material: _ProfileCustodyPasswordProofMaterialPort,
+    material: ProfileCustodyPasswordProofMaterialPort,
     *,
     password: str,
 ) -> ProfileCustodyUnlockPort:
@@ -978,11 +1117,7 @@ def unlock_profile_custody_password(
     material already loaded from the exact target capsule, so a caller cannot
     resolve one profile and unwrap another through ambient state.
     """
-    return custody.unlock_profile_custody(
-        _substrate_handle(material.envelope, custody.ProfileCustodyEnvelope, "password envelope"),
-        password,
-        sentinel=_substrate_handle(material.sentinel, custody.ProfileCustodySentinelRecord, "DEK sentinel"),
-    )
+    return profile_custody_port().unlock_password(material, password=password)
 
 
 def replace_profile_custody_password_envelope(
@@ -993,10 +1128,10 @@ def replace_profile_custody_password_envelope(
     root: Path,
 ) -> None:
     """CAS-replace exactly one committed password envelope through its owner."""
-    custody.replace_committed_profile_custody_envelope(
-        profile_id,
-        rotated.canonical_json_bytes(),
-        expected_sha256=prefixed_digest(current.canonical_json_bytes()),
+    profile_custody_port().replace_password_envelope(
+        profile_id=profile_id,
+        current=current,
+        rotated=rotated,
         root=root,
     )
 
@@ -1005,7 +1140,7 @@ def load_profile_custody_password_material(
     profile_id: UUID, *, root: Path | None = None
 ) -> ProfileCustodyPasswordMaterialPort:
     """Load committed password proof material through the custody boundary."""
-    return custody.load_committed_profile_password_material(profile_id, root=root)
+    return profile_custody_port().load_password_material(profile_id, root=root)
 
 
 def map_profile_authentication_proof_failure(
@@ -1014,19 +1149,14 @@ def map_profile_authentication_proof_failure(
     operation: ProfilePasswordProofOperation,
 ) -> ProfileAuthenticationRefusedError | None:
     """Collapse credential shape and proof failures for one named capability."""
-    expected = (
-        custody.ProfileCustodyRecoverySecretError
-        if operation is ProfilePasswordProofOperation.RECOVERY_RESTORE
-        else custody.ProfileCustodyPasswordError
-    )
-    if not isinstance(error, expected):
+    if not profile_custody_port().is_authentication_proof_failure(error, operation=operation):
         return None
     return ProfileAuthenticationRefusedError()
 
 
 def refuse_profile_login_without_password_channel() -> NoReturn:
     """Raise the current custody refusal for an absent explicit password channel."""
-    raise custody.ProfileCustodyPasswordError("profile login requires an explicit password channel")
+    profile_custody_port().refuse_login_without_password_channel()
 
 
 def profile_custody_record_session_material(
@@ -1035,89 +1165,47 @@ def profile_custody_record_session_material(
     root: Path | None = None,
 ) -> ProfileCustodyRecordSessionMaterial | None:
     """Return record material only when the live session serves this profile."""
-    session = master_key.current_active_bucket_session()
-    if session is None or not master_key.session_serves_bucket(session, str(profile_id)):
+    session = profile_current_bucket_session()
+    if session is None or not profile_session_serves_bucket(session, str(profile_id)):
         return None
-    material = custody.load_committed_profile_password_material(profile_id, root=root)
+    material = load_profile_custody_password_material(profile_id, root=root)
     return ProfileCustodyRecordSessionMaterial(envelope=material.envelope, dek=session.dek)
 
 
 def profile_is_authentication_failure(error: BaseException) -> bool:
     """Recognise the typed authentication refusals without leaking adapter types."""
-    return isinstance(
-        error,
-        (
-            KeyringUnavailableError,
-            MasterKeyMaterialMissingError,
-        ),
-    )
+    return profile_custody_port().is_authentication_failure(error)
 
 
 def profile_is_keyring_unavailable(error: BaseException) -> bool:
     """Recognise a keychain persistence refusal for the process-scoped fallback."""
-    return isinstance(error, KeyringUnavailableError)
+    return profile_custody_port().is_keyring_unavailable(error)
 
 
 def profile_custody_secure_object_namespace() -> ProfileCustodySecureObjectNamespace:
     """Resolve the registered current-profile value namespace at the app boundary."""
-    return ProfileCustodySecureObjectNamespace(
-        namespace=USER_PROFILE_VALUE_NAMESPACE.namespace,
-        sensitivity=USER_PROFILE_VALUE_NAMESPACE.sensitivity,
-        schema_version=USER_PROFILE_VALUE_NAMESPACE.schema_version,
-    )
+    return profile_custody_port().secure_object_namespace()
 
 
-@contextmanager
 def profile_custody_secure_object_repository(
     *,
     profile_id: UUID,
     dek: bytes,
     root: Path,
     database_file: Path | None = None,
-) -> Generator[ProfileCustodySecureObjectRepositoryPort]:
+) -> AbstractContextManager[ProfileCustodySecureObjectRepositoryPort]:
     """Open the canonical encrypted-object repository for one profile capsule.
 
     The provider owns the persistence/runtime imports and the short-lived
     staging session needed before a capsule has been published. Application
     authorities consume only this narrow repository port.
     """
-    active = master_key.current_active_bucket_session()
-    if database_file is None and master_key.session_serves_bucket(active, str(profile_id)):
-        settings = Settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(profile_id))
-        yield secure_object_repository_for_bucket(str(profile_id), settings)
-        return
-
-    if database_file is None:
-        database_file = bucket.bucket_paths(root, str(profile_id)).database_file
-    # The DEK binding stays out here on purpose: a staged capsule's key exists
-    # only inside the transaction creating it, so it cannot be storage's to
-    # resolve. Everything below that -- engine lifetime, namespace registry,
-    # session requirement -- is runtime-owned through the staged-bucket door.
-    with (
-        _temporary_profile_custody_session(profile_id=profile_id, dek=dek, root=root),
-        secure_object_repository_for_staged_bucket(str(profile_id), database_file=database_file) as staged,
-    ):
-        yield staged
-
-
-@contextmanager
-def _temporary_profile_custody_session(*, profile_id: UUID, dek: bytes, root: Path) -> Generator[None]:
-    """Bind the just-minted DEK while staging a not-yet-published capsule."""
-    now = _utc_now()
-    bridge = master_key.BucketSession.open_resumed(
-        bucket_id=str(profile_id),
+    return profile_custody_port().secure_object_repository(
+        profile_id=profile_id,
         dek=dek,
-        idle_minutes=1,
-        opened_at=now,
-        idle_deadline=now + timedelta(minutes=1),
-        absolute_deadline=now + timedelta(minutes=1),
-        storage_root=root,
+        root=root,
+        database_file=database_file,
     )
-    try:
-        with master_key.activate_session(bridge):
-            yield
-    finally:
-        bridge.close()
 
 
 def default_profile_bucket_event_history_repository(
@@ -1125,10 +1213,7 @@ def default_profile_bucket_event_history_repository(
     objects: ProfileCustodySecureObjectRepositoryPort | None = None,
 ) -> ProfileCustodyBucketEventHistoryPort:
     """Resolve the encrypted bucket-event repository at the app boundary."""
-    resolved = (
-        None if objects is None else _substrate_handle(objects, SecureObjectRepository, "secure-object repository")
-    )
-    return BucketEventHistoryRepository(objects=resolved)
+    return profile_custody_port().bucket_event_history_repository(objects=objects)
 
 
 __all__ = [
@@ -1138,9 +1223,14 @@ __all__ = [
     "ProfileCustodyEnvelopePort",
     "ProfileCustodyLocalRecordStore",
     "ProfileCustodyPasswordMaterialPort",
+    "ProfileCustodyPasswordProofMaterialPort",
+    "ProfileCustodyPort",
     "ProfileCustodyRecordSessionMaterial",
+    "ProfileCustodyRecoveryArtifactExportReceiptPort",
+    "ProfileCustodyRecoveryArtifactPort",
     "ProfileCustodyRecoveryEnrollmentMaterial",
     "ProfileCustodyRecoveryEnvelopePort",
+    "ProfileCustodyRecoveryUnlockPort",
     "ProfileCustodyRegistrationMaterial",
     "ProfileCustodySecureObjectNamespace",
     "ProfileCustodySecureObjectRawRowPort",
@@ -1151,7 +1241,9 @@ __all__ = [
     "ProfileRecordCryptoError",
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",
+    "ProfileRecoveryKeyPort",
     "ProfileSecureObjectInventoryPort",
+    "bind_profile_custody_port",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
     "canonical_snapshot_payload",
@@ -1166,6 +1258,7 @@ __all__ = [
     "export_profile_recovery_artifact",
     "map_profile_authentication_proof_failure",
     "profile_custody_owner_root",
+    "profile_custody_port",
     "profile_custody_record_session_material",
     "profile_custody_recovery_envelope_path",
     "profile_custody_secure_object_namespace",

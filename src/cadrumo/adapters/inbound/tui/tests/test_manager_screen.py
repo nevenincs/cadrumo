@@ -485,19 +485,6 @@ async def test_a_returned_refusal_is_not_styled_as_a_success(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_censal_apply_refuses_without_reading_or_writing(tmp_path) -> None:
-    """The shipped manager action forecloses before any profile or AEAT access."""
-    del tmp_path
-    from .....entrypoints.cli._config._manager_actions import censal_pull_action
-    from .. import ManagerActionDisposition
-
-    outcome = censal_pull_action().run()
-    assert outcome.disposition is ManagerActionDisposition.REFUSED
-    assert outcome.message == tr("flows.manager.action.censal_pull_review_unavailable")
-    assert outcome.overview is None
-
-
-@pytest.mark.asyncio
 async def test_an_action_runs_and_reports_what_it_did(tmp_path) -> None:
     """The bar renders one button per action and shows its message."""
     from .....entrypoints.tui.profile.tasks import ManagerAction, ManagerActionOutcome

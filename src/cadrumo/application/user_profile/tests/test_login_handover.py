@@ -11,7 +11,7 @@ import json
 import os
 import shutil
 import time
-from contextlib import AbstractContextManager
+from contextlib import ExitStack
 from contextvars import Token
 from datetime import UTC, datetime, timedelta
 from multiprocessing import get_context
@@ -26,7 +26,11 @@ from uuid import UUID
 import pytest
 from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 
-from ....adapters.persistence.storage import build_profile_login_session_port, master_key
+from ....adapters.persistence.storage import (
+    build_profile_custody_port,
+    build_profile_login_session_port,
+    master_key,
+)
 from ....adapters.persistence.storage.custody import (
     PROFILE_CUSTODY_SENTINEL_FILENAME,
     ProfileCustodyRecordError,
@@ -49,6 +53,7 @@ from ....core.time import now as _now
 from ....domain.buckets import BucketEventHistoryPersistenceError
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._authentication import ProfileAuthenticationRefusedError
+from .._custody_ports import bind_profile_custody_port
 from .._login_session import (
     _HANDOVER_JOURNAL_MAX_BYTES,
     _clear_handover_journal,
@@ -59,7 +64,7 @@ from .._login_session import (
     _save_handover_journal,
     login_profile,
 )
-from .._login_session_port import ProfileLoginSessionPort, bind_profile_login_session_port
+from .._login_session_port import bind_profile_login_session_port
 from .._profile_pointer_transaction import ActiveProfilePointerTransactionError
 from .._profile_record_repository import close_active_profile_record_session, require_profile_record_session
 from .._registration import register_profile_with_credentials
@@ -122,9 +127,7 @@ def _close_live_login() -> None:
     master_key.close_active_bucket_session()
 
 
-def _child_settings(
-    storage_root: Path,
-) -> tuple[Settings, Token[Settings | None], AbstractContextManager[ProfileLoginSessionPort]]:
+def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None], ExitStack]:
     # Calibration measurement is off for the same reason the session default in
     # `cadrumo/conftest.py` turns it off, and it has to be said again HERE:
     # these children are spawned, so no in-process override reaches them, and
@@ -142,14 +145,15 @@ def _child_settings(
         cadrumo_active_profile=None,
         cadrumo_profile_kdf_measure_calibration=False,
     )
-    composition = bind_profile_login_session_port(build_profile_login_session_port())
-    composition.__enter__()
+    composition = ExitStack()
+    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
+    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
     return settings, config_module._settings_override.set(settings), composition
 
 
 def _close_child_login(
     token: Token[Settings | None],
-    composition: AbstractContextManager[ProfileLoginSessionPort],
+    composition: ExitStack,
 ) -> None:
     try:
         _close_live_login()
