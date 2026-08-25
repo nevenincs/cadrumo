@@ -1544,22 +1544,12 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/entrypoints/cli/_app_live_payloads.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/entrypoints/cli/_common.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_config/_manager_actions.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
