@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-25'
-body_hash: 'sha256:8dffd7ec2e19ddfc8f30a10aea4bed1a15fa513e54eb8129931b23795dc6fc30'
+body_hash: 'sha256:dcb0c86aa6fc8fd5d3e9d368e4e780381aeaebb071ea6221f4434072da366b9a'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -353,7 +353,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S242` - Regenerate every affected documentation sequence golden through the owning CLI after live behavior is adjudicated and reconcile frame counts without hand-authored output; `docs/_sequences/`.
 - [ ] `W06.P12.S243` - Repair Spanish, Catalan, and Hungarian localized reference tokens and generated CLI toctree integration so all localized nitpicky builds resolve current targets; `docs/locales/ and docs/reference/cli/`.
 - [ ] `W06.P12.S244` - Repair the main nitpicky API documentation cross-references and toctree ownership against current public module exports; `docs/api/ and docs/conf.py`.
-- [ ] `W06.P12.S245` - Migrate harness warm-runtime profile provisioning to the mandatory verified recovery handoff and prove real runtime startup succeeds; `src/cadrumo-harness/`.
+- [x] `W06.P12.S245` - Migrate harness warm-runtime profile provisioning to the mandatory verified recovery handoff and prove real runtime startup succeeds; `src/cadrumo-harness/`.
 - [ ] `W06.P12.S246` - Repair the harness serial watchdog kill-switch and disarm lifecycle so the full integration suite terminates cleanly without weakening timeout enforcement; `src/cadrumo-harness/`.
 - [ ] `W06.P12.S247` - Resolve changed-surface Ruff import order and partition every remaining type diagnostic to its owning implementation or fixture until the scoped global proof is clean; `src/cadrumo/ and src/cadrumo-harness/ and dev/`.
 - [x] `W06.P12.S248` - Reconcile Modelo 303 2026 and Modelo 390 2022-2025 semantic-role constraint signatures against their official record-design authority so the shared-role validator passes without weakening compatibility checks; `src/cadrumo/_data/registry/aeat/modelos/303/ and src/cadrumo/_data/registry/aeat/modelos/390/ and src/cadrumo/domain/calculations/registry/tests/`.
