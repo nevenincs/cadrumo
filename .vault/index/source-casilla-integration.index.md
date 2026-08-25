@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:45caf0c7af3b5e16bdd1e3320e2eccdf2ab8cef03b9ac415512d48fc9337ff20'
+body_hash: 'sha256:c55e71f516ec457d0fcd8cec29545159e0e4dd242f7de55202ffe9b2f3fa598f'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -200,6 +200,8 @@ related:
   - '[[2026-08-25-source-casilla-integration-s112-connectivity-census-regeneration-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research]]'
   - '[[2026-08-25-source-casilla-integration-s113-helper-candidate-classification-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s114-zero-delivery-closure-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s115-structural-helper-selector-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s87-independent-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit]]'
@@ -286,6 +288,8 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-review-audit` - `source-casilla-integration` audit: `S102 M182 terminal-deferral review`
 - `2026-08-25-source-casilla-integration-s112-connectivity-census-regeneration-review-audit` - `source-casilla-integration` audit: `S112 connectivity census regeneration review`
 - `2026-08-25-source-casilla-integration-s113-helper-candidate-classification-review-audit` - `source-casilla-integration` audit: `S113 helper candidate classification review`
+- `2026-08-25-source-casilla-integration-s114-zero-delivery-closure-review-audit` - `source-casilla-integration` audit: `S114 zero-delivery closure review`
+- `2026-08-25-source-casilla-integration-s115-structural-helper-selector-review-audit` - `source-casilla-integration` audit: `S115 structural helper selector review`
 - `2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit` - `source-casilla-integration` audit: `S226 Modelo 187 source-owner decision review`
 - `2026-08-25-source-casilla-integration-s87-independent-post-review-audit` - `source-casilla-integration` audit: `S87 snapshot-bound row assembly independent review`
 - `2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit` - `source-casilla-integration` audit: `s88 google pull post review`
@@ -442,7 +446,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W06-P20-S114` - record the zero-delivery closure: S112 exposed no connect candidates and S113 classified both additions not_applicable, so no source-connectivity vertical slice is authorized
 - `2026-08-22-source-casilla-integration-W06-P20-S115` - classify the S112/S113 structural-helper handoff in the frozen census selector
 - `2026-08-22-source-casilla-integration-W06-P20-S226` - Adjudicate Modelo 187's non-substitutable payer and Article 42 RGAT entity/IIC value paths, including required type-1/type-2 filer facts, before defining a canonical source, binding, casilla, provenance, collision policy, or census disposition.
-- `2026-08-22-source-casilla-integration-W06-P20-S227` - Adjudicate the Modelo 220 2024 and 2025 group-value origins, grain, source identity, provenance, and absence semantics before any m220 producer key, binding, casilla, or filing layout is introduced.
+- `2026-08-22-source-casilla-integration-W06-P20-S227` - defer Modelo 220 group values as an ingress-blocked evidence decision
 
 ### plan
 

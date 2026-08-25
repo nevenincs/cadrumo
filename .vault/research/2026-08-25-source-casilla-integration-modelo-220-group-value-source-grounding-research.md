@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:bab516f357a52de130eb2b402c83cbd5285407b3c787994ff0c9e483a21ae1c9'
+body_hash: 'sha256:c5aafadd4935f0265787cfd189da18abf1fb4688cd1475692c781264a8a553eb'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
@@ -103,6 +103,32 @@ export separately for 2024 and 2025. The 2024/2025 design re-layout precludes
 assuming that one era's destination or semantics applies to the other.
 `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2025/revision.toml:1`
 `.vault/adr/2026-08-22-source-casilla-integration-adr.md:81`
+
+## Decision
+
+### Deferred ingress-blocked M220 group-value candidate
+
+The evidence supports a real but **ingress-blocked** M220 group-value
+candidate for the two exact designs, not a connection and not a
+`not_applicable` result. The decision is bounded to the 2024 design at
+`a8f398dd42db0b1142d5f2e98bf3a60d79069e31d63af32001373f459fee4f2e` and
+the 2025 design at
+`69c3a234e96eb4485a31c65209348bbcede0a49a8c143223c952000784f3f2df`.
+S227 records evidence and governance only: it deliberately adds no census
+row, producer, binding, casilla linkage, layout, resolver, or export claim.
+
+`source-connectivity-campaign` owns the deferred decision. It may reopen only
+when one encrypted, non-lossy owner retains the composite group and
+representative/dominant identity; each member identity and its
+individual-declaration/source reference; tax period and exact M220 revision;
+native member/group value role, unit, and value identity; capture provenance
+and fingerprint; and an explicit absent-versus-inapplicable-versus-zero state.
+That owner must then have independently demonstrated resolver enrollment,
+diagnostics/provenance, encrypted revision persistence and replay,
+operator/review reachability, and source-owned supported export for **each**
+of the 2024 and 2025 eras. A record position, a manual casilla, a Modelo 200
+relationship, or M222 fiscal-group identity cannot satisfy any part of this
+predicate.
 
 ## Sources
 
