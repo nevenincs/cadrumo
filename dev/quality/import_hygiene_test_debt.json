@@ -95,13 +95,6 @@
                 "reason": "White-box projection-parity gate: it asserts every InvoiceDraft field survives onto the operator-facing confirm payload, in both directions, so it must hold the CLI's own payload models alongside the application-layer models they project from. The set widened from the top-level EvidenceExtractResult to the five nested pairs beneath it, because the nested models are hand-mirrored and every payload model forbids extras, so a draft sub-model gaining a field its payload lacks makes a CORRECT operator confirm command return a refusal. These are the CLI's rendering-layer shapes for one verb family, not a cross-package production API, and have no promotion candidate on the entrypoints.cli facade. The gate exists precisely because the two ends can silently diverge, so it must see both ends directly rather than through a double."
             },
             {
-                "importer_path": "src/cadrumo/application/live/tests/test_redaction_base_composition.py",
-                "occurrence": 1,
-                "target_mod": "cadrumo.application.user_profile._overview",
-                "imported_names": ["_MASK_KEYWORDS"],
-                "reason": "Cross-checks that the live remote-state failure-context key sets compose correctly against every other redaction vocabulary in the tree, this one included. The property under test is that no sensitive key term is masked by one vocabulary and missed by another, which can only be asserted by reading the actual vocabularies rather than a restatement of them - a restatement is exactly the drift the test exists to catch."
-            },
-            {
                 "importer_path": "src/cadrumo/application/modelo/tests/test_actions.py",
                 "occurrence": 1,
                 "target_mod": "cadrumo.application.wizard._commands",
@@ -205,13 +198,6 @@
                 "target_mod": "cadrumo.adapters.outbound.storage._local",
                 "imported_names": ["LocalFileSystemProvider"],
                 "reason": "White-box unit test instantiating the concrete local-filesystem StorageProvider backend directly to exercise push/manifest behaviour. The package docstring explicitly documents _local and _google_drive as private implementation details behind the StorageProvider Protocol; promoting the concrete class to the public facade would contradict that documented boundary."
-            },
-            {
-                "importer_path": "src/cadrumo/entrypoints/cli/tests/test_app_maintenance_export_reconcile.py",
-                "occurrence": 1,
-                "target_mod": "cadrumo.application.user_profile._bundle_export_operation",
-                "imported_names": ["PROFILE_EXPORT_STAGED_TEMP_SUFFIX"],
-                "reason": "White-box test asserting the CLI reconcile verb recognises the profile-bundle-export operation's private staged-temp-file suffix constant. Internal naming convention with no consumer outside the user_profile package."
             },
             {
                 "importer_path": "src/cadrumo/entrypoints/cli/tests/test_config_reset_payload_contract.py",
