@@ -51,6 +51,7 @@ def test_m360_deferred_source_has_no_connected_downstream_lifecycle() -> None:
     revision = modelo.revisions["2010-y-siguientes"]
 
     assert any(binding.source is source_kind for binding in revision.bindings)
+    assert any(binding.source is BindingSourceKind.MANUAL_INPUT for binding in revision.bindings)
     assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind].value == "deferred"
     assert all(source_kind not in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
 

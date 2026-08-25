@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:614d816001c6613aeb79c2b534a6a5e275fdc41c2861cb1791a3554d14eb6ddb'
+body_hash: 'sha256:5cb94c60f11b1283c0746f937c50a666c0cc80a36a66e41722c67ed8acddd2e6'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -115,6 +115,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P15-summary]]'
   - '[[2026-08-22-source-casilla-integration-W05-P16-S96]]'
   - '[[2026-08-22-source-casilla-integration-W05-P16-S97]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P16-S98]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -351,6 +352,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P15-summary` - `source-casilla-integration` `W05.P15` summary
 - `2026-08-22-source-casilla-integration-W05-P16-S96` - adjudicate M360 row semantics and source ownership from official evidence
 - `2026-08-22-source-casilla-integration-W05-P16-S97` - retain the M360 refund-operation ingress-blocked census disposition and permit reopening only after one secure owner retains the full official request/document carrier with durable identity and fingerprint and S98 proves encrypted persistence/replay diagnostics/review and supported repeated-record export
+- `2026-08-22-source-casilla-integration-W05-P16-S98` - prove the M360 refund-operation source remains refused at calculation ingress and unavailable to a connected encrypted source lifecycle diagnostics/review and source-owned repeated-record export until the S97 reopening predicate is satisfied while separate manual M360 request bindings remain available
 
 ### plan
 
