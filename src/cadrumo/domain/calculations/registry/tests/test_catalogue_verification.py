@@ -13,6 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import RECORD_DESIGN_EPOCH_RE
+from .....core.config import Settings
 from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
@@ -33,6 +34,10 @@ from .._temporal import coverage_assessment_horizon, revision_selection_coordina
 from .._validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
+
+#: The AEAT host is centralised configuration; only the document ROUTE is this
+#: module's to assert, so the host is composed rather than spelled.
+_SEDE = Settings.external_constants().aeat.domains.sede
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -297,7 +302,7 @@ def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselec
         "original_filename": "dr038_2005.pdf",
         "sha256": "e9008d9c0c407c76143d6997f3a5fb52a2a482c40571f395da7dcf8a8fee3d9d",
         "title": "038 - Orden HAC/66/2002, de 15 de enero (actualizado a 18/01/2012)",
-        "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2005.pdf",
+        "url": f"{_SEDE}/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2005.pdf",
     }
 
     amendment_refs = {ref_id: catalogues.legal[ref_id] for ref_id in _M038_SOURCE_ERA_LEGAL_REFS}
