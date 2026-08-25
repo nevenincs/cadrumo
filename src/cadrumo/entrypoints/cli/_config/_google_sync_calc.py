@@ -584,17 +584,16 @@ def _assemble_pull_observations(
     """Per-grouping assemble-observations fan-out for the pull command."""
     if not enabled:
         return [], 0
-    from ....application.calculations import assemble_observations_for_grouping
+    from ....application.calculations import assemble_observations_for_snapshot
 
     groupings: list[dict[str, object]] = []
     total = 0
     for row_set in populated_row_sets:
         try:
-            source_kind, observations = assemble_observations_for_grouping(
+            source_kind, observations = assemble_observations_for_snapshot(
                 row_set.grouping,
                 row_set.cells,
-                snapshot.revision,
-                filing_year=snapshot.filing_year,
+                snapshot,
             )
         except OutboundStorageError as exc:
             raise _google_refusal(exc) from exc

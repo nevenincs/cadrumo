@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#source-casilla-integration'
-date: '2026-08-22'
+date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:27e4004362a3eab2aeb4ad2f118b68a9ab50ec0748d58ba1b05d8484195e4961'
+body_hash: 'sha256:21aea9bd92982d65e4e2394dac89ee27fb9e63e175406a021b4ab0b64ec5d0d9'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -104,6 +104,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W03-P10-S58]]'
   - '[[2026-08-22-source-casilla-integration-W03-P10-S59]]'
   - '[[2026-08-22-source-casilla-integration-W05-P14-S87]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P14-S88]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -307,6 +308,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W03-P10-S59` - decide grain, precedence, absence semantics, rounding, and override policy
 - `2026-08-22-source-casilla-integration-W01-P23-S225` - Adjudicate Modelo 036's exact event-driven profile source as manual-by-design and retain the human-filed no-local-submission boundary
 - `2026-08-22-source-casilla-integration-W05-P14-S87` - define the application command that accepts assembled typed row observations for calculation
+- `2026-08-22-source-casilla-integration-W05-P14-S88` - route Google Sheets pull output into the governed calculation input boundary
 
 ### plan
 
