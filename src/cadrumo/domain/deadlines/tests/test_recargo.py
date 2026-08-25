@@ -143,7 +143,7 @@ def test_build_recovery_uses_completed_months_not_day_bracket() -> None:
     assert recovery.recargo_band.surcharge_pct == Decimal("2.00")
     assert recovery.recargo_band.interest_applies is False
     assert "ley-58-2003" in recovery.recargo_band.legal_ref
-    assert recovery.next_command == "aeat app modelo work --help"
+    assert "next_command" not in type(recovery).model_fields
 
 
 def test_load_recargo_bands_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
@@ -253,5 +253,4 @@ def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band() -> None:
             still_filable=True,
             recargo_band=recovery.recargo_band,
             legal_ref="not-canonical",
-            next_command="aeat app modelo work --help",
         )

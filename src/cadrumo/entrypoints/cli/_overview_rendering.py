@@ -139,6 +139,19 @@ def _resolved_action(declaration: DeclaredNextAction | None) -> ResolvedNoticeAc
     )
 
 
+def _recovery_payload(entry: OverviewCalendarEntry) -> dict[str, object] | None:
+    """Resolve an overdue recovery's application declaration for CLI output."""
+    if entry.recovery is None:
+        return None
+    next_action = _resolved_action(entry.recovery_action)
+    if next_action is None:
+        raise ValueError("overdue overview recovery requires an application action declaration")
+    return {
+        **entry.recovery.model_dump(mode="json"),
+        "next_action": next_action,
+    }
+
+
 def overview_calendar_warning_notices(warnings: Sequence[CalendarWarning]) -> list[Notice]:
     """Project profile-completeness and evidence warnings onto the notice channel.
 
@@ -464,7 +477,7 @@ def overview_calendar_output(
             payment_cutoff_on=(entry.payment_cutoff_on.isoformat() if entry.payment_cutoff_on is not None else None),
             status=entry.status,
             user_state=entry.user_state,
-            recovery=(entry.recovery.model_dump(mode="json") if entry.recovery is not None else None),
+            recovery=_recovery_payload(entry),
             censo_enrolment_state=entry.censo_enrolment_state,
             local_work_unit_id=entry.local_work_unit_id,
             local_work_unit_name=entry.local_work_unit_name,

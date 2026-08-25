@@ -88,15 +88,16 @@ class OverviewRecoveryPayload(OutputSchema):
     """JSON projection of the canonical :class:`Recovery` payload.
 
     An OVERDUE entry's recovery carries legal obligations -- the resolved
-    recargo band with its legal reference, and the next command the operator
-    must run. Exposing it as a bare ``dict[str, object]`` let an empty mapping
-    serialize as a valid recovery, so an overdue row could reach the operator
-    with its legal grounding and its remedial action silently absent.
+    recargo band with its legal reference -- plus an action resolved at this
+    CLI boundary from the application's typed declaration. Exposing it as a
+    bare ``dict[str, object]`` let an empty mapping serialize as a valid
+    recovery, so an overdue row could reach the operator with its legal
+    grounding and its remedial action silently absent.
     """
 
     still_filable: bool = True
     recargo_band: OverviewRecargoBandPayload
-    next_command: str = Field(min_length=1, max_length=256)
+    next_action: ResolvedNoticeAction
 
 
 class OverviewCalendarEntryPayload(OutputSchema):
