@@ -711,14 +711,6 @@ ignore_imports =
     # The Sheets parity harness drives the outbound Google client; the export
     # mirror is one-way, so this reaches no persistence at all.
     cadrumo.application.storage.calc_sheets._parity_harness -> cadrumo.adapters.outbound.google
-    cadrumo.application.user_profile._bundle -> cadrumo.adapters.persistence.**
-    cadrumo.application.user_profile._bundle_encryption -> cadrumo.adapters.persistence.**
-    cadrumo.application.user_profile._capabilities -> cadrumo.adapters.persistence.**
-    cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.persistence.**
-    cadrumo.application.user_profile._language_resolver -> cadrumo.adapters.persistence.**
-    cadrumo.application.user_profile._profile_repository -> cadrumo.adapters.persistence.**
-    cadrumo.application.user_profile._repository -> cadrumo.adapters.persistence.**
     # Reaches NO persistence: the second pin in this sweep whose storage-shaped
     # The workflow run-contract surface reports whether a browser session can be
     # established, so it names the outbound browser adapter alongside its
