@@ -55,6 +55,19 @@ from pydantic import ValidationError
 
 import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
 
+from .....application.auth.protocols import (
+    BrowserContextPort,
+    BrowserPagePort,
+    BrowserSessionFactoryPort,
+    BrowserSessionPort,
+)
+from .....application.auth.session_types import (
+    AeatLoginAssertion,
+    AeatSession,
+    ClavePermanenteLoginAssertionDetail,
+    ClavePermanenteSessionDetail,
+    is_exact_active_provider_session,
+)
 from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 from .....core.bucket_pointer import require_active_bucket_id
@@ -71,16 +84,8 @@ from ._clave_provider_common import (
     default_sede_target_url,
     verification_probe_url,
 )
+from ._session_probe import run_authenticated_landing_probe
 from .authenticator import AEAT_SESSION_IDLE_TTL
-from .authenticator_types import (
-    AeatLoginAssertion,
-    AeatSession,
-    BrowserContextLike,
-    BrowserPageLike,
-    BrowserSessionFactory,
-    BrowserSessionLike,
-    _is_exact_active_provider_session,
-)
 from .browser_lifecycle import _CloseIntentBarrier
 from .clave_movil_support import classify_identity as _classify_identity
 from .clave_permanente_metadata import ClavePermanenteSessionMetadata
@@ -88,11 +93,6 @@ from .clave_permanente_support import ClavePermanenteFailureMode
 from .clave_permanente_support import clave_permanente_configuration_error as _configuration_error
 from .clave_permanente_support import clave_permanente_login_error as _login_error
 from .errors import AuthConfigurationError, AuthProviderCleanupError
-from .providers import (
-    ClavePermanenteLoginAssertionDetail,
-    ClavePermanenteSessionDetail,
-)
-from .session_probe import run_authenticated_landing_probe
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -124,7 +124,7 @@ class ClavePermanenteAuthProvider:
         self,
         settings: Settings,
         *,
-        browser_session_factory: BrowserSessionFactory | None = None,
+        browser_session_factory: BrowserSessionFactoryPort | None = None,
         navigation_timeout_ms: int = _NAVIGATION_TIMEOUT_MS_DEFAULT,
     ) -> None:
         """Initialize one provider with its settings and browser boundary."""
@@ -132,8 +132,8 @@ class ClavePermanenteAuthProvider:
         self._browser_session_factory = browser_session_factory
         self._navigation_timeout_ms = navigation_timeout_ms
         self._lifecycle = _CloseIntentBarrier()
-        self._browser_session: BrowserSessionLike | None = None
-        self._context: BrowserContextLike | None = None
+        self._browser_session: BrowserSessionPort | None = None
+        self._context: BrowserContextPort | None = None
         self._active_session: AeatSession | None = None
 
     # ── Protocol surface ────────────────────────────────────────────────────
@@ -211,7 +211,7 @@ class ClavePermanenteAuthProvider:
             describing the probe outcome.
         """
         async with self._lifecycle.work():
-            return await self.verify_in_work(session, target_url=target_url)
+            return await self._verify_in_work(session, target_url=target_url)
 
     async def _verify_in_work(
         self,
@@ -225,7 +225,7 @@ class ClavePermanenteAuthProvider:
             raise AeatLoginAssertionError(
                 "ClavePermanenteAuthProvider.verify() requires an active browser context; call authenticate() first",
             )
-        if not _is_exact_active_provider_session(
+        if not is_exact_active_provider_session(
             session,
             self._active_session,
             provider_kind=AuthProviderKind.CLAVE_PERMANENTE,
@@ -321,7 +321,7 @@ class ClavePermanenteAuthProvider:
         )
 
     async def close(self) -> None:
-        """Tear down any retained :class:`~adapters.outbound.aeat.auth.BrowserContextLike` and browser session."""
+        """Tear down any retained :class:`BrowserContextPort` and browser session."""
         async with self._lifecycle.close():
             context_closed = await self._drop_context()
             browser_session_closed = await self._close_browser_session(self._browser_session)
@@ -427,7 +427,7 @@ class ClavePermanenteAuthProvider:
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────
 
-    async def _resolve_browser_session(self) -> BrowserSessionLike:
+    async def _resolve_browser_session(self) -> BrowserSessionPort:
         if self._browser_session_factory is None:
             raise AeatLoginAssertionError(
                 "ClavePermanenteAuthProvider was constructed without a browser "
@@ -443,7 +443,7 @@ class ClavePermanenteAuthProvider:
             self._context = None
         return closed
 
-    async def _close_context(self, context: BrowserContextLike | None, *, reason: str) -> bool:
+    async def _close_context(self, context: BrowserContextPort | None, *, reason: str) -> bool:
         return await close_clave_context(
             context,
             settings=self._settings,
@@ -451,7 +451,7 @@ class ClavePermanenteAuthProvider:
             owner=f"ClavePermanenteAuthProvider:{reason}",
         )
 
-    async def _close_browser_session(self, session: BrowserSessionLike | None) -> bool:
+    async def _close_browser_session(self, session: BrowserSessionPort | None) -> bool:
         return await close_clave_browser_session(
             session,
             settings=self._settings,
@@ -525,7 +525,7 @@ class ClavePermanenteAuthProvider:
 
     async def _drive_login_form(
         self,
-        page: BrowserPageLike,
+        page: BrowserPagePort,
         *,
         dni_nie: str,
         password: str,
@@ -586,7 +586,7 @@ class ClavePermanenteAuthProvider:
 
     async def _wait_for_post_auth_landing(
         self,
-        page: BrowserPageLike,
+        page: BrowserPagePort,
         target_path: str,
         timeout_ms: int,
     ) -> None:
@@ -648,16 +648,16 @@ class ClavePermanenteAuthProvider:
 
     async def _capture_fresh_login_state(
         self,
-        session_like: BrowserSessionLike,
+        session_like: BrowserSessionPort,
         *,
         dni_nie: str,
         password: str,
         target_path: str,
         selector_url: str,
-    ) -> tuple[BrowserContextLike, Mapping[str, object], str | None]:
+    ) -> tuple[BrowserContextPort, Mapping[str, object], str | None]:
         """Drive the fresh Cl@ve Permanente login page to a captured storage state."""
-        context: BrowserContextLike | None = None
-        page: BrowserPageLike | None = None
+        context: BrowserContextPort | None = None
+        page: BrowserPagePort | None = None
         try:
             context = await session_like.create_context()
             self._context = context
@@ -701,8 +701,8 @@ class ClavePermanenteAuthProvider:
         self,
         storage_state_path: Path,
         *,
-        context: BrowserContextLike,
-        session_like: BrowserSessionLike,
+        context: BrowserContextPort,
+        session_like: BrowserSessionPort,
         storage_state: Mapping[str, object],
         dni_nie: str,
         authenticated_at: datetime,
@@ -754,7 +754,7 @@ class ClavePermanenteAuthProvider:
 
         session_like = await self._resolve_browser_session()
         self._browser_session = session_like
-        context: BrowserContextLike | None = None
+        context: BrowserContextPort | None = None
         try:
             context = await session_like.create_context(storage_state=persisted.storage_state)
             self._context = context
@@ -772,7 +772,7 @@ class ClavePermanenteAuthProvider:
             self._context = context
             self._active_session = session
 
-            assertion = await self.verify_in_work(session, target_url=target_url)
+            assertion = await self._verify_in_work(session, target_url=target_url)
             if not assertion.is_valid:
                 raise AeatLoginAssertionError(
                     "Cl@ve Permanente resume failed live verification: "
@@ -816,4 +816,3 @@ class ClavePermanenteAuthProvider:
 __all__ = [
     "ClavePermanenteAuthProvider",
 ]
-

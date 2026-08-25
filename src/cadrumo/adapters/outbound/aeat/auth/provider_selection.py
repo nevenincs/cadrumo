@@ -9,10 +9,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .....application.auth.protocols import BrowserSessionFactoryPort
 from .....application.auth_credentials import ActiveCertificateCredentials
 from .....core import AuthProviderKind
 from .authenticator import AeatAuthenticator
-from .authenticator_types import BrowserSessionFactory
 from .clave_movil import ClaveMovilAuthProvider
 from .clave_permanente import ClavePermanenteAuthProvider
 from .errors import AuthConfigurationError
@@ -27,7 +27,7 @@ def select_provider(
     kind: AuthProviderKind,
     *,
     settings: Settings,
-    browser_session_factory: BrowserSessionFactory | None = None,
+    browser_session_factory: BrowserSessionFactoryPort | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
 ) -> AeatAuthenticator | ClaveMovilAuthProvider | ClavePermanenteAuthProvider:
     """Return the concrete outbound provider implementation for ``kind``.

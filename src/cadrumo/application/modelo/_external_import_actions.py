@@ -75,6 +75,7 @@ from ...domain.modelos import (
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     WorkUnit,
+    WorkUnitCatalogue,
     derive_calculation_revision_id,
     derive_filing_record_id,
     is_receipt_bound_external_evidence,
@@ -91,6 +92,7 @@ from ._revision_persistence import build_modelo_bucket_event as _build_bucket_ev
 from ._revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
 from ._work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
 from .work_addressing import (
+    ModeloWorkResolution,
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
@@ -112,6 +114,27 @@ class ExternalFilingBaselineSource:
     tax_id: str
     casilla_lexicals: Mapping[CasillaId, str]
     registry_revision_id: str | None = None
+
+
+def _select_active_external_import_work_unit(
+    source: ExternalFilingBaselineSource,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> ModeloWorkResolution:
+    """Apply the canonical active-only cardinality policy to one captured catalogue."""
+    return select_modelo_work_resolution(
+        ModeloWorkSelectorRequest(
+            bucket_id=bucket_id,
+            modelo=source.modelo,
+            filing_year=source.filing_year,
+            period=source.period,
+            revision_id=source.registry_revision_id,
+        ),
+        catalogue=catalogue,
+        bucket_id=bucket_id,
+        mode=ModeloWorkSelectionMode.ACTIVE_NATURAL,
+    )
 
 
 def import_external_filing_source(
@@ -207,17 +230,10 @@ def import_external_filing_source(
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
     catalogue = wu_repo.load()
     try:
-        resolution = select_modelo_work_resolution(
-            ModeloWorkSelectorRequest(
-                bucket_id=bucket_id,
-                modelo=source.modelo,
-                filing_year=source.filing_year,
-                period=source.period,
-                revision_id=source.registry_revision_id,
-            ),
+        resolution = _select_active_external_import_work_unit(
+            source,
             catalogue=catalogue,
             bucket_id=bucket_id,
-            mode=ModeloWorkSelectionMode.ACTIVE_NATURAL,
         )
     except ModeloWorkVisibleTargetAmbiguousError as exc:
         raise ExternalModeloImportError(

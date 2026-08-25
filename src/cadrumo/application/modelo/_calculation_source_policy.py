@@ -35,7 +35,7 @@ from ...core import BindingSourceKind
 from ..aggregation import DEFERRED_SOURCE_KINDS
 from ..aggregation import CallerOverrideDisposition as _CallerOverrideDisposition
 from ..aggregation import precedence_ladder_sources as _precedence_ladder_sources
-from ._calculation_route import (
+from .calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
 )

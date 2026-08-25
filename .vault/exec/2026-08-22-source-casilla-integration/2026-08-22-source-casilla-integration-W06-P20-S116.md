@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:40ca4f420b959d5b7de5a8e5f879e93eaf0a24646cf70309b0a7cb21404f22e3'
+body_hash: 'sha256:f8329bd427d87099b3570913237cf891ff5a5ab0162f77985d176fba4b261dc4'
 step_id: 'S116'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -37,3 +37,5 @@ No candidate was promoted to `connected`, no deferral was extended, and no unsup
 ## Notes
 
 The first full focused suite exposed four stale mutation assertions after the census ordering and readiness wording changed. Those assertions were repaired to target the intended capability and inventory row; the production validation order and refusal behavior were not weakened. All seven dated deferrals remain current through 2026-12-31. `S117` remains responsible for the final disappearance, expiry, and unsupported-connected-claim gate.
+
+The inventory readiness implementation and test were captured by concurrent mixed commit `a6d3393949`; the remaining discovery, census, and test corrections were captured by concurrent mixed commit `5d65f6b321`. This record preserves that provenance rather than attributing either mixed commit solely to S116. The S116 execution and review records are committed separately by exact path.

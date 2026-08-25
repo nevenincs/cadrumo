@@ -33,7 +33,6 @@ import re
 import pytest
 
 from .....core import ExportLayoutFormat
-from ..errors import RegistryValidationError
 from .._export import derive_export_layouts_from_bindings
 from .._record_design import extract_record_design
 from .._record_design_schema import (
@@ -65,6 +64,7 @@ from .._validate_export_layout_coverage import (
     _sheet_constants,
     validate_export_layout_record_coverage,
 )
+from ..errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -864,6 +864,10 @@ def test_an_obligatory_blank_is_required_and_satisfied_by_a_filler(
         if position.declared_blank
     ]
     assert blanks, "no obligatory-blank position was examined, so this proved nothing"
+    assert any(
+        position.offset == 12 and "Indicador de página complementaria" in position.description
+        for position in blanks
+    ), "a terminal 'En blanco' description sentence must retain its obligatory filler position"
     for position in blanks:
         span = set(range(position.offset, position.offset + position.length))
         assert _covers(position, set(), span), (

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:583ce1764a47b72c056ff39ee52937298b08a92ee8588a7a9168002c701744b4'
+body_hash: 'sha256:f4bbeba14ad260c1a7df3fae3686d6ac97153ca5181c314820c33fb24482ee80'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - '[[2026-08-22-source-casilla-integration-W06-P20-S116]]'
@@ -64,3 +64,6 @@ Two separate fresh processes each return `status = match`, 478 discovered capabi
 - Final comparison pass 2: exit 0; identical counts and `status = match`.
 - Focused discovery tests: 10 passed.
 - Inventory readiness test: 1 passed.
+- Full source-connectivity suite: 60 passed.
+- Ruff over source-connectivity and inventory readiness surfaces: passed.
+- Feature-scoped Vaultspec check: passed.

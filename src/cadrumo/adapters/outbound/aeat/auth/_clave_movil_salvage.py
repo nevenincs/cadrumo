@@ -25,9 +25,10 @@ from typing import TYPE_CHECKING
 
 import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
 
+from .....application.auth.protocols import BrowserContextPort, BrowserPagePort
 from .....core.logging import get_logger
 from .....core.time import now
-from .authenticator import AEAT_SESSION_IDLE_TTL, BrowserContextLike, BrowserPageLike
+from .authenticator import AEAT_SESSION_IDLE_TTL
 from .clave_movil_metadata import ClaveMovilSessionMetadata
 
 if TYPE_CHECKING:
@@ -108,11 +109,11 @@ class _ClaveMovilSessionSalvageMixin(abc.ABC):
 
     async def _salvage_session_before_teardown(
         self,
-        context: BrowserContextLike | None,
+        context: BrowserContextPort | None,
         *,
         storage_state_path: Path,
         dni_nie: str,
-        page: BrowserPageLike | None,
+        page: BrowserPagePort | None,
         target_path: str,
     ) -> None:
         """Persist whatever session the failing context holds, if any.

@@ -10,12 +10,15 @@ from pydantic import ValidationError
 
 import cadrumo.adapters.outbound.aeat.auth.authenticator as authenticator
 
+from ......application.auth.session_types import (
+    ClaveMovilSessionDetail,
+    ClavePermanenteSessionDetail,
+    is_exact_active_provider_session,
+)
 from ......core.errors import AeatLoginAssertionError
 from ......core.i18n import tr
 from ..authenticator import _require_exact_active_certificate_session
-from ..authenticator_types import _is_exact_active_provider_session
 from ..errors import AuthConfigurationError
-from ..providers import ClaveMovilSessionDetail, ClavePermanenteSessionDetail
 from ._authenticator_support import (
     _SENSITIVE_HEALTH_PAYLOAD,
     _SENSITIVE_STORAGE_BASENAME,
@@ -93,13 +96,13 @@ def test_exact_active_provider_session_predicate_rejects_equal_reconstructions(
         provider_detail=detail,
     )
 
-    assert _is_exact_active_provider_session(
+    assert is_exact_active_provider_session(
         active,
         active,
         provider_kind=kind,
         detail_type=type(detail),
     )
-    assert not _is_exact_active_provider_session(
+    assert not is_exact_active_provider_session(
         active.model_copy(),
         active,
         provider_kind=kind,

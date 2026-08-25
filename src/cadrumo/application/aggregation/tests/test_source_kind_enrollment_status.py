@@ -18,7 +18,7 @@ import pytest
 
 from ....core import BindingSourceKind
 from ...aggregation import DEFERRED_SOURCE_KINDS, BindingSourceDisposition
-from ...modelo._calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from ...modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

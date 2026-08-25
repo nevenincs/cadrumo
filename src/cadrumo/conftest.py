@@ -144,13 +144,19 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def compose_profile_persistence_ports() -> Iterator[None]:
-    """Compose real custody/session/workflow adapters for tests that load their owners."""
+def compose_runtime_ports() -> Iterator[None]:
+    """Compose real persistence and authentication adapters for tests."""
+    from .adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from .adapters.persistence.workflow import build_workflow_persistence_port
+    from .application.auth.providers import bind_auth_provider_selector
     from .application.workflow.persistence import bind_workflow_persistence_port
     from .tests.profile_persistence import composed_profile_persistence_ports
 
-    with composed_profile_persistence_ports(), bind_workflow_persistence_port(build_workflow_persistence_port()):
+    with (
+        composed_profile_persistence_ports(),
+        bind_workflow_persistence_port(build_workflow_persistence_port()),
+        bind_auth_provider_selector(select_outbound_auth_provider),
+    ):
         yield
 
 

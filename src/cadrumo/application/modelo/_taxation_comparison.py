@@ -61,9 +61,15 @@ from ...domain.calculations.registry import (
     RelationId,
     calculate_registry_snapshot,
 )
+from ...domain.modelos import WorkUnitCatalogue
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_semantic_role,
+)
+from .work_addressing import (
+    ModeloWorkResolution,
+    ModeloWorkSelectorRequest,
+    select_modelo_work_resolution,
 )
 
 # ---------------------------------------------------------------------------
@@ -73,6 +79,16 @@ from ._semantic_role_resolution import (
 _DECLARATION_TYPE_BINDING_SUFFIX = "profile-declaration-type"
 _CUOTA_RESULTANTE_ROLE = "irpf_cuota_resultante_autoliquidacion"  # casilla 0595
 _RESULTADO_ROLE = "irpf_cuota_diferencial"  # casilla 0610
+
+
+def _select_taxation_work_unit(
+    request: ModeloWorkSelectorRequest,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> ModeloWorkResolution:
+    """Resolve one taxation target from the caller-captured work catalogue."""
+    return select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
 
 #: Honesty scope caveat for the individual filing branch. The individual run
 #: reuses the *single* input set assembled for the unidad familiar and merely
@@ -358,20 +374,16 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     from ._action_errors import WorkUnitNotFoundError
     from ._binding_resolution import resolve_declaration_period_inputs
     from ._registry_resources import authority_via_resources as _authority_via_resources
-    from .work_addressing import (
-        ModeloWorkSelectorRequest,
-        ModeloWorkSelectorState,
-        resolve_modelo_work_bucket,
-        select_modelo_work_resolution,
-    )
+    from .work_addressing import ModeloWorkSelectorState, resolve_modelo_work_bucket
 
     request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
     bucket_id = resolve_modelo_work_bucket(request)
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 
-    resolution = select_modelo_work_resolution(
+    catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+    resolution = _select_taxation_work_unit(
         request,
-        catalogue=WorkUnitCatalogueRepository(bucket_id=bucket_id).load(),
+        catalogue=catalogue,
         bucket_id=bucket_id,
     )
     if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:

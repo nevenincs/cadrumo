@@ -75,7 +75,6 @@ from .work_addressing import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     ModeloWorkUnitNotFoundError,
-    resolve_modelo_work_bucket,
     select_modelo_work_resolution,
 )
 
@@ -94,7 +93,7 @@ if TYPE_CHECKING:
     from ...core import Period
     from ...domain.calculations.registry import CasillaDefinition
     from ...domain.justificante import Justificante
-    from ...domain.modelos import CalculationRevision, WorkUnit
+    from ...domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue
 
 _DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[Modelo] = frozenset(
     {Modelo.M100, Modelo.M111, Modelo.M130, Modelo.M190, Modelo.M303, Modelo.M390}
@@ -140,13 +139,28 @@ Tier-R and is tracked separately, blocked on #332-337.
 """
 
 
-def _captured_work_unit_for_reconciliation(*, work_unit_id: WorkUnitId, bucket_id: str | None = None) -> WorkUnit:
-    """Capture one catalogue and preserve reconcile's typed absence policy."""
+def _active_reconciliation_catalogue() -> tuple[WorkUnitCatalogue, str]:
+    """Capture the active profile's work catalogue at the reconciliation boundary."""
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+
+    bucket_id = workflow_state_repository().load().active_profile_bucket_id()
+    if bucket_id is None:
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.reconcile_no_active_bucket",
+        )
+    return WorkUnitCatalogueRepository(bucket_id=bucket_id).load(), bucket_id
+
+
+def _resolve_work_unit_for_reconciliation(
+    *,
+    work_unit_id: WorkUnitId,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> WorkUnit:
+    """Translate canonical selector absence to reconciliation's typed refusal."""
     request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
-    resolved_bucket_id = bucket_id or resolve_modelo_work_bucket(request)
-    catalogue = WorkUnitCatalogueRepository(bucket_id=resolved_bucket_id).load()
     try:
-        resolution = select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=resolved_bucket_id)
+        resolution = select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
     except ModeloWorkUnitNotFoundError as exc:
         raise WorkUnitNotFoundError(
             translated_message="application.modelo.errors.work_unit_not_found",
@@ -280,7 +294,12 @@ class ReconciliationCrossBucketRefusedError(CadrumoError):
     """
 
 
-def _require_declaration_enrolled_modelo(work_unit_id: WorkUnitId) -> WorkUnit:
+def _require_declaration_enrolled_modelo(
+    work_unit_id: WorkUnitId,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> WorkUnit:
     """Refuse an unenrolled modelo before spending effort parsing its PDF.
 
     Declaración parsing (template detection, registry-profile extraction) is
@@ -294,7 +313,11 @@ def _require_declaration_enrolled_modelo(work_unit_id: WorkUnitId) -> WorkUnit:
     :func:`adapters.inbound.declaracion.parse_declaracion` overrides,
     rather than reloading the catalogue a second time.
     """
-    work_unit = _captured_work_unit_for_reconciliation(work_unit_id=work_unit_id)
+    work_unit = _resolve_work_unit_for_reconciliation(
+        work_unit_id=work_unit_id,
+        catalogue=catalogue,
+        bucket_id=bucket_id,
+    )
     if str(work_unit.modelo) not in _DECLARATION_CASILLA_RECONCILE_MODELOS:
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
@@ -333,7 +356,12 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         A :class:`ModeloReconciliationReport`.
     """
     if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
-        work_unit = _require_declaration_enrolled_modelo(command.work_unit_id)
+        catalogue, bucket_id = _active_reconciliation_catalogue()
+        work_unit = _require_declaration_enrolled_modelo(
+            command.work_unit_id,
+            catalogue=catalogue,
+            bucket_id=bucket_id,
+        )
 
         from ...adapters.inbound.declaracion import DeclaracionParseError, parse_declaracion
 
@@ -355,7 +383,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         except DeclaracionParseError as exc:
             raise _evidence_invalid_refusal(exc, source_ref=str(command.source_path)) from exc
         return _reconcile_parsed_declaracion(
-            work_unit_id=command.work_unit_id,
+            work_unit=work_unit,
             source_kind=command.source_kind,
             source_ref=str(command.source_path),
             actor=command.actor,
@@ -369,8 +397,13 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
         justificante = parse_justificante(command.source_path)
     except JustificanteParseError as exc:
         raise _evidence_invalid_refusal(exc, source_ref=str(command.source_path)) from exc
+    catalogue, bucket_id = _active_reconciliation_catalogue()
     return _reconcile_parsed_justificante(
-        work_unit_id=command.work_unit_id,
+        work_unit=_resolve_work_unit_for_reconciliation(
+            work_unit_id=command.work_unit_id,
+            catalogue=catalogue,
+            bucket_id=bucket_id,
+        ),
         source_kind=command.source_kind,
         source_ref=str(command.source_path),
         actor=command.actor,
@@ -411,8 +444,13 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
         justificante = parse_justificante_bytes(command.source_bytes)
     except JustificanteParseError as exc:
         raise _evidence_invalid_refusal(exc, source_ref=command.source_ref) from exc
+    catalogue, bucket_id = _active_reconciliation_catalogue()
     return _reconcile_parsed_justificante(
-        work_unit_id=command.work_unit_id,
+        work_unit=_resolve_work_unit_for_reconciliation(
+            work_unit_id=command.work_unit_id,
+            catalogue=catalogue,
+            bucket_id=bucket_id,
+        ),
         source_kind=command.source_kind,
         source_ref=command.source_ref,
         actor=command.actor,
@@ -422,30 +460,13 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
 
 def _reconcile_parsed_justificante(
     *,
-    work_unit_id: WorkUnitId,
+    work_unit: WorkUnit,
     source_kind: ModeloReconciliationEvidenceKind,
     source_ref: str,
     actor: str,
     justificante: Justificante,
 ) -> ModeloReconciliationReport:
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-
-    active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
-    if active_bucket_id is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.reconcile_no_active_bucket",
-        )
-
-    work_unit = _captured_work_unit_for_reconciliation(work_unit_id=work_unit_id, bucket_id=active_bucket_id)
-    if work_unit.bucket_id != active_bucket_id:
-        raise ReconciliationCrossBucketRefusedError(
-            translated_message="errors.refused.reconciliation_cross_bucket",
-            context={
-                "work_unit_id": work_unit_id,
-                "work_unit_bucket_id": work_unit.bucket_id,
-                "active_bucket_id": active_bucket_id,
-            },
-        )
+    active_bucket_id = work_unit.bucket_id
 
     diffs: list[ModeloReconciliationDiff] = []
     advisories: list[ModeloReconciliationAdvisory] = []
@@ -478,30 +499,13 @@ def _reconcile_parsed_justificante(
 
 def _reconcile_parsed_declaracion(
     *,
-    work_unit_id: WorkUnitId,
+    work_unit: WorkUnit,
     source_kind: ModeloReconciliationEvidenceKind,
     source_ref: str,
     actor: str,
     declaracion: InboundDeclaracionObservation,
 ) -> ModeloReconciliationReport:
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-
-    active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
-    if active_bucket_id is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.reconcile_no_active_bucket",
-        )
-
-    work_unit = _captured_work_unit_for_reconciliation(work_unit_id=work_unit_id, bucket_id=active_bucket_id)
-    if work_unit.bucket_id != active_bucket_id:
-        raise ReconciliationCrossBucketRefusedError(
-            translated_message="errors.refused.reconciliation_cross_bucket",
-            context={
-                "work_unit_id": work_unit_id,
-                "work_unit_bucket_id": work_unit.bucket_id,
-                "active_bucket_id": active_bucket_id,
-            },
-        )
+    active_bucket_id = work_unit.bucket_id
     if str(work_unit.modelo) not in _DECLARATION_CASILLA_RECONCILE_MODELOS:
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",

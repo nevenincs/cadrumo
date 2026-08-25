@@ -29,7 +29,7 @@ from ....domain.modelos import (
     CalculationSourceRef,
 )
 from ...aggregation import BindingSourceDisposition
-from ...modelo._calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from ...modelo.calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 from ...operator_surface import (
     LiveLeafInventoryRow,
     ModeloCalculationRouteId,

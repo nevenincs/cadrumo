@@ -188,6 +188,64 @@ def _class_names(node: ast.ClassDef) -> frozenset[str]:
     return frozenset(name.rsplit(".", maxsplit=1)[-1] for child in ast.walk(node) if (name := _dotted_name(child)))
 
 
+def _self_attribute_name(node: ast.AST) -> str | None:
+    if (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "self"
+    ):
+        return node.attr
+    return None
+
+
+def _constructor_uses_secure_object_store_port(node: ast.ClassDef) -> bool:
+    constructor = next(
+        (child for child in node.body if isinstance(child, ast.FunctionDef) and child.name == "__init__"),
+        None,
+    )
+    if constructor is None:
+        return False
+    arguments = (*constructor.args.posonlyargs, *constructor.args.args, *constructor.args.kwonlyargs)
+    secure_arguments = {
+        argument.arg
+        for argument in arguments
+        if argument.arg != "self"
+        and argument.annotation is not None
+        and any(
+            _dotted_name(part).rsplit(".", maxsplit=1)[-1].endswith("SecureObjectStorePort")
+            for part in ast.walk(argument.annotation)
+        )
+    }
+    if not secure_arguments:
+        return False
+    secure_attributes = {
+        attribute
+        for child in ast.walk(constructor)
+        if isinstance(child, (ast.Assign, ast.AnnAssign))
+        for target in (child.targets if isinstance(child, ast.Assign) else (child.target,))
+        if (attribute := _self_attribute_name(target)) is not None
+        and child.value is not None
+        and any(isinstance(part, ast.Name) and part.id in secure_arguments for part in ast.walk(child.value))
+    }
+    if not secure_attributes:
+        return False
+    for method in node.body:
+        if not isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)) or method.name == "__init__":
+            continue
+        for call in (child for child in ast.walk(method) if isinstance(child, ast.Call)):
+            receiver = _self_attribute_name(call.func.value) if isinstance(call.func, ast.Attribute) else None
+            if receiver in secure_attributes:
+                return True
+            call_inputs = (*call.args, *(keyword.value for keyword in call.keywords))
+            if any(
+                _self_attribute_name(part) in secure_attributes
+                for call_input in call_inputs
+                for part in ast.walk(call_input)
+            ):
+                return True
+    return False
+
+
 def _secure_mechanism(node: ast.ClassDef) -> SecureRepositoryMechanism | None:
     base_names = {_dotted_name(base).rsplit(".", maxsplit=1)[-1] for base in node.bases}
     if base_names & {"SecureBoundRepository", "_SecureBoundRepository"}:
@@ -195,7 +253,7 @@ def _secure_mechanism(node: ast.ClassDef) -> SecureRepositoryMechanism | None:
     names = _class_names(node)
     if "ProfileBareModelSecurePersistence" in names:
         return "profile_secure_document"
-    if names & _SECURE_NAMES or any(name.endswith("SecureObjectStorePort") for name in names):
+    if names & _SECURE_NAMES or _constructor_uses_secure_object_store_port(node):
         return "secure_object"
     return None
 
@@ -560,7 +618,12 @@ def discover_calculation_helpers(repo_root: Path) -> tuple[CalculationHelperCapa
         if "tests" in path.relative_to(domain_root).parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        module_is_public = path.name not in {"__init__.py", "conftest.py"} and not path.name.startswith("_")
+        relative_parts = path.relative_to(domain_root).parts
+        module_is_public = (
+            path.name not in {"__init__.py", "conftest.py"}
+            and not path.name.startswith("_")
+            and all(not part.startswith("_") for part in relative_parts[:-1])
+        )
         for node in tree.body:
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
@@ -686,7 +749,7 @@ def discover_row_assemblers(repo_root: Path) -> tuple[RowAssemblerCapability, ..
 
 def discover_source_ownership() -> tuple[SourceOwnershipCapability, ...]:
     """Project source ownership from the canonical live calculation route."""
-    from cadrumo.application.modelo._calculation_route import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+    from cadrumo.application.modelo.calculation_route import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
 
     return tuple(
         SourceOwnershipCapability(
@@ -734,7 +797,7 @@ def discovered_source_capability_evidence(repo_root: Path) -> dict[str, str]:
     evidence.update((row.capability_id, row.evidence_locator) for row in located_rows)
     evidence.update((row.capability_id, f"{row.module}:{row.line}") for row in discover_row_assemblers(repo_root))
     evidence.update(
-        (row.capability_id, "src/cadrumo/application/modelo/_calculation_route.py")
+        (row.capability_id, "src/cadrumo/application/modelo/calculation_route.py")
         for row in discover_source_ownership()
     )
     if len(evidence) != len(discovered_source_capability_ids(repo_root)):

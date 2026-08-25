@@ -317,6 +317,10 @@ def _select_operator_work_unit_resolution(
     bucket_id: str,
 ) -> ModeloWorkResolution:
     assert request.operator_work_unit_id is not None
+    if len(request.operator_work_unit_id) != 12:
+        raise ModeloWorkSelectorContradictionError(
+            translated_message="errors.refused.modelo_work_selector_contradiction",
+        )
     matches = tuple(
         sorted(
             (

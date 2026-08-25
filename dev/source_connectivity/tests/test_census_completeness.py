@@ -154,7 +154,7 @@ def test_modelo_036_profile_ownership_uses_the_canonical_route_locator() -> None
     entry = next(item for item in manifest.entries if item.candidate_id == "censo.modelo-036-profile-status")
     focused_manifest = manifest.model_copy(update={"entries": (entry,)})
     evidence = discovered_source_capability_evidence(REPO_ROOT)
-    canonical_route = "src/cadrumo/application/modelo/_calculation_route.py"
+    canonical_route = "src/cadrumo/application/modelo/calculation_route.py"
 
     assert canonical_route in entry.capability_locators
     check_capability_locators(REPO_ROOT, focused_manifest, capability_evidence=evidence)

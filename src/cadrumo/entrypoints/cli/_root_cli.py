@@ -56,8 +56,10 @@ def root_command(
         _emit_root_help_and_exit(ctx)
     if ctx.invoked_subcommand is not None and _is_introspection_only_invocation(ctx):
         return
+    from ...adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ...adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
     from ...adapters.persistence.workflow import build_workflow_persistence_port
+    from ...application.auth.providers import bind_auth_provider_selector
     from ...application.user_profile.custody_ports import bind_profile_custody_port
     from ...application.user_profile.language_resolver import register_language_resolver
     from ...application.user_profile.login_session_port import bind_profile_login_session_port
@@ -66,6 +68,7 @@ def root_command(
     ctx.with_resource(bind_profile_custody_port(build_profile_custody_port()))
     ctx.with_resource(bind_profile_login_session_port(build_profile_login_session_port()))
     ctx.with_resource(bind_workflow_persistence_port(build_workflow_persistence_port()))
+    ctx.with_resource(bind_auth_provider_selector(select_outbound_auth_provider))
     register_language_resolver()
     preserve_requested_cli_leaf(ctx)
     state["profile_override"] = profile

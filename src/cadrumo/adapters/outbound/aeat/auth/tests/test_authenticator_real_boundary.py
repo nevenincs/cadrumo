@@ -12,6 +12,7 @@ from pydantic import SecretStr
 
 import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
 
+from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......application.auth_credentials import ActiveCertificateCredentials, unnamed_certificate_credentials
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
@@ -22,9 +23,7 @@ from ...browser.tests.real_http_boundary import opened_http_boundary, real_brows
 from ...tests import wait_for_process_exit
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata
-from ..authenticator_types import AeatSession
 from ..certificate import extract_nif_from_subject
-from ..providers import CertificateSessionDetail
 from ._authenticator_support import SECRET_PASSPHRASE, _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

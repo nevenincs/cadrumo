@@ -39,7 +39,7 @@ from .....application.aggregation import (
 # The policy module made this name public; the underscore form it was imported
 # under no longer exists, which stopped this module COLLECTING at all -- a
 # gate running zero assertions rather than failing loudly.
-from .....application.modelo._calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
+from .....application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .....core import BindingSourceKind
 from .. import InputKind, PeriodSelector
 from .._authority import bundled_authority

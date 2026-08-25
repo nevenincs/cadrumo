@@ -10,17 +10,12 @@ never imports export code, so a new export consumer satisfies every assertion it
 makes. This gate fails on the commit that wires one instead.
 
 Scanning is by SYMBOL NAME across every ``from ... import``, not by importers of
-the defining module. That distinction is the whole design. The sole real consumer
-reaches these types through the package facade rather than through
-``_result_summary``, and ``aeat-architecture-boundaries`` mandates
-that route, so a definer-keyed scan finds zero importers, reports clean, and
-would certify its own blindness. A facade re-export changes the module path but
-never the symbol name, so name scanning is immune to that failure by
-construction, with no closure walk to keep in step.
+the defining module. That distinction is the whole design: a direct-defining
+module migration changes the import path but not the protected symbol name, so
+name scanning remains immune to it without a closure walk to keep in step.
 
-The re-export surface is still asserted, as its own inventory check rather than
-as the resolution mechanism: a facade promotion widens reach, and this makes that
-widening a finding to review rather than a silent change.
+The defining module is the sole re-export surface. The inert
+``application.modelo`` namespace must never become a second publisher.
 
 Known limit, stated rather than implied: ``import cadrumo.application.modelo``
 followed by attribute access is not an ``ImportFrom`` and is not seen. No
@@ -64,15 +59,9 @@ _DISPLAY_LAYER = _PACKAGE_ROOT / "entrypoints" / "cli"
 #: violation list, and an empty violation list reads as "no leak".
 _MINIMUM_MODULES_SCANNED = 200
 
-#: Pinned EXACTLY, unlike the importer count, and the asymmetry is deliberate. A
-#: floor is right for a count whose only job is refusing an empty scan, because a
-#: legitimate new importer would red it and train a reader to bump the number. A
-#: re-export point is the opposite case: adding one genuinely widens the surface a
-#: consumer can reach the symbol through, so the change IS the thing to review and
-#: bumping this is the sanctioned response rather than a way around the gate.
-#: ``aeat-architecture-boundaries`` actively encourages promotions on
-#: these types, which is exactly why the widening should not be silent.
-_EXPECTED_REEXPORTERS = 2
+#: The defining module is the sole publisher; a package-facade re-export is a
+#: duplicate authority after S170's inert-namespace convergence.
+_EXPECTED_REEXPORTERS = 1
 
 
 def _production_modules() -> Iterator[Path]:
@@ -170,13 +159,12 @@ def test_the_scan_still_matches_the_symbol(symbol: str) -> None:
 
 
 @pytest.mark.parametrize("symbol", _APPLICATION_SYMBOLS)
-def test_the_reexport_surface_is_the_one_reviewed(symbol: str) -> None:
-    """A facade promotion widens reach and must surface as a finding, not silently.
+def test_the_defining_module_is_the_sole_reexport_surface(symbol: str) -> None:
+    """A facade promotion is duplicate authority and must fail the fixed point.
 
-    The re-export set is computed, never assumed to be a fixed depth: it is the
-    definer plus the package facade today, and a promotion elsewhere would add to
-    it. Name scanning already covers the importers regardless, so this is an
-    inventory assertion whose job is to make the widening visible.
+    The re-export set is computed rather than inferred from module depth. Name
+    scanning independently covers importers; this inventory prevents a second
+    publisher from re-entering through the inert package namespace.
     """
     _importers, reexporters, _scanned = _scan(symbol)
     relative = sorted(str(path.relative_to(_REPO_ROOT)) for path in reexporters)
@@ -186,10 +174,8 @@ def test_the_reexport_surface_is_the_one_reviewed(symbol: str) -> None:
         f"consumer can reach it through: {relative}"
     )
     assert len(reexporters) == _EXPECTED_REEXPORTERS, (
-        f"the {symbol} re-export surface changed and now has {len(reexporters)} publishers: "
-        f"{relative}. A promotion widens the paths a consumer can reach this type through, so "
-        "confirm the new publisher is intended and update the expected count -- that bump is "
-        "the review, not a way around it."
+        f"the {symbol} re-export surface has {len(reexporters)} publishers: {relative}. "
+        "The defining module is the sole permitted publisher; delete any facade re-export."
     )
 
 

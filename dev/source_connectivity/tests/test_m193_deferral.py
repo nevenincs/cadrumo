@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 
 from cadrumo.application.aggregation import collect_unhandled_source_diagnostics
-from cadrumo.application.modelo._calculation_route import (
+from cadrumo.application.modelo.calculation_route import (
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
 )

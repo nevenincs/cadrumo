@@ -25,7 +25,7 @@ from ...core import (
 )
 from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
 from ..aggregation import BindingSourceDisposition
-from ..modelo._calculation_route import (
+from ..modelo.calculation_route import (
     CALCULATION_ROUTE_ID,
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,

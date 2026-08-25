@@ -61,7 +61,7 @@ from ..calculations import (
 )
 from ._calculation_modelo_adjustments import m131_objective_estimation_data_base_inputs
 from ._calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
-from ._calculation_route import CALCULATION_ROUTE_PRE_MESH_SOURCES, require_calculation_route_resolver
+from .calculation_route import CALCULATION_ROUTE_PRE_MESH_SOURCES, require_calculation_route_resolver
 
 
 @dataclass(frozen=True, slots=True)

@@ -61,11 +61,11 @@ from ....entrypoints.tui.components.widgets import ContentScroll
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
+    from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
     from ....application.user_profile.login_session import ProfileLoginOutcome
+    from ....application.user_profile.prospective_password import ProspectiveProfilePasswordRefusal
     from ....application.user_profile.recovery_custody import ProfileRecoveryEnrollment
     from ....application.user_profile.registration import ProfileRegistrationOutcome
-    from ....application.user_profile.prospective_password import ProspectiveProfilePasswordRefusal
-    from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
 
 
 CREDENTIAL_PANEL_CSS: Final[str] = """

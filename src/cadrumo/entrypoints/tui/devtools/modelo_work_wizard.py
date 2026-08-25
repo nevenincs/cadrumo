@@ -9,12 +9,11 @@ registry discovery and run-scoped copy ownership stay with
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING
 
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
 from ....application.modelo.work_wizard import ModeloWorkWizardRun, open_modelo_work_wizard
 from ....core import Modelo, Period
@@ -22,6 +21,7 @@ from ....core.flows import FlowMode
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
 from ..flows.app import FlowTuiApp
+from ..launcher import load_modelo_work_unit_catalogue
 from .fixture import harness_storage, passphrase
 
 if TYPE_CHECKING:
@@ -66,7 +66,7 @@ def _ensure_modelo_work_profile() -> str:
     )
     if existing is not None:
         bucket_id = existing.bucket_id
-        login_profile(name=bucket_id, passphrase_callback=lambda *_args, **_kwargs: passphrase())
+        login_profile(name=bucket_id, passphrase_callback=passphrase)
     else:
         outcome = register_profile_with_credentials(
             label=_PROFILE_LABEL,
@@ -88,13 +88,13 @@ def _ensure_modelo_work_unit(bucket_id: str) -> WorkUnit:
         period=period,
         registry_revision_id=None,
         actor="tui-devtools",
-        catalogue=WorkUnitCatalogueRepository(bucket_id=bucket_id).load(),
+        catalogue=load_modelo_work_unit_catalogue(bucket_id),
     )
     return result.work_unit
 
 
 @contextmanager
-def provision_modelo_work_wizard() -> Iterator[str]:
+def provision_modelo_work_wizard() -> Generator[str]:
     """Provision the real work unit and hold its canonical copy run open."""
     with harness_storage(namespace="modelo-work-wizard"):
         bucket_id = _ensure_modelo_work_profile()

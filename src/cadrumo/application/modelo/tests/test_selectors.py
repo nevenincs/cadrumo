@@ -366,6 +366,22 @@ def test_strict_work_unit_id_selector_refuses_operator_display_handles() -> None
         ModeloWorkSelectorRequest(work_unit_id="a" * 12)
     with pytest.raises(ValidationError, match="operator_work_unit_id"):
         ModeloWorkSelectorRequest(operator_work_unit_id="a")
+    with pytest.raises(ValidationError, match="operator_work_unit_id"):
+        ModeloWorkSelectorRequest(operator_work_unit_id="a" * 64)
+
+
+def test_selector_defends_the_operator_only_twelve_character_boundary(
+    work_repo: WorkUnitCatalogueRepository,
+) -> None:
+    """Even a validation-bypassing request cannot turn a full id into a prefix lookup."""
+    unit = _seed_work_unit(work_repo)
+
+    with pytest.raises(ModeloWorkSelectorContradictionError):
+        select_modelo_work_resolution(
+            ModeloWorkSelectorRequest.model_construct(operator_work_unit_id=unit.work_unit_id),
+            catalogue=work_repo.load(),
+            bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
+        )
 
 
 def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: WorkUnitCatalogueRepository) -> None:

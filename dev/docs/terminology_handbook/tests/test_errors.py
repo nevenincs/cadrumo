@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from importlib import import_module
+
 import pytest
 
-import dev.docs.terminology_handbook as handbook_package
-from dev.docs.terminology_handbook import errors
-
+from .. import errors
 from ..errors import TerminologyError, TerminologyLoadError, TerminologyValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+handbook_package = import_module("..", __package__)
 
 
 def test_errors_live_in_public_defining_module_without_facade_reexports() -> None:

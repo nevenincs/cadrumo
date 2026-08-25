@@ -23,7 +23,6 @@ import json
 from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from datetime import datetime
-from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from urllib.parse import urlsplit
@@ -59,12 +58,12 @@ from .operator_scope import (
     auth_mutation_span,
 )
 from .protocols import (
-    AeatLoginAssertionPort,
-    AeatSessionPort,
     BrowserSessionFactoryPort,
     SessionStoreProtocol,
+    session_store,
 )
 from .providers import AuthProvider, select_provider
+from .session_types import AeatLoginAssertion, AeatSession
 
 if TYPE_CHECKING:
     from ...core.config import Settings
@@ -81,14 +80,14 @@ class _TargetedAuthProvider(Protocol):
         self,
         *,
         target_url: str | None = None,
-    ) -> AeatSessionPort: ...
+    ) -> AeatSession: ...
 
     async def verify_for_target(
         self,
-        session: AeatSessionPort,
+        session: AeatSession,
         *,
         target_url: str | None = None,
-    ) -> AeatLoginAssertionPort: ...
+    ) -> AeatLoginAssertion: ...
 
 
 @runtime_checkable
@@ -99,18 +98,15 @@ class _PersistedTargetProbeProvider(_TargetedAuthProvider, Protocol):
         self,
         *,
         target_url: str | None = None,
-    ) -> tuple[AeatSessionPort, AeatLoginAssertionPort]: ...
+    ) -> tuple[AeatSession, AeatLoginAssertion]: ...
 
 
 def _get_session_store() -> SessionStoreProtocol:
     """Return the sole encrypted outbound session-store implementation."""
-    session_store = import_module("cadrumo.adapters.outbound.aeat.auth.session_store")
-    if not isinstance(session_store, SessionStoreProtocol):
-        raise TypeError("outbound auth session store does not implement SessionStoreProtocol")
-    return session_store
+    return session_store()
 
 
-def _invalid_assertion_diagnostic(assertion: AeatLoginAssertionPort) -> dict[str, object]:
+def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> dict[str, object]:
     """Return the non-secret machine facts describing a failed live assertion.
 
     The landing URL is decomposed into host and path so a query string, which
@@ -218,8 +214,8 @@ class AuthenticatedAeatSessionResult(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
     provider_kind: AuthProviderKind
-    session: SkipValidation[AeatSessionPort]
-    assertion: SkipValidation[AeatLoginAssertionPort]
+    session: SkipValidation[AeatSession]
+    assertion: SkipValidation[AeatLoginAssertion]
     reused_persisted_session: bool
     acquired_lock: AuthAcquisitionLockRecord | None = None
     reset_lock: AuthAcquisitionLockStatus | None = None
@@ -341,7 +337,7 @@ async def require_verified_aeat_session(
     *,
     kind: AuthProviderKind | None = None,
     target_url: str | None = None,
-) -> AeatSessionPort:
+) -> AeatSession:
     """Return a verified active session without exposing provider mechanics."""
     provider_kind = _resolve_provider_kind(settings, kind)
     settings, expected_identity = _prepare_clave_auth(settings, provider_kind)
@@ -1078,7 +1074,7 @@ async def _try_probe_verified_session(
     target_url: str | None,
     browser_session_factory: BrowserSessionFactoryPort | None,
     certificate_credentials: ActiveCertificateCredentials | None,
-) -> tuple[AeatSessionPort, AeatLoginAssertionPort] | None:
+) -> tuple[AeatSession, AeatLoginAssertion] | None:
     provider = _build_provider(
         settings,
         kind,
@@ -1119,7 +1115,7 @@ async def _probe_existing_session(
     provider: AuthProvider,
     *,
     target_url: str | None = None,
-) -> tuple[AeatSessionPort, AeatLoginAssertionPort]:
+) -> tuple[AeatSession, AeatLoginAssertion]:
     if provider.kind is AuthProviderKind.CLAVE_MOVIL:
         if not isinstance(provider, _PersistedTargetProbeProvider):
             raise TypeError("clave movil provider lacks persisted-session probing")
@@ -1133,7 +1129,7 @@ async def _authenticate_and_verify_provider(
     provider: AuthProvider,
     *,
     target_url: str | None,
-) -> tuple[AeatSessionPort, AeatLoginAssertionPort]:
+) -> tuple[AeatSession, AeatLoginAssertion]:
     """Authenticate and verify without weakening certificate target authority."""
     if provider.kind is AuthProviderKind.CERTIFICATE:
         session = await provider.authenticate()

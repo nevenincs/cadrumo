@@ -62,6 +62,37 @@ def test_secure_repository_behind_a_typed_store_port_remains_discoverable(tmp_pa
     ]
 
 
+def test_secure_port_name_outside_constructor_does_not_certify_plaintext_repository(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "src/cadrumo/application/probe.py",
+        """class PlainRepository:
+    marker: BogusSecureObjectStorePort
+
+    def save(self, payload: PlainPayload) -> None:
+        write_plaintext(payload)
+""",
+    )
+
+    assert discover_secure_repositories(tmp_path) == ()
+
+
+def test_unused_bogus_secure_port_constructor_marker_does_not_certify_plaintext_repository(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "src/cadrumo/application/probe.py",
+        """class PlainRepository:
+    def __init__(self, marker: BogusSecureObjectStorePort) -> None:
+        self._marker = marker
+
+    def save(self, payload: PlainPayload) -> None:
+        write_plaintext(payload)
+""",
+    )
+
+    assert discover_secure_repositories(tmp_path) == ()
+
+
 def test_new_cli_ingress_is_detected_from_command_and_write_policy(tmp_path: Path) -> None:
     _write(
         tmp_path,
@@ -216,6 +247,18 @@ def test_colocated_conftest_function_is_not_a_production_capability(tmp_path: Pa
         tmp_path,
         "src/cadrumo/domain/probe/conftest.py",
         """def calculate_fixture(left: Decimal, right: Decimal) -> Decimal:
+    return left + right
+""",
+    )
+
+    assert discover_calculation_helpers(tmp_path) == ()
+
+
+def test_public_filename_inside_private_subpackage_is_not_a_public_surface(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "src/cadrumo/domain/probe/_internal/calculations.py",
+        """def calculate_internal(left: Decimal, right: Decimal) -> Decimal:
     return left + right
 """,
     )

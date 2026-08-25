@@ -38,16 +38,35 @@ class _ClaveSessionDetailBase(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     kind: _ClaveProviderKind
-    dni_nie: str = Field(min_length=1)
-    landing_url: str | None = None
+    dni_nie: str = Field(
+        min_length=1,
+        description="DNI/NIE used for the Cl@ve login (authoritative identity).",
+    )
+    landing_url: str | None = Field(
+        default=None,
+        description=(
+            "Concrete authenticated AEAT URL observed after login. "
+            "Used by live verification and resume probes so the provider "
+            "does not re-enter the auth selector when a session is already live."
+        ),
+    )
 
 
 class ClaveMovilSessionDetail(_ClaveSessionDetailBase):
     """Session facts unique to a Cl@ve Móvil authentication."""
 
     kind: Literal[AuthProviderKind.CLAVE_MOVIL] = AuthProviderKind.CLAVE_MOVIL
-    used_non_qr_fallback: bool = False
-    verification_code: str | None = None
+    used_non_qr_fallback: bool = Field(
+        default=False,
+        description="True when the DNI/NIE + contraste fallback form was used rather than the QR code.",
+    )
+    verification_code: str | None = Field(
+        default=None,
+        description=(
+            "Three-letter confirmation code shown on the AEAT QR page at "
+            "login; recorded for audit only. Not reused on resume."
+        ),
+    )
 
 
 class ClavePermanenteSessionDetail(_ClaveSessionDetailBase):
@@ -73,8 +92,17 @@ class _ClaveLoginAssertionDetailBase(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     kind: _ClaveProviderKind
-    session_cookie_present: bool = False
-    landing_url: str | None = None
+    session_cookie_present: bool = Field(
+        default=False,
+        description=(
+            "True when the probe response carried an AEAT session cookie; "
+            "primary signal that the Cl@ve login is still live."
+        ),
+    )
+    landing_url: str | None = Field(
+        default=None,
+        description="Final URL Playwright landed on after following redirects.",
+    )
 
 
 class ClaveMovilLoginAssertionDetail(_ClaveLoginAssertionDetailBase):

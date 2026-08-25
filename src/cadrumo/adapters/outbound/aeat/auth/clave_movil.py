@@ -47,6 +47,19 @@ from pydantic import ValidationError
 
 import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
 
+from .....application.auth.protocols import (
+    BrowserContextPort,
+    BrowserPagePort,
+    BrowserSessionFactoryPort,
+    BrowserSessionPort,
+)
+from .....application.auth.session_types import (
+    AeatLoginAssertion,
+    AeatSession,
+    ClaveMovilLoginAssertionDetail,
+    ClaveMovilSessionDetail,
+    is_exact_active_provider_session,
+)
 from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
@@ -66,16 +79,8 @@ from ._clave_provider_common import (
     default_sede_target_url,
     verification_probe_url,
 )
-from .authenticator import (
-    AEAT_SESSION_IDLE_TTL,
-    AeatLoginAssertion,
-    AeatSession,
-    BrowserContextLike,
-    BrowserPageLike,
-    BrowserSessionFactory,
-    BrowserSessionLike,
-)
-from .authenticator_types import _is_exact_active_provider_session
+from ._session_probe import run_authenticated_landing_probe
+from .authenticator import AEAT_SESSION_IDLE_TTL
 from .browser_lifecycle import _CloseIntentBarrier
 from .clave_movil_metadata import ClaveMovilSessionMetadata
 from .clave_movil_support import (
@@ -96,11 +101,6 @@ from .clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
 from .errors import AuthProviderCleanupError
-from .providers import (
-    ClaveMovilLoginAssertionDetail,
-    ClaveMovilSessionDetail,
-)
-from .session_probe import run_authenticated_landing_probe
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -137,7 +137,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         self,
         settings: Settings,
         *,
-        browser_session_factory: BrowserSessionFactory | None = None,
+        browser_session_factory: BrowserSessionFactoryPort | None = None,
         navigation_timeout_ms: int = _NAVIGATION_TIMEOUT_MS_DEFAULT,
     ) -> None:
         """Initialize one provider with its settings and browser boundary."""
@@ -145,8 +145,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         self._browser_session_factory = browser_session_factory
         self._navigation_timeout_ms = navigation_timeout_ms
         self._lifecycle = _CloseIntentBarrier()
-        self._browser_session: BrowserSessionLike | None = None
-        self._context: BrowserContextLike | None = None
+        self._browser_session: BrowserSessionPort | None = None
+        self._context: BrowserContextPort | None = None
         self._active_session: AeatSession | None = None
 
     # ── Protocol surface ────────────────────────────────────────────────────
@@ -245,7 +245,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
             session_like = await self._resolve_browser_session()
             self._browser_session = session_like
-            context: BrowserContextLike | None = None
+            context: BrowserContextPort | None = None
             try:
                 context = await session_like.create_context(storage_state=persisted.storage_state)
                 self._context = context
@@ -275,7 +275,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 # read surface will use the session and fail as a read error
                 # if AEAT rejects it for the target application.
                 del target_url
-                assertion = await self.verify_in_work(session, target_url=None)
+                assertion = await self._verify_in_work(session, target_url=None)
                 return self._finalize_probe_result(
                     session,
                     metadata,
@@ -365,7 +365,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             An :class:`AeatLoginAssertion` describing the probe outcome.
         """
         async with self._lifecycle.work():
-            return await self.verify_in_work(session, target_url=target_url)
+            return await self._verify_in_work(session, target_url=target_url)
 
     async def _verify_in_work(
         self,
@@ -380,7 +380,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 "ClaveMovilAuthProvider.verify() requires an active browser context; call authenticate() first",
                 translated_message="adapters.auth.clave_movil.errors.verify_requires_active_context",
             )
-        if not _is_exact_active_provider_session(
+        if not is_exact_active_provider_session(
             session,
             self._active_session,
             provider_kind=AuthProviderKind.CLAVE_MOVIL,
@@ -435,7 +435,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     async def _dispatch_clave_selector_on_landing(
         self,
-        page: BrowserPageLike,
+        page: BrowserPagePort,
         landing_url: str,
         target_path: str,
     ) -> bool:
@@ -493,7 +493,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         )
 
     async def close(self) -> None:
-        """Tear down any retained :class:`BrowserContextLike` and browser session."""
+        """Tear down any retained :class:`BrowserContextPort` and browser session."""
         async with self._lifecycle.close():
             context_closed = await self._drop_context()
             browser_session_closed = await self._close_browser_session(self._browser_session)
@@ -715,7 +715,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             return self._settings
         return self._settings.model_copy(update={"cadrumo_browser_headless": False})
 
-    async def _resolve_browser_session(self, *, settings: Settings | None = None) -> BrowserSessionLike:
+    async def _resolve_browser_session(self, *, settings: Settings | None = None) -> BrowserSessionPort:
         if self._browser_session_factory is None:
             raise AeatLoginAssertionError(
                 "ClaveMovilAuthProvider was constructed without a browser "
@@ -731,7 +731,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             self._context = None
         return closed
 
-    async def _close_context(self, context: BrowserContextLike | None, *, reason: str) -> bool:
+    async def _close_context(self, context: BrowserContextPort | None, *, reason: str) -> bool:
         return await close_clave_context(
             context,
             settings=self._settings,
@@ -739,7 +739,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             owner=f"ClaveMovilAuthProvider:{reason}",
         )
 
-    async def _close_browser_session(self, session: BrowserSessionLike | None) -> bool:
+    async def _close_browser_session(self, session: BrowserSessionPort | None) -> bool:
         return await close_clave_browser_session(
             session,
             settings=self._settings,
@@ -877,14 +877,14 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     async def _capture_fresh_login_state(
         self,
-        session_like: BrowserSessionLike,
+        session_like: BrowserSessionPort,
         *,
         dni_nie: str,
         target_path: str,
         selector_url: str,
         attempt_context: dict[str, object],
         storage_state_path: Path,
-    ) -> tuple[BrowserContextLike, Mapping[str, object], str | None, str | None]:
+    ) -> tuple[BrowserContextPort, Mapping[str, object], str | None, str | None]:
         """Drive the fresh Cl@ve Móvil login page to a captured storage state.
 
         On failure the context is salvaged before it is closed. AEAT
@@ -895,8 +895,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         a navigation error. The same is true of a landing wait that times
         out after an approval AEAT has already processed.
         """
-        context: BrowserContextLike | None = None
-        page: BrowserPageLike | None = None
+        context: BrowserContextPort | None = None
+        page: BrowserPagePort | None = None
         try:
             context = await session_like.create_context()
             self._context = context
@@ -939,7 +939,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     async def _navigate_to_selector(
         self,
-        page: BrowserPageLike,
+        page: BrowserPagePort,
         *,
         selector_url: str,
         target_path: str,
@@ -964,7 +964,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     async def _run_clave_challenge(
         self,
-        page: BrowserPageLike,
+        page: BrowserPagePort,
         *,
         dni_nie: str,
         target_path: str,
@@ -1037,8 +1037,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         self,
         storage_state_path: Path,
         *,
-        context: BrowserContextLike,
-        session_like: BrowserSessionLike,
+        context: BrowserContextPort,
+        session_like: BrowserSessionPort,
         storage_state: Mapping[str, object],
         dni_nie: str,
         authenticated_at: datetime,
@@ -1103,7 +1103,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
         session_like = await self._resolve_browser_session()
         self._browser_session = session_like
-        context: BrowserContextLike | None = None
+        context: BrowserContextPort | None = None
         try:
             context = await session_like.create_context(
                 storage_state=persisted.storage_state,
@@ -1125,7 +1125,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             self._context = context
             self._active_session = session
 
-            assertion = await self.verify_in_work(session, target_url=target_url)
+            assertion = await self._verify_in_work(session, target_url=target_url)
             if not assertion.is_valid:
                 raise AeatLoginAssertionError(
                     "Cl@ve Móvil resume failed live verification: "

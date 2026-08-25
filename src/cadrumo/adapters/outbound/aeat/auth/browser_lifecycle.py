@@ -7,7 +7,7 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from .authenticator_types import BrowserContextLike, BrowserSessionLike
+from .....application.auth.protocols import BrowserContextPort, BrowserSessionPort
 
 
 class _CloseIntentBarrier:
@@ -61,7 +61,7 @@ class _CloseIntentBarrier:
 
 
 async def close_owned_browser_context(
-    context: BrowserContextLike | None,
+    context: BrowserContextPort | None,
     *,
     timeout_ms: int,
     logger: logging.Logger,
@@ -89,7 +89,7 @@ async def close_owned_browser_context(
 
 
 async def close_owned_browser_session(
-    session: BrowserSessionLike | None,
+    session: BrowserSessionPort | None,
     *,
     timeout_ms: int,
     logger: logging.Logger,
@@ -100,7 +100,7 @@ async def close_owned_browser_session(
     Returns ``True`` when no session exists or teardown completes. A timeout or
     close failure is logged and returns ``False`` so the provider retains the
     session reference and a later
-    :meth:`~cadrumo.adapters.outbound.aeat.auth.BrowserSessionLike.close`
+    :meth:`~cadrumo.application.auth.protocols.BrowserSessionPort.close`
     call can retry.
     """
     if session is None:

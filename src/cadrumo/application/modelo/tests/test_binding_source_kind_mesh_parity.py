@@ -25,7 +25,7 @@ from ...aggregation import (
     RESERVED_SOURCE_KINDS,
     BindingSourceDisposition,
 )
-from .._calculation_route import (
+from ..calculation_route import (
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
 )

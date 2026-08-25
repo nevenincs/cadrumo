@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+from importlib import import_module
+
 import pytest
 
-import dev.sanitizer as sanitizer_package
 from cadrumo.core.errors import CadrumoError
-from dev.sanitizer import errors
 
+from .. import errors
 from ..errors import AlreadySanitizedError, SanitizationError, SanitizerSourceParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+sanitizer_package = import_module("..", __package__)
 
 _SENSITIVE_BASENAME = "12345678Z-sanitizer-source.pdf"
 _SOURCE_SHA256 = "6a84b40c8c1b6a6771598f77d5334b9af858f5fbdc8fe96c3a8b2511af0f45bc"

@@ -19,18 +19,19 @@ makes this comparison its only identity check.
 
 Every test drives the real profile store and derives its expectation from
 the real resolver rather than passing a literal, so a pass here exercises
-the two halves joined. The guard consumes the identity fact exposed by the
-bound session rather than depending on an adapter-owned record to read one
-string.
+the two halves joined. Sessions are real :class:`AeatSession` records -
+value objects the guard genuinely receives, not test doubles - because the
+comparison reads the neutral identity fact off the bound session.
 """
 
 from __future__ import annotations
 
 import ast
 import inspect
+from datetime import UTC, datetime, timedelta
 
 import pytest
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 import cadrumo.application.auth.sessions as sessions
 
@@ -38,6 +39,7 @@ from ....core import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
+from ..session_types import AeatSession, CertificateSessionDetail, ClaveMovilSessionDetail
 from ..sessions import (
     AuthProfileIdentityMismatchError,
     _assert_session_identity_matches_expected,
@@ -54,7 +56,7 @@ _PROFILE_LABEL = "session-identity-operator"
 _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
 
-_LIVE_SESSION_RETURN_TYPES = ("AeatSessionPort", "AuthenticatedAeatSessionResult")
+_LIVE_SESSION_RETURN_TYPES = ("AeatSession", "AuthenticatedAeatSessionResult")
 _GUARD = "_assert_session_identity_matches_expected"
 
 
@@ -68,6 +70,31 @@ def _register_profile(**overrides: str) -> None:
         profile_id=_BUCKET_ID,
         display_name=_PROFILE_LABEL,
         overrides=facts,
+    )
+
+
+def _clave_session(identity_nif: str) -> AeatSession:
+    authenticated_at = datetime.now(UTC)
+    return AeatSession(
+        authenticated_at=authenticated_at,
+        idle_deadline=authenticated_at + timedelta(minutes=30),
+        storage_state_path=None,
+        identity_nif=identity_nif,
+        provider_detail=ClaveMovilSessionDetail(dni_nie=identity_nif),
+    )
+
+
+def _certificate_session(identity_nif: str) -> AeatSession:
+    authenticated_at = datetime.now(UTC)
+    return AeatSession(
+        authenticated_at=authenticated_at,
+        idle_deadline=authenticated_at + timedelta(minutes=30),
+        storage_state_path=None,
+        identity_nif=identity_nif,
+        provider_detail=CertificateSessionDetail(
+            certificate_thumbprint="abc123",
+            certificate_subject=f"CN=OTHER TAXPAYER - {identity_nif}",
+        ),
     )
 
 
@@ -100,7 +127,7 @@ def test_a_session_bound_to_another_taxpayer_is_refused() -> None:
     assert expected_identity == _TAX_ID
 
     with pytest.raises(AuthProfileIdentityMismatchError):
-        _assert_session_identity_matches_expected(_OTHER_TAX_ID, expected_identity)
+        _assert_session_identity_matches_expected(_clave_session(_OTHER_TAX_ID).identity_nif, expected_identity)
 
 
 def test_a_certificate_session_bound_to_another_taxpayer_is_refused() -> None:
@@ -118,7 +145,7 @@ def test_a_certificate_session_bound_to_another_taxpayer_is_refused() -> None:
 
     with pytest.raises(AuthProfileIdentityMismatchError):
         _assert_session_identity_matches_expected(
-            _OTHER_TAX_ID,
+            _certificate_session(_OTHER_TAX_ID).identity_nif,
             expected_identity,
         )
 
@@ -134,8 +161,8 @@ def test_the_taxpayers_own_session_is_accepted() -> None:
     _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     expected_identity = _expectation_for(AuthProviderKind.CLAVE_MOVIL)
 
-    _assert_session_identity_matches_expected(_TAX_ID, expected_identity)
-    _assert_session_identity_matches_expected(_TAX_ID, expected_identity)
+    _assert_session_identity_matches_expected(_clave_session(_TAX_ID).identity_nif, expected_identity)
+    _assert_session_identity_matches_expected(_certificate_session(_TAX_ID).identity_nif, expected_identity)
 
 
 def test_the_comparison_normalises_before_it_refuses() -> None:
@@ -151,9 +178,15 @@ def test_the_comparison_normalises_before_it_refuses() -> None:
     expected_identity = _expectation_for(AuthProviderKind.CLAVE_MOVIL)
 
     _assert_session_identity_matches_expected(
-        f"  {_TAX_ID.lower()}  ",
+        _clave_session(f"  {_TAX_ID.lower()}  ").identity_nif,
         expected_identity,
     )
+
+
+def test_a_real_session_cannot_carry_a_blank_identity() -> None:
+    """A bound session cannot satisfy the neutral identity type with a blank value."""
+    with pytest.raises(ValidationError):
+        _clave_session("")
 
 
 def test_a_profile_without_a_fiscal_id_has_nothing_to_compare() -> None:
@@ -165,8 +198,9 @@ def test_a_profile_without_a_fiscal_id_has_nothing_to_compare() -> None:
     carrying a fiscal ID - not by anything this function could do.
     """
 
-    _assert_session_identity_matches_expected(_OTHER_TAX_ID, "")
-    _assert_session_identity_matches_expected(_OTHER_TAX_ID, None)
+    session_identity = _clave_session(_OTHER_TAX_ID).identity_nif
+    _assert_session_identity_matches_expected(session_identity, "")
+    _assert_session_identity_matches_expected(session_identity, None)
 
 
 def test_every_path_that_hands_back_a_session_compares_its_identity() -> None:

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo._calculation_route import (
+from cadrumo.application.modelo.calculation_route import (
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
 )

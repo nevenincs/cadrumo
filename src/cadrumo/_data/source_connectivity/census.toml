@@ -13,7 +13,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Modelo 036's alta, modificacion, and baja are human-filed at AEAT Sede or a competent AEAT office. Cadrumo must not submit an M036 artifact: decl.event-kind receives operator-authoritative profile censo.status through ProfileSourceResolver, while the M036 lifecycle records the declared human filing and audit separately. Reconsider only if an accepted decision replaces that manual profile authority with a distinct authoritative source and complete live connected proof."
 capability_locators = [
   "src/cadrumo/application/aggregation/_source_profile.py:23",
-  "src/cadrumo/application/modelo/_calculation_route.py",
+  "src/cadrumo/application/modelo/calculation_route.py",
   "src/cadrumo/application/modelo/_m036_lifecycle.py:91",
 ]
 capability_ids = ["source_ownership:profile"]
@@ -394,7 +394,7 @@ expected_capability_digest = "sha256:29367043b2b6a7eea92c952f702e1e6632895b1fce0
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/modelo/_calculation_route.py:100"
+reference = "src/cadrumo/application/modelo/calculation_route.py:100"
 summary = "The frozen remaining assemblers resolve to already-owned atribucion, foreign-asset, and withholding source families; their connection authority is the canonical calculation route."
 
 [[entries]]
@@ -407,7 +407,7 @@ expected_capability_digest = "sha256:d959380f5aeddd9562be35c91e1a20b840dcba58eef
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/modelo/_calculation_route.py:100"
+reference = "src/cadrumo/application/modelo/calculation_route.py:100"
 summary = "The frozen remainder is operational secure state or storage behind an already canonical source route; disconnected inventory, asset, and amortization repositories have explicit rows."
 
 [[entries]]
@@ -420,5 +420,5 @@ expected_capability_digest = "sha256:87442b19dc5e68aad02de7f4db20a287a1caf3ba26c
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/modelo/_calculation_route.py:100"
+reference = "src/cadrumo/application/modelo/calculation_route.py:100"
 summary = "Every frozen ownership capability is already declared and validated by the canonical live calculation route, so a second census connection row would duplicate that authority."

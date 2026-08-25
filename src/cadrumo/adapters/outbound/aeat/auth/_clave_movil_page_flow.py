@@ -5,7 +5,7 @@ This private helper surface supplies the browser automation that
 forms, post-auth landing waits, pending-request cancellation, and the own-name
 representation gate. Selectors and path markers come from
 :class:`AeatClaveMovilSurface`; browser interactions operate against the
-minimal :class:`BrowserPageLike` protocol where possible.
+minimal :class:`BrowserPagePort` protocol where possible.
 
 Failure diagnostics captured during page driving are persisted as
 :class:`SensitivityClass` ``SESSION`` objects in the active bucket secure
@@ -24,6 +24,7 @@ import time
 from typing import TYPE_CHECKING, NoReturn
 from urllib.parse import urlsplit
 
+from .....application.auth.protocols import BrowserPagePort
 from .....core.config import unwrap_optional_secret
 from .....core.errors import AeatLoginAssertionError
 from .....core.external_constants import UTF_8_ENCODING
@@ -40,7 +41,6 @@ from .._representation_gate import (
     dismiss_pre303_alert_modal_if_present,
     wait_for_own_name_representation_selector,
 )
-from .authenticator_types import BrowserPageLike
 from .clave_movil_support import (
     DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS as _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
 )
@@ -80,7 +80,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
 
     Concrete subclasses (:class:`ClaveMovilAuthProvider`) supply the
     configured :class:`AeatClaveMovilSurface`, redacted diagnostic context, and
-    navigation settings. The helper methods turn a :class:`BrowserPageLike`
+    navigation settings. The helper methods turn a :class:`BrowserPagePort`
     page into the selector clicks, wait-state checks, and encrypted diagnostics
     needed by the provider lifecycle.
     """
@@ -117,11 +117,11 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             tail = f"{tail}?{parsed.query}"
         return tail
 
-    async def _click_clave_movil_button(self, page: BrowserPageLike) -> None:
+    async def _click_clave_movil_button(self, page: BrowserPagePort) -> None:
         """Click the configured Cl@ve entry button on the required browser page contract."""
         await page.click(self._clave_surface().authorize_button_selector)
 
-    async def _extract_verification_code(self, page: BrowserPageLike) -> str | None:
+    async def _extract_verification_code(self, page: BrowserPagePort) -> str | None:
         wait_for = getattr(page, "wait_for_selector", None)
         text_content = getattr(page, "text_content", None)
         if wait_for is not None and text_content is not None:
@@ -143,7 +143,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             return None
         return _extract_verification_code_from_html(html)
 
-    async def _drive_non_qr_fallback(self, page: BrowserPageLike, dni_nie: str) -> None:
+    async def _drive_non_qr_fallback(self, page: BrowserPagePort, dni_nie: str) -> None:
         """Submit the configured non-QR DNI/NIE contrast form.
 
         DNI identities require ``CADRUMO_CLAVE_MOVIL_DNI_FECHA``; NIE identities
@@ -198,7 +198,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
 
     async def _assert_push_wait_state(
         self,
-        page: BrowserPageLike,
+        page: BrowserPagePort,
         *,
         target_path: str,
         verification_code: str | None,
@@ -258,7 +258,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             },
         )
 
-    async def _raise_if_pending_request_error(self, page: BrowserPageLike) -> None:
+    async def _raise_if_pending_request_error(self, page: BrowserPagePort) -> None:
         """Detect AEAT's 'petición pendiente' refusal page and fail fast.
 
         After the configured continue button is clicked, AEAT sometimes returns the
@@ -296,7 +296,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                 translated_message="adapters.aeat.clave_movil.errors.pending_petition_blocked",
             )
 
-    async def _cancel_pending_auth_request(self, page: BrowserPageLike) -> None:
+    async def _cancel_pending_auth_request(self, page: BrowserPagePort) -> None:
         """Best-effort cancellation for a Cl@ve request left open by timeout.
 
         Cancellation is cleanup for a prior :class:`ClaveMovilApprovalTimeoutError`.
@@ -346,7 +346,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         except Exception as exc:  # cancellation is cleanup; preserve the original auth timeout
             log.warning("ClaveMovilAuthProvider: pending Cl@ve cancellation failed: %s", exc)
 
-    async def _wait_for_cancel_confirmation(self, page: BrowserPageLike) -> bool:
+    async def _wait_for_cancel_confirmation(self, page: BrowserPagePort) -> bool:
         wait_for_response = getattr(page, "wait_for_response", None)
         if wait_for_response is not None:
             surface = self._clave_surface()
@@ -376,7 +376,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             await asyncio.sleep(1)
         return not await self._page_still_shows_pending_request(page)
 
-    async def _page_still_shows_pending_request(self, page: BrowserPageLike) -> bool:
+    async def _page_still_shows_pending_request(self, page: BrowserPagePort) -> bool:
         content = getattr(page, "content", None)
         if content is None:
             return True
@@ -389,7 +389,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         return any(marker in normalized for marker in pending_markers)
 
     @staticmethod
-    def _attach_dialog_autodismiss(page: BrowserPageLike) -> None:
+    def _attach_dialog_autodismiss(page: BrowserPagePort) -> None:
         """Auto-accept any JS dialog AEAT pops during login.
 
         Playwright blocks the page until ``dialog`` events are handled;
@@ -419,7 +419,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
 
         on("dialog", _handle)
 
-    async def _dump_diagnostic(self, page: BrowserPageLike, *, reason: str) -> str | None:
+    async def _dump_diagnostic(self, page: BrowserPagePort, *, reason: str) -> str | None:
         """Capture page URL + HTML + screenshot on login failure for offline triage.
 
         Stores artefacts as encrypted session-class objects so a human
@@ -504,7 +504,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
 
     async def _wait_for_post_auth_landing(
         self,
-        page: BrowserPageLike,
+        page: BrowserPagePort,
         target_path: str,
         timeout_ms: int,
     ) -> None:
@@ -542,7 +542,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         )
         raise TimeoutError(f"page did not navigate to {target_path!r} within {timeout_ms}ms")
 
-    async def _continue_own_name_representation(self, page: BrowserPageLike) -> None:
+    async def _continue_own_name_representation(self, page: BrowserPagePort) -> None:
         """Continue only through AEAT's authenticated own-name selector.
 
         The click is checked as a :class:`RemoteOperation` browser action before
@@ -581,7 +581,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                 },
             ) from exc
 
-    async def _wait_for_own_name_representation_selector(self, page: BrowserPageLike) -> str:
+    async def _wait_for_own_name_representation_selector(self, page: BrowserPagePort) -> str:
         """Return the configured own-name selector that AEAT renders first."""
         pre303 = self._settings.external_constants().aeat.pre303
 
@@ -596,7 +596,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             raise_configuration_error=_raise_configuration_error,
         )
 
-    async def _own_name_representation_is_already_selected(self, page: BrowserPageLike) -> bool:
+    async def _own_name_representation_is_already_selected(self, page: BrowserPagePort) -> bool:
         """Return whether AEAT already selected the own-name representation radio."""
         pre303 = self._settings.external_constants().aeat.pre303
         content = getattr(page, "content", None)
@@ -617,7 +617,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             )
         return own_name is not None and _html_input_checked(own_name)
 
-    async def _dismiss_pre303_alert_modal_if_present(self, page: BrowserPageLike) -> None:
+    async def _dismiss_pre303_alert_modal_if_present(self, page: BrowserPagePort) -> None:
         """Dismiss the visible Pre303 alert modal before submitting own-name access.
 
         Delegates to the canonical, collapsed implementation in
