@@ -33,14 +33,6 @@ from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import BaseModel
 from textual.containers import Vertical
 
-from ....core.flows import (
-    CheckpointAvailability,
-    CopyRefKind,
-    FlowMode,
-    FlowWidgetKind,
-)
-from ....core.i18n import tr
-from ....entrypoints.tui.flows.app import FlowTuiApp
 from ....application.flows import (
     CopyRef,
     FlowAnswerError,
@@ -57,6 +49,14 @@ from ....application.flows import (
     run_scripted_flow,
     start_flow,
 )
+from ....core.flows import (
+    CheckpointAvailability,
+    CopyRefKind,
+    FlowMode,
+    FlowWidgetKind,
+)
+from ....core.i18n import tr
+from ....entrypoints.tui.flows.app import FlowTuiApp
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
