@@ -3,124 +3,56 @@ tags:
   - '#adr'
   - '#import-centralization'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:04b514262841b0f3eb875792afd236cf2e20c88d5cd1fb2f5d9251eeee916e65'
+modified: '2026-08-25'
+body_hash: 'sha256:57410a053ffb2e6cb446019a664078392400f8212d05779e457758c7910dc5c5'
 related:
   - '[[2026-07-01-import-centralization-research]]'
   - '[[2026-07-02-import-centralization-audit]]'
   - '[[2026-07-02-arch-remediation-program-adr]]'
 ---
-
-# `import-centralization` adr: `centralized top-level exports as the sole cross-package import surface` | (**status:** `accepted`)
+# `import-centralization` adr: `canonical defining modules as the sole cross-package import surface` | (**status:** `accepted`)
 
 ## Problem Statement
-The `2026-07-01-import-centralization-research` scan found the 104-facade
-boundary is bypassed by 2465 cross-package private imports (866
-production / 1599 test, 250 files, 34 owning packages), 8 Family-2 shim hits
-(mostly documented bridges), and 578 Family-3 multi-sourced symbols (101
-hierarchical-rollup non-violations, ~10 genuine duplicates). Fixing production
-requires 149 facade promotions (302 sites) before 400 simple consumer rewrites
-(937 sites).
 
-## Decision (the 9 rulings)
-1. POLICY + OWNERSHIP: one canonical public top-level export per symbol;
-   cross-package consumers import ONLY from the owning package top-level
-   `__all__`; ownership of `A.B._C...` is `A.B`; intra-package private
-   imports and a package building its own facade are fine. Generalizes
-   `service-imports-via-top-level-reexports` project-wide.
-2. PROMOTION MECHANISM: add symbol to owning `__all__`; default eager
-   `from .module import Name`; use lazy `__getattr__` (PEP 562) ONLY when
-   the owning package already uses it or eager import risks a
-   cycle/cost. Do not retrofit the ~93 eager facades to lazy.
-3. 20 UNDERSCORE-NAMED promotion candidates: no blanket `_foo`->`foo`+`__all__`.
-   Per-symbol: (i) rename-to-public+promote if it is a genuinely-shared public
-   primitive (e.g. `_parse_bool`, `_build_aad`, `_active_session`); (ii) expose
-   a purpose-built narrower public API if reached by one caller for one
-   purpose; (iii) treat the reach as a design defect to remove if neither
-   fits. An underscore name used by >=2 unrelated production packages -> (i);
-   by exactly one narrow caller -> (ii). Decide per-symbol in Wave-1 planning.
-4. FAMILY 2 bridges: the following six investigated non-`__init__` public
-   modules are explicitly authorized as canonical sources:
-   `registry/applicability.py`, `deadlines/taxpayer_model.py`,
-   `transactions/_ids.py`, `cli/_schemas.py`,
-   `outbound/aeat/_playwright.py`, and `workflow/_utils.py`. This is a closed,
-   named set, not a general permission to add re-export modules. Each carries
-   a boundary docstring and appears in the exact import-hygiene baseline.
-   `locales/__main__.py` is an entry-point FALSE POSITIVE (exclude
-   `__main__.py` from the shim classifier). The one genuine violation
-   `application/aggregation/_withholding_observations_repository.py` (real
-   282-line M190 percepciones impl) is an English-stem name: RENAME to
-   `_percepciones_observations_repository.py` (NOT `_retencion_...` which
-   already exists as the distinct M180/193 store), sweeping module+tests+
-   consumers in one atomic `relocation:` commit.
-5. FAMILY 3 (~10 genuine duplicates) = RETIRE (operator-decided 2026-07-01,
-   strict single-source): for the `CalculationRevision` /
-   `CalculationRevisionAmendmentKind` / `ExternalEvidenceKind` / `WorkUnit`
-   group (`application.modelo` re-exporting `domain.modelos` symbols) AND the
-   `link_transaction` / `suggest_reconciliations` / `verify_link_consistency`
-   group (`application.invoices` re-exporting `domain.invoices` symbols):
-   RETIRE the app-layer re-export. The domain package (`domain.modelos` /
-   `domain.invoices`) is the SOLE canonical source. Remove those symbols from
-   `application.modelo.__all__` / `application.invoices.__all__`, and repoint
-   ALL consumers (including app-layer siblings) to import from the domain
-   facade. This adds ~180 consumer-site rewrites folded into the
-   consumer-rewrite wave. `save_envelope` = two unrelated same-name funcs, no
-   consolidation (optional cosmetic rename deferred, out of scope).
-   `DEFAULT_IVA_GENERAL_RATE_PCT` = benign single-origin, no action.
-   `OutputLanguage` = drop the redundant `entrypoints.cli._config` `__all__`
-   entry, `core.i18n` sole facade.
-6. DYNAMIC IMPORTS in `core/setup_answers.py`: keep the deferred
-   `importlib.import_module` cycle-break technique, but retarget its module
-   strings to PUBLIC facades: `_m()` -> `cadrumo.domain.deadlines.taxpayer_model`,
-   `_ccaa()` -> `cadrumo.domain.contribuyente` (drop `._ccaa`). These are
-   ordinary Ruling-1 fixes, not exceptions.
-7. TEST-ONLY (1599 sites): deferred to a dedicated LAST wave after production
-   facades stabilize; batch by owning package.
-8. GATE: `dev/import_hygiene_scan.py` becomes the authoritative CI gate,
-   superseding `test_public_api_boundaries.py` and
-   `test_architecture_boundaries.py` (seed their existing allowlisted
-   exceptions as named entries). Ratchet: checked-in production-Family-1
-   baseline JSON; CI fails if current > baseline; every closing commit shrinks
-   the baseline in the same commit; flip to hard `assert 0` once production
-   reaches 0. Family-2 shim allowlist and the Family-3 pinned-symbol set are
-   structural.
-9. SEQUENCING: promotions before rewrites; batch promotions by OWNING package
-   (largest first: `domain.modelos` 24 sym/67 sites,
-   `adapters.outbound.google` 18/26, `core` 13/35, ...); batch consumer
-   rewrites by IMPORTER area (`application.modelo` 708, `entrypoints.cli` 466,
-   `application.user_profile` 221, ...); Family 2/3 + umbrella-retire after the
-   production Family-1 wave; test wave last. Every batch:
-   `pytest --collect-only -q` clean before commit (relocation atomicity),
-   behavior-preserving substitutions only.
+The original facade-centralization campaign reduced private cross-package reaches but replaced them with package namespaces that aggregate unrelated contracts, obscure canonical ownership, create import cycles, and permit the same symbol to appear at multiple import paths. The reproducible census and migration history remain grounded in `2026-07-01-import-centralization-research` and `2026-07-02-import-centralization-audit`.
 
-### Relationship to the July 2 remediation
+This amendment replaces facade promotion with direct defining-module ownership. It preserves the accepted hexagonal dependency direction and atomic-relocation discipline while eliminating package facades, re-export bridges, aliases, and compatibility paths.
 
-The July 2 architecture remediation prohibits generic re-export shims,
-compatibility aliases, and duplicate public authorities. It does not silently
-revoke the six named bridges in Ruling 4: those modules were individually
-investigated and remain the sole public source for their bounded contracts.
-Every other re-export-only module is prohibited unless a later ADR explicitly
-supersedes this closed set. A relocation must move the definition and all
-consumers atomically; it may not introduce a temporary bridge.
+## Decision
+
+1. Every cross-package public symbol has one definition in one semantically named, non-underscore module. Every consumer imports that symbol directly from its defining module.
+2. Package namespaces are structural and inert. A package `__init__.py` imports, binds, aliases, lazily resolves, or re-exports no project symbol. An empty `__all__` may document the inert boundary.
+3. A cross-package reach into an underscore-private module triggers one of two outcomes: remove the reach as a design defect, or hard-move the shared contract and its tests to a public defining module. Promotion through `__init__.py` is prohibited.
+4. The previously named bridge exceptions are revoked. A public module is legitimate only when it defines its owned implementation or contract; a forwarding module is not a canonical home. `__main__.py` may dispatch an executable but never exports a project symbol.
+5. Hierarchical roll-ups, umbrella exports, redundant application/domain exports, package aliases, forwarding wrappers, and multi-sourced public symbols are retired. Canonical ownership is the defining module, not a package-level import path.
+6. Dynamic imports target the exact canonical defining module. String-built module paths obey the same rule as static imports.
+7. Production, tests, fixtures, development tools, annotations, `TYPE_CHECKING` imports, registrations, plugin targets, and local imports obey the same rule immediately.
+8. The import-hygiene gate resolves definitions and rejects package imports used for symbols, re-exports, aliases, forwarding wrappers, private cross-package reaches, multi-sourced symbols, dangling imports, and orphaned bridge modules. It inventories canonical defining modules and symbols rather than package export sets.
+9. Every relocation is atomic: move the definition and its owning tests, update every production/test/tooling consumer and dynamic target, update manifests and receipts, delete the former module and every export surface, and prove clean collection in one explicit-path commit. No temporary alias, shim, fallback, or re-export may bridge the move.
+
+## Constraints
+
+- Intra-package underscore-private modules remain valid only when their symbols never cross the package boundary.
+- Public module names describe the owned contract or capability; mechanically stripping an underscore without adjudicating ownership is prohibited.
+- Moving an import path must not duplicate policy, storage, mutation, lifecycle, or rendering authority.
+- The accepted layer direction remains unchanged. Direct defining-module imports do not authorize a lower layer to import a higher layer.
+- Current-only pre-release cutovers delete old readers, fixtures, and compatibility paths rather than translating them.
+- Registry dispatch modules may own real dispatch definitions but may not re-export per-family symbols.
+
+## Implementation
+
+The existing import-hygiene scanner and its tests are amended in place to model package namespaces as inert and public defining modules as the only legal cross-package targets. Existing package `__init__.py` export populations are migrated in bounded atomic slices, prioritizing contracts that already create facade cycles or hide rejected authorities.
+
+For each symbol, the migration census records its current definition, every import form, canonical defining module, consumer class, dynamic target, manifest or receipt reference, and deletion proof. The gate reaches fixed point only when package binding inventories are empty and every public symbol resolves to one definition and one direct import path.
 
 ## Rationale
-Grounded in the re-runnable AST scan (`python dev/import_hygiene_scan.py`);
-every count reproducible. Ownership-first + promotion-before-rewrite is the
-only shape keeping each commit small and correct. Every Family-2/3
-disposition was verified by reading the actual module (caught the `_retencion`
-naming collision and the fake-circular-workaround Ruling-1 violations).
+
+A package facade is an additional import authority even when it does not duplicate implementation. It hides the module that owns the contract, couples unrelated consumers to package initialization, and permits re-export graphs that make deletion and cycle analysis indirect. Direct defining-module imports preserve one canonical home, make dependency edges explicit, and satisfy the no-shim/no-redeclaration architecture established by `2026-07-02-arch-remediation-program-adr`.
 
 ## Consequences
-Gains: single canonical import path project-wide; a ratcheting gate that only
-moves toward zero; two ad-hoc gates retired into one; the
-percepciones/retencion naming collision resolved; three latent violations
-inside the circular-workaround fixed. Costs: 250 production files + ~180
-additional consumer sites from the umbrella RETIRE decision;
-ratcheting-baseline discipline (shrink-in-same-commit); underscore-promotion
-per-symbol judgment. Deferred/out-of-scope: `save_envelope` cosmetic rename;
-the 1599 test-only sites (last wave).
 
-## Codification Candidates
-Refine `service-imports-via-top-level-reexports` into the project-wide Ruling-1
-policy + Ruling-2 promotion mechanism + Ruling-4 bridge distinction. New
-candidate `dynamic-import-targets-the-public-facade` generalizing Ruling 6.
+- Cross-package dependencies become exact and mechanically auditable.
+- Package initialization becomes effect-free and cycle-resistant.
+- Existing facade consumers require broad atomic migration, including tests, manifests, receipts, and dynamic imports.
+- Some underscore-private modules must become public defining modules; rejected or single-caller callback authorities are deleted instead.
+- Import statements are more explicit, but ownership and deletion proofs no longer depend on tracing umbrella exports.

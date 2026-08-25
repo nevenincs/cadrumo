@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:5e9232b2f32dae6816d49990f75844920c2be57e8bfd023aff96ee29005a5ec7'
+body_hash: 'sha256:5ec6a72523a8f9cfcb151e5237f28d06bd413cb46896b8d5abd9859af7199c45'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -27,8 +27,33 @@ related:
   - '[[2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit]]'
   - '[[2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit]]'
 ---
+# `tui-registry-api-gate` adr: `read-only Modelo workspace projection and capability API` | (**status:** `accepted`)
 
-# `tui-registry-api-gate` adr: `read-only Modelo workspace projection and capability facade` | (**status:** `accepted`)
+## Canonical defining-module amendment
+
+This in-place amendment replaces every package-facade and facade-promotion
+clause in this record. Workspace V1 models live in
+`cadrumo.application.modelo.workspace_models`; producer contracts in
+`cadrumo.application.modelo.workspace_producers`; the generated field
+denominator in `cadrumo.application.modelo.workspace_manifest`; and assembly
+and dispatch in the sole public `cadrumo.application.modelo.workspace` defining
+module. The Modelo package namespace is inert.
+
+Native work capture lives in the public
+`cadrumo.application.modelo.work_addressing` defining module. Active-profile
+pointer capture lives in its exact public defining module under
+`cadrumo.application.user_profile`. Each canonical owner exposes native capture
+and current-generation operations from the module that defines them; S126
+registration imports that module directly and never receives a package
+re-export. Lower owners still never import or construct `ModeloWorkspace*`
+types.
+
+Every former private definition hard-moves to its canonical public module with
+all production, test, registration, receipt, dynamic, and tooling consumers;
+the old definition and package export are deleted in the same commit. No shim,
+alias, fallback, bridge, private cross-package import, or parallel owner is
+permitted. All lifecycle, epoch, baseline, ABA, owner-generation, capability,
+cohort, and receipt decisions below remain unchanged.
 
 ## Problem Statement
 

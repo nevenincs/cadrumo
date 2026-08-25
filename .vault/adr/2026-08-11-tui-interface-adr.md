@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:755b357586150be6426884ff89f5f2d61fcc2923abe80276fa816fb8594e86b2'
+body_hash: 'sha256:4bd35ab1aaa4416f6e2827fc929740ea95261b6ead8cd059a1d9447ece10c418'
 related:
   - "[[2026-08-11-tui-interface-research]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -18,6 +18,28 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
 ---
 # `tui-interface` adr: `Canonical modular Textual application surface` | (**status:** `accepted`)
+
+## Canonical defining-module amendment
+
+This in-place amendment replaces every package-facade, area-facade, facade
+promotion, and compatibility-launch clause in this record. Package namespaces
+are inert and publish no project symbols. Every public TUI, application, core,
+or adapter contract is imported directly from its sole semantically named,
+non-underscore defining module. Static, local, `TYPE_CHECKING`, annotation,
+registration, and dynamic import edges obey the same rule.
+
+`__main__` imports `launcher.main` directly. `launcher` imports `app` and the
+exact application and adapter defining modules needed for composition. `app`
+imports exact defining modules from `components`, `operations`, `profile`,
+`secret`, and `flows`; feature modules import exact component and application
+defining modules. No feature symbol is republished through an area or root
+package, and no CLI import or legacy inbound TUI route participates in launch.
+
+`SyncReviewFactory` is defined once in `profile.sync_review`; integration imports
+it directly and registers it through the exact operation-interaction defining
+module. Every migration slice moves the definition, every consumer, dynamic
+target, manifest and test, then deletes the old definition and all export
+surfaces atomically. No facade, shim, alias, fallback, or re-export survives.
 
 ## Problem Statement
 
@@ -186,12 +208,12 @@ denominator, accessibility matrix, and the following admission chain:
 
 | Cohort | Admission evidence consumed by this parent |
 |---|---|
-| C0 — operation foundation | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md` as `TuiOperationObservationDependencyReceiptV1` |
-| C1 — bounded review | accepted companion identity plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md` as `ModeloWorkspaceC1ExitReceiptV1` |
-| C2 — complex read workspace | C1 plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md` as `ModeloWorkspaceC2DependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md` as `ModeloWorkspaceC2ExitReceiptV1` |
-| C3 — staged editor | C0 and C2 plus `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md` as `ModeloEditContractC3DependencyReceiptV1` and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md` as `TuiOperationFinancialOperandDependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md` as `ModeloWorkspaceC3ExitReceiptV1` |
-| C4 — lifecycle actions | C3, the green generated action denominator, each owning domain/operation capability, and `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md` as `ModeloWorkspaceC4ExitReceiptV1` |
-| C5 — visual closure | C4 plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md` as `ModeloWorkspaceC5ExitReceiptV1` |
+| C0 â€” operation foundation | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md` as `TuiOperationObservationDependencyReceiptV1` |
+| C1 â€” bounded review | accepted companion identity plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md` as `ModeloWorkspaceC1ExitReceiptV1` |
+| C2 â€” complex read workspace | C1 plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md` as `ModeloWorkspaceC2DependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md` as `ModeloWorkspaceC2ExitReceiptV1` |
+| C3 â€” staged editor | C0 and C2 plus `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md` as `ModeloEditContractC3DependencyReceiptV1` and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md` as `TuiOperationFinancialOperandDependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md` as `ModeloWorkspaceC3ExitReceiptV1` |
+| C4 â€” lifecycle actions | C3, the green generated action denominator, each owning domain/operation capability, and `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md` as `ModeloWorkspaceC4ExitReceiptV1` |
+| C5 â€” visual closure | C4 plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md` as `ModeloWorkspaceC5ExitReceiptV1` |
 
 The companion's named validators, predecessor digests, current-HEAD action
 denominator, compatibility coordinates, and per-cohort visual proofs are part

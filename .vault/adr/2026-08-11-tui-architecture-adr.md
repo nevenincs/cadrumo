@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:8fd5625d787fa39f5988579c837a1c4312026187b95e217e5ec16da24474c71c'
+body_hash: 'sha256:6a55376ca86e816708a6a497a8047b9e5d9cb96488cd70a9a0a88e6eabb6a81a'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -23,8 +23,56 @@ related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
   - '[[2026-08-10-current-schema-only-purge-adr]]'
 ---
-
 # `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
+
+## Canonical defining-module amendment
+
+This in-place amendment replaces every facade-based import, export, promotion,
+composition, migration-destination, and receipt-inventory clause in this record.
+A package namespace is structural and inert: its `__init__.py` imports, binds,
+aliases, lazily resolves, or re-exports no project symbol. An empty `__all__`
+may document that fact. Every cross-package public symbol is defined exactly
+once in a semantically named, non-underscore module, and every consumer imports
+it directly from that defining module.
+
+An underscore-private module may contain implementation used only inside its
+owning package. Once a contract has a cross-package consumer, its definition and
+tests hard-move to a public defining module with every production, test,
+tooling, annotation, registration, dynamic target, manifest, and receipt
+consumer. The former module and every package export, facade test, alias, shim,
+forwarder, fallback, and compatibility path are deleted in the same atomic
+relocation. Migration records name `canonical_defining_module` and
+`canonical_symbol`; a package namespace is never a destination. Receipt
+inventories bind defining-module symbols and their exact `__module__`, not
+package exports.
+
+The frontend-neutral operation API is the family of public defining modules
+under `cadrumo.application.operations`; the package namespace itself is inert.
+`_composition.py` hard-moves to `composition.py`, retaining the sole definitions
+of `OperationComposedServices`, `OperationSubmission`,
+`OperationSubmissionService`, and `compose_operation_services`; every consumer
+moves directly and the facade is deleted atomically. Other cross-package
+operation contracts follow the same rule. Persistence-facing contracts are
+public only in their own defining modules when adapters consume them, and remain
+private only when no cross-package consumer exists. This import topology does
+not widen frontend data authority.
+
+`ManagerAction`, `ManagerActionOutcome`, `ManagerActionDisposition`, and
+`ManagerProgressSinkBinder` are retired rather than promoted. They implement
+the callback architecture this ADR rejects. Profile presentation addresses work
+by registered `OperationDefinitionId`, submits through the operation controller,
+and observes public operation projections. No TUI worker invokes an arbitrary
+business callback, owns a progress sink, or infers terminal state.
+
+Every TUI `__init__.py` is likewise inert. `__main__` imports `launcher.main`
+directly; launcher, app, and feature modules import exact defining modules such
+as `components.widgets`, `operations.controller`, and `profile.sync_review`.
+Feature packages do not republish one another.
+
+`TuiCapability.AVAILABLE` requires a callable implementation in the canonical
+`cadrumo.entrypoints.tui` tree. No command remains available through
+`cadrumo.adapters.inbound.tui` or another legacy seam. An unmigrated command is
+`NOT_IMPLEMENTED`; explicit `--tui` never falls back to line mode.
 
 ## Problem Statement
 
@@ -1327,3 +1375,4 @@ are grounded in `2026-08-24-tui-operation-observation-research`.
   path survives.
 - C0 and C3 remain independently gated by their exact dependency receipts;
   neither receipt authorizes a later Modelo or visual cohort by implication.
+
