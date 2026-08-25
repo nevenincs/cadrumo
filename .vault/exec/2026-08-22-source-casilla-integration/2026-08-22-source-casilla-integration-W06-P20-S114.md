@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:3e05b5801fea70709c9756e0123817e64b21458555c817abfd44779251d58b5c'
+body_hash: 'sha256:cb1e707cc5dfde7d5e4223710da9ae6b3b261f7e26cf3b75daa14bfc2ce27573'
 step_id: 'S114'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -44,8 +44,6 @@ connected outcome through a census capability claim.
 - This is a closure record, not a claim that the helpers are connected or that
   a deferred source lifecycle was completed. Any later source claim requires
   new evidence and the canonical census workflow.
-- The focused runtime gate is not yet accepted: concurrent shared work removed
-  the `lru_cache` import while leaving its decorator in
-  `src/cadrumo/domain/calculations/registry/_authority.py`, so collection
-  stops with `NameError` before the test executes. S114 remains unchecked
-  until the shared import chain is repaired and the focused gate is rerun.
+- The initial collection block from concurrent shared work was repaired before
+  this closure. The exact helper gate passed on 2026-08-25; that result closes
+  S114 without changing its zero-delivery boundary.
