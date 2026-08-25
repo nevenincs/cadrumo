@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:f4bbeba14ad260c1a7df3fae3686d6ac97153ca5181c314820c33fb24482ee80'
+body_hash: 'sha256:f72dbef589abbab7465e9c97838eef2c62cfc02db2b3868f7edd298479d52987'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - '[[2026-08-22-source-casilla-integration-W06-P20-S116]]'
@@ -52,6 +52,22 @@ The inventory readiness fact no longer restates already-completed resolver, mesh
 
 Two separate fresh processes each return `status = match`, 478 discovered capabilities, 478 assignments, and 15 census rows. No capability is unclassified or unactioned. All seven dated deferrals remain current through 2026-12-31, and no row is promoted to `connected`.
 
+### s116-review-secure-port-proof | pass | False secure-repository classification is mutation-guarded
+
+The first independent review rejected a detector that trusted any class-body secure-port-shaped name; the second rejected constructor annotation alone. The final detector requires the typed constructor argument to bind a repository attribute and requires that bound attribute to participate in an operational method call. Negative mutations prove both an unrelated class-body marker and an unused bogus constructor port cannot classify plaintext persistence as secure. Optional union-typed workflow store ports remain visible because their bound `_objects` attribute participates in persistence calls.
+
+### s116-review-public-route | pass | Ownership discovery consumes one public defining module
+
+The independent review found the source-ownership discovery import crossed into the private calculation-route module. The authority was hard-renamed to the public `application.modelo.calculation_route` defining module and every scoped production, test, discovery, and census consumer moved atomically. The legacy module is absent; no compatibility facade or duplicate authority was introduced.
+
+### s116-current-registry-gate | pass | Obligatory blank positions require emitted filler bytes
+
+During re-review a newer export-coverage gate exposed M126 and M128 position 12. Both layouts already emit the official one-byte filler, while their extracted design rows carry the terminal sentence `En blanco` in the description rather than the content field. Bounded terminal-sentence recognition preserves the obligatory position and credits only filler bytes; the focused mutation test proves the position cannot disappear or accept taxpayer data.
+
+### s116-independent-re-review | pass | No critical, high, or medium finding remains
+
+The independent reviewer rejected two progressively weaker secure-port detectors and re-read the final tree after both remediations. The final verdict is PASS: the exact plaintext-marker counterexample refuses, both workflow repositories remain correctly discovered, private helper paths remain excluded, the public calculation-route move has no legacy module or scoped reference, and obligatory-blank handling stays narrowly filler-bound.
+
 ## Recommendations
 
 - Close `S116` after the focused source-connectivity suite and Vaultspec checks pass.
@@ -62,8 +78,11 @@ Two separate fresh processes each return `status = match`, 478 discovered capabi
 - Historical pre-repair passes: 464 capabilities; both refused the obsolete inventory command-spec locator as recorded above.
 - Final comparison pass 1: exit 0; 478 capabilities; 478 assignments; 15 rows; `status = match`.
 - Final comparison pass 2: exit 0; identical counts and `status = match`.
-- Focused discovery tests: 10 passed.
+- Focused discovery tests: 13 passed.
 - Inventory readiness test: 1 passed.
-- Full source-connectivity suite: 60 passed.
+- Full source-connectivity suite: 63 passed.
+- Public calculation-route suite: 27 passed.
+- Binding-source mesh parity suite: 12 passed.
+- Scoped legacy-route scan: the retired application private module is absent and no application, domain, or development consumer references it.
 - Ruff over source-connectivity and inventory readiness surfaces: passed.
 - Feature-scoped Vaultspec check: passed.

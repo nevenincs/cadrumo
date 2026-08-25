@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:f8329bd427d87099b3570913237cf891ff5a5ab0162f77985d176fba4b261dc4'
+body_hash: 'sha256:d9144d33eca9eea7d5101315b9c89c28079493d6395f32379b6267547202774e'
 step_id: 'S116'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -23,7 +23,10 @@ related:
 - Corrected the inventory readiness fact so it acknowledges the connected resolver, source mesh, registry row bindings, orchestration, source identity, and caller-override refusal while remaining false for missing repeated-row filing proof.
 - Extended structural discovery to retain functions defined by public modules without requiring package-facade redeclaration, excluding colocated `conftest.py` support.
 - Retained workflow repositories behind their typed secure-object store port and classified the new encrypted filing-export replay custody repository in the existing secure-repository remainder.
+- Hardened secure-port discovery through two review rounds so a typed port must be constructor-bound and participate in the repository persistence path; added plaintext false-positive mutations.
+- Moved the calculation-route ownership authority atomically to its public defining module instead of importing a private implementation across the discovery boundary.
 - Classified the new profile repeatable-row CLI write in the existing ingress remainder without creating a source owner or connection claim.
+- Preserved obligatory blank design positions for M126 and M128 when `En blanco` is the exact terminal description sentence and the layout emits a filler byte.
 - Ran the canonical comparison twice in separate fresh processes and verified identical complete assignment results.
 
 ## Outcome
@@ -38,4 +41,4 @@ No candidate was promoted to `connected`, no deferral was extended, and no unsup
 
 The first full focused suite exposed four stale mutation assertions after the census ordering and readiness wording changed. Those assertions were repaired to target the intended capability and inventory row; the production validation order and refusal behavior were not weakened. All seven dated deferrals remain current through 2026-12-31. `S117` remains responsible for the final disappearance, expiry, and unsupported-connected-claim gate.
 
-The inventory readiness implementation and test were captured by concurrent mixed commit `a6d3393949`; the remaining discovery, census, and test corrections were captured by concurrent mixed commit `5d65f6b321`. This record preserves that provenance rather than attributing either mixed commit solely to S116. The S116 execution and review records are committed separately by exact path.
+The initial locator correction was captured by exact-path commit `f59736d815`. The inventory readiness implementation and test were captured by concurrent mixed commit `a6d3393949`; the public-definition discovery work began in concurrent mixed commit `5d65f6b321`, while the final secure-port proof, public calculation-route move, and obligatory-blank gate were captured by concurrent mixed commit `3ec3f7908a`. This record preserves that mixed provenance rather than attributing those shared commits solely to S116. The S116 execution and review records are committed separately by exact path.
