@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:3f5429bee26a342456bdc4cada8062a7e96333cdef748b0f53c0ddb85cc2591e'
+body_hash: 'sha256:4c2548c6507ba221f3f4db70141922f8ef95042fbf4ce288e555c04f51e76cff'
 step_id: 'S91'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -48,14 +48,22 @@ related:
 
 ## Scope
 
+- `src/cadrumo/application/aggregation/_foreign_assets.py`
+- `src/cadrumo/application/modelo/_calculation_actions.py`
+- `src/cadrumo/application/storage/calc_sheets/_styling.py`
 - `src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py`
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Route S90 `Modelo720RowObservation` values through the existing Modelo 720 source resolver and existing bucket calculation action.
+- Retain the registry selector grouping, binding and row coordinates, worksheet source identity, and canonical content fingerprint in the established source-mesh and encrypted revision carriers.
+- Guard empty calculation and provenance worksheet bodies so the canonical local exporter remains valid without fabricated rows.
+- Exercise the actual XLSX serializer, existing Google pull decoder, S90 ingress boundary, M720 calculation path, and encrypted calculation repository without a mock or network substitute.
 
 ## Outcome
 
+The real worksheet round trip retains `per_foreign_asset`, every resolved row-binding coordinate, `detalle:per_foreign_asset:row-1`, and the row fingerprint after encrypted repository read-back. The calculation and persistence route remains the pre-existing M720 resolver, source mesh, and calculation revision repository.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The M720 handoff implementation was captured by concurrent shared-worktree commit `2b8164c1ae`; this Step retains that mixed provenance without rewriting history. The scoped follow-on contains the real round-trip regression, empty-export guards, execution record, plan closure, and feature index only.

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:71e287192265e9518a5d6735d0a24340ddd58247339e5165d57eb6436113dab8'
+body_hash: 'sha256:0d5434c5134378c53c9ad50738c93946543a02139af6f27afb9f18e8468a36dd'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -107,6 +107,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P14-S88]]'
   - '[[2026-08-22-source-casilla-integration-W05-P14-S89]]'
   - '[[2026-08-22-source-casilla-integration-W05-P14-S90]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P14-S91]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -156,6 +157,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-s87-independent-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s90-row-set-ingress-review-audit]]'
 ---
 
 # `source-casilla-integration` feature index
@@ -215,6 +217,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s87-independent-post-review-audit` - `source-casilla-integration` audit: `S87 snapshot-bound row assembly independent review`
 - `2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit` - `source-casilla-integration` audit: `s88 google pull post review`
 - `2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit` - `source-casilla-integration` audit: `S89 row source identity review`
+- `2026-08-25-source-casilla-integration-s90-row-set-ingress-review-audit` - `source-casilla-integration` audit: `S90 row-set ingress review`
 
 ### exec
 
@@ -317,6 +320,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P14-S88` - route Google Sheets pull output into the governed calculation input boundary
 - `2026-08-22-source-casilla-integration-W05-P14-S89` - preserve grouping, row index, binding identity, source identity, and fingerprint through ingress
 - `2026-08-22-source-casilla-integration-W05-P14-S90` - reject unknown fields, row ownership collisions, sparse invalid rows, and caller substitution
+- `2026-08-22-source-casilla-integration-W05-P14-S91` - prove a real worksheet export-pull-calculate encrypted revision round trip
 
 ### plan
 

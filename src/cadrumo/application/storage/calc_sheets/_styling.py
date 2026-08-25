@@ -120,24 +120,29 @@ def _data_tab_ranges(
             end_column=_COL_VALUE,
             role=StyleRole.HEADER,
         ),
-        SheetStyledRange(
-            tab=tab,
-            start_row=2,
-            end_row=last_row,
-            start_column=_COL_CONCEPTO,
-            end_column=_COL_CONCEPTO,
-            role=StyleRole.BODY,
-            wrap=True,
-        ),
-        SheetStyledRange(
-            tab=tab,
-            start_row=2,
-            end_row=last_row,
-            start_column=_COL_VALUE,
-            end_column=_COL_VALUE,
-            role=value_role,
-        ),
     ]
+    if last_row >= 2:
+        ranges.extend(
+            (
+                SheetStyledRange(
+                    tab=tab,
+                    start_row=2,
+                    end_row=last_row,
+                    start_column=_COL_CONCEPTO,
+                    end_column=_COL_CONCEPTO,
+                    role=StyleRole.BODY,
+                    wrap=True,
+                ),
+                SheetStyledRange(
+                    tab=tab,
+                    start_row=2,
+                    end_row=last_row,
+                    start_column=_COL_VALUE,
+                    end_column=_COL_VALUE,
+                    role=value_role,
+                ),
+            )
+        )
     for header in section_headers:
         if header.address.tab is not tab:
             continue
@@ -229,18 +234,19 @@ def compute_styling(
             role=StyleRole.HEADER,
         ),
     )
-    for wrap_col in (3, 6, 7):
-        styled.append(
-            SheetStyledRange(
-                tab=TabName.PROVENANCE,
-                start_row=2,
-                end_row=provenance_last,
-                start_column=wrap_col,
-                end_column=wrap_col,
-                role=StyleRole.BODY,
-                wrap=True,
-            ),
-        )
+    if provenance_last >= 2:
+        for wrap_col in (3, 6, 7):
+            styled.append(
+                SheetStyledRange(
+                    tab=TabName.PROVENANCE,
+                    start_row=2,
+                    end_row=provenance_last,
+                    start_column=wrap_col,
+                    end_column=wrap_col,
+                    role=StyleRole.BODY,
+                    wrap=True,
+                ),
+            )
     # Evidencia: fingerprint title on A1, header band on row 3, wrapped note /
     # ref columns.
     styled.append(

@@ -34,7 +34,7 @@ from ...core import (
     foreign_asset_obligation_group,
 )
 from ...core.aggregation import ForeignAssetClass
-from ...core.hashing import canonical_json_digest
+from ...core.hashing import content_hash_hex
 from ...core.identity import TransactionId
 from ...core.parsing import IsoDateString, require_iso8601_date
 from ...domain.calculations import RowSourceIdentity
@@ -447,16 +447,19 @@ def _worksheet_row_resolution(
     ordered = tuple(
         sorted(
             observations,
-            key=lambda row: (row.country_code, row.asset_class_code, row.asset_identifier, row.acquisition_date.isoformat()),
+            key=lambda row: (
+                row.country_code,
+                row.asset_class_code,
+                row.asset_identifier,
+                row.acquisition_date.isoformat(),
+            ),
         )
     )
     row_source_identities = {
         (binding.id, row_index): RowSourceIdentity(
             source_kind=BindingSourceKind.FOREIGN_ASSET,
             source_row_identity=row.source_id,
-            fingerprint=canonical_json_digest(
-                row.model_dump(mode="json"), maximum_bytes=4096, subject="modelo 720 worksheet row"
-            ),
+            fingerprint=content_hash_hex(row.model_dump(mode="json")),
             row_set_grouping=grouping,
         )
         for row_index, row in enumerate(ordered, start=1)
@@ -471,9 +474,7 @@ def _worksheet_row_resolution(
             lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref=f"worksheet:{row.source_id}",
             parent_source_ref=None,
-            fingerprint=canonical_json_digest(
-                row.model_dump(mode="json"), maximum_bytes=4096, subject="modelo 720 worksheet row"
-            ),
+            fingerprint=content_hash_hex(row.model_dump(mode="json")),
         )
         for row in ordered
     )
