@@ -1654,7 +1654,7 @@ kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/modelo/_workspace_models.py"
+path = "src/cadrumo/application/modelo/workspace_models.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 

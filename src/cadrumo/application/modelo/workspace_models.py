@@ -104,10 +104,17 @@ class ModeloWorkspaceLocaleDisposition(StrEnum):
     SUPPRESSED = "suppressed"
 
 
-class ModeloWorkspaceRevisionAssertionDisposition(StrEnum):
-    """Whether the optional visible-target revision assertion matched law selection."""
+class ModeloWorkspaceRevisionAssertionSource(StrEnum):
+    """The fixed coordinate that supplied one independently checked assertion."""
 
-    NOT_REQUESTED = "not_requested"
+    REQUESTED = "requested"
+    STORED = "stored"
+
+
+class ModeloWorkspaceRevisionAssertionDisposition(StrEnum):
+    """The closed outcome of one independently checked revision assertion."""
+
+    NOT_PRESENT = "not_present"
     MATCHED = "matched"
     MISMATCHED = "mismatched"
 
@@ -190,16 +197,17 @@ class ModeloWorkspaceRequestV1(_WorkspaceModel):
 
 
 class ModeloWorkspaceRevisionAssertionV1(_WorkspaceModel):
-    """The requested visible-target assertion and its law-selection outcome."""
+    """One source-fixed optional assertion and its independently supplied outcome."""
 
+    source: ModeloWorkspaceRevisionAssertionSource
     disposition: ModeloWorkspaceRevisionAssertionDisposition
-    requested_revision_id: RevisionId | None = None
+    asserted_revision_id: RevisionId | None = None
 
     @model_validator(mode="after")
     def _require_consistent_assertion_shape(self) -> ModeloWorkspaceRevisionAssertionV1:
-        requested = self.requested_revision_id is not None
-        if (self.disposition is ModeloWorkspaceRevisionAssertionDisposition.NOT_REQUESTED) != (not requested):
-            raise ValueError("revision assertion disposition must agree with requested_revision_id")
+        asserted = self.asserted_revision_id is not None
+        if (self.disposition is ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT) != (not asserted):
+            raise ValueError("revision assertion disposition must agree with asserted_revision_id")
         return self
 
 
@@ -212,7 +220,8 @@ class ModeloWorkspaceResolvedTargetV1(_WorkspaceModel):
     period: Period
     law_selected_revision_id: RevisionId
     review_status: RevisionReviewStatus
-    revision_assertion: ModeloWorkspaceRevisionAssertionV1
+    requested_revision_assertion: ModeloWorkspaceRevisionAssertionV1
+    stored_revision_assertion: ModeloWorkspaceRevisionAssertionV1
     work_unit_id: WorkUnitId | None = None
     work_state: WorkUnitState | None = None
 
@@ -220,6 +229,10 @@ class ModeloWorkspaceResolvedTargetV1(_WorkspaceModel):
     def _require_work_identity_and_state_together(self) -> ModeloWorkspaceResolvedTargetV1:
         if (self.work_unit_id is None) != (self.work_state is None):
             raise ValueError("resolved workspace work_unit_id and work_state must be present together")
+        if self.requested_revision_assertion.source is not ModeloWorkspaceRevisionAssertionSource.REQUESTED:
+            raise ValueError("requested workspace revision assertion must retain the requested source")
+        if self.stored_revision_assertion.source is not ModeloWorkspaceRevisionAssertionSource.STORED:
+            raise ValueError("stored workspace revision assertion must retain the stored source")
         return self
 
 
@@ -261,31 +274,43 @@ class ModeloWorkspaceSchemaIdentityV1(_WorkspaceModel):
 
 
 class ModeloWorkspaceCasillaReferenceV1(_WorkspaceModel):
+    """A canonical casilla identity exposed in one schema reference."""
+
     kind: Literal["casilla"] = "casilla"
     casilla_id: CasillaId
 
 
 class ModeloWorkspaceBindingReferenceV1(_WorkspaceModel):
+    """A canonical binding identity exposed in one schema reference."""
+
     kind: Literal["binding"] = "binding"
     binding_id: BindingId
 
 
 class ModeloWorkspaceFormulaReferenceV1(_WorkspaceModel):
+    """A canonical formula identity exposed in one schema reference."""
+
     kind: Literal["formula"] = "formula"
     formula_id: FormulaId
 
 
 class ModeloWorkspaceRelationReferenceV1(_WorkspaceModel):
+    """A canonical relation identity exposed in one schema reference."""
+
     kind: Literal["relation"] = "relation"
     relation_id: RelationId
 
 
 class ModeloWorkspaceParameterReferenceV1(_WorkspaceModel):
+    """A canonical parameter identity exposed in one schema reference."""
+
     kind: Literal["parameter"] = "parameter"
     parameter_id: ParameterId
 
 
 class ModeloWorkspaceExportFieldReferenceV1(_WorkspaceModel):
+    """A canonical export-field identity exposed in one schema reference."""
+
     kind: Literal["export_field"] = "export_field"
     export_field_id: ExportFieldId
 
@@ -560,11 +585,15 @@ class ModeloWorkspaceEvidenceFactV1(_WorkspaceModel):
 
 
 class ModeloWorkspaceLegalEvidenceReferenceV1(_WorkspaceModel):
+    """A canonical legal-reference identity used as safe evidence."""
+
     kind: Literal["legal"] = "legal"
     legal_ref_id: LegalRefId
 
 
 class ModeloWorkspaceSourceEvidenceReferenceV1(_WorkspaceModel):
+    """A canonical source-reference identity used as safe evidence."""
+
     kind: Literal["source"] = "source"
     source_ref_id: SourceRefId
 
@@ -581,6 +610,7 @@ class ModeloWorkspaceBaselineV1(_WorkspaceModel):
     contract_version: Literal[1] = 1
     token: ContentDigest
     contributor_stamp_digest: ContentDigest
+    contributor_epoch_digest: ContentDigest
     target: ModeloWorkspaceResolvedTargetV1
     selected_revision_id: RevisionId
     schema_identity: ModeloWorkspaceSchemaIdentityV1
@@ -608,6 +638,30 @@ def _require_unique_contributor_identities(
     if not identities or len(set(identities)) != len(identities):
         raise ValueError("workspace contributors must be non-empty and unique")
     return tuple(sorted(value, key=lambda contributor: (contributor.owner, contributor.producer)))
+
+
+class ModeloWorkspaceCursorV1(_WorkspaceModel):
+    """One opaque continuation bound to the complete Workspace read coordinate."""
+
+    contract_version: Literal[1] = 1
+    baseline: ModeloWorkspaceBaselineV1
+    selected_revision_id: RevisionId
+    schema_identity: ModeloWorkspaceSchemaIdentityV1
+    facet: ModeloWorkspaceFacetName
+    contributor_epoch_digest: ContentDigest
+    continuation: _BoundedText
+
+    @model_validator(mode="after")
+    def _require_exact_cursor_coordinate(self) -> ModeloWorkspaceCursorV1:
+        if self.baseline.contract_version != self.contract_version:
+            raise ValueError("workspace cursor baseline must retain the V1 contract version")
+        if self.baseline.selected_revision_id != self.selected_revision_id:
+            raise ValueError("workspace cursor baseline must retain the selected revision")
+        if self.baseline.schema_identity != self.schema_identity:
+            raise ValueError("workspace cursor baseline must retain the schema identity and fingerprint")
+        if self.baseline.contributor_epoch_digest != self.contributor_epoch_digest:
+            raise ValueError("workspace cursor baseline must retain the contributor epoch digest")
+        return self
 
 
 class ModeloWorkspaceCapabilityV1(_WorkspaceModel):
@@ -661,6 +715,7 @@ class ModeloWorkspaceBoundedFacetV1[RecordT](_WorkspaceModel):
     selected_revision_id: RevisionId
     schema_identity: ModeloWorkspaceSchemaIdentityV1
     baseline: ModeloWorkspaceBaselineV1
+    contributor_epoch_digest: ContentDigest
     contributors: Annotated[
         tuple[ModeloWorkspaceContributorIdentityV1, ...], Field(min_length=1, max_length=_MAX_CONTRIBUTORS)
     ]
@@ -668,7 +723,7 @@ class ModeloWorkspaceBoundedFacetV1[RecordT](_WorkspaceModel):
     disposition: ModeloWorkspaceCapabilityDisposition
     records: Annotated[tuple[RecordT, ...], Field(max_length=_MAX_FACET_PAGE_SIZE)] = ()
     page_size: Annotated[int, Field(ge=1, le=_MAX_FACET_PAGE_SIZE)]
-    next_cursor: _BoundedText | None = None
+    next_cursor: ModeloWorkspaceCursorV1 | None = None
     has_more: bool = False
 
     @field_validator("contributors")
@@ -686,10 +741,21 @@ class ModeloWorkspaceBoundedFacetV1[RecordT](_WorkspaceModel):
             raise ValueError("workspace facet baseline must retain the selected revision")
         if self.baseline.schema_identity != self.schema_identity:
             raise ValueError("workspace facet baseline must retain the schema identity and fingerprint")
+        if self.baseline.contributor_epoch_digest != self.contributor_epoch_digest:
+            raise ValueError("workspace facet baseline must retain the contributor epoch digest")
         if len(self.records) > self.page_size:
             raise ValueError("workspace facet cannot contain more records than its page_size")
         if self.has_more != (self.next_cursor is not None):
             raise ValueError("workspace facet has_more must agree with next_cursor")
+        if self.next_cursor is not None and (
+            self.next_cursor.contract_version != self.contract_version
+            or self.next_cursor.baseline != self.baseline
+            or self.next_cursor.selected_revision_id != self.selected_revision_id
+            or self.next_cursor.schema_identity != self.schema_identity
+            or self.next_cursor.facet is not self.facet
+            or self.next_cursor.contributor_epoch_digest != self.contributor_epoch_digest
+        ):
+            raise ValueError("workspace cursor must retain the complete facet consistency coordinate")
         if self.disposition is not ModeloWorkspaceCapabilityDisposition.AVAILABLE and (
             self.records or self.has_more or self.next_cursor is not None
         ):
@@ -881,6 +947,8 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
             raise ValueError("workspace schema facet must retain the schema identity and fingerprint")
         if self.schema_facet.baseline != self.baseline:
             raise ValueError("workspace schema facet must retain the projection baseline")
+        if self.schema_facet.contributor_epoch_digest != self.baseline.contributor_epoch_digest:
+            raise ValueError("workspace schema facet must retain the contributor epoch digest")
         if self.schema_facet.contributors != self.contributors:
             raise ValueError("workspace schema facet must retain the contributor tuple")
         for capability in self.capabilities:
@@ -921,6 +989,7 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
                 or facet.selected_revision_id != self.target.law_selected_revision_id
                 or facet.schema_identity != self.schema_identity
                 or facet.baseline != self.baseline
+                or facet.contributor_epoch_digest != self.baseline.contributor_epoch_digest
                 or facet.contributors != self.contributors
             ):
                 raise ValueError("graded workspace facets must retain the root consistency coordinates")
@@ -967,6 +1036,50 @@ class ModeloWorkspaceVersionRefusalV1(_WorkspaceModel):
     supported_version: Literal[1] = 1
 
 
+class ModeloWorkspaceRevisionMismatchRefusalV1(_WorkspaceModel):
+    """A two-axis refusal that retains every independently evaluated mismatch."""
+
+    kind: Literal["revision_assertion_mismatch"] = "revision_assertion_mismatch"
+    contract_version: Literal[1] = 1
+    requested_target: ModeloWorkspaceTargetV1
+    selected_target: ModeloWorkspaceResolvedTargetV1
+    requested_revision_assertion: ModeloWorkspaceRevisionAssertionV1
+    stored_revision_assertion: ModeloWorkspaceRevisionAssertionV1
+    mismatching_sources: Annotated[
+        tuple[ModeloWorkspaceRevisionAssertionSource, ...],
+        Field(min_length=1, max_length=2),
+    ]
+    responsible_owner: _BoundedCode
+    reconsideration_condition: _BoundedText
+    recovery_action: ActionReference | None = None
+
+    @model_validator(mode="after")
+    def _require_exact_mismatch_axes(self) -> ModeloWorkspaceRevisionMismatchRefusalV1:
+        axes = (
+            self.requested_revision_assertion,
+            self.stored_revision_assertion,
+        )
+        expected_sources = tuple(
+            axis.source
+            for axis in axes
+            if axis.disposition is ModeloWorkspaceRevisionAssertionDisposition.MISMATCHED
+        )
+        if self.requested_revision_assertion.source is not ModeloWorkspaceRevisionAssertionSource.REQUESTED:
+            raise ValueError("revision mismatch refusal must retain the requested assertion source")
+        if self.stored_revision_assertion.source is not ModeloWorkspaceRevisionAssertionSource.STORED:
+            raise ValueError("revision mismatch refusal must retain the stored assertion source")
+        if len(set(self.mismatching_sources)) != len(self.mismatching_sources):
+            raise ValueError("revision mismatch refusal sources must be unique")
+        if self.mismatching_sources != expected_sources:
+            raise ValueError("revision mismatch refusal must retain every and only mismatching source")
+        if (
+            self.selected_target.requested_revision_assertion != self.requested_revision_assertion
+            or self.selected_target.stored_revision_assertion != self.stored_revision_assertion
+        ):
+            raise ValueError("revision mismatch refusal must retain the selected target assertion axes")
+        return self
+
+
 class ModeloWorkspaceDomainRefusalV1(_WorkspaceModel):
     """Typed post-parse refusal without a partial projection or raw exception."""
 
@@ -995,9 +1108,15 @@ class ModeloWorkspaceDomainRefusalV1(_WorkspaceModel):
             raise ValueError("workspace refusal fact names must be unique")
         return tuple(sorted(value, key=lambda fact: fact.name))
 
+    @model_validator(mode="after")
+    def _reject_untyped_revision_mismatch(self) -> ModeloWorkspaceDomainRefusalV1:
+        if self.code is ModeloWorkspaceRefusalCode.REVISION_ASSERTION_MISMATCH:
+            raise ValueError("revision assertion mismatches require the typed two-axis refusal")
+        return self
+
 
 type ModeloWorkspaceRefusalV1 = Annotated[
-    ModeloWorkspaceVersionRefusalV1 | ModeloWorkspaceDomainRefusalV1,
+    ModeloWorkspaceVersionRefusalV1 | ModeloWorkspaceRevisionMismatchRefusalV1 | ModeloWorkspaceDomainRefusalV1,
     Field(discriminator="kind"),
 ]
 
@@ -1031,6 +1150,7 @@ __all__ = [
     "ModeloWorkspaceContinuityReferenceV1",
     "ModeloWorkspaceContributorIdentityV1",
     "ModeloWorkspaceCountFactValueV1",
+    "ModeloWorkspaceCursorV1",
     "ModeloWorkspaceDomainRefusalV1",
     "ModeloWorkspaceEvidenceFactV1",
     "ModeloWorkspaceEvidenceFactValueV1",
@@ -1079,7 +1199,9 @@ __all__ = [
     "ModeloWorkspaceResolvedTargetV1",
     "ModeloWorkspaceResultV1",
     "ModeloWorkspaceRevisionAssertionDisposition",
+    "ModeloWorkspaceRevisionAssertionSource",
     "ModeloWorkspaceRevisionAssertionV1",
+    "ModeloWorkspaceRevisionMismatchRefusalV1",
     "ModeloWorkspaceScalarMaterializationRecordV1",
     "ModeloWorkspaceScalarMaterializationV1",
     "ModeloWorkspaceSchemaClassification",

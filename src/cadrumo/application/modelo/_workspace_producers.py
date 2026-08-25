@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, content_hash_hex
 from ...core.identity import ContentDigest
-from ._workspace_models import ModeloWorkspaceContributorIdentityV1
+from .workspace_models import ModeloWorkspaceContributorIdentityV1
 
 _PRODUCER_CONTRACT_VERSION = 1
 _EPOCH_SCHEMA_VERSION = 1

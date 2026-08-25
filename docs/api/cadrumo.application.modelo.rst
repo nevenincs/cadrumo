@@ -119,7 +119,7 @@ Submodules
    cadrumo.application.modelo._work_plazo
    cadrumo.application.modelo._workflow_gate
    cadrumo.application.modelo._workspace_manifest
-   cadrumo.application.modelo._workspace_models
    cadrumo.application.modelo._workspace_producers
    cadrumo.application.modelo.work_review_projection
    cadrumo.application.modelo.work_wizard
+   cadrumo.application.modelo.workspace_models
