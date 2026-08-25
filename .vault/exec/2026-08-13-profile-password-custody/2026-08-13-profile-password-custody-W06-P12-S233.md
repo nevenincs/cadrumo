@@ -22,15 +22,31 @@ related:
 
 - Ran the combined documented-command, sequence contract/golden/page-coherence, catalogue drift, localization completeness, no-skip, and distribution-evidence modules on current HEAD.
 - Ran native Windows and WSL/POSIX KDF-supervision and machine-secret subprocess suites serially.
-- Ran the full harness integration lane serially, including its recovery-channel fixtures and process-global watchdog tests.
+- Ran the full harness integration lane in its authoritative split: non-serial integration under xdist and process-global watchdog tests serially under `-n 0`.
 - Ran Spanish, Catalan, and Hungarian localized nitpicky builds plus the main full-scope nitpicky build.
 - Ran feature-scoped Vaultspec checks and Ruff/ty over the relevant proof surfaces.
 
 ## Outcome
 
-S233 remains open because multiple substantive global gates are red. Green evidence: combined global module run had 375 passes around three sequence failures; native KDF 19 passed and machine-secret 70 passed; WSL KDF 19 passed and machine-secret 70 passed. Catalogue drift, localization completeness, no-skip, documented-command, and distribution-evidence cases did not fail in the combined run.
+S233 remains open because multiple substantive current-HEAD gates are red. Green current evidence includes no-skip at 25 passes, native and WSL KDF supervision at 19 passes each, and Ruff plus ty across the exact 41-file campaign surface. Current red evidence includes sequence/custody composition, production catalogue and registry moves, every required nitpicky build, documentation dash ratchet, both harness lanes, native root-descriptor refusal, and feature/full Vaultspec warning-free closure. The WSL machine-secret result is recorded with the fresh 2026-08-25 evidence below; the following 2026-08-24 section is retained only as historical comparison.
 
 ## Notes
+
+Fresh strict rerun on current shared HEAD, 2026-08-25:
+
+- `python -m pytest -q -n 0 -m integration` over documented-command conformance, sequence contracts/goldens/page coherence, catalogue drift, docs localization, no-skip, and distribution evidence exited 1 after 232.77 seconds: 371 passed, 6 failed, 3 errors, 59 deselected. Every real sequence failed before dispatch because `publish_test_profile_capsule` reached recovery enrollment without a composed `profile_custody_port`; catalogue extraction failed because Modelo 038's 2025 revision key `x-chim6r1ecll6asj3d5hmiro.label` is absent from Spanish.
+- `python -m pytest -q -n 0` over documentation localization, dash ratchet, orphan-page removal, and production locale audit exited 1 after 65.30 seconds: 16 passed, 2 failed. `docs/reference/environment-overrides.md` has five new em dashes against a zero baseline, and the production catalogue audit is red.
+- `python -m dev.locales audit` exited 1 after approximately 60 seconds: every locale reports 48 missing keys, 20 extra keys, and two registry moves. The moves are Modelo 220 `2025-y-siguientes` to `2025` and Modelo 763 `2011-y-siguientes` to six published eras; representative missing keys include calc-sheet metadata refusals, filed-pull factual refusals, the Modelo 210 deadline, LLM diagnostics, and current Modelo schema labels.
+- `python -m pytest -q -n 0 -m unit dev/docs/tests/test_docs_build_localized.py dev/docs/tests/test_docs_build_full_scope.py` exited 1 after 177.73 seconds: 2 passed and all four required builds failed. Spanish, Catalan, Hungarian, and main full-scope builds stop at the same missing Modelo 038 Spanish casilla label.
+- `python -m pytest -q -n auto src/cadrumo-harness/src/cadrumo_harness -m "integration and not serial and not os_keychain"` exited 1 after 89.00 seconds: 317 passed, 9 failed. Three delivery and three warm-runtime tests lack composed custody infrastructure; installed `cadrumo-mcp` is unavailable to handshake/refusal subprocesses; `overview.calendar` emits an 18,819-character schema over the 18,000-character budget.
+- `python -m pytest -q -n 0 src/cadrumo-harness/src/cadrumo_harness -m "integration and serial and not perf and not os_keychain"` exited 1 after 84.28 seconds: 18 passed, 1 failed, 379 deselected. The real leaked-stdin watchdog proof cannot launch `cadrumo-mcp`.
+- `python -m pytest -q -n 0 dev/tests/test_no_skip_xfail.py` exited 0: 25 passed in 30.60 seconds.
+- Native Windows supervised KDF exited 0: 19 passed in 30.20 seconds. Native machine-secret subprocess proof exited 1: 68 passed, 2 failed in 516.77 seconds; unusable root descriptors for `config.profile.history` are laundered into `INTERNAL_CLI_UNEXPECTED_BOUNDARY` with exit 6 instead of the typed exit-2 refusal.
+- WSL supervised KDF exited 0: 19 passed in 40.43 seconds. The WSL machine-secret result is recorded below when the bounded run completes.
+- The corrected 41-file campaign surface exited 0 under both Ruff and ty in 1.2 seconds. No diagnostic remains on that bounded campaign surface.
+- `vaultspec-core vault check all -f profile-password-custody --no-hints` exited 0 in 5.17 seconds but reported 26 warnings: 17 scaffold-annotation documents, one stale feature index, and eight stale body attestations. The unfiltered full check exited 0 in 10.26 seconds with 1,505 warnings across annotations, markdown hygiene, orphan audits, stale/missing feature indexes, historical body sections, references, schema grounding, and modified stamps.
+
+Derived owner steps were appended through the plan CLI and S233 remains open: S261 owns custody composition in profile capsules, sequences, and harness fixtures; S262 owns catalogue/revision reconciliation and all nitpicky builds; S263 owns the documentation em-dash regression; S264 owns hermetic `cadrumo-mcp` delivery to installed subprocess proofs; S265 owns the `overview.calendar` schema budget; S266 owns typed root descriptor refusal; S267 owns feature/full Vaultspec hygiene by exact document owner.
 
 Exact commands and results on 2026-08-24:
 

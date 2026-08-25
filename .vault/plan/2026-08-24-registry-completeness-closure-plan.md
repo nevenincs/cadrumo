@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-25'
-body_hash: 'sha256:58d052309c022e04b25f9f775f9d80ad6582752750b5129eb91b148516544a20'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -12,6 +10,8 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
+modified: '2026-08-25'
+body_hash: 'sha256:1c4944255b9a9dcc3aa42c5dee7fbda556c443af9bcd3889f836bdf325dc6891'
 ---
 
 # `registry-completeness-closure` plan
@@ -147,7 +147,7 @@ Exercise the supported revision umbrella through localization, casilla continuit
 
 Close the predicate-relevant work in temporal coverage, source-casilla integration, and export-fragment authority with records, summaries, reviews, and canonical plan state.
 
-- [ ] `W03.P06.S34` - Close registry-temporal-coverage predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
+- [x] `W03.P06.S34` - Close registry-temporal-coverage predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
 - [ ] `W03.P06.S35` - Close source-casilla-integration predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
 - [ ] `W03.P06.S36` - Close aeat-export-fragment-generator-authority predicate-relevant rows, execution records, summaries, stale assumptions, and final review; `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 

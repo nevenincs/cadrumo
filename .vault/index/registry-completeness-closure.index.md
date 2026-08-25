@@ -6,8 +6,9 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b2191498ae21cb0233c623f40e37ac22f4eadbeae9ceccdd4bfb9b8e78e4dc8'
+body_hash: 'sha256:1d3d95d5b88f3d6e5b8d7a81b5238b4341b698ac067a16c50f61c0cdbea41c08'
 related:
+  - '[[2026-08-23-registry-unblock-loop-reference]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S03]]'
@@ -188,9 +189,11 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s80-structured-message-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s81-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s82-source-evidence-post-review-audit]]'
+  - '[[2026-08-24-registry-unblock-loop-reference]]'
   - '[[2026-08-25-registry-completeness-closure-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s32-independent-post-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s34-temporal-predecessor-closure-audit-audit]]'
+  - '[[2026-08-25-registry-completeness-closure-s34-temporal-predecessor-final-close-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s72-independent-post-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s73-independent-post-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit]]'
@@ -294,6 +297,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-25-registry-completeness-closure-audit` - `registry-completeness-closure` audit: `S11 final outcome corpus independent review`
 - `2026-08-25-registry-completeness-closure-s32-independent-post-review-audit` - `registry-completeness-closure` audit: `W03.P05.S32 independent review`
 - `2026-08-25-registry-completeness-closure-s34-temporal-predecessor-closure-audit-audit` - `registry-completeness-closure` audit: `S34 temporal predecessor closure reconciliation`
+- `2026-08-25-registry-completeness-closure-s34-temporal-predecessor-final-close-audit` - `registry-completeness-closure` audit: `S34 temporal predecessor predicate closure reconciliation`
 - `2026-08-25-registry-completeness-closure-s72-independent-post-review-audit` - `registry-completeness-closure` audit: `S72 independent post-review`
 - `2026-08-25-registry-completeness-closure-s73-independent-post-review-audit` - `registry-completeness-closure` audit: `S73 independent post-review`
 - `2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit` - `registry-completeness-closure` audit: `S73 source-connectivity revalidation audit`
@@ -388,6 +392,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 
 ### reference
 
+- `2026-08-23-registry-unblock-loop-reference` - REGISTRY UNBLOCK LOOP v2 — make the application file what it claims to file
 - `2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference` - `registry-completeness-closure` reference: `Modelo 036 2025 filing authority adjudication`
 - `2026-08-24-registry-completeness-closure-modelo-036-source-connectivity-reference` - `registry-completeness-closure` reference: `Modelo 036 source-connectivity participation`
 - `2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference` - `registry-completeness-closure` reference: `modelo 038 design extraction`
@@ -403,6 +408,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-modelo-721-structured-message-design-and-filing-boundary-reference` - `registry-completeness-closure` reference: `Modelo 721 structured message design and filing boundary`
 - `2026-08-24-registry-completeness-closure-modelo-763-design-era-and-filing-boundary-reference` - `registry-completeness-closure` reference: `Modelo 763 design-era and filing boundary`
 - `2026-08-24-registry-completeness-closure-modelo-840-record-terminator-and-design-extent-reference` - `registry-completeness-closure` reference: `Modelo 840 record terminator and official design extent`
+- `2026-08-24-registry-unblock-loop-reference` - REGISTRY LOOP v4 — make the registry GREEN and WHOLE
 
 ### research
 
