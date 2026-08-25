@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f3528912cca06b1ae0ddbeed3ec918ae55d6ae92ad72f2a907115ec0ee8fc48'
+body_hash: 'sha256:5e91f7f896deeb451a22fb5922dd70851946d381976ff06c3bc092dd83a7331f'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -154,6 +154,7 @@ related:
   - '[[2026-08-23-source-casilla-integration-s43-inventory-binding-templates-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s87-independent-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit]]'
 ---
 
 # `source-casilla-integration` feature index
@@ -212,6 +213,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-23-source-casilla-integration-s43-inventory-binding-templates-review-audit` - `source-casilla-integration` audit: `source-casilla-integration audit: s43 inventory binding templates review`
 - `2026-08-25-source-casilla-integration-s87-independent-post-review-audit` - `source-casilla-integration` audit: `S87 snapshot-bound row assembly independent review`
 - `2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit` - `source-casilla-integration` audit: `s88 google pull post review`
+- `2026-08-25-source-casilla-integration-s89-row-source-identity-review-audit` - `source-casilla-integration` audit: `S89 row source identity review`
 
 ### exec
 

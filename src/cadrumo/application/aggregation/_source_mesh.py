@@ -1014,6 +1014,7 @@ class CalculationSourceResolution(BaseModel):
                 "source_kind": row.get("source_kind"),
                 "source_row_identity": row.get("source_row_identity"),
                 "fingerprint": row.get("fingerprint"),
+                "row_set_grouping": row.get("row_set_grouping"),
             }
         return normalized
 
