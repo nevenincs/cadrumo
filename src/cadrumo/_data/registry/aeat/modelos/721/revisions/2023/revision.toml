@@ -24,7 +24,14 @@ orden_aplicabilidad = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: S49 finite BOE-package review. VERIFIED -- the bundled HFP/886/2023 Annex PDF is an immutable official form-spec package (294687 bytes; SHA-256 afc706b7c41a34a3cd119ea6221dc2091eac73e64669189b93d6eeed43821acb), and the Orden first applies to exercise 2023. This applicability-grade revision is therefore selected only for 2023 0A. NOT CLAIMED -- the separately published AEAT SOAP/XML material is not pair-complete here: the historical 2023 description endpoint no longer supplies its bytes, so no 2023/2024 AEAT service-package inventory, service serializer, validation matrix, record design, or filing-grade authority is asserted. The BOE annex is kind form_spec, not record_design; export layouts remain empty. NOT CLAIMED -- no independent figure oracle exists and the informational casillas remain manual or informational facts.
+agent: finite BOE-package review. VERIFIED -- the bundled HFP/886/2023 Annex PDF is an immutable official \
+form-spec package (294687 bytes; SHA-256 afc706b7c41a34a3cd119ea6221dc2091eac73e64669189b93d6eeed43821acb), \
+and the Orden first applies to exercise 2023. This applicability-grade revision is therefore selected only \
+for 2023 0A. NOT CLAIMED -- the separately published AEAT SOAP/XML material is not pair-complete here: the \
+historical 2023 description endpoint no longer supplies its bytes, so no 2023/2024 AEAT service-package \
+inventory, service serializer, validation matrix, record design, or filing-grade authority is asserted. The \
+BOE annex is kind form_spec, not record_design; export layouts remain empty. NOT CLAIMED -- no independent \
+figure oracle exists and the informational casillas remain manual or informational facts.
 """
 reviewed_at = 2026-08-25
 

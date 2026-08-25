@@ -28,7 +28,15 @@ orden_aplicabilidad = [
 ]
 review_status = "agent_reviewed"
 reviewed_by = """\
-agent: S49 finite BOE-package review. VERIFIED -- the bundled HAC/1504/2024 PDF is the immutable official amendment package (827110 bytes; SHA-256 27995a7285f61a3a3ff2ddd259d9b252143d2ef6fc5d999936738bbd8b116a31), and its final provision first applies the substituted annex to exercise 2024. This applicability-grade revision is therefore selected only for 2024 0A. NOT CLAIMED -- the separately published AEAT SOAP/XML material is not pair-complete here: the historical 2023 description endpoint no longer supplies its bytes, so no 2023/2024 AEAT service-package inventory, service serializer, validation matrix, record design, or filing-grade authority is asserted. The BOE amendment is kind form_spec, not record_design; export layouts remain empty. NOT CLAIMED -- no independent figure oracle exists and the informational casillas remain manual or informational facts.
+agent: finite BOE-package review. VERIFIED -- the bundled HAC/1504/2024 PDF is the immutable official \
+amendment package (827110 bytes; SHA-256 27995a7285f61a3a3ff2ddd259d9b252143d2ef6fc5d999936738bbd8b116a31), \
+and its final provision first applies the substituted annex to exercise 2024. This applicability-grade \
+revision is therefore selected only for 2024 0A. NOT CLAIMED -- the separately published AEAT SOAP/XML \
+material is not pair-complete here: the historical 2023 description endpoint no longer supplies its bytes, so \
+no 2023/2024 AEAT service-package inventory, service serializer, validation matrix, record design, or \
+filing-grade authority is asserted. The BOE amendment is kind form_spec, not record_design; export layouts \
+remain empty. NOT CLAIMED -- no independent figure oracle exists and the informational casillas remain manual \
+or informational facts.
 """
 reviewed_at = 2026-08-25
 
