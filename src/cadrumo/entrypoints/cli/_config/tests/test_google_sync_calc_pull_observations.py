@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import ast
 from decimal import Decimal
+import inspect
 
 import pytest
 
 from .....adapters.outbound.google import RowSetCellEdit, RowSetEdit
-from .....application import calculations
 from .....core.resources import resources
 from .._google_sync_calc import _assemble_pull_observations
 
@@ -22,43 +23,26 @@ def _snapshot():
     )
 
 
-def test_pull_row_assembly_delegates_each_row_set_to_the_snapshot_command(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """A lower-level dispatcher bypass cannot substitute a different revision."""
-    snapshot = _snapshot()
-    row_set = RowSetEdit(
-        grouping="not-a-live-grouping",
-        cells=(RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="11111111A"),),
-    )
-    calls: list[tuple[object, object, object]] = []
-
-    def assemble_for_snapshot(
-        grouping: object,
-        cells: object,
-        supplied_snapshot: object,
-    ) -> tuple[str, tuple[object, ...]]:
-        calls.append((grouping, cells, supplied_snapshot))
-        return "withholding", ()
-
-    monkeypatch.setattr(calculations, "assemble_observations_for_snapshot", assemble_for_snapshot)
-
-    groupings, observation_count = _assemble_pull_observations(
-        populated_row_sets=[row_set],
-        snapshot=snapshot,
-        enabled=True,
+def test_pull_row_assembly_calls_the_public_snapshot_command_with_the_selected_snapshot() -> None:
+    """A lower-level dispatcher bypass or substituted snapshot is structurally refused."""
+    function = ast.parse(inspect.getsource(_assemble_pull_observations))
+    imports = [node for node in ast.walk(function) if isinstance(node, ast.ImportFrom)]
+    assert any(
+        node.level == 4
+        and node.module == "application.calculations"
+        and [alias.name for alias in node.names] == ["assemble_observations_for_snapshot"]
+        for node in imports
     )
 
-    assert calls == [(row_set.grouping, row_set.cells, snapshot)]
-    assert observation_count == 0
-    assert groupings == [
-        {
-            "grouping": row_set.grouping,
-            "source_kind": "withholding",
-            "observation_count": 0,
-            "observations": [],
-        },
-    ]
+    calls = [node for node in ast.walk(function) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)]
+    assert any(
+        node.func.id == "assemble_observations_for_snapshot"
+        and len(node.args) == 3
+        and isinstance(node.args[2], ast.Name)
+        and node.args[2].id == "snapshot"
+        for node in calls
+    )
+    assert all(node.func.id != "assemble_observations_for_grouping" for node in calls)
 
 
 def test_pull_row_assembly_returns_live_snapshot_assembled_observations() -> None:

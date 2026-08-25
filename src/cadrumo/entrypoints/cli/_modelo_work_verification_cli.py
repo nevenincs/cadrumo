@@ -82,15 +82,13 @@ class _VerificationDeps:
 
 def _profile_expected_member_sets(profile: object) -> tuple[CrossPeriodExpectedMemberSet, ...]:
     return tuple(
-
-            CrossPeriodExpectedMemberSet(
-                source_modelo=roster.source_modelo,
-                filing_year=roster.filing_year,
-                period=roster.period,
-                member_nifs=roster.member_nifs,
-            )
-            for roster in getattr(profile, "cross_period_group_member_rosters", ())
-
+        CrossPeriodExpectedMemberSet(
+            source_modelo=roster.source_modelo,
+            filing_year=roster.filing_year,
+            period=roster.period,
+            member_nifs=roster.member_nifs,
+        )
+        for roster in getattr(profile, "cross_period_group_member_rosters", ())
     )
 
 
@@ -105,18 +103,16 @@ def _dependency_inventory_item_payload(
         dependency_count=len(item.dependencies),
         source_modelos=item.source_modelos,
         dependencies=tuple(
-
-                CrossPeriodDependencyRequirementPayload(
-                    source_modelo=requirement.source_modelo,
-                    filing_year=requirement.filing_year,
-                    period=requirement.period,
-                    source_casilla_ids=requirement.source_casilla_ids,
-                    origin=requirement.origin.value,
-                    origin_ids=requirement.origin_ids,
-                    requires_member_fan_in=requirement.requires_member_fan_in,
-                )
-                for requirement in item.dependencies
-
+            CrossPeriodDependencyRequirementPayload(
+                source_modelo=requirement.source_modelo,
+                filing_year=requirement.filing_year,
+                period=requirement.period,
+                source_casilla_ids=requirement.source_casilla_ids,
+                origin=requirement.origin.value,
+                origin_ids=requirement.origin_ids,
+                requires_member_fan_in=requirement.requires_member_fan_in,
+            )
+            for requirement in item.dependencies
         ),
     )
 
@@ -130,24 +126,22 @@ def _clean_state_payload(verdict: CrossPeriodCleanStateVerdict) -> CrossPeriodCl
         clean=verdict.clean,
         blockers=tuple(blocker.value for blocker in verdict.blockers),
         dependencies=tuple(
-
-                CrossPeriodDependencyEvidencePayload(
-                    source_modelo=evidence.requirement.source_modelo,
-                    filing_year=evidence.requirement.filing_year,
-                    period=evidence.requirement.period,
-                    clean=evidence.clean,
-                    blockers=tuple(blocker.value for blocker in evidence.blockers),
-                    observation_source_kind=evidence.observation_source_kind,
-                    filing_record_id=evidence.filing_record_id,
-                    calculation_revision_id=evidence.calculation_revision_id,
-                    external_evidence_kind=evidence.external_evidence_kind,
-                    expected_member_nifs=evidence.expected_member_nifs,
-                    observed_member_nifs=evidence.observed_member_nifs,
-                    missing_member_nifs=evidence.missing_member_nifs,
-                    unexpected_member_nifs=evidence.unexpected_member_nifs,
-                )
-                for evidence in verdict.dependencies
-
+            CrossPeriodDependencyEvidencePayload(
+                source_modelo=evidence.requirement.source_modelo,
+                filing_year=evidence.requirement.filing_year,
+                period=evidence.requirement.period,
+                clean=evidence.clean,
+                blockers=tuple(blocker.value for blocker in evidence.blockers),
+                observation_source_kind=evidence.observation_source_kind,
+                filing_record_id=evidence.filing_record_id,
+                calculation_revision_id=evidence.calculation_revision_id,
+                external_evidence_kind=evidence.external_evidence_kind,
+                expected_member_nifs=evidence.expected_member_nifs,
+                observed_member_nifs=evidence.observed_member_nifs,
+                missing_member_nifs=evidence.missing_member_nifs,
+                unexpected_member_nifs=evidence.unexpected_member_nifs,
+            )
+            for evidence in verdict.dependencies
         ),
     )
 
@@ -164,19 +158,17 @@ def _dependency_inventory_lines(result: WorkDependenciesResult) -> list[str]:
         "target_modelo\tyear\tperiod\trevision\tdependency_count\tsource_modelos",
     ]
     lines.extend(
-
-            "\t".join(
-                (
-                    item.target_modelo,
-                    str(item.target_filing_year),
-                    item.target_period.registry_token,
-                    item.target_revision_id,
-                    str(item.dependency_count),
-                    ", ".join(item.source_modelos),
-                )
+        "\t".join(
+            (
+                item.target_modelo,
+                str(item.target_filing_year),
+                item.target_period.registry_token,
+                item.target_revision_id,
+                str(item.dependency_count),
+                ", ".join(item.source_modelos),
             )
-            for item in result.items
-
+        )
+        for item in result.items
     )
     if result.clean_state is None:
         return lines
@@ -191,20 +183,18 @@ def _dependency_inventory_lines(result: WorkDependenciesResult) -> list[str]:
         ]
     )
     lines.extend(
-
-            "\t".join(
-                (
-                    evidence.source_modelo,
-                    str(evidence.filing_year),
-                    evidence.period.registry_token,
-                    str(evidence.clean),
-                    ", ".join(evidence.blockers),
-                    evidence.external_evidence_kind or "",
-                    evidence.filing_record_id or "",
-                )
+        "\t".join(
+            (
+                evidence.source_modelo,
+                str(evidence.filing_year),
+                evidence.period.registry_token,
+                str(evidence.clean),
+                ", ".join(evidence.blockers),
+                evidence.external_evidence_kind or "",
+                evidence.filing_record_id or "",
             )
-            for evidence in result.clean_state.dependencies
-
+        )
+        for evidence in result.clean_state.dependencies
     )
     return lines
 

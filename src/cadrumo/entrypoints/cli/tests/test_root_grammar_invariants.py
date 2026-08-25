@@ -40,7 +40,7 @@ def test_app_does_not_register_deadlines_subgroup() -> None:
 def test_app_rejects_retired_consumer_command() -> None:
     """The product CLI does not provision downstream consumers."""
 
-    result = invoke_cached_cli(["app", "ag" "ent", "--help"])
+    result = invoke_cached_cli(["app", "agent", "--help"])
     assert result.exit_code != 0, result.output
 
 

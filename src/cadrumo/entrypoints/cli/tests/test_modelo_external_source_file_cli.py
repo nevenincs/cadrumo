@@ -38,8 +38,18 @@ def test_filing_record_import_file_uses_real_csv_parser_and_persists_lexicals(
     assert completed.exit_code == 0, completed.output
     created = invoke_cached_cli(
         [
-            "--format", "json", "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2026", "--period", "1T",
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "130",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
         ],
     )
     assert created.exit_code == 0, created.output
@@ -92,8 +102,18 @@ def test_failed_csv_file_import_creates_no_filing_or_revision(
     assert completed.exit_code == 0, completed.output
     created = invoke_cached_cli(
         [
-            "--format", "json", "app", "modelo", "work", "create",
-            "--modelo", "130", "--year", "2026", "--period", "1T",
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "130",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
         ],
     )
     assert created.exit_code == 0, created.output
@@ -103,9 +123,19 @@ def test_failed_csv_file_import_creates_no_filing_or_revision(
 
     refused = invoke_cached_cli(
         [
-            "--format", "json", "app", "modelo", "filing-record", "import",
-            work_unit_id, "--evidence-kind", "aeat_csv_register",
-            "--evidence-id", "PARTIALCSV113", "--file", str(partial),
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "filing-record",
+            "import",
+            work_unit_id,
+            "--evidence-kind",
+            "aeat_csv_register",
+            "--evidence-id",
+            "PARTIALCSV113",
+            "--file",
+            str(partial),
         ],
     )
     assert refused.exit_code != 0

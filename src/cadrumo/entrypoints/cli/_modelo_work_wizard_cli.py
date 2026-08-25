@@ -298,19 +298,17 @@ def _outstanding_wizard_steps(unit: WorkUnit) -> tuple[_WizardStep, ...]:
         str(unit.modelo), filing_year=unit.filing_year, period=unit.period.registry_token, input_kind=InputKind.MANUAL
     )
     casilla_steps = tuple(
-
-            _WizardStep(
-                channel="casilla",
-                key=row.casilla_id,
-                casilla_id=row.casilla_id,
-                number=row.number,
-                label=row.label,
-                help_text=row.help_text,
-                legal_refs=tuple(row.legal_refs),
-                source_refs=tuple(row.source_refs),
-            )
-            for row in casillas_report.rows
-
+        _WizardStep(
+            channel="casilla",
+            key=row.casilla_id,
+            casilla_id=row.casilla_id,
+            number=row.number,
+            label=row.label,
+            help_text=row.help_text,
+            legal_refs=tuple(row.legal_refs),
+            source_refs=tuple(row.source_refs),
+        )
+        for row in casillas_report.rows
     )
     bindings_report = registry_bindings_for_scope(str(unit.modelo), period=unit.period)
     profile_resolved = _profile_resolved_binding_ids(unit)
@@ -601,10 +599,8 @@ def _emit_wizard_result(
     diagnostics = calculation_result.source_diagnostics
     if diagnostics:
         notices.extend(
-
-                source_diagnostic_notice(diagnostic, code="modelo.work.wizard.source_advisory")
-                for diagnostic in diagnostics
-
+            source_diagnostic_notice(diagnostic, code="modelo.work.wizard.source_advisory")
+            for diagnostic in diagnostics
         )
         lines.extend(source_diagnostic_notice_text(notice) for notice in notices)
     _emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)

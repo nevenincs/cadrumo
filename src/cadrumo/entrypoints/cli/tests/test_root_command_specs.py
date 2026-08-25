@@ -64,8 +64,7 @@ def test_root_executable_targets_are_public_behavior_only_functions() -> None:
     functions = {
         node.name: node
         for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-        and node.name in {"app_root", "root_command"}
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in {"app_root", "root_command"}
     }
     assert functions.keys() == {"app_root", "root_command"}
     assert all(not node.decorator_list for node in functions.values())

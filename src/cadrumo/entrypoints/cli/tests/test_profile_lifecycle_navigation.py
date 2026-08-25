@@ -48,9 +48,7 @@ def _invoke(args: Sequence[str]) -> Result:
     if "create" in args and "profile" in args and "--secrets-stdin" not in args:
         return invoke_cached_cli(
             (*args, "--secrets-stdin"),
-            input=json.dumps(
-                {"passphrase": _dev_passphrase(), "passphrase_confirmation": _dev_passphrase()}
-            ),
+            input=json.dumps({"passphrase": _dev_passphrase(), "passphrase_confirmation": _dev_passphrase()}),
         )
     # `login` OPENS an existing envelope rather than minting one, so it takes the
     # passphrase alone and refuses a payload carrying the confirmation field.

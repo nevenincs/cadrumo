@@ -111,11 +111,12 @@ def compose_google_sheets_export_service(
 def build_production_operation_registry(
     *,
     settings: Settings | None = None,
+    auth_definitions: tuple[OperationDefinition, ...] | None = None,
     censal_definition: OperationDefinition | None = None,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
-    auth_definitions = build_auth_operation_definitions()
+    resolved_auth_definitions = auth_definitions if auth_definitions is not None else build_auth_operation_definitions()
     profile_definitions = build_user_profile_operation_definitions()
     google_export_definition = build_google_sheets_export_operation_definition(
         export_port=_google_sheets_export_port(settings=resolved_settings)
@@ -126,7 +127,7 @@ def build_production_operation_registry(
     definitions = tuple(
         sorted(
             (
-                *auth_definitions,
+                *resolved_auth_definitions,
                 *profile_definitions,
                 CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition,
                 filed_history_definition,
@@ -138,7 +139,7 @@ def build_production_operation_registry(
     registrations = tuple(
         sorted(
             (
-                *build_auth_operation_registrations(auth_definitions),
+                *build_auth_operation_registrations(resolved_auth_definitions),
                 *build_user_profile_operation_registrations(profile_definitions),
                 build_censal_operation_registration(
                     CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition

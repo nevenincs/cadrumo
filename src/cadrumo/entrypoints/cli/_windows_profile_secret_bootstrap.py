@@ -97,11 +97,7 @@ def bootstrap_argv(
 
     root = () if profile_descriptor is None else ("--profile-secrets-fd", str(profile_descriptor))
     leaf = () if leaf_descriptor is None else ("--secrets-fd", str(leaf_descriptor))
-    handoff = (
-        ()
-        if recovery_handoff_descriptor is None
-        else ("--recovery-handoff-fd", str(recovery_handoff_descriptor))
-    )
+    handoff = () if recovery_handoff_descriptor is None else ("--recovery-handoff-fd", str(recovery_handoff_descriptor))
     verification = (
         ()
         if recovery_verification_descriptor is None

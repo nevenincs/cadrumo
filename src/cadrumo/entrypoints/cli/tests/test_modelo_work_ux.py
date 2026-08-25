@@ -792,17 +792,17 @@ def test_modelo_303_workflow_json_resolves_each_2025_quarter_once() -> None:
         )
         assert created.exit_code == 0, created.output
         payload = _payload(created.output)
-        assert payload["revision_id"] == select_revision(
-            modelo_303,
-            filing_year=2025,
-            period=period,
-        ).id
+        assert (
+            payload["revision_id"]
+            == select_revision(
+                modelo_303,
+                filing_year=2025,
+                period=period,
+            ).id
+        )
         payloads.append(payload)
 
-    coordinates = tuple(
-        (payload["modelo"], payload["filing_year"], payload["period"])
-        for payload in payloads
-    )
+    coordinates = tuple((payload["modelo"], payload["filing_year"], payload["period"]) for payload in payloads)
     assert coordinates == (
         ("303", 2025, {"filing_year": 2025, "code": "1T"}),
         ("303", 2025, {"filing_year": 2025, "code": "2T"}),

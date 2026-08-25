@@ -27,16 +27,11 @@ def test_every_executable_target_is_public_and_every_schema_identity_is_unique()
     assert executable
     assert all(spec.handler is not None and spec.handler.target is not None for spec in executable)
     assert all(
-        not spec.handler.target.qualname.startswith("_")
-        and ".<locals>." not in spec.handler.target.qualname
+        not spec.handler.target.qualname.startswith("_") and ".<locals>." not in spec.handler.target.qualname
         for spec in executable
         if spec.handler is not None and spec.handler.target is not None
     )
-    identities = [
-        spec.result_schema.identity
-        for spec in COMMAND_SPECS
-        if spec.result_schema.identity is not None
-    ]
+    identities = [spec.result_schema.identity for spec in COMMAND_SPECS if spec.result_schema.identity is not None]
     assert len(identities) == len(set(identities))
 
 
@@ -79,7 +74,7 @@ def test_handler_target_modules_do_not_import_the_cli_package_facade() -> None:
                 imported_module = node.module
                 if node.level:
                     relative = f"{'.' * node.level}{node.module or ''}"
-                    imported_module = resolve_name(relative, module.rpartition('.')[0])
+                    imported_module = resolve_name(relative, module.rpartition(".")[0])
                 imported_names = {
                     imported_module if alias.name == "*" else f"{imported_module}.{alias.name}"
                     for alias in node.names

@@ -193,9 +193,7 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
         spec = specs[key]
         recovery = spec.recovery_handoff
         option_by_name = {
-            parameter.name: parameter
-            for parameter in spec.parameters
-            if isinstance(parameter, OptionSpec)
+            parameter.name: parameter for parameter in spec.parameters if isinstance(parameter, OptionSpec)
         }
         recovery_contract = None
         if recovery is not None:
@@ -212,10 +210,7 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
                 descriptors_closed=recovery.descriptors_closed,
                 reserved_descriptors=recovery.reserved_descriptors,
                 descriptors_must_differ=recovery.descriptors_must_differ,
-                collides_with=tuple(
-                    option_by_name[name].declarations[0]
-                    for name in recovery.collides_with_parameters
-                ),
+                collides_with=tuple(option_by_name[name].declarations[0] for name in recovery.collides_with_parameters),
                 windows_handle_bootstrap=recovery.windows_handle_bootstrap,
             )
         schemas[key] = VerbInputSchema(

@@ -97,6 +97,7 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
+
 def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
     """Render calendar warnings as grounded profile requirements where possible.
 

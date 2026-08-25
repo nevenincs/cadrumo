@@ -88,10 +88,7 @@ def _raise_call_contracts(path: Path) -> tuple[tuple[str, Mapping[str, str]], ..
 
 def test_s70_exactly_five_producers_keep_observed_fact_expression_polarity() -> None:
     """The five persistence producers have one complete, mutation-sensitive census."""
-    assert {
-        relative: _raise_call_contracts(path)
-        for relative, path in _PERSISTENCE_PRODUCERS.items()
-    } == {
+    assert {relative: _raise_call_contracts(path) for relative, path in _PERSISTENCE_PRODUCERS.items()} == {
         "master_key/_active_session.py": (("NoActiveBucketSessionError", {}),),
         "master_key/_bucket_session.py": (
             (
@@ -119,9 +116,7 @@ def test_s70_exactly_five_producers_keep_observed_fact_expression_polarity() -> 
             (
                 "SessionExpiredError",
                 {
-                    "context": _normalised_expression(
-                        "{'active_session_fresh': False, 'session_expired': True}"
-                    ),
+                    "context": _normalised_expression("{'active_session_fresh': False, 'session_expired': True}"),
                 },
             ),
         ),
@@ -141,18 +136,13 @@ def test_s70_adapter_producers_cannot_author_actions_or_executable_recovery_pros
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
         imported_modules = [
-            node.module
-            for node in ast.walk(tree)
-            if isinstance(node, ast.ImportFrom) and node.module is not None
+            node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module is not None
         ]
         imported_modules.extend(
             alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
         )
         constructed = {
-            name
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            if (name := _callee_name(node)) is not None
+            name for node in ast.walk(tree) if isinstance(node, ast.Call) if (name := _callee_name(node)) is not None
         }
         assert "application" not in ".".join(imported_modules), relative
         assert not constructed & forbidden_constructors, (relative, constructed & forbidden_constructors)
@@ -165,10 +155,7 @@ def test_s70_cli_boundary_delegates_all_verdict_construction_to_application_auth
     source = (_CADRUMO_ROOT / "entrypoints" / "cli" / "_errors.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     constructed = {
-        name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        if (name := _callee_name(node)) is not None
+        name for node in ast.walk(tree) if isinstance(node, ast.Call) if (name := _callee_name(node)) is not None
     }
 
     assert not constructed & {"PreconditionVerdict", "ConditionEvidence", "ActionReference"}
