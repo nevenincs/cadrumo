@@ -699,7 +699,7 @@ def _resolve_cli_path(command_path: tuple[str, ...]) -> None:
     from typer._click.core import Context
     from typer.main import get_command
 
-    from cadrumo.entrypoints.cli import app
+    from ..entrypoints.cli import app
 
     command = get_command(app)
     for token in command_path:
@@ -717,7 +717,7 @@ def _resolve_cli_path(command_path: tuple[str, ...]) -> None:
 
 
 def _invoke_cli(argv: tuple[str, ...]) -> int:
-    from cadrumo.entrypoints.cli import main
+    from ..entrypoints.cli import main
 
     sys.argv = ["aeat", *argv]
     try:
@@ -735,7 +735,7 @@ def _run_instrumentation_probe(storage_root: Path) -> None:
 
     from pydantic import BaseModel
 
-    from cadrumo.adapters.persistence.storage import safe_repository_id as aliased_storage_call
+    from ..adapters.persistence.storage import safe_repository_id as aliased_storage_call
 
     class ProbeModel(BaseModel):
         value: int
