@@ -14,6 +14,7 @@ related:
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
+  - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
 modified: '2026-08-25'
 body_hash: 'sha256:0508af23ae1924f1f46294466dff579a96a53cc2de6ea4d0405f21989ec249c8'
 ---
