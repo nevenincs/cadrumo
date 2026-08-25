@@ -43,6 +43,7 @@ _LEDGER_BINDING_PUBLIC_NAMES = (
 )
 _CASILLA_CONTINUITY_PUBLIC_NAMES = (
     "CasillaContinuidadEvolutionDefinition",
+    "ContinuidadId",
     "CrossRevisionCasillaDivergence",
     "CrossRevisionCasillaDriftSummary",
     "summarize_non_overlapping_cross_revision_casilla_drift",

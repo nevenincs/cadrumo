@@ -10,8 +10,6 @@ from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_valid
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
-    BindingSourceKind,
-    CalculationSourceLineageRole,
     CasillaId,
     OutputLanguage,
     Period,
@@ -21,7 +19,9 @@ from ...core import (
 )
 from ...core.identity import BucketId, ContentDigest, WorkUnitId
 from ...domain.calculations.registry import (
+    ApplicabilityRuleId,
     BindingId,
+    ContinuidadId,
     ExportFieldId,
     FormulaId,
     LegalRefId,
@@ -31,8 +31,10 @@ from ...domain.calculations.registry import (
     SourceRefId,
 )
 from ...domain.filing import ModeloScalar
-from ...domain.modelos import ModeloCode, WorkUnitState
+from ...domain.modelos import CalculationSourceRef, ModeloCode, WorkUnitState
 from ..operator_actions import ActionReference
+from ..registry import RegistryClosureLimb
+from ..state_projection import ProjectionModeloReadiness
 from ._work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from ._work_review import ModeloWorkReview
 
@@ -325,13 +327,151 @@ class ModeloWorkspaceExportFieldReferenceV1(_WorkspaceModel):
     export_field_id: ExportFieldId
 
 
+class ModeloWorkspaceContinuityReferenceV1(_WorkspaceModel):
+    """A canonical cross-revision casilla continuity identity."""
+
+    kind: Literal["continuity"] = "continuity"
+    continuidad_id: ContinuidadId
+
+
+class ModeloWorkspaceFormulaCasillaOperandReferenceV1(_WorkspaceModel):
+    """A formula operand that addresses a canonical casilla."""
+
+    kind: Literal["formula_operand_casilla"] = "formula_operand_casilla"
+    formula_id: FormulaId
+    casilla_id: CasillaId
+
+
+class ModeloWorkspaceFormulaBindingOperandReferenceV1(_WorkspaceModel):
+    """A formula operand that reads a canonical decimal binding."""
+
+    kind: Literal["formula_operand_binding"] = "formula_operand_binding"
+    formula_id: FormulaId
+    binding_id: BindingId
+
+
+class ModeloWorkspaceFormulaDateBindingOperandReferenceV1(_WorkspaceModel):
+    """A formula operand that reads a canonical date binding."""
+
+    kind: Literal["formula_operand_date_binding"] = "formula_operand_date_binding"
+    formula_id: FormulaId
+    binding_id: BindingId
+
+
+class ModeloWorkspaceFormulaParameterOperandReferenceV1(_WorkspaceModel):
+    """A formula operand that addresses a canonical parameter."""
+
+    kind: Literal["formula_operand_parameter"] = "formula_operand_parameter"
+    formula_id: FormulaId
+    parameter_id: ParameterId
+
+
+class ModeloWorkspaceFormulaRelationOperandReferenceV1(_WorkspaceModel):
+    """A formula operand that addresses a canonical relation."""
+
+    kind: Literal["formula_operand_relation"] = "formula_operand_relation"
+    formula_id: FormulaId
+    relation_id: RelationId
+
+
+class ModeloWorkspaceFormulaLiteralOperandReferenceV1(_WorkspaceModel):
+    """A formula literal arm without exporting its formula compiler node."""
+
+    kind: Literal["formula_operand_literal"] = "formula_operand_literal"
+    formula_id: FormulaId
+
+
+class ModeloWorkspaceFormulaDispatchOperandReferenceV1(_WorkspaceModel):
+    """A dispatch-table formula operand retaining its parameter identities."""
+
+    kind: Literal["formula_operand_dispatch"] = "formula_operand_dispatch"
+    formula_id: FormulaId
+    parameter_ids: tuple[ParameterId, ...]
+
+    @field_validator("parameter_ids")
+    @classmethod
+    def _require_unique_formula_dispatch_parameters(cls, value: tuple[ParameterId, ...]) -> tuple[ParameterId, ...]:
+        if not value or len(set(value)) != len(value):
+            raise ValueError("workspace formula dispatch parameters must be non-empty and unique")
+        return tuple(sorted(value))
+
+
+type ModeloWorkspaceFormulaOperandReferenceV1 = Annotated[
+    ModeloWorkspaceFormulaCasillaOperandReferenceV1
+    | ModeloWorkspaceFormulaBindingOperandReferenceV1
+    | ModeloWorkspaceFormulaDateBindingOperandReferenceV1
+    | ModeloWorkspaceFormulaParameterOperandReferenceV1
+    | ModeloWorkspaceFormulaRelationOperandReferenceV1
+    | ModeloWorkspaceFormulaLiteralOperandReferenceV1
+    | ModeloWorkspaceFormulaDispatchOperandReferenceV1,
+    Field(discriminator="kind"),
+]
+
+
+class ModeloWorkspaceRelationSourceEndpointReferenceV1(_WorkspaceModel):
+    """The canonical source-casilla endpoint of one registry relation."""
+
+    kind: Literal["relation_source_casilla"] = "relation_source_casilla"
+    relation_id: RelationId
+    casilla_id: CasillaId
+
+
+class ModeloWorkspaceRelationTargetEndpointReferenceV1(_WorkspaceModel):
+    """The canonical target-binding endpoint of one registry relation."""
+
+    kind: Literal["relation_target_binding"] = "relation_target_binding"
+    relation_id: RelationId
+    binding_id: BindingId
+
+
+type ModeloWorkspaceRelationEndpointReferenceV1 = Annotated[
+    ModeloWorkspaceRelationSourceEndpointReferenceV1 | ModeloWorkspaceRelationTargetEndpointReferenceV1,
+    Field(discriminator="kind"),
+]
+
+
+class ModeloWorkspaceApplicabilityReferenceV1(_WorkspaceModel):
+    """A canonical registry applicability-rule identity."""
+
+    kind: Literal["applicability"] = "applicability"
+    applicability_rule_id: ApplicabilityRuleId
+
+
+class ModeloWorkspaceConstraintReferenceV1(_WorkspaceModel):
+    """The casilla identity to which its canonical registry constraints apply."""
+
+    kind: Literal["constraint"] = "constraint"
+    casilla_id: CasillaId
+
+
+class ModeloWorkspaceExportExposureReferenceV1(_WorkspaceModel):
+    """One canonical casilla-to-export-field exposure without layout internals."""
+
+    kind: Literal["export_exposure"] = "export_exposure"
+    casilla_id: CasillaId
+    export_field_id: ExportFieldId
+
+
 type ModeloWorkspaceSchemaReferenceV1 = Annotated[
     ModeloWorkspaceCasillaReferenceV1
     | ModeloWorkspaceBindingReferenceV1
     | ModeloWorkspaceFormulaReferenceV1
     | ModeloWorkspaceRelationReferenceV1
     | ModeloWorkspaceParameterReferenceV1
-    | ModeloWorkspaceExportFieldReferenceV1,
+    | ModeloWorkspaceExportFieldReferenceV1
+    | ModeloWorkspaceContinuityReferenceV1
+    | ModeloWorkspaceFormulaCasillaOperandReferenceV1
+    | ModeloWorkspaceFormulaBindingOperandReferenceV1
+    | ModeloWorkspaceFormulaDateBindingOperandReferenceV1
+    | ModeloWorkspaceFormulaParameterOperandReferenceV1
+    | ModeloWorkspaceFormulaRelationOperandReferenceV1
+    | ModeloWorkspaceFormulaLiteralOperandReferenceV1
+    | ModeloWorkspaceFormulaDispatchOperandReferenceV1
+    | ModeloWorkspaceRelationSourceEndpointReferenceV1
+    | ModeloWorkspaceRelationTargetEndpointReferenceV1
+    | ModeloWorkspaceApplicabilityReferenceV1
+    | ModeloWorkspaceConstraintReferenceV1
+    | ModeloWorkspaceExportExposureReferenceV1,
     Field(discriminator="kind"),
 ]
 
@@ -359,15 +499,10 @@ class ModeloWorkspaceFamilyDispositionV1(_WorkspaceModel):
 
 
 class ModeloWorkspaceProvenanceRecordV1(_WorkspaceModel):
-    """Safe causal lineage for one schema or materialization reference."""
+    """One selected canonical resolver lineage row for a workspace subject."""
 
     subject: ModeloWorkspaceSchemaReferenceV1
-    lineage_role: CalculationSourceLineageRole
-    resolved_source_kind: BindingSourceKind
-    contributor_source_kind: BindingSourceKind | None = None
-    source_ref: SourceRefId
-    parent_source_ref: SourceRefId | None = None
-    fingerprint: ContentDigest
+    calculation_source: CalculationSourceRef
 
 
 class ModeloWorkspaceScalarMaterializationV1(_WorkspaceModel):
@@ -403,11 +538,38 @@ class ModeloWorkspaceMaterializationRecordV1(_WorkspaceModel):
         raise ValueError("workspace materialization kind must name exactly one matching arm")
 
 
+class ModeloWorkspaceTextFactValueV1(_WorkspaceModel):
+    """A bounded safe text fact, never a raw exception or localized command."""
+
+    kind: Literal["text"] = "text"
+    value: Annotated[str, Field(min_length=1, max_length=_MAX_SAFE_FACT_TEXT_LENGTH)]
+
+
+class ModeloWorkspaceCountFactValueV1(_WorkspaceModel):
+    """A non-negative count fact with no text-length constraint."""
+
+    kind: Literal["count"] = "count"
+    value: Annotated[int, Field(ge=0)]
+
+
+class ModeloWorkspaceFlagFactValueV1(_WorkspaceModel):
+    """A closed Boolean fact with no string validation applied."""
+
+    kind: Literal["flag"] = "flag"
+    value: bool
+
+
+type ModeloWorkspaceEvidenceFactValueV1 = Annotated[
+    ModeloWorkspaceTextFactValueV1 | ModeloWorkspaceCountFactValueV1 | ModeloWorkspaceFlagFactValueV1,
+    Field(discriminator="kind"),
+]
+
+
 class ModeloWorkspaceEvidenceFactV1(_WorkspaceModel):
     """A bounded non-financial fact for capability or refusal explanation."""
 
     name: _BoundedCode
-    value: Annotated[str | int | bool, Field(max_length=_MAX_SAFE_FACT_TEXT_LENGTH)]
+    value: ModeloWorkspaceEvidenceFactValueV1
 
 
 class ModeloWorkspaceLegalEvidenceReferenceV1(_WorkspaceModel):
@@ -426,11 +588,41 @@ type ModeloWorkspaceEvidenceReferenceV1 = Annotated[
 ]
 
 
+class ModeloWorkspaceBaselineV1(_WorkspaceModel):
+    """Opaque read consistency identity; this is not mutation authority or approval."""
+
+    contract_version: Literal[1] = 1
+    token: ContentDigest
+    contributor_stamp_digest: ContentDigest
+    target: ModeloWorkspaceResolvedTargetV1
+    selected_revision_id: RevisionId
+    schema_identity: ModeloWorkspaceSchemaIdentityV1
+    locale_catalogue_digest: ContentDigest
+
+
+class ModeloWorkspaceContributorIdentityV1(_WorkspaceModel):
+    """One producer identity captured in a baseline-pinned Workspace read."""
+
+    owner: _BoundedCode
+    producer: _BoundedCode
+
+
+def _require_unique_contributor_identities(
+    value: tuple[ModeloWorkspaceContributorIdentityV1, ...],
+) -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
+    """Keep each pinned contributor tuple deterministic without declaring its port contract."""
+    identities = tuple((contributor.owner, contributor.producer) for contributor in value)
+    if not identities or len(set(identities)) != len(identities):
+        raise ValueError("workspace contributors must be non-empty and unique")
+    return tuple(sorted(value, key=lambda contributor: (contributor.owner, contributor.producer)))
+
+
 class ModeloWorkspaceCapabilityV1(_WorkspaceModel):
     """One non-inferred capability answer copied from its canonical producer."""
 
     capability: ModeloWorkspaceCapabilityName
     disposition: ModeloWorkspaceCapabilityDisposition
+    target: ModeloWorkspaceResolvedTargetV1
     producer_owner: _BoundedCode
     producer: _BoundedCode
     evidence: tuple[ModeloWorkspaceEvidenceReferenceV1, ...] = ()
@@ -463,6 +655,11 @@ def _complete_capability_denominator(
 class ModeloWorkspaceBoundedFacetV1[RecordT: BaseModel](_WorkspaceModel):
     """A baseline-pinned, finite page from one workspace facet."""
 
+    contract_version: Literal[1] = 1
+    selected_revision_id: RevisionId
+    schema_identity: ModeloWorkspaceSchemaIdentityV1
+    baseline: ModeloWorkspaceBaselineV1
+    contributors: tuple[ModeloWorkspaceContributorIdentityV1, ...]
     facet: ModeloWorkspaceFacetName
     disposition: ModeloWorkspaceCapabilityDisposition
     records: tuple[RecordT, ...] = ()
@@ -470,8 +667,21 @@ class ModeloWorkspaceBoundedFacetV1[RecordT: BaseModel](_WorkspaceModel):
     next_cursor: str | None = None
     has_more: bool = False
 
+    @field_validator("contributors")
+    @classmethod
+    def _require_unique_facet_contributors(
+        cls, value: tuple[ModeloWorkspaceContributorIdentityV1, ...]
+    ) -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
+        return _require_unique_contributor_identities(value)
+
     @model_validator(mode="after")
     def _validate_page(self) -> ModeloWorkspaceBoundedFacetV1[RecordT]:
+        if self.baseline.contract_version != self.contract_version:
+            raise ValueError("workspace facet baseline must retain the V1 contract version")
+        if self.baseline.selected_revision_id != self.selected_revision_id:
+            raise ValueError("workspace facet baseline must retain the selected revision")
+        if self.baseline.schema_identity != self.schema_identity:
+            raise ValueError("workspace facet baseline must retain the schema identity and fingerprint")
         if len(self.records) > self.page_size:
             raise ValueError("workspace facet cannot contain more records than its page_size")
         if self.has_more != (self.next_cursor is not None):
@@ -494,18 +704,6 @@ class ModeloWorkspaceWorkReviewFacetV1(_WorkspaceModel):
         if (self.disposition is ModeloWorkspaceCapabilityDisposition.AVAILABLE) != (self.review is not None):
             raise ValueError("work review facet must contain its canonical review exactly when available")
         return self
-
-
-class ModeloWorkspaceBaselineV1(_WorkspaceModel):
-    """Opaque read consistency identity; this is not mutation authority or approval."""
-
-    contract_version: Literal[1] = 1
-    token: ContentDigest
-    contributor_stamp_digest: ContentDigest
-    target: ModeloWorkspaceResolvedTargetV1
-    selected_revision_id: RevisionId
-    schema_identity: ModeloWorkspaceSchemaIdentityV1
-    locale_catalogue_digest: ContentDigest
 
 
 class ModeloWorkspaceEvidenceHorizonV1(_WorkspaceModel):
@@ -555,11 +753,14 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
     locale: ModeloWorkspaceLocaleSummaryV1
     evidence_horizon: ModeloWorkspaceEvidenceHorizonV1
     family_dispositions: tuple[ModeloWorkspaceFamilyDispositionV1, ...]
+    contributors: tuple[ModeloWorkspaceContributorIdentityV1, ...]
     baseline: ModeloWorkspaceBaselineV1
     schema_facet: ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceSchemaRecordV1]
     materialization_facet: ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceMaterializationRecordV1] | None = None
     provenance_facet: ModeloWorkspaceBoundedFacetV1[ModeloWorkspaceProvenanceRecordV1] | None = None
     work_review: ModeloWorkspaceWorkReviewFacetV1
+    readiness: ProjectionModeloReadiness | None = None
+    registry_closure_limbs: tuple[RegistryClosureLimb, ...] = ()
     capabilities: tuple[ModeloWorkspaceCapabilityV1, ...]
 
     @field_validator("capabilities")
@@ -578,6 +779,22 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
             raise ValueError("workspace schema-family dispositions must be unique")
         return tuple(sorted(value, key=lambda family: family.family))
 
+    @field_validator("contributors")
+    @classmethod
+    def _require_unique_projection_contributors(
+        cls, value: tuple[ModeloWorkspaceContributorIdentityV1, ...]
+    ) -> tuple[ModeloWorkspaceContributorIdentityV1, ...]:
+        return _require_unique_contributor_identities(value)
+
+    @field_validator("registry_closure_limbs")
+    @classmethod
+    def _require_unique_closure_limb_names(
+        cls, value: tuple[RegistryClosureLimb, ...]
+    ) -> tuple[RegistryClosureLimb, ...]:
+        if len({limb.name for limb in value}) != len(value):
+            raise ValueError("workspace registry closure limbs must be unique")
+        return tuple(sorted(value, key=lambda limb: limb.name))
+
     @model_validator(mode="after")
     def _enforce_admission_scope(self) -> ModeloWorkspaceProjectionV1:
         if self.schema_facet.facet is not ModeloWorkspaceFacetName.SCHEMA:
@@ -588,6 +805,31 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
             raise ValueError("workspace baseline must pin the exact law-selected revision")
         if self.baseline.schema_identity != self.schema_identity:
             raise ValueError("workspace baseline must pin the exact schema identity")
+        if self.schema_facet.contract_version != self.contract_version:
+            raise ValueError("workspace schema facet must retain the V1 contract version")
+        if self.schema_facet.selected_revision_id != self.target.law_selected_revision_id:
+            raise ValueError("workspace schema facet must retain the law-selected revision")
+        if self.schema_facet.schema_identity != self.schema_identity:
+            raise ValueError("workspace schema facet must retain the schema identity and fingerprint")
+        if self.schema_facet.baseline != self.baseline:
+            raise ValueError("workspace schema facet must retain the projection baseline")
+        if self.schema_facet.contributors != self.contributors:
+            raise ValueError("workspace schema facet must retain the contributor tuple")
+        for capability in self.capabilities:
+            if capability.target != self.target:
+                raise ValueError("workspace capabilities must retain the exact target and revision coordinate")
+        if self.readiness is not None and (
+            self.readiness.modelo != self.target.modelo
+            or self.readiness.revision_id != self.target.law_selected_revision_id
+            or self.readiness.filing_year != self.target.filing_year
+            or self.readiness.period != self.target.period
+        ):
+            raise ValueError("workspace readiness must retain the exact target and revision coordinate")
+        if any(
+            limb.modelo != self.target.modelo or limb.revision != self.target.law_selected_revision_id
+            for limb in self.registry_closure_limbs
+        ):
+            raise ValueError("workspace registry closure limbs must retain the exact target and revision coordinate")
         if isinstance(self.admission, ModeloWorkspaceStaticInspectionScopeV1):
             if self.materialization_facet is not None or self.provenance_facet is not None:
                 raise ValueError("static inspection cannot carry materialization or provenance facets")
@@ -602,6 +844,15 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
         )
         if any(facet.facet is not expected_name for facet, expected_name in expected):
             raise ValueError("graded snapshot facets must retain their canonical names")
+        for facet in (self.materialization_facet, self.provenance_facet):
+            if (
+                facet.contract_version != self.contract_version
+                or facet.selected_revision_id != self.target.law_selected_revision_id
+                or facet.schema_identity != self.schema_identity
+                or facet.baseline != self.baseline
+                or facet.contributors != self.contributors
+            ):
+                raise ValueError("graded workspace facets must retain the root consistency coordinates")
         return self
 
 
@@ -701,22 +952,41 @@ type ModeloWorkspaceResultV1 = Annotated[
 __all__ = [
     "ModeloWorkspaceAdmissionKind",
     "ModeloWorkspaceAdmissionV1",
+    "ModeloWorkspaceApplicabilityReferenceV1",
     "ModeloWorkspaceBaselineV1",
+    "ModeloWorkspaceBindingReferenceV1",
     "ModeloWorkspaceBoundedFacetV1",
     "ModeloWorkspaceCapabilityDisposition",
     "ModeloWorkspaceCapabilityName",
     "ModeloWorkspaceCapabilityV1",
+    "ModeloWorkspaceCasillaReferenceV1",
+    "ModeloWorkspaceConstraintReferenceV1",
+    "ModeloWorkspaceContinuityReferenceV1",
+    "ModeloWorkspaceContributorIdentityV1",
+    "ModeloWorkspaceCountFactValueV1",
     "ModeloWorkspaceDomainRefusalV1",
     "ModeloWorkspaceEvidenceFactV1",
+    "ModeloWorkspaceEvidenceFactValueV1",
     "ModeloWorkspaceEvidenceHorizonV1",
     "ModeloWorkspaceEvidenceReferenceV1",
+    "ModeloWorkspaceExportExposureReferenceV1",
     "ModeloWorkspaceExportFieldReferenceV1",
     "ModeloWorkspaceFacetName",
     "ModeloWorkspaceFamilyDispositionV1",
+    "ModeloWorkspaceFlagFactValueV1",
+    "ModeloWorkspaceFormulaBindingOperandReferenceV1",
+    "ModeloWorkspaceFormulaCasillaOperandReferenceV1",
+    "ModeloWorkspaceFormulaDateBindingOperandReferenceV1",
+    "ModeloWorkspaceFormulaDispatchOperandReferenceV1",
+    "ModeloWorkspaceFormulaLiteralOperandReferenceV1",
+    "ModeloWorkspaceFormulaOperandReferenceV1",
+    "ModeloWorkspaceFormulaParameterOperandReferenceV1",
     "ModeloWorkspaceFormulaReferenceV1",
+    "ModeloWorkspaceFormulaRelationOperandReferenceV1",
     "ModeloWorkspaceGradedSnapshotAdmissionV1",
     "ModeloWorkspaceGradedSnapshotResultV1",
     "ModeloWorkspaceGradedSnapshotScopeV1",
+    "ModeloWorkspaceLegalEvidenceReferenceV1",
     "ModeloWorkspaceLocaleDisposition",
     "ModeloWorkspaceLocaleSummaryV1",
     "ModeloWorkspaceLocalizedTextV1",
@@ -728,19 +998,27 @@ __all__ = [
     "ModeloWorkspaceRefusalCode",
     "ModeloWorkspaceRefusalV1",
     "ModeloWorkspaceRefusedResultV1",
+    "ModeloWorkspaceRelationEndpointReferenceV1",
+    "ModeloWorkspaceRelationReferenceV1",
+    "ModeloWorkspaceRelationSourceEndpointReferenceV1",
+    "ModeloWorkspaceRelationTargetEndpointReferenceV1",
+    "ModeloWorkspaceRepeatedRowMaterializationV1",
     "ModeloWorkspaceRequestV1",
     "ModeloWorkspaceResolvedTargetV1",
     "ModeloWorkspaceResultV1",
     "ModeloWorkspaceRevisionAssertionDisposition",
     "ModeloWorkspaceRevisionAssertionV1",
+    "ModeloWorkspaceScalarMaterializationV1",
     "ModeloWorkspaceSchemaClassification",
     "ModeloWorkspaceSchemaIdentityV1",
     "ModeloWorkspaceSchemaRecordV1",
     "ModeloWorkspaceSchemaReferenceV1",
     "ModeloWorkspaceSnapshotScopeV1",
+    "ModeloWorkspaceSourceEvidenceReferenceV1",
     "ModeloWorkspaceStaticInspectionAdmissionV1",
     "ModeloWorkspaceStaticInspectionResultV1",
     "ModeloWorkspaceStaticInspectionScopeV1",
+    "ModeloWorkspaceTextFactValueV1",
     "ModeloWorkspaceVersionHeader",
     "ModeloWorkspaceVersionRefusalV1",
     "ModeloWorkspaceWorkReviewFacetV1",

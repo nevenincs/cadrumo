@@ -614,6 +614,7 @@ from ._runtime_graph import (
     revision_date_binding_ids,
 )
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
+from ._schema_base import ContinuidadId
 from ._schema import (
     REVISION_GOVERNANCE_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
@@ -965,6 +966,7 @@ __all__ = [
     "ConstructEvidenceRow",
     "ConstructEvidenceStatus",
     "ConstructId",
+    "ContinuidadId",
     "ConvenioAuthority",
     "ConvenioOverride",
     "ConvenioOverrideRow",
