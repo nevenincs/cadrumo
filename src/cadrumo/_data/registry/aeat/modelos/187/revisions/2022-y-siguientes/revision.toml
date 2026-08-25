@@ -13,13 +13,11 @@ reviewed_by = """\
 agent: inspection-grade review; casilla set 01-04 read from ANEXO I of Orden HAP/1608/2014; deadline \
 window 1-31 enero verified verbatim against that orden's own plazo article; full-Diseno \
 casilla-number coverage inapplicable (design text-parsed in full, numbers nothing); the record \
-design's per-perceptor detail is NOT modelled and no export layout is declared NOT CLAIMED -- SPAN: \
-test_every_modelo_revision_span_is_corpus_proven reports 0 comparable bundled design year(s) inside \
-this revision's claimed span, so AEAT's published record designs do not evidence the record layout \
-for the years this revision covers; closing that gap needs AEAT acquisition and is NOT something \
-this review does. Stated because it is not a discriminator: 60 of the 80 revisions stamped before \
-2026-08-21 carry the same flag and none of them name it."""
-reviewed_at = 2026-08-21
+design's per-perceptor detail is NOT modelled and no export layout is declared NOT CLAIMED. The \
+hash-pinned AEAT record design updated in 2022 begins on 2022-01-01 with no declared end, matching \
+this revision's 2022-y-siguientes selector; it is not evidence for 2019-2021, which this revision \
+does not select. This scope correction does not promote authority grade or claim emitted-byte proof."""
+reviewed_at = 2026-08-25
 
 [revisions."2022-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """

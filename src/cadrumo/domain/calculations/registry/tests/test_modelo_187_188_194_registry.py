@@ -17,10 +17,14 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
+from .._errors import NoRevisionForPeriodError
+from .._temporal import select_revision
 from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
@@ -84,6 +88,25 @@ def test_modelo_187_preserves_both_article_2_filer_population_limbs() -> None:
 
     article_2 = catalogues.legal["orden-hac-1417-2018:art-primero"]
     assert "Asimismo, se encuentran también obligadas a presentar el modelo 187" in article_2.required_text
+
+
+def test_modelo_187_selects_only_the_2022_design_era() -> None:
+    """The current record design cannot be backdated to the unevidenced years."""
+    modelo, catalogues = _committed_modelo("187")
+    revision = modelo.revisions["2022-y-siguientes"]
+
+    assert revision.authority_grade.value == "applicability"
+    assert revision.valid_from == date(2022, 1, 1)
+    assert revision.period_selector.year_from == 2022
+    assert {ref for ref in revision.source_refs if ref.startswith("aeat-dr-187-")} == {"aeat-dr-187-2022"}
+    design = catalogues.sources["aeat-dr-187-2022"]
+    assert design.applies_from == date(2022, 1, 1)
+    assert design.applies_to is None
+
+    assert select_revision(modelo, filing_year=2022, period="0A", on=date(2022, 12, 31)) == revision
+    for filing_year in range(2019, 2022):
+        with pytest.raises(NoRevisionForPeriodError):
+            select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
 
 
 @pytest.mark.parametrize(
