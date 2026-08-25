@@ -48,9 +48,9 @@ from ....core import STR_KEYED_MAPPING_ADAPTER, CasillaId
 from ....core.aggregation import BindingSourceKind
 from .bindings import casillas_by_binding
 from .ids import BindingId
-from ._ledger_bindings import iva_ledger_selector
+from .ledger_bindings import iva_ledger_selector
 from .schema import DataBindingDefinition, ModeloRevision
-from ._schema_base import RegistryModel
+from .schema_base import RegistryModel
 
 __all__ = [
     "RateBoxPartition",

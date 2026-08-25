@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import expression_casilla_refs
+from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ....domain.filing import ModeloBuilderError
 from ..runtime import build_runtime_schema_provider
 

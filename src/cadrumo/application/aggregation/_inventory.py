@@ -10,10 +10,8 @@ from pydantic import ValidationError
 
 from ...core import BindingSourceKind, Modelo
 from ...domain.calculations import RowSourceIdentity
-from ...domain.calculations.registry import (
-    DataBindingDefinition,
-    InventorySelector,
-)
+from ...domain.calculations.registry.bindings import InventorySelector
+from ...domain.calculations.registry.schema import DataBindingDefinition
 from ...domain.contribuyente.inventory import (
     InventoryLedgerDocument,
     InventoryLedgerError,

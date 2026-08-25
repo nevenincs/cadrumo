@@ -53,11 +53,8 @@ from ....iva import (
     ProrrataKind,
     compute_prorrata_general,
 )
-from .. import (
-    calculate_registry_snapshot,
-    resolve_available_bound_inputs_by_casilla_id,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id, resolve_ledger_iva_aggregation_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

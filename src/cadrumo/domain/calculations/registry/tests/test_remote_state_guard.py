@@ -19,7 +19,8 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from .. import ModeloDefinition, RegistryCatalogues, build_snapshot
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
 from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
@@ -33,7 +34,7 @@ from ..remote_state_guard import (
     evaluate_remote_operation,
     remote_state_policy_from_cross_reference,
 )
-from .._renta_web_open_oracle import RentaWebOpenOracle
+from ..renta_web_open_oracle import RentaWebOpenOracle
 from ..schema import LiveCrossReferenceDecision
 from ._registry_schema_support import _committed_registry_tree
 

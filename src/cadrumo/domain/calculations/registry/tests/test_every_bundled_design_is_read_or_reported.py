@@ -52,13 +52,7 @@ import pytest
 
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.resources import bundled_path
-from .. import (
-    RecordDesignCorrection,
-    RecordDesignFieldTypeCorrection,
-    RecordDesignHeaderCellCorrection,
-    RecordDesignSinglePositionCorrection,
-    extract_record_design,
-)
+from cadrumo.domain.calculations.registry.record_design import RecordDesignCorrection, RecordDesignFieldTypeCorrection, RecordDesignHeaderCellCorrection, RecordDesignSinglePositionCorrection, extract_record_design
 from ..record_design import (
     _collapse_stuttered_row_prefix,
     _extract_pdf_text_lines,

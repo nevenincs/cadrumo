@@ -26,7 +26,12 @@ from typing import Final
 from ....core import CasillaId
 from ....core.decimal import format_decimal
 from ....core.errors import CadrumoError
-from ....domain.calculations.registry import BindingId, FormulaExpression, ParameterId, RelationId
+from ....domain.calculations.registry.ids import (
+    BindingId,
+    ParameterId,
+    RelationId,
+)
+from ....domain.calculations.registry.schema import FormulaExpression
 from .errors import CalcSheetsEngineError
 from ._layout import SheetLayout
 

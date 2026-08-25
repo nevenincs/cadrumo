@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import RecordDesignField, RecordDesignSheet, extract_record_design
+from cadrumo.domain.calculations.registry.record_design import RecordDesignField, RecordDesignSheet, extract_record_design
 from ..record_design import (
     _PdfParseState,
     _PdfSheetResult,

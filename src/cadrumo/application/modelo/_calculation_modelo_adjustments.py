@@ -33,16 +33,20 @@ from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core.aggregation import BindingSourceKind
 from ...core.decimal import coerce_decimal_strict
 from ...core.money import round_to_cents
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     BindingId,
+    RelationId,
+)
+from ...domain.calculations.registry.bindings import (
     CasillaObservation,
+    casillas_by_binding,
+)
+from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
-    RelationId,
-    casillas_by_binding,
-    manual_input_record_field_selector,
-    relation_source_requirements,
 )
+from ...domain.calculations.registry.binding_selector_utils import manual_input_record_field_selector
+from ...domain.calculations.registry.relations import relation_source_requirements
 from ...domain.modelos import (
     Modelo349OperadorRow,
     Modelo349RectificacionRow,

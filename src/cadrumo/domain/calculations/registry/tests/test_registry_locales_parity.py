@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import resources
-from .. import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -34,13 +34,11 @@ from ....core import (
     RefundElection,
     ResultDisposition,
 )
-from ....domain.calculations.registry import (
-    M303RegimenSimplificadoSnapshot,
-    RegistrySnapshot,
-    bundled_authority,
-    load_m303_annual_orden_authority,
-    m303_annual_orden_snapshot_from_projection,
-)
+from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.m303_orden_manifest import load_m303_annual_orden_authority
+from cadrumo.domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.justificante import Justificante

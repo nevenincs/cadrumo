@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import RetencionClave
-from .. import WithholdingObservation, WithholdingObservationRequirement
+from cadrumo.domain.calculations.registry.bindings import WithholdingObservation, WithholdingObservationRequirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

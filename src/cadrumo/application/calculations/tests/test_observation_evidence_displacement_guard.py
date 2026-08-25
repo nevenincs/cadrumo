@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....core import Period, validated_casilla_id
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import ObservationEvidenceDisplacementError
 from .._observations_repository import CalculationObservationRepository

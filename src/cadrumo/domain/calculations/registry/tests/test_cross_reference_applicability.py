@@ -14,7 +14,10 @@ from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .. import ModeloDefinition, ModeloRevision, RegistryValidationError, RegistryValidator, applicable_filing_schedules
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.schedules import applicable_filing_schedules
 from ..live_parity import (
     CrossReferenceApplicability,
     evaluate_cross_reference_applicability,

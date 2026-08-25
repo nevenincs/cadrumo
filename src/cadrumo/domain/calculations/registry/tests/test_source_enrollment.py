@@ -51,7 +51,7 @@ from .....application.aggregation import (
 )
 from .....core import BindingSourceKind
 from .....core.resources import resources
-from .. import RegistryQueryService, RegistrySourceInventoryReport
+from cadrumo.domain.calculations.registry.queries import RegistryQueryService, RegistrySourceInventoryReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

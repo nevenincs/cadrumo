@@ -8,15 +8,15 @@ from decimal import Decimal
 
 from ...core import CasillaId, FilingProducerKey, PriorDomiciliationElection
 from ...core.decimal import coerce_decimal
-from ...domain.calculations.registry import (
-    BindingId,
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import (
     CasillaFieldKind,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     RegistrySnapshot,
-    export_fields_overlap,
 )
+from ...domain.calculations.registry.export import export_fields_overlap
 from ...domain.filing import FilingExportValidationError, ModeloDraft
 from ._export_parity import did_page_suppressed
 from ._producer_snapshot import FilingProducerSnapshot

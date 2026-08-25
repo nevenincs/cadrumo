@@ -26,12 +26,10 @@ import pytest
 
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    CasillaObservation,
-    RegistryCalculationResult,
-    RegistrySnapshot,
-    expression_casilla_refs,
-)
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

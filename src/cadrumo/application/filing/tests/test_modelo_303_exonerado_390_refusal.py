@@ -19,7 +19,7 @@ from ....core import (
 )
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister, compute_registro_regularizacion
-from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (

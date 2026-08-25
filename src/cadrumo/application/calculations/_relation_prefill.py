@@ -66,28 +66,34 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...core.time import now
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
     ModeloId,
-    ModeloRevision,
-    RegistryFoldRequirement,
-    RegistryModeloObservation,
-    RegistrySnapshot,
-    RegistryValidationError,
-    RelationDefinition,
     RelationId,
     RevisionId,
     SourceRefId,
-    is_iva_wallet_owned_relation_target,
+)
+from ...domain.calculations.registry.schema import (
+    ModeloRevision,
+    RegistrySnapshot,
+    RelationDefinition,
+)
+from ...domain.calculations.registry.relations import (
+    RegistryFoldRequirement,
     materialize_relation_binding_values,
-    relation_consumption_channels,
-    relation_consumption_index,
     relation_requirement_index,
     relation_source_requirements,
-    relations_by_target_binding,
-    resolve_observed_requirement_value,
 )
+from ...domain.calculations.registry.bindings import RegistryModeloObservation
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
+from ...domain.calculations.registry.handoffs import (
+    relation_consumption_channels,
+    relation_consumption_index,
+)
+from ...domain.calculations.registry.queries import relations_by_target_binding
+from ...domain.calculations.registry.observation_fold import resolve_observed_requirement_value
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -379,7 +385,10 @@ def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> 
     202 relation stays unresolved and the gate keeps blocking, never a silent
     under-declaration.
     """
-    from ...domain.calculations.registry import Modelo202Modality, modelo_202_modality_from_inputs
+    from ...domain.calculations.registry.applicability import (
+        Modelo202Modality,
+        modelo_202_modality_from_inputs,
+    )
 
     values = _profile_path_values_for_bucket(bucket_id)
     if values is None:

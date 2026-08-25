@@ -14,7 +14,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....domain.calculations.registry import CasillaDefinition, InputKind, bundled_authority
+from cadrumo.domain.calculations.registry.schema import CasillaDefinition
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from .. import CasillaParity, _parity_comparison, collect_parity_rows, resolve_parity_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

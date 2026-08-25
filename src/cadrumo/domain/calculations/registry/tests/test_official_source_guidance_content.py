@@ -27,7 +27,7 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..corpus_catalogue import verify_source_file
-from .._schema_references import SourceReference
+from ..schema_references import SourceReference
 from .._validate_evidence import EvidenceValidator
 from .._validate_official_source_guidance_content import (
     _DEADLINE_VOCABULARY,

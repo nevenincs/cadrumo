@@ -55,7 +55,9 @@ from ...domain.buckets import (
 from ...domain.buckets import (
     bucket_event_history_write as _bucket_event_write,
 )
-from ...domain.calculations.registry import CasillaObservation, RegistrySnapshot, bundled_authority
+from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,

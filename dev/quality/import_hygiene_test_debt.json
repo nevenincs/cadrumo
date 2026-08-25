@@ -111,7 +111,7 @@
             {
                 "importer_path": "src/cadrumo/application/modelo/tests/test_unresolved_binding_diagnostics.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.domain.calculations.registry._formula_runtime",
+                "target_mod": "cadrumo.domain.calculations.registry.formula_runtime",
                 "imported_names": ["_evaluate_expression", "_UnresolvedFormulaDependencyError"],
                 "reason": "White-box test of the private formula-expression evaluator and its private unresolved-dependency exception, exercising the non-blocking unresolved-binding diagnostic channel. Internal formula-runtime primitives, not the public calculate_registry_snapshot entry point."
             },
@@ -146,7 +146,7 @@
             {
                 "importer_path": "src/cadrumo/conftest.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.domain.calculations.registry._loader",
+                "target_mod": "cadrumo.domain.calculations.registry.loader",
                 "imported_names": ["_load_registry_tree_cached"],
                 "reason": "Test-isolation fixture hook that clears the private registry-tree LRU cache between tests so no fixture leaks a stale compiled snapshot across test modules. Deliberately reaches the cache internals; the public authority never exposes cache-invalidation as an API."
             },
@@ -181,14 +181,14 @@
             {
                 "importer_path": "src/cadrumo/domain/renta/tests/test_first_slice_routing.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.domain.calculations.registry._validate_references",
+                "target_mod": "cadrumo.domain.calculations.registry.validate_references",
                 "imported_names": ["_CROSS_DOMAIN_SNAPSHOT_CHECKS"],
                 "reason": "White-box test confirming the renta first-slice routing validator is registered in the private cross-domain snapshot-check dispatch table. Internal registry-build validator wiring, not a public contract."
             },
             {
                 "importer_path": "src/cadrumo/domain/renta/tests/test_retenciones_routing_integrity.py",
                 "occurrence": 1,
-                "target_mod": "cadrumo.domain.calculations.registry._validate_references",
+                "target_mod": "cadrumo.domain.calculations.registry.validate_references",
                 "imported_names": ["_CROSS_DOMAIN_SNAPSHOT_CHECKS"],
                 "reason": "White-box test confirming the renta retenciones output-casilla validator is registered in the private cross-domain snapshot-check dispatch table by `renta` package import. Internal registry-build validator wiring, not a public contract. Same shape and disposition as the `test_first_slice_routing.py` entry against the same table."
             },

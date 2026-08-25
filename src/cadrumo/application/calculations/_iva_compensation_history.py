@@ -47,11 +47,9 @@ from ...core import CasillaId, CasillaValueKind, IvaCompensationStateProvenance,
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ...core.resources import bundled_path
 from ...core.time import now
-from ...domain.calculations.registry import (
-    load_registry_tree,
-    select_revision,
-    undeclared_casilla_ids,
-)
+from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.temporal import select_revision
+from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.iva_compensation import (
     IvaCompensationCarryForwardReport,
     IvaCompensationCasillaReferenceError,

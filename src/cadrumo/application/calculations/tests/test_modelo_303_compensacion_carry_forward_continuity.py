@@ -53,14 +53,10 @@ import pytest
 
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistryCalculationResult,
-    RegistryModeloObservation,
-    RelationId,
-    calculate_registry_snapshot,
-    materialize_relation_binding_values,
-    resolve_available_bound_inputs_by_casilla_id,
-)
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.ids import RelationId
+from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository

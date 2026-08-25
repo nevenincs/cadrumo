@@ -29,7 +29,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from .._schema_references import SourceReference
+from ..schema_references import SourceReference
 from .._validate_layout_authority_content import (
     _ANNEX_BLOCK,
     _ANNEX_HEADING,

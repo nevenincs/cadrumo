@@ -22,11 +22,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry import (
-    build_support_matrix,
-    bundled_authority,
-    revision_capability_probe,
-)
+from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix, revision_capability_probe
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from .. import audit_bundled_registry_conformance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

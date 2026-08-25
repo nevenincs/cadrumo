@@ -251,7 +251,7 @@ _CADRUMO_ROOT = Path(__file__).resolve().parents[4]
 #: aeat-registry-authority-flow discipline).
 _SANCTIONED_REVISION_ID_SITES = frozenset(
     {
-        "domain/calculations/registry/_snapshot.py",
+        "domain/calculations/registry/snapshot.py",
         "application/modelo/work_addressing.py",
     },
 )

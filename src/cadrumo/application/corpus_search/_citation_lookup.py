@@ -31,7 +31,8 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from ...core import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
-from ...domain.calculations.registry import LegalReference, bundled_authority
+from ...domain.calculations.registry.schema import LegalReference
+from ...domain.calculations.registry.authority import bundled_authority
 from .errors import CorpusSearchInputError
 from ._models import CitationResolution
 

@@ -327,7 +327,7 @@ def test_resolve_counterpart_binding_values_filters_by_source_kind() -> None:
     assert resolved == {"iva-349-declarante-importe-operaciones": Decimal("100")}
 
 
-def test_resolve_counterpart_binding_values_ignores_non_counterpart_bindings() -> None:
+def test_resolve_counterpart_binding_values_ignores_noncounterpart_bindings() -> None:
     counterpart_binding = _with_selector(
         _binding("iva-349-declarante-importe-operaciones"),
         claves=("E",),

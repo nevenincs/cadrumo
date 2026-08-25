@@ -8,12 +8,7 @@ import pytest
 
 from ....core import CasillaId, Modelo, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    ParsedVerificationPredicate,
-    VerificationPredicateDefinition,
-    VerificationPredicateOperator,
-    parse_verification_predicate_expression,
-)
+from cadrumo.domain.calculations.registry.schema_verification import ParsedVerificationPredicate, VerificationPredicateDefinition, VerificationPredicateOperator, parse_verification_predicate_expression
 from ....domain.modelos import ModeloError, ModeloVerificationFindingKind
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,

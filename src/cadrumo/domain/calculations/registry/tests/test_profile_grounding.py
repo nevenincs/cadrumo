@@ -11,13 +11,9 @@ import pytest
 
 from .....core import BindingSourceKind, Modelo
 from .....core.resources import resources
-from .. import (
-    DataBindingDefinition,
-    ProfileKeyGrounding,
-    RegistryValidationError,
-    binding_profile_keys,
-    build_profile_grounding_index,
-)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+from cadrumo.domain.calculations.registry.profile_grounding import ProfileKeyGrounding, binding_profile_keys, build_profile_grounding_index
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

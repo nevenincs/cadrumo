@@ -85,14 +85,14 @@ A partial read never produces a pass
 
 :func:`~._record_design.extract_record_design` returns what it could read
 alongside what it could not, and
-:meth:`~._record_design_schema.RecordDesignExtraction.accept_partial` tolerates
+:meth:`~.record_design_schema.RecordDesignExtraction.accept_partial` tolerates
 the difference. The off-load-path coverage inventory in
-``_record_design_coverage`` deliberately takes that tolerance, and its own
+``record_design_coverage`` deliberately takes that tolerance, and its own
 docstring records why: tightening it would make Modelo 232's legitimately
 skipped ``TABLAS`` lookup tab refuse the whole modelo.
 
 **This gate does not share that tolerance and does not need to.** It calls
-:meth:`~._record_design_schema.RecordDesignExtraction.require_complete` and
+:meth:`~.record_design_schema.RecordDesignExtraction.require_complete` and
 converts the refusal into its own diagnostic, because a design whose record body
 was skipped understates the modelo and would hand back an inflated coverage
 figure that nothing downstream could tell from a real one -- the exact false
@@ -126,7 +126,7 @@ from ....core.resources import resolve_corpus_binary
 from .._export_field_kind import CasillaFieldKind
 from .export import derive_export_layouts_from_bindings
 from .record_design import _naturaleza_or_none, extract_record_design
-from ._record_design_schema import RecordDesignField, RecordDesignSheet
+from .record_design_schema import RecordDesignField, RecordDesignSheet
 from .schema import (
     AuxiliaryEnvelopeHeaderDefinition,
     ExportFieldDefinition,
@@ -489,7 +489,7 @@ def _required_positions(sheet: RecordDesignSheet) -> tuple[_RequiredPosition, ..
     Where AEAT *desglosa* a printed field into sub-fields, THE SUB-FIELDS ARE THE
     POSITIONS and the parent's own span is not one. The parent is a printed
     grouping whose extent
-    :attr:`~._record_design_schema.RecordDesignField.components` deliberately
+    :attr:`~.record_design_schema.RecordDesignField.components` deliberately
     leaves intact for geometry consumers; asking a layout to write the group as a
     single position asks it to write the wrong thing.
 

@@ -7,7 +7,8 @@ from datetime import date
 import pytest
 
 from .....core.resources import resources
-from .....domain.calculations.registry import FormulaDefinition, FormulaExpression, InputKind, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition, FormulaExpression, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from ..errors import CalcSheetsEngineError
 from .._layout import plan_layout
 

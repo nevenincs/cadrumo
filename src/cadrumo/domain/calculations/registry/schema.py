@@ -239,7 +239,7 @@ __all__ = [
 
 from .convenio import ConvenioAuthority
 from .modelo_localization import resolve_modelo_localization
-from ._schema_base import (
+from .schema_base import (
     GOVERNANCE_STAMP,
     MANIFEST_ONLY,
     SCHEMA_FAMILY,
@@ -262,7 +262,7 @@ from ._schema_base import (
     manifest_only_fields,
     schema_family_fields,
 )
-from ._schema_exports import (
+from .schema_exports import (
     AuxiliaryEnvelopeHeaderDefinition,
     ExportComputedKey,
     ExportDraftAttribute,
@@ -281,15 +281,15 @@ from ._schema_exports import (
     ProjectionEndpointDeclaration,
     export_semantic_payload_axis,
 )
-from ._schema_extraction import BboxAnchorSpec, ExtractionProfileDefinition, ExtractionTargetDefinition
-from ._schema_formula import (
+from .schema_extraction import BboxAnchorSpec, ExtractionProfileDefinition, ExtractionTargetDefinition
+from .schema_formula import (
     BracketEntry,
     DatedValue,
     FormulaExpression,
     KeyedBracketEntry,
     ParameterDefinition,
 )
-from ._schema_references import (
+from .schema_references import (
     LegalParameter,
     LegalReference,
     PeriodSelector,
@@ -298,7 +298,7 @@ from ._schema_references import (
     SourceReference,
     TemporalApplicability,
 )
-from ._schema_surfaces import (
+from .schema_surfaces import (
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,
     CasillaAlias,

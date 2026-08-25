@@ -16,7 +16,8 @@ import pytest
 from ....core import ActionConditionality, ActionEvidenceProvenance, BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import TerminalPreconditionErrorMixin
 from ....core.resources import resources
-from ....domain.calculations.registry import DataBindingDefinition, IvaLedgerObservation, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import (
     InvoiceKind,

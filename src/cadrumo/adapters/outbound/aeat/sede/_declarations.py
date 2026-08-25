@@ -44,12 +44,12 @@ from .....core.time import now
 # cross-domain snapshot check with the registry validator. build_snapshot
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this declarations path.
-from .....domain.calculations.registry import (
-    RegistrySnapshot,
-    RegistryValidationError,
-    RemoteStateGuardPolicy,
-    previous_filing_observation_requirements,
-    registry_snapshot_id,
+from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
+from .....domain.calculations.registry.bindings import previous_filing_observation_requirements
+from .....domain.calculations.registry.snapshot_coordinate import registry_snapshot_id
+from .....domain.calculations.registry.relations import (
     relation_source_requirements,
     source_presence_gaps,
 )
@@ -123,7 +123,7 @@ from .errors import (
 
 if TYPE_CHECKING:
     from .....application.auth.session_types import AeatSession
-    from .....domain.calculations.registry import ModeloRevision
+    from .....domain.calculations.registry.schema import ModeloRevision
 
 
 log = get_logger(__name__)

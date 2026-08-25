@@ -19,7 +19,7 @@ from pydantic import AnyUrl
 
 from .....core import is_aeat_csv
 from .....core.identity import AeatCsv
-from .....domain.calculations.registry import (
+from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,

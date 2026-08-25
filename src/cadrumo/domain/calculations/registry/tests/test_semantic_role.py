@@ -24,7 +24,7 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .. import load_modelo_path
+from cadrumo.domain.calculations.registry.loader import load_modelo_path
 from ..schema import (
     CasillaAlias,
     CasillaConstraints,

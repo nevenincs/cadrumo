@@ -12,7 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core import IvaDeductionFactKind, Period
-from ...domain.calculations.registry import IvaLedgerObservation
+from ...domain.calculations.registry.bindings import IvaLedgerObservation
 from ...domain.iva import (
     EUMemberState,
     InputClassification,

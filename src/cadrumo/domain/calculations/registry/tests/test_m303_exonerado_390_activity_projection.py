@@ -20,7 +20,7 @@ from ....modelos import (
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
 )
-from .. import project_m303_exonerado_390_activity_rows
+from cadrumo.domain.calculations.registry.m303_exonerado_390_projection import project_m303_exonerado_390_activity_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -150,7 +150,7 @@ def test_applicable_evidence_refuses_noncontiguous_rows_and_an_unreferenced_mode
 
 
 def test_projection_identity_never_uses_json_serialisation() -> None:
-    from .. import _m303_exonerado_390_projection as module
+    import cadrumo.domain.calculations.registry.m303_exonerado_390_projection as module
 
     source = inspect.getsource(module)
     assert "model_dump_json" not in source

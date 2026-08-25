@@ -43,7 +43,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import DeudaDireccion, ObjetoTributario, Period
 from .....core.config import Settings
 from .....core.identity import AeatClaveLiquidacion
-from .....domain.calculations.registry import RemoteStateGuardPolicy
+from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from ._adapter_utils import assert_read_landing
 
 __all__ = [

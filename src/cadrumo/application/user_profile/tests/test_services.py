@@ -12,7 +12,7 @@ from cadrumo.application.user_profile.validation import ProfileValidationService
 from ....core import Modelo, Period
 from ....core.errors import BaseSeverity
 from ....core.resources import resources
-from ....domain.calculations.registry import ProfileKeyGrounding
+from cadrumo.domain.calculations.registry.profile_grounding import ProfileKeyGrounding
 from ....domain.user_profile.labels import profile_field_label
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import ProfileSchemaDefinition

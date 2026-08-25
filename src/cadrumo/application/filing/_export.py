@@ -68,20 +68,24 @@ from ...core.atomic_write import atomic_write_bytes
 from ...core.hashing import hash_file, sha256_file, sha256_hex
 from ...core.logging import get_logger
 from ...core.time import now
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     BindingId,
+    RecordId,
+)
+from ...domain.calculations.registry.schema import (
     CasillaFieldKind,
     ExportLayoutDefinition,
     FilingEnvelopeDefinition,
     FilingEnvelopePrefixFieldDeclaration,
     FilingEnvelopePrefixRole,
-    RecordId,
     RegistrySnapshot,
-    RegistryValidationError,
+)
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.export_parse import (
     parse_export_payload,
-    render_fixed_width_export_field,
     xml_dictionary_entries,
 )
+from ...domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from ...domain.filing import (
     FilingExportError,
     FilingExportValidationError,

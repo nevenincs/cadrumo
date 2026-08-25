@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from datetime import datetime
     from pathlib import Path
 
-    from ....domain.calculations.registry import RegistryModeloObservation
+    from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
     from .._observations_repository import ObservationEnvelopePayload
 
 

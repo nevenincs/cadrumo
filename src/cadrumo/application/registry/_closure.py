@@ -14,7 +14,10 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, StringConstraints, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...domain.calculations.registry import ModeloId, RevisionId
+from ...domain.calculations.registry.ids import (
+    ModeloId,
+    RevisionId,
+)
 
 __all__ = [
     "RegistryClosureEvidence",

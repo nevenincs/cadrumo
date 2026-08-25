@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core import validated_casilla_id
-from .. import expression_casilla_refs
+from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ._modelo_100_registry_support import (
     _AUTONOMIC_DEDUCTION_ART_77_REF,
     _BASE_IMPONIBLE_AHORRO_CASILLA,

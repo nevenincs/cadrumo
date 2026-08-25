@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import RecordDesignField, RecordDesignSheet
+from cadrumo.domain.calculations.registry.record_design import RecordDesignField, RecordDesignSheet
 from ..record_design import _bracketed_payload_positions, contiguity_failure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

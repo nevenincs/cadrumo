@@ -33,14 +33,14 @@ from ...adapters.persistence.storage import (
 from ...core import BindingSourceKind, CalculationSourceLineageRole, IntracomOperationType, Modelo, Period
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
-from ...domain.calculations.registry import (
-    BindingId,
+from ...domain.calculations.registry.bindings import (
     InvoiceObservation,
-    RegistryValidationError,
     is_m347_declarante_summary_invoice_binding,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogueRepositoryProtocol,

@@ -25,7 +25,7 @@ import pytest
 from .....core import M347_THRESHOLD_EUR, BindingSourceKind
 from .....core.aggregation import BindingAggregationOp
 from ..binding_selector_utils import selector_as_dict
-from .._invoice_bindings import InvoiceObservation, resolve_invoice_binding_values
+from ..invoice_bindings import InvoiceObservation, resolve_invoice_binding_values
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

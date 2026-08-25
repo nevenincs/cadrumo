@@ -71,7 +71,7 @@ from ...core.aggregation import (
     RetencionScheme,
 )
 from ...domain.calculations import DirectRowMaterializationProvenance, RowCasillaKey
-from ...domain.calculations.registry import WithholdingObservation
+from ...domain.calculations.registry.bindings import WithholdingObservation
 from ...domain.modelos import LedgerFilingSnapshot
 from ._atribucion_member import AtribucionMemberSourceResolver
 from ._business_proportion import business_proportion

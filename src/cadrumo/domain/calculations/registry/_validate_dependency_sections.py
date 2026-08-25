@@ -24,7 +24,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....core import BindingSourceKind
-from ._bindings_previous_filing import previous_filing_source_reference
+from .bindings_previous_filing import previous_filing_source_reference
 from .ids import BindingId
 from .schema import (
     ConstructDefinition,

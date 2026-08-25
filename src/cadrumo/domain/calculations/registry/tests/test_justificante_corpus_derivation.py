@@ -20,7 +20,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .....core.resources import bundled_path
-from .. import RegistryCatalogues, RegistryValidator
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

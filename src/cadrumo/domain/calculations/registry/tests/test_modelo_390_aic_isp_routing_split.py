@@ -36,8 +36,8 @@ import pytest
 
 from .....core import IvaDeductionFactKind
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
-from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
-from .._ledger_bindings import iva_ledger_selector
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+from ..ledger_bindings import iva_ledger_selector
 from ..loader import load_registry_tree
 from ._gate_support import fragment_declaring
 from ._ledger_iva_aggregation_support import _deduction_provenance

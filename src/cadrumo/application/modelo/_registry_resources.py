@@ -25,11 +25,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core import Period
-from ...domain.calculations.registry import RevisionId
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos import ModeloError
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import ValidatedRegistryAuthority
+    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 def registry_root() -> Path:
@@ -64,7 +64,7 @@ def reject_unknown_revision(*, modelo: str, revision_id: RevisionId) -> None:
     revision map, this raises :class:`ModeloError` with the available revision
     ids.
     """
-    from ...domain.calculations.registry import RegistrySnapshotError
+    from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     try:
         modelo_def = authority_via_resources().modelo(modelo)
@@ -86,7 +86,8 @@ def reject_unknown_period_for_revision(*, modelo: str, revision_id: RevisionId, 
     with no declared schedule is accepted here; a missing revision is also left
     alone because :func:`reject_unknown_revision` owns that refusal.
     """
-    from ...domain.calculations.registry import RegistrySnapshotError, selector_period_matches_request
+    from ...domain.calculations.registry.errors import RegistrySnapshotError
+    from ...domain.calculations.registry.period_selector_match import selector_period_matches_request
 
     try:
         modelo_def = authority_via_resources().modelo(modelo)

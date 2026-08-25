@@ -8,7 +8,9 @@ import pytest
 
 from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
-from .. import FormulaExpression, ParameterId, build_snapshot
+from cadrumo.domain.calculations.registry.schema import FormulaExpression
+from cadrumo.domain.calculations.registry.ids import ParameterId
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
 from ..binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo
 

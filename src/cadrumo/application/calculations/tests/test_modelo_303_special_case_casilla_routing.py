@@ -41,7 +41,8 @@ import pytest
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from ....domain.calculations.registry import calculate_registry_snapshot, resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.iva import (
     IvaCategory,
 )

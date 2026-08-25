@@ -22,15 +22,10 @@ from ....core import (
     ResultDisposition,
 )
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    CasillaFieldKind,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    RegistryValidationError,
-    project_m303_regimen_simplificado_rows,
-    resolve_m303_regimen_simplificado_snapshot,
-)
+from cadrumo.domain.calculations.registry.schema import CasillaFieldKind, ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection import project_m303_regimen_simplificado_rows
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     ActividadNoAgricolaSimplificado,

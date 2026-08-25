@@ -33,11 +33,11 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...core.time import now, today_madrid
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
-    LegalRefId,
     derive_modelo_applicability,
 )
+from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.deadlines import (
     DeadlineEngine,
     DeadlineValidationError,
@@ -49,7 +49,10 @@ from ...domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS, add_prescripti
 from .errors import OverviewExplainError
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import DeadlineWindowDefinition, ModeloRevision
+    from ...domain.calculations.registry.schema import (
+        DeadlineWindowDefinition,
+        ModeloRevision,
+    )
 
 _ProfileFactValue = str | bool | int
 """Closed value type for the explain payload's ``profile_facts`` map.

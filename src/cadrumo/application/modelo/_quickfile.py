@@ -51,7 +51,7 @@ from ...core import AeatProductSoftwareIdentity, PaymentElection, Period, PriorD
 from ...core.errors import CadrumoError
 from ...core.identity import BucketId
 from ...core.logging import get_logger
-from ...domain.calculations.registry import RevisionId
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevision,

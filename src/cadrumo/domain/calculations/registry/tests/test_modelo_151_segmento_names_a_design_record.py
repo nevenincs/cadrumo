@@ -33,8 +33,8 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .. import extract_record_design
-from .._record_design_coverage import build_diseno_coverage_report
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from ..record_design_coverage import build_diseno_coverage_report
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

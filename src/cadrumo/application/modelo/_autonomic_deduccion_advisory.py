@@ -45,7 +45,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import CasillaId
-from ...domain.calculations.registry import RegistrySnapshot
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos import (
     ModeloError,
     ModeloVerificationFinding,

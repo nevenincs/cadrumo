@@ -57,15 +57,15 @@ from pydantic import BaseModel
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, CasillaId
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
-from ...domain.calculations.registry import (
-    BindingId,
-    InputKind,
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_casilla_refs,
 )
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import (
+    from ...domain.calculations.registry.schema import (
         DataBindingDefinition,
         FormulaExpression,
         ModeloRevision,

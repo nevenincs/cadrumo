@@ -28,8 +28,8 @@ from .....core.decimal import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money, 
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
-from .....domain.calculations.registry import (
-    RegistryValidationError,
+from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,

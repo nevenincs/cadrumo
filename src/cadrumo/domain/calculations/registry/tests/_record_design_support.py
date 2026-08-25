@@ -11,12 +11,10 @@ from reportlab.pdfgen import canvas
 
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
-from .. import (
-    CasillaFieldKind,
-    RecordDesignSheet,
-    build_snapshot,
-    resolve_export_layout,
-)
+from cadrumo.domain.calculations.registry.schema import CasillaFieldKind
+from cadrumo.domain.calculations.registry.record_design import RecordDesignSheet
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from ..binding_selector_utils import BindingFixedExportSelector, binding_export_selector
 from ..record_design import (
     build_diseno_coverage_report,

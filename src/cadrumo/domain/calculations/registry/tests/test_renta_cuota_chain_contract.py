@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
-from .. import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

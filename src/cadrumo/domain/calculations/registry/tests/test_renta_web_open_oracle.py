@@ -20,7 +20,7 @@ from ..remote_state_guard import (
     assert_remote_operation_allowed,
     remote_state_policy_from_cross_reference,
 )
-from .._renta_web_open_oracle import (
+from ..renta_web_open_oracle import (
     RentaWebOpenOracle,
     _overall_verdict,
     _parse_decimal_text,
@@ -203,7 +203,7 @@ def test_verify_payload_without_driver_is_unverifiable_not_live_implementation()
 
 
 def test_verify_payload_rejects_label_keyed_expected_mapping_before_replay() -> None:
-    from .._renta_web_open_oracle import RentaWebOpenReplayDriver
+    from ..renta_web_open_oracle import RentaWebOpenReplayDriver
 
     raw = json.dumps(
         {
@@ -348,7 +348,7 @@ def test_replay_payload_roundtrip_via_renta_web_open_driver() -> None:
     Renta WEB Open replay driver round-trips the same envelope faithfully."""
 
     from ..live_parity import ReplayPayload
-    from .._renta_web_open_oracle import RentaWebOpenReplayDriver
+    from ..renta_web_open_oracle import RentaWebOpenReplayDriver
 
     raw = json.dumps(
         {
@@ -384,7 +384,7 @@ def test_replay_payload_roundtrip_via_renta_web_open_driver() -> None:
 
 
 def test_renta_web_open_replay_driver_requires_observed_by_casilla_id() -> None:
-    from .._renta_web_open_oracle import RentaWebOpenReplayDriver
+    from ..renta_web_open_oracle import RentaWebOpenReplayDriver
 
     raw = json.dumps(
         {
@@ -407,7 +407,7 @@ def test_replay_payload_strict_rejects_extra_fields_renta_web_open() -> None:
 
 
 def test_live_payload_strict_rejects_legacy_scrape_field_names() -> None:
-    from .._renta_web_open_oracle import parse_renta_web_open_live_payload
+    from ..renta_web_open_oracle import parse_renta_web_open_live_payload
 
     raw = json.dumps(
         {
@@ -421,7 +421,7 @@ def test_live_payload_strict_rejects_legacy_scrape_field_names() -> None:
 
 
 def test_live_payload_rejects_display_number_keyed_overrides() -> None:
-    from .._renta_web_open_oracle import parse_renta_web_open_live_payload
+    from ..renta_web_open_oracle import parse_renta_web_open_live_payload
 
     raw = json.dumps(
         {

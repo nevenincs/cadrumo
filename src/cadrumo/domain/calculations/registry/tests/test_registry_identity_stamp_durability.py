@@ -28,7 +28,7 @@ import pytest
 from ..... import __version__
 from .....core.atomic_write import atomic_write_best_effort_text
 from .....tests.attribute_scope import scoped_attribute
-from .. import _loader_cache as loader_cache
+from .. import loader_cache as loader_cache
 from ..identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     RegistryIdentityOrigin,
@@ -38,7 +38,7 @@ from ..identity import (
     resolve_registry_identity,
 )
 from ..loader import clear_fingerprint_cache
-from .._loader_cache import _bundled_registry_root, _bundled_root_match
+from ..loader_cache import _bundled_registry_root, _bundled_root_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -65,7 +65,7 @@ def _registry_root(tmp_path: Path) -> Path:
 def durability_bundled_root_pointing_at() -> Iterator[Callable[[Path], None]]:
     """Redirect the bundled registry root at a caller-chosen real tree.
 
-    Rebinds inside ``_loader_cache``, which holds its own reference to
+    Rebinds inside ``loader_cache``, which holds its own reference to
     ``bundled_path``; patching ``core.resources`` would leave the predicate
     calling the original. Both memoised roots are cleared on repoint.
     """

@@ -574,7 +574,7 @@ def test_a_section_holding_only_a_nested_fragment_is_refused_as_empty(tmp_path: 
     "populated" by one and read as empty by the other. This exercises the
     collector directly, bypassing ``_validate_section_fragment_names``'s
     categorical refusal of ANY nested section subdirectory in
-    ``_loader_cache.py`` (which makes this scenario unreachable through the
+    ``loader_cache.py`` (which makes this scenario unreachable through the
     full ``load_modelo_directory`` pipeline), to prove the one-level reading
     holds standalone: a section directory holding ONLY a nested fragment
     contributes nothing and is refused, rather than passing as populated on

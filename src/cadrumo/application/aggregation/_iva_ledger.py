@@ -62,13 +62,13 @@ from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
     validate_investment_asset_reciprocity,
 )
-from ...domain.calculations.registry import (
-    BindingId,
+from ...domain.calculations.registry.bindings import (
     IvaLedgerObservation,
-    ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
 )
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva import (
     EUMemberState,
     InputClassification,

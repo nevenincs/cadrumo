@@ -43,13 +43,8 @@ import pytest
 
 from ....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    IvaLedgerObservation,
-    RegistryCalculationResult,
-    calculate_registry_snapshot,
-    resolve_available_bound_inputs_by_casilla_id,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_available_bound_inputs_by_casilla_id, resolve_ledger_iva_aggregation_binding_values
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,

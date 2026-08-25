@@ -19,18 +19,16 @@ from .....core import (
 from .....core.i18n import tr
 from .....core.resources import bundled_path
 from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
-from .. import (
-    InputKind,
-    RegistryValidationError,
-    RegistryValidator,
-    build_snapshot,
-    clasificar_casillas_oficiales,
-    extract_record_design,
-    initial_value_casilla_ids,
-    load_catalogue_file,
-    project_m303_prorrata_activity_rows,
-    resolve_record_design_binary,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from cadrumo.domain.calculations.registry.formula_initial_values import initial_value_casilla_ids
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from cadrumo.domain.calculations.registry.m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
+from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
 from ..formula_initial_values import initial_values
 from ._registry_schema_support import _committed_modelo
 

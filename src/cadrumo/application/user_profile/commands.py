@@ -16,7 +16,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ElidedProse, Hex64Str, Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.identity import ProfileId
-from ...domain.calculations.registry import RevisionId
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 
 __all__ = [

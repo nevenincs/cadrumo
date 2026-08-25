@@ -44,7 +44,7 @@ import pytest
 from .....core import BindingSourceKind
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
-from .._bindings_previous_filing import is_direct_previous_filing_binding
+from ..bindings_previous_filing import is_direct_previous_filing_binding
 from ..schema import DataBindingDefinition, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

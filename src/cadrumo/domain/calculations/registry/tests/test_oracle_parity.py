@@ -29,7 +29,7 @@ from ..live_parity import (
     pre_flight_oracle_operations,
 )
 from ..remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
-from .._renta_web_open_oracle import RentaWebOpenOracle
+from ..renta_web_open_oracle import RentaWebOpenOracle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

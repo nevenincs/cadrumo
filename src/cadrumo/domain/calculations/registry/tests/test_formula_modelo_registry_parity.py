@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import RegistryValidator
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

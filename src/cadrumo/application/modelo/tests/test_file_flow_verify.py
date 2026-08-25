@@ -454,7 +454,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     # BLOCKING_RULE path explicitly: the work unit was anchored at a
     # year that predates the modelo's earliest revision, so verify's
     # registry-snapshot resolution still fails.
-    from ....domain.calculations.registry import CasillaObservation
+    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
     from ....domain.modelos import (
         CalculationRevision,
         derive_calculation_revision_id,

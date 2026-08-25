@@ -11,7 +11,7 @@ from ......application.auth.providers import AuthProvider, select_provider
 from ......application.modelo._workflow_gate import build_revision_deadline_window_checker
 from ......core import AuthProviderKind, Period
 from ......core.config import Settings
-from ......domain.calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ......domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
 from ......domain.filing import ModeloDraft, ModeloValidationFinding
 from ......domain.submission import DeadlineWindowChecker, ModeloDraftStatus

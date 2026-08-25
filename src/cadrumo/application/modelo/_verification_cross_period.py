@@ -24,10 +24,12 @@ from decimal import Decimal
 
 from ...core import ActionEvidenceProvenance, Modelo
 from ...core.decimal import coerce_decimal_strict
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     LegalRefId,
-    Modelo202Modality,
     SourceRefId,
+)
+from ...domain.calculations.registry.applicability import (
+    Modelo202Modality,
     derive_modelo_202_modality,
     derive_not_applicable_source_modelos,
 )
@@ -175,7 +177,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
     dependency is scoped out as a first-year no-fractional-payment obligation;
     fail-closed otherwise.
     """
-    from ...domain.calculations.registry import RegistrySnapshotError
+    from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     try:
         snapshot = _authority_via_resources().snapshot(

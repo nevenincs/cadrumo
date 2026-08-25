@@ -46,9 +46,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from ....core import ExportLayoutFormat
 from .authority import ValidatedRegistryAuthority
 from .ids import ModeloId, RevisionId
-from ._record_design_coverage import calculation_closure_casilla_ids
+from .record_design_coverage import calculation_closure_casilla_ids
 from .schema import CalculationClass, EvidenceTier, ModeloDefinition, ModeloRevision
-from ._schema_surfaces import CasillaContinuidadEvolutionDefinition
+from .schema_surfaces import CasillaContinuidadEvolutionDefinition
 
 __all__ = [
     "ModeloEntry",

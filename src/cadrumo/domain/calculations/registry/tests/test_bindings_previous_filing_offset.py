@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._bindings_previous_filing import _derive_offset_source_anchor
+from ..bindings_previous_filing import _derive_offset_source_anchor
 from ..errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

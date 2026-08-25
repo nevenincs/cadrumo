@@ -20,11 +20,9 @@ import pytest
 
 from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistrySnapshot,
-    calculate_registry_snapshot,
-    enum_consumed_binding_ids,
-)
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from .. import _filing_binding_values, _string_inputs_for_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -34,7 +34,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import CasillaId
-from ...domain.calculations.registry import ModeloRevision
+from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic
 
 __all__ = ["collect_official_box_unpopulated_diagnostics"]
@@ -69,7 +69,7 @@ def collect_official_box_unpopulated_diagnostics(
     """
     # Lazy imports avoid the calculate/verification action cycle. The domain
     # registry owns predicate syntax; the verification module owns evaluation.
-    from ...domain.calculations.registry import (
+    from ...domain.calculations.registry.schema_verification import (
         VerificationPredicateOperator,
         parse_verification_predicate_expression,
     )

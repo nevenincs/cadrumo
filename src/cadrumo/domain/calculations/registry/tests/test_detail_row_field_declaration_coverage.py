@@ -46,25 +46,17 @@ from pydantic import BaseModel
 
 from .....core import Modelo
 from .....core.resources import resources
-from .. import (
-    AtributionMemberObservation,
-    DonativoDonorObservation,
-    InvoiceObservation,
-    Modelo720RowObservation,
-    RefundOperationObservation,
-    RelatedPartyOperationObservation,
-    WithholdingObservation,
-)
-from .._detail_record_bindings import (
+from cadrumo.domain.calculations.registry.bindings import AtributionMemberObservation, DonativoDonorObservation, InvoiceObservation, Modelo720RowObservation, RefundOperationObservation, RelatedPartyOperationObservation, WithholdingObservation
+from ..detail_record_bindings import (
     _AtributionRowField,
     _ForeignAssetRowField,
     _RefundRowField,
     _RelatedPartyRowField,
 )
-from .._donativo_bindings import _DonativoRowField
+from ..donativo_bindings import _DonativoRowField
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from .._invoice_bindings import _InvoiceRowField
-from .._withholding_bindings import _WithholdingRowField
+from ..invoice_bindings import _InvoiceRowField
+from ..withholding_bindings import _WithholdingRowField
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

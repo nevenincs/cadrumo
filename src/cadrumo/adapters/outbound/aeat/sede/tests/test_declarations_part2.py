@@ -7,9 +7,7 @@ from collections.abc import Mapping
 import pytest
 
 from ......core import CasillaValueKind, Period, validated_casilla_id, validated_casilla_id_map
-from ......domain.calculations.registry import (
-    previous_filing_source_reference,
-)
+from cadrumo.domain.calculations.registry.bindings import previous_filing_source_reference
 from .._declarations_observations import (
     _observed_header_facts_from_submitted_file,
     _submitted_file_coverage_for_casillas,

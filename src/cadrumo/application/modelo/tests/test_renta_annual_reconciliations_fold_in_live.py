@@ -70,10 +70,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import AggregationCaptureKind, BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistryModeloObservation,
-    WithholdingObservation,
-)
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, WithholdingObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings

@@ -44,16 +44,20 @@ from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId
-from ....domain.calculations.registry import (
+from ....domain.calculations.registry.ids import (
     BindingId,
-    BracketEntry,
-    CasillaDefinition,
-    InputKind,
-    ModeloRevision,
-    ParameterDefinition,
     ParameterId,
     RelationId,
     RevisionId,
+)
+from ....domain.calculations.registry.schema import (
+    BracketEntry,
+    CasillaDefinition,
+    ModeloRevision,
+    ParameterDefinition,
+)
+from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_date_binding_refs,
     expression_parameter_refs,

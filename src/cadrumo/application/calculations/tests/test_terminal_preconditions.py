@@ -24,12 +24,9 @@ from ....core import (
 )
 from ....core.errors import TerminalPreconditionErrorMixin
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import (
-    CasillaObservation,
-    RegistryModeloObservation,
-    load_registry_tree,
-    select_revision,
-)
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,

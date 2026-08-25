@@ -34,16 +34,8 @@ import pytest
 
 from ....core import Modelo
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import (
-    ApplicabilityVerdict,
-    TaxRoute,
-    derive_modelo_applicability,
-    derive_tax_route,
-    has_applicability_rule,
-    iter_modelo_applicability_rules,
-    taxpayer_model_is_declared,
-    verify_legal_catalogue,
-)
+from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, TaxRoute, derive_modelo_applicability, derive_tax_route, has_applicability_rule, iter_modelo_applicability_rules, taxpayer_model_is_declared
+from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,

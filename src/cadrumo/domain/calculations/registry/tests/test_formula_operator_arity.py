@@ -12,7 +12,7 @@ from ..errors import RegistryValidationError
 from .._formula_operator_contracts import FORMULA_OPERATOR_ARITIES
 from ..formula_runtime_ops import evaluate_args_op
 from ..schema import FormulaExpression
-from .._schema_base import FormulaOperator
+from ..schema_base import FormulaOperator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

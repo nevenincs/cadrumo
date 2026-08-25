@@ -36,7 +36,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ....domain.modelos import Modelo184MemberRow
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -200,7 +200,7 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     # Fabricate a revision with a synthetic unknown source by wrapping the real one.
     # model_construct bypasses Literal validation so we can inject a source value that
     # is not in the accepted set — exactly what the gate should detect and reject.
-    from ....domain.calculations.registry import DataBindingDefinition
+    from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
 
     revision = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision
     # Build a synthetic binding with a novel source kind via model_construct (no validators).

@@ -18,7 +18,8 @@ from ..errors import ResourceNotFoundError
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:
-    from ....domain.calculations.registry import ModeloDefinition, ValidatedRegistryAuthority
+    from ....domain.calculations.registry.schema import ModeloDefinition
+    from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
@@ -38,9 +39,7 @@ class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
     def _resolve_authority(self) -> ValidatedRegistryAuthority:
         if self._authority is not None:
             return self._authority
-        from ....domain.calculations.registry import (
-            ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
-        )
+        from ....domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
         from .._boundary import bundled_path
 
         root = self._root or bundled_path("registry", "aeat")
@@ -55,7 +54,7 @@ class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
 
     @override
     def _load(self, key: str) -> ModeloDefinition:
-        from ....domain.calculations.registry import RegistrySnapshotError
+        from ....domain.calculations.registry.errors import RegistrySnapshotError
 
         authority = self._resolve_authority()
         try:

@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._detail_record_bindings import foreign_asset_binding_row_field
+from ..detail_record_bindings import foreign_asset_binding_row_field
 from ..errors import RegistryValidationError
 from ..schema import DataBindingDefinition
 

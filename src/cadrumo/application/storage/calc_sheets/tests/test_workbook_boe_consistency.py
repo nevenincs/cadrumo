@@ -31,7 +31,7 @@ import pytest
 from .....application.filing import build_runtime_schema_provider
 from .....core import ExportLayoutFormat, Period
 from .....core.resources import resources
-from .....domain.calculations.registry import CasillaFieldKind, ExportLayoutDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import CasillaFieldKind, ExportLayoutDefinition, RegistrySnapshot
 from .. import build_export_plan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

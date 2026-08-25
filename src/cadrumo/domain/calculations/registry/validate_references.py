@@ -12,14 +12,14 @@ from typing import TYPE_CHECKING
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .schema import InputKind, ModeloRevision
-from ._validate_cross_domain_snapshot import (
+from .validate_cross_domain_snapshot import (
     CROSS_DOMAIN_SNAPSHOT_CHECKS,
     check_cross_domain_snapshot_routing,
 )
-from ._validate_cross_domain_snapshot import (
+from .validate_cross_domain_snapshot import (
     CrossDomainSnapshotCheck as CrossDomainSnapshotCheck,
 )
-from ._validate_cross_domain_snapshot import (
+from .validate_cross_domain_snapshot import (
     register_cross_domain_snapshot_check as register_cross_domain_snapshot_check,
 )
 from ._validate_reference_checker import IdReferenceChecker as _IdReferenceChecker

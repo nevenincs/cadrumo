@@ -58,7 +58,7 @@ def test_retention_family_has_a_production_prune_call_site(field: str, wiring: t
 
 
 def test_registry_disk_cache_accessor_has_no_project_root_fallback() -> None:
-    source = (_CADRUMO_ROOT / "domain/calculations/registry/_loader_cache.py").read_text(encoding="utf-8")
+    source = (_CADRUMO_ROOT / "domain/calculations/registry/loader_cache.py").read_text(encoding="utf-8")
     assert "PROJECT_ROOT" not in source, (
         "the registry disk-cache accessor must derive its opt-in fallback from "
         "cadrumo_local_storage_root, never a PROJECT_ROOT literal that resolves "

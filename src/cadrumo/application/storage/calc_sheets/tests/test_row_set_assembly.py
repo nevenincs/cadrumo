@@ -12,7 +12,8 @@ import pytest
 
 from .....adapters.outbound.google import RowSetCellEdit, RowSetEdit
 from .....core.resources import resources
-from .....domain.calculations.registry import Modelo720RowObservation, RegistryValidationError
+from cadrumo.domain.calculations.registry.bindings import Modelo720RowObservation
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from .. import assemble_row_sets_for_snapshot, collect_row_sets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

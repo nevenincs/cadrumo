@@ -53,7 +53,7 @@ from datetime import datetime
 from typing import Final
 
 from ...core import IvaCompensationStateProvenance, Modelo, ResultDisposition
-from ...domain.calculations.registry import RegistryModeloObservation
+from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ..calculations import (
     CalculationObservationRepository,

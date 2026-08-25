@@ -19,7 +19,7 @@ from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.identity import BucketId
 from ...core.time import UtcInstant
-from ...domain.calculations.registry import LegalRefId
+from ...domain.calculations.registry.ids import LegalRefId
 from ._aggregator import ReviewQueue
 from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
 from .errors import ReviewError

@@ -25,21 +25,11 @@ from ....core import (
 )
 from ....core.resources import bundled_path
 from ....domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult
-from ....domain.calculations.registry import (
-    CasillaFieldKind,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    FilingEnvelopeDefinition,
-    FilingEnvelopePrefixFieldDeclaration,
-    FilingEnvelopePrefixRole,
-    RegistrySnapshot,
-    RegistrySnapshotRef,
-    bundled_authority,
-    extract_record_design,
-    load_modelo_directory,
-    resolve_m303_regimen_simplificado_snapshot,
-)
+from cadrumo.domain.calculations.registry.schema import CasillaFieldKind, ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition, FilingEnvelopeDefinition, FilingEnvelopePrefixFieldDeclaration, FilingEnvelopePrefixRole, RegistrySnapshot, RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.deadlines import (
     ChargeAccount,

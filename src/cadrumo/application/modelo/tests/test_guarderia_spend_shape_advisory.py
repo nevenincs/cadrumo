@@ -39,7 +39,7 @@ import pytest
 
 from ....core import CasillaId, Modelo
 from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ....domain.contribuyente import (
     DescendantInfo,
     GuarderiaMonthSpend,

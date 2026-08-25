@@ -34,10 +34,10 @@ from .errors import (
     RegistryLoadError,
     RegistryValidationError,
 )
-from ._export_semantics import ExportComputedKey, ExportDraftAttribute
+from .export_semantics import ExportComputedKey, ExportDraftAttribute
 from .identity import RegistryIdentity, resolve_registry_identity, stamped_cache_key_tuples
 from .ids import RevisionId
-from ._loader_cache import (
+from .loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
     MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
     ModeloSource,
@@ -47,20 +47,20 @@ from ._loader_cache import (
     toml_file_fingerprint,
     validate_modelo_directory_source,
 )
-from ._loader_cache import (
+from .loader_cache import (
     ModeloRevisionSource as _ModeloRevisionSource,
 )
-from ._loader_fingerprints import (
+from .loader_fingerprints import (
     _registry_fingerprint_cache,
     bind_tree_fingerprint_collectors,
 )
-from ._loader_fingerprints import (
+from .loader_fingerprints import (
     clear_fingerprint_cache as _clear_fingerprint_cache,
 )
-from ._loader_fingerprints import (
+from .loader_fingerprints import (
     collect_registry_tree_fingerprints_for_cache as _collect_fingerprints_for_cache,
 )
-from ._loader_fingerprints import (
+from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
 )
 from .modelo_localization import (
@@ -534,7 +534,7 @@ def _revision_section_fragment_paths(section_dirs: tuple[Path, ...]) -> tuple[Pa
     The listing is narrowed to files, which is what the emptiness question
     always meant: a directory named ``*.toml`` is not a fragment. Nothing of
     the sort can exist anyway -- :func:`_validate_section_fragment_names`
-    (``_loader_cache.py``, run for every section directory before a fragment
+    (``loader_cache.py``, run for every section directory before a fragment
     tree is merged) refuses ANY subdirectory nested inside a section
     directory outright -- so the narrowing restates an upstream categorical
     block rather than introducing a new rule.

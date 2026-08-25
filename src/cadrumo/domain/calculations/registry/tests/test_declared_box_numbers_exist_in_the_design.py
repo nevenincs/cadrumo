@@ -38,8 +38,8 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import resources
-from .. import ModeloRevision
-from .._record_design_coverage import _CASILLA_TAG_RE
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from ..record_design_coverage import _CASILLA_TAG_RE
 from .test_revision_span_matches_published_designs import _designs_by_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -42,7 +42,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import Period, validated_casilla_id
 from ....core.resources import resources
 from ....core.time import now
-from ....domain.calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

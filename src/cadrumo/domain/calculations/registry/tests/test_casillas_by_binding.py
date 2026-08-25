@@ -25,14 +25,9 @@ from pydantic import ValidationError
 
 from .....core import validated_casilla_id
 from .....core.aggregation import BindingSourceKind
-from .. import (
-    CasillaDefinition,
-    ModeloRevision,
-    PeriodSelector,
-    bound_casilla_binding_ids,
-    bundled_authority,
-    casillas_by_binding,
-)
+from cadrumo.domain.calculations.registry.schema import CasillaDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.bindings import bound_casilla_binding_ids, casillas_by_binding
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

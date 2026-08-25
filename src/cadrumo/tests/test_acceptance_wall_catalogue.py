@@ -145,7 +145,7 @@ def _run_pytest_subprocess(
     ``#66``/``#24``. Pinning the rootdir to the module's own directory and
     clearing ``testpaths`` confines collection to the explicit node, so no
     shared-temp walk happens. (Mirrors the identical guard in
-    ``registry/tests/test_loader_cache_isolation.py``.) In-tree callers pass
+    ``registry/tests/testloader_cache_isolation.py``.) In-tree callers pass
     ``None`` and keep the repository rootdir.
     """
     argv = [

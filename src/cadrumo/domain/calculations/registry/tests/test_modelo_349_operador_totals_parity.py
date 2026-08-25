@@ -54,12 +54,7 @@ import pytest
 
 from .....core.aggregation import BindingSourceKind
 from .....tests.registry_tree import bundled_registry_tree
-from .. import (
-    InvoiceObservation,
-    Modelo349OperadorTotalsParity,
-    compute_modelo_349_operador_totals_parity,
-    resolve_invoice_binding_values,
-)
+from cadrumo.domain.calculations.registry.bindings import InvoiceObservation, Modelo349OperadorTotalsParity, compute_modelo_349_operador_totals_parity, resolve_invoice_binding_values
 from ._modelo_349_registry_support import _modelo_349_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -39,7 +39,7 @@ from ...domain.bienes_inversion import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
-from ...domain.calculations.registry import SourceReference
+from ...domain.calculations.registry.schema import SourceReference
 from ...domain.deadlines import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevisionAmendmentKind,

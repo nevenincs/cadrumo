@@ -14,11 +14,8 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistrySnapshot,
-    SourceReference,
-    resolve_m303_regimen_simplificado_snapshot,
-)
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot, SourceReference
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing import FilingExportError
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision

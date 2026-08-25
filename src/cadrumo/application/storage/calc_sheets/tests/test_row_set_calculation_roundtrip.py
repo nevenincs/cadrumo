@@ -19,7 +19,7 @@ from .....adapters.persistence.profile.transactions import TransactionCatalogueR
 from .....core import BindingSourceKind, Period
 from .....core.hashing import content_hash_hex
 from .....core.resources import resources
-from .....domain.calculations.registry import Modelo720RowObservation
+from cadrumo.domain.calculations.registry.bindings import Modelo720RowObservation
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .....tests.profile_capsule import seed_test_profile_record
 from .....tests.secure_sql import isolated_runtime_profile

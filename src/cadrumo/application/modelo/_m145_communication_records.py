@@ -54,16 +54,18 @@ from ...domain.buckets import (
     BucketEventType,
     bucket_event_history_write,
 )
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.schema import (
     CasillaDefinition,
     ExportRecordDefinition,
     ModeloRevision,
     RegistrySnapshot,
-    RevisionId,
+)
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.casilla_membership import (
     casillas_by_id,
-    resolve_export_layout,
     undeclared_casilla_ids,
 )
+from ...domain.calculations.registry.export import resolve_export_layout
 from ...domain.modelos import ModeloError, ModeloExportError
 from ._m145_communication import (
     M145_COMMUNICATION_MODELO,

@@ -69,14 +69,18 @@ from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.schema import (
     CasillaDefinition,
-    CasillaObservation,
     DataBindingDefinition,
-    InputKind,
-    LegalRefId,
     RegistrySnapshot,
+)
+from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.ids import (
+    LegalRefId,
     SourceRefId,
+)
+from ...domain.calculations.registry.applicability import (
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )
@@ -1431,7 +1435,10 @@ def _resolve_verification_snapshot(
     findings: list[ModeloVerificationFinding],
     failures_by_finding_id: dict[int, ModeloPreconditionFailure],
 ) -> RegistrySnapshot | None:
-    from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
+    from ...domain.calculations.registry.errors import (
+        RegistrySnapshotError,
+        RegistryValidationError,
+    )
 
     try:
         authority = _authority_via_resources()

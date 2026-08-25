@@ -30,13 +30,15 @@ from typing import TYPE_CHECKING
 
 from ...core import CasillaId, Period, validated_casilla_id
 from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     BindingId,
+    RelationId,
+)
+from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
-    RelationId,
-    resolve_available_bound_inputs_by_casilla_id,
 )
+from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.modelos import WorkUnit
 from ..aggregation import CalculationSourceResolution, merge_source_resolutions_by_precedence
 from ._binding_resolution import (

@@ -12,7 +12,7 @@ import pytest
 
 from ....core import BindingSourceKind
 from ....core.resources import resources
-from ....domain.calculations.registry import binding_profile_keys
+from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys
 from ...aggregation import AtribucionMemberSourceResolver
 from .._data_inventory import _LIVE_OBSERVATION_SOURCE_KINDS, _profile_keys_for_bindings
 

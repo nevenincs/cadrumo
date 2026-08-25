@@ -17,7 +17,8 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .. import RegistryCatalogues, RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..schema import ExtractionProfileDefinition, ModeloDefinition
 from ..validate import RegistryValidator
 from ._gate_support import catalogues_for_m130_gate_tests

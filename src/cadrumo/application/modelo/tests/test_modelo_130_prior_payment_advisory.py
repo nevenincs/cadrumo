@@ -46,10 +46,8 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    ModeloRevision,
-    RegistryModeloObservation,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

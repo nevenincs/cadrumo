@@ -58,36 +58,40 @@ from ...core.resources import bundled_path
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.schema import (
     CalculationCompletenessManifest,
     CasillaConstraints,
     CasillaDefinition,
     DataBindingDefinition,
     ExportLayoutDefinition,
     FormulaDefinition,
-    FormulaId,
-    LegalRefId,
     ModeloDefinition,
     ModeloRevision,
-    RateBoxPartition,
-    RegistryFailureCondition,
     RegistrySnapshot,
+    SourceReference,
+)
+from ...domain.calculations.registry.ids import (
+    FormulaId,
+    LegalRefId,
+    RevisionId,
+    SourceRefId,
+)
+from ...domain.calculations.registry.rate_box_partition import (
+    RateBoxPartition,
+    derive_rate_box_partitions,
+)
+from ...domain.calculations.registry.errors import (
+    RegistryFailureCondition,
     RegistrySnapshotError,
     RegistryValidationError,
-    RevisionId,
-    SourceReference,
-    SourceRefId,
-    ValidatedRegistryAuthority,
-    collect_registry_tree_fingerprints,
-    derive_rate_box_partitions,
-    expression_casilla_refs,
-    fold_reconciliation_total_casilla_ids,
-    registry_scalar_value_type,
-    revision_reference_identity_failures,
 )
-from ...domain.calculations.registry import (
-    clear_fingerprint_cache as _clear_loader_fingerprint_cache,
-)
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.loader import collect_registry_tree_fingerprints
+from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
+from ...domain.calculations.registry.schema_verification import fold_reconciliation_total_casilla_ids
+from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type
+from ...domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
+from ...domain.calculations.registry.loader import clear_fingerprint_cache as _clear_loader_fingerprint_cache
 from ...domain.filing import CasillaCollection, CasillaSchema, registry_schema_version
 from .errors import ModeloApplicationError as ModeloBuilderError
 

@@ -250,14 +250,14 @@ class TestNoWriteSurface:
 
     def test_read_guard_refuses_a_write_method(self) -> None:
         """No censal navigation may use a mutating HTTP method."""
-        from ......domain.calculations.registry import RegistryValidationError
+        from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
         with pytest.raises(RegistryValidationError):
             _assert_read_http("POST", _CENSAL_URL)
 
     def test_read_guard_refuses_an_off_aeat_host(self) -> None:
         """A redirect off the AEAT apex fails closed."""
-        from ......domain.calculations.registry import RegistryValidationError
+        from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
         with pytest.raises(RegistryValidationError):
             _assert_read_http("GET", f"https://example.invalid{_AEAT.sede_paths.censal_datos}")

@@ -47,7 +47,7 @@ from .m303_orden_raw_models import (
     M303AnnualOrdenRawSeasonalIndex,
     M303AnnualOrdenSourceCensus,
 )
-from ._schema_references import SourceReference
+from .schema_references import SourceReference
 from .errors import RegistryLoadError, RegistryValidationError
 
 _SIDECAR_PREPROCESSOR_ID = "normatives-html"

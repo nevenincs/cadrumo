@@ -14,7 +14,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import M210GrossIncomeSourceMode, M210PayerMode, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import load_modelo_directory
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import Modelo210AgrupacionRentaRow
 from ....domain.transactions import BusinessClassification, M210IncomeClassification, TransactionDirection

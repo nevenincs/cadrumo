@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
-from .._record_design_coverage import calculation_closure_casilla_ids
+from ..record_design_coverage import calculation_closure_casilla_ids
 from ..schema import CasillaContinuidadEvolutionDefinition, ModeloDefinition, RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..validate import RegistryValidator

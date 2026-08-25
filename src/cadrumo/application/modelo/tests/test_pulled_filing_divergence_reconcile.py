@@ -58,14 +58,10 @@ import pytest
 
 from ....core import CasillaId, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    CasillaDefinition,
-    DataBindingDefinition,
-    InputKind,
-    ModeloRevision,
-    RegistryModeloObservation,
-)
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.schema import CasillaDefinition, DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

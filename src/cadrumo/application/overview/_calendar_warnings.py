@@ -26,10 +26,8 @@ from types import MappingProxyType
 from ...core import Modelo as _Modelo
 from ...core import Period as _Period
 from ...core.external_constants import IVA_REGIME_MODELOS
-from ...domain.calculations.registry import PayerFact as _PayerFact
-from ...domain.calculations.registry import (
-    iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
-)
+from ...domain.calculations.registry.applicability import PayerFact as _PayerFact
+from ...domain.calculations.registry.applicability import iter_modelo_applicability_rules as _iter_modelo_applicability_rules
 from ...domain.deadlines import IrpfEstimationRegime as _IrpfEstimationRegime
 from ...domain.deadlines import IVARegime as _IVARegime
 from ..operator_actions import DeclaredNextAction

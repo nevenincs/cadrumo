@@ -28,9 +28,7 @@ from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
-from .....domain.calculations.registry import (
-    RemoteStateGuardPolicy,
-)
+from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response

@@ -14,15 +14,14 @@ from ..manager import ApiStubManager, DriftResult, ScaffoldResult
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_public_type_aliases_have_one_canonical_facade_target(tmp_path: Path) -> None:
-    """Public PEP 695 aliases are indexed once at their intended facades."""
+def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) -> None:
+    """Public PEP 695 aliases are indexed once at their defining modules."""
     manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
 
     manager.scaffold()
 
     core_api_text = (tmp_path / "api" / "cadrumo.core.rst").read_text(encoding="utf-8")
     identity_api_text = (tmp_path / "api" / "cadrumo.core.identity.rst").read_text(encoding="utf-8")
-    registry_api_text = (tmp_path / "api" / "cadrumo.domain.calculations.registry.rst").read_text(encoding="utf-8")
     all_stub_text = "\n".join(path.read_text(encoding="utf-8") for path in (tmp_path / "api").glob("*.rst"))
     assert ".. py:data:: CasillaId\n   :module: cadrumo.core" in core_api_text
     assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity" in identity_api_text
@@ -32,8 +31,6 @@ def test_public_type_aliases_have_one_canonical_facade_target(tmp_path: Path) ->
     assert all_stub_text.count(".. py:data:: TaxIdIdentityToken\n") == 1
     assert all_stub_text.count(".. py:data:: SubjectTaxId\n") == 1
     assert all_stub_text.count(".. py:data:: ContentDigest\n") == 1
-    assert ".. py:function:: collect_registry_tree_fingerprints" in registry_api_text
-    assert all_stub_text.count(".. py:function:: collect_registry_tree_fingerprints\n") == 1
 
 
 def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: Path) -> None:

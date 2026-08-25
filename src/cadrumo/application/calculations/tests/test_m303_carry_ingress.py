@@ -10,7 +10,8 @@ import pytest
 
 from ....core import CasillaId, Modelo, ObservedHeaderFact, Period, ResultDisposition
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation, casillas_by_id
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,

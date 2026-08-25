@@ -32,11 +32,9 @@ from .....application.storage.calc_sheets import (
 )
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import resources
-from .....domain.calculations.registry import (
-    InputKind,
-    NoRevisionForPeriodError,
-    calculate_registry_snapshot,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....domain.period import calculation_filing_date
 from .._calc_sheets_pull import (
     BindingEdit,

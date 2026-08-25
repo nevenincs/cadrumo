@@ -8,7 +8,8 @@ import pytest
 
 from ....core import M303RegimenSimplificadoFact, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import M303RegimenSimplificadoSnapshot, resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     ActividadNoAgricolaSimplificado,

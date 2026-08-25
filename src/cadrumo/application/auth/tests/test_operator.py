@@ -19,7 +19,7 @@ from ....core import AuthProviderKind, ClaveMovilRoute, NoRecoveryOutcome, Perio
 from ....core.config import Settings, load_settings, override_settings
 from ....core.time import frozen_clock
 from ....domain.buckets import BucketEventType
-from ....domain.calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ....domain.filing import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from ....domain.submission import ModeloDraftStatus
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture

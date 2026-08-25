@@ -73,9 +73,7 @@ _PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
     "cadrumo.core": ("CasillaId",),
     "cadrumo.core.identity": ("ContentDigest", "SubjectTaxId", "TaxIdIdentityToken"),
 }
-_PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {
-    "cadrumo.domain.calculations.registry": ("collect_registry_tree_fingerprints",),
-}
+_PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {}
 
 # Pydantic materialises generic bases on each concrete consumer with the
 # defining class's original ``__module__``/``__qualname__``.  Autodoc would

@@ -34,11 +34,8 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistryCalculationResult,
-    RelationId,
-    calculate_registry_snapshot,
-)
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.ids import RelationId
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest

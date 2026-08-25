@@ -41,17 +41,17 @@ from ....core.identity import IdentityError, validate_spanish_tax_id
 from ....core.logging import get_logger
 from ....core.resources import bundled_path
 from ....core.time import now
-from ....domain.calculations.registry import (
+from ....domain.calculations.registry.schema import (
     BboxAnchorSpec,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
     ModeloRevision,
     RegistrySnapshot,
-    RegistrySnapshotError,
     RegistrySnapshotRef,
-    ValidatedRegistryAuthority,
-    casillas_by_id,
 )
+from ....domain.calculations.registry.errors import RegistrySnapshotError
+from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ..pdf import (
     PRESENTADOR_NIF_LABEL,
     SPANISH_AMOUNT_GROUP,

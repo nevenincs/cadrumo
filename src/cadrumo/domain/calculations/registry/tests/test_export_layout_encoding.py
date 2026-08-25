@@ -15,7 +15,7 @@ from pydantic import ValidationError
 
 from .....core import ExportLayoutFormat
 from ..._export_field_kind import CasillaFieldKind
-from .. import bundled_authority
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from ..schema import (
     ExportFieldDefinition,
     ExportLayoutDefinition,

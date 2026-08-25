@@ -27,7 +27,8 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from .. import CasillaFieldKind, ExportFieldDefinition, resolve_export_layout
+from cadrumo.domain.calculations.registry.schema import CasillaFieldKind, ExportFieldDefinition
+from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from ..authority import bundled_authority
 from ..snapshot import build_snapshot
 from ..support_matrix import build_support_matrix

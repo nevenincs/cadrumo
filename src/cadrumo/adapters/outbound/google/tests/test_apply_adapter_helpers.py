@@ -35,7 +35,7 @@ from .....application.storage.calc_sheets import (
     TabName,
 )
 from .....core import CasillaId, Period, validated_casilla_id
-from .....domain.calculations.registry import LegalRefId
+from cadrumo.domain.calculations.registry.ids import LegalRefId
 from .._calc_sheets_apply import (
     _build_structural_cleanup_requests,
     _coerce_cell_value,

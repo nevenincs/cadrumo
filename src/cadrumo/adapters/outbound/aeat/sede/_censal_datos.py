@@ -56,7 +56,7 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.parsing import parse_date
 from .....core.time import now
-from .....domain.calculations.registry import (
+from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,

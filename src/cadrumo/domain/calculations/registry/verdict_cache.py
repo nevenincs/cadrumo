@@ -40,7 +40,7 @@ from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.external_constants import UTF_8_ENCODING
 from ._compiled_cache import loader_code_fingerprint
 from .identity import RegistryIdentity
-from ._loader_cache import is_bundled_registry_root
+from .loader_cache import is_bundled_registry_root
 
 SourceEvidenceFingerprintTuples = tuple[tuple[str, int, int], ...]
 """``(path, size, mtime_ns)`` tuples for source-evidence files (no content digest)."""

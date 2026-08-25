@@ -63,44 +63,30 @@ from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import CasillaId as _CasillaId
 from ...core import validated_casilla_id as _validated_casilla_id
 from ...core.resources import bundled_path as _bundled_path
-from ...domain.calculations.registry import BindingId as _BindingId
-from ...domain.calculations.registry import CasillaDefinition as _CasillaDefinition
-from ...domain.calculations.registry import DataBindingDefinition as _DataBindingDefinition
+from ...domain.calculations.registry.ids import BindingId as _BindingId
+from ...domain.calculations.registry.schema import CasillaDefinition as _CasillaDefinition
+from ...domain.calculations.registry.schema import DataBindingDefinition as _DataBindingDefinition
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
-from ...domain.calculations.registry import ExportLayoutId as _ExportLayoutId
-from ...domain.calculations.registry import (
-    InputKind as _InputKind,
-)
-from ...domain.calculations.registry import LegalRefId as _LegalRefId
-from ...domain.calculations.registry import ModeloDefinition as _ModeloDefinition
-from ...domain.calculations.registry import (
-    RegistryFiledStateComparison as _RegistryFiledStateComparison,
-)
-from ...domain.calculations.registry import RegistryModeloObservation as _RegistryModeloObservation
-from ...domain.calculations.registry import RegistrySnapshot as _RegistrySnapshot
-from ...domain.calculations.registry import RelationId as _RelationId
-from ...domain.calculations.registry import SourceRefId as _SourceRefId
-from ...domain.calculations.registry import (
-    ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
-)
-from ...domain.calculations.registry import WorkbookParityRefId as _WorkbookParityRefId
-from ...domain.calculations.registry import (
-    calculate_registry_snapshot as _calculate_registry_snapshot,
-)
-from ...domain.calculations.registry import (
-    compare_calculation_to_filed_observation as _compare_calculation_to_filed_observation,
-)
-from ...domain.calculations.registry import (
-    resolve_previous_filing_binding_values as _resolve_previous_filing_binding_values,
-)
-from ...domain.calculations.registry import (
-    resolve_relation_values_from_observations as _resolve_relation_values_from_observations,
-)
-from ...domain.calculations.registry import undeclared_casilla_ids as _undeclared_casilla_ids
-from ...domain.calculations.registry import verification_tolerance_or_exact as _verification_tolerance_or_exact
-from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
+from ...domain.calculations.registry.ids import ExportLayoutId as _ExportLayoutId
+from ...domain.calculations.registry.schema_input_kind import InputKind as _InputKind
+from ...domain.calculations.registry.ids import LegalRefId as _LegalRefId
+from ...domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
+from ...domain.calculations.registry.filed_state import RegistryFiledStateComparison as _RegistryFiledStateComparison
+from ...domain.calculations.registry.bindings import RegistryModeloObservation as _RegistryModeloObservation
+from ...domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
+from ...domain.calculations.registry.ids import RelationId as _RelationId
+from ...domain.calculations.registry.ids import SourceRefId as _SourceRefId
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
+from ...domain.calculations.registry.ids import WorkbookParityRefId as _WorkbookParityRefId
+from ...domain.calculations.registry.formula_runtime import calculate_registry_snapshot as _calculate_registry_snapshot
+from ...domain.calculations.registry.filed_state import compare_calculation_to_filed_observation as _compare_calculation_to_filed_observation
+from ...domain.calculations.registry.bindings import resolve_previous_filing_binding_values as _resolve_previous_filing_binding_values
+from ...domain.calculations.registry.relations import resolve_relation_values_from_observations as _resolve_relation_values_from_observations
+from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids as _undeclared_casilla_ids
+from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact as _verification_tolerance_or_exact
+from ...domain.calculations.registry.legal import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ._closure import (
     RegistryClosureEvidence,

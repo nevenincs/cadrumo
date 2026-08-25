@@ -9,7 +9,7 @@ import pytest
 
 from ....core import CasillaId
 from ....core.resources import resources
-from ....domain.calculations.registry import VerificationPredicateDefinition
+from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,

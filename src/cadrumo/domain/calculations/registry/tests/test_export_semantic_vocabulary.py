@@ -11,13 +11,7 @@ from .....core import (
     M303ProrrataActivityProjectionRef,
 )
 from ..._export_field_kind import CasillaFieldKind
-from .. import (
-    ExportComputedKey,
-    ExportDraftAttribute,
-    ExportFieldDefinition,
-    ExportSemanticPayloadAxis,
-    export_semantic_payload_axis,
-)
+from cadrumo.domain.calculations.registry.schema import ExportComputedKey, ExportDraftAttribute, ExportFieldDefinition, ExportSemanticPayloadAxis, export_semantic_payload_axis
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

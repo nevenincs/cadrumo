@@ -91,7 +91,7 @@ _REFERENCE_ELISION = "..."
 if TYPE_CHECKING:
     from ...adapters.inbound.declaracion import InboundDeclaracionObservation
     from ...core import Period
-    from ...domain.calculations.registry import CasillaDefinition
+    from ...domain.calculations.registry.schema import CasillaDefinition
     from ...domain.justificante import Justificante
     from ...domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue
 
@@ -968,7 +968,7 @@ def _reconcile_declaracion_casillas(
     if revision is None:
         return [], [_totals_not_reconciled("no_persisted_revision", modelo=modelo)]
 
-    from ...domain.calculations.registry import casillas_by_id
+    from ...domain.calculations.registry.casilla_membership import casillas_by_id
 
     revision_casillas = casillas_by_id(snapshot.revision)
     filed_values = _decimal_declaracion_values(declaracion)

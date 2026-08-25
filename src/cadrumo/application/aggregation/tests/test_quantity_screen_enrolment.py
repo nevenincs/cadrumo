@@ -34,7 +34,8 @@ from ....adapters.persistence.tests.runtime_profile_fixture import (
 from ....core import Period
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from ....domain.calculations.registry import ModeloRevision, screened_quantity_families
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.ledger_binding_resolution import screened_quantity_families
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,

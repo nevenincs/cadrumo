@@ -32,13 +32,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry import (
-    ExportFieldDefinition,
-    ExportJustification,
-    ExportPadding,
-    ExportRecordDefinition,
-    pad_fixed_width_text,
-)
+from cadrumo.domain.calculations.registry.schema import ExportFieldDefinition, ExportRecordDefinition
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportJustification, ExportPadding, pad_fixed_width_text
 from .._export import _RecordRenderRow, _render_record
 from ._export_support import _approved_registry_draft, _typed_producer_snapshot
 

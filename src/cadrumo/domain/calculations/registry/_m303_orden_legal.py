@@ -39,7 +39,7 @@ from .m303_orden_source import (
     shared_annual_orden_activity_table,
     validate_pinned_boe_orden_source,
 )
-from ._schema_references import LegalReference, SourceReference
+from .schema_references import LegalReference, SourceReference
 
 
 def compile_annual_orden_legal_references(

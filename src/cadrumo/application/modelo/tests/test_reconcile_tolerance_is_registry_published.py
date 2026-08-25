@@ -36,7 +36,7 @@ from .._reconcile_casilla import (
 )
 
 if TYPE_CHECKING:
-    from ....domain.calculations.registry import RegistrySnapshot
+    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

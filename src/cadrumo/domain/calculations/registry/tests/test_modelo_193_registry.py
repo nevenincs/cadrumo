@@ -11,14 +11,11 @@ from .....core import CasillaId
 from .....core.resources import bundled_path
 from .....domain.deadlines import shift_deadline
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from .. import (
-    RegistryValidator,
-    build_snapshot,
-    calculate_registry_snapshot,
-    relation_source_requirements,
-    resolve_available_bound_inputs_by_casilla_id,
-    resolve_relation_values_from_observations,
-)
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.relations import relation_source_requirements, resolve_relation_values_from_observations
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

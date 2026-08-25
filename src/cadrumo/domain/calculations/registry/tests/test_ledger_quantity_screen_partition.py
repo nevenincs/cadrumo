@@ -20,12 +20,12 @@ from decimal import Decimal
 
 import pytest
 
-from .. import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..ledger_binding_resolution import (
     assert_quantity_readers_cover_independent_facts,
     independent_quantity_facts,
 )
-from .._ledger_bindings import (
+from ..ledger_bindings import (
     _IVA_ALTERNATIVE_MEASURE_FACTS,
     _IVA_INDEPENDENT_QUANTITY_FACTS,
     _IVA_SUPPORTED_FACTS,

@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 
 from ....core import Modelo
-from ....domain.calculations.registry import CasillaFieldKind, parse_export_payload
+from cadrumo.domain.calculations.registry.schema import CasillaFieldKind
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from ....domain.filing import FilingExportError
 from .. import GeneralFilingProfileFacts, build_filing_producer_snapshot
 from .._export import (

@@ -35,7 +35,8 @@ from ...domain.bienes_inversion import (
     compute_registro_regularizacion,
     compute_registro_transmisiones,
 )
-from ...domain.calculations.registry import BindingId, ModeloRevision
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva import m303_annual_settlement_period_tokens
 from ..aggregation import (
     CalculationSourceContext,

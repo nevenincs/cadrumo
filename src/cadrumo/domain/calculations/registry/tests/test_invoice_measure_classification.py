@@ -22,8 +22,8 @@ from collections import defaultdict
 import pytest
 from pydantic import BaseModel
 
-from .. import RegistryValidationError
-from .._invoice_bindings import (
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from ..invoice_bindings import (
     _INVOICE_ALTERNATIVE_MEASURE_FACTS,
     _INVOICE_FACTS,
     _INVOICE_INDEPENDENT_QUANTITY_FACTS,

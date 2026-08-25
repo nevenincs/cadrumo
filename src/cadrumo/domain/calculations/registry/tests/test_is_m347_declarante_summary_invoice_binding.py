@@ -28,7 +28,7 @@ from __future__ import annotations
 import pytest
 
 from ..errors import RegistryValidationError
-from .._invoice_bindings import is_m347_declarante_summary_invoice_binding
+from ..invoice_bindings import is_m347_declarante_summary_invoice_binding
 from ..schema import DataBindingDefinition
 from ._registry_schema_support import _committed_modelo
 

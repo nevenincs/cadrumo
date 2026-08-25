@@ -29,7 +29,7 @@ from ....core.directory_scan import (
     iter_directory,
 )
 from ....domain.buckets import BucketEventType
-from ....domain.calculations.registry import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import (
     ChargeAccount,
     IVARegime,

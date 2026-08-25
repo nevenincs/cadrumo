@@ -32,7 +32,8 @@ from .....application.registry import (
 )
 from .....core import BindingSourceKind, RegistryAuthorityGrade
 from .....domain.filing import ModeloBuilderError
-from .. import DataBindingDefinition, ModeloRevision, PeriodSelector, selector_model_for_source
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.bindings import selector_model_for_source
 from ..authority import bundled_authority
 from ..bindings import validate_binding_selector_shape
 

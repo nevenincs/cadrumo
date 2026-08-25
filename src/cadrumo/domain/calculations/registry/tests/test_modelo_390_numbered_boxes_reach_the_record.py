@@ -34,11 +34,9 @@ import re
 import pytest
 
 from .....core.resources import bundled_path
-from .. import (
-    bundled_authority,
-    derive_export_layouts_from_bindings,
-    extract_record_design,
-)
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

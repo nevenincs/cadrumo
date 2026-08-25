@@ -10,7 +10,7 @@ import pytest
 
 from ....core import BindingSourceKind, Period
 from ....domain.calculations import RowSourceIdentity
-from ....domain.calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloBindingValue,
     ModeloDraft,

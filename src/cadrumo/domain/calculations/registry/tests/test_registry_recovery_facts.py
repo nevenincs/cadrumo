@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import resources
-from .._applicability_modelo202 import Modelo202Modality, modelo_202_modality_from_inputs
+from ..applicability_modelo202 import Modelo202Modality, modelo_202_modality_from_inputs
 from ..errors import RegistryFailureCondition, RegistryValidationError
 from ..queries import RegistryQueryService, _casilla_detail_report
 from ..snapshot import _check_snapshot_filing_capability
@@ -22,8 +22,8 @@ _RECOVERY_PROSE_MODULES = (
     "_queries.py",
     "_snapshot.py",
     "_loader.py",
-    "_loader_cache.py",
-    "_loader_fingerprints.py",
+    "loader_cache.py",
+    "loader_fingerprints.py",
 )
 _FORBIDDEN_RECOVERY_FRAGMENTS = (
     "aeat config profile edit",

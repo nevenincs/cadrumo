@@ -9,7 +9,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-load-topology-reference]]'
   - '[[2026-08-14-registry-temporal-coverage-research]]'
 modified: '2026-08-25'
-body_hash: 'sha256:e2bfb4d372311cad1c6cacb7222eda6a9eef8c1db52f08eb6f9f79206d0515f4'
+body_hash: 'sha256:63306824ba870ef2283072035806b8335e27009ad614a0ee72bb48b163158cb1'
 ---
 
 <!-- RETIRED: S31 -->
@@ -108,6 +108,7 @@ Refuse or advise at the authority and snapshot resolution boundary, which execut
 - [x] `W02.P05.S49` - Acquire and hash-pin distinct Modelo 721 2023 and 2024 technical contract packages with exact exercise applicability, then split or constrain law-selected revision scope without claiming unbounded technical-layout authority or promoting authority grade.; `src/cadrumo/_data/registry/aeat/modelos/721/; src/cadrumo/_data/registry/aeat/legal/; src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_721/; src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W02.P05.S50` - Acquire Modelo 763 opening-period and design-era authority, then split the revision at the evidenced 2012, 2015, and 4T-2018 boundaries with period-aware selectors and complete deadlines without inventing unsupported windows or promoting authority grade.; `src/cadrumo/_data/registry/aeat/modelos/763/; src/cadrumo/_data/registry/aeat/legal/; src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_763/; src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W02.P05.S51` - Acquire and hash-pin the missing historical design eras or constrain unsupported claimed years for Modelos 126, 128, 165, 181, 184, 270, 308, 309, 341, 353, and 576, and adjudicate Modelo 180 ejercicio 2022 on the presentation axis, until the whole-tree claimed-year layout-design gate passes without backdating a newer design or inventing temporal coverage; `src/cadrumo/_data/corpus/aeat_official/disenos_registro, src/cadrumo/_data/registry/aeat/modelos, src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py`.
+- [ ] `W02.P05.S53` - Execute the accepted Modelo 200 exercise-2024 versus 2025-design ruling by atomically partitioning layout-correct 2024 and 2025 successors, or withdraw the premature filing layout and application link until that split is complete, without backdating the 2025 design, weakening the claimed-year gate, or promoting unsupported authority.; `src/cadrumo/_data/registry/aeat/modelos/200/; src/cadrumo/_data/registry/aeat/legal/is.toml; src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py; .vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 
 ### Phase `W02.P06` - coverage ledger reconciliation
 

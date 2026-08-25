@@ -12,7 +12,7 @@ package data observes a bounded window, and any other root -- an explicit
 specimen tree a caller can rewrite mid-run -- is walked afresh on every call.
 
 See Also:
-    :func:`~domain.calculations.registry._loader_cache.is_bundled_registry_root`
+    :func:`~domain.calculations.registry.loader_cache.is_bundled_registry_root`
         The sibling predicate that admits the registry tree to its own window.
 """
 
@@ -23,7 +23,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
-from ._loader_cache import BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS
+from .loader_cache import BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS
 
 SourceEvidenceFingerprint = tuple[tuple[str, int, int], ...]
 
@@ -51,7 +51,7 @@ def collect_source_evidence_fingerprints(
     Served from the cache only for roots inside the package-bundled data tree,
     which is read-only package data on the same premise the bundled registry
     window rests on, and only within
-    :data:`~domain.calculations.registry._loader_cache.BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS`
+    :data:`~domain.calculations.registry.loader_cache.BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS`
     -- one number for one premise rather than two that can drift apart. Any
     root outside that tree is a caller-supplied specimen tree that the run
     itself can rewrite, so it is never cached and never served.

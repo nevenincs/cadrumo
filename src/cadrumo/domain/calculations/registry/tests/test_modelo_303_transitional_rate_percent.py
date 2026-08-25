@@ -56,13 +56,9 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path, resources
 from .....tests.registry_tree import bundled_registry_tree
 from ....period import Period, calculation_filing_date
-from .. import (
-    RegistryCalculationResult,
-    build_snapshot,
-    calculate_registry_snapshot,
-    resolve_available_bound_inputs_by_casilla_id,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id, resolve_ledger_iva_aggregation_binding_values
 from ..errors import RegistryValidationError
 from ..loader import load_registry_tree
 

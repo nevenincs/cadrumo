@@ -40,7 +40,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import resources
-from .....domain.calculations.registry import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

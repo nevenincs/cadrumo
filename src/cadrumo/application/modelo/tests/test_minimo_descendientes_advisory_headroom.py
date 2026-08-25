@@ -37,7 +37,8 @@ from decimal import Decimal
 import pytest
 
 from ....core import validated_casilla_id
-from ....domain.calculations.registry import ModeloRevision, select_revision
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....tests.registry_tree import bundled_registry_tree
 from ...aggregation import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 from .._minimo_descendientes_advisory import (

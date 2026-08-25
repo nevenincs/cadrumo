@@ -16,7 +16,7 @@ entry is planted with a live stamp, so it is maximally fresh by construction and
 no sleep, TTL window or machine speed can make the proof vacuous.
 
 The package-bundled tree keeps its declared window and is pinned separately by
-:mod:`~domain.calculations.registry.tests.test_loader_cache_isolation`.
+:mod:`~domain.calculations.registry.tests.testloader_cache_isolation`.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.resources import bundled_path
-from .. import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 from ..loader import (
     _collect_registry_directory_fingerprints,
@@ -43,7 +43,7 @@ from ..loader import (
     is_bundled_registry_root,
     load_registry_tree,
 )
-from .._loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
+from ..loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 from ..verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,

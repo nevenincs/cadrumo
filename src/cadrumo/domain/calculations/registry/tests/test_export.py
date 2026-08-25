@@ -23,7 +23,8 @@ from pydantic import ValidationError
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
-from .. import ExportDraftAttribute, ExportJustification, ExportPadding
+from cadrumo.domain.calculations.registry.schema import ExportDraftAttribute
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportJustification, ExportPadding
 from ..binding_selector_utils import (
     BindingExportDataType,
     BindingFixedExportSelector,
@@ -37,7 +38,7 @@ from ..export import (
     export_fields_overlap,
 )
 from ..schema import CasillaFieldKind, DataBindingDefinition, ExportFieldDefinition, ModeloRevision
-from .._schema_exports import FilingEnvelopePrefixFieldDeclaration, FilingEnvelopePrefixRole
+from ..schema_exports import FilingEnvelopePrefixFieldDeclaration, FilingEnvelopePrefixRole
 from ._loader_directory_mode_support import _committed_modelo, _committed_registry_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

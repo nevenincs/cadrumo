@@ -58,7 +58,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from ...core import BindingSourceKind, CasillaId, Modelo, Period, ProrrataRegisterRegime
-from ...domain.calculations.registry import ModeloRevision
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.iva import (
     especial_mandatory_rule,
     is_m303_annual_settlement_period,

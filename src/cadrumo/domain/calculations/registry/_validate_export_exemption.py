@@ -99,7 +99,7 @@ from .schema import (
     ModeloDefinition,
     ModeloRevision,
 )
-from ._schema_references import SourceReference
+from .schema_references import SourceReference
 
 
 def _reaches_addressed_casilla(

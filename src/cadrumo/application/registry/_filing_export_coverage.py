@@ -14,17 +14,21 @@ from dataclasses import dataclass
 from pydantic import BaseModel, Field, computed_field, model_validator
 
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES, STRICT_FROZEN_CONFIG, RegistryAuthorityGrade
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
+    SourceReference,
+)
+from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
-    SourceReference,
-    ValidatedRegistryAuthority,
+)
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.temporal import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
-    verify_source_file,
 )
+from ...domain.calculations.registry.corpus_catalogue import verify_source_file
 from ._closure import (
     RegistryClosureEvidence,
     RegistryClosureLimb,

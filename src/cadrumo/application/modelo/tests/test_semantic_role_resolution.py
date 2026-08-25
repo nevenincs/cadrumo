@@ -10,7 +10,7 @@ import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos import ModeloError
 from .._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,

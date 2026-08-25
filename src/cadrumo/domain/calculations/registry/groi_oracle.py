@@ -12,7 +12,7 @@ from typing import override
 from pydantic import AnyUrl
 
 from ....core.config import Settings
-from ._checker_oracle_flow import CheckerDriver, CheckerOperationPlan, CheckerOracle
+from .checker_oracle_flow import CheckerDriver, CheckerOperationPlan, CheckerOracle
 from .ids import OracleId
 from .live_parity import LiveParityCatalogue, OracleEnvironment, OracleSurfaceKind
 

@@ -25,12 +25,8 @@ from ....domain.bienes_inversion import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from ....domain.calculations.registry import (
-    DataBindingDefinition,
-    ModeloRevision,
-    PeriodSelector,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import (
     IvaCashAccountingTreatment,
     IvaCategory,

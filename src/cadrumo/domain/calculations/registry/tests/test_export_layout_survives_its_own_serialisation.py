@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from .. import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.schema import ExportLayoutDefinition
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

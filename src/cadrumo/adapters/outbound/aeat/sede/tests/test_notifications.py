@@ -15,11 +15,8 @@ from pydantic import AnyUrl
 
 from ......application.auth.session_types import AeatSession
 from ......core.config import Settings
-from ......domain.calculations.registry import (
-    RegistryValidationError,
-    RemoteOperation,
-    assert_remote_operation_allowed,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests import FIXTURES_DIR
 from ......tests.aeat_literal_fixtures import (
     NOTIFICATION_ACKNOWLEDGE_PATH_CANARY,

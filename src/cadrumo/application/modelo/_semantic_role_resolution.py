@@ -24,7 +24,8 @@ from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
 from ...core import CasillaId, validated_casilla_id
-from ...domain.calculations.registry import RegistrySnapshot, RevisionId
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos import ModeloError
 
 

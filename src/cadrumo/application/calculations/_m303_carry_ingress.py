@@ -16,14 +16,12 @@ from typing import TYPE_CHECKING
 from ...core import Modelo, ResultDisposition, result_disposition_is_refund
 from ...core.errors import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.resources import bundled_path
-from ...domain.calculations.registry import (
-    CasillaObservation,
-    ModeloRevision,
-    casillas_by_id,
-    expression_casilla_refs,
-    load_registry_tree,
-    select_revision,
-)
+from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.casilla_membership import casillas_by_id
+from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
+from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -292,7 +290,7 @@ def _normalize_carry_observation(
     # ``observation`` is deliberately typed structurally at this private seam:
     # importing RegistryModeloObservation just to repeat the public envelope's
     # field contract makes no runtime distinction and obscures the policy.
-    from ...domain.calculations.registry import RegistryModeloObservation
+    from ...domain.calculations.registry.bindings import RegistryModeloObservation
 
     if not isinstance(observation, RegistryModeloObservation):
         raise M303CarryIngressError(

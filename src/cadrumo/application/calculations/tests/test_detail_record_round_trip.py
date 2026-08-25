@@ -20,13 +20,7 @@ import pytest
 
 from ....adapters.outbound.google import RowSetCellEdit
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    resolve_atribucion_binding_row_values,
-    resolve_foreign_asset_binding_row_values,
-    resolve_refund_binding_row_values,
-    resolve_related_party_binding_row_values,
-    resolve_withholding_binding_row_values,
-)
+from cadrumo.domain.calculations.registry.bindings import resolve_atribucion_binding_row_values, resolve_foreign_asset_binding_row_values, resolve_refund_binding_row_values, resolve_related_party_binding_row_values, resolve_withholding_binding_row_values
 from .._row_set_assembly import (
     assemble_atribucion_observations,
     assemble_foreign_asset_observations,

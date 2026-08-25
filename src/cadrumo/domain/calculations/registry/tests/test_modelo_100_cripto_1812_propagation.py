@@ -32,7 +32,9 @@ from decimal import Decimal
 import pytest
 
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
-from .. import BindingId, RegistrySnapshot, RelationId, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

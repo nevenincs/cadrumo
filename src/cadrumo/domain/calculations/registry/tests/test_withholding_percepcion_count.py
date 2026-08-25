@@ -19,7 +19,7 @@ import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
 from ..schema import DataBindingDefinition, ModeloRevision, PeriodSelector
-from .._withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
+from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

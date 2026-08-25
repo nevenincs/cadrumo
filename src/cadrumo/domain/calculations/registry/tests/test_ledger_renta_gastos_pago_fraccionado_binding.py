@@ -23,12 +23,8 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .. import (
-    build_snapshot,
-    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
-    unsupported_ledger_renta_gastos_pago_fraccionado_observations,
-    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
-)
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.bindings import resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values, unsupported_ledger_renta_gastos_pago_fraccionado_observations, validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition
 from ..binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo
 
@@ -199,12 +195,12 @@ def test_reachability_probe_is_not_tautological_against_a_mistyped_casilla_id() 
     passed, the probe would be validating "same digits" rather than "the
     real matcher accepts this shape", which is not the contract it claims.
     """
-    from .._ledger_bindings import _renta_gastos_pago_fraccionado_build_matcher
+    from ..ledger_bindings import _renta_gastos_pago_fraccionado_build_matcher
 
     revision = _modelo_130_snapshot().revision
     binding = next(binding for binding in revision.bindings if binding.id == _GASTOS_BINDING)
     selector_dict = selector_as_dict(binding)
-    from .._ledger_bindings import _RentaLedgerGastosPagoFraccionadoSelector
+    from ..ledger_bindings import _RentaLedgerGastosPagoFraccionadoSelector
 
     selector = _RentaLedgerGastosPagoFraccionadoSelector.model_validate(selector_dict)
     matcher = _renta_gastos_pago_fraccionado_build_matcher(selector)

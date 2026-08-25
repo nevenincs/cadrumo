@@ -49,7 +49,8 @@ from decimal import Decimal
 from typing import Final, NamedTuple
 
 from ...core import CasillaId
-from ...domain.calculations.registry import BindingId, LegalRefId, ModeloRevision, SourceRefId
+from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
+from ...domain.calculations.registry.schema import ModeloRevision
 from ._renta_income_ledger import RentaIncomeLedgerAggregation
 from ._source_mesh import CalculationSourceDiagnostic
 

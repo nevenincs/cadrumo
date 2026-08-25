@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....core import CasillaId, Modelo, Period, ResultDisposition, validated_casilla_id
-from ....domain.calculations.registry import CasillaObservation
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.modelos import (
     CalculationRevision,

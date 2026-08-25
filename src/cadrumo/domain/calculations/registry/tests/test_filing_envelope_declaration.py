@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._schema_exports import (
+from ..schema_exports import (
     FilingEnvelopeCloserDerivation,
     FilingEnvelopeDefinition,
     FilingEnvelopePrefixFieldDeclaration,

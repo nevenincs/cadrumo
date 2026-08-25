@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from ...core import Modelo, Period
-from ...domain.calculations.registry import ExportLayoutDefinition, RegistrySnapshot
+from ...domain.calculations.registry.schema import (
+    ExportLayoutDefinition,
+    RegistrySnapshot,
+)
 from ._producer_snapshot import (
     FilingProducerSnapshot,
     M303FilingFacts,

@@ -37,7 +37,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....domain.calculations.registry import IvaLedgerObservation
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,

@@ -23,10 +23,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import CasillaId, validated_casilla_id
-from ....domain.calculations.registry import (
-    CasillaObservation,
-    RegistryModeloObservation,
-)
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...calculations import ObservationEnvelopePayload
 from .. import empty_prior_filing_observations_fingerprint
 from .._review import _prior_filing_observations_fingerprint

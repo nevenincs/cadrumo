@@ -15,11 +15,8 @@ from decimal import Decimal
 import pytest
 
 from .....core import CasillaId, validated_casilla_id
-from .. import (
-    RegistryCalculationResult,
-    RegistrySnapshot,
-    calculate_registry_snapshot,
-)
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ..authority import ValidatedRegistryAuthority
 from ..binding_selector_utils import selector_as_dict
 from ..relations import (

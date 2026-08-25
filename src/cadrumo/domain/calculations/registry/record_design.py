@@ -40,7 +40,7 @@ from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ....core.paths import path_stat_fingerprint
 from ....core.tabular import coerce_cell_text
-from ._record_design_coverage import (
+from .record_design_coverage import (
     DerivedDisenoCasilla,
     DisenoCoverageReport,
     build_diseno_coverage_report,
@@ -50,7 +50,7 @@ from ._record_design_coverage import (
     derive_calculation_completeness_casillas,
     derive_diseno_coverage_casillas,
 )
-from ._record_design_schema import (
+from .record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_CONTENT,
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,

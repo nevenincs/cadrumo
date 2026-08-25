@@ -9,13 +9,8 @@ import pytest
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregationOp
 from .....core.resources import resources
-from .. import (
-    InputKind,
-    InventorySelector,
-    bound_casilla_binding_ids,
-    casillas_by_binding,
-    resolve_bound_casilla_binding_value,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.bindings import InventorySelector, bound_casilla_binding_ids, casillas_by_binding, resolve_bound_casilla_binding_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

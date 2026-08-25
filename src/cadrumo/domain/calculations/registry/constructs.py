@@ -14,7 +14,7 @@ from typing import Any
 from .errors import RegistrySnapshotError
 from .modelo_localization import resolve_modelo_localization
 from .schema import ModeloRevision
-from ._schema_base import LegalRefs, RegistryModel, SourceRefs
+from .schema_base import LegalRefs, RegistryModel, SourceRefs
 
 
 @dataclass(frozen=True, slots=True)

@@ -33,7 +33,8 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import CasillaId
-from ...domain.calculations.registry import ModeloRevision, casillas_by_id
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ..aggregation import CalculationSourceDiagnostic
 
 __all__ = ["collect_operator_override_divergence_diagnostics"]

@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import RegistryValidator
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

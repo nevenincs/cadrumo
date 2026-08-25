@@ -16,7 +16,7 @@ from ....application.calculations import (
 )
 from ....core import ObservedHeaderFact, Period, PriorDomiciliationElection, ResultDisposition
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentIdentity,

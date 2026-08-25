@@ -73,7 +73,7 @@ def test_iva_rate_table_singleton_loads_real_mapping() -> None:
 
 
 def test_legal_parameters_singleton_loads_real_mapping() -> None:
-    from .....domain.calculations.registry import LegalParameter
+    from cadrumo.domain.calculations.registry.schema import LegalParameter
 
     repo = LegalParameterRepository()
 

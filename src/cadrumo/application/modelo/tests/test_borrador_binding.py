@@ -19,12 +19,9 @@ from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.errors import ErrorCategory, get_registered_error_code
 from ....core.resources import resources
 from ....domain.buckets import BucketEventType
-from ....domain.calculations.registry import (
-    BindingId,
-    RegistrySnapshot,
-    RegistryValidationError,
-    RelationId,
-)
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ....domain.modelos import derive_calculation_revision_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path

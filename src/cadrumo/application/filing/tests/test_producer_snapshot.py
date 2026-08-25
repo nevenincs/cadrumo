@@ -30,7 +30,8 @@ from ....domain.bienes_inversion import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
-from ....domain.calculations.registry import RegistrySnapshotRef, resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines import (
     ChargeAccount,
     IVARegime,

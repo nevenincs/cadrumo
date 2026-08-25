@@ -36,8 +36,8 @@ from pydantic import AnyUrl, BaseModel
 from pydantic import ValidationError as PydanticValidationError
 
 from .....core.logging import get_logger
-from .....domain.calculations.registry import (
-    RegistryValidationError,
+from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,

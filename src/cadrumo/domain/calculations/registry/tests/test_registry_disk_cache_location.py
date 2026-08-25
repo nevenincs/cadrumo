@@ -17,7 +17,7 @@ from typing import Final
 import pytest
 
 from .....core import StorageCategory, storage_location
-from .._loader_cache import (
+from ..loader_cache import (
     _resolve_registry_disk_cache_dir,
     registry_disk_cache_dir,
 )

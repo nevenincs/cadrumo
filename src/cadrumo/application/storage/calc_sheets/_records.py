@@ -42,7 +42,7 @@ from ....core import CasillaId, Period
 from ....core.identity import ContentDigest, TransactionId
 from ....core.time import now as _utc_now
 from ....core.time import validate_utc_aware
-from ....domain.calculations.registry import (
+from ....domain.calculations.registry.ids import (
     BindingId,
     FormulaId,
     LegalRefId,
@@ -52,7 +52,7 @@ from ....domain.calculations.registry import (
     RevisionId,
     SourceRefId,
 )
-from ....domain.calculations.registry import DecimalValue as _RegistryDecimalValue
+from ....domain.calculations.registry.schema import DecimalValue as _RegistryDecimalValue
 from .errors import CalcSheetsRecordError
 from ._theme import WORKBOOK_FONT_FAMILY, StyleRole
 

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from .....tests.aeat_literal_fixtures import AEAT_NONCANONICAL_HTTP_MANUAL_URL_CANARY
 from ..errors import RegistryValidationError
 from ..legal import verify_legal_reference
-from .._schema_references import LegalReference, SourceReference
+from ..schema_references import LegalReference, SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

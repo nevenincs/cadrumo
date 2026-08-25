@@ -30,8 +30,8 @@ from ....core import ConvenioOverrideKind, TipoRentaIrnr, freeze_toml, read_toml
 from ....core.directory_scan import scan_directory
 from .errors import RegistryLoadError, RegistryValidationError
 from .ids import LegalRefId
-from ._loader_cache import toml_file_fingerprint
-from ._schema_base import RegistryModel
+from .loader_cache import toml_file_fingerprint
+from .schema_base import RegistryModel
 
 _ZERO = Decimal("0")
 _ONE = Decimal("1")

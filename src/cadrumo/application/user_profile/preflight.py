@@ -12,12 +12,12 @@ from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
 from ...core import Modelo, Period
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.profile_grounding import (
     ProfileKeyGrounding,
-    RevisionId,
-    ValidatedRegistryAuthority,
     build_profile_grounding_index,
 )
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.user_profile.errors import UserProfileNotFoundError
 from ...domain.user_profile.labels import profile_field_label
 from ...domain.user_profile.schema import ProfileSchemaDefinition
@@ -30,7 +30,7 @@ from .completeness import conditional_profile_missing_required
 from .projections import record_to_path_values
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import ModeloRevision
+    from ...domain.calculations.registry.schema import ModeloRevision
 
 
 def build_profile_preflight_requirement(

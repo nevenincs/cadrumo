@@ -39,10 +39,8 @@ import pytest
 from ....core import Modelo, Period
 from ....core.aggregation import LedgerIncomeGrounding
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    ModeloRevision,
-    resolve_ledger_renta_income_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.bindings import resolve_ledger_renta_income_aggregation_binding_values
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,

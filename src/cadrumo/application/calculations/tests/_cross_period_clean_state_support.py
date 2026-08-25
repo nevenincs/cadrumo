@@ -17,7 +17,8 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import CasillaId, Period, RegistryAuthorityGrade
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import Modelo202Modality, RegistrySnapshot
+from cadrumo.domain.calculations.registry.applicability import Modelo202Modality
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.justificante import Justificante
 from ....domain.modelos import (

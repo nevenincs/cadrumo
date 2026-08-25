@@ -50,24 +50,32 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.json_contract import Notice
 from ...core.resources import bundled_path, resources
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     BindingId,
+    RelationId,
+)
+from ...domain.calculations.registry.schema import (
     CasillaDefinition,
     DataBindingDefinition,
     ModeloRevision,
-    RegistryValidationError,
-    RelationId,
-    boolean_binding_encoded_values,
+)
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
+from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     declared_casilla_ids,
+)
+from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
-    load_registry_tree,
-    registry_scalar_value_type,
     revision_date_binding_ids,
-    select_revision,
+)
+from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.schema_scalars import (
+    registry_scalar_value_type,
     validate_registry_text_scalar,
 )
+from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente import descendant_list_from_facts
 from ...domain.modelos import (
     CalculationRevision,
@@ -1090,7 +1098,7 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
 
     from cadrumo.application.workflow.persistence import workflow_state_repository
 
-    from ...domain.calculations.registry import derive_modelo_202_modality
+    from ...domain.calculations.registry.applicability import derive_modelo_202_modality
     from ..user_profile.projections import projection_for_taxpayer
 
     state = workflow_state_repository().load()

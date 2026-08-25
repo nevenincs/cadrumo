@@ -21,7 +21,7 @@ from typing import Annotated
 import pytest
 
 from .....tests.registry_tree import bundled_registry_tree
-from .. import loader as _loader
+import cadrumo.domain.calculations.registry.loader as _loader
 from ..errors import RegistryLoadError
 from ..loader import load_modelo_directory
 from ..schema import (
@@ -29,7 +29,7 @@ from ..schema import (
     REVISION_MANIFEST_ONLY_FIELDS,
     ModeloRevision,
 )
-from .._schema_base import (
+from ..schema_base import (
     GOVERNANCE_STAMP,
     MANIFEST_ONLY,
     GovernanceStampMarker,

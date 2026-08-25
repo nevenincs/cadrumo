@@ -15,7 +15,7 @@ from ..aeat_nif_iva_oracle import (
     AeatNifIvaCheckerOracle,
     register_default,
 )
-from .._checker_oracle_flow import CheckerReplayDriver
+from ..checker_oracle_flow import CheckerReplayDriver
 from ..errors import RegistryValidationError
 from ..live_parity import LiveParityCatalogue, LiveParityOracle, OracleEnvironment
 from ..remote_state_guard import (

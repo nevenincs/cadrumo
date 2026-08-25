@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloAmendmentError,
     ModeloBuilderError,

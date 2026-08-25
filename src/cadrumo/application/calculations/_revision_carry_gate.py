@@ -32,7 +32,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core.resources import resources
-from ...domain.calculations.registry import RevisionId
+from ...domain.calculations.registry.ids import RevisionId
 
 
 @dataclass(frozen=True, slots=True)

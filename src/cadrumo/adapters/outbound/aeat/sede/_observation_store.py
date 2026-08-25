@@ -48,7 +48,8 @@ from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.resources import resources
 from .....core.time import now
-from .....domain.calculations.registry import RegistrySnapshotError, undeclared_casilla_ids
+from .....domain.calculations.registry.errors import RegistrySnapshotError
+from .....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ....persistence.storage import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,

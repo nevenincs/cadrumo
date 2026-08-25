@@ -38,7 +38,8 @@ from typing import NamedTuple
 
 from ...core import CasillaId, Modelo
 from ...core.decimal import coerce_decimal
-from ...domain.calculations.registry import LegalRefId, ModeloRevision
+from ...domain.calculations.registry.ids import LegalRefId
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.contribuyente import DescendantInfo, RentaFamilyProfile, descendant_list_from_facts
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..aggregation import CalculationSourceDiagnostic

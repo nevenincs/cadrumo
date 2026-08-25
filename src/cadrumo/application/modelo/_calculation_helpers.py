@@ -28,14 +28,16 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import CasillaId, Period, RegistryAuthorityGrade
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.schema import (
     CasillaDefinition,
-    CasillaObservation,
+    RegistrySnapshot,
+)
+from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.formula_runtime import (
     RegistryCalculationEntry,
     RegistryCalculationResult,
-    RegistrySnapshot,
-    casillas_by_id,
 )
+from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.modelos import (
     CalculationRevision,
     WorkUnit,
@@ -148,7 +150,7 @@ def resolve_registry_snapshot_for_work_unit(
             Refusal raised when the pinned revision no longer matches the
             law-determined snapshot.
     """
-    from ...domain.calculations.registry import RegistrySnapshotError
+    from ...domain.calculations.registry.errors import RegistrySnapshotError
 
     try:
         authority = _authority_via_resources()

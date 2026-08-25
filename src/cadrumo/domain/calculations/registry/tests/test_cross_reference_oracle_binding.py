@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources import bundled_path
-from .. import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..schema import LiveCrossReferenceDecision, ModeloDefinition, ModeloRevision
 from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_registry_tree

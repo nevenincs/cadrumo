@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from .schema import LegalReference, ModeloRevision
-from ._schema_references import governed_period_span
+from .schema_references import governed_period_span
 
 
 @dataclass(frozen=True, slots=True)

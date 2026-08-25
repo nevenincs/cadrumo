@@ -30,10 +30,10 @@ from pydantic import BaseModel
 from ..binding_selector_utils import BindingExportDataType
 from ..bindings import _ManualInputDataType
 from ..errors import RegistryValidationError
-from .._schema_exports import ExportFieldDefinition
-from .._schema_formula import ParameterDefinition
+from ..schema_exports import ExportFieldDefinition
+from ..schema_formula import ParameterDefinition
 from ..schema_scalars import _REGISTRY_SCALAR_VALUE_TYPES, registry_scalar_value_type
-from .._schema_surfaces import CasillaDefinition
+from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

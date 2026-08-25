@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId, Period, PeriodError
 from ....core.identity import ContentDigest
-from ....domain.calculations.registry import RegistrySnapshotRef
+from ....domain.calculations.registry.schema import RegistrySnapshotRef
 from ..pdf import ExtractedCasilla
 
 

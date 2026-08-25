@@ -29,7 +29,10 @@ from datetime import datetime
 from decimal import Decimal
 
 from ...core import CasillaId, Modelo
-from ...domain.calculations.registry import LegalRefId, SourceRefId
+from ...domain.calculations.registry.ids import (
+    LegalRefId,
+    SourceRefId,
+)
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,

@@ -15,13 +15,8 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from ....domain.calculations.registry import (
-    CasillaDefinition,
-    DataBindingDefinition,
-    ModeloRevision,
-    PeriodSelector,
-    resolve_ledger_renta_income_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.schema import CasillaDefinition, DataBindingDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.bindings import resolve_ledger_renta_income_aggregation_binding_values
 from ....domain.transactions import (
     BusinessClassification,
     TransactionCatalogue,

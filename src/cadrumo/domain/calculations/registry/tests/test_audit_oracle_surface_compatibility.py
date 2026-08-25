@@ -21,7 +21,7 @@ from ..live_parity import (
     OracleEnvironment,
     audit_oracle_bindings,
 )
-from .._renta_web_open_oracle import RentaWebOpenOracle
+from ..renta_web_open_oracle import RentaWebOpenOracle
 from ..schema import ModeloDefinition
 from ._registry_schema_support import _committed_modelo
 

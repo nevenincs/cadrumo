@@ -20,7 +20,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._bindings_previous_filing import previous_filing_binding_source_casilla_ids
+from ..bindings_previous_filing import previous_filing_binding_source_casilla_ids
 from ..errors import RegistryValidationError
 from ..schema import DataBindingDefinition
 

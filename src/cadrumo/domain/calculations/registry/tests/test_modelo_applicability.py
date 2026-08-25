@@ -19,15 +19,7 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from .. import (
-    ApplicabilityVerdict,
-    Modelo202Modality,
-    Modelo202ModalityVerdict,
-    ModeloApplicability,
-    ModeloApplicabilityRule,
-    derive_modelo_applicability,
-    iter_modelo_applicability_rules,
-)
+from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, Modelo202Modality, Modelo202ModalityVerdict, ModeloApplicability, ModeloApplicabilityRule, derive_modelo_applicability, iter_modelo_applicability_rules
 from ..applicability import MODELO_APPLICABILITY_RULES
 from ._registry_schema_support import _committed_registry_tree
 

@@ -213,7 +213,7 @@ def _no_aeat_history_notice(record: UserProfileRecord) -> Notice | None:
     """Read official-history evidence and return the application-owned advisory."""
     from pydantic import ValidationError
 
-    from ...domain.calculations.registry import derive_tax_route
+    from ...domain.calculations.registry.applicability import derive_tax_route
     from ..calculations import CalculationObservationRepository
     from ..overview import no_aeat_history_notice
     from .projections import projection_for_taxpayer

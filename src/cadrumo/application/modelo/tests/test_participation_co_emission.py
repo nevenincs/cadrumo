@@ -23,7 +23,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....application.ledger.actions_common import blocking_modelo_references
 from ....core import CasillaId, Period, validated_casilla_id
-from ....domain.calculations.registry import CasillaObservation
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

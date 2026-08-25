@@ -14,12 +14,16 @@ from typing import Literal
 from pydantic import BaseModel, Field, computed_field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade, RegistrySelectorPeriodCode
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.ids import (
     ModeloId,
+    RevisionId,
+)
+from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
-    RevisionId,
-    ValidatedRegistryAuthority,
+)
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.temporal import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
 )

@@ -54,7 +54,7 @@ from typing import TYPE_CHECKING
 from ...core import Modelo as _Modelo
 from ...core.decimal import coerce_decimal_strict as _coerce_decimal_strict
 from ...core.logging import get_logger as _get_logger
-from ...domain.calculations.registry import derive_modelo_applicability
+from ...domain.calculations.registry.applicability import derive_modelo_applicability
 from ...domain.deadlines import (
     evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation,
 )

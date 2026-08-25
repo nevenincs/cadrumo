@@ -29,10 +29,8 @@ from collections.abc import Mapping
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
-from ...domain.calculations.registry import (
-    ValidatedRegistryAuthority,
-    build_profile_grounding_index,
-)
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.profile_grounding import build_profile_grounding_index
 from ...domain.user_profile.errors import UserProfileError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileSchemaDefinition

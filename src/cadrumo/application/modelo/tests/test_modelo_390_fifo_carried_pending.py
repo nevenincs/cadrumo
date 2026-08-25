@@ -68,9 +68,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistryModeloObservation,
-)
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.iva_compensation import (
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,

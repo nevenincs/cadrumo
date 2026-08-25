@@ -29,11 +29,8 @@ import pytest
 
 from .....core import Modelo
 from .....domain.deadlines import EntityType, FiscalResidency, IVARegime, TaxpayerProfile
-from .. import (
-    ApplicabilityVerdict,
-    ValidatedRegistryAuthority,
-    resolve_applicability_rule_from_authority,
-)
+from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, resolve_applicability_rule_from_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ..applicability import ModeloApplicabilityRule
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 

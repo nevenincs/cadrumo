@@ -31,7 +31,7 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from .. import ApplicabilityVerdict, derive_modelo_applicability
+from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

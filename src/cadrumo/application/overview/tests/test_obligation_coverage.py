@@ -28,7 +28,7 @@ from ....core import (
     UNMODELED_OBLIGATIONS,
     Modelo,
 )
-from ....domain.calculations.registry import has_applicability_rule
+from cadrumo.domain.calculations.registry.applicability import has_applicability_rule
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,

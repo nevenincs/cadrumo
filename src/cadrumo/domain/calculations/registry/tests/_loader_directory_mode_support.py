@@ -9,7 +9,8 @@ from pathlib import Path
 
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, ModeloSource
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.loader import ModeloSource
 from ..loader import (
     _REVISION_SECTION_FIELDS,
     discover_modelo_sources,

@@ -22,13 +22,8 @@ from .....domain.iva import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from .. import (
-    DataBindingDefinition,
-    IvaLedgerObservation,
-    ModeloRevision,
-    PeriodSelector,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -8,7 +8,8 @@ import pytest
 
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
-from .. import ValidatedRegistryAuthority, calculation_closure_legal_refs
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.record_design import calculation_closure_legal_refs
 from ._record_design_support import (
     _committed_registry_tree,
     build_diseno_coverage_report,

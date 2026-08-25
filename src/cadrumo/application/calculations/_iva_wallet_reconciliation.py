@@ -41,7 +41,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core import BindingSourceKind, CalculationSourceLineageRole, Modelo, Period
 from ...core.hashing import sha256_hex
-from ...domain.calculations.registry import RegistrySnapshot
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.iva_compensation import (
     DEFAULT_MAX_WALLET_AGE_DAYS,
     IvaCompensationOverride,

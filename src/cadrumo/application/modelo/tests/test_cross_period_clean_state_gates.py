@@ -19,9 +19,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistryModeloObservation,
-)
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
 from ....domain.modelos import (

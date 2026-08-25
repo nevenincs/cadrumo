@@ -30,11 +30,11 @@ from ...adapters.persistence.storage import (
 )
 from ...core import CalculationSourceLineageRole
 from ...core.aggregation import BindingSourceKind
-from ...domain.calculations.registry import (
-    ModeloRevision,
+from ...domain.calculations.registry.bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
 )
+from ...domain.calculations.registry.schema import ModeloRevision
 from ._percepciones_observations_repository import PercepcionObservationRepository
 from ._source_mesh import (
     CalculationSourceContext,

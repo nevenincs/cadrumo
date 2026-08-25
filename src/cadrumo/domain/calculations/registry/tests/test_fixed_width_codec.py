@@ -10,20 +10,10 @@ from pydantic import ValidationError
 
 from .....core.decimal import coerce_fixed_width_decimal
 from .....core.directory_scan import scan_directory
-from .. import (
-    ExportEncoding,
-    ExportFieldDefinition,
-    ExportJustification,
-    ExportPadding,
-    ExportRecordDefinition,
-    ExportValuePolicy,
-    FixedWidthRecordRenderError,
-    ParsedExportPolicyWireValue,
-    RegistryValidationError,
-    parse_fixed_width_export_field,
-    render_fixed_width_export_field,
-    render_fixed_width_export_record_body,
-)
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, ExportJustification, ExportPadding, FixedWidthRecordRenderError, parse_fixed_width_export_field, render_fixed_width_export_field, render_fixed_width_export_record_body
+from cadrumo.domain.calculations.registry.schema import ExportFieldDefinition, ExportRecordDefinition
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy, ParsedExportPolicyWireValue
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

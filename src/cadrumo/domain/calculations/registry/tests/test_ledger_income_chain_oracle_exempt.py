@@ -63,10 +63,7 @@ from ....transactions import (
     TransactionLifecycleState,
     load_retencion_actividades_rates,
 )
-from .. import (
-    resolve_ledger_renta_income_aggregation_binding_values,
-    ungrounded_ledger_renta_income_observations,
-)
+from cadrumo.domain.calculations.registry.bindings import resolve_ledger_renta_income_aggregation_binding_values, ungrounded_ledger_renta_income_observations
 from ._ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -37,10 +37,7 @@ from sqlalchemy import select
 
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....core import CasillaId, ObservedHeaderFact, Period, validated_casilla_id
-from ....domain.calculations.registry import (
-    CasillaObservation,
-    RegistryModeloObservation,
-)
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._observations_repository import (
     CalculationObservationRepository,

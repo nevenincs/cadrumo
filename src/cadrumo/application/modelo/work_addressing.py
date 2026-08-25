@@ -39,12 +39,10 @@ from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, Period
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.resources import bundled_path
-from ...domain.calculations.registry import (
-    RegistrySnapshotError,
-    RevisionId,
-    load_registry_tree,
-    select_revision,
-)
+from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente import CCAA
 from ...domain.modelos import (
     CalculationRevision,

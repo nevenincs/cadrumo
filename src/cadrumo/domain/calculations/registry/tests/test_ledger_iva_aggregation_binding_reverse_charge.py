@@ -23,10 +23,7 @@ from ....iva import (
     classify_iva,
     derive_flow_for_classification,
 )
-from .. import (
-    resolve_ledger_iva_aggregation_binding_values,
-    unsupported_ledger_iva_observations,
-)
+from cadrumo.domain.calculations.registry.bindings import resolve_ledger_iva_aggregation_binding_values, unsupported_ledger_iva_observations
 from ._ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA,

@@ -48,18 +48,20 @@ from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR, UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date
-from ...domain.calculations.registry import (
-    BindingId,
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import (
     DataBindingDefinition,
     ModeloRevision,
     ParameterDefinition,
     RegistrySnapshot,
+)
+from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
     expression_date_binding_refs,
-    resolve_parameter,
-    selector_as_dict,
 )
+from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.contribuyente import (
     CCAA,
     MinimoDescendientesThresholds,

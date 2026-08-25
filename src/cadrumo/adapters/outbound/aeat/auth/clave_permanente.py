@@ -76,7 +76,7 @@ from .....core.config import unwrap_optional_secret
 from .....core.errors import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.time import now
-from .....domain.calculations.registry import canonical_remote_hostname
+from .....domain.calculations.registry.aeat_hosts import canonical_remote_hostname
 from .._playwright import PlaywrightTimeoutError
 from ._clave_provider_common import (
     close_clave_browser_session,

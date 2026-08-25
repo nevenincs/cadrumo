@@ -46,7 +46,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import AuthProviderKind, CasillaId, Period, RefundElection, ResultDisposition, validated_casilla_id
 from ....core.config import Settings
 from ....core.resources import resources
-from ....domain.calculations.registry import RelationId
+from cadrumo.domain.calculations.registry.ids import RelationId
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,

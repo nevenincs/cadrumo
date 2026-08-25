@@ -46,7 +46,8 @@ from ....iva import (
     IvaRateNotFoundError,
     invoice_line_to_iva_observation,
 )
-from .. import IvaLedgerObservation, ModeloRevision, resolve_ledger_iva_aggregation_binding_values
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

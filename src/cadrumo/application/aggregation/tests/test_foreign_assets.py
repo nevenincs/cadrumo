@@ -11,12 +11,8 @@ import pytest
 from ....core import BindingSourceKind, ForeignAssetObligationGroup, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    DataBindingDefinition,
-    ModeloRevision,
-    PeriodSelector,
-    resolve_foreign_asset_binding_row_values,
-)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
+from cadrumo.domain.calculations.registry.bindings import resolve_foreign_asset_binding_row_values
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from .._foreign_assets import (
     ForeignAssetClass,

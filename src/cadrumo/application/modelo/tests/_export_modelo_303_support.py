@@ -15,7 +15,8 @@ from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runt
 from ....core import Period
 from ....core.config import Settings
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,

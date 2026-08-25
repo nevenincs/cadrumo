@@ -16,7 +16,7 @@ from .m303_orden_projection_models import (
     M303AnnualOrdenSnapshot,
     M303RegimenSimplificadoSnapshot,
 )
-from ._schema_references import SourceReference
+from .schema_references import SourceReference
 from ._supplementary_orden import supplementary_orden_authority
 
 if TYPE_CHECKING:

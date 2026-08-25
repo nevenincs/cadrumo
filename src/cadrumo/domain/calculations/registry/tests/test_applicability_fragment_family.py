@@ -14,10 +14,11 @@ from pathlib import Path
 import pytest
 
 from .....core import Modelo
-from .. import ApplicabilityRuleDefinition, ModeloRevision, RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ApplicabilityRuleDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from ..applicability import ModeloApplicabilityRule, hydrate_applicability_rule
 from ..loader import load_modelo_directory
-from .._schema_base import schema_family_enrollment_failures, schema_family_fields
+from ..schema_base import schema_family_enrollment_failures, schema_family_fields
 from .._validate_applicability_section import validate_applicability_section
 from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
 
@@ -125,7 +126,7 @@ def test_hydrate_applicability_rule_round_trips_every_axis() -> None:
     hydrated = hydrate_applicability_rule(Modelo.M100, fragment)
 
     from .....domain.deadlines import EntityType, FiscalResidency, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
-    from .._applicability_payer_facts import PayerFact
+    from ..applicability_payer_facts import PayerFact
 
     assert hydrated == ModeloApplicabilityRule(
         modelo=Modelo.M100,

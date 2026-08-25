@@ -23,7 +23,7 @@ import pytest
 from .....application.storage.calc_sheets import CALC_SHEETS_ENGINE_VERSION
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
-from .....domain.calculations.registry import InputKind
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from ...storage import (
     OutboundStorageConflictError,
     OutboundStorageValidationError,

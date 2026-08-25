@@ -45,9 +45,7 @@ from .....core.identity import AeatCertificadoId
 from .....core.logging import get_logger
 from .....core.parsing import parse_date
 from .....core.time import now
-from .....domain.calculations.registry import (
-    RemoteStateGuardPolicy,
-)
+from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .._html import parse_html
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory

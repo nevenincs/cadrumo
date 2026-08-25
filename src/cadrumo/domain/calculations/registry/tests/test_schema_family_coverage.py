@@ -32,7 +32,7 @@ from ..schema import (
     CasillaDefinition,
     ModeloRevision,
 )
-from .._schema_base import (
+from ..schema_base import (
     SCHEMA_FAMILY,
     RegistryModel,
     schema_family_enrollment_failures,

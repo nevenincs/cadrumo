@@ -25,14 +25,11 @@ from ....domain.buckets import (
 from ....domain.buckets import (
     BucketEventType as BucketEventType,
 )
-from ....domain.calculations.registry import (
-    InputKind,
-    ModeloRevision,
-    RegistryModeloObservation,
-    previous_filing_observation_requirements,
-    relation_source_requirements,
-    select_revision,
-)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, previous_filing_observation_requirements
+from cadrumo.domain.calculations.registry.relations import relation_source_requirements
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,

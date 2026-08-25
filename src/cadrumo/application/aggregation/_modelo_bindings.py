@@ -54,11 +54,8 @@ from ...core import (
 )
 from ...core.money import round_to_cents
 from ...domain.bienes_inversion import BienesInversionIvaRegister
-from ...domain.calculations.registry import (
-    BindingId,
-    CasillaDefinition,
+from ...domain.calculations.registry.bindings import (
     IvaLedgerObservation,
-    ModeloRevision,
     UngroundedRentaIncome,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     resolve_ledger_irnr_income_aggregation_binding_values,
@@ -77,6 +74,8 @@ from ...domain.calculations.registry import (
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
     unsupported_ledger_renta_income_observations,
 )
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import CasillaDefinition, ModeloRevision
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogueRepositoryProtocol,

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, Modelo, validated_casilla_id
 from .....core.resources import resources
-from .. import relations_by_target_binding
+from cadrumo.domain.calculations.registry.queries import relations_by_target_binding
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..queries import (
     BindingSelectorQueryProjection,
@@ -18,7 +18,7 @@ from ..queries import (
     RegistryQueryService,
     ResolvedRegistryQueryContext,
 )
-from .._query_reports import ModeloBindingsReport, ModeloCasillaDetailReport
+from ..query_reports import ModeloBindingsReport, ModeloCasillaDetailReport
 from ..schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -31,10 +31,8 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import get_registered_error_code
-from ....domain.calculations.registry import (
-    resolve_foreign_asset_binding_row_values,
-    select_revision,
-)
+from cadrumo.domain.calculations.registry.bindings import resolve_foreign_asset_binding_row_values
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....tests.registry_tree import bundled_registry_tree
 from .. import (
     ACCEPTED_SOURCE_KINDS,

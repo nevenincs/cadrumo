@@ -11,16 +11,12 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
-from .. import (
-    RecordDesignCompositeRelativeClosing,
-    RecordDesignRelativeSuffixMarker,
-    RegistryValidationError,
-    extract_record_design,
-    resolve_record_design_binary,
-)
-from .. import record_design as record_design_module
+from cadrumo.domain.calculations.registry.record_design import RecordDesignCompositeRelativeClosing, RecordDesignRelativeSuffixMarker, extract_record_design
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
+import cadrumo.domain.calculations.registry.record_design as record_design_module
 from ..record_design import _unnamed_position_candidate
-from .._record_design_schema import RecordDesignSinglePositionCorrection
+from ..record_design_schema import RecordDesignSinglePositionCorrection
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _committed_registry_tree,
@@ -1258,7 +1254,7 @@ def test_a_two_byte_closing_part_that_is_not_a_terminator_is_not_peeled() -> Non
     reclassify a real identifier component as physical padding.
     """
     from ..record_design import _split_record_terminator
-    from .._record_design_schema import RecordDesignRelativeSuffixMarker
+    from ..record_design_schema import RecordDesignRelativeSuffixMarker
 
     def suffix(length: int, description: str, ordinal: int) -> RecordDesignRelativeSuffixMarker:
         return RecordDesignRelativeSuffixMarker(
@@ -1291,7 +1287,7 @@ def test_a_terminator_that_does_not_come_last_is_refused() -> None:
     would hide both.
     """
     from ..record_design import _require_terminator_closes_the_record
-    from .._record_design_schema import RecordDesignRelativeSuffixMarker
+    from ..record_design_schema import RecordDesignRelativeSuffixMarker
 
     def suffix(ordinal: int, length: int, description: str) -> RecordDesignRelativeSuffixMarker:
         return RecordDesignRelativeSuffixMarker(
@@ -1381,7 +1377,7 @@ def test_envelope_composition_order_is_checked_by_source_position_not_by_ordinal
     ``10`` by construction.
     """
     from ..record_design import _require_ordered_variable_envelope
-    from .._record_design_schema import (
+    from ..record_design_schema import (
         RecordDesignField,
         RecordDesignRelativeSuffixMarker,
         RecordDesignVariableBodyMarker,

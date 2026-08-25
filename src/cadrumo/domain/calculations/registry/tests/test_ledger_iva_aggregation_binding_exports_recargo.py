@@ -17,14 +17,9 @@ from ....iva import (
     IvaFlowDirection,
     IvaRateKind,
 )
-from .. import (
-    IvaLedgerObservation,
-    ModeloRevision,
-    RegistryCalculationResult,
-    calculate_registry_snapshot,
-    resolve_available_bound_inputs_by_casilla_id,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_available_bound_inputs_by_casilla_id, resolve_ledger_iva_aggregation_binding_values
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..binding_selector_utils import selector_as_dict
 from ._ledger_iva_aggregation_support import (
     _M303_REPERCUTIDO_GENERAL_BASE_CASILLA,

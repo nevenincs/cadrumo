@@ -53,15 +53,10 @@ import pytest
 from ....core import CasillaId, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RelationId,
-    WithholdingObservation,
-    calculate_registry_snapshot,
-    compute_withholding_totals_parity,
-    materialize_relation_binding_values,
-    resolve_available_bound_inputs_by_casilla_id,
-    resolve_withholding_binding_values,
-)
+from cadrumo.domain.calculations.registry.ids import RelationId
+from cadrumo.domain.calculations.registry.bindings import WithholdingObservation, compute_withholding_totals_parity, resolve_available_bound_inputs_by_casilla_id, resolve_withholding_binding_values
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values
 from ....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

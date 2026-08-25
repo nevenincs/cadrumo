@@ -30,7 +30,7 @@ from ....iva import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from .._ledger_bindings import (
+from ..ledger_bindings import (
     _iva_build_matcher,
     _iva_reachability_probe,
     _IvaLedgerSelector,

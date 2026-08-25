@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from .. import schedules as _schedules
+import cadrumo.domain.calculations.registry.schedules as _schedules
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

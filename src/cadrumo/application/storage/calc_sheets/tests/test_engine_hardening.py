@@ -9,12 +9,8 @@ import pytest
 from .....core import RegistryAuthorityGrade
 from .....core.config import override_settings
 from .....core.resources import bundled_path, resources
-from .....domain.calculations.registry import (
-    FormulaDefinition,
-    RegistrySnapshot,
-    relation_requirement_index,
-    relation_source_requirements,
-)
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.relations import relation_requirement_index, relation_source_requirements
 from .....domain.calculations.registry.tests import build_snapshot
 from .....tests.registry_tree import bundled_registry_tree
 from .._engine import _rounding_rule_for, build_export_plan

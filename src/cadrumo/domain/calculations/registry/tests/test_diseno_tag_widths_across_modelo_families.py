@@ -35,7 +35,7 @@ from typing import Final
 import pytest
 
 from .....core.resources import bundled_path
-from .._record_design_coverage import _CASILLA_TAG_RE, DisenoCoverageReport, derive_diseno_coverage_casillas
+from ..record_design_coverage import _CASILLA_TAG_RE, DisenoCoverageReport, derive_diseno_coverage_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

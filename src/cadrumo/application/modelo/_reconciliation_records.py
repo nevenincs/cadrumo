@@ -36,7 +36,10 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId, WorkUnitId
 from ...core.time import validate_utc_aware
 from ...domain.buckets import BucketEventId
-from ...domain.calculations.registry import LegalRefId, SourceRefId
+from ...domain.calculations.registry.ids import (
+    LegalRefId,
+    SourceRefId,
+)
 
 
 class ModeloReconciliationEvidenceKind(StrEnum):

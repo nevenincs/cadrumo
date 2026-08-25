@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .._record_design_coverage import (
+from ..record_design_coverage import (
     _normalised_box_number,
     _segmento_addresses_sheet,
     build_diseno_coverage_report,

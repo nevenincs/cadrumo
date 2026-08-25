@@ -18,6 +18,7 @@ from ....application.user_profile.custody_ports import (
     ProfileCustodyBucketEventHistoryPort,
     ProfileCustodyCapsuleLabelPort,
     ProfileCustodyCapsuleSourceMaterial,
+    ProfileCustodyCarryMaterial,
     ProfileCustodyEnvelopePort,
     ProfileCustodyInventoryPort,
     ProfileCustodyLabelHeadPort,
@@ -44,7 +45,7 @@ from ....application.user_profile.custody_ports import (
     ProfileSecureObjectInventoryPort,
     ProfileSnapshotPersistencePort,
 )
-from ....core import StorageCategory, storage_location
+from ....core import StorageCategory, StorageCustodyProfile, storage_location
 from ....core.classification import SensitivityClass
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
@@ -57,6 +58,7 @@ from ....domain.user_profile.errors import (
     ProfileSnapshotVersionError,
     UserProfileValidationError,
 )
+from ....domain.user_profile.portable_export import CarriedSecureObject
 from ....domain.user_profile.values import UserProfileSnapshot
 from ..profile.buckets import BucketEventHistoryRepository
 from ..profile.snapshots import SecureSnapshotRepository
@@ -79,6 +81,12 @@ from . import (
     secure_object_repository_for_staged_bucket,
 )
 from ._kdf_salt import KDF_SALT_BYTES
+from ._profile_custody_carry import (
+    collect_profile_custody_carry as _collect_profile_custody_carry,
+)
+from ._profile_custody_carry import (
+    restore_profile_custody_carry as _restore_profile_custody_carry,
+)
 
 
 def _capsule_relative(category: StorageCategory) -> Path:
@@ -666,6 +674,22 @@ class _PersistenceProfileCustody:
 
     def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
         return _PersistenceProfileSecureObjectInventory()
+
+    def collect_profile_custody_carry(
+        self,
+        *,
+        bucket_id: str,
+        profile: StorageCustodyProfile,
+    ) -> ProfileCustodyCarryMaterial:
+        return _collect_profile_custody_carry(bucket_id=bucket_id, profile=profile)
+
+    def restore_profile_custody_carry(
+        self,
+        carried_objects: tuple[CarriedSecureObject, ...],
+        *,
+        target_bucket_id: str,
+    ) -> None:
+        _restore_profile_custody_carry(carried_objects, target_bucket_id=target_bucket_id)
 
     def profile_snapshot_persistence(
         self,

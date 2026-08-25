@@ -18,7 +18,7 @@ from typing import ClassVar
 from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
 from ...core.identity import tax_id_identity_token
-from ...domain.calculations.registry import AtributionMemberObservation, resolve_atribucion_binding_row_values
+from ...domain.calculations.registry.bindings import AtributionMemberObservation, resolve_atribucion_binding_row_values
 from ...domain.modelos import Modelo184MemberRow
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema

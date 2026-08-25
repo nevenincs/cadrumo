@@ -32,27 +32,37 @@ from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.i18n import tr
 from .....core.resources import bundled_path, resources
 from .....core.time import now
-from .....domain.calculations.registry import (
+from .....domain.calculations.registry.ids import (
     BindingId,
+    RelationId,
+)
+from .....domain.calculations.registry.schema import (
     CasillaDefinition,
     CasillaFieldKind,
-    CasillaObservation,
     ExportFieldDefinition,
-    ParsedExportFieldValue,
-    RegistryModeloObservation,
     RegistrySnapshot,
+)
+from .....domain.calculations.registry.bindings import (
+    CasillaObservation,
+    RegistryModeloObservation,
+    resolve_previous_filing_binding_values,
+)
+from .....domain.calculations.registry.export_parse import (
+    ParsedExportFieldValue,
+    parse_export_payload,
+)
+from .....domain.calculations.registry.errors import (
     RegistrySnapshotError,
     RegistryValidationError,
-    RelationId,
-    RemoteStateGuardPolicy,
-    casillas_by_id,
-    expression_casilla_refs,
-    parse_export_payload,
-    remote_state_policy_from_cross_reference,
-    resolve_export_layout,
-    resolve_previous_filing_binding_values,
-    resolve_relation_values_from_observations,
 )
+from .....domain.calculations.registry.remote_state_guard import (
+    RemoteStateGuardPolicy,
+    remote_state_policy_from_cross_reference,
+)
+from .....domain.calculations.registry.casilla_membership import casillas_by_id
+from .....domain.calculations.registry.runtime_graph import expression_casilla_refs
+from .....domain.calculations.registry.export import resolve_export_layout
+from .....domain.calculations.registry.relations import resolve_relation_values_from_observations
 from .....domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -72,7 +82,8 @@ from ._schema import (
 )
 
 if TYPE_CHECKING:
-    from .....domain.calculations.registry import ModeloRevision, ValidatedRegistryAuthority
+    from .....domain.calculations.registry.schema import ModeloRevision
+    from .....domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 __all__ = [
     "FiledDeclaracionArtefactSink",
@@ -161,7 +172,7 @@ def _registry_snapshot_for_declaration(declaration: Declaracion) -> RegistrySnap
 
 
 def _registry_authority() -> ValidatedRegistryAuthority:
-    from .....domain.calculations.registry import ValidatedRegistryAuthority
+    from .....domain.calculations.registry.authority import ValidatedRegistryAuthority
 
     return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
 

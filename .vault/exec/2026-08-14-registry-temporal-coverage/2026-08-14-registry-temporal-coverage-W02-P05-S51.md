@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:02666acfa2c4973dab59adbb6ebb6c86a70429371bde3b28b1cb2a83bbb9eb6d'
+body_hash: 'sha256:b2a3a501ffcbf418b990332a5863f1e9ef833cc121973df9bfaee03de5a7e849'
 step_id: 'S51'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -72,3 +72,16 @@ real position gap from 102 to 103, so attaching it to the sole open-ended
 layout would overstate coverage. Modelo 270's 2013 BOE annex establishes the
 historical era, but the corpus currently has no canonical generic BOE-PDF
 acquisition route; the current 2023 AEAT design must not be backdated.
+
+Commit `61cdab0e89` attached the already acquired finite 2015--2019 sources for
+Modelos 126 and 128 at revision, layout, and export application-link authority.
+It changed no field-level 2020 source reference, selector, grade, geometry, or
+export semantics. Generic obligatory-blank coverage and its ordinary-field
+negative proof pass, and both historical binaries match the catalogue.
+
+The live whole-tree gate now excludes Modelos 126 and 128 and retains ten
+divergences: Modelos 165, 181, 184, 200, 270, 308, 309, 341, 353, and 576.
+Modelo 180 is no longer divergent. Modelo 200 is a real 2024-exercise versus
+2025-design mismatch governed by the accepted partition ruling and is now
+re-carried as a separate temporal Step. S51 remains open until all remaining
+divergences are resolved without backdating or invented authority.

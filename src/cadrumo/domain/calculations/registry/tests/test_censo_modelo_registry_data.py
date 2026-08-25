@@ -6,7 +6,8 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
-from .. import build_snapshot, discover_modelo_sources
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.registry.loader import discover_modelo_sources
 from ..binding_selector_utils import selector_as_dict
 from ..corpus_catalogue import verify_source_file
 from ..coverage import build_model_law_coverage_ledger

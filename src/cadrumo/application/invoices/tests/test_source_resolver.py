@@ -17,11 +17,9 @@ from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped
 from ....core import M347_THRESHOLD_EUR, BindingSourceKind, IntracomOperationType, Period
 from ....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import (
-    RegistryValidationError,
-    load_modelo_directory,
-    select_revision,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.modelos import Modelo349CountryPrefixContextError
@@ -702,7 +700,7 @@ def test_declarable_fact_contract_covers_every_observation_fact_the_stores_contr
     name, which forces a newly-added declarable field to fail here rather than
     slip past the coverage proofs unnoticed.
     """
-    from ....domain.calculations.registry import InvoiceObservation
+    from cadrumo.domain.calculations.registry.bindings import InvoiceObservation
 
     non_declarable = {
         "invoice_id",

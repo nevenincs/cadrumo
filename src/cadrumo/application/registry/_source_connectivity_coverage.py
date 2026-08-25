@@ -20,7 +20,9 @@ from ...core import (
     SourceConnectivityProofAuthority,
     SourceConnectivityProofFailureCause,
 )
-from ...domain.calculations.registry import ModeloId, ModeloRevision, ValidatedRegistryAuthority
+from ...domain.calculations.registry.ids import ModeloId
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ._closure import (
     RegistryClosureEvidence,
     RegistryClosureLimb,

@@ -5,7 +5,7 @@ and the invoice resolver. They differ only in which observation type they sum
 and how they read an amount off it, so the summation stays with each family and
 only the regulatory comparison lives here.
 
-This is a leaf module on purpose. ``_counterpart_bindings`` already imports from
+This is a leaf module on purpose. ``counterpart_bindings`` already imports from
 ``_invoice_bindings``, so putting the shared predicate in either one would make
 the dependency circular. Neither family owns the threshold; the regulation does.
 """

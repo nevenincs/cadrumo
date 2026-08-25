@@ -18,7 +18,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import RetencionClave
-from .._withholding_bindings import (
+from ..withholding_bindings import (
     WithholdingClaveBreakdown,
     WithholdingObservation,
     aggregate_withholding_by_clave,

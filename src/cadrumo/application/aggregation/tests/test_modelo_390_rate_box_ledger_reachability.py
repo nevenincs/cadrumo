@@ -60,10 +60,8 @@ import pytest
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    ModeloRevision,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva import IvaCategory, IvaRateKind
 from ....domain.transactions import (
     BusinessClassification,
