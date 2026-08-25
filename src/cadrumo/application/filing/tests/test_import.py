@@ -123,7 +123,9 @@ def test_normalise_period_rejects_unsupported_typed_period(
         )
     error = exc_info.value
     assert error.translated_message == expected_key
-    assert expected_context.items() <= dict(error.context).items(), error.context
+    context = error.context
+    assert context is not None
+    assert expected_context.items() <= context.items(), context
     with override_settings(cadrumo_output_language="en"):
         assert resolve_error_message(error)
 
@@ -269,7 +271,9 @@ class TestImportFromJustificante:
             )
         error = excinfo.value
         assert error.translated_message == "application.filing.import.errors.period_token_undeclared"
-        assert dict(error.context)["period_code"] == "0A"
+        context = error.context
+        assert context is not None
+        assert context["period_code"] == "0A"
 
     def test_missing_pdf_raises_parse_error(
         self,
