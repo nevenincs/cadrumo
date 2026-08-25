@@ -27,7 +27,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....application.flows import FlowCopyResolutionError, assemble_page_copy, run_scripted_flow
+from ....application.flows import FlowCopyResolutionError, FlowPage, assemble_page_copy, run_scripted_flow
 from ....application.modelo import modelo_work_wizard_retry_exhausted_precondition
 from ....application.modelo.work_wizard import ModeloWorkWizardStep, open_modelo_work_wizard
 from ....core import ActionConditionality, NoRecoveryOutcome, resolve_active_bucket_id
@@ -305,6 +305,7 @@ def test_canonical_wizard_factory_carries_real_registry_grounding() -> None:
             steps = wizard.steps
             definition = wizard.definition_for()
             first_page = definition.sections[0].items[0]
+            assert isinstance(first_page, FlowPage)
             assert assemble_page_copy(first_page).prompt
 
     assert steps, "expected the M130 wizard to expose registry-backed questions"
