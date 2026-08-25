@@ -3,16 +3,16 @@ tags:
   - '#audit'
   - '#registry-campaign-sequencing'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:c331af28725be063a0c962b82b315fa22df5846207cdf6cade0cbefbe5d6db31'
+body_hash: 'sha256:f425fce822747e4e16cc4dd9ea852c5164172a9f6041942705c1964d9d853c48'
 related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
-  - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
-  - "[[2026-08-14-registry-temporal-coverage-plan]]"
-  - "[[2026-08-13-registry-suite-red-at-head-plan]]"
-  - "[[2026-08-10-legal-corpus-vintage-plan]]"
-  - "[[2026-08-14-registry-campaign-sequencing-audit]]"
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
+  - '[[2026-08-14-registry-temporal-coverage-plan]]'
+  - '[[2026-08-13-registry-suite-red-at-head-plan]]'
+  - '[[2026-08-10-legal-corpus-vintage-plan]]'
+  - '[[2026-08-14-registry-campaign-sequencing-audit]]'
 ---
 
 # `registry-campaign-sequencing` audit: `Operator attestation ledger`
@@ -177,10 +177,13 @@ rather than re-verified.
 
 ### Operator attestation ledger | high | 3. Legal corpus vintage — re-stamp two prepared candidate diffs, escalate one wrong-provision determination
 
-**Where:** `.vault/plan/2026-08-10-legal-corpus-vintage-plan.md`, rows `P02.S08`
-(open) and `P02.S09` (open, closeout). Candidate diffs live in
+**Where:** this ledger item is the sole outstanding-attestation owner. Its
+production targets are `src/cadrumo/_data/registry/aeat/legal/irpf.toml` and
+`src/cadrumo/_data/registry/aeat/legal/iva.toml`; the immutable candidate and
+falsifier evidence lives in
 `.vault/exec/2026-08-10-legal-corpus-vintage/2026-08-10-legal-corpus-vintage-P02-S03.md`
-and `...-P02-S04.md`.
+and `...-P02-S04.md`. The originating plan's retired S08/S09 rows no longer
+act as a second human task queue.
 
 **What the operator must decide, per entry in `src/cadrumo/_data/registry/aeat/legal/`:**
 - `ley-35-2006:art-81` (`irpf.toml`) — confirm three present-clauses (the
@@ -225,16 +228,14 @@ first two; a provenance-grounded provision determination for art-124 (no
 candidate exists to review — this is authored from scratch by whoever makes the
 call); and a tax review of the guardería advisory's per-year scope.
 
-**What stays blocked until this lands:** `P02.S09` (closeout) cannot close
-until a real commit exists applying the operator's reading — it was not
-exercised through a live registry build at authoring time because an unrelated
-in-flight Modelo 130 migration currently makes registry load fail before the
-legal-catalogue validator is reached, so the operator's re-stamp still needs a
-green load to close on. Nothing outside this plan is blocked by S08/S09
-specifically — legal-corpus-vintage's dev-screen rows are independent of the
-contended `modelos/303/`/`modelos/390/` trees and may run at any point per the
-sequencing audit's Tier 5 placement — but this is fully prepared and cheap to
-close, which is why it ranks above items still waiting on agent work.
+**What stays blocked until this lands:** applying either candidate still
+requires the operator's reading, a real commit, and a green registry load at
+that commit. The art-124 determination and its Modelo 303/390 citation sweep,
+plus the guarderia per-year review, remain open here until explicitly
+adjudicated. The completed legal-corpus-vintage implementation and its
+dev-screen rows do not wait on those external human acts.
+The prepared first two decisions remain cheap to close, which is why this item
+ranks above entries still waiting on agent work.
 
 ### Operator attestation ledger | high | 4. Rule on the Nota 7 foral-filer allowance before the next Modelo 303 epoch map is authored
 
