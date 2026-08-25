@@ -118,6 +118,7 @@ def _pointer_entry_signature(target: Path) -> tuple[str, int, int] | None:
 
 def _read_pointer_bytes(target: Path) -> bytes | None:
     """Read one complete record, waiting out a Windows replacement race."""
+
     def read_once() -> bytes:
         from ._link_safety import is_link_like
 
@@ -222,10 +223,16 @@ def resolve_repository_bucket_id(bucket_id: str | None, *, error_type: type[Cadr
         trimmed = bucket_id.strip()
         if trimmed:
             return trimmed
-        raise error_type(translated_message="application.workflow.errors.no_active_profile_bucket", context={"reason": "blank_explicit_bucket_id"})
+        raise error_type(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+            context={"reason": "blank_explicit_bucket_id"},
+        )
     active = resolve_active_bucket_id()
     if active is None:
-        raise error_type(translated_message="application.workflow.errors.no_active_profile_bucket", context={"reason": "missing_active_profile_bucket"})
+        raise error_type(
+            translated_message="application.workflow.errors.no_active_profile_bucket",
+            context={"reason": "missing_active_profile_bucket"},
+        )
     return active
 
 
