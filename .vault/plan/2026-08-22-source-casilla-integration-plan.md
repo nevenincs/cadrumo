@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-25'
-body_hash: 'sha256:e60bb5f09bd02ec098e9f632e7eb48534ea7cc2a02fe1f7da90379005fb5a3ab'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -15,6 +13,8 @@ related:
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
+modified: '2026-08-25'
+body_hash: 'sha256:baa632364ba915f7fc3610966bda24434de637e9b5d9504e721c313201c6b770'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -334,7 +334,7 @@ settles their source and record semantics.
 
 - [x] `W05.P17.S100` - adjudicate Modelo 182 donor-detail and Article-3 declarant/header source semantics, including type-1 nature `3` and administrator-holder identity, from official evidence; `.vault/research/2026-08-22-source-casilla-integration-m182-row-source-grounding-research.md`.
 - [x] `W05.P17.S101` - recast Modelo 182 as a bounded terminal ingress-blocked deferral pending distinct non-lossy type-1 declarant/header and type-2 donor-detail carriers, secure owner(s), durable identity/fingerprint, and S102 lifecycle/export proof; `src/cadrumo/_data/source_connectivity/census.toml`.
-- [ ] `W05.P17.S102` - prove Modelo 182 declarant and donor-detail persistence, diagnostics, provenance, replay, review, and supported export without a lossy fold; `dev/source_connectivity/tests/test_m182_deferral.py`.
+- [x] `W05.P17.S102` - prove the Modelo 182 donor source remains refused at calculation ingress and unavailable to connected encrypted persistence, provenance, replay, review, or repeated-record export until S101's reopening predicate is satisfied, while the five direct manual type-2 casillas remain available and no type-1/header support is claimed; `dev/source_connectivity/tests/test_m182_deferral.py`.
 - [ ] `W05.P17.S103` - close the Modelo 182 census disposition and obtain formal review only after every accepted declarant and donor source path has proof; `.vault/audit/2026-08-22-m182-row-source-code-review.md`.
 
 ### Phase `W05.P18` - resolve M193 contributor-expense rows

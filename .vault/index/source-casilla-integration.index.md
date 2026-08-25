@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e1bae0588a16fa7d1fe770a5de204549f698dda858601ce35920b8d1b434aad5'
+body_hash: 'sha256:47b47ed1066e7085d73cfd11109c2c293795f0e9b75aa8656ddaf94381e4a050'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -373,7 +373,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P16-summary` - `source-casilla-integration` `W05.P16` summary
 - `2026-08-22-source-casilla-integration-W05-P17-S100` - adjudicate Modelo 182 donor-detail and Article-3 declarant/header source semantics, including type-1 nature `3` and administrator-holder identity, from official evidence
 - `2026-08-22-source-casilla-integration-W05-P17-S101` - recast Modelo 182 as a bounded terminal ingress-blocked deferral pending distinct non-lossy type-1 declarant/header and type-2 donor-detail carriers, secure owner(s), durable identity/fingerprint, and S102 lifecycle/export proof
-- `2026-08-22-source-casilla-integration-W05-P17-S102` - prove Modelo 182 declarant and donor-detail persistence, diagnostics, provenance, replay, review, and supported export without a lossy fold
+- `2026-08-22-source-casilla-integration-W05-P17-S102` - prove the Modelo 182 donor source remains refused at calculation ingress and unavailable to connected encrypted persistence, provenance, replay, review, or repeated-record export until S101's reopening predicate is satisfied, while the five direct manual type-2 casillas remain available and no type-1/header support is claimed
 
 ### plan
 
