@@ -382,11 +382,11 @@ def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_re
             "applicability": ({"kind": "applicability", "applicability_rule_id": "income-only"},),
             "constraints": ({"kind": "constraint", "casilla_id": "0001"},),
             "formula_operands": (
-                {"kind": "formula_operand_binding", "formula_id": "base-formula", "binding_id": "income-base"}
-            ,),
+                {"kind": "formula_operand_binding", "formula_id": "base-formula", "binding_id": "income-base"},
+            ),
             "relation_endpoints": (
-                {"kind": "relation_target_binding", "relation_id": "income-relation", "binding_id": "income-base"}
-            ,),
+                {"kind": "relation_target_binding", "relation_id": "income-relation", "binding_id": "income-base"},
+            ),
             "export_exposure": ({"kind": "export_exposure", "casilla_id": "0001", "export_field_id": "BASE_01"},),
         }
     )

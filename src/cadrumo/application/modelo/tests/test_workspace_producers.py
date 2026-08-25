@@ -159,7 +159,9 @@ def test_workspace_producer_inventory_refuses_a_current_contract_set_that_has_dr
     current_contracts = tuple(
         _contract(
             contract.contributor_kind,
-            projection_contract_version=(2 if contract.contributor_kind is ModeloWorkspaceContributorKindV1.READINESS else 1),
+            projection_contract_version=(
+                2 if contract.contributor_kind is ModeloWorkspaceContributorKindV1.READINESS else 1
+            ),
         )
         for contract in _contracts()
     )

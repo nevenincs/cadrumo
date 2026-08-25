@@ -25,11 +25,6 @@ all. :meth:`BucketMaintenanceService.assess_deletion` is the retention
 pre-assessment for a destructive delete; it does not implement reset
 orchestration itself.
 
-:meth:`BucketMaintenanceService.disk_usage` measures a bucket's on-disk
-footprint by summing regular-file byte sizes under its fixed directory
-layout; it reads only filesystem metadata, never decrypted content, so
-it can measure a non-active bucket without opening a storage session.
-
 See Also:
     :mod:`application.user_profile`
         ``ProfileCapsuleLifecycle``, the custody transaction owner for

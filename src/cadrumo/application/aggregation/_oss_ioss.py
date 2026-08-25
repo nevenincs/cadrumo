@@ -152,7 +152,7 @@ def validate_oss_ioss_observation(
     derives the expected IVA amount from ``base_amount`` and the
     looked-up rate, and rejects the candidate if the persisted
     ``iva_amount`` deviates from the derived value by more than
-    :data:`~core.money.CENT`.
+    ``CENT``.
 
     Args:
         candidate: The substrate-classified ledger line to validate.

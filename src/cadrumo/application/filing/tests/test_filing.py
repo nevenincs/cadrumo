@@ -34,6 +34,9 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
+from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     ModeloCalculateError,
     _binding_provenance,
@@ -49,6 +52,9 @@ from .. import (
 )
 from ..conftest import _BUCKET_ID
 from ..runtime import ModeloOperatorProfile
+
+#: The isolated capsule predates every filing this module drafts.
+_PROFILE_SEEDED_AT = datetime(2025, 1, 6, 9, 0, 0, tzinfo=UTC)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -602,52 +608,75 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
     assert approved.review_checksum is not None
 
 
-def test_approval_basis_reloads_persisted_transaction_catalogue() -> None:
+def test_approval_basis_reloads_persisted_transaction_catalogue(tmp_path: Path) -> None:
+    """Both fingerprints are SELF-LOADED, from a capsule that still has its record row.
+
+    The module-scoped runtime is truncated before every test, which also
+    removes the capsule's one current profile-record row -- a state no
+    published capsule reaches, and one the record loader is right to refuse.
+    Entering a fresh runtime here gives the self-load a real capsule to read,
+    so the profile fingerprint is loaded rather than supplied and the
+    transaction-catalogue reload stays the subject under test.
+    """
     schema_provider = _schema_provider()
     draft = _draft(schema_provider)
-    repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID)
 
-    repository.save(
-        TransactionCatalogue.from_transactions(
-            (
-                _transaction(
-                    provider_id="first-catalogue-row",
-                    amount=Decimal("80.00"),
-                    description="First persisted catalogue row",
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        # The published capsule's revision-one record is factless, so its
+        # projection digests to the EMPTY constant and could not be told apart
+        # from a supplied empty fingerprint. Seeding real facts through the
+        # production replacement door gives the self-load something distinctive
+        # to digest, which is what makes the assertion below discriminating.
+        seed_test_profile_record(
+            UserProfileRecord(
+                setup_state=ProfileSetupState.COMPLETE,
+                profile_id=profile.bucket_id,
+                facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+                created_at=_PROFILE_SEEDED_AT,
+                updated_at=_PROFILE_SEEDED_AT,
+            ),
+        )
+        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+
+        repository.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _transaction(
+                        provider_id="first-catalogue-row",
+                        amount=Decimal("80.00"),
+                        description="First persisted catalogue row",
+                    ),
                 ),
             ),
-        ),
-    )
-    # The profile fingerprint is supplied rather than self-loaded: this module's
-    # per-test store truncation removes the capsule's one current record row, a
-    # state no production capsule reaches, and the self-load rightly refuses it.
-    # The subject here is the TRANSACTION catalogue, which is still self-loaded.
-    first_basis = compute_current_approval_basis(
-        draft,
-        bucket_id=_BUCKET_ID,
-        schema_provider=schema_provider,
-        profile_activity_fingerprint=empty_profile_activity_fingerprint(),
-    )
+        )
+        first_basis = compute_current_approval_basis(
+            draft,
+            bucket_id=profile.bucket_id,
+            schema_provider=schema_provider,
+        )
 
-    repository.save(
-        TransactionCatalogue.from_transactions(
-            (
-                _transaction(
-                    provider_id="second-catalogue-row",
-                    amount=Decimal("125.00"),
-                    description="Second persisted catalogue row",
+        repository.save(
+            TransactionCatalogue.from_transactions(
+                (
+                    _transaction(
+                        provider_id="second-catalogue-row",
+                        amount=Decimal("125.00"),
+                        description="Second persisted catalogue row",
+                    ),
                 ),
             ),
-        ),
-    )
-    second_basis = compute_current_approval_basis(
-        draft,
-        bucket_id=_BUCKET_ID,
-        schema_provider=schema_provider,
-        profile_activity_fingerprint=empty_profile_activity_fingerprint(),
-    )
+        )
+        second_basis = compute_current_approval_basis(
+            draft,
+            bucket_id=profile.bucket_id,
+            schema_provider=schema_provider,
+        )
 
     assert first_basis.transaction_catalogue_fingerprint != second_basis.transaction_catalogue_fingerprint
+    # The self-load actually ran: a real capsule's projection digest is not the
+    # empty-projection constant the supplied-value shortcut would have produced.
+    assert first_basis.profile_activity_fingerprint == second_basis.profile_activity_fingerprint
+    assert first_basis.profile_activity_fingerprint != empty_profile_activity_fingerprint()
 
 
 def test_approve_draft_rejects_blank_approver_with_translated_message() -> None:

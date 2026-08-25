@@ -640,9 +640,12 @@ def test_authority_refuses_missing_or_changed_executable_evidence() -> None:
     assert digest_mismatch_error.value.errors(include_url=False)[0]["type"] == (
         core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH.value
     )
-    assert core.SourceConnectivityProofFailureCause.from_validation_error_type(
-        digest_mismatch_error.value.errors(include_url=False)[0]["type"],
-    ) is core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH
+    assert (
+        core.SourceConnectivityProofFailureCause.from_validation_error_type(
+            digest_mismatch_error.value.errors(include_url=False)[0]["type"],
+        )
+        is core.SourceConnectivityProofFailureCause.EXECUTABLE_EVIDENCE_DIGEST_MISMATCH
+    )
 
 
 def test_connected_proof_rejects_non_test_executable_evidence_shape() -> None:
