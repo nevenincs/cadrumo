@@ -8,27 +8,29 @@ from types import ModuleType
 
 import pytest
 
-import cadrumo.application.auth.acquisition_lock as acquisition_lock
-import cadrumo.application.auth.actions as actions
-import cadrumo.application.auth.apoderado_flow as apoderado_flow
-import cadrumo.application.auth.apoderado_service as apoderado_service
-import cadrumo.application.auth.catalogue as catalogue
-import cadrumo.application.auth.certificate_secret_backend as certificate_secret_backend
-import cadrumo.application.auth.certificate_source_operations as certificate_source_operations
-import cadrumo.application.auth.certificate_sources as certificate_sources
-import cadrumo.application.auth.credentials as credentials
-import cadrumo.application.auth.diagnostics as diagnostics
-import cadrumo.application.auth.errors as errors
-import cadrumo.application.auth.operation_definitions as operation_definitions
-import cadrumo.application.auth.operator as operator
-import cadrumo.application.auth.operator_cleanup as operator_cleanup
-import cadrumo.application.auth.operator_probes as operator_probes
-import cadrumo.application.auth.operator_results as operator_results
-import cadrumo.application.auth.operator_scope as operator_scope
-import cadrumo.application.auth.probes as probes
-import cadrumo.application.auth.protocols as protocols
-import cadrumo.application.auth.providers as providers
-import cadrumo.application.auth.sessions as sessions
+from .. import (
+    acquisition_lock,
+    actions,
+    apoderado_flow,
+    apoderado_service,
+    catalogue,
+    certificate_secret_backend,
+    certificate_source_operations,
+    certificate_sources,
+    credentials,
+    diagnostics,
+    errors,
+    operation_definitions,
+    operator,
+    operator_cleanup,
+    operator_probes,
+    operator_results,
+    operator_scope,
+    probes,
+    protocols,
+    providers,
+    sessions,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
