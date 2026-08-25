@@ -72,6 +72,8 @@ from ._overview_payloads import (
     OverviewPipelineResult,
     OverviewPrepareResult,
     OverviewPrepareStepPayload,
+    OverviewRecargoBandPayload,
+    OverviewRecoveryPayload,
 )
 
 _NEXT_STEP_NOTICE_CODE = "overview.status.next_step"
@@ -139,17 +141,19 @@ def _resolved_action(declaration: DeclaredNextAction | None) -> ResolvedNoticeAc
     )
 
 
-def _recovery_payload(entry: OverviewCalendarEntry) -> dict[str, object] | None:
+def _recovery_payload(entry: OverviewCalendarEntry) -> OverviewRecoveryPayload | None:
     """Resolve an overdue recovery's application declaration for CLI output."""
     if entry.recovery is None:
         return None
     next_action = _resolved_action(entry.recovery_action)
     if next_action is None:
         raise ValueError("overdue overview recovery requires an application action declaration")
-    return {
-        **entry.recovery.model_dump(mode="json"),
-        "next_action": next_action,
-    }
+    recargo_band = OverviewRecargoBandPayload.model_validate_json(entry.recovery.recargo_band.model_dump_json())
+    return OverviewRecoveryPayload(
+        still_filable=entry.recovery.still_filable,
+        recargo_band=recargo_band,
+        next_action=next_action,
+    )
 
 
 def overview_calendar_warning_notices(warnings: Sequence[CalendarWarning]) -> list[Notice]:
@@ -476,14 +480,14 @@ def overview_calendar_output(
             adjusted_closes_on=entry.adjusted_closes_on.isoformat(),
             payment_cutoff_on=(entry.payment_cutoff_on.isoformat() if entry.payment_cutoff_on is not None else None),
             status=entry.status,
-            user_state=entry.user_state,
+            user_state=entry.user_state.value,
             recovery=_recovery_payload(entry),
-            censo_enrolment_state=entry.censo_enrolment_state,
+            censo_enrolment_state=entry.censo_enrolment_state.value,
             local_work_unit_id=entry.local_work_unit_id,
             local_work_unit_name=entry.local_work_unit_name,
             local_work_unit_revision_id=entry.local_work_unit_revision_id,
-            local_filing_state=entry.filing_evidence.local_filing_state,
-            aeat_submission_state=entry.filing_evidence.aeat_submission_state,
+            local_filing_state=entry.filing_evidence.local_filing_state.value,
+            aeat_submission_state=entry.filing_evidence.aeat_submission_state.value,
             justificante_required=entry.filing_evidence.justificante_required,
             justificante_verified=entry.filing_evidence.justificante_verified,
         ).model_dump(mode="json")
@@ -491,7 +495,7 @@ def overview_calendar_output(
     ]
     events = [
         OverviewCalendarEventSummaryPayload(
-            event_type=event.event_type,
+            event_type=event.event_type.value,
             event_date=event.event_date.isoformat(),
             summary=event.summary,
             reference_id=event.reference_id,
@@ -499,7 +503,9 @@ def overview_calendar_output(
             period=str(event.period) if event.period is not None else None,
             status=event.status,
             notificacion_estado_servicio=event.notificacion_estado_servicio,
-            aeat_submission_state=event.aeat_submission_state,
+            aeat_submission_state=(
+                event.aeat_submission_state.value if event.aeat_submission_state is not None else None
+            ),
             justificante_verified=event.justificante_verified,
         ).model_dump(mode="json")
         for event in cal.events
