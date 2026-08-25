@@ -5,8 +5,8 @@ The centralized-output-redaction contract makes ``_emit_envelope`` and
 exceptions explicit so new ``typer.echo``, ``print``, or stream writes do not
 silently bypass the redacted renderer.
 
-The scan covers the CLI, diagnostics, and wizard roots below. The
-``adapters/inbound/tui`` tree is outside it deliberately. The TUI renders a
+The scan covers the CLI, diagnostics, and wizard roots below. The canonical
+``entrypoints/tui`` tree is outside it deliberately. The TUI renders a
 frame the operator is looking at rather than a stream that can be redirected,
 piped, or attached, and it carries its own privacy authority: a fact row's
 ``masked`` flag, decided from schema sensitivity, substitutes a mask token so

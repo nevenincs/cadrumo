@@ -66,6 +66,7 @@ _UTF_8: Final[str] = UTF_8
 RETIRED_TUI_PACKAGE: Final[str] = "cadrumo.adapters.inbound.tui"
 RETIRED_TUI_ROOT: Final[Path] = PKG_ROOT / "adapters" / "inbound" / "tui"
 CANONICAL_TUI_PACKAGE: Final[str] = "cadrumo.entrypoints.tui"
+_DETECTOR_PATH: Final[Path] = Path(__file__).resolve()
 
 
 class TuiRetirementRemnantKind(StrEnum):
@@ -2252,29 +2253,49 @@ def _parse_tui_retirement_input(path: Path, *, repo_root: Path) -> ast.Module:
         ) from error
 
 
-def _retired_tui_string_references(tree: ast.Module) -> tuple[tuple[int, str], ...]:
-    """Return every qualified retired-TUI reference embedded in a Python string."""
+def _retired_tui_string_references(
+    tree: ast.Module,
+    *,
+    is_detector_module: bool = False,
+) -> tuple[tuple[int, str], ...]:
+    """Return every dotted or repository-path retired-TUI reference in Python strings."""
+    detector_declaration_values = {
+        id(node.value)
+        for node in tree.body
+        if is_detector_module
+        and isinstance(node, ast.AnnAssign)
+        and isinstance(node.target, ast.Name)
+        and node.target.id == "RETIRED_TUI_PACKAGE"
+        and isinstance(node.value, ast.Constant)
+        and node.value.value == RETIRED_TUI_PACKAGE
+    }
+    retired_path = RETIRED_TUI_ROOT.relative_to(REPO_ROOT).as_posix()
     found: list[tuple[int, str]] = []
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+        if (
+            id(node) in detector_declaration_values
+            or not isinstance(node, ast.Constant)
+            or not isinstance(node.value, str)
+        ):
             continue
-        text = node.value
-        offset = 0
-        while (start := text.find(RETIRED_TUI_PACKAGE, offset)) >= 0:
-            end = start + len(RETIRED_TUI_PACKAGE)
-            before = text[start - 1] if start else ""
-            after = text[end : end + 1]
-            if (not before or not (before.isalnum() or before in "._")) and (
-                not after or not (after.isalnum() or after == "_")
-            ):
-                target = RETIRED_TUI_PACKAGE
-                suffix = text[end:]
-                if suffix.startswith("."):
-                    parts = [part for part in suffix[1:].split(".") if part.isidentifier()]
-                    target = ".".join((RETIRED_TUI_PACKAGE, *parts)) if parts else RETIRED_TUI_PACKAGE
-            locator_line = node.lineno + text[:start].count("\n")
-            found.append((locator_line, target))
-            offset = end
+        normalized = node.value.replace("\\", "/")
+        for prefix in (RETIRED_TUI_PACKAGE, retired_path):
+            offset = 0
+            while (start := normalized.find(prefix, offset)) >= 0:
+                end = start + len(prefix)
+                before = normalized[start - 1] if start else ""
+                after = normalized[end : end + 1]
+                if (not before or not (before.isalnum() or before in "._")) and (
+                    not after or not (after.isalnum() or after == "_")
+                ):
+                    target = prefix
+                    suffix = normalized[end:]
+                    if prefix == RETIRED_TUI_PACKAGE and suffix.startswith("."):
+                        parts = [part for part in suffix[1:].split(".") if part.isidentifier()]
+                        target = ".".join((RETIRED_TUI_PACKAGE, *parts)) if parts else RETIRED_TUI_PACKAGE
+                    locator_line = node.lineno + normalized[:start].count("\n")
+                    found.append((locator_line, target))
+                offset = end
     return tuple(sorted(found))
 
 
@@ -2285,6 +2306,7 @@ def find_retired_tui_remnants(
     package_root: Path = PKG_ROOT,
     retired_root: Path = RETIRED_TUI_ROOT,
     development_root: Path | None = None,
+    detector_path: Path | None = None,
 ) -> tuple[TuiRetirementRemnant, ...]:
     """Derive the zero-remnant fixed point from live modules and consumer syntax.
 
@@ -2295,6 +2317,7 @@ def find_retired_tui_remnants(
     """
     remnants: list[TuiRetirementRemnant] = []
     development_root = repo_root / "dev" if development_root is None else development_root
+    detector_path = _DETECTOR_PATH if detector_path is None else detector_path
 
     if retired_root.is_dir():
         for path in scan_directory(retired_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",)):
@@ -2319,8 +2342,6 @@ def find_retired_tui_remnants(
         else []
     )
     for path in (*source_files, *development_files):
-        if path.resolve() == Path(__file__).resolve():
-            continue
         scan_root = src_root if src_root in path.parents else repo_root
         tree = _parse_tui_retirement_input(path, repo_root=repo_root)
         importer = module_name_for(path, src_root=scan_root)
@@ -2336,7 +2357,7 @@ def find_retired_tui_remnants(
                         target=site.target_mod,
                     )
                 )
-        for lineno, target in _retired_tui_string_references(tree):
+        for lineno, target in _retired_tui_string_references(tree, is_detector_module=path.resolve() == detector_path):
             remnants.append(
                 TuiRetirementRemnant(
                     kind=TuiRetirementRemnantKind.REFERENCE,

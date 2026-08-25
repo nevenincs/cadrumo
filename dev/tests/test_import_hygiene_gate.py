@@ -1182,7 +1182,7 @@ def test_components_boundary_allows_a_direct_canonical_component_import(tmp_path
             TuiBoundaryViolationKind.TEXTUAL_LOCATION,
         ),
         (
-            "cadrumo/adapters/inbound/tui/_unaccepted_surface.py",
+            "cadrumo/adapters/inbound/_unaccepted_surface.py",
             "from textual.screen import Screen\n",
             TuiBoundaryViolationKind.TEXTUAL_LOCATION,
         ),
