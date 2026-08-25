@@ -22,12 +22,13 @@ an export file itself, mirroring how ``work wizard`` hands off to
 ``work calculate`` rather than re-deriving casilla values.
 
 A real interactive terminal is required: the prompting is the flow
-substrate's frontend (:class:`~cadrumo.application.flows.LineFlowFrontend`
-or the full-screen Textual app) over the one flow engine, so the non-TTY /
-Windows-no-console detection and the translated refusal are the substrate's
-single implementation rather than a re-derived copy of it, and the operator
-gets the engine's review surface (re-edit by number, restart, submit) before
-the amendment is filed. The amendment is asked in two rounds: a CHECKBOX
+substrate's line frontend (:class:`~cadrumo.application.flows.LineFlowFrontend`)
+over the one flow engine, so the non-TTY / Windows-no-console detection and
+the translated refusal are the substrate's single implementation rather than
+a re-derived copy of it, and the operator gets the engine's review surface
+(re-edit by number, restart, submit) before the amendment is filed. The
+dedicated TUI launcher owns the separate Textual projection. The amendment is
+asked in two rounds: a CHECKBOX
 selection page over the filing record's casilla ids, then a second definition
 carrying one DECIMAL page per selected casilla, the amendment-kind SELECT
 (restricted to the kinds the period legally permits), and the required reason.
@@ -57,11 +58,9 @@ from ...application.flows import (
     FlowCondition,
     FlowDefinition,
     FlowPage,
-    FlowRunAbandonedError,
     FlowSection,
     FlowState,
     LineFlowFrontend,
-    detect_frontend_capability,
     register_copy_source,
 )
 from ...application.modelo import (
@@ -93,8 +92,7 @@ from ...domain.modelos import (
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
-from ...entrypoints.tui.flows.app import select_flow_frontend
-from ._common import activate_subcommand_output_language
+from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
@@ -296,26 +294,15 @@ def _amendable_rows(casilla_rows: tuple[Any, ...], baseline_revision: Calculatio
 
 
 def _run_flow(definition: FlowDefinition) -> FlowState:
-    """Drive one flow definition through the host's selected frontend to a submitted state.
+    """Drive one CLI flow through the frontend-neutral line projection.
 
-    The frontend is the full-screen Textual app where the host can host it,
-    degrading to the line-mode frontend where it cannot; the choice is the
-    shared :func:`select_flow_frontend` primitive over
-    :func:`detect_frontend_capability`, so every consumer selects in one
-    place. A non-interactive host refuses inside ``select_flow_frontend``
-    with the substrate's typed unsupported-console error, which propagates
-    to the operator as the translated refusal rather than a raw traceback.
+    The dedicated TUI launcher owns Textual composition. The CLI consumes the
+    application substrate's line frontend directly; its environment guard
+    preserves the canonical typed refusal on a non-interactive or unsupported
+    console.
     """
-    frontend = select_flow_frontend(definition, mode=FlowMode.CREATE, capability=detect_frontend_capability())
-    if isinstance(frontend, LineFlowFrontend):
-        state, _projection = frontend.run(mode=FlowMode.CREATE)
-        return state
-    frontend.run()
-    if frontend.final_state is None:
-        raise FlowRunAbandonedError(
-            translated_message="errors.refused.refused_flow_run_abandoned", context={"flow_id": definition.id}
-        )
-    return frontend.final_state
+    state, _projection = LineFlowFrontend(definition).run(mode=FlowMode.CREATE)
+    return state
 
 
 def _prompt_selection(
@@ -633,7 +620,6 @@ def _emit_amend_wizard_result(
     reason: str,
     corrections: tuple[tuple[Any, Decimal, Decimal], ...],
 ) -> None:
-    from ._common import _emit_envelope
     from ._modelo_rendering import filing_record_payload
 
     corrected_payload = tuple(
@@ -670,7 +656,7 @@ def _emit_amend_wizard_result(
             for row, previous_value, corrected_value in corrections
         ),
     ]
-    _emit_envelope(ctx, command="modelo.work.amend_wizard", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.amend_wizard", result=result, lines=lines)
 
 
 def work_amend_wizard(

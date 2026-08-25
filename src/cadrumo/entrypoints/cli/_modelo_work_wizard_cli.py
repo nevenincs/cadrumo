@@ -50,7 +50,6 @@ from pydantic import ValidationError
 
 from ...application.flows import (
     LineFlowFrontend,
-    detect_frontend_capability,
 )
 from ...application.modelo import (
     CalculationRegistryUnavailableError,
@@ -68,11 +67,11 @@ from ...application.modelo.work_wizard import (
     open_modelo_work_wizard,
 )
 from ...core.external_constants import OutputLanguage
-from ...core.flows import FlowMode, FrontendCapability
+from ...core.flows import FlowMode
 from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
-from ._common import activate_subcommand_output_language, attach_cli_policy_verdict
+from ._common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope
 from ._errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
@@ -204,7 +203,9 @@ def _run_wizard_calculation_attempt(
 ) -> ModeloWorkCalculationServiceResult | None:
     calculation_inputs = _wizard_calculation_inputs(wizard.unit, prompted)
     try:
-        return calculate_modelo_work_revision(work_unit_id=wizard.unit.work_unit_id, actor=actor, inputs=calculation_inputs)
+        return calculate_modelo_work_revision(
+            work_unit_id=wizard.unit.work_unit_id, actor=actor, inputs=calculation_inputs
+        )
     except RegistryValidationError as exc:
         follow_up = modelo_work_wizard_follow_up_step(exc, unit=wizard.unit)
         if follow_up is None:
@@ -243,17 +244,7 @@ def _run_wizard_steps(
     if not steps:
         return ()
     definition = wizard.definition_for(steps)
-    capability = detect_frontend_capability()
-    if capability is FrontendCapability.FULL_SCREEN:
-        from ...entrypoints.tui.flows.app import run_flow_tui
-
-        state, _projection = run_flow_tui(definition, mode=FlowMode.CREATE)
-    elif capability is FrontendCapability.LINE:
-        state, _projection = LineFlowFrontend(definition).run(mode=FlowMode.CREATE)
-    else:
-        from ...application.flows import FlowUnsupportedConsoleError
-
-        raise FlowUnsupportedConsoleError(translated_message="flows.errors.unsupported_console")
+    state, _projection = LineFlowFrontend(definition).run(mode=FlowMode.CREATE)
     return wizard.answer_pairs(state, steps=steps)
 
 
@@ -262,8 +253,6 @@ def _emit_wizard_result(
     calculation_result: ModeloWorkCalculationServiceResult,
     prompted: tuple[tuple[ModeloWorkWizardStep, str], ...],
 ) -> None:
-    from ._common import _emit_envelope
-
     calculation_revision = calculation_result.revision
     saved_confirmation = tr(
         "cli.app.modelo.work.wizard_saved",
@@ -312,7 +301,7 @@ def _emit_wizard_result(
             for diagnostic in diagnostics
         )
         lines.extend(source_diagnostic_notice_text(notice) for notice in notices)
-    _emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)
+    emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)
 
 
 __all__ = ["work_wizard"]
