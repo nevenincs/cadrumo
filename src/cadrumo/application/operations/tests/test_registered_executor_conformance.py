@@ -27,6 +27,7 @@ from ....entrypoints import build_production_operation_registry
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...auth import build_auth_operation_definitions
+from ...export import build_google_sheets_export_operation_definition
 from ...user_profile import (
     CENSAL_ADOPTABLE_PATHS,
     CensalFieldIntent,
@@ -59,6 +60,10 @@ from .. import (
     OperationResponseControlRequestV1,
     OperationResponseMutationSuccessV1,
     OperationReviewAvailableInteractionV1,
+    OperationReviewProjectionReferenceV1,
+    OperationReviewProjectionRefusalCode,
+    OperationReviewProjectionRefusalV1,
+    OperationReviewProjectionRequestV1,
     OperationSubmission,
     compose_operation_services,
 )
@@ -74,6 +79,8 @@ _ACTOR = "operator:s45"
 class _RegisteredExecutorConformanceCase:
     definition_id: str
     succeeds: bool = False
+    expected_terminal: OperationTerminalCondition | None = None
+    expected_effect: OperationEffect | None = None
 
 
 _MATRIX = (
@@ -88,7 +95,11 @@ _MATRIX = (
     _RegisteredExecutorConformanceCase("user-profile.bundle-export", succeeds=True),
     _RegisteredExecutorConformanceCase("user-profile.logout", succeeds=True),
     _RegisteredExecutorConformanceCase("live.filed-history.pull"),
-    _RegisteredExecutorConformanceCase("export.google-sheets"),
+    _RegisteredExecutorConformanceCase(
+        "export.google-sheets",
+        expected_terminal=OperationTerminalCondition.FAILED,
+        expected_effect=OperationEffect.UNKNOWN,
+    ),
     _RegisteredExecutorConformanceCase("user-profile.censo-review", succeeds=True),
 )
 
@@ -182,6 +193,25 @@ class _ExecutionDriver:
             await asyncio.sleep(0)
         raise AssertionError("review continuation did not settle")
 
+    async def review_not_pending(self, *, operation_id: str, revision: int, registry: OperationRegistry) -> None:
+        """Prove the public REVIEW control truthfully refuses an operation without a pending review."""
+        review_contract = registry.lookup_public_contract("user-profile.censo-review")
+        assert review_contract.review_projection_schema is not None
+        result = await self.services.review.resolve(
+            OperationReviewProjectionRequestV1(
+                reference=OperationReviewProjectionReferenceV1(
+                    operation_id=operation_id,
+                    interaction_id="0" * 64,
+                    revision=revision,
+                    review_projection_schema=review_contract.review_projection_schema,
+                    definition_contract_digest=review_contract.definition_contract_digest,
+                    expires_at=None,
+                )
+            )
+        )
+        assert isinstance(result, OperationReviewProjectionRefusalV1)
+        assert result.code is OperationReviewProjectionRefusalCode.REVIEW_NOT_PENDING
+
 
 def _observation() -> CensalObservation:
     return CensalObservation(
@@ -199,7 +229,9 @@ def _observation() -> CensalObservation:
     )
 
 
-def _payload(definition: OperationDefinition, *, profile_id: UUID, tmp_path: Path) -> tuple[str, BaseModel, bytes | None]:
+def _payload(
+    definition: OperationDefinition, *, profile_id: UUID, tmp_path: Path
+) -> tuple[str, BaseModel, bytes | None]:
     """Use only the exact request type exported by the registered definition."""
     values: dict[str, object]
     secret: bytes | None = None
@@ -211,8 +243,13 @@ def _payload(definition: OperationDefinition, *, profile_id: UUID, tmp_path: Pat
         case "auth.profile.passphrase-rotate":
             values = {"profile_id": profile_id}
             secret = (
-                '{"current_passphrase":"' + _PASSPHRASE + '","new_passphrase":"'
-                + _ROTATED_PASSPHRASE + '","new_passphrase_confirmation":"' + _ROTATED_PASSPHRASE + '"}'
+                '{"current_passphrase":"'
+                + _PASSPHRASE
+                + '","new_passphrase":"'
+                + _ROTATED_PASSPHRASE
+                + '","new_passphrase_confirmation":"'
+                + _ROTATED_PASSPHRASE
+                + '"}'
             ).encode()
         case "auth.provider.configure":
             values = {"provider": AuthProviderKind.CERTIFICATE}
@@ -241,7 +278,7 @@ def _payload(definition: OperationDefinition, *, profile_id: UUID, tmp_path: Pat
             subject_ref = str(profile_id)
             values = {"output_root": tmp_path / "filed-history", "dry_run": True}
         case "export.google-sheets":
-            values = {"profile_id": profile_id, "modelo": "303", "filing_year": 2025, "period": "4T", "dry_run": True}
+            values = {"profile_id": profile_id, "modelo": "130", "filing_year": 2025, "period": "1T", "dry_run": False}
         case "user-profile.censo-review":
             subject_ref = str(profile_id)
             record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
@@ -263,8 +300,10 @@ def _runtime(
     *,
     cleanup: _CloseWitness,
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
+    execution_timeout: timedelta = timedelta(hours=1),
 ) -> Generator[tuple[_ExecutionDriver, OperationRegistry, UUID]]:
     """Fresh production profile, inventory, journal, lease, and operand custody per case."""
+
     async def acquire_censo() -> CensalOperationAcquisition:
         return CensalOperationAcquisition(observation=_observation(), resource=cleanup)
 
@@ -283,6 +322,7 @@ def _runtime(
                 acquire=acquire_censo,
                 before_irreversible_section=before_irreversible_section,
             ),
+            google_export_definition=build_google_sheets_export_operation_definition(),
         )
         journal = OperationJournalRepository(storage_root=root / "operations")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
@@ -297,7 +337,7 @@ def _runtime(
                 lease_token_factory=lambda: "2" * 64,
                 clock=now,
                 lease_duration=timedelta(minutes=10),
-                execution_timeout=timedelta(hours=1),
+                execution_timeout=execution_timeout,
                 cleanup_timeout=timedelta(minutes=2),
             )
             try:
@@ -307,6 +347,7 @@ def _runtime(
 
 
 @pytest.mark.parametrize("case", _MATRIX, ids=lambda case: case.definition_id)
+@pytest.mark.timeout(90)
 def test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix(
     tmp_path: Path, case: _RegisteredExecutorConformanceCase
 ) -> None:
@@ -317,14 +358,14 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         definitions = {definition.definition_id: definition for definition in registry.definitions}
         assert set(definitions) == {item.definition_id for item in _MATRIX}
         definition = definitions[case.definition_id]
-        subject_ref, payload, secret = _payload(definition, profile_id=profile_id, tmp_path=tmp_path / case.definition_id)
+        subject_ref, payload, secret = _payload(
+            definition, profile_id=profile_id, tmp_path=tmp_path / case.definition_id
+        )
         submitted, observed = asyncio.run(
             driver.run(definition_id=definition.definition_id, subject_ref=subject_ref, payload=payload, secret=secret)
         )
         phases = {
-            event.phase_code
-            for event in observed.event_page.events
-            if isinstance(event, OperationPublicPhaseEventV1)
+            event.phase_code for event in observed.event_page.events if isinstance(event, OperationPublicPhaseEventV1)
         }
         assert phases & set(definition.phase_codes)
         if case.definition_id == "user-profile.censo-review":
@@ -337,6 +378,9 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         if case.succeeds:
             assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, case.definition_id
             assert observed.projection.effect in {OperationEffect.NONE, OperationEffect.UPDATED}
+        elif case.expected_terminal is not None:
+            assert observed.projection.terminal_condition is case.expected_terminal
+            assert observed.projection.effect is case.expected_effect
         else:
             assert observed.projection.terminal_condition in {
                 OperationTerminalCondition.SUCCEEDED,
@@ -344,6 +388,13 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
                 OperationTerminalCondition.FAILED,
             }
         assert isinstance(observed.projection.pending_interaction, OperationNoPendingInteractionV1)
+        asyncio.run(
+            driver.review_not_pending(
+                operation_id=submitted.receipt.operation_id,
+                revision=observed.projection.revision,
+                registry=registry,
+            )
+        )
 
 
 def test_censo_cooperative_cancellation_is_acknowledged_before_its_irreversible_section(tmp_path: Path) -> None:
@@ -390,5 +441,40 @@ def test_censo_cooperative_cancellation_is_acknowledged_before_its_irreversible_
                     return
                 await asyncio.sleep(0)
             raise AssertionError("censo executor did not acknowledge cooperative cancellation")
+
+        asyncio.run(run())
+
+
+def test_censo_execution_deadline_requests_its_actual_cooperative_safe_stop(tmp_path: Path) -> None:
+    """Let the supervisor-owned deadline cancel the production CENSO continuation before apply."""
+    cleanup = _CloseWitness()
+    with _runtime(
+        tmp_path / "censo-deadline",
+        cleanup=cleanup,
+        execution_timeout=timedelta(milliseconds=50),
+    ) as (driver, registry, profile_id):
+        definition = registry.lookup("user-profile.censo-review")
+        subject_ref, payload, secret = _payload(definition, profile_id=profile_id, tmp_path=tmp_path)
+
+        async def run() -> None:
+            submitted, waiting = await driver.run(
+                definition_id=definition.definition_id,
+                subject_ref=subject_ref,
+                payload=payload,
+                secret=secret,
+            )
+            assert waiting.projection.execution_deadline_at is not None
+            await asyncio.sleep(max((waiting.projection.execution_deadline_at - now()).total_seconds(), 0) + 0.01)
+            operation_id = await driver.respond_apply(submitted, waiting)
+            for _ in range(100):
+                observed = await driver.observe(operation_id)
+                if observed.projection.cancellation_acknowledged:
+                    assert observed.projection.cancellation_requested is True
+                    assert observed.projection.cleanup_deadline_at is not None
+                    assert observed.projection.effect is OperationEffect.NONE
+                    assert cleanup.closed is True
+                    return
+                await asyncio.sleep(0)
+            raise AssertionError("CENSO deadline did not reach its cooperative safe stop")
 
         asyncio.run(run())

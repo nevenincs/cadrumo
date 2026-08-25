@@ -49,14 +49,7 @@ from typing import Literal
 
 from pydantic import Field, PrivateAttr, computed_field, model_validator
 
-from ....core import (
-    REVIEWED_LEGAL_STATUSES,
-    REVIEWED_REVISION_REVIEW_STATUSES,
-    LegalReviewStatus,
-    RegistryAuthorityGrade,
-    RegistrySelectorPeriodCode,
-    RevisionReviewStatus,
-)
+from ....core import RegistryAuthorityGrade, RegistrySelectorPeriodCode, RevisionReviewStatus
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
@@ -64,7 +57,6 @@ from ._schema import (
     DataBindingDefinition,
     EvidenceTier,
     FormulaDefinition,
-    LegalReference,
     LiveCrossReferenceDecision,
     ModeloDefinition,
     ModeloRevision,
@@ -77,6 +69,7 @@ from ._schema import (
 from ._schema_family_coverage import (
     CoverageModel,
 )
+from ._snapshot import check_snapshot_filing_review_tier
 from ._static_inspection import RegistryRevisionInspection
 from ._temporal import coverage_assessment_horizon, revision_selection_coordinates
 
@@ -158,11 +151,6 @@ class ModelLawCoverageLedger(CoverageModel):
     def gaps(self) -> tuple[EvidenceTierCoverageGate, ...]:
         """Return :class:`EvidenceTierCoverageGate` entries that have no supporting registry evidence."""
         return tuple(gate for gate in self.gates if gate.status == "gap")
-
-    @property
-    def filing_gaps(self) -> tuple[EvidenceTierCoverageGate, ...]:
-        """Return mandatory findings that may be read as filing-grade gaps."""
-        return self.gaps if self.filing_eligible else ()
 
 
 class RegistryCoverageAudit(CoverageModel):
@@ -432,7 +420,7 @@ def _model_law_coverage_for_coordinate(
             f"coverage coordinate {modelo.id}/{filing_year}/{period} selected revision "
             f"{inspection.revision_id!r} instead of declared revision {revision.id!r}",
         )
-    proof = _revision_filing_authority_proof(revision, inspection, authority.catalogues.legal)
+    proof = _snapshot_filing_review_proof(modelo, revision, authority, inspection)
     if proof is not None and revision.effective_authority_grade is RegistryAuthorityGrade.FILING:
         try:
             snapshot = authority.snapshot(
@@ -504,7 +492,7 @@ def audit_registry_construct_evidence(
                         f"{inspection.revision_id!r} instead of declared revision {revision.id!r}",
                     )
             inspection = inspections[0]
-            proof = _revision_filing_authority_proof(revision, inspection, authority.catalogues.legal)
+            proof = _snapshot_filing_review_proof(modelo, revision, authority, inspection)
             if proof is not None and revision.effective_authority_grade is RegistryAuthorityGrade.FILING:
                 try:
                     snapshots = tuple(
@@ -893,36 +881,20 @@ def _status(*values: tuple[object, ...]) -> CoverageGateStatus:
     return "satisfied" if any(values) else "gap"
 
 
-def _revision_filing_authority_proof(
+def _snapshot_filing_review_proof(
+    modelo: ModeloDefinition,
     revision: ModeloRevision,
+    authority: ValidatedRegistryAuthority,
     inspection: RegistryRevisionInspection,
-    legal: Mapping[LegalRefId, LegalReference],
 ) -> _AuthorityCheckProof | None:
-    """Return the proof for a filing fold, or None when review state forbids one.
-
-    Both clauses test MEMBERSHIP of the reviewed sets rather than demanding
-    ``operator_reviewed``. Demanding it made this branch unreachable: no revision
-    in the corpus has ever carried that status, and nothing in this project may
-    stamp it, so the fold below never ran once. Unlike the sibling checks in
-    ``_snapshot.py`` and ``_legal.py`` this one does not raise -- it selects
-    between a filing fold and an inspection fold -- so instead of refusing
-    loudly it quietly answered a weaker question than it appeared to, and the
-    ledger said nothing about which question that was.
-
-    ``pending_review`` still yields None, which is the tooth that matters.
-
-    The returned proof carries the WEAKEST tier in the chain, not the revision's
-    own. A revision an operator signed off that cites an agent-reviewed article
-    rests on agent review for that article, and recording the stronger tier
-    would overstate what backs the ledger.
-    """
-    if revision.review_status not in REVIEWED_REVISION_REVIEW_STATUSES:
+    """Return snapshot-owned filing-review proof, or None when the check refuses."""
+    try:
+        tier = check_snapshot_filing_review_tier(
+            modelo,
+            revision,
+            authority.catalogues,
+            set(inspection.legal_ref_ids),
+        )
+    except RegistryValidationError:
         return None
-    tier = revision.review_status
-    for legal_id in inspection.legal_ref_ids:
-        reference = legal.get(legal_id)
-        if reference is None or reference.review_status not in REVIEWED_LEGAL_STATUSES:
-            return None
-        if reference.review_status is LegalReviewStatus.AGENT_REVIEWED:
-            tier = RevisionReviewStatus.AGENT_REVIEWED
     return _PROOF_BY_TIER[tier]

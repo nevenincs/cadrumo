@@ -113,13 +113,18 @@ def build_production_operation_registry(
     settings: Settings | None = None,
     auth_definitions: tuple[OperationDefinition, ...] | None = None,
     censal_definition: OperationDefinition | None = None,
+    google_export_definition: OperationDefinition | None = None,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
     resolved_auth_definitions = auth_definitions if auth_definitions is not None else build_auth_operation_definitions()
     profile_definitions = build_user_profile_operation_definitions()
-    google_export_definition = build_google_sheets_export_operation_definition(
-        export_port=_google_sheets_export_port(settings=resolved_settings)
+    resolved_google_export_definition = (
+        google_export_definition
+        if google_export_definition is not None
+        else build_google_sheets_export_operation_definition(
+            export_port=_google_sheets_export_port(settings=resolved_settings)
+        )
     )
     filed_history_definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository
@@ -131,7 +136,7 @@ def build_production_operation_registry(
                 *profile_definitions,
                 CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition,
                 filed_history_definition,
-                google_export_definition,
+                resolved_google_export_definition,
             ),
             key=lambda item: item.definition_id,
         )
@@ -145,7 +150,7 @@ def build_production_operation_registry(
                     CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition
                 ),
                 build_filed_history_operation_registration(filed_history_definition),
-                build_google_sheets_export_operation_registration(google_export_definition),
+                build_google_sheets_export_operation_registration(resolved_google_export_definition),
             ),
             key=lambda item: item.contract.definition_id,
         )

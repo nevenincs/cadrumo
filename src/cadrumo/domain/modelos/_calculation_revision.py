@@ -227,16 +227,19 @@ def _canonical_row_binding_values(
 def _canonical_row_source_identities(
     value: Mapping[RowBindingKey, RowSourceIdentity],
 ) -> list[dict[str, object]]:
-    return [
-        {
+    canonical: list[dict[str, object]] = []
+    for (binding_id, row_index), identity in sorted(value.items()):
+        row_identity: dict[str, object] = {
             "binding_id": binding_id,
             "row_index": row_index,
             "source_kind": identity.source_kind.value,
             "source_row_identity": identity.source_row_identity,
             "fingerprint": identity.fingerprint,
         }
-        for (binding_id, row_index), identity in sorted(value.items())
-    ]
+        if identity.row_set_grouping is not None:
+            row_identity["row_set_grouping"] = identity.row_set_grouping
+        canonical.append(row_identity)
+    return canonical
 
 
 def _canonical_row_casilla_values(value: Mapping[RowCasillaKey, Decimal]) -> list[dict[str, object]]:
@@ -255,7 +258,7 @@ def _canonical_row_casilla_provenance(
             "row_index": row_index,
             "source_binding_id": provenance.source_binding_id,
             "source_row_index": provenance.source_row_index,
-            "source_identity": provenance.source_identity.model_dump(mode="json"),
+            "source_identity": provenance.source_identity.model_dump(mode="json", exclude_none=True),
             "materialization_rule_id": provenance.materialization_rule_id,
             "materialization_rule_version": provenance.materialization_rule_version,
         }
@@ -963,6 +966,9 @@ class CalculationRevision(BaseModel):
         row_binding_values: Mapping of row-indexed binding values produced by
             source meshes for repeating export records. Kept separate from
             ``binding_overrides`` so the row coordinate remains structured.
+        row_source_identities: Opaque source identities and content fingerprints
+            keyed by the exact binding and row coordinate. Worksheet-originated
+            identities additionally retain their exact registry row-set grouping.
         relation_overrides: Mapping of relation values applied during
             this calculation. Kept separate from ``binding_overrides`` so
             BindingId-keyed snapshots never carry RelationId keys.
@@ -1275,6 +1281,7 @@ class CalculationRevision(BaseModel):
                         "source_kind": raw.get("source_kind"),
                         "source_row_identity": raw.get("source_row_identity"),
                         "fingerprint": raw.get("fingerprint"),
+                        "row_set_grouping": raw.get("row_set_grouping"),
                     },
                 )
                 parsed_key = TypeAdapter(RowBindingKey).validate_python(key)

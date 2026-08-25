@@ -15,6 +15,8 @@ from pydantic import BaseModel, Field, computed_field, model_validator
 
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES, STRICT_FROZEN_CONFIG, RegistryAuthorityGrade
 from ...domain.calculations.registry import (
+    ModeloRevision,
+    RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
     SourceReference,
@@ -102,7 +104,7 @@ def _compose_revision_limb(
     authority: ValidatedRegistryAuthority,
     proof_authority: FilingExportProofAuthority | None,
     modelo_id: str,
-    revision,
+    revision: ModeloRevision,
 ) -> RegistryClosureLimb:
     """Build one retained filing-export limb from its declared revision scope."""
     if revision.authority_grade is not RegistryAuthorityGrade.FILING:
@@ -123,7 +125,7 @@ def _compose_revision_limb(
         )
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
-    snapshots = []
+    snapshots: list[RegistrySnapshot] = []
     evidence_by_locator: dict[tuple[str, str], RegistryClosureEvidence] = {}
     expected_layout_ids: tuple[str, ...] | None = None
     for filing_year, period in coordinates:
@@ -218,7 +220,7 @@ def _compose_revision_limb(
 def _layout_byte_evidence(
     *,
     authority: ValidatedRegistryAuthority,
-    snapshot,
+    snapshot: RegistrySnapshot,
 ) -> tuple[tuple[RegistryClosureEvidence, ...], _LayoutEvidenceFailure | None]:
     """Recheck every materialised layout's official source bytes.
 
@@ -258,7 +260,7 @@ def _layout_byte_evidence(
 def _filing_export_proof(
     *,
     proof_authority: FilingExportProofAuthority | None,
-    snapshot,
+    snapshot: RegistrySnapshot,
 ) -> tuple[FilingExportProof | None, _LayoutEvidenceFailure | None]:
     """Require one exact canonical-generation and production-emission proof."""
     if proof_authority is None:

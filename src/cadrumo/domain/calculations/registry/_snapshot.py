@@ -19,7 +19,12 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
-from ....core import REVIEWED_REVISION_REVIEW_STATUSES, RegistryAuthorityGrade
+from ....core import (
+    REVIEWED_REVISION_REVIEW_STATUSES,
+    LegalReviewStatus,
+    RegistryAuthorityGrade,
+    RevisionReviewStatus,
+)
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._ids import RevisionId
@@ -332,7 +337,7 @@ def _build_validated_snapshot(
         _check_snapshot_filing_capability(modelo, revision)
     legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
     if grade is RegistryAuthorityGrade.FILING:
-        _check_snapshot_legal_review_status(modelo, revision, catalogues, legal_ids)
+        check_snapshot_filing_review_tier(modelo, revision, catalogues, legal_ids)
     _check_revision_scoped_legal_windows(modelo, revision, catalogues)
     _check_revision_scoped_source_windows(modelo, revision, catalogues)
     snapshot = RegistrySnapshot(
@@ -464,6 +469,31 @@ def _check_snapshot_legal_review_status(
             f"modelo {modelo.id} revision {revision.id} is not filing-grade:\n"
             + "\n".join(f" - {failure}" for failure in failures),
         )
+
+
+def check_snapshot_filing_review_tier(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+    legal_ids: set[str],
+) -> RevisionReviewStatus:
+    """Validate a filing snapshot's review boundary and return its weakest tier.
+
+    Snapshot construction owns the review boundary. Consumers that need to
+    classify a successful filing snapshot must call this check rather than
+    repeat the revision and legal-reference status predicates.
+    """
+    _check_snapshot_revision_review_status(modelo, revision)
+    _check_snapshot_legal_review_status(modelo, revision, catalogues, legal_ids)
+    if revision.review_status is RevisionReviewStatus.AGENT_REVIEWED:
+        return RevisionReviewStatus.AGENT_REVIEWED
+    if any(
+        catalogues.legal[legal_id].review_status is LegalReviewStatus.AGENT_REVIEWED
+        for legal_id in legal_ids
+        if legal_id in catalogues.legal
+    ):
+        return RevisionReviewStatus.AGENT_REVIEWED
+    return RevisionReviewStatus.OPERATOR_REVIEWED
 
 
 def build_validated_snapshot(

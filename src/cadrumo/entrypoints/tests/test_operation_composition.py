@@ -121,6 +121,7 @@ def test_production_composition_imports_only_the_inbound_safe_operation_facade()
     assert operation_imports[0].level == 2
     assert {item.name for item in operation_imports[0].names} == {
         "OperationComposedServices",
+        "OperationDefinition",
         "OperationRegistry",
         "compose_operation_services",
     }

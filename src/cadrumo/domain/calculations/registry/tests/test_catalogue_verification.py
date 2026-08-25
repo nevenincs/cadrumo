@@ -2,23 +2,30 @@
 
 from __future__ import annotations
 
+import inspect
 import json
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from .....core import RECORD_DESIGN_EPOCH_RE
+from .....core import RECORD_DESIGN_EPOCH_RE, LegalReviewStatus
 from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .._authority import bundled_authority
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
-from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage, build_model_law_coverage_ledger
+from .._coverage import (
+    EvidenceTierCoverageGate,
+    _snapshot_filing_review_proof,
+    audit_registry_model_law_coverage,
+    build_model_law_coverage_ledger,
+)
 from .._legal import verify_legal_catalogue_grounding
 from .._schema import filing_period_from_scope
-from .._snapshot import build_snapshot
+from .._snapshot import build_snapshot, check_snapshot_filing_review_tier, collect_snapshot_ref_ids
 from .._temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
 from .._validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
@@ -281,6 +288,92 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
         assert gates["legal_authority"].status == "satisfied", ledger
         assert gates["official_source_guidance"].status == "satisfied", ledger
         assert gates["layout_authority"].status == "satisfied", ledger
+
+
+def test_model_law_matrix_reports_a_non_vacuous_gap_from_a_synthetic_reviewed_corpus() -> None:
+    """A valid reviewed applicability corpus reports each missing-layout matrix cell."""
+    authority = bundled_authority()
+    modelo = authority.modelo("185")
+    revision = modelo.revisions["2003-2025"]
+    legal_ids, _source_ids = collect_snapshot_ref_ids(modelo, revision)
+    reviewed_legal = {
+        **authority.catalogues.legal,
+        **{
+            legal_id: authority.catalogues.legal[legal_id].model_copy(
+                update={
+                    "review_status": LegalReviewStatus.AGENT_REVIEWED,
+                    "reviewed_by": "synthetic corpus reviewer",
+                    "reviewed_at": date(2026, 8, 25),
+                },
+            )
+            for legal_id in legal_ids
+        },
+    }
+    reviewed_revision = revision.model_copy(
+        update={
+            "review_status": "agent_reviewed",
+            "reviewed_by": "synthetic corpus reviewer",
+            "reviewed_at": date(2026, 8, 25),
+        },
+    )
+    reviewed_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, reviewed_revision.id: reviewed_revision}},
+    )
+    catalogues = authority.catalogues.model_copy(update={"legal": reviewed_legal})
+    synthetic_authority = replace(
+        authority,
+        modelos=(reviewed_modelo,),
+        catalogues=catalogues,
+        _modelos_by_id={reviewed_modelo.id: reviewed_modelo},
+        _validator=RegistryValidator(catalogues, source_root=authority.source_root),
+        _registry_validated=False,
+        _validated_modelos=set(),
+        _snapshots={},
+    )
+
+    audit = audit_registry_model_law_coverage(synthetic_authority)
+    expected_coordinates = set(
+        revision_selection_coordinates(
+            reviewed_revision,
+            assessment_horizon=coverage_assessment_horizon(catalogues),
+        ),
+    )
+    layout_gaps = [
+        ledger
+        for ledger in audit.ledgers
+        if next(gate for gate in ledger.gates if gate.tier == "layout_authority").status == "gap"
+    ]
+
+    assert len(expected_coordinates) > 1
+    ledgers = [ledger for ledger in audit.ledgers if ledger.revision == reviewed_revision.id]
+    assert {(ledger.filing_year, ledger.period) for ledger in ledgers} == expected_coordinates
+    assert all(ledger.authority_scope == "inspection_only" for ledger in ledgers)
+    assert {(ledger.filing_year, ledger.period) for ledger in layout_gaps} == expected_coordinates
+    assert audit.required_gate_failures
+
+
+def test_coverage_filing_review_proof_delegates_to_snapshot_owned_check() -> None:
+    """Coverage classification obtains review status from the snapshot boundary."""
+    authority = bundled_authority()
+    modelo = authority.modelo("130")
+    revision = modelo.revisions["2019-y-siguientes"]
+    filing_year, period = revision_selection_coordinates(
+        revision,
+        assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+    )[0]
+    inspection = authority.inspect_revision(modelo.id, filing_year=filing_year, period=period)
+
+    snapshot_tier = check_snapshot_filing_review_tier(
+        modelo,
+        revision,
+        authority.catalogues,
+        set(inspection.legal_ref_ids),
+    )
+    proof = _snapshot_filing_review_proof(modelo, revision, authority, inspection)
+
+    assert "check_snapshot_filing_review_tier(" in inspect.getsource(_snapshot_filing_review_proof)
+    assert proof is not None
+    assert proof.review_tier is snapshot_tier
 
 
 def test_coverage_gate_rejects_satisfied_without_evidence_refs() -> None:
