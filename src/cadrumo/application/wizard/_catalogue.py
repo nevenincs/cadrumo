@@ -11,7 +11,7 @@ from __future__ import annotations
 from ...core import RentaDeclaracionType
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
-from ...core.setup_answers import SetupAnswers
+from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ...core.wizard_catalogue import register_wizard_catalogue
 from ...domain.contribuyente import (
     CCAA,
@@ -392,7 +392,7 @@ _IDENTIDAD_SECTION = WizardSection(
     questions=(
         WizardQuestion(
             id="output-language",
-            profile_key="preferences.output_language",
+        profile_key=PROFILE_OUTPUT_LANGUAGE_PATH,
             widget=WizardWidget.SELECT,
             prompt=tr("wizard.setup.profile.output-language.prompt"),
             choices=_OUTPUT_LANGUAGE_CHOICES,

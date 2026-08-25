@@ -14,6 +14,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.i18n import Translatable as tr
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.contribuyente import ProfileKeyRequirement
 from .._catalogue import WIZARD_FLOWS
 from .._compiler import compile_profile_keys
@@ -228,4 +229,4 @@ def test_compile_is_pure_on_the_real_catalogue() -> None:
 def test_real_catalogue_exposes_profile_owned_output_language_key() -> None:
     keys = {entry.key for entry in compile_profile_keys(WIZARD_FLOWS)}
 
-    assert "preferences.output_language" in keys
+    assert PROFILE_OUTPUT_LANGUAGE_PATH in keys

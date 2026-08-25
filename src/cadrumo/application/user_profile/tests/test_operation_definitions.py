@@ -33,6 +33,7 @@ from ....application.operations import (
 )
 from ....application.operations.persistence import OperationPersistedSnapshot
 from ....core import read_pointer
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._bundle_export_contracts import (
     ProfileBundleExportPurpose,
@@ -207,7 +208,7 @@ def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_s
                     subject_ref=f"profile:{profile_id}",
                     payload=ProfileFieldMutationOperationRequest(
                         profile_id=profile_id,
-                        path="preferences.output_language",
+                        path=PROFILE_OUTPUT_LANGUAGE_PATH,
                         value="es",
                     ),
                 ),
@@ -224,7 +225,7 @@ def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_s
         assert result.profile_id == profile_id
         assert result.record_revision == stored.record_revision
         assert result.content_digest == stored.content_digest
-        assert record_to_path_values(stored)["preferences.output_language"] == "es"
+        assert record_to_path_values(stored)[PROFILE_OUTPUT_LANGUAGE_PATH] == "es"
 
 
 def test_repeatable_row_mutation_allocates_and_persists_one_real_schema_row(tmp_path: Path) -> None:

@@ -67,7 +67,7 @@ from .._interactions import (
     OperationPendingInteraction,
     OperationRejectResponse,
 )
-from .._supervisor import OperationSupervisor
+from .._supervisor import OperationSupervisor, _SupervisorExecutorContext
 from ..owner import OperationExecutor, OperationExecutorContext
 from ..persistence import (
     OperationDiagnosticEvent,
@@ -270,6 +270,7 @@ class UndeclaredInteractionExecutor:
         context: OperationExecutorContext,
     ) -> str | None:
         del request
+        assert isinstance(context, _SupervisorExecutorContext)
         await context.interactions.request(_pending_interaction(context.identity))
         return None
 
@@ -283,6 +284,7 @@ class ReviewExecutor:
         context: OperationExecutorContext,
     ) -> str | None:
         del request
+        assert isinstance(context, _SupervisorExecutorContext)
         await context.interactions.request(_pending_interaction(context.identity))
         return None
 
@@ -300,6 +302,7 @@ class ResumableReviewExecutor:
         context: OperationExecutorContext,
     ) -> str | None:
         del request
+        assert isinstance(context, _SupervisorExecutorContext)
         await context.interactions.request(_pending_interaction(context.identity))
         return None
 
@@ -1051,6 +1054,7 @@ def test_start_refuses_each_undeclared_executor_mutation_after_only_the_safe_sta
         assert refused.pending_interaction is None
         assert refused.effect is OperationEffect.NONE
         assert tuple(type(event) for event in refused.events) == (OperationNoticeEvent,)
+        assert isinstance(refused.events[0], OperationNoticeEvent)
         assert refused.events[0].notice_code == "operation.started"
         if isinstance(executor, UndeclaredResourceExecutor):
             assert executor.resource is not None

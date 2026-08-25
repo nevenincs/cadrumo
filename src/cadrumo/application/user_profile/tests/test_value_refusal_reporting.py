@@ -19,6 +19,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors import BaseSeverity
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile import (
     ProfileSchemaValidationError,
     ProfileValueRefusalKind,
@@ -63,7 +64,7 @@ def test_every_refusal_kind_has_an_issue_code() -> None:
     ("path", "value", "expected_code"),
     [
         ("auth.fecha_validez", "15/03/1978", DATE_VALUE_ISSUE_CODE),
-        ("preferences.output_language", "klingon", ENUM_VALUE_ISSUE_CODE),
+        (PROFILE_OUTPUT_LANGUAGE_PATH, "klingon", ENUM_VALUE_ISSUE_CODE),
         ("attribution_entity_socios.0.share_pct", "999", NUMERIC_VALUE_ISSUE_CODE),
         ("capabilities.llm_vision", "on", BOOLEAN_VALUE_ISSUE_CODE),
         ("identity.email", "banana", EMAIL_VALUE_ISSUE_CODE),
@@ -86,7 +87,7 @@ def test_the_reported_code_is_unchanged_per_type(path: str, value: str, expected
     ("path", "value"),
     [
         ("auth.fecha_validez", "1978-03-15"),
-        ("preferences.output_language", "en"),
+        (PROFILE_OUTPUT_LANGUAGE_PATH, "en"),
         ("attribution_entity_socios.0.share_pct", "50"),
         ("capabilities.llm_vision", "true"),
         ("identity.name", "Ada Lovelace"),

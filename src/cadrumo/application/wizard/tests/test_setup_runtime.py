@@ -14,7 +14,7 @@ from collections import deque
 import pytest
 
 from ....core.flows import FlowMode
-from ....core.setup_answers import SetupAnswers
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ....domain.deadlines import LegalEntityForm
 from ...flows import FlowAnswerError, run_scripted_flow
 from .. import DESCENDANTS_COUNT_PAGE_ID
@@ -179,7 +179,7 @@ def test_output_language_is_the_first_page_of_the_flow() -> None:
     first_section = SETUP_FLOW.sections[0]
     first_question = first_section.questions[0]
     assert first_question.id == "output-language"
-    assert first_question.profile_key == "preferences.output_language"
+    assert first_question.profile_key == PROFILE_OUTPUT_LANGUAGE_PATH
     all_ids = [question.id for section in SETUP_FLOW.sections for question in section.questions]
     assert all_ids.count("output-language") == 1
 
@@ -241,7 +241,7 @@ def test_canonical_dict_only_carries_profile_bound_keys() -> None:
     canonical = serialise_answers(SETUP_FLOW, answers)
     assert "identity.tax_id" in canonical
     assert canonical["identity.tax_id"] == "12345678Z"
-    assert canonical["preferences.output_language"] == "en"
+    assert canonical[PROFILE_OUTPUT_LANGUAGE_PATH] == "en"
     assert "tax_residence.ccaa" in canonical
     assert canonical["tax_residence.ccaa"] == "madrid"
     # Non-profile-bound questions don't surface in the canonical map

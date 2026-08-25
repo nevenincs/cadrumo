@@ -14,9 +14,9 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.buckets import BucketEventType
 from ...domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .profile_fields import PROFILE_OUTPUT_LANGUAGE_PATH
 
 
 class ProfileFactWriteDoor(StrEnum):

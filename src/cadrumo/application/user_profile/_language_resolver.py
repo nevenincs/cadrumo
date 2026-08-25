@@ -12,7 +12,7 @@ function registers
 from __future__ import annotations
 
 from ...core.i18n import register_profile_language_resolver
-from .profile_fields import PROFILE_OUTPUT_LANGUAGE_PATH
+from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
 
 def resolve_active_profile_output_language() -> str | None:

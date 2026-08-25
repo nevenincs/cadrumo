@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_lazy_public_names_have_exact_static_owner_bindings() -> None:
     """Static imports mirror runtime owners without changing lazy imports."""
-    import cadrumo.application.operator_surface as operator_surface
+    from ... import operator_surface
 
     facade_tree = ast.parse(Path(operator_surface.__file__).read_text(encoding="utf-8"))
     type_checking_block = next(
