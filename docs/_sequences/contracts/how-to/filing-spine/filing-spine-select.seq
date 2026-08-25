@@ -7,17 +7,20 @@
 @setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
 @capture selected_revision_id result.calculation_revision_id
 @step Select the latest draft revision explicitly.
-@result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
+aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-draft
 @expect result.calculation_revision_id == "{selected_revision_id}"
 @expect result.state == "borrador"
 @step Verify the calculated draft so a verified revision exists.
 @setup aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @step Select the latest verified revision.
-@result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
+aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select latest-verified
 @expect result.calculation_revision_id == "{selected_revision_id}"
 @expect result.state == "verificado_completo"
 @step Record the local filed marker so a filed revision exists.
 @setup aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
+@step Confirm the captured revision itself completed the transition.
+aeat --format json app modelo work revision {selected_revision_id}
+@expect result.state == "presentado"
 @step Select the filed revision.
 @result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T --select filed
 @expect result.calculation_revision_id == "{selected_revision_id}"

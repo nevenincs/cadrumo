@@ -235,6 +235,41 @@
     {
       "argv": [
         "aeat",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-03-20",
+        "--amount",
+        "121",
+        "--direction",
+        "INCOMING",
+        "--description",
+        "Selector transition sale",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "100",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "21",
+        "--iva-category",
+        "domestic_general",
+        "--idempotency-key",
+        "filing-spine-selector-transition"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\t5af95d20b7e333671071443238f6f542ae06ee734bfe59f1815d035b2ee8de31\nDate\t2026-03-20\nAmount\t121\nDescription\tSelector transition sale\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
         "--format",
         "json",
         "app",
@@ -250,7 +285,13 @@
         "--m303-filing-evidence",
         "fixtures/m303-filing-evidence-2026-1T.json"
       ],
-      "captures": [],
+      "captures": [
+        {
+          "json_path": "result.calculation_revision_id",
+          "name": "selected_revision_id",
+          "value": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08"
+        }
+      ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
@@ -274,8 +315,8 @@
             "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": "0",
-            "modelo-303-iva-repercutido-general-base": "1000",
-            "modelo-303-iva-repercutido-general-cuota": "210",
+            "modelo-303-iva-repercutido-general-base": "1100",
+            "modelo-303-iva-repercutido-general-cuota": "231",
             "modelo-303-iva-repercutido-reducido-base": "0",
             "modelo-303-iva-repercutido-reducido-cuota": "0",
             "modelo-303-iva-repercutido-reducido-transitorio-base": "0",
@@ -293,7 +334,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -301,9 +342,9 @@
             "04": "0",
             "05": "0",
             "06": "0.00",
-            "07": "1000",
+            "07": "1100",
             "08": "0",
-            "09": "210.00",
+            "09": "231.00",
             "10": "0.00",
             "107": "0",
             "108": "0",
@@ -349,7 +390,7 @@
             "24": "0",
             "25": "0",
             "26": "0",
-            "27": "210.00",
+            "27": "231.00",
             "28": "500",
             "29": "105.00",
             "30": "0",
@@ -384,12 +425,12 @@
             "60": "0",
             "62": "0",
             "63": "0",
-            "64": "105.00",
+            "64": "126.00",
             "65": "100",
-            "66": "105.00",
+            "66": "126.00",
             "68": "0",
             "70": "0",
-            "71": "105.00",
+            "71": "126.00",
             "74": "0",
             "75": "0",
             "76": "0",
@@ -413,7 +454,6 @@
             "98": "0",
             "99": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "0",
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
@@ -428,18 +468,18 @@
             "iva.compensacion-pendiente-periodos-anteriores": "0",
             "iva.compensacion-pendiente-periodos-posteriores": "0.00",
             "iva.cuota-deducible-total": "105.00",
-            "iva.cuota-devengada-total": "210.00",
+            "iva.cuota-devengada-total": "231.00",
             "iva.prorrata-porcentaje": "100",
             "iva.prorrata-volumen-con-derecho": "0",
             "iva.prorrata-volumen-total": "0",
             "iva.regularizacion-inversiones": "0",
-            "iva.repercutido.general": "210",
+            "iva.repercutido.general": "231",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
             "iva.repercutido.super-reducido.transitorio": "0",
-            "iva.resultado": "105.00",
-            "iva.resultado-regimen-general": "105.00",
+            "iva.resultado": "126.00",
+            "iva.resultado-regimen-general": "126.00",
             "iva.soportado.importaciones": "0",
             "iva.soportado.interiores": "105"
           },
@@ -456,7 +496,7 @@
           "input_values_by_casilla_id": {
             "01": "0",
             "04": "0",
-            "07": "1000",
+            "07": "1100",
             "120": "0",
             "122": "0",
             "153": "0",
@@ -483,7 +523,7 @@
             "iva.autorepercutido.intracomunitaria.devengado": "0",
             "iva.autorepercutido.intracomunitaria.devengado.base": "0",
             "iva.compensacion-pendiente-periodos-anteriores": "0",
-            "iva.repercutido.general": "210",
+            "iva.repercutido.general": "231",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
@@ -648,7 +688,7 @@
               "source_refs": [
                 "aeat-dr-303-2026"
               ],
-              "value": "1000"
+              "value": "1100"
             },
             {
               "absent_by_design": false,
@@ -689,14 +729,14 @@
                 "iva.repercutido.general"
               ],
               "operand_values": [
-                "210"
+                "231"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -1655,14 +1695,14 @@
                 "iva.cuota-devengada-total"
               ],
               "operand_values": [
-                "210.00"
+                "231.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -2404,7 +2444,7 @@
                 "76"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0"
               ],
@@ -2413,7 +2453,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -2452,7 +2492,7 @@
                 "65"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "100"
               ],
               "source_refs": [
@@ -2460,7 +2500,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -2528,7 +2568,7 @@
                 "112"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0",
                 "0"
@@ -2538,7 +2578,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -2982,7 +3022,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "0"
+              "value": "1T"
             },
             {
               "absent_by_design": false,
@@ -3178,7 +3218,7 @@
               ],
               "operand_values": [
                 "0",
-                "105.00"
+                "126.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -3241,7 +3281,7 @@
                 "iva.resultado"
               ],
               "operand_values": [
-                "105.00"
+                "126.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -3398,7 +3438,7 @@
                 "152"
               ],
               "operand_values": [
-                "210",
+                "231",
                 "0",
                 "0",
                 "0",
@@ -3420,7 +3460,7 @@
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -3528,7 +3568,7 @@
               "source_refs": [
                 "aeat-dr-303-2026"
               ],
-              "value": "210"
+              "value": "231"
             },
             {
               "absent_by_design": false,
@@ -3630,7 +3670,7 @@
                 "iva.compensacion-aplicada-periodo"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0",
                 "0.00"
@@ -3640,7 +3680,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -3662,7 +3702,7 @@
                 "iva.cuota-deducible-total"
               ],
               "operand_values": [
-                "210.00",
+                "231.00",
                 "105.00"
               ],
               "source_refs": [
@@ -3670,7 +3710,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -3717,7 +3757,7 @@
               "casilla_id": "iva.cuota-devengada-total",
               "label": "Total accrued VAT amount",
               "role": "key_figure",
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "casilla_id": "iva.cuota-deducible-total",
@@ -3729,19 +3769,19 @@
               "casilla_id": "iva.resultado-regimen-general",
               "label": "General regime result",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "64",
               "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "66",
               "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
@@ -3759,13 +3799,13 @@
               "casilla_id": "iva.resultado",
               "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "71",
               "label": "Resultado final ([69]-[70]+[109])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-generada-periodo",
@@ -3783,7 +3823,7 @@
               "casilla_id": "27",
               "label": "Total accrued VAT amount",
               "role": "key_figure",
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "casilla_id": "45",
@@ -3793,30 +3833,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88`.",
-          "source_provenance": [
-            {
-              "binding_source": "ledger_iva_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
-              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
-            },
-            {
-              "binding_source": "ledger_iva_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
-              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
-            },
-            {
-              "binding_source": "prorrata_regularizacion",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
-            }
-          ],
+          "saved_confirmation": "Saved as draft calculation revision a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -3874,8 +3891,8 @@
             "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": "0",
-            "modelo-303-iva-repercutido-general-base": "1000",
-            "modelo-303-iva-repercutido-general-cuota": "210",
+            "modelo-303-iva-repercutido-general-base": "1100",
+            "modelo-303-iva-repercutido-general-cuota": "231",
             "modelo-303-iva-repercutido-reducido-base": "0",
             "modelo-303-iva-repercutido-reducido-cuota": "0",
             "modelo-303-iva-repercutido-reducido-transitorio-base": "0",
@@ -3893,7 +3910,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3901,9 +3918,9 @@
             "04": "0",
             "05": "0",
             "06": "0.00",
-            "07": "1000",
+            "07": "1100",
             "08": "0",
-            "09": "210.00",
+            "09": "231.00",
             "10": "0.00",
             "107": "0",
             "108": "0",
@@ -3949,7 +3966,7 @@
             "24": "0",
             "25": "0",
             "26": "0",
-            "27": "210.00",
+            "27": "231.00",
             "28": "500",
             "29": "105.00",
             "30": "0",
@@ -3984,12 +4001,12 @@
             "60": "0",
             "62": "0",
             "63": "0",
-            "64": "105.00",
+            "64": "126.00",
             "65": "100",
-            "66": "105.00",
+            "66": "126.00",
             "68": "0",
             "70": "0",
-            "71": "105.00",
+            "71": "126.00",
             "74": "0",
             "75": "0",
             "76": "0",
@@ -4013,7 +4030,6 @@
             "98": "0",
             "99": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "0",
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
@@ -4028,18 +4044,18 @@
             "iva.compensacion-pendiente-periodos-anteriores": "0",
             "iva.compensacion-pendiente-periodos-posteriores": "0.00",
             "iva.cuota-deducible-total": "105.00",
-            "iva.cuota-devengada-total": "210.00",
+            "iva.cuota-devengada-total": "231.00",
             "iva.prorrata-porcentaje": "100",
             "iva.prorrata-volumen-con-derecho": "0",
             "iva.prorrata-volumen-total": "0",
             "iva.regularizacion-inversiones": "0",
-            "iva.repercutido.general": "210",
+            "iva.repercutido.general": "231",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
             "iva.repercutido.super-reducido.transitorio": "0",
-            "iva.resultado": "105.00",
-            "iva.resultado-regimen-general": "105.00",
+            "iva.resultado": "126.00",
+            "iva.resultado-regimen-general": "126.00",
             "iva.soportado.importaciones": "0",
             "iva.soportado.interiores": "105"
           },
@@ -4050,7 +4066,7 @@
           "input_values_by_casilla_id": {
             "01": "0",
             "04": "0",
-            "07": "1000",
+            "07": "1100",
             "120": "0",
             "122": "0",
             "153": "0",
@@ -4077,7 +4093,7 @@
             "iva.autorepercutido.intracomunitaria.devengado": "0",
             "iva.autorepercutido.intracomunitaria.devengado.base": "0",
             "iva.compensacion-pendiente-periodos-anteriores": "0",
-            "iva.repercutido.general": "210",
+            "iva.repercutido.general": "231",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
@@ -4242,7 +4258,7 @@
               "source_refs": [
                 "aeat-dr-303-2026"
               ],
-              "value": "1000"
+              "value": "1100"
             },
             {
               "absent_by_design": false,
@@ -4283,14 +4299,14 @@
                 "iva.repercutido.general"
               ],
               "operand_values": [
-                "210"
+                "231"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -5249,14 +5265,14 @@
                 "iva.cuota-devengada-total"
               ],
               "operand_values": [
-                "210.00"
+                "231.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -5998,7 +6014,7 @@
                 "76"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0"
               ],
@@ -6007,7 +6023,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -6046,7 +6062,7 @@
                 "65"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "100"
               ],
               "source_refs": [
@@ -6054,7 +6070,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -6122,7 +6138,7 @@
                 "112"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0",
                 "0"
@@ -6132,7 +6148,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -6576,7 +6592,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "0"
+              "value": "1T"
             },
             {
               "absent_by_design": false,
@@ -6772,7 +6788,7 @@
               ],
               "operand_values": [
                 "0",
-                "105.00"
+                "126.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -6835,7 +6851,7 @@
                 "iva.resultado"
               ],
               "operand_values": [
-                "105.00"
+                "126.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -6992,7 +7008,7 @@
                 "152"
               ],
               "operand_values": [
-                "210",
+                "231",
                 "0",
                 "0",
                 "0",
@@ -7014,7 +7030,7 @@
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -7122,7 +7138,7 @@
               "source_refs": [
                 "aeat-dr-303-2026"
               ],
-              "value": "210"
+              "value": "231"
             },
             {
               "absent_by_design": false,
@@ -7224,7 +7240,7 @@
                 "iva.compensacion-aplicada-periodo"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0",
                 "0.00"
@@ -7234,7 +7250,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -7256,7 +7272,7 @@
                 "iva.cuota-deducible-total"
               ],
               "operand_values": [
-                "210.00",
+                "231.00",
                 "105.00"
               ],
               "source_refs": [
@@ -7264,7 +7280,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -7311,7 +7327,7 @@
               "casilla_id": "iva.cuota-devengada-total",
               "label": "Total accrued VAT amount",
               "role": "key_figure",
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "casilla_id": "iva.cuota-deducible-total",
@@ -7323,19 +7339,19 @@
               "casilla_id": "iva.resultado-regimen-general",
               "label": "General regime result",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "64",
               "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "66",
               "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
@@ -7353,13 +7369,13 @@
               "casilla_id": "iva.resultado",
               "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "71",
               "label": "Resultado final ([69]-[70]+[109])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-generada-periodo",
@@ -7377,7 +7393,7 @@
               "casilla_id": "27",
               "label": "Total accrued VAT amount",
               "role": "key_figure",
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "casilla_id": "45",
@@ -7388,24 +7404,47 @@
           ],
           "source_provenance": [
             {
-              "binding_source": "ledger_iva_aggregation",
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:5af95d20b7e333671071443238f6f542ae06ee734bfe59f1815d035b2ee8de31"
+            },
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
               "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
             },
             {
-              "binding_source": "ledger_iva_aggregation",
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
               "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
             },
             {
-              "binding_source": "prorrata_regularizacion",
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "prorrata_regularizacion",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
             }
           ],
@@ -7484,6 +7523,21 @@
             "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
+              "binding_id": "5af95d20b7e333671071443238f6f542ae06ee734bfe59f1815d035b2ee8de31",
+              "diagnostic_reason_code": "missing_transaction_evidence",
+              "kind": "advisory",
+              "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
+              "severity": "warning",
+              "source_kind_code": "output_iva_evidence",
+              "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
+            },
+            "message": "An output transaction has no supporting evidence.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.work.verify.finding.advisory",
+            "context": {
               "binding_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
               "diagnostic_reason_code": "missing_transaction_evidence",
               "kind": "advisory",
@@ -7497,7 +7551,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
           "completeness_status": "complete",
           "findings": [
             {
@@ -7548,6 +7602,23 @@
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ]
+            },
+            {
+              "action": null,
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "ley-37-1992:art-97",
+                "rd-1619-2012:art-2"
+              ],
+              "message": "An output transaction has no supporting evidence.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ]
             }
           ],
           "granted_verificado_completo": true,
@@ -7555,7 +7626,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "ad42793fd3e8c9d909427312a5a688838f8146f88b3cf40993813ce49ac2d693",
+          "verification_report_id": "842b4dd79ba708673efd9e956eed1ae01ea03167852f0aaf17af042da91b7b17",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -7608,8 +7679,8 @@
             "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": "0",
-            "modelo-303-iva-repercutido-general-base": "1000",
-            "modelo-303-iva-repercutido-general-cuota": "210",
+            "modelo-303-iva-repercutido-general-base": "1100",
+            "modelo-303-iva-repercutido-general-cuota": "231",
             "modelo-303-iva-repercutido-reducido-base": "0",
             "modelo-303-iva-repercutido-reducido-cuota": "0",
             "modelo-303-iva-repercutido-reducido-transitorio-base": "0",
@@ -7627,7 +7698,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -7635,9 +7706,9 @@
             "04": "0",
             "05": "0",
             "06": "0.00",
-            "07": "1000",
+            "07": "1100",
             "08": "0",
-            "09": "210.00",
+            "09": "231.00",
             "10": "0.00",
             "107": "0",
             "108": "0",
@@ -7683,7 +7754,7 @@
             "24": "0",
             "25": "0",
             "26": "0",
-            "27": "210.00",
+            "27": "231.00",
             "28": "500",
             "29": "105.00",
             "30": "0",
@@ -7718,12 +7789,12 @@
             "60": "0",
             "62": "0",
             "63": "0",
-            "64": "105.00",
+            "64": "126.00",
             "65": "100",
-            "66": "105.00",
+            "66": "126.00",
             "68": "0",
             "70": "0",
-            "71": "105.00",
+            "71": "126.00",
             "74": "0",
             "75": "0",
             "76": "0",
@@ -7747,7 +7818,6 @@
             "98": "0",
             "99": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "0",
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
@@ -7762,18 +7832,18 @@
             "iva.compensacion-pendiente-periodos-anteriores": "0",
             "iva.compensacion-pendiente-periodos-posteriores": "0.00",
             "iva.cuota-deducible-total": "105.00",
-            "iva.cuota-devengada-total": "210.00",
+            "iva.cuota-devengada-total": "231.00",
             "iva.prorrata-porcentaje": "100",
             "iva.prorrata-volumen-con-derecho": "0",
             "iva.prorrata-volumen-total": "0",
             "iva.regularizacion-inversiones": "0",
-            "iva.repercutido.general": "210",
+            "iva.repercutido.general": "231",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
             "iva.repercutido.super-reducido.transitorio": "0",
-            "iva.resultado": "105.00",
-            "iva.resultado-regimen-general": "105.00",
+            "iva.resultado": "126.00",
+            "iva.resultado-regimen-general": "126.00",
             "iva.soportado.importaciones": "0",
             "iva.soportado.interiores": "105"
           },
@@ -7784,7 +7854,7 @@
           "input_values_by_casilla_id": {
             "01": "0",
             "04": "0",
-            "07": "1000",
+            "07": "1100",
             "120": "0",
             "122": "0",
             "153": "0",
@@ -7811,7 +7881,7 @@
             "iva.autorepercutido.intracomunitaria.devengado": "0",
             "iva.autorepercutido.intracomunitaria.devengado.base": "0",
             "iva.compensacion-pendiente-periodos-anteriores": "0",
-            "iva.repercutido.general": "210",
+            "iva.repercutido.general": "231",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
@@ -7976,7 +8046,7 @@
               "source_refs": [
                 "aeat-dr-303-2026"
               ],
-              "value": "1000"
+              "value": "1100"
             },
             {
               "absent_by_design": false,
@@ -8017,14 +8087,14 @@
                 "iva.repercutido.general"
               ],
               "operand_values": [
-                "210"
+                "231"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -8983,14 +9053,14 @@
                 "iva.cuota-devengada-total"
               ],
               "operand_values": [
-                "210.00"
+                "231.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -9732,7 +9802,7 @@
                 "76"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0"
               ],
@@ -9741,7 +9811,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -9780,7 +9850,7 @@
                 "65"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "100"
               ],
               "source_refs": [
@@ -9788,7 +9858,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -9856,7 +9926,7 @@
                 "112"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0",
                 "0"
@@ -9866,7 +9936,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -10310,7 +10380,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "0"
+              "value": "1T"
             },
             {
               "absent_by_design": false,
@@ -10506,7 +10576,7 @@
               ],
               "operand_values": [
                 "0",
-                "105.00"
+                "126.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -10569,7 +10639,7 @@
                 "iva.resultado"
               ],
               "operand_values": [
-                "105.00"
+                "126.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -10726,7 +10796,7 @@
                 "152"
               ],
               "operand_values": [
-                "210",
+                "231",
                 "0",
                 "0",
                 "0",
@@ -10748,7 +10818,7 @@
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -10856,7 +10926,7 @@
               "source_refs": [
                 "aeat-dr-303-2026"
               ],
-              "value": "210"
+              "value": "231"
             },
             {
               "absent_by_design": false,
@@ -10958,7 +11028,7 @@
                 "iva.compensacion-aplicada-periodo"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0",
                 "0.00"
@@ -10968,7 +11038,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -10990,7 +11060,7 @@
                 "iva.cuota-deducible-total"
               ],
               "operand_values": [
-                "210.00",
+                "231.00",
                 "105.00"
               ],
               "source_refs": [
@@ -10998,7 +11068,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -11045,7 +11115,7 @@
               "casilla_id": "iva.cuota-devengada-total",
               "label": "Total accrued VAT amount",
               "role": "key_figure",
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "casilla_id": "iva.cuota-deducible-total",
@@ -11057,19 +11127,19 @@
               "casilla_id": "iva.resultado-regimen-general",
               "label": "General regime result",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "64",
               "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "66",
               "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
@@ -11087,13 +11157,13 @@
               "casilla_id": "iva.resultado",
               "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "71",
               "label": "Resultado final ([69]-[70]+[109])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-generada-periodo",
@@ -11111,7 +11181,7 @@
               "casilla_id": "27",
               "label": "Total accrued VAT amount",
               "role": "key_figure",
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "casilla_id": "45",
@@ -11122,24 +11192,47 @@
           ],
           "source_provenance": [
             {
-              "binding_source": "ledger_iva_aggregation",
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:5af95d20b7e333671071443238f6f542ae06ee734bfe59f1815d035b2ee8de31"
+            },
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
               "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
             },
             {
-              "binding_source": "ledger_iva_aggregation",
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
               "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
             },
             {
-              "binding_source": "prorrata_regularizacion",
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "prorrata_regularizacion",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
             }
           ],
@@ -11184,11 +11277,11 @@
           "aeat_accepted": false,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "590d6e1bec6397235008ae8f59566a76007f3cedec719df01efc7ed21d97519b",
+          "filing_record_id": "8185a76f89a43efdcbd584031662c28a62ee490fcc6f4c21eb67e49a9e6b827a",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -11222,14 +11315,7 @@
         "modelo",
         "work",
         "revision",
-        "--modelo",
-        "303",
-        "--year",
-        "2026",
-        "--period",
-        "1T",
-        "--select",
-        "filed"
+        "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08"
       ],
       "captures": [],
       "envelope": {
@@ -11254,8 +11340,8 @@
             "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": "0",
-            "modelo-303-iva-repercutido-general-base": "1000",
-            "modelo-303-iva-repercutido-general-cuota": "210",
+            "modelo-303-iva-repercutido-general-base": "1100",
+            "modelo-303-iva-repercutido-general-cuota": "231",
             "modelo-303-iva-repercutido-reducido-base": "0",
             "modelo-303-iva-repercutido-reducido-cuota": "0",
             "modelo-303-iva-repercutido-reducido-transitorio-base": "0",
@@ -11273,7 +11359,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -11281,9 +11367,9 @@
             "04": "0",
             "05": "0",
             "06": "0.00",
-            "07": "1000",
+            "07": "1100",
             "08": "0",
-            "09": "210.00",
+            "09": "231.00",
             "10": "0.00",
             "107": "0",
             "108": "0",
@@ -11329,7 +11415,7 @@
             "24": "0",
             "25": "0",
             "26": "0",
-            "27": "210.00",
+            "27": "231.00",
             "28": "500",
             "29": "105.00",
             "30": "0",
@@ -11364,12 +11450,12 @@
             "60": "0",
             "62": "0",
             "63": "0",
-            "64": "105.00",
+            "64": "126.00",
             "65": "100",
-            "66": "105.00",
+            "66": "126.00",
             "68": "0",
             "70": "0",
-            "71": "105.00",
+            "71": "126.00",
             "74": "0",
             "75": "0",
             "76": "0",
@@ -11393,7 +11479,6 @@
             "98": "0",
             "99": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "0",
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
@@ -11408,18 +11493,18 @@
             "iva.compensacion-pendiente-periodos-anteriores": "0",
             "iva.compensacion-pendiente-periodos-posteriores": "0.00",
             "iva.cuota-deducible-total": "105.00",
-            "iva.cuota-devengada-total": "210.00",
+            "iva.cuota-devengada-total": "231.00",
             "iva.prorrata-porcentaje": "100",
             "iva.prorrata-volumen-con-derecho": "0",
             "iva.prorrata-volumen-total": "0",
             "iva.regularizacion-inversiones": "0",
-            "iva.repercutido.general": "210",
+            "iva.repercutido.general": "231",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
             "iva.repercutido.super-reducido.transitorio": "0",
-            "iva.resultado": "105.00",
-            "iva.resultado-regimen-general": "105.00",
+            "iva.resultado": "126.00",
+            "iva.resultado-regimen-general": "126.00",
             "iva.soportado.importaciones": "0",
             "iva.soportado.interiores": "105"
           },
@@ -11430,7 +11515,7 @@
           "input_values_by_casilla_id": {
             "01": "0",
             "04": "0",
-            "07": "1000",
+            "07": "1100",
             "120": "0",
             "122": "0",
             "153": "0",
@@ -11457,7 +11542,7 @@
             "iva.autorepercutido.intracomunitaria.devengado": "0",
             "iva.autorepercutido.intracomunitaria.devengado.base": "0",
             "iva.compensacion-pendiente-periodos-anteriores": "0",
-            "iva.repercutido.general": "210",
+            "iva.repercutido.general": "231",
             "iva.repercutido.reducido": "0",
             "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
@@ -11622,7 +11707,7 @@
               "source_refs": [
                 "aeat-dr-303-2026"
               ],
-              "value": "1000"
+              "value": "1100"
             },
             {
               "absent_by_design": false,
@@ -11663,14 +11748,14 @@
                 "iva.repercutido.general"
               ],
               "operand_values": [
-                "210"
+                "231"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -12629,14 +12714,14 @@
                 "iva.cuota-devengada-total"
               ],
               "operand_values": [
-                "210.00"
+                "231.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -13378,7 +13463,7 @@
                 "76"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0"
               ],
@@ -13387,7 +13472,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -13426,7 +13511,7 @@
                 "65"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "100"
               ],
               "source_refs": [
@@ -13434,7 +13519,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -13502,7 +13587,7 @@
                 "112"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0",
                 "0"
@@ -13512,7 +13597,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -13956,7 +14041,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "0"
+              "value": "1T"
             },
             {
               "absent_by_design": false,
@@ -14152,7 +14237,7 @@
               ],
               "operand_values": [
                 "0",
-                "105.00"
+                "126.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -14215,7 +14300,7 @@
                 "iva.resultado"
               ],
               "operand_values": [
-                "105.00"
+                "126.00"
               ],
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -14372,7 +14457,7 @@
                 "152"
               ],
               "operand_values": [
-                "210",
+                "231",
                 "0",
                 "0",
                 "0",
@@ -14394,7 +14479,7 @@
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "absent_by_design": false,
@@ -14502,7 +14587,7 @@
               "source_refs": [
                 "aeat-dr-303-2026"
               ],
-              "value": "210"
+              "value": "231"
             },
             {
               "absent_by_design": false,
@@ -14604,7 +14689,7 @@
                 "iva.compensacion-aplicada-periodo"
               ],
               "operand_values": [
-                "105.00",
+                "126.00",
                 "0",
                 "0",
                 "0.00"
@@ -14614,7 +14699,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -14636,7 +14721,7 @@
                 "iva.cuota-deducible-total"
               ],
               "operand_values": [
-                "210.00",
+                "231.00",
                 "105.00"
               ],
               "source_refs": [
@@ -14644,7 +14729,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "absent_by_design": false,
@@ -14691,7 +14776,7 @@
               "casilla_id": "iva.cuota-devengada-total",
               "label": "Total accrued VAT amount",
               "role": "key_figure",
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "casilla_id": "iva.cuota-deducible-total",
@@ -14703,19 +14788,19 @@
               "casilla_id": "iva.resultado-regimen-general",
               "label": "General regime result",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "64",
               "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "66",
               "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
@@ -14733,13 +14818,13 @@
               "casilla_id": "iva.resultado",
               "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "71",
               "label": "Resultado final ([69]-[70]+[109])",
               "role": "key_figure",
-              "value": "105.00"
+              "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-generada-periodo",
@@ -14757,7 +14842,7 @@
               "casilla_id": "27",
               "label": "Total accrued VAT amount",
               "role": "key_figure",
-              "value": "210.00"
+              "value": "231.00"
             },
             {
               "casilla_id": "45",
@@ -14768,24 +14853,3661 @@
           ],
           "source_provenance": [
             {
-              "binding_source": "ledger_iva_aggregation",
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:5af95d20b7e333671071443238f6f542ae06ee734bfe59f1815d035b2ee8de31"
+            },
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
               "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
             },
             {
-              "binding_source": "ledger_iva_aggregation",
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
               "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
             },
             {
-              "binding_source": "prorrata_regularizacion",
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "prorrata_regularizacion",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
+              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
+            }
+          ],
+          "state": "presentado",
+          "superseded_at": null,
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "verified_at": "2026-04-01T09:00:00+00:00",
+          "verified_by": "docs-sequence-sandbox",
+          "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "revision",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--select",
+        "filed"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.revision",
+        "notices": [],
+        "result": {
+          "binding_overrides": {
+            "modelo-303-bienes-inversion-regularizacion-casilla-43": "0",
+            "modelo-303-casilla-120-no-sujetas-localizacion-base": "0",
+            "modelo-303-casilla-122-inversion-sujeto-pasivo-base": "0",
+            "modelo-303-casilla-59-entregas-intracomunitarias-base": "0",
+            "modelo-303-casilla-60-exportaciones-base": "0",
+            "modelo-303-compensacion-pendiente-anteriores": "0",
+            "modelo-303-criterio-caja-adquisiciones-base": "0",
+            "modelo-303-criterio-caja-adquisiciones-cuota": "0",
+            "modelo-303-criterio-caja-entregas-art75-base": "0",
+            "modelo-303-criterio-caja-entregas-art75-cuota": "0",
+            "modelo-303-iva-autorepercutido-interior-deducible-cuota": "0",
+            "modelo-303-iva-autorepercutido-interior-devengado-cuota": "0",
+            "modelo-303-iva-autorepercutido-intracomunitaria-cuota": "0",
+            "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": "0",
+            "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": "0",
+            "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": "0",
+            "modelo-303-iva-repercutido-general-base": "1100",
+            "modelo-303-iva-repercutido-general-cuota": "231",
+            "modelo-303-iva-repercutido-reducido-base": "0",
+            "modelo-303-iva-repercutido-reducido-cuota": "0",
+            "modelo-303-iva-repercutido-reducido-transitorio-base": "0",
+            "modelo-303-iva-repercutido-reducido-transitorio-cuota": "0",
+            "modelo-303-iva-repercutido-super-reducido-base": "0",
+            "modelo-303-iva-repercutido-super-reducido-cuota": "0",
+            "modelo-303-iva-repercutido-super-reducido-transitorio-base": "0",
+            "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": "0",
+            "modelo-303-iva-soportado-importaciones-cuota": "0",
+            "modelo-303-iva-soportado-interiores-base": "500",
+            "modelo-303-iva-soportado-interiores-cuota": "105",
+            "modelo-303-profile-state-attribution-ratio": "100",
+            "modelo-303-prorrata-regularizacion-casilla-44": "0",
+            "modelo-303-recargo-equivalencia-general-cuota": "0",
+            "modelo-303-recargo-equivalencia-reducido-cuota": "0",
+            "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
+          },
+          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
+          "casilla_values": {
+            "01": "0",
+            "02": "0",
+            "03": "0.00",
+            "04": "0",
+            "05": "0",
+            "06": "0.00",
+            "07": "1100",
+            "08": "0",
+            "09": "231.00",
+            "10": "0.00",
+            "107": "0",
+            "108": "0",
+            "109": "0",
+            "11": "0.00",
+            "111": "0",
+            "112": "0",
+            "12": "0",
+            "120": "0",
+            "122": "0",
+            "123": "0",
+            "124": "0",
+            "125": "0",
+            "126": "0",
+            "127": "0",
+            "128": "0",
+            "13": "0.00",
+            "14": "0",
+            "15": "0",
+            "150": "0",
+            "151": "0",
+            "152": "0",
+            "153": "0",
+            "154": "0.00",
+            "155": "0.00",
+            "156": "0",
+            "157": "0",
+            "158": "0",
+            "16": "0",
+            "165": "0",
+            "166": "0.00",
+            "167": "0.00",
+            "168": "0",
+            "169": "0",
+            "17": "0",
+            "170": "0",
+            "18": "0",
+            "19": "0",
+            "20": "0",
+            "21": "0",
+            "22": "0",
+            "23": "0",
+            "24": "0",
+            "25": "0",
+            "26": "0",
+            "27": "231.00",
+            "28": "500",
+            "29": "105.00",
+            "30": "0",
+            "31": "0",
+            "32": "0",
+            "33": "0.00",
+            "34": "0",
+            "35": "0",
+            "36": "0",
+            "37": "0.00",
+            "38": "0",
+            "39": "0",
+            "40": "0",
+            "41": "0",
+            "42": "0",
+            "43": "0.00",
+            "44": "0.00",
+            "45": "105.00",
+            "47": "0",
+            "48": "0",
+            "49": "0",
+            "50": "0",
+            "51": "0",
+            "52": "0",
+            "53": "0",
+            "54": "0",
+            "55": "0",
+            "56": "0",
+            "57": "0",
+            "58": "0",
+            "59": "0",
+            "60": "0",
+            "62": "0",
+            "63": "0",
+            "64": "126.00",
+            "65": "100",
+            "66": "126.00",
+            "68": "0",
+            "70": "0",
+            "71": "126.00",
+            "74": "0",
+            "75": "0",
+            "76": "0",
+            "77": "0",
+            "79": "0",
+            "80": "0",
+            "81": "0",
+            "83": "0",
+            "84": "0",
+            "86": "0",
+            "88": "0",
+            "89": "0",
+            "90": "0",
+            "91": "0",
+            "92": "0",
+            "93": "0",
+            "94": "0",
+            "95": "0",
+            "96": "0",
+            "97": "0",
+            "98": "0",
+            "99": "0",
+            "decl.ejercicio": "2026",
+            "iva.autoconsumo.promotor.base": "0",
+            "iva.autoconsumo.promotor.cuota": "0.00",
+            "iva.autorepercutido.interior.deducible": "0",
+            "iva.autorepercutido.interior.devengado": "0",
+            "iva.autorepercutido.intracomunitaria": "0",
+            "iva.autorepercutido.intracomunitaria.deducible": "0",
+            "iva.autorepercutido.intracomunitaria.devengado": "0",
+            "iva.autorepercutido.intracomunitaria.devengado.base": "0",
+            "iva.compensacion-aplicada-periodo": "0.00",
+            "iva.compensacion-disponible-fin-periodo": "0.00",
+            "iva.compensacion-generada-periodo": "0.00",
+            "iva.compensacion-pendiente-periodos-anteriores": "0",
+            "iva.compensacion-pendiente-periodos-posteriores": "0.00",
+            "iva.cuota-deducible-total": "105.00",
+            "iva.cuota-devengada-total": "231.00",
+            "iva.prorrata-porcentaje": "100",
+            "iva.prorrata-volumen-con-derecho": "0",
+            "iva.prorrata-volumen-total": "0",
+            "iva.regularizacion-inversiones": "0",
+            "iva.repercutido.general": "231",
+            "iva.repercutido.reducido": "0",
+            "iva.repercutido.reducido.transitorio": "0",
+            "iva.repercutido.super-reducido": "0",
+            "iva.repercutido.super-reducido.transitorio": "0",
+            "iva.resultado": "126.00",
+            "iva.resultado-regimen-general": "126.00",
+            "iva.soportado.importaciones": "0",
+            "iva.soportado.interiores": "105"
+          },
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "detail_rows": [],
+          "filed_at": "2026-04-01T09:00:00+00:00",
+          "filed_by": "docs-sequence-sandbox",
+          "input_values_by_casilla_id": {
+            "01": "0",
+            "04": "0",
+            "07": "1100",
+            "120": "0",
+            "122": "0",
+            "153": "0",
+            "165": "0",
+            "170": "0",
+            "21": "0",
+            "24": "0",
+            "28": "500",
+            "43": "0",
+            "44": "0",
+            "59": "0",
+            "60": "0",
+            "62": "0",
+            "63": "0",
+            "65": "100",
+            "74": "0",
+            "75": "0",
+            "decl.ejercicio": "2026",
+            "decl.periodo": "1T",
+            "iva.autorepercutido.interior.deducible": "0",
+            "iva.autorepercutido.interior.devengado": "0",
+            "iva.autorepercutido.intracomunitaria": "0",
+            "iva.autorepercutido.intracomunitaria.deducible": "0",
+            "iva.autorepercutido.intracomunitaria.devengado": "0",
+            "iva.autorepercutido.intracomunitaria.devengado.base": "0",
+            "iva.compensacion-pendiente-periodos-anteriores": "0",
+            "iva.repercutido.general": "231",
+            "iva.repercutido.reducido": "0",
+            "iva.repercutido.reducido.transitorio": "0",
+            "iva.repercutido.super-reducido": "0",
+            "iva.repercutido.super-reducido.transitorio": "0",
+            "iva.soportado.importaciones": "0",
+            "iva.soportado.interiores": "105"
+          },
+          "modality": null,
+          "modality_reason": null,
+          "observations": [
+            {
+              "absent_by_design": false,
+              "casilla_id": "01",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "02",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "03",
+              "formula_id": "modelo-303-dr303-03-projection",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.repercutido.super-reducido"
+              ],
+              "operand_refs": [
+                "iva.repercutido.super-reducido"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "04",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "05",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "06",
+              "formula_id": "modelo-303-dr303-06-projection",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.repercutido.reducido"
+              ],
+              "operand_refs": [
+                "iva.repercutido.reducido"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "07",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "1100"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "08",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "09",
+              "formula_id": "modelo-303-dr303-09-projection",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.repercutido.general"
+              ],
+              "operand_refs": [
+                "iva.repercutido.general"
+              ],
+              "operand_values": [
+                "231"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "231.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "10",
+              "formula_id": "modelo-303-dr303-10-projection",
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.autorepercutido.intracomunitaria.devengado.base"
+              ],
+              "operand_refs": [
+                "iva.autorepercutido.intracomunitaria.devengado.base"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "107",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "108",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "109",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "11",
+              "formula_id": "modelo-303-dr303-11-projection",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.autorepercutido.intracomunitaria.devengado"
+              ],
+              "operand_refs": [
+                "iva.autorepercutido.intracomunitaria.devengado"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "111",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "112",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "12",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "120",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-69",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "122",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "123",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "124",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "125",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "126",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "127",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "128",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "13",
+              "formula_id": "modelo-303-dr303-13-projection",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.autorepercutido.interior.devengado"
+              ],
+              "operand_refs": [
+                "iva.autorepercutido.interior.devengado"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "14",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "15",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "150",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "151",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "152",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "153",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "154",
+              "formula_id": "modelo-303-dr303-154-rate",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [],
+              "operand_refs": [
+                "m303-dr303-154-transitional-rate-percent"
+              ],
+              "operand_values": [
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "155",
+              "formula_id": "modelo-303-dr303-155-projection",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.repercutido.reducido.transitorio"
+              ],
+              "operand_refs": [
+                "iva.repercutido.reducido.transitorio"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "156",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "157",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "158",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "16",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "165",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "166",
+              "formula_id": "modelo-303-dr303-166-rate",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [],
+              "operand_refs": [
+                "m303-dr303-166-transitional-rate-percent"
+              ],
+              "operand_values": [
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "167",
+              "formula_id": "modelo-303-dr303-167-projection",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.repercutido.super-reducido.transitorio"
+              ],
+              "operand_refs": [
+                "iva.repercutido.super-reducido.transitorio"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "168",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "169",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "17",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "170",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "18",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "19",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "20",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "21",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "22",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "23",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "24",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "25",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "26",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "27",
+              "formula_id": "modelo-303-dr303-27-projection",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.cuota-devengada-total"
+              ],
+              "operand_refs": [
+                "iva.cuota-devengada-total"
+              ],
+              "operand_values": [
+                "231.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "231.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "28",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "500"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "29",
+              "formula_id": "modelo-303-dr303-29-projection",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.soportado.interiores"
+              ],
+              "operand_refs": [
+                "iva.soportado.interiores"
+              ],
+              "operand_values": [
+                "105"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "105.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "30",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "31",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "32",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "33",
+              "formula_id": "modelo-303-dr303-33-projection",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.soportado.importaciones"
+              ],
+              "operand_refs": [
+                "iva.soportado.importaciones"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "34",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "35",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "36",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "37",
+              "formula_id": "modelo-303-dr303-37-projection",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.autorepercutido.intracomunitaria.deducible"
+              ],
+              "operand_refs": [
+                "iva.autorepercutido.intracomunitaria.deducible"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "38",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "39",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "40",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "41",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "42",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "43",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-107",
+                "ley-37-1992:art-108",
+                "ley-37-1992:art-109",
+                "ley-37-1992:art-110",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "44",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-104",
+                "ley-37-1992:art-105",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "45",
+              "formula_id": "modelo-303-dr303-45-projection",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-94",
+                "ley-37-1992:art-95",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.cuota-deducible-total"
+              ],
+              "operand_refs": [
+                "iva.cuota-deducible-total"
+              ],
+              "operand_values": [
+                "105.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "105.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "47",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "48",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "49",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "50",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "51",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "52",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "53",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "54",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "55",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "56",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "57",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "58",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "59",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-25",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "60",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-21",
+                "ley-37-1992:art-22",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "62",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-75",
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "63",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-75",
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "64",
+              "formula_id": "modelo-303-iva-suma-resultados",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "ley-37-1992:art-122",
+                "ley-37-1992:art-123",
+                "ley-37-1992:art-124",
+                "rd-1624-1992:art-71"
+              ],
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.resultado-regimen-general",
+                "58",
+                "76"
+              ],
+              "operand_refs": [
+                "iva.resultado-regimen-general",
+                "58",
+                "76"
+              ],
+              "operand_values": [
+                "126.00",
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "126.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "65",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "100"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "66",
+              "formula_id": "modelo-303-iva-atribuible-estado",
+              "legal_refs": [
+                "rd-1624-1992:art-71"
+              ],
+              "op": "divide",
+              "operand_casilla_refs": [
+                "64",
+                "65"
+              ],
+              "operand_refs": [
+                "64",
+                "65"
+              ],
+              "operand_values": [
+                "126.00",
+                "100"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "126.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "68",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "70",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "71",
+              "formula_id": "modelo-303-iva-resultado-final",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "iva.resultado",
+                "70",
+                "109",
+                "112"
+              ],
+              "operand_refs": [
+                "iva.resultado",
+                "70",
+                "109",
+                "112"
+              ],
+              "operand_values": [
+                "126.00",
+                "0",
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "126.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "74",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "ley-37-1992:art-163-quinquiesdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "75",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-163-decies",
+                "ley-37-1992:art-163-undecies",
+                "ley-37-1992:art-163-duodecies",
+                "ley-37-1992:art-163-terdecies",
+                "ley-37-1992:art-163-quinquiesdecies",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "76",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "77",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "79",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "80",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "81",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "83",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "84",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "86",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "88",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "89",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "90",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "91",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "92",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "93",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "94",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "95",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "96",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "97",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "98",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "99",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.ejercicio",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "2026"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "decl.periodo",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "1T"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.autoconsumo.promotor.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.autoconsumo.promotor.cuota",
+              "formula_id": "modelo-303-autoconsumo-promotor-cuota",
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "ley-37-1992:art-90",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "multiply",
+              "operand_casilla_refs": [
+                "iva.autoconsumo.promotor.base"
+              ],
+              "operand_refs": [
+                "iva.autoconsumo.promotor.base"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.interior.deducible",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.interior.devengado",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.intracomunitaria",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.intracomunitaria.deducible",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.intracomunitaria.devengado",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.intracomunitaria.devengado.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.compensacion-aplicada-periodo",
+              "formula_id": "modelo-303-compensacion-aplicada-periodo",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "min",
+              "operand_casilla_refs": [
+                "iva.compensacion-pendiente-periodos-anteriores",
+                "iva.resultado-regimen-general"
+              ],
+              "operand_refs": [
+                "iva.compensacion-pendiente-periodos-anteriores",
+                "iva.resultado-regimen-general"
+              ],
+              "operand_values": [
+                "0",
+                "126.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.compensacion-disponible-fin-periodo",
+              "formula_id": "modelo-303-compensacion-disponible-fin-periodo",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.compensacion-pendiente-periodos-posteriores",
+                "iva.compensacion-generada-periodo"
+              ],
+              "operand_refs": [
+                "iva.compensacion-pendiente-periodos-posteriores",
+                "iva.compensacion-generada-periodo"
+              ],
+              "operand_values": [
+                "0.00",
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.compensacion-generada-periodo",
+              "formula_id": "modelo-303-compensacion-generada-periodo",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "max",
+              "operand_casilla_refs": [
+                "iva.resultado"
+              ],
+              "operand_refs": [
+                "iva.resultado"
+              ],
+              "operand_values": [
+                "126.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.compensacion-pendiente-periodos-anteriores",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
+              "formula_id": "modelo-303-compensacion-pendiente-periodos-posteriores",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "iva.compensacion-pendiente-periodos-anteriores",
+                "iva.compensacion-aplicada-periodo"
+              ],
+              "operand_refs": [
+                "iva.compensacion-pendiente-periodos-anteriores",
+                "iva.compensacion-aplicada-periodo"
+              ],
+              "operand_values": [
+                "0",
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.cuota-deducible-total",
+              "formula_id": "modelo-303-iva-cuota-deducible-total",
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.soportado.interiores",
+                "iva.soportado.importaciones",
+                "iva.autorepercutido.intracomunitaria",
+                "iva.autorepercutido.interior.deducible",
+                "43",
+                "44"
+              ],
+              "operand_refs": [
+                "iva.soportado.interiores",
+                "iva.soportado.importaciones",
+                "iva.autorepercutido.intracomunitaria",
+                "iva.autorepercutido.interior.deducible",
+                "43",
+                "44"
+              ],
+              "operand_values": [
+                "105",
+                "0",
+                "0",
+                "0",
+                "0.00",
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "105.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.cuota-devengada-total",
+              "formula_id": "modelo-303-iva-cuota-devengada-total",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "add",
+              "operand_casilla_refs": [
+                "iva.repercutido.general",
+                "iva.repercutido.reducido",
+                "iva.repercutido.super-reducido",
+                "iva.repercutido.reducido.transitorio",
+                "iva.repercutido.super-reducido.transitorio",
+                "iva.autorepercutido.intracomunitaria",
+                "iva.autorepercutido.interior.devengado",
+                "iva.autoconsumo.promotor.cuota",
+                "18",
+                "21",
+                "24",
+                "158",
+                "170",
+                "26",
+                "15",
+                "152"
+              ],
+              "operand_refs": [
+                "iva.repercutido.general",
+                "iva.repercutido.reducido",
+                "iva.repercutido.super-reducido",
+                "iva.repercutido.reducido.transitorio",
+                "iva.repercutido.super-reducido.transitorio",
+                "iva.autorepercutido.intracomunitaria",
+                "iva.autorepercutido.interior.devengado",
+                "iva.autoconsumo.promotor.cuota",
+                "18",
+                "21",
+                "24",
+                "158",
+                "170",
+                "26",
+                "15",
+                "152"
+              ],
+              "operand_values": [
+                "231",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0.00",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "231.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.prorrata-porcentaje",
+              "formula_id": "modelo-303-iva-prorrata-porcentaje",
+              "legal_refs": [
+                "ley-37-1992:art-104",
+                "ley-37-1992:art-102",
+                "ley-37-1992:art-94",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "if_then_else",
+              "operand_casilla_refs": [
+                "iva.prorrata-volumen-total"
+              ],
+              "operand_refs": [
+                "iva.prorrata-volumen-total"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "100"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.prorrata-volumen-con-derecho",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-104",
+                "ley-37-1992:art-102",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.prorrata-volumen-total",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-104",
+                "ley-37-1992:art-102",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.regularizacion-inversiones",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-107",
+                "ley-37-1992:art-108",
+                "ley-37-1992:art-109",
+                "ley-37-1992:art-110",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.repercutido.general",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "231"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.repercutido.reducido",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.repercutido.reducido.transitorio",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.repercutido.super-reducido",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.repercutido.super-reducido.transitorio",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.resultado",
+              "formula_id": "modelo-303-iva-resultado",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "rd-1624-1992:art-29",
+                "rd-1624-1992:art-30"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "66",
+                "77",
+                "68",
+                "iva.compensacion-aplicada-periodo"
+              ],
+              "operand_refs": [
+                "66",
+                "77",
+                "68",
+                "iva.compensacion-aplicada-periodo"
+              ],
+              "operand_values": [
+                "126.00",
+                "0",
+                "0",
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "126.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.resultado-regimen-general",
+              "formula_id": "modelo-303-iva-resultado-regimen-general",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "iva.cuota-devengada-total",
+                "iva.cuota-deducible-total"
+              ],
+              "operand_refs": [
+                "iva.cuota-devengada-total",
+                "iva.cuota-deducible-total"
+              ],
+              "operand_values": [
+                "231.00",
+                "105.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2026",
+                "boe-modelo-303-2008-form",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "126.00"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.soportado.importaciones",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-17",
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.soportado.interiores",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-92",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ],
+              "value": "105"
+            }
+          ],
+          "operation": "modelo.work.revision",
+          "relation_overrides": {},
+          "result_summary": [
+            {
+              "casilla_id": "iva.cuota-devengada-total",
+              "label": "Total accrued VAT amount",
+              "role": "key_figure",
+              "value": "231.00"
+            },
+            {
+              "casilla_id": "iva.cuota-deducible-total",
+              "label": "Total deductible VAT amount",
+              "role": "key_figure",
+              "value": "105.00"
+            },
+            {
+              "casilla_id": "iva.resultado-regimen-general",
+              "label": "General regime result",
+              "role": "key_figure",
+              "value": "126.00"
+            },
+            {
+              "casilla_id": "64",
+              "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
+              "role": "key_figure",
+              "value": "126.00"
+            },
+            {
+              "casilla_id": "66",
+              "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
+              "role": "key_figure",
+              "value": "126.00"
+            },
+            {
+              "casilla_id": "iva.compensacion-aplicada-periodo",
+              "label": "Prior-period offsets applied in this period",
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
+              "label": "Prior-period offsets pending for later periods",
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "iva.resultado",
+              "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
+              "role": "key_figure",
+              "value": "126.00"
+            },
+            {
+              "casilla_id": "71",
+              "label": "Resultado final ([69]-[70]+[109])",
+              "role": "key_figure",
+              "value": "126.00"
+            },
+            {
+              "casilla_id": "iva.compensacion-generada-periodo",
+              "label": "Offset balance generated in this period",
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "iva.compensacion-disponible-fin-periodo",
+              "label": "Offset balance available at period end",
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "27",
+              "label": "Total accrued VAT amount",
+              "role": "key_figure",
+              "value": "231.00"
+            },
+            {
+              "casilla_id": "45",
+              "label": "Total deductible amount",
+              "role": "key_figure",
+              "value": "105.00"
+            }
+          ],
+          "source_provenance": [
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:5af95d20b7e333671071443238f6f542ae06ee734bfe59f1815d035b2ee8de31"
+            },
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+            },
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+            },
+            {
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
               "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
             }
           ],

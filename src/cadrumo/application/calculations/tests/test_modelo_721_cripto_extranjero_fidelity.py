@@ -70,6 +70,7 @@ import pytest
 from ....core import (
     CasillaId,
     ForeignAssetObligationGroup,
+    RegistryAuthorityGrade,
     validated_casilla_id,
 )
 from ....domain.calculations.registry import (
@@ -242,6 +243,12 @@ def _year_n_observation() -> RegistryModeloObservation:
         period="0A",
         observations=registry_grounded_observation_rows(
             modelo=_MODELO,
+            # APPLICABILITY grade. Modelo 721 declares tax_domain and
+            # calculation_class "informative" and ships no export or
+            # formulas family: it reports holdings abroad and computes no
+            # liability, so the FILING default asks for capability the
+            # modelo neither has nor claims.
+            grade=RegistryAuthorityGrade.APPLICABILITY,
             filing_year=_YEAR_N,
             period="0A",
             casilla_values=(
@@ -276,6 +283,7 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
         period="0A",
         observations=registry_grounded_observation_rows(
             modelo=_MODELO,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
             filing_year=_YEAR_N_PLUS_1,
             period="0A",
             casilla_values=(
@@ -301,6 +309,7 @@ def _year_n_plus_1_observation_without_btc() -> RegistryModeloObservation:
         period="0A",
         observations=registry_grounded_observation_rows(
             modelo=_MODELO,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
             filing_year=_YEAR_N_PLUS_1,
             period="0A",
             casilla_values=(
@@ -322,6 +331,7 @@ def _year_n_plus_1_observation_without_eth() -> RegistryModeloObservation:
         period="0A",
         observations=registry_grounded_observation_rows(
             modelo=_MODELO,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
             filing_year=_YEAR_N_PLUS_1,
             period="0A",
             casilla_values=(

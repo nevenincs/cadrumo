@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry._authority import bundled_authority
 from cadrumo.domain.calculations.registry._errors import RegistryValidationError
-from cadrumo.domain.calculations.registry._schema import RegistryAuthorityGrade
 
 from .test_revision_span_matches_published_designs import _boundaries_for, _declared_revisions, _filing_revisions
 
