@@ -27,11 +27,12 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Annotated, ClassVar, Final, Literal, NamedTuple, Protocol, Self, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
 from ...core import (
     OBJECT_TUPLE_ADAPTER,
     STR_KEYED_MAPPING_ADAPTER,
+    STRICT_FROZEN_HIDDEN_INPUT_CONFIG,
     BindingSourceKind,
     CalculationSourceLineageRole,
     CasillaId,
@@ -863,7 +864,7 @@ class BorradorSourceProvenance(BaseModel):
 class CalculationSourceResolution(BaseModel):
     """Resolved values and provenance returned by one source resolver."""
 
-    model_config = ConfigDict(**{**_STRICT_FROZEN, "hide_input_in_errors": True})
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     resolver_id: str | CompositeSourceResolverId = Field(min_length=1, max_length=128)
     owned_sources: tuple[BindingSourceKind, ...] = Field(default_factory=tuple)
