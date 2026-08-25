@@ -282,6 +282,10 @@ class ProfileCustodySecureObjectRecordPort(Protocol):
 class ProfileCustodySecureObjectRepositoryPort(Protocol):
     """The small encrypted-object surface needed by a profile capsule."""
 
+    def object_key_digest(self, object_key: str | bytes) -> bytes:
+        """Derive the repository's stored lookup digest for one natural key."""
+        ...
+
     def iter_all_records_raw(
         self,
         *,
@@ -790,6 +794,7 @@ class ProfileCustodyInventoryPort(Protocol):
 
     @property
     def digest_entries(self) -> tuple[ProfileCustodyInventoryEntryPort, ...]: ...
+
 
 class _PersistenceProfileBucketStorage:
     """Adapt canonical bucket layout and locking to the application port."""

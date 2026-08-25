@@ -18,7 +18,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.persistence.storage import crypto
 from ...core import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import canonical_json_bytes, sha256_hex
@@ -481,7 +480,7 @@ def _load_profile_record_row(
     or duplicated row that does not exist.
     """
     object_key = profile_record_object_key(profile_id)
-    expected_key = crypto.secure_object_key_digest(object_key)
+    expected_key = objects.object_key_digest(object_key)
     rows = tuple(objects.iter_all_records_raw(namespace=_RECORD_NAMESPACE))
     if len(rows) != 1:
         raise ProfileRecordIntegrityError(
