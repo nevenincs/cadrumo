@@ -39,10 +39,10 @@ from .._counterparty_establishment import (
     ConfirmedCounterpartyFactsRepository,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 _BUCKET_ID = "37373737-3737-4737-8737-373737373739"
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
 

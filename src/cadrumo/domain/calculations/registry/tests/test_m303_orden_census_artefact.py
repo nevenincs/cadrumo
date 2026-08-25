@@ -42,9 +42,9 @@ from .._m303_orden_manifest import (
 )
 from .._schema_references import SourceReference
 
-CensusArtefactPayload = dict[str, object]
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
+
+CensusArtefactPayload = dict[str, object]
 
 
 @pytest.fixture(scope="module")

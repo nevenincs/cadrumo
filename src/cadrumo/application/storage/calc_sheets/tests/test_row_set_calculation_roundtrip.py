@@ -27,11 +27,11 @@ from .._row_set_assembly import assemble_row_sets_for_snapshot
 from .._styling import StyleRole, _data_tab_ranges
 from .._workbook_export import serialize_offline_workbook
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 _BUCKET_ID = "72000000-0000-4000-8000-000000000720"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _seed_ready_profile() -> None:
