@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ..quality.cli_action_census import CandidateRecord, census
+from ..quality.cli_action_census import CandidateRecord, current_census
 from ..quality.cli_action_census_dispositions import (
     DEFAULT_DISPOSITIONS_PATH,
     CandidateDisposition,
@@ -16,8 +16,10 @@ from ..quality.cli_action_census_dispositions import (
     DispositionRole,
     DispositionValidationError,
     ExclusionGrounding,
+    checked_in_current_dispositions,
     checked_in_dispositions,
     current_exception_override_observations,
+    current_tree_dispositions,
     load_authored_message_exclusions,
     load_dispositions,
     main,
@@ -31,9 +33,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 @pytest.fixture(scope="module")
 def candidates() -> tuple[CandidateRecord, ...]:
-    """Use the real pinned census, never a reimplemented candidate model."""
-    records = census("HEAD")
-    assert records, "HEAD must contain real action-guidance census candidates"
+    """Use the real live census, never a reimplemented candidate model."""
+    records = current_census()
+    assert records, "the current tree must contain real action-guidance census candidates"
     return records
 
 
@@ -77,6 +79,49 @@ def test_toml_round_trip_preserves_all_five_real_census_identity_fields(
     assert parsed == (expected,)
     assert parsed[0].key == CandidateKey.from_candidate(source)
     assert validate_dispositions((source,), parsed) == parsed
+
+
+def test_current_tree_ledger_exactly_matches_the_mechanical_live_census() -> None:
+    """A new site, changed identity, or retired row fails the checked-in current-tree join."""
+    candidates = current_census()
+    rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
+
+    assert checked_in_current_dispositions() == rows
+    assert current_tree_dispositions(candidates) == rows
+
+
+def test_current_tree_ledger_rejects_a_mutated_unadjudicated_candidate() -> None:
+    """Adding one live candidate cannot inherit a nearby ledger row's adjudication."""
+    candidates = current_census()
+    rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
+    unadjudicated = CandidateRecord(
+        path="src/cadrumo/application/overview/_data_prep.py",
+        enclosing_symbol="_work_unit_step",
+        role="producer",
+        alias="next_action",
+        action_identity="declare_next_action('operator.unreviewed')",
+        line=1,
+        column=0,
+    )
+
+    with pytest.raises(DispositionValidationError, match="missing disposition for current census candidate"):
+        validate_dispositions((*candidates, unadjudicated), rows)
+
+
+def test_current_tree_adjudication_fails_closed_for_an_unrecognized_action_alias() -> None:
+    """A scanner-discovered alias cannot be silently classified by a nearby known shape."""
+    candidate = CandidateRecord(
+        path="src/cadrumo/application/overview/_data_prep.py",
+        enclosing_symbol="_work_unit_step",
+        role="producer",
+        alias="unreviewed_action_field",
+        action_identity="declare_next_action('operator.unreviewed')",
+        line=1,
+        column=0,
+    )
+
+    with pytest.raises(DispositionValidationError, match="has no disposition rule"):
+        current_tree_dispositions((candidate,))
 
 
 def test_action_identity_preserves_source_whitespace_but_rejects_whitespace_only_values(
@@ -250,7 +295,7 @@ def test_excluded_rows_require_symbol_function_and_grounded_reason(
 
 
 def test_checked_in_exception_override_owners_cover_each_live_physical_observation() -> None:
-    """The current tree proves every override shape joins exactly one ledger owner."""
+    """The current tree proves the retired exception override shape is absent."""
     rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
     observations = validate_exception_override_owners(rows)
     owner_rows = tuple(row for row in rows if row.exception_observations)
@@ -261,68 +306,18 @@ def test_checked_in_exception_override_owners_cover_each_live_physical_observati
 
     assert {observation.key for observation in observations} == {row.key for row in owner_rows}
     assert observed_fingerprints == ledger_fingerprints
-    assert any(observation.form == "cooperative_mro" and observation.mro_proven for observation in observations)
-    assert any(observation.role.value == "mutator" for observation in observations)
-    assert all(observation.action_field == "suggestion" for observation in observations)
+    assert observations == ()
+    assert owner_rows == ()
     assert current_exception_override_observations() == observations
 
 
-def test_current_owner_gate_rejects_an_owner_stripped_of_its_evidence() -> None:
-    """Mutating real checked-in ownership cannot conceal a missing-evidence defect.
-
-    The gate no longer asserts external ownership metadata for an override --
-    reading that meant citing a development record, which this tooling must not
-    do. The evidence the tree can prove on its own still has to be there.
-    """
+def test_current_owner_gate_rejects_a_retired_exception_owner() -> None:
+    """A mutation cannot reintroduce metadata for the absent override shape."""
     rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
-    target = next(row for row in rows if row.key.path == "src/cadrumo/domain/justificante/_errors.py")
-    changed = tuple(replace(row, exception_observations=()) if row == target else row for row in rows)
+    target = rows[0]
+    changed = (replace(target, exception_observations=("selector|constructor_keyword|suggestion|<stale>|1",)),)
 
-    with pytest.raises(DispositionValidationError, match="lacks exception_observations"):
-        validate_exception_override_owners(changed)
-
-
-def test_current_owner_gate_rejects_multiple_adjudicated_owners() -> None:
-    """One current observation has one ledger owner, rather than a scope-derived fallback."""
-    rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
-    target = next(row for row in rows if row.key.path == "src/cadrumo/domain/justificante/_errors.py")
-
-    with pytest.raises(DispositionValidationError, match="2 adjudicated owners"):
-        validate_exception_override_owners((*rows, target))
-
-
-def test_current_owner_gate_rejects_an_excluded_live_override_owner() -> None:
-    """A real live override cannot be relabelled as a grounded non-producer."""
-    rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
-    target = next(row for row in rows if row.key.path == "src/cadrumo/domain/justificante/_errors.py")
-    excluded = replace(
-        target,
-        role=DispositionRole.EXCLUDED,
-        exclusion=ExclusionGrounding(
-            symbol=target.key.alias,
-            enclosing_function=target.key.enclosing_symbol,
-        ),
-    )
-    changed = tuple(excluded if row == target else row for row in rows)
-
-    with pytest.raises(DispositionValidationError, match="requires producer or transformer disposition role"):
-        validate_exception_override_owners(changed)
-
-
-@pytest.mark.parametrize("kind", ("missing", "extra", "duplicate"))
-def test_current_owner_gate_rejects_observation_entry_drift(kind: str) -> None:
-    """Every source-derived physical fingerprint has one exact ledger entry."""
-    rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
-    target = next(row for row in rows if row.key.path == "src/cadrumo/domain/justificante/_errors.py")
-    if kind == "missing":
-        fingerprints: tuple[str, ...] = ()
-    elif kind == "extra":
-        fingerprints = (*target.exception_observations, "selector|constructor_keyword|suggestion|<extra>|1")
-    else:
-        fingerprints = (*target.exception_observations, target.exception_observations[0])
-    changed = tuple(replace(row, exception_observations=fingerprints) if row == target else row for row in rows)
-
-    with pytest.raises(DispositionValidationError, match="observation set drifted"):
+    with pytest.raises(DispositionValidationError, match="stale exception override owner"):
         validate_exception_override_owners(changed)
 
 

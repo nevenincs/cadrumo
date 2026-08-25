@@ -30,6 +30,7 @@ from .cli_action_census import (
     AuthoredErrorMessageSite,
     CandidateRecord,
     census,
+    current_census,
 )
 
 __all__ = [
@@ -43,14 +44,17 @@ __all__ = [
     "ExceptionOverrideObservation",
     "ExceptionOverrideRole",
     "ExclusionGrounding",
+    "checked_in_current_dispositions",
     "checked_in_dispositions",
     "current_exception_override_observations",
+    "current_tree_dispositions",
     "load_authored_message_exclusions",
     "load_dispositions",
     "render_dispositions",
     "validate_authored_error_message_join",
     "validate_dispositions",
     "validate_exception_override_owners",
+    "write_current_dispositions",
 ]
 
 
@@ -76,6 +80,8 @@ _AUTHORED_MESSAGE_EXCLUSION_FIELDS: Final[frozenset[str]] = frozenset({"fingerpr
 
 DEFAULT_DISPOSITIONS_PATH: Final[Path] = Path(__file__).with_suffix(".toml")
 """The checked-in ledger path to be populated after the model is established."""
+
+_CURRENT_TYPED_ACTION_ALIASES: Final[frozenset[str]] = frozenset({"next_action"})
 
 
 class DispositionRole(StrEnum):
@@ -893,23 +899,116 @@ def validate_dispositions(
     return tuple(sorted(parsed, key=lambda disposition: disposition.key.render()))
 
 
+def _current_tree_disposition_role(candidate: CandidateRecord) -> DispositionRole:
+    """Classify one live mechanical observation without inventing an action.
+
+    The scanner deliberately has a broad denominator: it reports command
+    spelling, internal LLM suggestions, and migration-local remediation beside
+    typed action fields.  A bare command string or a general-purpose
+    ``suggestion`` value has no bindings or envelope shape, so it must remain a
+    grounded exclusion rather than be promoted into a purported recovery.
+    """
+    if candidate.role == "command_literal" or candidate.alias in {"next_command", "remediation", "suggestion"}:
+        return DispositionRole.EXCLUDED
+    if candidate.alias not in _CURRENT_TYPED_ACTION_ALIASES:
+        raise DispositionValidationError(
+            (f"current census has no disposition rule for {CandidateKey.from_candidate(candidate).render()}",),
+        )
+    if candidate.role == "definition":
+        return DispositionRole.CANONICAL_OWNER
+    if candidate.role in {"assignment", "producer"}:
+        return DispositionRole.PRODUCER
+    if candidate.role == "transformer":
+        return DispositionRole.TRANSFORMER
+    raise DispositionValidationError(
+        (f"current census has no disposition rule for {CandidateKey.from_candidate(candidate).render()}",),
+    )
+
+
+def _current_tree_disposition_reason(candidate: CandidateRecord, role: DispositionRole) -> str:
+    """Return the source-grounded adjudication explanation for one live row."""
+    location = f"{candidate.path}:{candidate.line} {candidate.enclosing_symbol}"
+    if role is DispositionRole.EXCLUDED:
+        if candidate.role == "command_literal":
+            return (
+                f"{location}: this bare command literal has no typed action envelope or bindings; "
+                "it is excluded from recovery ownership."
+            )
+        if candidate.alias == "next_command":
+            return (
+                f"{location}: this text-surface success hint is not a typed recovery action; "
+                "it is excluded from recovery ownership."
+            )
+        return (
+            f"{location}: this {candidate.alias!r} value is an internal domain value, not a typed operator action; "
+            "it is excluded from recovery ownership."
+        )
+    if role is DispositionRole.CANONICAL_OWNER:
+        return f"{location}: this typed action field is the canonical source-schema owner."
+    if role is DispositionRole.PRODUCER:
+        return f"{location}: this source selects or supplies the typed action to its consumer."
+    if role is DispositionRole.TRANSFORMER:
+        return f"{location}: this source relays a typed action without selecting its target."
+    raise AssertionError(f"unhandled current-tree disposition role: {role}")
+
+
+def current_tree_dispositions(candidates: Iterable[CandidateRecord]) -> tuple[CandidateDisposition, ...]:
+    """Derive the complete, source-grounded S46 disposition set for live candidates."""
+    observed = tuple(candidates)
+    rows: list[CandidateDisposition] = []
+    for candidate in observed:
+        role = _current_tree_disposition_role(candidate)
+        exclusion = (
+            ExclusionGrounding(symbol=candidate.alias, enclosing_function=candidate.enclosing_symbol)
+            if role is DispositionRole.EXCLUDED
+            else None
+        )
+        rows.append(
+            CandidateDisposition(
+                key=CandidateKey.from_candidate(candidate),
+                role=role,
+                reason=_current_tree_disposition_reason(candidate, role),
+                exclusion=exclusion,
+            ),
+        )
+    return validate_dispositions(observed, rows)
+
+
 def _toml_string(value: str) -> str:
     """Render a TOML basic string through JSON's compatible string grammar."""
     return json.dumps(value, ensure_ascii=False)
 
 
-def render_dispositions(dispositions: Iterable[CandidateDisposition]) -> str:
+def render_dispositions(
+    dispositions: Iterable[CandidateDisposition],
+    *,
+    authored_message_exclusions: Iterable[AuthoredMessageExclusion] = (),
+) -> str:
     """Serialize well-formed rows deterministically for the checked-in ledger.
 
     This only validates individual row shape.  Coverage remains an explicit
     reconciliation against a specific current census revision.
     """
     rows = tuple(dispositions)
+    exclusions = tuple(authored_message_exclusions)
     errors = [
         error
         for index, disposition in enumerate(rows, start=1)
         for error in _disposition_shape_errors(disposition, context=f"disposition #{index}")
     ]
+    if errors:
+        raise DispositionValidationError(errors)
+
+    exclusion_fingerprints: set[str] = set()
+    for index, exclusion in enumerate(exclusions, start=1):
+        context = f"authored message exclusion #{index}"
+        if not exclusion.fingerprint.strip():
+            errors.append(f"{context}: missing or empty 'fingerprint'")
+        if not exclusion.reason.strip():
+            errors.append(f"{context}: missing or empty 'reason'")
+        if exclusion.fingerprint in exclusion_fingerprints:
+            errors.append(f"{context}: duplicate fingerprint {exclusion.fingerprint!r}")
+        exclusion_fingerprints.add(exclusion.fingerprint)
     if errors:
         raise DispositionValidationError(errors)
 
@@ -944,6 +1043,15 @@ def render_dispositions(dispositions: Iterable[CandidateDisposition]) -> str:
                     + "]",
                 ),
             )
+    for exclusion in sorted(exclusions, key=lambda row: row.fingerprint):
+        lines.extend(
+            (
+                "",
+                "[[authored_message_exclusion]]",
+                f"fingerprint = {_toml_string(exclusion.fingerprint)}",
+                f"reason = {_toml_string(exclusion.reason.strip())}",
+            ),
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -956,10 +1064,49 @@ def checked_in_dispositions(
     return validate_dispositions(census(revision), load_dispositions(path))
 
 
+def checked_in_current_dispositions(
+    *,
+    path: Path = DEFAULT_DISPOSITIONS_PATH,
+    root: Path = REPO_ROOT,
+) -> tuple[CandidateDisposition, ...]:
+    """Load the ledger and require exact coverage of the current production tree."""
+    return validate_dispositions(current_census(root=root), load_dispositions(path))
+
+
+def write_current_dispositions(
+    *,
+    path: Path = DEFAULT_DISPOSITIONS_PATH,
+    root: Path = REPO_ROOT,
+) -> tuple[CandidateDisposition, ...]:
+    """Mechanically replace stale candidate rows while retaining exact message exclusions."""
+    candidates = current_census(root=root)
+    rows = current_tree_dispositions(candidates)
+    exclusions = load_authored_message_exclusions(path)
+    path.write_text(
+        render_dispositions(rows, authored_message_exclusions=exclusions),
+        encoding=_UTF_8,
+    )
+    return rows
+
+
 def main(argv: list[str] | None = None) -> int:
-    """Validate a checked-in disposition ledger against one pinned census revision."""
+    """Validate or mechanically re-adjudicate the action-census disposition ledger."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("revision", help="Git revision to reconcile; use an immutable commit when citing output")
+    parser.add_argument(
+        "revision",
+        nargs="?",
+        help="Git revision to reconcile; use an immutable commit when citing output",
+    )
+    parser.add_argument(
+        "--current-tree",
+        action="store_true",
+        help="reconcile the current production tree instead of a pinned revision",
+    )
+    parser.add_argument(
+        "--write-current",
+        action="store_true",
+        help="replace candidate rows with the explicit mechanical current-tree adjudication",
+    )
     parser.add_argument(
         "--dispositions",
         type=Path,
@@ -967,12 +1114,23 @@ def main(argv: list[str] | None = None) -> int:
         help="TOML ledger path (defaults to the checked-in campaign ledger)",
     )
     arguments = parser.parse_args(argv)
+    if arguments.current_tree == (arguments.revision is not None):
+        parser.error("supply exactly one revision or --current-tree")
+    if arguments.write_current and not arguments.current_tree:
+        parser.error("--write-current requires --current-tree")
     try:
-        rows = checked_in_dispositions(arguments.revision, path=arguments.dispositions)
+        if arguments.write_current:
+            rows = write_current_dispositions(path=arguments.dispositions)
+        elif arguments.current_tree:
+            rows = checked_in_current_dispositions(path=arguments.dispositions)
+        else:
+            assert arguments.revision is not None
+            rows = checked_in_dispositions(arguments.revision, path=arguments.dispositions)
     except DispositionValidationError as error:
         print(error)
         return 1
-    print(f"reconciled {len(rows)} CLI action-census dispositions against {arguments.revision}")
+    scope = "the current production tree" if arguments.current_tree else arguments.revision
+    print(f"reconciled {len(rows)} CLI action-census dispositions against {scope}")
     return 0
 
 

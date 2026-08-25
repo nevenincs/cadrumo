@@ -556,6 +556,39 @@ def current_census(*, root: Path = REPO_ROOT) -> tuple[CandidateRecord, ...]:
     return _census_sources(current_production_sources(root=root), INITIAL_ACTION_ALIASES)
 
 
+def action_alias_discoveries_from_sources(
+    sources: Iterable[SourceEntry],
+    *,
+    aliases: frozenset[str],
+) -> tuple[DiscoveryRecord, ...]:
+    """Find only direct, newly named fields to which an admitted action flows.
+
+    This intentionally keeps a distinct result from the broader fixed-point
+    report: S46 needs a cheap fail-closed alias check over current Python, not
+    catalogue/YAML discovery or a second claim about source authority.
+    """
+    source_snapshot = tuple(sources)
+    candidates = _census_sources(source_snapshot, aliases)
+    discoveries: list[DiscoveryRecord] = []
+    for path, source in source_snapshot:
+        if not path.endswith(".py"):
+            continue
+        tree = ast.parse(source, filename=path)
+        visitor = _DiscoveryVisitor(path, aliases, candidates)
+        visitor.visit(tree)
+        discoveries.extend(record for record in visitor.records if record.kind is DiscoveryKind.ACTION_ALIAS)
+    return _stable_records(discoveries)
+
+
+def current_action_alias_discoveries(
+    *,
+    aliases: frozenset[str],
+    root: Path = REPO_ROOT,
+) -> tuple[DiscoveryRecord, ...]:
+    """Find direct action-field aliases across the complete current production tree."""
+    return action_alias_discoveries_from_sources(current_production_sources(root=root), aliases=aliases)
+
+
 type SourceEntry = tuple[str, str]
 type ClusterKey = tuple[object, ...]
 
@@ -599,6 +632,18 @@ def _is_fixed_point_production_path(path: str) -> bool:
 def fixed_point_sources(revision: str) -> FixedPointSources:
     """Read the complete, production-only S02 source scope at one revision."""
     return FixedPointSources.from_entries(fixed_point_production_sources(revision))
+
+
+def current_fixed_point_sources(*, root: Path = REPO_ROOT) -> FixedPointSources:
+    """Read the complete fixed-point scope from the live production tree.
+
+    The returned snapshot is intentionally ephemeral: callers use it to prove
+    that the checked-in ledger covers the tree they are about to change, not to
+    replace a revision-pinned campaign record.
+    """
+    return FixedPointSources.from_entries(
+        _current_tree_sources(root=root, suffixes=_FIXED_POINT_SOURCE_SUFFIXES),
+    )
 
 
 def initial_fixed_point_state(revision: str) -> FixedPointState:
@@ -1076,6 +1121,20 @@ def fixed_point_pass(
     return fixed_point_pass_from_sources(
         state,
         fixed_point_sources(revision),
+        semantic_observations=semantic_observations,
+    )
+
+
+def current_fixed_point_pass(
+    state: FixedPointState,
+    *,
+    root: Path = REPO_ROOT,
+    semantic_observations: Iterable[DiscoveryRecord | UnknownCluster] = (),
+) -> FixedPointPass:
+    """Run one fail-closed fixed-point pass against the live production tree."""
+    return fixed_point_pass_from_sources(
+        state,
+        current_fixed_point_sources(root=root),
         semantic_observations=semantic_observations,
     )
 
