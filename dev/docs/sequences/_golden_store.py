@@ -320,21 +320,27 @@ rows) or ``service`` (dependency rows) -- the two shapes ``config check`` emits.
 #: Row keys that carry a host-conditional row's stable identifier.
 _ROW_ID_KEYS: tuple[str, ...] = ("check", "service")
 
-#: Suffix marking a host-conditional row's measured byte quantities.
+#: Exact host-row fact coordinates whose values are volatile between runs.
 #:
 #: Masking the ``detail`` sentence alone leaves the numbers it was rendered from
 #: pinned under ``facts``, which reintroduces the very defect
-#: :data:`PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS` documents: ``free_memory_bytes``
-#: and ``free_vram_bytes`` are live readings that drift between two runs on the
-#: same box, so a golden carrying them is red on its own author's machine a
-#: second later. Keyed on the suffix rather than an enumeration of names for the
-#: reason the row ids are: the fact set grows with each reader and a literal list
-#: rots, whereas every byte quantity a host-conditional row reports is by
-#: construction a measurement of THAT host.
+#: :data:`PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS` documents: the local hardware
+#: probe's free system memory and free VRAM are live readings that drift between
+#: two runs on the same box as ordinary processes allocate memory. The
+#: contention row repeats the selected free-capacity value as
+#: ``binding_free_bytes`` and must follow the same comparison policy.
 #:
-#: Only the values mask; the keys stay under exact comparison, so a row that
-#: stops reporting a quantity still reds.
-_HOST_MEASURED_FACT_SUFFIX = "_bytes"
+#: This is deliberately a row-id/fact-name coordinate, not a suffix rule.
+#: Total RAM, total VRAM, thresholds, shortfalls, and byte-valued facts on every
+#: other row remain exact diagnostic evidence. Only free-capacity values mask; the
+#: key stays under comparison, so a probe that stops reporting free RAM reds.
+_VOLATILE_HOST_FACT_COORDINATES: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("local-inference-hardware", "free_memory_bytes"),
+        ("local-inference-hardware", "free_vram_bytes"),
+        ("local-inference-contention", "binding_free_bytes"),
+    },
+)
 
 
 def _host_conditional_row_id(node: Mapping[str, object]) -> str | None:
@@ -386,13 +392,14 @@ def mask_host_conditional_details(document: object) -> object:
     """
     if isinstance(document, Mapping):
         masked: dict[str, object] = {str(key): mask_host_conditional_details(value) for key, value in document.items()}
-        if _host_conditional_row_id(document) is not None:
+        row_id = _host_conditional_row_id(document)
+        if row_id is not None:
             if isinstance(document.get("detail"), str):
                 masked["detail"] = MASK_SENTINEL
             facts = document.get("facts")
             if isinstance(facts, Mapping):
                 masked["facts"] = {
-                    str(key): (MASK_SENTINEL if str(key).endswith(_HOST_MEASURED_FACT_SUFFIX) else value)
+                    str(key): (MASK_SENTINEL if (row_id, str(key)) in _VOLATILE_HOST_FACT_COORDINATES else value)
                     for key, value in facts.items()
                 }
         return masked
@@ -435,6 +442,18 @@ def masked_envelope_values(transcript: SequenceTranscript) -> frozenset[str]:
     return frozenset(values)
 
 
+def _normalise_volatile_host_fact_lines(text: str) -> str:
+    """Mask exact config-check text coordinates for volatile free capacity."""
+    prefixes = tuple(f"{row_id}.facts.{fact_name}\t" for row_id, fact_name in _VOLATILE_HOST_FACT_COORDINATES)
+    lines: list[str] = []
+    for line in text.splitlines(keepends=True):
+        ending = "\n" if line.endswith("\n") else ""
+        content = line.removesuffix("\n").removesuffix("\r")
+        matched = next((prefix for prefix in prefixes if content.startswith(prefix)), None)
+        lines.append(f"{matched}{MASK_SENTINEL}{ending}" if matched is not None else line)
+    return "".join(lines)
+
+
 def _running_version() -> str:
     """Return the version the running package declares.
 
@@ -475,7 +494,7 @@ def normalise_text_output(
         if value:
             replacements.append((value, MASK_SENTINEL))
 
-    normalised = text
+    normalised = _normalise_volatile_host_fact_lines(text)
     for needle, token in sorted(replacements, key=lambda pair: len(pair[0]), reverse=True):
         normalised = normalised.replace(needle, token)
     return _normalise_token_path_separators(normalised)
