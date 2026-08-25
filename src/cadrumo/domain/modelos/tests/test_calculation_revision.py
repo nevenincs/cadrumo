@@ -6,7 +6,7 @@ import ast
 from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
+from typing import TypedDict, cast
 
 import pytest
 from pydantic import ValidationError
@@ -66,6 +66,15 @@ _NONCANONICAL_CASILLA_KEY = "bad key"
 _WHITESPACE_CASILLA_KEY = " 001 "
 _TEST_LEGAL_REFS = ("ley-58-2003:art-93",)
 _TEST_SOURCE_REFS = ("aeat-dr-303-2025",)
+
+
+class _CommonRevisionIdArgs(TypedDict):
+    """Shared typed keyword payload for source-provenance hash cases."""
+
+    work_unit_id: str
+    input_values_by_casilla_id: dict[CasillaId, str]
+    binding_overrides: dict[str, str]
+    casilla_values: dict[CasillaId, Decimal]
 
 
 def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
@@ -742,7 +751,7 @@ def test_revision_id_canonicalizes_complete_source_provenance_and_refuses_identi
         parent_source_ref=None,
         fingerprint="sha256:" + "b" * 64,
     )
-    common = {
+    common: _CommonRevisionIdArgs = {
         "work_unit_id": "a" * 64,
         "input_values_by_casilla_id": {},
         "binding_overrides": {},
