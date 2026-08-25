@@ -20,13 +20,13 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
 from ....application.user_profile import (
+    apply_manager_profile_field_mutation,
     build_profile_overview,
     login_profile,
     register_profile_with_credentials,
 )
 from ....core import require_active_bucket_id, resolve_active_bucket_id
 from ....core.i18n import tr
-from ....entrypoints.cli import persist_active_profile_field
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.status import PinnedStatusBar
@@ -56,7 +56,12 @@ def _live_overview(label: str = "Manager Subject"):
 
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
-    return persist_active_profile_field(path, value, label="Manager Subject")
+    record = apply_manager_profile_field_mutation(
+        profile_id=require_active_bucket_id(),
+        path=path,
+        value=value,
+    )
+    return build_profile_overview(record, label="Manager Subject")
 
 
 def _notice(app: ProfileManagerApp) -> str:
@@ -971,7 +976,20 @@ async def test_logout_closes_both_the_session_and_the_surface(tmp_path) -> None:
     session is gone (the real ``logout_active_profile`` door, not a
     stand-in) AND that the app is no longer running, not either alone.
     """
-    from ....entrypoints.cli import logout_action
+    from ....application.operations import ManagerAction, ManagerActionOutcome
+    from ....application.user_profile import logout_active_profile
+
+    def logout_action() -> ManagerAction:
+        def run() -> ManagerActionOutcome:
+            logout_active_profile()
+            return ManagerActionOutcome(message=tr("flows.manager.action.logout_done"), close_session=True)
+
+        return ManagerAction(
+            key="logout",
+            label=tr("flows.manager.action.logout"),
+            label_key="flows.manager.action.logout",
+            run=run,
+        )
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(

@@ -27,10 +27,10 @@ from ....application.user_profile import logout_active_profile
 from ....application.user_profile.login_interaction import attempt_profile_login
 from ....core import ProfilePasswordRefusalReason, assess_profile_password
 from ....core.i18n import tr
-from ....entrypoints.cli import attempt_registration
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.secret.app import RecoveryWordsScreen, RegistrationApp, assessment_refusal
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..devtools.fixture import registration_attempt
 
 pytestmark = [
     pytest.mark.integration,
@@ -107,7 +107,7 @@ def _screen(**kwargs) -> RegistrationApp:
     exercise the same path an operator does: a stub here would prove the
     widgets talk to a stub.
     """
-    return RegistrationApp(assess=assess_profile_password, register=attempt_registration, **kwargs)
+    return RegistrationApp(assess=assess_profile_password, register=registration_attempt, **kwargs)
 
 
 async def _fill(pilot, *, username: str, password: str, confirm: str) -> None:

@@ -134,19 +134,20 @@ def test_bucket_history_event_payload_requires_payload_version() -> None:
 
 def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> None:
     """The omitted subject is the real active profile, not a copied default."""
+    from .....application.user_profile import register_profile_with_credentials
+    from .....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+    from .....domain.user_profile import UserProfileFact
     from .....tests.secure_sql import isolated_profile_storage_root
-    from .._manager_frontend import attempt_registration
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        attempt = attempt_registration(
-            "History Subject",
-            "history-subject-operator-secret",
-            "en",
-            lambda enrollment: enrollment.recovery_key.mnemonic,
+        outcome = register_profile_with_credentials(
+            label="History Subject",
+            passphrase="history-subject-operator-secret",  # noqa: S106 - synthetic fixture
+            facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="en"),),
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         )
-        assert attempt.outcome is not None, attempt.refusal
 
         assert _resolve_profile_history_target(None) == (
             "History Subject",
-            attempt.outcome.bucket_id,
+            outcome.bucket_id,
         )

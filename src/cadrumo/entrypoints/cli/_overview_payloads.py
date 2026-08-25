@@ -219,6 +219,41 @@ class OverviewCalendarEventPayload(OutputSchema):
         return self
 
 
+class OverviewCalendarEntrySummaryPayload(OutputSchema):
+    """Actionable calendar row summary with a typed route to full explanation.
+
+    The calendar list answers what is due and whether filing evidence has been
+    observed. Legal-window and recovery detail stays retrievable through the
+    resolved ``overview explain`` action instead of being repeated for every
+    row in the tool-list schema.
+    """
+
+    modelo: str
+    period: str
+    adjusted_closes_on: str
+    user_state: Literal["due", "late", "filed", "unknown"]
+    local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
+    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"]
+    justificante_verified: bool
+    detail_action: ResolvedNoticeAction
+
+
+class OverviewCalendarEventSummaryPayload(OutputSchema):
+    """Compact observed-event identity retained by the calendar list.
+
+    ``source`` plus ``reference_id`` are the stable retrieval coordinates for
+    the owning live-read surface; the full event record is not redeclared in
+    every calendar result schema.
+    """
+
+    event_type: Literal["filing", "message"]
+    event_date: str
+    source: str
+    summary: str
+    reference_id: str
+    status: str | None = None
+
+
 class OverviewResolvedWarningActionReferencePayload(OutputSchema):
     """Resolved command target retaining the producer's stable action identity."""
 
@@ -436,8 +471,8 @@ class OverviewCalendarResult(OutputSchema):
     from_date: str | None = None
     to_date: str | None = None
     range: OverviewCalendarRangePayload | None = None
-    entries: list[OverviewCalendarEntryPayload] = []
-    events: list[OverviewCalendarEventPayload] = []
+    entries: list[OverviewCalendarEntrySummaryPayload] = []
+    events: list[OverviewCalendarEventSummaryPayload] = []
     warnings: list[OverviewCalendarWarningPayload] = []
     generated_at: str | None = None
     completeness: OverviewCalendarCompletenessPayload | None = None

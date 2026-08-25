@@ -1,17 +1,9 @@
-"""Route the interactive arm of the profile wizard verbs onto the manager.
+"""Project profile creation and editing through the CLI.
 
 `create` and `edit` are two closures off the same wizard flow, each bound to
 its verb. The `create` closure refuses a name that already has a manifest; the
 `edit` closure refuses a name that has none. The verb — not a runtime-detected
 pointer — is the authority for the create-vs-edit branch.
-
-Those refusals live in the WIZARD command, which the manager arm returns
-before ever calling, so this module re-states the `edit` one at the diversion
-(:func:`open_the_edit_target_or_refuse`) and settles what the manager brings
-with it: the manager edits whichever profile is ACTIVE, so a name for any
-other live profile opens the login screen for that profile rather than being
-silently redirected onto the active one. An operator who declines the screen
-gets a refusal; one who authenticates gets the profile they asked for.
 
 Both are registered as per-LEAF lazy subcommands rather than built at
 package-import time. :func:`~cadrumo.application.wizard.build_wizard_command`
@@ -25,14 +17,9 @@ itself has to move behind the resolution boundary, which is what
 ``LazySubcommand`` already provides for groups; `profile` is a
 ``CadrumoTyperGroup``, so the same machinery serves a leaf.
 
-That deferral is why the frontend imports inside this module stay function-local
-rather than moving to the top: hoisting them would re-eager exactly the tail the
-lazy leaf exists to defer.
-
-See Also:
-    :mod:`~cadrumo.entrypoints.cli._config._manager_frontend`
-        The full-screen manager and registration screens this module dispatches
-        onto once it has decided the operator wants them.
+That deferral is why the CLI projection imports inside this module stay
+function-local rather than moving to the top: hoisting them would re-eager
+exactly the tail the lazy leaf exists to defer.
 """
 
 from __future__ import annotations
@@ -44,16 +31,15 @@ from typing import TYPE_CHECKING, cast
 import typer
 from typer._click.core import Context as _TyperClickContext
 
-from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from ....core.json_contract import Notice as _Notice
-from ....core.json_contract import NoticeSeverity as _NoticeSeverity
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
-from .._common import _emit_envelope, activate_subcommand_output_language, active_profile_label
+from .._common import activate_subcommand_output_language
 from .._errors import command_error_boundary as _command_error_boundary
 
 if TYPE_CHECKING:
     from typing import Literal
+
+    from ....core.external_constants import OutputLanguage
 
     WizardPersistMode = Literal["create", "edit"]
     """Which arm of the shared wizard flow a registered leaf serves.
@@ -65,33 +51,19 @@ if TYPE_CHECKING:
     """
 
 
-def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
-    """Divert the INTERACTIVE arm of a profile verb onto the manager.
+def with_profile_cli_projection(wizard_command, *, mode: WizardPersistMode):
+    """Route profile verbs through their canonical CLI projections.
 
-    ``create`` and ``edit`` serve two audiences through one verb. A script
-    or an agent passes field flags (or ``--quiet`` / ``--accept-defaults``)
-    and wants a JSON envelope with no screen; an operator at a terminal
-    wants their whole profile on one page, every field editable, nothing
-    gated. Only the second arm is diverted here — the scripted path keeps
-    the wizard, its flags, and its documented contract untouched.
-
-    A profile name on the command line does NOT send ``create`` back to the
-    flow: it prefills the registration screen's name field. Routing on it
-    was a mistake -- ``config profile create NAME`` is the documented usage,
-    so it meant the operator met the old paged flow every time and the new
-    surface was effectively unreachable.
+    Creation has a dedicated CLI credential door because the setup wizard does
+    not create profiles. Editing stays with the wizard, which owns its parsed
+    field values and persistence behavior. Full-screen construction is not a
+    CLI concern.
     """
     import functools
 
     @functools.wraps(wizard_command)
     def _dispatch(*args: object, **kwargs: object):
-        from ._manager_frontend import (
-            has_explicit_profile_fields,
-            host_can_run_full_screen,
-            manager_is_the_right_frontend,
-            present_profile_manager,
-            present_registration,
-        )
+        from ._manager_frontend import has_explicit_profile_fields
 
         context = kwargs.get("ctx")
         if not isinstance(context, _TyperClickContext):
@@ -113,208 +85,17 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
         if tui_requested and (scripted or explicit_fields):
             raise typer.BadParameter(tr("cli.config.setup.tui_scripted_conflict"))
 
-        if not manager_is_the_right_frontend(
-            mode=mode,
-            scripted=scripted,
-            explicit_fields=explicit_fields,
-            full_screen=host_can_run_full_screen(),
-            tui_requested=tui_requested,
-        ):
-            # The setup flow is not a creation authority and refuses `create`
-            # outright, so the scripted arm of THIS verb has to reach the
-            # credential registration door itself rather than hand the
-            # operator a refusal that names a capability no surface offered.
-            #
-            # BOTH forms are taken natively, the bare one and the one carrying
-            # profile field flags. Routing the flagged form back to the flow
-            # was a dead end rather than a safeguard: the flow refuses `create`
-            # before it validates anything, so the invocation the operator
-            # action catalogue projects as the recovery for a clean-root
-            # refusal could never succeed. The registration door now applies
-            # those flags itself, through the flow's own validation and fact
-            # authority, so the values are neither stranded nor dropped.
-            scripted_ctx = kwargs.get("ctx")
-            if mode == "create" and isinstance(scripted_ctx, _TyperClickContext):
-                from ._scripted_registration import register_profile_from_scripted_invocation
-
-                activate_subcommand_output_language(
-                    cast(typer.Context, scripted_ctx),
-                    cast(OutputLanguage | None, kwargs.get("output_language")),
-                )
-                return register_profile_from_scripted_invocation(scripted_ctx, kwargs)
-            return wizard_command(*args, **kwargs)
-
-        ctx = kwargs.get("ctx")
-        if not isinstance(ctx, _TyperClickContext):
-            # No Typer context to emit an envelope through; the wizard owns
-            # its own output path, so hand the call straight back rather
-            # than rendering a manager whose result could not be reported.
-            return wizard_command(*args, **kwargs)
         if mode == "create":
-            supplied = kwargs.get("profile_name")
-            outcome = present_registration(
-                suggested_name=supplied if isinstance(supplied, str) else None,
+            from ._scripted_registration import register_profile_from_scripted_invocation
+
+            activate_subcommand_output_language(
+                cast(typer.Context, context),
+                cast("OutputLanguage | None", kwargs.get("output_language")),
             )
-            if outcome is None:
-                emit_registration_abandoned(ctx)
-                return None
-            # Textual runs button handlers in an asyncio task.  The registration
-            # door authenticates there, but ContextVar bindings made by that
-            # child task cannot flow back into this synchronous CLI context.
-            # Resume the just-persisted login through the same authority used by
-            # the root callback before the manager performs its first read.
-            from .._profile_session_gate import resume_registered_profile_for_manager
-
-            # CAST-RATIONALE-TYPER-CLICK-CONTEXT: see emit_manager_closed below.
-            resume_registered_profile_for_manager(cast(typer.Context, ctx), bucket_id=outcome.bucket_id)
-            present_profile_manager(label=outcome.label)
-            emit_manager_closed(ctx, outcome.label, created=True)
-            return None
-
-        open_the_edit_target_or_refuse(ctx, kwargs.get("profile_name"))
-        present_profile_manager()
-        label = active_profile_label()
-        if label is None:
-            raise RuntimeError("active profile label unavailable after profile manager session")
-        emit_manager_closed(ctx, label, created=False)
-        return None
+            return register_profile_from_scripted_invocation(context, kwargs)
+        return wizard_command(*args, **kwargs)
 
     return _dispatch
-
-
-def open_the_edit_target_or_refuse(ctx: _TyperClickContext, supplied: object) -> None:
-    """Make ``edit NAME`` open NAME, authenticating to it if that is what it takes.
-
-    The manager edits the ACTIVE profile: ``build_active_profile_overview``
-    resolves its subject through ``require_active_bucket_id`` and never sees
-    this argument. Diverting here without checking it therefore honoured the
-    verb and dropped its subject — ``profile edit <someone-else>`` opened the
-    ACTIVE profile's page, and every field the operator went on to change
-    landed on the wrong taxpayer with nothing on screen naming the one they
-    had asked for. A mistyped label behaved identically, and neither case
-    left a trace.
-
-    The wizard arm validates the name in ``_resolve_profile_id_for_mode``,
-    but the manager arm returns before the wizard command is ever called, so
-    the check has to happen at the diversion rather than inside the command
-    it replaces. (The module docstring's claim that "the ``edit`` closure
-    refuses a name that has none" described only the wizard arm.)
-
-    Resolution goes through the same
-    :func:`~cadrumo.application.user_profile.resolve_login_target` that
-    ``login`` applies to its own ``NAME``, so an unknown target refuses
-    identically here and there rather than growing a second wording.
-
-    A live profile that is not the active one is OPENED, not refused. The
-    root callback's gate cannot help here — it runs before the verb is
-    parsed, so it preselects whoever was already selected and knows nothing
-    about this argument — so the offer is repeated with the target this verb
-    actually names. Authenticating to it performs the handover ``login NAME``
-    already owns, which is not a silent switch: the operator typed the name
-    and then entered that profile's secret. Declining leaves the previous
-    profile untouched and refuses, naming the verb that would have done it
-    on its own.
-    """
-    if not isinstance(supplied, str) or not supplied.strip():
-        return
-
-    from ....application.profile_preconditions import profile_session_failure_verdict
-    from ....application.user_profile import resolve_login_target
-    from ....core import ProfileSessionRefusalReason, resolve_active_bucket_id
-    from .._common import attach_cli_policy_verdict
-    from .._errors import CliRefusedBoundaryError
-    from .._profile_session_gate import authenticate_profile_for_manager
-
-    target = resolve_login_target(supplied)
-    if target.bucket_id == resolve_active_bucket_id():
-        return
-    # CAST-RATIONALE-TYPER-CLICK-CONTEXT: both aliases name the same runtime
-    # context object at this transport boundary.
-    if authenticate_profile_for_manager(cast(typer.Context, ctx), bucket_id=target.bucket_id):
-        return
-    raise attach_cli_policy_verdict(
-        CliRefusedBoundaryError(
-            translated_message="cli.config.profile.edit_target_not_active",
-            context={"name": target.label},
-        ),
-        verdict=profile_session_failure_verdict(
-            ProfileSessionRefusalReason.ABSENT,
-            profile_name=target.label,
-        ),
-    )
-
-
-def emit_registration_abandoned(ctx: _TyperClickContext) -> None:
-    """Report a registration the operator left without completing.
-
-    Not an error: leaving the first screen without creating a profile is an
-    ordinary choice, so it emits a success envelope carrying an info notice
-    rather than a refusal.
-    """
-    from ....application.wizard import ConfigProfileCreateResult, ProfileWizardStatus
-
-    _emit_envelope(
-        # CAST-RATIONALE-TYPER-CLICK-CONTEXT: ctx is typed as the vendored
-        # typer._click.core.Context this module accepts at its own boundary;
-        # _emit_envelope's signature wants the public typer.Context alias for
-        # the same runtime object.
-        cast(typer.Context, ctx),
-        command="config.profile.create",
-        result=ConfigProfileCreateResult(profile_name="", status=ProfileWizardStatus.ABANDONED),
-        lines=[tr("cli.config.profile.registration_abandoned")],
-        notices=[
-            _Notice(
-                code="PROFILE_REGISTRATION_ABANDONED",
-                severity=_NoticeSeverity.INFO,
-                message=tr("cli.config.profile.registration_abandoned"),
-            ),
-        ],
-    )
-
-
-def emit_manager_closed(ctx: _TyperClickContext, label: str, *, created: bool) -> None:
-    """Report the manager session, naming the profile it operated on.
-
-    The manager persists every edit as it is made, so this envelope closes
-    the session rather than committing it — by the time it renders, the
-    record already holds whatever the operator changed.
-    """
-    from ....application.wizard import (
-        ConfigProfileCreateResult,
-        ConfigProfileEditResult,
-        ProfileWizardStatus,
-    )
-
-    message = tr(
-        "cli.config.profile.manager_closed_created" if created else "cli.config.profile.manager_closed",
-        profile=label,
-    )
-    result = (
-        ConfigProfileCreateResult(
-            profile_name=label,
-            status=ProfileWizardStatus.CREATED,
-            active_profile=label,
-        )
-        if created
-        else ConfigProfileEditResult(profile_name=label, status=ProfileWizardStatus.UPDATED)
-    )
-    _emit_envelope(
-        # CAST-RATIONALE-TYPER-CLICK-CONTEXT: ctx is typed as the vendored
-        # typer._click.core.Context this module accepts at its own boundary;
-        # _emit_envelope's signature wants the public typer.Context alias for
-        # the same runtime object.
-        cast(typer.Context, ctx),
-        command="config.profile.create" if created else "config.profile.edit",
-        result=result,
-        lines=[message],
-        notices=[
-            _Notice(
-                code="PROFILE_MANAGER_CLOSED",
-                severity=_NoticeSeverity.INFO,
-                message=message,
-            ),
-        ],
-    )
 
 
 @cache
@@ -325,7 +106,7 @@ def profile_wizard_behavior(mode: WizardPersistMode) -> Callable[..., None]:
     return cast(
         "Callable[..., None]",
         _command_error_boundary(
-            with_manager_frontend(
+            with_profile_cli_projection(
                 build_wizard_command(_get_setup_flow(), mode=mode),
                 mode=mode,
             ),
@@ -344,11 +125,8 @@ def profile_edit(ctx: typer.Context, **parameters: object) -> None:
 
 
 __all__ = [
-    "emit_manager_closed",
-    "emit_registration_abandoned",
-    "open_the_edit_target_or_refuse",
     "profile_create",
     "profile_edit",
     "profile_wizard_behavior",
-    "with_manager_frontend",
+    "with_profile_cli_projection",
 ]

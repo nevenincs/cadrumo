@@ -15,6 +15,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
     "command",
     (
         ("config", "passphrase", "change"),
+        ("config", "profile", "create"),
+        ("config", "profile", "edit"),
+        ("config", "profile", "descendiente"),
+        ("config", "auth", "apoderado", "configure"),
         ("app", "overview", "status"),
         ("app", "modelo", "work", "calculate", "missing-work-unit"),
     ),
@@ -51,10 +55,6 @@ def test_every_existing_cli_tui_route_is_enrolled() -> None:
     expected = {
         "config_login",
         "config_profile_status",
-        "config_profile_descendiente",
-        "config_auth_apoderado_configure",
-        "config_profile_create",
-        "config_profile_edit",
         "app_modelo_work_wizard",
         "app_modelo_work_amend_wizard",
     }

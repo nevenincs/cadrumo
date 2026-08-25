@@ -19,19 +19,16 @@ is still looking at it.
 from __future__ import annotations
 
 import pytest
-from textual.widgets import Input, Label, OptionList, Static
+from textual.widgets import Label, OptionList, Static
 
 from ....application.user_profile import (
+    apply_manager_profile_field_mutation,
     build_profile_overview,
     login_profile,
     register_profile_with_credentials,
 )
 from ....core import require_active_bucket_id
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....entrypoints.cli import (
-    persist_active_profile_field,
-    profile_field_value_refusal,
-)
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..profile.overview import FieldEditScreen, ProfileManagerApp
@@ -54,16 +51,8 @@ _DATE_PATH = "auth.fecha_validez"
 """A field the schema declares ``date``. Typed into, and its accepted layout
 is exactly what a box cannot state for itself."""
 
-_EMAIL_PATH = "identity.email"
-"""A field the schema declares ``email``. Typed into, and the one content
-format the schema names that nothing used to check."""
-
 _TEXT_PATH = "identity.name"
 """A plain ``string`` field, so "everything became a choice" cannot pass."""
-
-_MALFORMED_DATE = "15/03/1978"
-"""A date in the layout an operator most plausibly reaches for, and one the
-schema does not take."""
 
 _VALID_DATE = "1978-03-15"
 
@@ -87,7 +76,12 @@ def _live_overview():
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
     _ensure_logged_in()
-    return persist_active_profile_field(path, value, label=_LABEL)
+    record = apply_manager_profile_field_mutation(
+        profile_id=require_active_bucket_id(),
+        path=path,
+        value=value,
+    )
+    return build_profile_overview(record, label=_LABEL)
 
 
 def _stored() -> dict[str, object | None]:
@@ -102,11 +96,7 @@ def _manager() -> ProfileManagerApp:
     The judge is injected in production, so a test that left it out would be
     exercising a screen the operator never meets.
     """
-    return ProfileManagerApp(
-        _live_overview(),
-        persist=_persist,
-        validate=profile_field_value_refusal,
-    )
+    return ProfileManagerApp(_live_overview(), persist=_persist)
 
 
 def _open(app: ProfileManagerApp, path: str) -> None:
@@ -271,125 +261,3 @@ async def test_a_date_box_says_which_layout_it_wants(tmp_path) -> None:
             assert hint.strip(), "a date box must say what layout it accepts"
             assert _VALID_DATE in hint, "the hint must show the layout by example, not only describe it"
             app.exit(None)
-
-
-@pytest.mark.asyncio
-async def test_a_refused_value_holds_the_dialog_open_and_says_why(tmp_path) -> None:
-    """The operator must be answered at the box, while they can still fix it.
-
-    Three things are asserted together because any one alone would let the
-    defect back: the dialog must stay open, the reason must name the value
-    the operator actually typed, and nothing may reach the record.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
-        )
-
-        app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
-            _open(app, _DATE_PATH)
-            await pilot.pause()
-            app.screen.query_one("#edit-input", Input).value = _MALFORMED_DATE
-            await pilot.click("#btn-edit-save")
-            await pilot.pause()
-
-            assert app.screen.query("#edit-input"), "the dialog must stay open on a refused value"
-            refusal = str(app.screen.query_one("#edit-refusal", Static).content)
-            assert _MALFORMED_DATE in refusal, "the refusal must quote back what was typed"
-            assert _VALID_DATE in refusal, "the refusal must show an acceptable value, not only reject one"
-            app.exit(None)
-
-        assert _DATE_PATH not in _stored(), "a value refused at the box must never reach the record"
-
-
-@pytest.mark.asyncio
-async def test_an_acceptable_value_is_not_refused(tmp_path) -> None:
-    """The control for the guard above: it must refuse a value, not every value.
-
-    A validator wired to reject unconditionally would satisfy the refusal
-    test completely, and the field would simply have become uneditable —
-    which is the complaint this whole change answers.
-    """
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
-        )
-
-        app = _manager()
-        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
-            _open(app, _DATE_PATH)
-            await pilot.pause()
-            app.screen.query_one("#edit-input", Input).value = _VALID_DATE
-            await pilot.click("#btn-edit-save")
-            await wait_until_settled(app, pilot)
-            assert not app.screen.query("#edit-input"), "an acceptable value must close the dialog"
-            app.exit(None)
-
-        assert str(_stored().get(_DATE_PATH)) == _VALID_DATE
-
-
-def test_the_dialog_judge_agrees_with_the_write_door() -> None:
-    """What the box refuses and what storage refuses must be one answer.
-
-    The dialog exists to answer earlier, not to answer differently. A judge
-    stricter than the door would refuse values the record would have taken;
-    a looser one would close on values the door then rejects, which is the
-    behaviour the operator met before this seam existed.
-    """
-    from ....domain.user_profile import (
-        UserProfileFact,
-        load_user_profile_schema,
-        profile_value_refusal,
-        section_field_key,
-    )
-
-    schema = load_user_profile_schema()
-    cases = (
-        (_DATE_PATH, _MALFORMED_DATE),
-        (_DATE_PATH, _VALID_DATE),
-        (_BOOLEAN_PATH, "on"),
-        (_BOOLEAN_PATH, "true"),
-        (PROFILE_OUTPUT_LANGUAGE_PATH, "klingon"),
-        (PROFILE_OUTPUT_LANGUAGE_PATH, "en"),
-        (_TEXT_PATH, "Ada Lovelace"),
-        (_EMAIL_PATH, "banana"),
-        (_EMAIL_PATH, "op@example.test"),
-    )
-    for path, value in cases:
-        declared = schema.field(section_field_key(path))
-        door_refuses = profile_value_refusal(declared, UserProfileFact(path=path, value=value).value) is not None
-        dialog_refuses = profile_field_value_refusal(path, value) is not None
-        assert dialog_refuses is door_refuses, f"the two judges disagree about {value!r} at {path}"
-
-
-def test_every_refusal_kind_reaches_the_operator_as_words() -> None:
-    """A verdict with no sentence would surface as a blank refusal line.
-
-    Driven through the public seam with one real refusal per kind rather
-    than by calling the wording helper directly, so what is proved is that
-    the whole path — judge, then words — produces something an operator can
-    read, not merely that a copy table has four rows.
-
-    The offending value must come back in the sentence. A refusal that says
-    only "invalid" leaves the operator re-reading a box whose contents they
-    already believed were right.
-    """
-    from ....domain.user_profile import ProfileValueRefusalKind
-
-    by_kind = {
-        ProfileValueRefusalKind.DATE: (_DATE_PATH, _MALFORMED_DATE),
-        ProfileValueRefusalKind.ENUM: (PROFILE_OUTPUT_LANGUAGE_PATH, "klingon"),
-        ProfileValueRefusalKind.BOOLEAN: (_BOOLEAN_PATH, "on"),
-        ProfileValueRefusalKind.NUMERIC: ("attribution_entity_socios.share_pct", "999"),
-        ProfileValueRefusalKind.EMAIL: (_EMAIL_PATH, "banana"),
-    }
-    assert set(by_kind) == set(ProfileValueRefusalKind), (
-        "every refusal kind the rule can return must have a case here, or a kind ships unworded"
-    )
-    for kind, (path, value) in by_kind.items():
-        sentence = profile_field_value_refusal(path, value)
-        assert sentence, f"{kind} produced no words for {value!r} at {path}"
-        assert value in sentence, f"{kind} must quote back the refused value"

@@ -7,20 +7,14 @@ from typing import TYPE_CHECKING
 import typer
 
 if TYPE_CHECKING:
-    from ....application.auth import ApoderadoService
     from ....application.workflow import ProfileBucketPointer
+    from ....domain.auth import ApoderamientosCatalogue
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-
-_REPRESENTED_NIF_KEY = "represented-nif"
-"""Form key for the represented party's tax identifier."""
-
-_SCOPES_KEY = "scopes"
-"""Form key for the granted scope set."""
 
 
 def _active_profile_pointer() -> ProfileBucketPointer:
@@ -112,7 +106,7 @@ def apoderado_configure(
 
     scope_tokens = tuple(scope or ())
     if represented_nif is None:
-        resolved_nif, scope_tokens = _collect_apoderado_answers_interactively(svc)
+        resolved_nif, scope_tokens = _collect_apoderado_answers_interactively(svc.catalogue)
     else:
         resolved_nif = represented_nif
         if not scope_tokens:
@@ -156,77 +150,16 @@ def apoderado_configure(
 
 
 def _collect_apoderado_answers_interactively(
-    svc: ApoderadoService,
+    catalogue: ApoderamientosCatalogue,
 ) -> tuple[str, tuple[str, ...]]:
-    """Show the apoderado page and return ``(represented_nif, scope_tokens)``.
+    """Collect representation intent through the canonical line-mode flow."""
+    from ....application.auth import apoderado_answers_from_state, build_apoderado_flow_definition
+    from ....application.flows import LineFlowFrontend
+    from ....core.flows import FlowMode
 
-    One page with both values on it rather than a question at a time:
-    choosing who you represent and what you may do for them is a single
-    decision, and the scope list only makes sense next to the party it
-    applies to.
-
-    The scope choices come from the service's live catalogue, so a
-    catalogue revision that adds a scope offers it without a change here.
-    The NIF is checked by the canonical identity authority as it is typed
-    — never a second identifier implementation.
-
-    A host that cannot present a screen refuses with an apoderado-specific
-    hint naming ``--represented-nif`` / ``--scope``, which is the actual
-    recovery for this verb, rather than generic no-console copy.
-    """
-    from ....core.i18n import tr as _tr
-    from ....core.identity import IdentityError, validate_identity
-    from ....core.presentation import (
-        FormField,
-        FormFieldKind,
-        FormPage,
-        form_choices,
-        multi_choice_tokens,
-    )
-    from ._manager_frontend import host_can_run_full_screen, present_form
-
-    if not host_can_run_full_screen():
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.apoderado.configure.no_console_hint",
-        )
-
-    def _check_nif(candidate: str) -> str | None:
-        try:
-            validate_identity(candidate.strip())
-        except IdentityError:
-            return _tr("wizard.errors.invalid_tax_id")
-        return None
-
-    page = FormPage(
-        title=_tr("cli.config.auth.apoderado.help"),
-        section=_tr("cli.config.auth.apoderado.configure_help"),
-        fields=(
-            FormField(
-                key=_REPRESENTED_NIF_KEY,
-                label=_tr("cli.config.auth.apoderado.configure.represented_nif_help"),
-                hint=_tr("wizard.setup.format.tax-id"),
-                validate=_check_nif,
-            ),
-            FormField(
-                key=_SCOPES_KEY,
-                label=_tr("cli.config.auth.apoderado.configure.scope_help"),
-                kind=FormFieldKind.MULTI_CHOICE,
-                choices=form_choices(
-                    [
-                        (scope.code, _tr(f"cli.config.auth.apoderado.scope.{scope.code.lower()}"))
-                        for scope in svc.catalogue.scopes
-                    ],
-                ),
-                validate=lambda value: None if value else _tr("cli.config.auth.apoderado.configure.scope_help"),
-            ),
-        ),
-    )
-    collected = present_form(page)
-    if collected is None:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.apoderado.configure.no_console_hint",
-        )
-    return collected[_REPRESENTED_NIF_KEY].strip(), multi_choice_tokens(collected[_SCOPES_KEY])
+    definition = build_apoderado_flow_definition(catalogue)
+    state, _projection = LineFlowFrontend(definition).run(mode=FlowMode.MODIFY)
+    return apoderado_answers_from_state(state)
 
 
 def apoderado_clear(

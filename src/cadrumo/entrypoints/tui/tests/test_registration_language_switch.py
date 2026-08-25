@@ -26,10 +26,10 @@ from ....application.user_profile import login_profile
 from ....core import assess_profile_password, require_active_bucket_id
 from ....core.i18n import output_language, tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....entrypoints.cli import attempt_registration
 from ....entrypoints.tui.secret.app import RecoveryWordsScreen, RegistrationApp
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..devtools.fixture import registration_attempt
 
 pytestmark = [
     pytest.mark.integration,
@@ -44,7 +44,7 @@ _TARGET_LANGUAGE = "hu"
 
 def _screen() -> RegistrationApp:
     """The production composition, wired to the doors the CLI gives it."""
-    return RegistrationApp(assess=assess_profile_password, register=attempt_registration)
+    return RegistrationApp(assess=assess_profile_password, register=registration_attempt)
 
 
 def _text(app: RegistrationApp, selector: str) -> str:

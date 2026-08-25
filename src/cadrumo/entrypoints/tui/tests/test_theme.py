@@ -200,9 +200,9 @@ def _registration_screen() -> RegistrationApp:
     not reach up into the application layer for itself.
     """
     from ....core import assess_profile_password
-    from ....entrypoints.cli import attempt_registration
+    from ..devtools.fixture import registration_attempt
 
-    return RegistrationApp(assess=assess_profile_password, register=attempt_registration)
+    return RegistrationApp(assess=assess_profile_password, register=registration_attempt)
 
 
 def _gutters(app: App[Any]) -> tuple[int, int]:

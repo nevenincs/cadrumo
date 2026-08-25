@@ -28,7 +28,7 @@ import click
 import pytest
 import typer
 from pydantic import ValidationError
-from textual.widgets import DataTable, OptionList
+from typer.testing import CliRunner
 
 from .....application.user_profile import (
     CENSO_SOURCE_TAG,
@@ -37,12 +37,11 @@ from .....application.user_profile import (
     CensalReviewProjectionV1,
 )
 from .....core.config import Settings
-from .....entrypoints.tui.components.form_screen import FormApp, FormScreen
 from .....tests.cli_runner import invoke_cached_cli
 from ... import app as _live_app
 from .. import _censo_file
 from .._censo_payloads import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
-from .._censo_review_ui import build_censal_review_page, censal_review_decision
+from .._censo_review_cli import confirm_censal_review
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -435,9 +434,8 @@ def test_apply_routes_through_the_canonical_reviewed_operation() -> None:
     assert "apply_censal_read" not in source
 
 
-@pytest.mark.asyncio
-async def test_exact_projection_requires_a_real_tui_apply_choice() -> None:
-    """The shared manager/CLI review page displays and returns an exact choice."""
+def test_exact_projection_requires_a_real_cli_apply_choice() -> None:
+    """The CLI prints every reviewed fact and requires explicit confirmation."""
     projection = CensalReviewProjectionV1(
         projection_version=1,
         fields=(
@@ -448,20 +446,17 @@ async def test_exact_projection_requires_a_real_tui_apply_choice() -> None:
             ),
         ),
     )
-    app = FormApp(build_censal_review_page(projection), translate=lambda key: key)
-    async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        screen = next(item for item in reversed(app.screen_stack) if isinstance(item, FormScreen))
-        screen.query_one("#form-table", DataTable).action_select_cursor()
-        await pilot.pause()
-        app.screen.query_one("#edit-options", OptionList).highlighted = 0
-        await pilot.click("#btn-edit-save")
-        await pilot.pause()
-        await pilot.click("#btn-form-save")
-        await pilot.pause()
+    app = typer.Typer()
 
-    assert app.collected is not None
-    assert censal_review_decision(app.collected) is True
+    @app.command()
+    def review() -> None:
+        typer.echo(f"decision={confirm_censal_review(projection)}")
+
+    result = CliRunner().invoke(app, ["review"], input="y\n")
+
+    assert result.exit_code == 0, result.output
+    assert "contact.postcode: 28013 [adopt]" in result.output
+    assert "decision=True" in result.output
 
 
 def test_the_module_docstring_does_not_declare_the_pull_retired() -> None:

@@ -121,7 +121,7 @@ def censo_pull(
     )
     from ....domain.user_profile import UserProfileFact
     from ....entrypoints import run_censal_review
-    from ._censo_review_ui import confirm_censal_review
+    from ._censo_review_cli import confirm_censal_review
 
     # Refuse an absent active profile before the read, not after: the live
     # navigation can trigger a Cl@ve push, and asking the operator to

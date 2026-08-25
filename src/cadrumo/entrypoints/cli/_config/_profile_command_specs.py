@@ -302,7 +302,7 @@ PROFILE_COMMAND_SPECS = (
             "ConfigProfileDescendienteListResult",
             "config.profile.descendiente",
         ),
-        tui_capability=TuiCapability.AVAILABLE,
+        tui_capability=TuiCapability.NOT_IMPLEMENTED,
     ),
     _leaf(
         "config_profile_archive_export",
@@ -471,7 +471,7 @@ PROFILE_COMMAND_SPECS = (
             collides_with_parameters=("secrets_fd",),
             windows_handle_bootstrap="cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
         ),
-        tui_capability=TuiCapability.AVAILABLE,
+        tui_capability=TuiCapability.NOT_IMPLEMENTED,
     ),
     _leaf(
         "config_profile_delete",
@@ -546,7 +546,7 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileEditResult",
         ENCRYPTED_WRITE,
         _WIZARD_BASE_PARAMETERS,
-        tui_capability=TuiCapability.AVAILABLE,
+        tui_capability=TuiCapability.NOT_IMPLEMENTED,
     ),
     _leaf(
         "config_profile_history",

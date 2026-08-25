@@ -48,12 +48,10 @@ from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
     from datetime import date
 
     from ....application.workflow import ProfileBucketPointer
     from ....core.json_contract import Notice
-    from ....core.presentation import FormChoice, FormFieldKind, FormPage
 
 
 def _active_profile_pointer() -> ProfileBucketPointer:
@@ -289,18 +287,12 @@ def descendiente_door(
 
 
 def _run_descendant_door(ctx: typer.Context) -> None:
-    """Seed, host, and commit the paged descendant door for the active profile.
-
-    Reads the active profile record, seeds a MODIFY-mode door state from its
-    existing descendant facts, drives the interactive editor, then commits the
-    reviewed answers as the full descendant fact set through the single
-    application-layer seam. A piped / no-console host refuses with the substrate's
-    translated no-console error mapped to the CLI refusal boundary.
-    """
-    from ....application.wizard import descendant_answers_from_record, persist_descendant_door_answers
+    """Drive the descendant application flow through its line-mode frontend."""
+    from ....application.flows import LineFlowFrontend
+    from ....application.wizard import build_descendant_door, persist_descendant_door_answers
     from ....application.workflow import workflow_state_repository
+    from ....core.flows import FlowMode
     from ....domain.user_profile import ProfileNotFoundError
-    from ._manager_frontend import host_can_run_full_screen, present_form
     from ._profile_readiness import _read_profile_record
 
     workflow_state_repository().load()
@@ -311,144 +303,13 @@ def _run_descendant_door(ctx: typer.Context) -> None:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.no_active_profile",
         ) from exc
-
-    if not host_can_run_full_screen():
-        raise _CliRefusedBoundaryError(translated_message="flows.errors.unsupported_console")
-
-    seed = descendant_answers_from_record(record)
-    collected = present_form(_descendant_page(seed), rebuild=_descendant_page)
-    if collected is None:
-        _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
-        return
-
-    persist_descendant_door_answers(dict(collected))
+    definition, resume_state = build_descendant_door(record)
+    state, _projection = LineFlowFrontend(definition).run(
+        mode=FlowMode.MODIFY,
+        resume_state=resume_state,
+    )
+    persist_descendant_door_answers(state.answers)
     _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
-
-
-def _descendant_page(values: Mapping[str, str]) -> FormPage:
-    """Build the descendant page for the answers collected so far.
-
-    The count row decides how many children the page asks about, so the
-    page is rebuilt whenever an answer changes: raise the count and the new
-    child's rows appear, lower it and they stop being collected. Keys are
-    the canonical ``descendientes#<index>.<page-id>`` shape the application
-    layer already projects to and from profile facts, so this screen adds
-    no second answer vocabulary.
-    """
-    from ....application.wizard import DESCENDANT_PAGE_IDS, DESCENDANTS_COUNT_PAGE_ID
-    from ....core.i18n import tr as _tr
-    from ....core.presentation import FormField, FormPage, form_choices
-
-    raw_count = values.get(DESCENDANTS_COUNT_PAGE_ID, "0")
-    count = int(raw_count) if raw_count.isdigit() else 0
-    fields: list[FormField] = [
-        FormField(
-            key=DESCENDANTS_COUNT_PAGE_ID,
-            label=_tr("wizard.setup.descendientes.count.prompt"),
-            value=raw_count,
-            validate=_check_count,
-        ),
-    ]
-    yes_no = form_choices([("true", _tr("flows.confirm.yes")), ("false", _tr("flows.confirm.no"))])
-    grades = form_choices(
-        [
-            ("0", _tr("wizard.setup.descendientes.discapacidad.choices.0.label")),
-            ("33", _tr("wizard.setup.descendientes.discapacidad.choices.33.label")),
-            ("65", _tr("wizard.setup.descendientes.discapacidad.choices.65.label")),
-        ],
-    )
-    for index in range(count):
-        for page_id in DESCENDANT_PAGE_IDS:
-            key = f"descendientes#{index}.{page_id}"
-            kind, choices = _descendant_field_shape(page_id, yes_no=yes_no, grades=grades)
-            fields.append(
-                FormField(
-                    key=key,
-                    label=f"{index + 1}. {_descendant_prompt(page_id)}",
-                    value=values.get(key, ""),
-                    kind=kind,
-                    choices=choices,
-                ),
-            )
-    return FormPage(
-        title=_tr("cli.config.profile.descendiente.help"),
-        section=_tr("wizard.setup.descendientes.title"),
-        fields=tuple(fields),
-    )
-
-
-def _descendant_prompt(page_id: str) -> str:
-    """Return one per-descendant question's prompt.
-
-    Every key is a literal ``tr(...)`` argument in an exhaustive match
-    rather than an f-string over the page id: the locale scaffolder finds
-    keys by static scan, so a key built at runtime is invisible to it and
-    would silently fall out of the catalogues once the flow module that
-    declares these constants is retired.
-    """
-    from ....core.i18n import tr as _tr
-
-    match page_id:
-        case "birth-date":
-            return _tr("wizard.setup.descendientes.birth-date.prompt")
-        case "relacion":
-            return _tr("wizard.setup.descendientes.relacion.prompt")
-        case "inscripcion-registro-civil":
-            return _tr("wizard.setup.descendientes.inscripcion-registro-civil.prompt")
-        case "acogimiento-resolucion":
-            return _tr("wizard.setup.descendientes.acogimiento-resolucion.prompt")
-        case "discapacidad":
-            return _tr("wizard.setup.descendientes.discapacidad.prompt")
-        case "convivencia":
-            return _tr("wizard.setup.descendientes.convivencia.prompt")
-        case "dependencia-economica":
-            return _tr("wizard.setup.descendientes.dependencia-economica.prompt")
-        case "custodia-compartida":
-            return _tr("wizard.setup.descendientes.custodia-compartida.prompt")
-        case "rentas-anuales":
-            return _tr("wizard.setup.descendientes.rentas-anuales.prompt")
-        case "declaracion-propia":
-            return _tr("wizard.setup.descendientes.declaracion-propia.prompt")
-        case "prorrata-minimo":
-            return _tr("wizard.setup.descendientes.prorrata-minimo.prompt")
-        case "meses-madre-trabajo":
-            return _tr("wizard.setup.descendientes.meses-madre-trabajo.prompt")
-        case "gastos-guarderia":
-            return _tr("wizard.setup.descendientes.gastos-guarderia.prompt")
-        case "gastos-guarderia-mensuales":
-            return _tr("wizard.setup.descendientes.gastos-guarderia-mensuales.prompt")
-        # Only ``nif`` reaches here: every other member of DESCENDANT_PAGE_IDS is
-        # named above. Three of them were NOT, and this arm answered for them --
-        # the guided screen labelled the rentas, declaración-propia and prórrata
-        # rows with the NIF question, so an operator was asked for a tax id three
-        # times and the figures they typed went to fields they never saw named.
-        case _:
-            return _tr("wizard.setup.descendientes.nif.prompt")
-
-
-def _descendant_field_shape(
-    page_id: str,
-    *,
-    yes_no: tuple[FormChoice, ...],
-    grades: tuple[FormChoice, ...],
-) -> tuple[FormFieldKind, tuple[FormChoice, ...]]:
-    """Return the edit kind and choices for one per-descendant question."""
-    from ....core.presentation import FormFieldKind
-
-    if page_id in {"convivencia", "custodia-compartida"}:
-        return FormFieldKind.SINGLE_CHOICE, yes_no
-    if page_id == "discapacidad":
-        return FormFieldKind.SINGLE_CHOICE, grades
-    return FormFieldKind.TEXT, ()
-
-
-def _check_count(candidate: str) -> str | None:
-    """Refuse a count that is not a plain non-negative whole number."""
-    from ....core.i18n import tr as _tr
-
-    if candidate.isdigit():
-        return None
-    return _tr("wizard.setup.format.units-count")
 
 
 def descendiente_add(

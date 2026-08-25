@@ -24,6 +24,7 @@ from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
 
 from ....application.user_profile import (
+    apply_manager_profile_field_mutation,
     build_profile_overview,
     login_profile,
     register_profile_with_credentials,
@@ -31,7 +32,6 @@ from ....application.user_profile import (
 from ....core import require_active_bucket_id
 from ....core.i18n import tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....entrypoints.cli import persist_active_profile_field
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..profile.overview import ProfileManagerApp
@@ -107,10 +107,15 @@ def _ensure_logged_in() -> None:
 def _manager() -> ProfileManagerApp:
     _ensure_logged_in()
     record = load_test_profile_record(require_active_bucket_id())
-    return ProfileManagerApp(
-        build_profile_overview(record, label=_LABEL),
-        persist=lambda path, value: persist_active_profile_field(path, value, label=_LABEL),
-    )
+    def persist(path: str, value: str):
+        applied = apply_manager_profile_field_mutation(
+            profile_id=require_active_bucket_id(),
+            path=path,
+            value=value,
+        )
+        return build_profile_overview(applied, label=_LABEL)
+
+    return ProfileManagerApp(build_profile_overview(record, label=_LABEL), persist=persist)
 
 
 def _footer_entries(app: ProfileManagerApp) -> dict[str, str]:
