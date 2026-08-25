@@ -20,13 +20,12 @@ from ....core.redaction import (
 )
 from .._common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from .errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._status_rendering import precondition_action_lines
+from .errors import ConfigBoundaryError as _ConfigBoundaryError
 
 if typing.TYPE_CHECKING:
-    from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
-    from cadrumo.application.workflow.profile_health import ActiveProfileHealth
-
+    from ....application.workflow.profile_bucket_models import ProfileBucketPointer
+    from ....application.workflow.profile_health import ActiveProfileHealth
     from ....domain.user_profile.values import UserProfileRecord
 
 
@@ -89,8 +88,7 @@ def _validate_repair_action_preconditions(
 
 def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: bool) -> None:
     """Repair a degraded active-profile pointer and emit the health result."""
-    from cadrumo.application.workflow.profile_health import repair_active_profile_pointer
-
+    from ....application.workflow.profile_health import repair_active_profile_pointer
     from .._config_payloads import RepairProfileResult
 
     result = repair_active_profile_pointer(clear_active=clear_active, confirmed=confirmed)
@@ -169,8 +167,7 @@ def _emit_profile_record_status(
     read_profile_record: ProfileRecordReader,
 ) -> None:
     """Emit a non-secret status report for one registered profile bucket."""
-    from cadrumo.application.workflow.profile_health import unavailable_profile_record_verdict
-
+    from ....application.workflow.profile_health import unavailable_profile_record_verdict
     from ....domain.user_profile.errors import ProfileNotFoundError
     from .._config_payloads import RepairProfileResult
 
@@ -262,8 +259,7 @@ def _emit_profile_record_unreadable_repair(
     profile_id: str,
     error: Exception,
 ) -> None:
-    from cadrumo.application.workflow.profile_health import unavailable_profile_record_verdict
-
+    from ....application.workflow.profile_health import unavailable_profile_record_verdict
     from .._config_payloads import RepairProfileResult
 
     payload = {
