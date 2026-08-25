@@ -11,7 +11,7 @@ outside this application package by the authorised production composition step.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Self
+from typing import ClassVar, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -78,9 +78,22 @@ type GoogleSheetsExportPort = Callable[[str, SheetExportPlan, bool], "GoogleShee
 class GoogleSheetsExportCapabilityDisabledError(ValueError):
     """The active profile has not admitted Google workbook export."""
 
+    __bare_base_rationale__: ClassVar[str] = (
+        "internal-google-export-capability-carrier: the CLI sync door catches this by name "
+        "and re-raises CliRefusedBoundaryError with the registered "
+        "cli.config.google.sync.calc.export.capability_disabled message, so it never reaches "
+        "an operator as itself"
+    )
+
 
 class GoogleSheetsExportRootFolderRequiredError(ValueError):
     """The composed transport has no configured Drive root folder."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "internal-google-export-root-folder-carrier: the CLI sync door catches this by name "
+        "and re-raises CliRefusedBoundaryError with the registered "
+        "cli.config.google.sync.calc.export.root_folder_required message"
+    )
 
 
 class GoogleSheetsExportOperationRequest(CredentialFreeOperationRequest):

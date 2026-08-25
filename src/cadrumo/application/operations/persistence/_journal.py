@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from itertools import pairwise
-from typing import Literal, Protocol, runtime_checkable
+from typing import ClassVar, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 
@@ -200,6 +200,12 @@ class OperationObservationUnknownOperationError(LookupError):
 
 class OperationObservationCursorAheadError(ValueError):
     """The caller cursor is beyond the authoritative anchor read under the journal lock."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "internal-observation-cursor-ahead-carrier: the observation service catches this by "
+        "name and returns a typed CURSOR_AHEAD refusal rather than propagating, so it never "
+        "reaches an operator as itself"
+    )
 
     def __init__(self, *, requested_cursor: OperationEventCursor, anchor_cursor: OperationEventCursor) -> None:
         self.requested_cursor = requested_cursor
