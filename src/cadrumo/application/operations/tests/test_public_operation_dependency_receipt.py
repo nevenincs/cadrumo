@@ -267,7 +267,7 @@ _REQUIRED_PROOFS: Mapping[str, tuple[str, str]] = {
 
 _EXPECTED_AUTHORITY_OWNERS: Mapping[str, str] = {
     "OperationSnapshot": "src/cadrumo/application/operations/_models.py",
-    "OperationPersistedSnapshot": "src/cadrumo/application/operations/_journal.py",
+    "OperationPersistedSnapshot": "src/cadrumo/application/operations/persistence/_journal.py",
     "OperationRegistry": "src/cadrumo/application/operations/_registry.py",
     "OperationObservationService": "src/cadrumo/application/operations/_observation.py",
     "OperationReviewProjectionService": "src/cadrumo/application/operations/_projection_services.py",

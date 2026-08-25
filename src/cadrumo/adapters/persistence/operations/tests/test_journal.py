@@ -19,26 +19,26 @@ from .....application.operations import (
     OperationRequestStoragePolicy,
     OperationTerminalReceipt,
 )
-from .....application.operations._events import OperationPhaseEvent, OperationProgressEvent, OperationTerminalEvent
 from .....application.operations._interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
     OperationInteractionRequest,
     OperationPendingInteraction,
 )
-from .....application.operations._journal import (
+from .....application.operations.persistence import (
+    OperationIdempotencyClaim,
+    OperationLeaseDisposition,
     OperationObservationCursorAheadError,
     OperationObservationMaterialization,
     OperationObservationUnknownOperationError,
-    OperationPersistedSnapshot,
-)
-from .....application.operations._leases import (
-    OperationLeaseDisposition,
     OperationOwnerLease,
+    OperationPersistedSnapshot,
+    OperationPhaseEvent,
+    OperationProgressEvent,
+    OperationReplayStatus,
+    OperationTerminalEvent,
     operation_conflict_scope_reference,
 )
-from .....application.operations._models import OperationIdempotencyClaim
-from .....application.operations._replay import OperationReplayStatus
 from .....core import (
     OperationEffect,
     OperationInteractionKind,
@@ -240,6 +240,7 @@ def _observe_in_process(
     results: Queue[str],
 ) -> None:
     """Read one real observation and signal entry to its actual lock context."""
+
     def trace(frame: object, event: str, argument: object) -> object:
         del argument
         code = getattr(frame, "f_code", None)
@@ -305,9 +306,7 @@ def test_operation_journal_commits_cas_transitions_and_refuses_mutations(tmp_pat
         asyncio.run(repository.commit(_snapshot(revision=1, sequence=3), expected_revision=0, lease=_lease()))
     assert path.read_bytes() == original_bytes
 
-    changed_contract = _snapshot(revision=1, sequence=2).model_copy(
-        update={"definition_contract_digest": "f" * 64}
-    )
+    changed_contract = _snapshot(revision=1, sequence=2).model_copy(update={"definition_contract_digest": "f" * 64})
     with pytest.raises(RepositoryError, match="definition contract digest"):
         asyncio.run(repository.commit(changed_contract, expected_revision=0, lease=_lease()))
     assert path.read_bytes() == original_bytes

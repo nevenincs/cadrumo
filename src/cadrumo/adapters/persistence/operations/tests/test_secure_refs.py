@@ -27,6 +27,8 @@ from .. import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _WRITTEN_AT = datetime(2026, 8, 14, 14, tzinfo=UTC)
+
+
 class _Operand(BaseModel):
     subject: str = Field(min_length=1)
     amount: int = Field(ge=0)

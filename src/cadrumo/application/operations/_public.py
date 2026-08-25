@@ -35,8 +35,9 @@ from ._registry import (
     OperationPublicDefinitionContractV1,
     OperationSchemaIdentityV1,
 )
-from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayStatus
+from ._replay import OperationEventCursor
 from ._secret_submission import OperationSecretRequirement
+from .persistence import OperationReplayLimit, OperationReplayStatus
 
 _PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 

@@ -9,15 +9,18 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from ...core import Hex64Str
-from ._journal import OperationJournal, OperationLeaseRepository, OperationPersistedSnapshot
-from ._leases import (
+from ._models import OperationId, OperationIdentity
+from .persistence import (
+    OperationIdempotencyClaim,
+    OperationJournal,
     OperationLeaseDisposition,
     OperationLeaseObservationDisposition,
+    OperationLeaseRepository,
     OperationLeaseToken,
     OperationOwnerLease,
+    OperationPersistedSnapshot,
     operation_conflict_scope_reference,
 )
-from ._models import OperationId, OperationIdempotencyClaim, OperationIdentity
 
 
 class OperationSupervisorLeaseMixin:

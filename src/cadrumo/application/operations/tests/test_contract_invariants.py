@@ -26,9 +26,9 @@ from .. import (
     OperationTerminalCondition,
     OperationTerminalReceipt,
 )
-from .._events import OperationDiagnosticEvent
 from .._interactions import OperationApplyResponse
 from .._models import OperationSnapshot
+from ..persistence import OperationDiagnosticEvent
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

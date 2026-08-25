@@ -6,26 +6,7 @@ from dataclasses import dataclass
 from typing import ClassVar, Literal, cast
 
 from ...core import OperationCancellation, OperationInteractionKind, OperationLifecycle
-from ._events import (
-    OperationDiagnosticEvent,
-    OperationEffectEvent,
-    OperationEvent,
-    OperationInteractionEvent,
-    OperationLogRecord,
-    OperationNoticeEvent,
-    OperationPhaseEvent,
-    OperationProgressEvent,
-    OperationReconciliationEvent,
-    OperationTerminalEvent,
-)
 from ._interactions import OperationPendingInteraction
-from ._journal import (
-    OperationObservationCursorAheadError,
-    OperationObservationMaterialization,
-    OperationObservationReader,
-    OperationObservationUnknownOperationError,
-    OperationProgressFoldInput,
-)
 from ._public import (
     OperationNoPendingInteractionV1,
     OperationObservationRefusalCode,
@@ -57,7 +38,24 @@ from ._registry import (
     OperationRegistry,
     operation_public_schema_reference,
 )
-from ._replay import OperationReplayStatus
+from .persistence import (
+    OperationDiagnosticEvent,
+    OperationEffectEvent,
+    OperationEvent,
+    OperationInteractionEvent,
+    OperationLogRecord,
+    OperationNoticeEvent,
+    OperationObservationCursorAheadError,
+    OperationObservationMaterialization,
+    OperationObservationReader,
+    OperationObservationUnknownOperationError,
+    OperationPhaseEvent,
+    OperationProgressEvent,
+    OperationProgressFoldInput,
+    OperationReconciliationEvent,
+    OperationReplayStatus,
+    OperationTerminalEvent,
+)
 
 _SUPPORTED_OBSERVATION_VERSION = 1
 _UNSUPPORTED_INTERACTION_CODE = "operation.interaction.unsupported"

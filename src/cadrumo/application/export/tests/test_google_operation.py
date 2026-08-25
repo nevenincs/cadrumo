@@ -213,6 +213,6 @@ def test_google_export_owner_has_no_concrete_adapter_or_entrypoint_dependency() 
         for alias in node.names
     }
 
-    assert not any(module.startswith("cadrumo.adapters") for module in imported_modules)
-    assert not any(module.startswith("cadrumo.entrypoints") for module in imported_modules)
+    assert not any(module.startswith("adapters") or module.startswith("persistence") for module in imported_modules)
+    assert not any(module.startswith("entrypoints") for module in imported_modules)
     assert {"build_export_plan", "resolve_relations_from_local_store"}.issubset(imported_names)

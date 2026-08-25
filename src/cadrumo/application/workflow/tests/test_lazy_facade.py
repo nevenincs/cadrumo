@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -36,6 +38,28 @@ def test_lazy_map_has_exact_public_name_parity() -> None:
 
     assert set(workflow._LAZY_EXPORTS) == set(workflow.__all__)
     assert set(workflow.__all__).issubset(dir(workflow))
+
+
+def test_lazy_public_names_have_exact_static_owner_bindings() -> None:
+    """Static imports mirror the runtime owners without loading them at runtime."""
+    import cadrumo.application.workflow as workflow
+
+    facade_tree = ast.parse(Path(workflow.__file__).read_text(encoding="utf-8"))
+    type_checking_block = next(
+        statement
+        for statement in facade_tree.body
+        if isinstance(statement, ast.If)
+        and isinstance(statement.test, ast.Name)
+        and statement.test.id == "TYPE_CHECKING"
+    )
+    static_owners = {
+        alias.asname or alias.name: "." * statement.level + (statement.module or "")
+        for statement in type_checking_block.body
+        if isinstance(statement, ast.ImportFrom)
+        for alias in statement.names
+    }
+
+    assert static_owners == workflow._LAZY_EXPORTS
 
 
 def test_each_public_name_resolves_from_its_declared_owner() -> None:

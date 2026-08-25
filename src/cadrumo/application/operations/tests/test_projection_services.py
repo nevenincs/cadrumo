@@ -72,13 +72,18 @@ from .. import (
     OperationWorkspaceRefreshTargetVersionHeader,
     operation_public_schema_reference,
 )
-from .._events import OperationInteractionEvent, OperationPhaseEvent, OperationTerminalEvent
 from .._interactions import OperationInteractionRequest, OperationPendingInteraction, OperationResponseIntent
-from .._journal import OperationPersistedSnapshot
-from .._leases import OperationOwnerLease, operation_conflict_scope_reference
 from .._projection_services import BoundOperationSecureResponseAuthority, OperationResponseAuthorityBroker
 from .._supervisor import OperationSupervisor
 from ..owner import OperationExecutorContext
+from ..persistence import (
+    OperationInteractionEvent,
+    OperationOwnerLease,
+    OperationPersistedSnapshot,
+    OperationPhaseEvent,
+    OperationTerminalEvent,
+    operation_conflict_scope_reference,
+)
 
 _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
 _OPERATION_ID = "1" * 64

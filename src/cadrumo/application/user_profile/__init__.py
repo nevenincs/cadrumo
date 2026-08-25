@@ -221,6 +221,9 @@ if TYPE_CHECKING:
         read_profile_capsule_archive as read_profile_capsule_archive,
     )
     from ._capsule_record import (
+        ProfileRecordIntegrityError as ProfileRecordIntegrityError,
+    )
+    from ._capsule_record import (
         ProfileRecordSession as ProfileRecordSession,
     )
     from ._capsule_restore import (
@@ -961,6 +964,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfilePassphraseRotationOutcome": "._passphrase_rotation",
     "ProfileRecordRepository": "._profile_record_repository",
     "ProfileRepeatableRowMutationOutcome": "._section_rows",
+    "ProfileRecordIntegrityError": "._capsule_record",
     "ProfileRecordSession": "._capsule_record",
     "bound_profile_record_session": "._profile_record_repository",
     "ProfileRecoveryArtifactReceipt": "._recovery_custody",
@@ -1186,6 +1190,7 @@ __all__ = [
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
+    "ProfileRecordIntegrityError",
     "ProfileRecordRepository",
     "ProfileRecordSession",
     "ProfileRecoveryArtifactReceipt",

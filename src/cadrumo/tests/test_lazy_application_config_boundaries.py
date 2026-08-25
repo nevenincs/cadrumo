@@ -19,7 +19,7 @@ _WORKFLOW = _SRC / "application" / "workflow"
 _WRITE_SIDE_MODULES = frozenset(
     {
         "cadrumo.application._journal_repository",
-        "cadrumo.application.operations._journal",
+        "cadrumo.application.operations.persistence._journal",
         "cadrumo.core.file_permissions",
         "cadrumo.core.logging",
         "cadrumo.core.storage_materialization",

@@ -9,13 +9,6 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, TypeAdapter
 
 from ._interactions import OperationActorReference
-from ._journal import (
-    OperationEventStream,
-    OperationJournal,
-    OperationLeaseRepository,
-    OperationObservationReader,
-    OperationSecureReferenceStore,
-)
 from ._models import OperationId, OperationRequest
 from ._observation import OperationObservationService
 from ._projection_services import (
@@ -34,6 +27,13 @@ from ._public import OperationResponseControlRequestV1, OperationSubmissionRecei
 from ._registry import OperationRegistry
 from ._secret_submission import OperationSecretRequirement
 from ._supervisor import OperationSupervisor
+from .persistence import (
+    OperationEventStream,
+    OperationJournal,
+    OperationLeaseRepository,
+    OperationObservationReader,
+    OperationSecureReferenceStore,
+)
 
 
 @dataclass(frozen=True, slots=True)

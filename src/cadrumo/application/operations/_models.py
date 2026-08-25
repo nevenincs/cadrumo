@@ -18,9 +18,7 @@ from ...core import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
-    content_hash_hex,
 )
-from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
 from ._model_contract import require_strict_frozen_operation_model_graph
 
@@ -73,42 +71,6 @@ class CredentialFreeOperationRequest(BaseModel):
     """Explicit opt-in base for request payloads safe to retain without credentials."""
 
     model_config = STRICT_FROZEN_CONFIG
-
-
-class OperationIdempotencyClaim(BaseModel):
-    """Durable binding from one caller key to one exact operation request."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    definition_id: OperationDefinitionId
-    subject_ref: OperationReference
-    key_digest: ContentDigest
-    operation_id: OperationId
-    request_reference: ContentDigest
-
-    @classmethod
-    def bind(
-        cls,
-        *,
-        identity: OperationIdentity,
-        idempotency_key: str,
-        request_reference: ContentDigest,
-    ) -> OperationIdempotencyClaim:
-        """Bind a caller key without retaining it in credential-free state."""
-        return cls(
-            definition_id=identity.definition_id,
-            subject_ref=identity.subject_ref,
-            key_digest=content_hash_hex(
-                {
-                    "schema_version": 1,
-                    "definition_id": identity.definition_id,
-                    "subject_ref": identity.subject_ref,
-                    "idempotency_key": idempotency_key,
-                }
-            ),
-            operation_id=identity.operation_id,
-            request_reference=request_reference,
-        )
 
 
 class OperationRequest[RequestPayloadT: BaseModel](BaseModel):
@@ -277,7 +239,6 @@ __all__ = [
     "OperationDefinitionId",
     "OperationDiagnosticReference",
     "OperationId",
-    "OperationIdempotencyClaim",
     "OperationIdentity",
     "OperationReconciliationOutcome",
     "OperationReference",
