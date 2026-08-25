@@ -14,15 +14,18 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from cadrumo.application.operations.composition import (
+from ...adapters.persistence.operations.journal import OperationJournalRepository
+from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ...adapters.persistence.storage import SecureObjectRepository
+from ...application.auth.operation_definitions import build_auth_operation_definitions
+from ...application.export import build_google_sheets_export_operation_definition
+from ...application.operations.composition import (
     OperationComposedServices,
     OperationSubmission,
     compose_operation_services,
 )
-from cadrumo.application.operations.frontend_contracts import (
+from ...application.operations.frontend_contracts import (
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
     OperationCancellationSuccessV1,
@@ -39,16 +42,12 @@ from cadrumo.application.operations.frontend_contracts import (
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
 )
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import (
+from ...application.operations.models import OperationRequest
+from ...application.operations.registry import (
     OperationDefinition,
     OperationRegistry,
 )
-from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
-
-from ...adapters.persistence.storage import SecureObjectRepository
-from ...application.auth.operation_definitions import build_auth_operation_definitions
-from ...application.export import build_google_sheets_export_operation_definition
+from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 from ...application.user_profile.censal_observation import (
     CensalObservation,
     CensalObservationAddress,
