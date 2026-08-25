@@ -30,7 +30,7 @@ import textwrap
 
 import pytest
 
-from dev.ci.perf_measurement import SubprocessTiming, min_subprocess_cpu_seconds, wall_advisory_message
+from ..perf_measurement import SubprocessTiming, min_subprocess_cpu_seconds, wall_advisory_message
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

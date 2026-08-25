@@ -25,8 +25,8 @@ import pytest
 import yaml
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..runner_queue_watchdog import (
     JobView,
     _epoch_of,

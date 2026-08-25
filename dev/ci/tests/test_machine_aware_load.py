@@ -20,8 +20,7 @@ from typing import Any, Final
 import pytest
 import yaml
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ...packaging._command import run_command
 from ..lane_reachability import Lane, declared_lanes, expression_selects, marker_sets_in
 

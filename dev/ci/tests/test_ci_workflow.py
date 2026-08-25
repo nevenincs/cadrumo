@@ -9,8 +9,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ...packaging._command import run_command
 from ..lane_reachability import declared_lanes, resolved_recipe_commands
 

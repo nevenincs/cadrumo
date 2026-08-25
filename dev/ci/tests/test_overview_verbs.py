@@ -43,7 +43,8 @@ from cadrumo.entrypoints.cli._common import resolve_notice_action
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.filing import build_registry_filing_draft
-from dev.ci.perf_measurement import CPU_CONTENTION_MARGIN
+
+from ..perf_measurement import CPU_CONTENTION_MARGIN
 
 pytestmark = [
     pytest.mark.integration,
