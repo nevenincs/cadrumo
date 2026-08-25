@@ -3,12 +3,14 @@ tags:
   - '#plan'
   - '#dehu-notification-legal-effect'
 date: '2026-08-07'
-modified: '2026-08-13'
-body_hash: 'sha256:c4dddfb7455e2dbf0f274584464a88b3203f36d3b0fa3a9801c9012304c8e202'
+modified: '2026-08-25'
+body_hash: 'sha256:f0fe919a0362b916f38d78e5a86e04b4ec32b4c22860b94d2b57509aee0c51d6'
 tier: L2
 related:
   - '[[2026-08-07-dehu-notification-legal-effect-adr]]'
 ---
+
+<!-- RETIRED: S20, S21, S22 -->
 
 # `dehu-notification-legal-effect` plan
 
@@ -74,16 +76,14 @@ fetch, parser, persistence, or typed snapshot inspection in P05.S14 and
 P05.S15. The feature and this plan cannot claim completion without the
 sanitized real live evidence defined in P05.
 
-**Critical custody dependency (2026-08-13).** The production profile needed
-for that live read retains bucket manifests and wrapped bucket DEKs but its
-canonical file-custody route reports both master-key artefacts absent. This is
-a data-safety incident inside this campaign, not an external blocker and not
-permission to create a substitute profile. P05.S19 through P05.S22 therefore
-precede authentication: reproduce and locate the regression, measure the
-production blast radius without decrypting or rewriting taxpayer data, repair
-the canonical custody lifecycle, and prove restart/login plus anti-overwrite
-behaviour. The original profile bytes remain immutable evidence throughout.
-Neither a friendlier refusal nor a newly provisioned profile closes these rows.
+**Critical custody dependency (reconciled 2026-08-25).** P05.S19 recorded the
+custody regression that blocked the live read. The accepted
+`2026-08-13-profile-password-custody-rollup-adr` and its implementation plan now
+own the incident's architecture, migration, proof, and close audit. Retired
+P05.S20 through P05.S22 duplicated that successor authority and must not be
+implemented or checked here. P05.S13 may begin only after the custody campaign
+closes honestly; the original profile remains immutable evidence, and neither a
+friendlier refusal nor a replacement profile satisfies that dependency.
 
 ## Steps
 
@@ -124,12 +124,9 @@ Run a strictly serial, authenticated, read-only acceptance program proving the r
 
 - [x] `P05.S12` - Prove the canonical DEHu route and remote-operation guard permit only authenticated read-only notification fetches and refuse acknowledge, mark-read, comparecer, submit, present, and every other AEAT mutation before transport.; `src/cadrumo/application/live src/cadrumo/adapters/outbound/aeat/sede src/cadrumo/domain/calculations/registry src/cadrumo/entrypoints/cli`.
 - [x] `P05.S19` - Reproduce the production custody regression through a real isolated create setup-interruption process-restart and login lifecycle using the file backend and original passphrase, then identify the first commit and invariant that permits encrypted bucket state to outlive its only master-key route.; `src/cadrumo/application/user_profile src/cadrumo/adapters/persistence/storage/master_key src/cadrumo/entrypoints/cli/_config`.
-- [ ] `P05.S20` - Measure the production blast radius from manifest keystore session and custody metadata without decrypting taxpayer data, classify every existing profile as recoverable missing-custody torn or unrelated, and preserve every original byte while recording cryptographic identity evidence rather than guessed ownership.; `src/cadrumo/adapters/persistence/storage src/cadrumo/application/user_profile .vault/audit`.
-- [ ] `P05.S21` - Fix the canonical profile-enrollment and custody lifecycle so no failed or interrupted setup can leave an advertised profile with encrypted bucket data but no durable master-key authority, and make existing-profile login fail with recovery-safe guidance that never suggests creating a replacement profile over inaccessible data.; `src/cadrumo/application/user_profile src/cadrumo/adapters/persistence/storage/master_key src/cadrumo/entrypoints/cli/_config src/cadrumo/locales`.
-- [ ] `P05.S22` - Prove the custody repair with real subprocess create interruption restart login and recovery-boundary tests, an anti-overwrite test over pre-existing encrypted buckets, focused security review, and current-tree storage profile and CLI gates before retrying live authentication.; `src/cadrumo/application/user_profile/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/entrypoints/cli/tests .vault/audit`.
 - [ ] `P05.S13` - Verify active-profile and authenticated-session preconditions with sanctioned read-only diagnostics, record only presence and readiness facts, and stop for the operator if login, certificate, or Cl@ve interaction is required.; `src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py src/cadrumo/entrypoints/cli/_app_live.py src/cadrumo/entrypoints/cli/_config`.
 - [ ] `P05.S14` - Execute one real authenticated aeat app live notifications pull through DEHu, prove traffic reached the canonical guarded service, and record sanitized typed evidence of the persisted snapshot id, capture time, row count, and source host without remote mutation.; `src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py src/cadrumo/application/live/__init__.py src/cadrumo/application/live/_notifications.py src/cadrumo/adapters/outbound/aeat/sede/_notifications.py`.
-- [ ] `P05.S15` - Inspect the just-captured snapshot only through typed latest and view commands, correlate its sanitized id and count with the pull envelope, and prove the remote parser supplied fecha_notificacion and leida inputs consumed by service-state computation.; `src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py src/cadrumo/entrypoints/cli/_app_live_payloads.py src/cadrumo/application/live/_notifications.py src/cadrumo/adapters/outbound/aeat/sede/_notifications.py src/cadrumo/application/overview/_calendar.py`.
+- [ ] `P05.S15` - Inspect the just-captured snapshot only through typed latest and show commands, correlate its sanitized id and count with the pull envelope, and prove the remote parser supplied fecha_notificacion and leida inputs consumed by service-state computation; `src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py src/cadrumo/entrypoints/cli/_app_live_payloads.py src/cadrumo/application/live/_notifications.py src/cadrumo/adapters/outbound/aeat/sede/_notifications.py src/cadrumo/application/overview/_calendar.py`.
 - [ ] `P05.S16` - Run aeat app overview calendar over the captured snapshot and prove its real event service state. If the live payload contains an unread item at least ten days old, demonstrate overview.notificacion.rechazo_tacito with its legal reference. Otherwise run a supplementary real-payload replay through the same production projection.; `src/cadrumo/entrypoints/cli/_overview.py src/cadrumo/entrypoints/cli/_overview_rendering.py src/cadrumo/application/overview/_calendar.py src/cadrumo/core/_notificacion_estado_servicio.py`.
 - [ ] `P05.S17` - Conduct an independent security and semantic-duplication review of the canonical guarded route parser persistence and overview projection and record every owner-surface finding without compatibility shims.; `src/cadrumo/application/live src/cadrumo/adapters/outbound/aeat/sede src/cadrumo/application/overview src/cadrumo/entrypoints/cli .vault/audit`.
 - [ ] `P05.S18` - Create a sanitized live-evidence execution record and phase summary that correlates guarded traffic snapshot persistence parser inputs overview state Notice outcome and every blocker without exposing taxpayer content or credentials.; `.vault/exec/2026-08-07-dehu-notification-legal-effect .vault/audit .vault/plan/2026-08-07-dehu-notification-legal-effect-plan.md`.
@@ -158,8 +155,8 @@ and may run in parallel with each other once P03.S06 is closed.
 
 P04.S09 was the terminal implementation verification for P01 through P03;
 P05 supersedes it as the plan's final acceptance program. P05 is strictly
-serial: P05.S12 precedes the custody incident sequence P05.S19, P05.S20,
-P05.S21 and P05.S22; only then may P05.S13 retry authentication and precede the one live read in
+serial: P05.S12 and the completed P05.S19 diagnosis precede the successor
+profile-password-custody campaign's honest close; only then may P05.S13 retry authentication and precede the one live read in
 P05.S14; P05.S15 must inspect that exact capture; P05.S16 must project that
 same capture; P05.S17 independently reviews the completed route; and P05.S18
 records the sanitized evidence and summary last. A session/authentication
@@ -211,18 +208,9 @@ amendment because P05.S12 through P05.S18 are unchecked. Per-Step gates
   interrupted or refused setup, process restart, and login with the original
   passphrase, and Git history plus code evidence identifies the first broken
   invariant. A prose-only diagnosis cannot close the row.
-- P05.S20: production metadata is inspected read-only and every profile is
-  classified without exposing identity or decrypting records. Hashes and
-  custody/backend facts preserve chain of evidence; no key, bucket, pointer,
-  session, or manifest byte is moved, replaced, minted, or deleted.
-- P05.S21: the canonical enrollment/custody owner prevents an advertised
-  encrypted profile from surviving without durable master-key authority and
-  refuses existing inaccessible profiles with recovery-safe guidance. It must
-  never suggest that creating a replacement profile restores old ciphertext.
-- P05.S22: real subprocess restart/login tests pass with the original
-  passphrase; forced setup interruption cannot orphan custody; pre-existing
-  encrypted buckets cannot trigger implicit mint, re-key, overwrite, or
-  deletion; independent security review has no open high or critical finding.
+- Custody successor dependency: the profile-password-custody campaign's final
+  audit closes without an open high or critical finding before P05.S13 begins.
+  This plan neither repeats its proof nor redefines its architecture.
 - P05.S13: sanctioned read-only profile/auth diagnostics report only
   readiness and presence facts. The record contains no NIF, certificate path,
   session material, notification content, or credential detail. Missing
