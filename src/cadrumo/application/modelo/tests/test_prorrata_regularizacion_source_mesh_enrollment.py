@@ -190,6 +190,7 @@ def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) ->
             transaction_repository=None,
             invoice_repository=None,
             foreign_asset_observations=(),
+            foreign_asset_row_observations=(),
             casilla_inputs={
                 _SOPORTADO_INTERIORES_ID: _FIRST_THREE_QUARTERS_INPUT_IVA,
                 _VOLUMEN_CON_DERECHO_ID: _MANUAL_CURRENT_YEAR_CON_DERECHO,
@@ -232,6 +233,7 @@ def test_source_mesh_resolves_m390_prorrata_binding_from_m303_source_periods(
             transaction_repository=None,
             invoice_repository=None,
             foreign_asset_observations=(),
+            foreign_asset_row_observations=(),
             filing_period_date=snapshot.filing_period.end_date,
         )
 
