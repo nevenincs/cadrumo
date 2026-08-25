@@ -13,6 +13,7 @@ import subprocess
 import sys
 import textwrap
 import urllib.request
+from collections.abc import Iterable, Mapping
 from typing import cast
 
 
@@ -214,6 +215,28 @@ def calculation_evidence(query: str, result: dict[str, object]) -> str | None:
     return None
 
 
+def semantic_leak_violations(
+    results_by_query: Mapping[str, Iterable[dict[str, object]]],
+) -> tuple[str, ...]:
+    """Classify shaped RAG results into concrete semantic leak violations."""
+    violations: list[str] = []
+    score_threshold = 0.50
+
+    for query, results in results_by_query.items():
+        for result in results:
+            raw_score = result.get("score")
+            score = float(raw_score) if isinstance(raw_score, int | float) else 0.0
+            raw_path = result.get("path")
+            path = raw_path if isinstance(raw_path, str) else ""
+            if score < score_threshold or not is_violation(path):
+                continue
+            evidence = calculation_evidence(query, result)
+            if evidence is not None:
+                violations.append(f"Leak detected for query '{query}' ({evidence}; score {score:.2f}): {path}")
+
+    return tuple(violations)
+
+
 def main() -> None:
     """Execute programmatic semantic leak audits and assert clean state."""
     if not check_health():
@@ -221,25 +244,11 @@ def main() -> None:
         sys.exit(0)
 
     # Core concepts queries to check leaks
-    queries = [
+    queries = (
         "currency rounding",
         "calculate tax base",
-    ]
-
-    violations: list[str] = []
-    score_threshold = 0.50
-
-    for query in queries:
-        results = run_search(query)
-        for res in results:
-            raw_score = res.get("score")
-            score = float(raw_score) if isinstance(raw_score, int | float) else 0.0
-            raw_path = res.get("path")
-            path = raw_path if isinstance(raw_path, str) else ""
-            if score >= score_threshold and is_violation(path):
-                evidence = calculation_evidence(query, res)
-                if evidence is not None:
-                    violations.append(f"Leak detected for query '{query}' ({evidence}; score {score:.2f}): {path}")
+    )
+    violations = semantic_leak_violations({query: run_search(query) for query in queries})
 
     if violations:
         print("=== Semantic Leak Violations ===")
