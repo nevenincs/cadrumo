@@ -38,9 +38,23 @@ if TYPE_CHECKING:
     from ._config._google import OAuthClientPayload as OAuthClientPayload
     from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
     from ._verb_input_schema import cli_path_for_command_key as cli_path_for_command_key
+from ._config._login_frontend import attempt_login as attempt_login
+from ._config._login_frontend import preselected_profile_id as preselected_profile_id
+from ._config._manager_actions import logout_action as logout_action
+from ._config._manager_actions import manager_actions as manager_actions
+from ._config._manager_frontend import (
+    attempt_registration as attempt_registration,
+)
+from ._config._manager_frontend import (
+    build_active_profile_overview as build_active_profile_overview,
+)
 from ._config._manager_frontend import (
     persist_active_profile_field as persist_active_profile_field,
 )
+from ._config._manager_frontend import (
+    profile_field_value_refusal as profile_field_value_refusal,
+)
+from ._config._status_frontend import build_status_page_data as build_status_page_data
 from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
@@ -350,6 +364,10 @@ __all__ = [
     "VerbParameter",
     "app",
     "assert_schema_coverage",
+    "attempt_login",
+    "attempt_registration",
+    "build_active_profile_overview",
+    "build_status_page_data",
     "build_verb_input_schemas",
     "calculation_revision_lines",
     "calculation_revision_payload",
@@ -363,7 +381,11 @@ __all__ = [
     "command_search_terms",
     "current_operator_surface_reconciliation",
     "is_exposable_command",
+    "logout_action",
     "main",
+    "manager_actions",
     "persist_active_profile_field",
+    "preselected_profile_id",
+    "profile_field_value_refusal",
     "resolve_cli_precondition_action",
 ]

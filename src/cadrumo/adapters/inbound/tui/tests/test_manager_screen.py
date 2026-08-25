@@ -1020,7 +1020,7 @@ async def test_logout_closes_both_the_session_and_the_surface(tmp_path) -> None:
     session is gone (the real ``logout_active_profile`` door, not a
     stand-in) AND that the app is no longer running, not either alone.
     """
-    from .....entrypoints.cli._config._manager_actions import logout_action
+    from .....entrypoints.cli import logout_action
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(

@@ -93,7 +93,7 @@ _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 @contextmanager
 def _registration(tmp_path: Path) -> Iterator[RegistrationApp]:
     from .....core import assess_profile_password
-    from .....entrypoints.cli._config._manager_frontend import attempt_registration
+    from .....entrypoints.cli import attempt_registration
 
     del tmp_path  # unused: this surface writes nothing until a real submit, which no gate here does
     yield RegistrationApp(assess=assess_profile_password, register=attempt_registration)
@@ -142,9 +142,9 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     enrollment exists to catch on a real terminal render rather than by hand.
     """
     from .....application.user_profile import register_profile_with_credentials
-    from .....entrypoints.cli._config._manager_actions import manager_actions
-    from .....entrypoints.cli._config._manager_frontend import (
+    from .....entrypoints.cli import (
         build_active_profile_overview,
+        manager_actions,
         persist_active_profile_field,
         profile_field_value_refusal,
     )
@@ -222,7 +222,7 @@ def _status_populated(tmp_path: Path) -> Iterator[StatusApp]:
     a widget that eliminates its siblings passes edge, scroll, theme, tab
     and masking checks identically whether the siblings are there or not.
     """
-    from .....entrypoints.cli._config._status_frontend import build_status_page_data
+    from .....entrypoints.cli import build_status_page_data
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -254,9 +254,9 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     to track.
     """
     from .....application.user_profile import add_profile_repeatable_section_row
-    from .....entrypoints.cli._config._manager_actions import manager_actions
-    from .....entrypoints.cli._config._manager_frontend import (
+    from .....entrypoints.cli import (
         build_active_profile_overview,
+        manager_actions,
         persist_active_profile_field,
         profile_field_value_refusal,
     )
@@ -787,8 +787,7 @@ async def test_a_modal_secret_never_paints_its_value(tmp_path: Path) -> None:
             passphrase=_VISUAL_PASSWORD,
         )
         record = load_test_profile_record(require_active_bucket_id())
-        from .....entrypoints.cli import persist_active_profile_field
-        from .....entrypoints.cli._config._manager_actions import manager_actions
+        from .....entrypoints.cli import manager_actions, persist_active_profile_field
 
         app = ProfileManagerApp(
             build_profile_overview(record, label=_VISUAL_LABEL),
