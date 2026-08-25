@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:2cd02c1ae6b39a4163700abd34b75298a45ea9912fb11a78612732c78d3a0eba'
+body_hash: 'sha256:692797e1e13fc1cce1087f8e17b8ca014bd6ac0d984313c0bdf898a01c72aeac'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -48,6 +48,7 @@ related:
   - '[[2026-08-24-registry-temporal-coverage-supported-year-redeclaration-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s13-full-span-matrix-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s14-independent-post-review-audit]]'
+  - '[[2026-08-25-registry-temporal-coverage-s43-boe-grounding-review-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s48-m220-2025-scope-review-audit]]'
 ---
 
@@ -75,6 +76,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-24-registry-temporal-coverage-supported-year-redeclaration-audit` - `registry-temporal-coverage` audit: `supported filing year canonical-home and redeclaration audit`
 - `2026-08-25-registry-temporal-coverage-s13-full-span-matrix-audit` - `registry-temporal-coverage` audit: `s13 full span matrix`
 - `2026-08-25-registry-temporal-coverage-s14-independent-post-review-audit` - `registry-temporal-coverage` audit: `S14 independent post-review`
+- `2026-08-25-registry-temporal-coverage-s43-boe-grounding-review-audit` - `registry-temporal-coverage` audit: `S43 BOE grounding review`
 - `2026-08-25-registry-temporal-coverage-s48-m220-2025-scope-review-audit` - `registry-temporal-coverage` audit: `S48 Modelo 220 2025 scope review`
 
 ### exec

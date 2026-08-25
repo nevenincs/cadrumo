@@ -36,6 +36,45 @@ required_text = [
     "inscripciones autorizadas en el mes inmediato anterior",
 ]
 
+[legal."orden-hac-646-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-646-2024.html#articulo-primero"
+document_id = "BOE-A-2024-13049"
+article = "primero"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-13049"
+published_at = 2024-06-28
+effective_from = 2024-06-29
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "agent-prepared (corpus-grounded against official BOE-A-2024-13049 artículo primero; pending operator re-stamp)"
+notes = "Orden HAC/646/2024 artículo primero: introduce el campo Identificador registral único de la sociedad (IRUS) en las posiciones 153-165 del registro de tipo 2 del modelo 038 y desplaza Blancos a las posiciones 166-250."
+required_text = [
+    "Se introduce un nuevo campo, «Identificador registral único de la sociedad (IRUS)»",
+    "ocupará las posiciones 153-165 del registro de tipo 2",
+    "166-250",
+]
+
+[legal."orden-hac-646-2024:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-646-2024.html#disposicion-final-unica"
+document_id = "BOE-A-2024-13049"
+article = "disposición final única"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-13049"
+published_at = 2024-06-28
+effective_from = 2024-06-29
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "agent-prepared (corpus-grounded against official BOE-A-2024-13049 disposición final única; pending operator re-stamp)"
+notes = "Orden HAC/646/2024 disposición final única: fija la primera aplicación del artículo primero en la declaración informativa del modelo 038 correspondiente a junio de 2024, presentada en julio de 2024."
+required_text = [
+    "será aplicable, por primera vez, a la declaración informativa correspondiente al mes de junio de 2024",
+    "se presentará durante el mes de julio de 2024",
+]
+
 [sources."enrolled-modelo-038-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "boe"

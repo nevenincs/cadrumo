@@ -40,6 +40,10 @@ _PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS = {
     ("184", "2025-y-siguientes", 2026): "aeat-dr-184-2025",
     ("200", "2024-y-siguientes", 2026): "aeat-dr-200-2025",
 }
+_M038_SOURCE_ERA_LEGAL_REFS = {
+    "orden-hac-646-2024:art-1",
+    "orden-hac-646-2024:df-unica",
+}
 
 
 def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
@@ -272,12 +276,31 @@ def test_modelo_220_2025_scope_refuses_an_unevidenced_2026_successor() -> None:
 
 
 def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselected() -> None:
-    """M038's inspection receipt cannot make the pre-June window selectable."""
+    """M038's legal cutover and inspection receipt cannot select pre-June history."""
     modelos, catalogues = _registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "038")
     june_2024 = modelo.revisions["2024-desde-06"]
     current_source = catalogues.sources["aeat-dr-038-2024"]
     historical_source = catalogues.sources["aeat-dr-038-2012-inspection"]
+
+    amendment_refs = {
+        ref_id: catalogues.legal[ref_id]
+        for ref_id in _M038_SOURCE_ERA_LEGAL_REFS
+    }
+    verify_legal_catalogue_grounding(amendment_refs, source_root=bundled_path())
+    assert amendment_refs["orden-hac-646-2024:art-1"].required_text == (
+        "Se introduce un nuevo campo, «Identificador registral único de la sociedad (IRUS)»",
+        "ocupará las posiciones 153-165 del registro de tipo 2",
+        "166-250",
+    )
+    assert amendment_refs["orden-hac-646-2024:df-unica"].required_text == (
+        "será aplicable, por primera vez, a la declaración informativa correspondiente al mes de junio de 2024",
+        "se presentará durante el mes de julio de 2024",
+    )
+    for revision in modelo.revisions.values():
+        assert set(revision.legal_refs) >= _M038_SOURCE_ERA_LEGAL_REFS
+        assert len(revision.constructs) == 1
+        assert set(revision.constructs[0].legal_refs) >= _M038_SOURCE_ERA_LEGAL_REFS
 
     assert historical_source.applies_from is None
     assert historical_source.applies_to is None
@@ -336,6 +359,8 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
         "ley-58-2003:art-93",
         "orden-hac-66-2002:art-1",
         "orden-hac-66-2002:art-6",
+        "orden-hac-646-2024:art-1",
+        "orden-hac-646-2024:df-unica",
     )
     assert gates["official_source_guidance"].source_refs == ("enrolled-modelo-038-procedure",)
     assert gates["layout_authority"].source_refs == ("aeat-dr-038-2024",)

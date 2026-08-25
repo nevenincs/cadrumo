@@ -1,6 +1,6 @@
 [[revisions."2024-desde-06".constructs]]
 id = "modelo-038-informative"
-legal_refs = ["orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
+legal_refs = ["orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "orden-hac-646-2024:art-1", "orden-hac-646-2024:df-unica", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure", "aeat-dr-038-2024"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
 application_links = ["modelo-038-filing", "modelo-038-deadline"]
