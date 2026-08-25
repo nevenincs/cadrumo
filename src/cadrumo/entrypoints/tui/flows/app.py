@@ -56,8 +56,7 @@ from ....application.flows.engine import (
     start_flow,
     visible_sequence,
 )
-from ....application.flows.errors import FlowCheckpointError as _FlowCheckpointError
-from ....application.flows.errors import FlowUnsupportedConsoleError
+from ....application.flows.errors import FlowCheckpointError, FlowUnsupportedConsoleError
 from ....application.flows.line_frontend import LineFlowFrontend
 from ....application.flows.review import ReviewProjection, ReviewRow, assert_submit_eligible, review
 from ....application.flows.validators import validate_widget_shape
@@ -72,8 +71,7 @@ from ....core.flows import (
 from ....core.i18n import tr
 from ....core.parsing import parse_bool
 from ..components.dialogs import ConfirmScreen
-from ..components.theme import BASE_CSS as _BASE_CSS
-from ..components.theme import install_cadrumo_themes, toggle_appearance
+from ..components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance
 from ..components.widgets import ContentScroll
 
 if TYPE_CHECKING:
@@ -100,7 +98,7 @@ class FlowTuiApp(App[None]):
     """Full-screen projection of one flow run."""
 
     CSS = (
-        _BASE_CSS
+        BASE_CSS
         + """
     #flow-top {
         dock: top;
@@ -208,7 +206,7 @@ class FlowTuiApp(App[None]):
         """Build a flow projection, requiring a store when checkpointing is available."""
         super().__init__()
         if checkpoint_available(definition, mode) and checkpoint_store is None:
-            raise _FlowCheckpointError(
+            raise FlowCheckpointError(
                 translated_message="flows.errors.checkpoint_store_missing",
                 context=_operator_flow_context(definition, mode),
             )
@@ -397,7 +395,7 @@ class FlowTuiApp(App[None]):
             # never a silent no-save exit — and it survives ``python -O``,
             # where a bare assert would vanish and reach ``save_checkpoint``
             # with ``None``.
-            raise _FlowCheckpointError(
+            raise FlowCheckpointError(
                 translated_message="flows.errors.checkpoint_store_missing",
                 context=_operator_flow_context(self.definition, self.state.mode),
             )
@@ -504,7 +502,7 @@ def run_flow_tui(
         on_app_ready(app)
     app.run()
     if app.final_state is None or app.final_projection is None:
-        raise _FlowCheckpointError(
+        raise FlowCheckpointError(
             translated_message="flows.errors.tui_abandoned",
             context=_operator_flow_context(definition, mode),
         )
