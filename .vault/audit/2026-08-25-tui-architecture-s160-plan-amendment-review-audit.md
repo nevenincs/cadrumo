@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:48c2c0aa680f81e5cb6c7236350418586997888e7cfd53146079072b8e3831c2'
+body_hash: 'sha256:82a6f4fd2e297893e1c1a235daa562f76d56f4eed7119d21d412969dc26b724d'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
@@ -28,9 +28,9 @@ The CLI plan checker reports only `PLAN022`: canonical IDs are not monotonic in 
 
 ### pointer-cutover-scope | high | S168 omits the strict pointer-record owner, core facade, and an exact consumer inventory
 
-The durable transition revision and absent tombstone change the current on-disk pointer grammar, whose strict schema and deterministic TOML serializer live in `src/cadrumo/core/_bucket_pointer.py:47`, `:50`, `:74`, and `:77`. S168 names only `_bucket_pointer_io.py`, the application transaction/facade, generic â€œproduction pointer consumers,â€� and tests. It does not name the schema owner or `src/cadrumo/core/__init__.py`, which must atomically promote the new core record/coordinate surface. Implementing a second record parser in IO would create the forbidden parallel grammar; leaving the v1 record untouched cannot persist an absent selection plus monotonic revision.
+The durable transition revision and absent tombstone change the current on-disk pointer grammar, whose strict schema and deterministic TOML serializer live in `src/cadrumo/core/_bucket_pointer.py:47`, `:50`, `:74`, and `:77`. S168 names only `_bucket_pointer_io.py`, the application transaction/facade, generic "production pointer consumers," and tests. It does not name the schema owner or `src/cadrumo/core/__init__.py`, which must atomically promote the new core record/coordinate surface. Implementing a second record parser in IO would create the forbidden parallel grammar; leaving the v1 record untouched cannot persist an absent selection plus monotonic revision.
 
-The exact direct-reader census also reaches `src/cadrumo/core/config.py:1009`, `src/cadrumo/application/storage_write_policy.py:42`, `src/cadrumo/application/config_reset.py:10`, and `src/cadrumo/application/auth/_operator_scope.py:85`. Transaction-shape consumers occur in `src/cadrumo/application/workflow/_profile_health.py:541`, `src/cadrumo/application/config_reset.py:102`, `src/cadrumo/application/user_profile/_login_session.py:664`, `src/cadrumo/application/user_profile/_lifecycle.py:206`, `src/cadrumo/application/user_profile/_custody_service.py:641`, `src/cadrumo/application/user_profile/_custody_repository.py:196`, and `src/cadrumo/entrypoints/cli/_config/_profile_delete.py:135`. The generic phrase in the row is not an exact one-step/one-commit scope and can silently omit a reader while still claiming â€œzero dual mutation paths.â€�
+The exact direct-reader census also reaches `src/cadrumo/core/config.py:1009`, `src/cadrumo/application/storage_write_policy.py:42`, `src/cadrumo/application/config_reset.py:10`, and `src/cadrumo/application/auth/_operator_scope.py:85`. Transaction-shape consumers occur in `src/cadrumo/application/workflow/_profile_health.py:541`, `src/cadrumo/application/config_reset.py:102`, `src/cadrumo/application/user_profile/_login_session.py:664`, `src/cadrumo/application/user_profile/_lifecycle.py:206`, `src/cadrumo/application/user_profile/_custody_service.py:641`, `src/cadrumo/application/user_profile/_custody_repository.py:196`, and `src/cadrumo/entrypoints/cli/_config/_profile_delete.py:135`. The generic phrase in the row is not an exact one-step/one-commit scope and can silently omit a reader while still claiming "zero dual mutation paths."
 
 ### revision-assertion-teardown | high | S174 cannot delete the raw-loader helper within its listed files
 
