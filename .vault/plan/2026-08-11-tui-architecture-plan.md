@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-25'
-body_hash: 'sha256:245fc3477d9200e561ffd1ff463b722830abdcbdd4114cdec0243b7201f97d9b'
+body_hash: 'sha256:c5556df304f4050d7273aeb535102bffef5421d6d9893fc55915b0a111e4ca23'
 ---
 
 # `tui-architecture` plan
@@ -150,10 +150,10 @@ Move every current manager and credential action behind registered application e
 
 - [x] `W03.P08.S114` - Implement credential-free non-secret operation requests and one-shot supervisor-owned ephemeral secret submission with exact binding, expiry, zeroisation, restart interruption, and no durable secret derivatives before registering login or passphrase operations; `src/cadrumo/application/operations, src/cadrumo/adapters/persistence/operations, and focused real persistence and lifecycle tests`.
 - [x] `W03.P08.S39` - Register login, provider configuration, credential acquisition, passphrase rotation, and auth teardown as application-owned operations; `src/cadrumo/application/auth/_operation_definitions.py`.
-- [ ] `W03.P08.S40` - Register profile field mutation, repeatable-row mutation, bundle export, and profile logout operations through existing user-profile authorities; `src/cadrumo/application/user_profile/_operation_definitions.py`.
+- [x] `W03.P08.S40` - Register profile field mutation, repeatable-row mutation, bundle export, and profile logout operations through existing user-profile authorities; `src/cadrumo/application/user_profile/_operation_definitions.py`.
 - [ ] `W03.P08.S41` - Move Google export planning and application orchestration out of the CLI frontend and register its external-effect operation; `src/cadrumo/application/export/_google_operation.py`.
 - [x] `W03.P08.S42` - Expose authentication operation definitions through the authentication application facade; `src/cadrumo/application/auth/__init__.py`.
-- [ ] `W03.P08.S43` - Expose profile mutation and lifecycle operation definitions through the user-profile application facade; `src/cadrumo/application/user_profile/__init__.py`.
+- [x] `W03.P08.S43` - Expose profile mutation and lifecycle operation definitions through the user-profile application facade; `src/cadrumo/application/user_profile/__init__.py`.
 - [ ] `W03.P08.S44` - Expose Google export operation definitions through the export application facade; `src/cadrumo/application/export/__init__.py`.
 - [ ] `W03.P08.S45` - Run every production-registered executor through the shared success, refusal, failure, interaction, cancellation-capability, deadline-capability, effect, and cleanup matrix and prove the exported definition population is complete; `src/cadrumo/application/operations/tests/test_registered_executor_conformance.py`.
 

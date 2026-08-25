@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:040d7b7c5c21e1721196895c07e3d997fb00dafdd85df9839ab1b376b6a19655'
+body_hash: 'sha256:90d70564cca55966eb7f36861b1717614aaf63b97f501c625d486f245fd221e5'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -51,7 +51,7 @@ Resolution (2026-08-24): resolved during review. Runtime-private supervisor and 
 All recommendations were implemented and independently rechecked in the final review snapshot. No open finding remains. Verdict: approve S122 for closure by the owning executor.
 ## Re-review at `dad420acca1` (2026-08-25)
 
-### Final disposition â€” PASS
+### Final disposition ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ PASS
 
 The prior HIGH facade-authority finding is resolved at exact commit `dad420acca18f1cc3cd2eb68e5c8d0b87681999d`. Vaultspec RAG semantic discovery was followed by exact commit-scoped searches and source reads.
 
@@ -61,10 +61,23 @@ The prior HIGH facade-authority finding is resolved at exact commit `dad420acca1
 - The former static definition-ID list is replaced by a live owner-facade fixed point: current auth, user-profile, censal, and filed-history definition and registration builders are recomposed as the independently derived denominator and compared with production registry and contract-set composition.
 - The opaque response capability remains separately held: it is issuer-gated, actor- and operation-bound, non-serializable, consumed on successful bind, zeroized on close, and unavailable after process restart. Public apply/reject V1 requests bind through the composed service without exposing the token or concrete authority.
 
-Focused faÃ§ade, composition, fixed-point, opaque-capability, and entrypoint-owner-boundary tests passed in the repository test runner; Ruff passed on all changed surfaces. Exact source searches also found no non-test duplicate production `OperationRegistry(` or `OperationSupervisor(` construction outside the composition path.
+Focused faÃƒÆ’Ã‚Â§ade, composition, fixed-point, opaque-capability, and entrypoint-owner-boundary tests passed in the repository test runner; Ruff passed on all changed surfaces. Exact source searches also found no non-test duplicate production `OperationRegistry(` or `OperationSupervisor(` construction outside the composition path.
 
-### LOW â€” Focused basedpyright remains red inside owner-private composition
+### LOW ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ Focused basedpyright remains red inside owner-private composition
 
 `basedpyright` reports five diagnostics in `application/operations/_composition.py`: three private cross-module references (`_read_snapshot`, `_UnavailableOperationSecureResponseAuthority`, `_UnavailableSnapshot`) and two unknown-type diagnostics around `TypeAdapter(OperationActorReference).validate_python`. These are owner-private implementation/type-quality issues, not a public authority exposure or redeclaration, and do not alter the D0/D8 disposition. They should be cleaned up before a broader quality-gate milestone.
 
 No HIGH or CRITICAL finding remains. S122 may close.
+## Canonical relocation re-review at `033a058f57` (2026-08-25)
+
+### Superseding disposition - PASS
+
+This section supersedes the temporary `dad420acca1` statement that `operations.owner` re-exported canonical `_executor` objects. Under the clarified rule, that intermediate identity-re-export shape was noncompliant: it was a compatibility bridge and cannot be retained.
+
+Commit `033a058f57e0c110a990d5d373ce5d5a221d7baf` resolves it by deleting `application/operations/_executor.py` and defining the owner-only executor protocols directly in `application/operations/owner.py`. The facade census now proves their `__module__` is `operations.owner`, and exact source search finds no production import of `operations._executor`, no `_executor.py`, and no compatibility re-export.
+
+Production auth, live, user-profile, and export owners import contributor contracts directly from `operations.owner`. No non-test entrypoint imports that module. The top-level `application.operations` facade continues to reject every owner/runtime/custody symbol while the entrypoint imports only `OperationComposedServices`, `OperationRegistry`, and `compose_operation_services` from the inbound-safe facade.
+
+S123 remains valid: its exact authority/constructor census does not retain `_executor` as an expected authority, and its resident Vaultspec RAG query/replay remains source-tree-bound and limited to canonical operation authorities. Focused Ruff and basedpyright for the relocated owner, facade, supervisor, and S123 validator are clean.
+
+No finding remains. S122 and S123 pass this relocation re-review.

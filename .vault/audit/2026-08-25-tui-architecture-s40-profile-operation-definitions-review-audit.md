@@ -5,49 +5,26 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:29e93b6608d68560b298629a80887d938ba8c5079ca90f7b5036a8d88eed69be'
+body_hash: 'sha256:3549e5a8de7837218ce9bdae42b53b53ecba7cee86be662424d41016964484da'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-# `tui-architecture` audit: `Focused S40 user-profile operation-definition review`
+# `tui-architecture` audit: S40 profile-operation definitions review
 
 ## Scope
 
-<!-- What was audited and why -->
+Independent review of `W03.P08.S40`: the canonical profile operation population, its real supervisor integration proofs, the user-profile authority delegation chain, the supporting owner-only executor contract, and the residual direct frontend-door inventory.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### owner-contract-reexport-bridge | high | Resolved before S40 closure
 
-       ### Focused S40 user-profile operation-definition review | {level} | {summary}
+`operations/owner.py` was a non-`__init__` forwarding module for the executor protocols while profile, auth, censal, and live owners imported it. That violated the canonical-home and no-re-export-bridge rules and contradicted the recorded S122 disposition. The relocation moved the executable protocol definitions into `operations/owner.py`, deleted `_executor.py`, swept every internal and test consumer, and added the live facade census assertion that the retired module does not exist. The S40 module retains its direct import from the now-canonical owner boundary; it contains no second executor protocol or profile operation definition population.
 
-     followed by a paragraph carrying the detail. Focused S40 user-profile operation-definition review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### direct-cli-profile-logout-door | medium | Owned downstream, not an S40 exception
+
+The direct logout invocation in the CLI custody frontend remains an execution door. It is explicitly owned by `W06.P14.S157`, which replaces that call with the composed public operation API and deletes the application-authority path. The S40 completion record names that exact owner; no compatibility wrapper or duplicate logout executor is retained here.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Complete `W06.P14.S157` before declaring the CLI/logout fixed point complete. Keep new profile-operation owners bound to `operations.owner` only for executor contracts, and keep frontend consumers on the public operation facade.

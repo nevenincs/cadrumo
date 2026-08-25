@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:3abe36a01de3cf1be11b4ed23b5184dcc5a4a6f89884196c5f4e4ec75b9d15c7'
+body_hash: 'sha256:f8d23866d18299f1cd7b2b88aaf84a5e4b7d4fe23d5940a6bbc6b9357544885e'
 step_id: 'S43'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -32,8 +32,10 @@ Restore canonical ordering of the builder exports without adding eager imports, 
 ## Verification
 
 - `uv run pytest -q -m integration src/cadrumo/application/user_profile/tests/test_operation_definitions.py src/cadrumo/entrypoints/tests/test_operation_composition.py`: 12 passed.
+- Lazy-boundary and censal-facade unit proofs: 5 passed.
 - `uv run ruff check src/cadrumo/application/user_profile/__init__.py src/cadrumo/application/user_profile/_operation_definitions.py`: passed.
 - `git diff --check -- src/cadrumo/application/user_profile/__init__.py`: passed.
+- Independent read-only review: approved with no findings; live RAG and exact census found one owner, one mapping/export per builder, zero foreign private-owner consumers, and fresh-process proof that the lazy owner remains unloaded until resolution.
 
 ## Notes
 
