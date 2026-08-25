@@ -18,17 +18,13 @@ from __future__ import annotations
 
 import unicodedata
 from pathlib import Path
-from uuid import UUID
 
 import pytest
 from textual.css.query import NoMatches
 from textual.widgets import Input, Static
 
-from ....adapters.persistence.storage.custody import (
-    ProfileCustodyPasswordError,
-    load_committed_profile_password_material,
-    unlock_profile_custody,
-)
+from ....application.user_profile import logout_active_profile
+from ....application.user_profile.login_interaction import attempt_profile_login
 from ....core import ProfilePasswordRefusalReason, assess_profile_password
 from ....core.i18n import tr
 from ....entrypoints.cli import attempt_registration
@@ -142,7 +138,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
     proves the screen wired the operator's credential through to the key
     material rather than merely reporting success.
     """
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(pilot, username="Screen Subject", password=candidate, confirm=candidate)
@@ -173,37 +169,26 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
         assert app.outcome.label == "Screen Subject"
         assert app.outcome.setup_state.value == "incomplete"
 
-        # The password typed into the screen is the one that opens the
-        # profile. Asserted against the committed capsule rather than a
-        # process-wide key store: custody is per profile, so "the typed
-        # password unlocks THIS profile" is the property that matters.
-        material = load_committed_profile_password_material(
-            UUID(str(app.outcome.profile_id)),
-            root=storage_root,
-        )
-        unlocked = unlock_profile_custody(
-            password=candidate,
-            envelope=material.envelope,
-            sentinel=material.sentinel,
-        )
-        assert len(bytes(unlocked.dek)) == 32
+        # The password typed into the screen is the one that opens this exact
+        # profile through the application login door. That door exercises the
+        # real Argon2id, sentinel proof, and session publication without making
+        # an inbound-surface test depend on persistence-owned record types.
+        profile_id = str(app.outcome.profile_id)
+        logout_active_profile()
+        authenticated = attempt_profile_login(profile_id, candidate)
+        assert authenticated.refusal is None
+        assert authenticated.outcome is not None
+        assert authenticated.outcome.bucket_id == profile_id
+        logout_active_profile()
+
         counterpart = unicodedata.normalize(
             "NFD" if unicodedata.is_normalized("NFC", candidate) else "NFC",
             candidate,
         )
-        if counterpart != candidate:
-            with pytest.raises(ProfileCustodyPasswordError):
-                unlock_profile_custody(
-                    password=counterpart,
-                    envelope=material.envelope,
-                    sentinel=material.sentinel,
-                )
-        with pytest.raises(ProfileCustodyPasswordError):
-            unlock_profile_custody(
-                password="a-different-secret",  # noqa: S106 - synthetic wrong password under test
-                envelope=material.envelope,
-                sentinel=material.sentinel,
-            )
+        wrong_password = counterpart if counterpart != candidate else "a-different-secret"
+        refused = attempt_profile_login(profile_id, wrong_password)
+        assert refused.outcome is None
+        assert refused.refusal
 
 
 @pytest.mark.asyncio

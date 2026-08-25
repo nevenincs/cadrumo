@@ -17,7 +17,6 @@ from pathlib import Path
 import pytest
 from textual.widgets import Input
 
-from ....adapters.persistence.storage.custody import ProfileCustodyRefusedError
 from ....application.user_profile import (
     logout_active_profile,
     register_profile_with_credentials,
@@ -28,6 +27,7 @@ from ....application.user_profile.login_interaction import (
     attempt_profile_login,
     profile_login_choices,
 )
+from ....core.errors import CadrumoError, get_registered_error_code
 from ....entrypoints.tui.secret.app import LoginApp
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -100,5 +100,7 @@ async def test_a_legacy_custody_member_refuses_at_the_login_surface(
             "bucket_id = '11111111-1111-4111-8111-111111111111'\n",
             encoding="utf-8",
         )
-        with pytest.raises(ProfileCustodyRefusedError):
+        with pytest.raises(CadrumoError) as captured:
             profile_login_choices()
+
+        assert get_registered_error_code(type(captured.value)).code == "REFUSED_STORAGE_PROFILE_CUSTODY"
