@@ -188,6 +188,7 @@ from ._prorrata_regularizacion import (
     derive_prorrata_applicability,
     project_prorrata_regularizacion_feed,
 )
+from ._registry_preconditions import calculation_registry_failure_verdict
 from ._relation_prefill import (
     RelationPrefillSourceResolver,
     relation_prefill_period_zero_default_binding_ids,
@@ -278,6 +279,7 @@ __all__ = [
     "build_prorrata_missing_provisional_advisory",
     "build_prorrata_regularizacion_advisory",
     "calculate_m303_regimen_simplificado_result",
+    "calculation_registry_failure_verdict",
     "correct_iva_compensation_period",
     "cross_check_iva_compensation_annual_summary",
     "cross_period_dependency_inventory",
