@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import re
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
@@ -102,16 +103,26 @@ def test_malformed_pdf_raises_not_crashes() -> None:
     data = _read("adversarial_malformed.pdf")
     with pytest.raises(ValueError, match="pdfplumber could not open"):
         extract_pages_text_from_bytes(data, error_class=ValueError, pdf_label="the invoice")
-    with pytest.raises(LLMPdfRasterisationError, match="Data format error"):
+    # The refusal carries typed context rather than the pdfium message: this
+    # path handles evidence bytes, and a library message can quote document
+    # content or paths. Assert the contract, not the swallowed prose.
+    with pytest.raises(LLMPdfRasterisationError) as rasterisation:
         rasterise_pdf_pages_to_base64_png(data)
+    assert rasterisation.value.context["rasterisation_stage"] == "document_open"
+    assert rasterisation.value.context["rasterisation_error_type"]
 
 
 def test_empty_pdf_raises_not_crashes() -> None:
     """A zero-byte .pdf fails loudly rather than producing a bogus result."""
     data = _read("adversarial_empty.pdf")
     assert data == b""
-    with pytest.raises(LLMPdfRasterisationError, match="Data format error"):
+    # The refusal carries typed context rather than the pdfium message: this
+    # path handles evidence bytes, and a library message can quote document
+    # content or paths. Assert the contract, not the swallowed prose.
+    with pytest.raises(LLMPdfRasterisationError) as rasterisation:
         rasterise_pdf_pages_to_base64_png(data)
+    assert rasterisation.value.context["rasterisation_stage"] == "document_open"
+    assert rasterisation.value.context["rasterisation_error_type"]
 
 
 def _corpus_fixtures() -> list[Path]:
@@ -570,7 +581,7 @@ def test_an_unrecognised_xml_refuses_rather_than_reaching_the_vision_model() -> 
     )
 
     assert evidence.document_shape not in STRUCTURED_DOCUMENT_SHAPES, "not a recognised invoice syntax"
-    with pytest.raises(PurchaseInvoiceEvidenceInputError, match="errors.refused.refused_ledger_evidence_input"):
+    with pytest.raises(PurchaseInvoiceEvidenceInputError, match=re.escape("errors.refused.refused_ledger_evidence_input")):
         _refuse_an_unrecognised_xml_document(evidence)
 
 
