@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-deadline-window-span'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:3012a759731a45170e4a833d45f5dff54838e02a0f1ed30a390ed63d65c864e6'
+body_hash: 'sha256:05350f217e2e881be983dc3cb42b35542e708d6d7636c9fde1ab97f5420d5c21'
 related: []
 ---
 
@@ -503,6 +503,49 @@ Which code, and whether that error is meant to reach an operator at all, are
 decisions inside the operations feature, which has been landing in stages
 throughout this campaign. Left for its owner with both routes named. Note that
 fixing only the first leaves the gate red, so this is one item, not two.
+
+## My span corrections collide with a second gate, and I have to say so
+
+`test_every_claimed_filing_year_is_covered_by_its_declared_layout_design`
+fails listing fourteen modelos whose revisions claim ejercicios their own
+declared layout design does not cover. Three of them -- 184, 308 and 309 -- are
+revisions whose spans I corrected in this campaign.
+
+The corrections were right by the evidence available: modelo 184 has a test
+literally named `test_modelo_184_revision_period_selector_starts_at_2015`
+asserting `valid_from == date(2015, 1, 1)` and `year_from == 2015`, plus a
+partition assertion requiring that revision to own seven windows; 308 and 309
+carry equivalent tests naming 2009 and 2004. Restoring those starts is what
+those gates demand.
+
+But widening the claimed span widens what the layout design must cover, and the
+designs do not. So:
+
+- **Gate A** (`test_modelo_184_revision_period_selector_starts_at_2015`) reds if
+  the selector starts late.
+- **Gate B** (`test_every_claimed_filing_year_is_covered_by_its_declared_layout_design`)
+  reds if the selector starts early and the design does not reach back.
+
+`aeat-quality-gates` names this exactly: "if fix A reds gate B and fix B reds
+gate A, neither is right and a third shape is needed", and warns against
+resolving it by hiding the construct from one gate's matcher. The third shape
+here is the layout designs covering the years their revisions claim -- registry
+data work needing AEAT grounding for each modelo's design span, not a selector
+tweak in either direction.
+
+Two things keep this honest rather than convenient:
+
+1. **The gate was already red for eleven other modelos** -- 126, 128, 165, 180,
+   181, 200, 210, 270, 341, 353, 576 -- so my three did not break a green gate;
+   they joined a standing failure whose root cause they share.
+2. **Reverting my corrections would not fix it.** It would trade fourteen
+   entries for eleven while re-breaking three explicit start-year tests and
+   restoring the orphaned-window state that made modelo 184 unresolvable for
+   ejercicios 2018 through 2022 in the first place.
+
+Recorded rather than silently left: anyone reading the span fixes should know
+they surface a design-coverage gap rather than close one, and that the gap is
+the pre-existing condition of this registry.
 
 ## Durable lesson
 
