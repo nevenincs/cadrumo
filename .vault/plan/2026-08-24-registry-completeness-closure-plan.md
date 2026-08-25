@@ -11,7 +11,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
 modified: '2026-08-25'
-body_hash: 'sha256:c18efcc7d40fefa05559337673851170a634f6b94a10d3a9ba2f92807fcb441f'
+body_hash: 'sha256:da53465dfbac04965a3ad187f359930d9562ee074e92ea2926d1a77874358660'
 ---
 
 # `registry-completeness-closure` plan
@@ -54,7 +54,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S08` - Compose the source-connectivity limb from the canonical evidence-backed census authority; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S09` - Compose the filing-export limb from exact layout capability and official-byte evidence; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S10` - Publish the derived cross-authority closure report and blocking release predicate through registry conformance; `dev/registry/conformance/`.
-- [ ] `W01.P02.S11` - Prove complete, refused, stale-evidence, below-filing-grade, and cross-limb disagreement outcomes with mutation tests; `src/cadrumo/application/registry/tests/`.
+- [x] `W01.P02.S11` - Prove complete, refused, stale-evidence, below-filing-grade, and cross-limb disagreement outcomes with mutation tests; `src/cadrumo/application/registry/tests/`.
 - [x] `W01.P02.S42` - Constrain temporal evidence identity, period, and filing-year fields to registry semantics and add mutation proof for every composer refusal outcome; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S43` - Reject resolved owner dispositions on active closure refusals and prove the contradiction fails validation; `src/cadrumo/application/registry/`.
 - [x] `W01.P02.S44` - Encode branch-specific TemporalRevisionCoverage refusal invariants and add construction and mutation-bite tests.; `src/cadrumo/application/registry/`.
