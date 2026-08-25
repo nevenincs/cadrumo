@@ -19,13 +19,13 @@ from .....application.user_profile import (
 from .....core.identity import canonical_profile_bucket_id
 from .....core.paths import effective_storage_root
 from .....domain.user_profile import ProfileSetupState, UserProfileRecord
+from ..bucket import BucketPaths, bucket_paths
 from ..custody import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
     create_profile_custody_sentinel,
 )
-from ..bucket import BucketPaths, bucket_paths
 from ..master_key import BucketSession
 
 
