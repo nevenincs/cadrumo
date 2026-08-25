@@ -1,7 +1,7 @@
 """Real-behavior tests for the auth operation custody-session precondition.
 
 Every auth operator surface routes its storage access through
-:func:`application.auth._operator_scope.active_profile_storage_span`. The span
+:func:`application.auth.operator_scope.active_profile_storage_span`. The span
 no longer opens a session for whichever bucket the caller named: it requires the
 target profile's custody session to already be open, and refuses otherwise.
 
@@ -25,15 +25,11 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
-from .. import (
-    AuthOperationRequiresCustodySessionError,
-    build_live_auth_preflight_report,
-)
-from .. import (
-    test_operator_auth as run_operator_auth_test,
-)
-from .._operator_probes import _probe_local_session
-from .._operator_scope import active_profile_storage_span
+from ..operator import build_live_auth_preflight_report
+from ..operator import test_operator_auth as run_operator_auth_test
+from ..operator_probes import _probe_local_session
+from ..operator_results import AuthOperationRequiresCustodySessionError
+from ..operator_scope import active_profile_storage_span
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

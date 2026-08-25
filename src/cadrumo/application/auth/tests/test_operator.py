@@ -24,26 +24,21 @@ from ....tests.profile_storage_root_fixture import bucket_session_storage_fixtur
 from ....tests.user_profile import register_minimal_profile
 from ..._state_projection_auth import ProjectionAuthReadiness
 from ...workflow import workflow_state_repository
-from .. import (
-    AuthLoginPreconditionError,
-    ProviderConfigurationProbe,
-    ProviderProbeResult,
-    active_auth_projection_span,
-    login_operator_auth,
-    register_operator_certificate_source,
-    resolve_certificate_source_secret,
-    set_operator_certificate_source_secret,
-)
-from .._acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
-from .._operator import (
+from ..acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
+from ..certificate_source_operations import register_operator_certificate_source, set_operator_certificate_source_secret
+from ..credentials import active_auth_projection_span, resolve_certificate_source_secret
+from ..operator import (
     build_live_auth_preflight_report,
     configure_operator_auth,
     inspect_operator_auth,
+    login_operator_auth,
     reset_operator_auth,
 )
-from .._operator import test_operator_auth as run_operator_auth_test
-from .._operator_results import AuthTestResult, LiveAuthPreflightReport
-from .._sessions import (
+from ..operator import test_operator_auth as run_operator_auth_test
+from ..operator_probes import ProviderConfigurationProbe
+from ..operator_results import AuthLoginPreconditionError, AuthTestResult, LiveAuthPreflightReport
+from ..probes import ProviderProbeResult
+from ..sessions import (
     AuthProfileIdentityMismatchError,
     _prepare_clave_auth,
     storage_state_paths,
@@ -214,7 +209,7 @@ def test_configure_operator_auth_refuses_when_no_active_profile_bucket(tmp_path:
         at the application service keeps the bootstrap order explicit and
         leaves no audit hole."""
 
-    from .._operator import AuthConfigureNoActiveBucketError
+    from ..operator_results import AuthConfigureNoActiveBucketError
 
     # The refusal is exercised against an empty root below, but the audit-hole
     # assertion afterwards reads this profile's real bucket event catalogue, and
@@ -241,7 +236,7 @@ def test_configure_operator_auth_reserved_provider_emits_no_event() -> None:
     events" per the config-auth-shape contract. Surfacing the refusal
     must precede every persisted side effect."""
 
-    from .._operator import AuthProviderReservedError
+    from ..operator_results import AuthProviderReservedError
 
     _register_operator_profile()
     state_before = workflow_state_repository().load()

@@ -27,19 +27,17 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...workflow import workflow_state_repository
-from .. import (
-    load_persisted_session,
-    logout_operator_auth,
+from ..acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
+from ..certificate_source_operations import (
     register_operator_certificate_source,
-    resolve_certificate_source_secret,
     select_operator_certificate_source,
     set_operator_certificate_source_secret,
 )
-from .._acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
-from .._operator import configure_operator_auth, reset_operator_auth
-from .._operator_results import AuthOperationScopeConflictError, AuthProviderNotConfiguredError
-from .._operator_scope import auth_mutation_span
-from .._sessions import storage_state_paths
+from ..credentials import resolve_certificate_source_secret
+from ..operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
+from ..operator_results import AuthOperationScopeConflictError, AuthProviderNotConfiguredError
+from ..operator_scope import auth_mutation_span
+from ..sessions import load_persisted_session, storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -442,7 +440,7 @@ def test_revoking_a_locked_profile_refuses_and_says_the_session_is_still_live(tm
     usable -- rather than that the profile is locked, which they already know.
     """
     from ....core.errors import resolve_error_message
-    from .. import AuthOperationRequiresCustodySessionError
+    from ..operator_results import AuthOperationRequiresCustodySessionError
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile(_PROFILE_A, provider="certificate")

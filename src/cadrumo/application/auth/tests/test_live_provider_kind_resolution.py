@@ -30,8 +30,8 @@ from ....core.config import override_settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ...workflow import workflow_state_repository
-from .._actions import update_auth
-from .._sessions import _resolve_provider_kind
+from ..actions import update_auth
+from ..sessions import _resolve_provider_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

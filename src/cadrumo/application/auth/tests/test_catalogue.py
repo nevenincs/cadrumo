@@ -6,16 +6,16 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
-from .. import (
+from ..catalogue import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,
-    AuthProvidersReport,
     get_auth_provider,
     implemented_auth_provider_ids,
     known_auth_provider_ids,
     list_auth_providers,
-    list_operator_auth_providers,
 )
+from ..operator import list_operator_auth_providers
+from ..operator_results import AuthProvidersReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

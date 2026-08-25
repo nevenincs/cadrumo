@@ -14,20 +14,18 @@ import pytest
 from ....core.config import Settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
-from ... import auth as _auth_facade
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
 from ...workflow import workflow_state_repository
-from .. import (
-    CertificateSourceNotFoundError,
-    configure_operator_auth,
-    inspect_operator_auth,
+from ..certificate_source_operations import (
     list_operator_certificate_sources,
     register_operator_certificate_source,
     remove_operator_certificate_source,
-    resolve_active_certificate_credentials,
     select_operator_certificate_source,
 )
-from .. import _certificate_sources as _certificate_sources_module
+from ..credentials import resolve_active_certificate_credentials
+from ..operator import configure_operator_auth, inspect_operator_auth
+from ..operator_results import CertificateSourceNotFoundError
+import cadrumo.application.auth.certificate_sources as _certificate_sources_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -150,9 +148,7 @@ def test_state_source_refusal_is_the_registered_public_contract() -> None:
 
     assert type(refusal.value) is CertificateSourceNotFoundError
     assert _certificate_sources_module.CertificateSourceNotFoundError is CertificateSourceNotFoundError
-    assert CertificateSourceNotFoundError.__module__ == "cadrumo.application.auth._operator_results"
-    assert not hasattr(_auth_facade, "StateCertificateSourceNotFoundError")
-    assert "StateCertificateSourceNotFoundError" not in _auth_facade.__all__
+    assert CertificateSourceNotFoundError.__module__ == "cadrumo.application.auth.operator_results"
 
 
 def test_re_registering_an_existing_name_repoints_its_path(tmp_path: Path) -> None:

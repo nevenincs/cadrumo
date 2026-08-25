@@ -5,7 +5,7 @@ every profile the shipped paths accept, and the schema says so. What the
 schema does NOT say -- and what nothing else recorded until this module
 -- is WHERE that agreement is enforced. It is enforced once, at the entry
 to a live session, by the comparison in
-:mod:`application.auth._sessions`. No validator refuses the divergent
+:mod:`application.auth.sessions`. No validator refuses the divergent
 write, so a profile carrying two different identifiers can be created,
 persisted, and read back; it simply cannot authenticate.
 
@@ -38,7 +38,7 @@ from ....tests.profile_capsule import (
 )
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ...user_profile import record_to_path_values
-from .._sessions import AuthProfileIdentityMismatchError, _prepare_clave_auth
+from ..sessions import AuthProfileIdentityMismatchError, _prepare_clave_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

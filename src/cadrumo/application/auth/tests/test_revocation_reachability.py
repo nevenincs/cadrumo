@@ -35,7 +35,7 @@ _OTHER_PROFILE_ID = "22222222-2222-4222-8222-222222222222"
 
 
 def _certificate_secret_present(bucket_id: str) -> bool:
-    from .._certificate_secret_backend import SecureStorageCertificateSecretBackend
+    from ..certificate_secret_backend import SecureStorageCertificateSecretBackend
 
     return SecureStorageCertificateSecretBackend(bucket_id=bucket_id).get("personal") is not None
 
@@ -43,12 +43,9 @@ def _certificate_secret_present(bucket_id: str) -> bool:
 def test_reachability_answers_both_ways_and_an_open_session_removes_the_out_of_bucket_secret(
     tmp_path: Path,
 ) -> None:
-    from .. import (
-        operator_auth_revocation_is_reachable,
-        register_operator_certificate_source,
-        reset_operator_auth,
-        set_operator_certificate_source_secret,
-    )
+    from ..certificate_source_operations import register_operator_certificate_source, set_operator_certificate_source_secret
+    from ..operator import reset_operator_auth
+    from ..operator_scope import operator_auth_revocation_is_reachable
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         with open_test_profile_session(_PROFILE_ID):
@@ -91,9 +88,11 @@ def test_a_locked_profile_refuses_the_revocation_that_reachability_predicted(
     revocation that quietly worked anyway, and the caller's branch would be
     protecting against nothing.
     """
-    from .. import AuthOperationRequiresCustodySessionError, operator_auth_revocation_is_reachable, reset_operator_auth
-    from .._acquisition_lock import clear_auth_acquisition_lock
-    from .._operator_cleanup import clear_operator_auth_acquisition_locks
+    from ..acquisition_lock import clear_auth_acquisition_lock
+    from ..operator import reset_operator_auth
+    from ..operator_cleanup import clear_operator_auth_acquisition_locks
+    from ..operator_results import AuthOperationRequiresCustodySessionError
+    from ..operator_scope import operator_auth_revocation_is_reachable
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         with open_test_profile_session(_PROFILE_ID):
@@ -108,7 +107,7 @@ def test_a_locked_profile_refuses_the_revocation_that_reachability_predicted(
 
         # The key-free half proceeds against the very profile the revocation
         # just refused, which is the whole reason the two are separable.
-        from .. import acquire_auth_acquisition_lock
+        from ..acquisition_lock import acquire_auth_acquisition_lock
 
         with acquire_auth_acquisition_lock(
             settings,

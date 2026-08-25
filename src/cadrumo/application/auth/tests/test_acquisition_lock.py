@@ -16,7 +16,7 @@ import pytest
 from ....core import ActionConditionality, AuthProviderKind, NoRecoveryOutcome
 from ....core.config import Settings
 from ....core.external_constants import UTF_8_ENCODING
-from .._acquisition_lock import (
+from ..acquisition_lock import (
     AuthAcquisitionLockedError,
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockState,

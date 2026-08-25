@@ -17,20 +17,22 @@ from ....core.identity import canonical_bucket_id
 from ....core.time import now
 from ....domain.auth.apoderamientos import UnknownScopeError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
-from ...flows import FlowPage, run_scripted_flow
-from ..apoderado_service import (
-    ApoderadoConfiguration,
-    ApoderadoConfigurationIdentityError,
-    ApoderadoLiveCheckUnavailableError,
-    ApoderadoRepresentedNifInvalidError,
-    ApoderadoService,
-    ApoderadoConfigRepository,
-)
+from ...flows.definition import FlowPage
+from ...flows.scripted import run_scripted_flow
+from ...flows.errors import FlowRunAbandonedError
 from ..apoderado_flow import (
     REPRESENTED_NIF_PAGE_ID,
     SCOPES_PAGE_ID,
     build_apoderado_flow_definition,
     run_apoderado_flow,
+)
+from ..apoderado_service import (
+    ApoderadoConfigRepository,
+    ApoderadoConfiguration,
+    ApoderadoConfigurationIdentityError,
+    ApoderadoLiveCheckUnavailableError,
+    ApoderadoRepresentedNifInvalidError,
+    ApoderadoService,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -305,6 +307,23 @@ class TestApoderadoFlowDoor:
         assert status.granted_scopes == ("IVA", "RENT")
         assert output.getvalue(), "the production line door must render its prompts and review"
 
+    def test_ctrl_c_refuses_before_the_production_door_writes(self, isolated_settings: Settings) -> None:
+        """Cancellation is typed and cannot manufacture an apoderado record."""
+        svc = ApoderadoService(settings=isolated_settings)
+        output = StringIO()
+        with create_pipe_input() as pipe:
+            pipe.send_text("\x03")
+            with pytest.raises(FlowRunAbandonedError) as excinfo:
+                run_apoderado_flow(
+                    svc,
+                    bucket_id=_APODERADO_BUCKET_ID,
+                    input=pipe,
+                    output=PlainTextOutput(output),
+                )
+
+        assert excinfo.value.translated_message == "errors.refused.refused_flow_run_abandoned"
+        assert svc.status(bucket_id=_APODERADO_BUCKET_ID).configured is False
+
     def test_answer_pages_bind_no_profile_domain_key(self, isolated_settings: Settings) -> None:
         """Every answer page is domain_key-free: no apoderado answer is a profile fact."""
         svc = ApoderadoService(settings=isolated_settings)
@@ -319,7 +338,7 @@ class TestApoderadoFlowDoor:
 
     def test_malformed_represented_nif_is_rejected_before_commit(self, isolated_settings: Settings) -> None:
         """A bad represented-party tax id fails the identity validator, so the scripted walk refuses."""
-        from ...flows import FlowAnswerError
+        from ...flows.errors import FlowAnswerError
 
         svc = ApoderadoService(settings=isolated_settings)
         definition = build_apoderado_flow_definition(svc.catalogue)

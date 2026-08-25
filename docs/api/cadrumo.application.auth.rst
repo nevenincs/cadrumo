@@ -13,25 +13,24 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.application.auth._acquisition_lock
-   cadrumo.application.auth._actions
-   cadrumo.application.auth._catalogue
-   cadrumo.application.auth._certificate_secret_backend
-   cadrumo.application.auth._certificate_sources
-   cadrumo.application.auth._certificate_sources_operator
-   cadrumo.application.auth._credential_resolution
-   cadrumo.application.auth._diagnostics
-   cadrumo.application.auth._errors
-   cadrumo.application.auth._mutation
-   cadrumo.application.auth._operation_definitions
-   cadrumo.application.auth._operator
-   cadrumo.application.auth._operator_cleanup
-   cadrumo.application.auth._operator_probes
-   cadrumo.application.auth._operator_results
-   cadrumo.application.auth._operator_scope
-   cadrumo.application.auth._probe_result
-   cadrumo.application.auth._protocols
-   cadrumo.application.auth._sessions
-   cadrumo.application.auth._workflow_repository
+   cadrumo.application.auth.acquisition_lock
+   cadrumo.application.auth.actions
+   cadrumo.application.auth.catalogue
+   cadrumo.application.auth.certificate_secret_backend
+   cadrumo.application.auth.certificate_sources
+   cadrumo.application.auth.certificate_source_operations
+   cadrumo.application.auth.credentials
+   cadrumo.application.auth.diagnostics
+   cadrumo.application.auth.errors
+   cadrumo.application.auth.operation_definitions
+   cadrumo.application.auth.operator
+   cadrumo.application.auth.operator_cleanup
+   cadrumo.application.auth.operator_probes
+   cadrumo.application.auth.operator_results
+   cadrumo.application.auth.operator_scope
+   cadrumo.application.auth.probes
+   cadrumo.application.auth.protocols
+   cadrumo.application.auth.providers
+   cadrumo.application.auth.sessions
    cadrumo.application.auth.apoderado_flow
    cadrumo.application.auth.apoderado_service

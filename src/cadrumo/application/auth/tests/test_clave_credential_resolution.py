@@ -25,7 +25,7 @@ from ....core.resources import resources
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import build_profile_preflight_requirement
-from .._sessions import (
+from ..sessions import (
     AuthProfileIdentityMismatchError,
     ClaveCredentialsIncompleteError,
     _prepare_clave_auth,

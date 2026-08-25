@@ -33,7 +33,7 @@ from ....tests.profile_capsule import (
     seed_test_profile_record,
 )
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
-from .._sessions import AuthProfileIdentityMismatchError, _prepare_clave_auth
+from ..sessions import AuthProfileIdentityMismatchError, _prepare_clave_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

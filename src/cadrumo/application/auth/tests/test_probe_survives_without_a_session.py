@@ -39,8 +39,8 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...preflight import run_preflight_checks
-from .._operator import build_live_auth_preflight_report
-from .._operator_probes import (
+from ..operator import build_live_auth_preflight_report
+from ..operator_probes import (
     _active_profile_path_values,
     _live_auth_identity_state,
     probe_clave_credentials,

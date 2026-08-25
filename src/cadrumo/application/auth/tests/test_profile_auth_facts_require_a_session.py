@@ -30,7 +30,7 @@ from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.profile_storage_root_fixture import isolated_profile_storage_fixture
 from ....tests.user_profile import register_minimal_profile
-from .._sessions import ClaveAuthFacts, _active_profile_auth_facts
+from ..sessions import ClaveAuthFacts, _active_profile_auth_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

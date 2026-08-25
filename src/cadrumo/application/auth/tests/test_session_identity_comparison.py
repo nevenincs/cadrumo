@@ -42,8 +42,8 @@ from ....core import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
-from .. import _sessions
-from .._sessions import (
+import cadrumo.application.auth.sessions as sessions
+from ..sessions import (
     AuthProfileIdentityMismatchError,
     _assert_session_identity_matches_expected,
     _prepare_clave_auth,
@@ -231,7 +231,7 @@ def test_every_path_that_hands_back_a_session_compares_its_identity() -> None:
     # session-returning methods too, but those describe what an outbound
     # provider offers; the comparison belongs to the application writer
     # that hands a bound session on, not to the provider contract.
-    tree = ast.parse(inspect.getsource(_sessions))
+    tree = ast.parse(inspect.getsource(sessions))
     functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)}
     writers = {
         name: node
@@ -239,7 +239,7 @@ def test_every_path_that_hands_back_a_session_compares_its_identity() -> None:
         if node.returns is not None and ast.unparse(node.returns).strip() in _LIVE_SESSION_RETURN_TYPES
     }
     assert writers, (
-        "no session-returning function was found in _sessions.py; the sweep matched "
+        "no session-returning function was found in sessions.py; the sweep matched "
         "nothing and so proves nothing about the guard's wiring"
     )
 
@@ -291,7 +291,7 @@ def test_every_path_that_hands_back_a_session_compares_its_identity() -> None:
 
     unguarded = {name: lines for name in sorted(writers) if (lines := unchecked_returns(name))}
     assert not unguarded, (
-        f"_sessions.py hands back a bound session without comparing its identity at "
+        f"sessions.py hands back a bound session without comparing its identity at "
         f"{unguarded} (name -> line numbers). A return that skips the comparison restores "
         "the silent pass this guard exists to prevent."
     )
@@ -317,7 +317,7 @@ class TestClaveIdentityIsComparedCanonically:
     _CANONICAL = "12345678Z"
 
     def _credentials(self, *, profile_tax_id: str, dni_nie: str):
-        from .._sessions import ClaveCredentials
+        from ..sessions import ClaveCredentials
 
         return ClaveCredentials(
             provider_kind=AuthProviderKind.CLAVE_MOVIL,
@@ -326,7 +326,7 @@ class TestClaveIdentityIsComparedCanonically:
         )
 
     def _assert_guard(self, *, profile_tax_id: str, dni_nie: str):
-        from .._sessions import _assert_active_profile_identity_matches_provider
+        from ..sessions import _assert_active_profile_identity_matches_provider
 
         return _assert_active_profile_identity_matches_provider(
             self._credentials(profile_tax_id=profile_tax_id, dni_nie=dni_nie),
@@ -373,7 +373,7 @@ class TestClaveIdentityIsComparedCanonically:
 
     def test_absent_credentials_and_blank_profile_identity_keep_their_behaviour(self) -> None:
         """The pre-existing empty-value contract is unchanged by the normalisation."""
-        from .._sessions import _assert_active_profile_identity_matches_provider
+        from ..sessions import _assert_active_profile_identity_matches_provider
 
         assert _assert_active_profile_identity_matches_provider(None) is None
         with pytest.raises(AuthProfileIdentityMismatchError):
@@ -386,9 +386,7 @@ class TestClaveIdentityIsComparedCanonically:
         while silently re-admitting the malformed-pair hole, so the source is
         pinned to the shared validator.
         """
-        from .. import _sessions
-
-        source = inspect.getsource(_sessions._assert_active_profile_identity_matches_provider)
+        source = inspect.getsource(sessions._assert_active_profile_identity_matches_provider)
 
         assert "validate_spanish_tax_id" in source
         assert ".upper()" not in source, "a local normaliser would diverge from the canonical form"

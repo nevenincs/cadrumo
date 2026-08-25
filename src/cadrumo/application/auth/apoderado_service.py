@@ -205,6 +205,7 @@ class ApoderadoService:
         settings: Settings | None = None,
         catalogue: ApoderamientosCatalogue | None = None,
     ) -> None:
+        """Bind settings and the authoritative apoderamientos catalogue."""
         # `load_settings()` honours `override_settings`; bare `Settings()`
         # bypasses the context-var.
         from ...core.config import load_settings as _load_settings
@@ -318,12 +319,12 @@ class ApoderadoService:
 
 
 __all__ = [
+    "ApoderadoConfigRepository",
     "ApoderadoConfiguration",
     "ApoderadoConfigurationIdentityError",
     "ApoderadoConfigurationNotSetError",
     "ApoderadoLiveCheckUnavailableError",
     "ApoderadoRepresentedNifInvalidError",
-    "ApoderadoConfigRepository",
     "ApoderadoService",
     "ApoderadoStatus",
 ]

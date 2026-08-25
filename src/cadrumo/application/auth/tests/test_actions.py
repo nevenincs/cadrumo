@@ -1,4 +1,4 @@
-"""Focused unit tests for application.auth._actions.update_auth.
+"""Focused unit tests for application.auth.actions.update_auth.
 
 `update_auth` is a pure state-transition helper that mutates AuthState
 via WorkflowState.model_copy. Four kwarg-driven branches:
@@ -26,7 +26,7 @@ from __future__ import annotations
 import pytest
 
 from ...workflow import WorkflowState
-from .._actions import update_auth
+from ..actions import update_auth
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

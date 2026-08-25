@@ -24,8 +24,8 @@ from ....tests.profile_storage_root_fixture import bucket_session_storage_fixtur
 from ....tests.user_profile import register_minimal_profile
 from ..._state_projection_auth import build_auth_readiness
 from ...workflow import workflow_state_repository
-from .._operator import _assert_login_precondition, build_live_auth_preflight_report, configure_operator_auth
-from .._operator_probes import (
+from ..operator import _assert_login_precondition, build_live_auth_preflight_report, configure_operator_auth
+from ..operator_probes import (
     _live_auth_identity_kind,
     _live_auth_identity_state,
     probe_clave_credentials,
@@ -180,7 +180,7 @@ def test_login_precondition_admits_a_profile_borne_credential() -> None:
 def test_login_precondition_still_refuses_when_no_credential_exists() -> None:
     """The refusal has to survive: neither source holds an identity."""
 
-    from .._operator_results import AuthLoginPreconditionError
+    from ..operator_results import AuthLoginPreconditionError
 
     _register_profile()
     with (

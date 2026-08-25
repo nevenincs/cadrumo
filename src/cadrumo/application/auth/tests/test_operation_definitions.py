@@ -32,7 +32,7 @@ from ...user_profile import (
     profile_custody_secure_object_repository,
     register_profile_with_credentials,
 )
-from .._operation_definitions import (
+from ..operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AUTH_LOGOUT_OPERATION_DEFINITION_ID,
     AUTH_OPERATION_DEFINITIONS,
