@@ -29,14 +29,14 @@ from ...core.logging import get_logger
 from ...core.time import now as utc_now
 from ...domain.submission import ModeloDraftStatus
 from ..auth.models import AuthState
+from ._identity import period_identity_segment
+from .profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
+from .profile_bucket_scan import resolve_profile_bucket
 from .review_models import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
     WorkflowEvent,
 )
-from ._identity import period_identity_segment
-from .profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
-from .profile_bucket_scan import resolve_profile_bucket
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
