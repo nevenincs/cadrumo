@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.tests.cli_performance import (
+from ....tests.cli_performance import (
     LatencyBudget,
     LatencyDistribution,
     PerformanceCalibrationPolicy,
