@@ -40,8 +40,8 @@ from ...core import (
     OperationDurability,
     OperationEffect,
     OperationInteractionKind,
-    require_active_bucket_id,
 )
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.time import now
 from ..operations.owner import OperationExecutorContext
 from ..user_profile import (

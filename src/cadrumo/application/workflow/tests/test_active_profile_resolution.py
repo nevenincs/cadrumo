@@ -29,14 +29,8 @@ from ....adapters.persistence.storage.custody import (
     create_profile_custody_sentinel,
 )
 from ....application.user_profile import ProfileCapsuleLifecycle, ProfileRecordSession, bound_profile_record_session
-from ....core import (
-    BucketPointer,
-    ProfileRecordUnavailability,
-    pointer_path,
-    read_pointer,
-    resolve_active_bucket_id,
-    write_pointer,
-)
+from ....core import ProfileRecordUnavailability
+from ....core.bucket_pointer import BucketPointer, pointer_path, read_pointer, resolve_active_bucket_id, write_pointer
 from ....core.config import override_settings
 from ....core.errors import NoActiveProfileError, get_registered_error_code
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord

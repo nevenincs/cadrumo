@@ -319,7 +319,7 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
 ) -> None:
     from ...adapters.persistence.storage.bucket import bucket_paths
     from ...adapters.persistence.storage.sql import dispose_engine
-    from ...core import pointer_path
+    from ...core.bucket_pointer import read_pointer
     from .._config_reset_models import (
         ConfigResetOperation,
         ConfigResetOperationStatus,
@@ -349,7 +349,7 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
         expected_phase = boundary.removesuffix("_after_effect")
         assert interrupted.targets[0].phase.value == expected_phase
         if boundary == "pointer_reconciling_after_effect":
-            assert pointer_path(root).exists() is False
+            assert read_pointer(root).bucket_id is None
         if boundary == "deleting_after_effect":
             assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
 
@@ -361,8 +361,41 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
         assert resumed.summary.deleted_count == 1
         assert resumed.targets[0].phase is ConfigResetTargetPhase.DELETED
         assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
-        assert pointer_path(root).exists() is False
+        assert read_pointer(root).bucket_id is None
         assert repository.load(interrupted.operation_id) == resumed
+
+
+def test_pointer_reconciling_resume_refuses_a_later_absent_tombstone(tmp_path: Path) -> None:
+    """A later clear is not the reset's exact expected pointer successor."""
+    from .._config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
+    from .._config_reset_repository import ConfigResetJournalRepository
+    from ..config_reset import resume_config_reset
+    from ..user_profile.profile_pointer import active_profile_pointer_transaction
+
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+        crashed = _run_crashing_start(root, "pointer_reconciling_after_effect")
+        assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
+        interrupted = ConfigResetJournalRepository().latest()
+        assert interrupted is not None
+        expected = interrupted.pointer_snapshot.record.transition_revision + 1
+
+        with active_profile_pointer_transaction(root) as pointer:
+            selected = pointer.select("22222222-2222-4222-8222-222222222222")
+            later_tombstone = pointer.clear()
+        assert selected.transition_revision == expected + 1
+        assert later_tombstone.bucket_id is None
+        assert later_tombstone.transition_revision == expected + 2
+
+        resumed = resume_config_reset(
+            interrupted.operation_id,
+            confirmed=True,
+            acknowledge_retention_override=True,
+            retention_override_reason=_OVERRIDE_REASON,
+        )
+        assert resumed.status is ConfigResetOperationStatus.PAUSED
+        assert resumed.pause_reason is ConfigResetPauseReason.POINTER_CHANGED
+        assert resumed.pointer_snapshot.record == later_tombstone
 
 
 def test_fresh_resume_canonicalizes_journal_bucket_identity_before_target_lock(

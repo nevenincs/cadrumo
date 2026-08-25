@@ -97,7 +97,7 @@ class ActiveProfilePointerTransaction:
             or ownership.depth < 1
         ):
             raise ActiveProfilePointerTransactionError(
-                translated_message="errors.internal.internal_activeprofile_pointer",
+                translated_message="errors.internal.internal_active_profile_pointer_transaction",
                 context={"live_ownership": False},
             )
 
@@ -140,7 +140,7 @@ def _acquire_root_lock(
 
 
 @contextmanager
-def activeprofile_pointer(
+def active_profile_pointer_transaction(
     root: Path | None = None,
     *,
     root_lock: ProfileCustodyRootLockPort | None = None,
@@ -175,17 +175,17 @@ def activeprofile_pointer(
     if isinstance(ownership, _Ownership):
         if ownership.pid != current_pid:
             raise ActiveProfilePointerTransactionError(
-                translated_message="errors.internal.internal_activeprofile_pointer",
+                translated_message="errors.internal.internal_active_profile_pointer_transaction",
                 context={"owning_process_is_current": False},
             )
         if ownership.thread_id != current_thread_id:
             raise ActiveProfilePointerTransactionError(
-                translated_message="errors.internal.internal_activeprofile_pointer",
+                translated_message="errors.internal.internal_active_profile_pointer_transaction",
                 context={"owning_thread_is_current": False},
             )
         if ownership.root != canonical_root:
             raise ActiveProfilePointerTransactionError(
-                translated_message="errors.internal.internal_activeprofile_pointer",
+                translated_message="errors.internal.internal_active_profile_pointer_transaction",
                 context={"nested_root_matches": False},
             )
         ownership.depth += 1
@@ -231,13 +231,13 @@ def observe_active_profile_pointer(root: Path | None = None) -> BucketPointer:
     parallel core read path; core bootstrap remains the sole inner-layer
     exception because it cannot depend outward on this application owner.
     """
-    with activeprofile_pointer(root) as transaction:
+    with active_profile_pointer_transaction(root) as transaction:
         return transaction.read()
 
 
 __all__ = [
     "ActiveProfilePointerTransaction",
     "ActiveProfilePointerTransactionError",
-    "activeprofile_pointer",
+    "active_profile_pointer_transaction",
     "observe_active_profile_pointer",
 ]

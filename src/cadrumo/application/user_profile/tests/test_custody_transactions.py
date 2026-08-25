@@ -37,7 +37,8 @@ from ....adapters.persistence.storage.master_key import (
     bind_active_bucket_session,
     current_active_bucket_session,
 )
-from ....core import BucketPointer, Period
+from ....core import Period
+from ....core.bucket_pointer import BucketPointer
 from ....core.config import Settings
 from ....domain.modelos import ModeloCode, ModeloRecord, derive_filing_record_id
 from ... import user_profile as user_profiles
@@ -64,19 +65,19 @@ _INSTANT = datetime(2026, 8, 13, 12, 34, 56, tzinfo=UTC)
 
 def _observe_pointer(root: Path) -> BucketPointer:
     """Observe through the only public current-pointer transaction."""
-    with user_profiles.activeprofile_pointer(root) as transaction:
+    with user_profiles.active_profile_pointer_transaction(root) as transaction:
         return transaction.read()
 
 
 def _select_pointer(root: Path, bucket_id: str) -> BucketPointer:
     """Select through the sole transition owner."""
-    with user_profiles.activeprofile_pointer(root) as transaction:
+    with user_profiles.active_profile_pointer_transaction(root) as transaction:
         return transaction.select(bucket_id)
 
 
 def _clear_expected_pointer(root: Path, expected: BucketPointer) -> BucketPointer:
     """Model a crash boundary using the canonical compare-and-transition verb."""
-    with user_profiles.activeprofile_pointer(root) as transaction:
+    with user_profiles.active_profile_pointer_transaction(root) as transaction:
         return transaction.compare_and_restore(
             expected=expected,
             captured=BucketPointer.absent(transition_revision=0),
@@ -238,11 +239,11 @@ def _write_active_pointer_in_sibling(root_text: str, bucket_id_text: str, result
     in?" measures the lock rather than the seconds a spawn spends importing.
     """
     from ....tests.profile_persistence import composed_profile_persistence_ports
-    from ..profile_pointer import activeprofile_pointer
+    from ..profile_pointer import active_profile_pointer_transaction
 
     with composed_profile_persistence_ports():
         result_queue.put("ready")
-        with activeprofile_pointer(Path(root_text)) as pointer_transaction:
+        with active_profile_pointer_transaction(Path(root_text)) as pointer_transaction:
             pointer_transaction.select(bucket_id_text)
         result_queue.put("written")
 
@@ -1007,7 +1008,7 @@ def test_pointer_transition_and_active_pointer_writer_share_one_root_lock(tmp_pa
         replacement = _observe_pointer(tmp_path)
         assert replacement.bucket_id == str(_OTHER_PROFILE_ID)
         with (
-            user_profiles.activeprofile_pointer(tmp_path) as transaction,
+            user_profiles.active_profile_pointer_transaction(tmp_path) as transaction,
             pytest.raises(user_profiles.ActiveProfilePointerTransactionError),
         ):
             transaction.compare_and_restore(

@@ -21,7 +21,8 @@ from typing import Final
 import pytest
 
 from ....adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
-from ....core import Period, require_active_bucket_id
+from ....core import Period
+from ....core.bucket_pointer import require_active_bucket_id
 from ....core.config import load_settings
 from ....core.resources import resources
 from ....tests.live_gate import requires_live_enabled

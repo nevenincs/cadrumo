@@ -22,10 +22,10 @@ from ....application.state_projection import _build_active_profile
 from ....application.user_profile import (
     ProfileCapsuleLifecycle,
     ProfileRecordSession,
-    activeprofile_pointer,
+    active_profile_pointer_transaction,
     bound_profile_record_session,
 )
-from ....core import BucketPointer, read_pointer, write_pointer
+from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
@@ -118,7 +118,7 @@ def test_active_profile_health_is_ready_from_one_current_capsule_projection(tmp_
 def test_inactive_current_capsule_routes_the_operator_to_login(tmp_path: Path) -> None:
     session = _create_current_profile(root=tmp_path)
     try:
-        with activeprofile_pointer(tmp_path) as pointer_transaction:
+        with active_profile_pointer_transaction(tmp_path) as pointer_transaction:
             pointer_transaction.clear()
         with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
             health = assess_active_profile_health()

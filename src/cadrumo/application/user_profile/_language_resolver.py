@@ -41,7 +41,7 @@ def resolve_active_profile_output_language() -> str | None:
 def resolve_active_profile_output_language_hint() -> str | None:
     """Return the active bucket's last-known output-language hint, if present."""
     try:
-        from ...core import resolve_active_bucket_id
+        from ...core.bucket_pointer import resolve_active_bucket_id
 
         bucket_id = resolve_active_bucket_id()
         if bucket_id is None:

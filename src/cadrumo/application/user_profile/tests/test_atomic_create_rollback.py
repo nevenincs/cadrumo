@@ -31,7 +31,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.custody import list_current_profile_custody_capsule_ids
-from ....core import read_pointer
+from ....core.bucket_pointer import read_pointer
 from ....core.config import load_settings
 from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
 from ....tests.profile_storage_root_fixture import profile_storage_root_fixture

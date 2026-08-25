@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core import resolve_repository_bucket_id
+from ...core.bucket_pointer import resolve_repository_bucket_id
 from .errors import ModeloApplicationError
 
 if TYPE_CHECKING:

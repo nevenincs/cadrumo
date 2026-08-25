@@ -244,7 +244,7 @@ def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_writer(
     tmp_path: Path,
 ) -> None:
     from ...adapters.persistence.storage.bucket import bucket_paths, lock_path
-    from ...core import pointer_path
+    from ...core.bucket_pointer import pointer_path
     from .._config_reset_repository import ConfigResetJournalRepository
     from ..workflow import read_profile_bucket_by_id
 

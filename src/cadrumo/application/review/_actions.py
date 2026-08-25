@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...domain.contribuyente import normalise_key
-from .._workflow_review_models import WorkflowEvent, utc_now
+from ..workflow.review_models import WorkflowEvent, utc_now
 from ._errors import ReviewError
 from ._models import InvoiceReviewRecord, LedgerReviewRecord
 

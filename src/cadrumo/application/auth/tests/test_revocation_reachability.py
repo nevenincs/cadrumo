@@ -22,7 +22,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ....core import AuthProviderKind, BucketPointer, write_pointer
+from ....core import AuthProviderKind
+from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -43,7 +44,10 @@ def _certificate_secret_present(bucket_id: str) -> bool:
 def test_reachability_answers_both_ways_and_an_open_session_removes_the_out_of_bucket_secret(
     tmp_path: Path,
 ) -> None:
-    from ..certificate_source_operations import register_operator_certificate_source, set_operator_certificate_source_secret
+    from ..certificate_source_operations import (
+        register_operator_certificate_source,
+        set_operator_certificate_source_secret,
+    )
     from ..operator import reset_operator_auth
     from ..operator_scope import operator_auth_revocation_is_reachable
 

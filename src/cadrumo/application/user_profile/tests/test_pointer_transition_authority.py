@@ -8,10 +8,10 @@ from typing import Any
 
 import pytest
 
-from ....core import BucketPointer, pointer_path, read_pointer
-from .. import (
+from ....core.bucket_pointer import BucketPointer, pointer_path, read_pointer
+from ..profile_pointer import (
     ActiveProfilePointerTransactionError,
-    activeprofile_pointer,
+    active_profile_pointer_transaction,
     observe_active_profile_pointer,
 )
 
@@ -24,7 +24,7 @@ _B = "22222222-2222-4222-8222-222222222222"
 def _select_b_then_a_in_child(root_text: str, result_queue: Any) -> None:
     """Publish two real transitions from one fresh interpreter."""
     from ....tests.profile_persistence import composed_profile_persistence_ports
-    from .. import activeprofile_pointer as transaction_context
+    from ..profile_pointer import active_profile_pointer_transaction as transaction_context
 
     with composed_profile_persistence_ports(), transaction_context(Path(root_text)) as transaction:
         selected_b = transaction.select(_B)
@@ -36,7 +36,7 @@ def test_absence_idempotence_and_restore_keep_one_durable_lineage(tmp_path: Path
     """A clear tombstone and restore never erase or reuse a coordinate."""
     assert observe_active_profile_pointer(tmp_path) == BucketPointer.absent(transition_revision=0)
 
-    with activeprofile_pointer(tmp_path) as transaction:
+    with active_profile_pointer_transaction(tmp_path) as transaction:
         assert transaction.clear() == BucketPointer.absent(transition_revision=0)
         selected_a = transaction.select(_A)
         assert transaction.select(_A) == selected_a
@@ -56,7 +56,7 @@ def test_absence_idempotence_and_restore_keep_one_durable_lineage(tmp_path: Path
 
 def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(tmp_path: Path) -> None:
     """A real spawned process cannot turn A→B→A into the original A witness."""
-    with activeprofile_pointer(tmp_path) as transaction:
+    with active_profile_pointer_transaction(tmp_path) as transaction:
         initial_a = transaction.select(_A)
 
     context = get_context("spawn")
@@ -75,20 +75,33 @@ def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(
     assert observe_active_profile_pointer(tmp_path) == selected_a_again
 
     with (
-        activeprofile_pointer(tmp_path) as transaction,
+        active_profile_pointer_transaction(tmp_path) as transaction,
         pytest.raises(ActiveProfilePointerTransactionError),
     ):
         transaction.compare_and_select(expected=initial_a, bucket_id=_B)
 
 
-def test_facades_are_the_only_public_pointer_transition_surface() -> None:
-    """The facade resolves native owners and exposes no byte-era bridge."""
+def test_defining_modules_are_the_only_public_pointer_transition_surface() -> None:
+    """Only defining modules own pointer contracts; package namespaces are inert."""
     import cadrumo.application.user_profile as user_profile
     import cadrumo.core as core
+    from cadrumo.application.user_profile import profile_pointer
+    from cadrumo.core import bucket_pointer
 
-    assert user_profile.activeprofile_pointer.__module__.endswith("profile_pointer")
-    assert user_profile.observe_active_profile_pointer.__module__.endswith("profile_pointer")
-    assert user_profile.ActiveProfilePointerTransaction.__module__.endswith("profile_pointer")
+    assert profile_pointer.active_profile_pointer_transaction.__module__.endswith("profile_pointer")
+    assert profile_pointer.observe_active_profile_pointer.__module__.endswith("profile_pointer")
+    assert profile_pointer.ActiveProfilePointerTransaction.__module__.endswith("profile_pointer")
+    assert bucket_pointer.BucketPointer.__module__.endswith("bucket_pointer")
+    for forbidden_name in (
+        "active_profile_pointer_transaction",
+        "observe_active_profile_pointer",
+        "ActiveProfilePointerTransaction",
+        "BucketPointer",
+        "read_pointer",
+        "write_pointer",
+    ):
+        assert not hasattr(user_profile, forbidden_name)
+        assert not hasattr(core, forbidden_name)
     for retired_name in (
         "ProfileCustodyPointerSnapshot",
         "compare_and_swap_profile_pointer",

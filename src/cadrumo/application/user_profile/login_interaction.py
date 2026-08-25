@@ -35,7 +35,7 @@ def profile_login_choices() -> tuple[ProfileLoginChoice, ...]:
 
 def preselected_profile_login_id(name: str | None) -> str | None:
     """Resolve the profile an authentication chooser should open on."""
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     if name is None:
         return resolve_active_bucket_id()

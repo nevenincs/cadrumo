@@ -91,7 +91,7 @@ def _guarded_read_errors() -> tuple[type[BaseException], ...]:
 
 def _resolve_active_identity() -> tuple[str | None, str | None]:
     """Return the active profile identifier and display label, or no identity."""
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ..workflow import read_profile_bucket_by_id
 
     try:

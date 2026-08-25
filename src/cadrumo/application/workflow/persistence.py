@@ -63,13 +63,13 @@ from ...core import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger
 from ...domain.buckets import BucketEvent, append_bucket_event
-from ._errors import WorkflowError
-from ._events import (
+from .errors import WorkflowError
+from .events import (
     WorkflowStateResetFingerprint,
     emit_workflow_state_reset,
 )
-from ._run_models import WorkflowResult
-from ._state_models import WorkflowState, utc_now
+from .run_models import WorkflowResult
+from .state_models import WorkflowState, utc_now
 
 _logger = get_logger(__name__)
 
@@ -554,7 +554,7 @@ def workflow_state_repository() -> WorkflowStateRepository:
     :class:`~adapters.persistence.storage.SecureObjectRepository` so
     bootstrap-exempt recovery reads can still observe an absent state.
     """
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:

@@ -42,7 +42,7 @@ from ...preflight import run_preflight_checks
 from ..operator import build_live_auth_preflight_report
 from ..operator_probes import (
     _active_profile_path_values,
-    _live_auth_identity_state,
+    live_auth_identity_state,
     probe_clave_credentials,
 )
 
@@ -103,7 +103,7 @@ def test_the_identity_state_probe_answers_without_a_session() -> None:
     """The alignment ladder reports a state rather than refusing."""
 
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        profile_present, provider_present, alignment = _live_auth_identity_state(
+        profile_present, provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
             settings=settings,
         )

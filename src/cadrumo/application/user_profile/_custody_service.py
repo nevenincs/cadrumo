@@ -12,7 +12,7 @@ from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
-from ...core import BucketPointer
+from ...core.bucket_pointer import BucketPointer
 from ...core.paths import effective_storage_root
 from ...core.time import now as _utc_now
 from ._custody_hold import ProfileCustodyHoldAuthority
@@ -47,7 +47,7 @@ from ._login_session import (
     remove_profile_session_acceleration_for_custody_delete,
     revoke_live_profile_secret_for_custody_delete,
 )
-from .profile_pointer import activeprofile_pointer
+from .profile_pointer import active_profile_pointer_transaction
 
 
 class ProfileCustodyDisplacedSessionRetirementError(ProfileCustodyTransactionConflictError):
@@ -89,7 +89,7 @@ class _ProfileCustodyTransactionCapability:
 
     def _read_pointer(self) -> BucketPointer:
         """Consume one canonical lock-scoped pointer observation."""
-        with activeprofile_pointer(self._root) as transaction:
+        with active_profile_pointer_transaction(self._root) as transaction:
             return transaction.read()
 
     def prepare_delete(
@@ -438,7 +438,7 @@ class _ProfileCustodyTransactionCapability:
             bucket_id=replacement_bucket_id,
             transition_revision=journal.pointer_before.transition_revision + 1,
         )
-        with activeprofile_pointer(self._root) as pointer_transaction:
+        with active_profile_pointer_transaction(self._root) as pointer_transaction:
             current = pointer_transaction.read()
             if current == journal.pointer_before:
                 self._retire_displaced_profile_session(journal)
@@ -634,9 +634,9 @@ class _ProfileCustodyTransactionCapability:
         """Bind and revalidate the single-target inactive-delete policy."""
         if not requires_inactive_target:
             return
-        from .profile_pointer import activeprofile_pointer
+        from .profile_pointer import active_profile_pointer_transaction
 
-        with activeprofile_pointer(self._root) as pointer_transaction:
+        with active_profile_pointer_transaction(self._root) as pointer_transaction:
             pointer = pointer_transaction.read()
         if pointer.bucket_id == str(profile_id):
             raise ProfileCustodyTransactionRefusalError("single-target profile deletion refuses the active profile")
@@ -774,7 +774,7 @@ class _ProfileCustodyTransactionCapability:
                 transition_revision=journal.pointer_before.transition_revision + 1,
             )
         )
-        with activeprofile_pointer(self._root) as pointer_transaction:
+        with active_profile_pointer_transaction(self._root) as pointer_transaction:
             current = pointer_transaction.read()
             if current == journal.pointer_before:
                 if replacement_bucket_id is None:

@@ -38,6 +38,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
+import cadrumo.application.auth.certificate_secret_backend as _backend_module
+
 from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore
 from ....tests.master_key import EphemeralMasterKeyProvider
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
@@ -51,7 +53,6 @@ from ..certificate_source_operations import (
 )
 from ..credentials import resolve_certificate_source_secret
 from ..operator_results import CertificateSourceNotFoundError
-import cadrumo.application.auth.certificate_secret_backend as _backend_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

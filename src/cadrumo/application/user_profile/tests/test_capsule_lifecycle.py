@@ -25,7 +25,7 @@ from ....adapters.persistence.storage.custody import (
     load_committed_profile_custody_label_record,
     replace_committed_profile_custody_data_file,
 )
-from ....core import read_pointer
+from ....core.bucket_pointer import read_pointer
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import (
     ProfileNotFoundError,

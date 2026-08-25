@@ -1348,7 +1348,7 @@ def _resolve_profile_target_for_mode(
         profile_name = _require_profile_name(flow, raw_profile_name)
         return profile_name, _resolve_profile_id_for_mode(flow, mode, profile_name)
 
-    from ...core import require_active_bucket_id
+    from ...core.bucket_pointer import require_active_bucket_id
     from ..user_profile import resolve_login_target
 
     target = resolve_login_target(require_active_bucket_id())

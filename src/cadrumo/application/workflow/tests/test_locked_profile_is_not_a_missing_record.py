@@ -30,7 +30,7 @@ from textwrap import dedent
 import pytest
 
 from ....adapters.persistence.storage import master_key
-from ....core import BucketPointer, write_pointer
+from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import override_settings
 from ....tests.subprocess_cli import run_subprocess_cli_harness
 from ...user_profile import close_active_profile_record_session, profile_bind_bucket_session

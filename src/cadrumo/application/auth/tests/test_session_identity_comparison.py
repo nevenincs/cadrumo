@@ -33,6 +33,8 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import SecretStr, ValidationError
 
+import cadrumo.application.auth.sessions as sessions
+
 from ....adapters.outbound.aeat.auth import (
     AeatSession,
     CertificateSessionDetail,
@@ -42,7 +44,6 @@ from ....core import AuthProviderKind, ClaveMovilRoute
 from ....core.config import override_settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
-import cadrumo.application.auth.sessions as sessions
 from ..sessions import (
     AuthProfileIdentityMismatchError,
     _assert_session_identity_matches_expected,

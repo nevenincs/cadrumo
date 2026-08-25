@@ -44,7 +44,7 @@ from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.time import now
-from .._workflow_auth_models import (
+from .models import (
     CertificateSecretMutationEventKind,
     CertificateSecretMutationIntent,
 )
@@ -86,7 +86,7 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from ...domain.buckets import BucketEvent, BucketEventType
-    from .._workflow_auth_models import CertificateSourceRecord
+    from .models import CertificateSourceRecord
     from ..workflow import WorkflowState, WorkflowStateRepository
 
 
@@ -100,7 +100,7 @@ def _gate_active_bucket() -> str:
     Returns:
         The active bucket id.
     """
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ..workflow import assess_active_profile_health, workflow_state_repository
 
     if resolve_active_bucket_id() is None:
@@ -334,7 +334,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
     """Classify expiry/rotation health for every registered certificate source.
 
     Reuses the same local PKCS#12 probe
-    (:func:`~application.auth.operator_probes._probe_certificate_bundle`)
+    (:func:`~application.auth.operator_probes.probe_certificate_bundle`)
     the single-certificate ``auth test`` path already runs — classifying
     ``ok`` / ``expiring`` / ``expired`` / ``corrupt`` / ``unreadable`` /
     ``file_missing`` — but applies it to every named source in the
@@ -835,7 +835,6 @@ def _finalize_certificate_secret_mutation(
 
 
 __all__ = [
-    "ActiveCertificateCredentials",
     "CertificateSubjectNifReader",
     "certificate_source_tax_id",
     "check_operator_certificate_sources",
@@ -843,7 +842,6 @@ __all__ = [
     "register_operator_certificate_source",
     "remove_operator_certificate_source",
     "remove_operator_certificate_source_secret",
-    "resolve_certificate_source_secret",
     "select_operator_certificate_source",
     "set_operator_certificate_source_secret",
 ]

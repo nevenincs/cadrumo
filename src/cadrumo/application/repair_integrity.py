@@ -314,7 +314,7 @@ def active_bucket_repair_session() -> Generator[None]:
             :meth:`~cadrumo.adapters.persistence.storage.SecureObjectRepository.quarantine_unreadable_rows`.
     """
     from ..adapters.persistence.storage import active_bucket_session_serves, has_active_bucket_session
-    from ..core import resolve_active_bucket_id
+    from ..core.bucket_pointer import resolve_active_bucket_id
 
     # Probing decryptability under the WRONG bucket's key reports readable rows
     # as unreadable, and this context feeds the quarantine flows, so a

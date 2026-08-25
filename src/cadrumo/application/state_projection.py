@@ -87,7 +87,8 @@ from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueR
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import AuthProviderKind, BindingSourceKind, OperatorActionAxis, Period, resolve_active_bucket_id
+from ..core import AuthProviderKind, BindingSourceKind, OperatorActionAxis, Period
+from ..core.bucket_pointer import resolve_active_bucket_id
 from ..core.errors import CadrumoError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger

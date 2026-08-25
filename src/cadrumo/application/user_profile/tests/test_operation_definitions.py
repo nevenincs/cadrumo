@@ -33,7 +33,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from ....core import read_pointer
+from ....core.bucket_pointer import read_pointer
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._bundle_export_contracts import (

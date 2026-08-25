@@ -18,8 +18,8 @@ from ....core.time import now
 from ....domain.auth.apoderamientos import UnknownScopeError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
 from ...flows.definition import FlowPage
-from ...flows.scripted import run_scripted_flow
 from ...flows.errors import FlowRunAbandonedError
+from ...flows.scripted import run_scripted_flow
 from ..apoderado_flow import (
     REPRESENTED_NIF_PAGE_ID,
     SCOPES_PAGE_ID,

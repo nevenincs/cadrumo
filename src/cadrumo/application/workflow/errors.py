@@ -11,7 +11,7 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 from __future__ import annotations
 
 from ...core.errors import CadrumoError, CoreValidationError
-from ._workflow_abort import WorkflowAbortReason
+from .abort import WorkflowAbortReason
 
 
 class WorkflowError(CadrumoError):

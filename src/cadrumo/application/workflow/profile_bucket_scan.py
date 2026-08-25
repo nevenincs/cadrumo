@@ -10,8 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from ..user_profile import CommittedProfileRepository, ProfileNotFoundError
-from ._errors import ProfileLabelAmbiguousError
-from ._profile_bucket_models import ProfileBucketPointer
+from .errors import ProfileLabelAmbiguousError
+from .profile_bucket_models import ProfileBucketPointer
 
 
 def _repository(root: Path | None) -> CommittedProfileRepository:

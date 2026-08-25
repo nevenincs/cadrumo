@@ -135,7 +135,7 @@ def auth_acquisition_lock_path(
     bucket_id: str | None = None,
 ) -> Path:
     """Return the profile/provider-scoped lock path."""
-    from ...core import require_active_bucket_id
+    from ...core.bucket_pointer import require_active_bucket_id
 
     return settings.cadrumo_token_dir / f"{bucket_id or require_active_bucket_id()}-{kind.value}-auth.lock"
 
@@ -305,7 +305,7 @@ def acquire_auth_acquisition_lock(
     path = auth_acquisition_lock_path(settings, kind)
     path.parent.mkdir(parents=True, exist_ok=True)
     now = _utc_now()
-    from ...core import require_active_bucket_id
+    from ...core.bucket_pointer import require_active_bucket_id
 
     record = AuthAcquisitionLockRecord(
         provider_kind=kind,

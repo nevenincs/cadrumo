@@ -37,9 +37,9 @@ from ...domain.deadlines import (
     next_deadline,
 )
 from ..operator_actions import no_action_precondition_verdict
-from ._errors import WorkflowAbortSignalError
-from ._protocols import DeadlineEngineProtocol
-from ._run_models import WorkflowAbortReason, WorkflowPurpose, WorkflowStage, WorkflowStep
+from .errors import WorkflowAbortSignalError
+from .protocols import DeadlineEngineProtocol
+from .run_models import WorkflowAbortReason, WorkflowPurpose, WorkflowStage, WorkflowStep
 
 
 def resolve_deadline_stage_obligation(

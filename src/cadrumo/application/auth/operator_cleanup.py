@@ -8,7 +8,7 @@ from ...core import AuthProviderKind
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from .._workflow_auth_models import (
+from .models import (
     AuthCleanupCertificateSource,
     AuthCleanupIntent,
     AuthCleanupOperationKind,
@@ -28,6 +28,7 @@ from .sessions import delete_persisted_session, persisted_session_exists
 
 
 def implemented_kind(provider_id: str) -> AuthProviderKind | None:
+    """Resolve an implemented provider id without accepting unknown values."""
     try:
         return AuthProviderKind(provider_id)
     except ValueError:
@@ -40,6 +41,7 @@ def delete_scoped_sessions(
     *,
     bucket_id: str,
 ) -> tuple[int, tuple[str, ...]]:
+    """Delete sessions for the requested providers within one profile bucket."""
     removed = 0
     affected: list[str] = []
     for provider_id in provider_ids:
@@ -60,6 +62,7 @@ def clear_scoped_locks(
     bucket_id: str,
     allow_held: bool = False,
 ) -> tuple[int, tuple[str, ...]]:
+    """Clear acquisition locks for the requested providers and bucket."""
     cleared = 0
     affected: list[str] = []
     for provider_id in provider_ids:
@@ -110,6 +113,7 @@ def clear_operator_auth_acquisition_locks(
 
 
 def delete_certificate_source_secrets(bucket_id: str, names: tuple[str, ...]) -> int:
+    """Delete the named certificate secrets from one bucket's secure backend."""
     backend = SecureStorageCertificateSecretBackend(bucket_id=bucket_id)
     return sum(backend.remove(name) for name in names)
 
@@ -120,6 +124,7 @@ def assert_logout_request_matches(
     provider: str | None,
     all_providers: bool,
 ) -> None:
+    """Refuse when a durable logout intent differs from the current request."""
     if intent.operation_kind is not AuthCleanupOperationKind.LOGOUT:
         matches = False
     elif all_providers:
@@ -135,6 +140,7 @@ def assert_logout_request_matches(
 
 
 def auth_cleanup_intent_has_effects(intent: AuthCleanupIntent) -> bool:
+    """Return whether a durable cleanup intent still names removable state."""
     if intent.operation_kind is AuthCleanupOperationKind.LOGOUT:
         return bool(intent.session_provider_ids or intent.had_session_state)
     return bool(
@@ -152,6 +158,7 @@ def assert_reset_request_matches(
     provider: str | None,
     all_providers: bool,
 ) -> None:
+    """Refuse when a durable reset intent differs from the current request."""
     if intent.operation_kind is not AuthCleanupOperationKind.RESET:
         matches = False
     elif all_providers:
@@ -431,6 +438,7 @@ def apply_auth_cleanup_intent(
     auth: AuthState,
     intent: AuthCleanupIntent,
 ) -> tuple[AuthState, tuple[str, ...], tuple[str, ...]]:
+    """Apply one validated cleanup intent to the encrypted auth state."""
     updates: dict[str, object] = {"cleanup_intent": None}
     cleared_provider_ids: list[str] = []
     cleared_current = _clear_current_provider_state(auth, intent, updates)
@@ -454,6 +462,7 @@ def auth_cleanup_bucket_events(
     provider_ids: tuple[str, ...],
     certificate_names: tuple[str, ...],
 ) -> tuple[_BucketEventSpec, ...]:
+    """Project durable bucket events for one completed auth cleanup intent."""
     from ...domain.buckets import BucketEventType
 
     common = {"operation": "reset", "operation_id": intent.operation_id}
@@ -510,4 +519,15 @@ def _certificate_source_secret_exists(bucket_id: str, name: str) -> bool:
     return SecureStorageCertificateSecretBackend(bucket_id=bucket_id).get(name) is not None
 
 
-__all__: list[str] = []
+__all__ = [
+    "apply_auth_cleanup_intent",
+    "assert_logout_request_matches",
+    "assert_reset_request_matches",
+    "auth_cleanup_bucket_events",
+    "auth_cleanup_intent_has_effects",
+    "clear_operator_auth_acquisition_locks",
+    "clear_scoped_locks",
+    "delete_certificate_source_secrets",
+    "delete_scoped_sessions",
+    "implemented_kind",
+]

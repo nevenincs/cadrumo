@@ -57,13 +57,8 @@ from uuid import UUID
 from pydantic import BaseModel, ValidationError, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import (
-    BucketPointer,
-    ProfileSessionRefusalReason,
-    StorageCategory,
-    resolve_active_bucket_id,
-    storage_location,
-)
+from ...core import ProfileSessionRefusalReason, StorageCategory, storage_location
+from ...core.bucket_pointer import BucketPointer, resolve_active_bucket_id
 from ...core.config import load_settings
 from ...core.hashing import (
     bounded_canonical_json_bytes,
@@ -99,7 +94,7 @@ from ._login_session_port import (
 from .profile_pointer import (
     ActiveProfilePointerTransaction,
     ActiveProfilePointerTransactionError,
-    activeprofile_pointer,
+    active_profile_pointer_transaction,
 )
 from ._profile_record_repository import (
     activate_profile_record_session,
@@ -635,7 +630,7 @@ def logout_active_profile() -> str | None:
     storage_root = effective_storage_root()
     live = _login_sessions().current_session()
     live_bucket_id = live.bucket_id if live is not None else None
-    with activeprofile_pointer(storage_root) as pointer_transaction:
+    with active_profile_pointer_transaction(storage_root) as pointer_transaction:
         selected = pointer_transaction.read()
         selected_bucket_id = selected.bucket_id
         target_ids = _distinct_bucket_ids(live_bucket_id, selected_bucket_id)
@@ -974,7 +969,7 @@ def login_profile(
     instant = _now() if now is None else now
     storage_root = effective_storage_root()
 
-    with activeprofile_pointer() as pointer_transaction:
+    with active_profile_pointer_transaction() as pointer_transaction:
         attempt = _prepare_login_attempt(
             name=name,
             storage_root=storage_root,

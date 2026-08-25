@@ -260,7 +260,7 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
 
 
 def test_live_auth_identity_state_does_not_swallow_unrelated_exceptions() -> None:
-    """The profile tax-id probe in _live_auth_identity_state is narrow: confirm function is importable."""
-    import cadrumo.application.auth.operator as operator_mod
+    """The profile tax-id probe is narrow and remains publicly importable."""
+    import cadrumo.application.auth.operator_probes as probes
 
-    assert hasattr(operator_mod, "_live_auth_identity_state")
+    assert hasattr(probes, "live_auth_identity_state")

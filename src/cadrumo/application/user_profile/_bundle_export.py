@@ -460,7 +460,7 @@ def _reload_operation(
 
 
 def _resolve_export_profile(profile_name: str | None) -> ProfileBucketPointer:
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ..workflow import read_profile_bucket, read_profile_bucket_by_id
 
     if profile_name is not None:

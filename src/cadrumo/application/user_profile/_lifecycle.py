@@ -33,7 +33,7 @@ from ._custody_transactions import (
     ProfileCustodyTransactionJournal,
     ProfileCustodyTransactionReceipt,
 )
-from .profile_pointer import activeprofile_pointer
+from .profile_pointer import active_profile_pointer_transaction
 from ._profile_repository import CommittedProfileRepository
 
 
@@ -202,7 +202,7 @@ class ProfileCapsuleLifecycle:
 
     def select(self, value: str) -> CommittedProfileView:
         aggregate = self._profiles.resolve(value)
-        with activeprofile_pointer(self.root) as pointer:
+        with active_profile_pointer_transaction(self.root) as pointer:
             pointer.select(aggregate.profile_id)
         return aggregate
 

@@ -1292,3 +1292,6 @@ class _SupervisorExecutorContext:
     def snapshot(self) -> OperationPersistedSnapshot:
         """Expose the current durable view retained by the definition-bound context."""
         return self._context.snapshot
+
+
+__all__ = ["OperationSupervisor"]

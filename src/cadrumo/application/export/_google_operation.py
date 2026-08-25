@@ -16,18 +16,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationInteractionKind,
-    Period,
-    ServiceCapability,
-    require_active_bucket_id,
-)
+from ...core import STRICT_FROZEN_CONFIG, OperationCancellation, OperationClosePolicy, OperationDeadline, OperationDurability, OperationEffect, OperationInteractionKind, Period, ServiceCapability
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.time import now
 from ...domain.calculations.registry import ModeloId, RegistrySnapshot, RevisionId, bundled_authority
 from ..calculations import resolve_relations_from_local_store

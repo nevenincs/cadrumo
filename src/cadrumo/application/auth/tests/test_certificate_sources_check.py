@@ -21,7 +21,8 @@ from pydantic import SecretStr, ValidationError
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.storage import SECRET_INDEX_FILENAME, SecretStore, get_secret_store
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
-from ....core import AuthProviderKind, BucketPointer, write_pointer
+from ....core import AuthProviderKind
+from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from ....tests.profile_capsule import open_test_profile_session

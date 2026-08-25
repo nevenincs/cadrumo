@@ -281,7 +281,7 @@ def _classify_effective_write_route(settings: Settings | None) -> StorageRouteCl
         route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE
         and "cadrumo_database_url" not in resolved.model_fields_set
     ):
-        from .user_profile import observe_active_profile_pointer
+        from .user_profile.profile_pointer import observe_active_profile_pointer
 
         pointer = observe_active_profile_pointer(resolved.cadrumo_local_storage_root)
         if pointer.bucket_id is not None:

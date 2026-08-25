@@ -23,7 +23,7 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyWrappedDek,
     create_profile_custody_sentinel,
 )
-from ....core import BucketPointer, write_pointer
+from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
 

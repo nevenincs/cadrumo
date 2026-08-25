@@ -8,16 +8,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, SecretStr, field_validator
 
-from ...core import (
-    STRICT_FROZEN_CONFIG,
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationInteractionKind,
-    require_active_bucket_id,
-)
+from ...core import STRICT_FROZEN_CONFIG, OperationCancellation, OperationClosePolicy, OperationDeadline, OperationDurability, OperationEffect, OperationInteractionKind
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity import ContentDigest
 from ...core.time import now
 from cadrumo.application.operations.capabilities import (

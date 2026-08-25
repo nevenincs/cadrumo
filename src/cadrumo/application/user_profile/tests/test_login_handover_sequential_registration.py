@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import BucketPointer, read_pointer
+from ....core.bucket_pointer import BucketPointer, read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._login_session import (

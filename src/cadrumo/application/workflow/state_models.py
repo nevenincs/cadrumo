@@ -22,25 +22,21 @@ from ...core import (
     Period,
     ProfileRecordUnavailability,
 )
-from ...core import (
-    require_active_bucket_id as _require_active_bucket_id,
-)
-from ...core import (
-    resolve_active_bucket_id as _resolve_active_bucket_id,
-)
+from ...core.bucket_pointer import require_active_bucket_id as _require_active_bucket_id
+from ...core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.config import override_settings
 from ...core.logging import get_logger
 from ...core.time import now as utc_now
 from ...domain.submission import ModeloDraftStatus
-from .._workflow_auth_models import AuthState
-from .._workflow_review_models import (
+from ..auth.models import AuthState
+from .review_models import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
     WorkflowEvent,
 )
 from ._identity import period_identity_segment
-from ._profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
-from ._profile_bucket_scan import resolve_profile_bucket
+from .profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
+from .profile_bucket_scan import resolve_profile_bucket
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository

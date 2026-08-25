@@ -4,7 +4,7 @@
 :class:`UserProfileRecord` from the active bucket and returns an
 :class:`ActiveProfileHealth` verdict used by every operator status surface.
 Confirmed pointer repairs coordinate mutation through the public
-:func:`~cadrumo.application.user_profile.activeprofile_pointer` boundary.
+:func:`~cadrumo.application.user_profile.active_profile_pointer_transaction` boundary.
 
 See Also:
     :class:`~application.workflow.ProfileBucketPointer`
@@ -32,16 +32,8 @@ from pydantic import BaseModel, PrivateAttr, ValidationError
 
 from ...adapters.persistence.storage.custody import ProfileCustodyRecordError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
-    ActionEvidenceProvenance,
-    NoRecoveryOutcome,
-    ProfileRecordUnavailability,
-    ProfileSessionRefusalReason,
-    resolve_active_bucket_id,
-)
+from ...core import ActionArgumentSource, ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, ProfileRecordUnavailability, ProfileSessionRefusalReason
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import load_settings, override_settings
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
@@ -55,15 +47,15 @@ from ..operator_actions import (
 )
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
 from ..user_profile import (
-    activeprofile_pointer,
     list_profile_key_records,
     profile_record_session_if_authenticated,
     record_to_path_values,
     validate_profile_values,
 )
-from ._persistence import workflow_state_repository
-from ._profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
-from ._state_models import WorkflowState
+from ..user_profile.profile_pointer import active_profile_pointer_transaction
+from .persistence import workflow_state_repository
+from .profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
+from .state_models import WorkflowState
 
 ProfileHealthStatus = Literal[
     "none",
@@ -538,7 +530,7 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
         return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
 
     root = load_settings().cadrumo_local_storage_root
-    with activeprofile_pointer(root) as pointer_transaction:
+    with active_profile_pointer_transaction(root) as pointer_transaction:
         before = assess_active_profile_health()
         if not before.repairable_by_clearing_pointer:
             return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)

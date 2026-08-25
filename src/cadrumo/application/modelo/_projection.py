@@ -580,7 +580,7 @@ def _profile_projection_bindings(
     extra_enum_bindings: Mapping[BindingId, str],
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, date], dict[BindingId, str]]:
     """Resolve the active bucket's profile-sourced projection bindings (empty when no bucket)."""
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:

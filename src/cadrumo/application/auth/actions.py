@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.time import now as utc_now
-from .._workflow_auth_models import AuthState
+from .models import AuthState
 
 if TYPE_CHECKING:
     from ..workflow import WorkflowState
@@ -45,3 +45,6 @@ def update_auth(
         update["subject"] = subject.strip() or None
 
     return state.model_copy(update={"auth": auth.model_copy(update=update), "updated_at": utc_now()})
+
+
+__all__ = ["update_auth"]

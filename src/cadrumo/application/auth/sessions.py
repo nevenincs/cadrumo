@@ -261,8 +261,8 @@ def storage_state_paths(
     Returns a :class:`StorageStatePaths` carrying the stable logical object key
     for the provider's encrypted session state.
     """
-    from ...core import require_active_bucket_id
     from ...core.auth_session_keys import aeat_auth_session_storage_state_path
+    from ...core.bucket_pointer import require_active_bucket_id
 
     resolved = kind or AuthProviderKind.CERTIFICATE
     stem = _STEM_BY_KIND[resolved]
@@ -1037,7 +1037,7 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     profile is active.
     """
     from ...adapters.persistence.storage import active_bucket_session_serves
-    from ...core import resolve_active_bucket_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ...domain.user_profile import ProfileNotFoundError
     from ..user_profile import (
         ProfileRecordRepository,
@@ -1171,3 +1171,26 @@ async def _provider_lifecycle(provider: AuthProvider) -> AsyncGenerator[None]:
             raise AuthSessionUnavailableError(
                 translated_message="application.auth.sessions.errors.provider_close_failed",
             ) from cleanup_error
+
+
+__all__ = [
+    "AuthProfileIdentityMismatchError",
+    "AuthSessionUnavailableError",
+    "AuthenticatedAeatSessionResult",
+    "ClaveAuthFacts",
+    "ClaveCredentials",
+    "ClaveCredentialsIncompleteError",
+    "CorruptAuthSessionError",
+    "PersistedAuthSession",
+    "SessionDeserializationError",
+    "StorageStatePaths",
+    "bind_clave_credentials_to_settings",
+    "clave_auth_facts_from_profile_values",
+    "delete_persisted_session",
+    "ensure_authenticated_aeat_session",
+    "load_persisted_session",
+    "persisted_session_exists",
+    "require_verified_aeat_session",
+    "resolve_clave_credentials",
+    "storage_state_paths",
+]

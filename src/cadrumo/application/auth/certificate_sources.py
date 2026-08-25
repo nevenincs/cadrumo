@@ -39,7 +39,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
 from ...core.time import now
-from .._workflow_auth_models import AuthState, CertificateSourceRecord
+from .models import AuthState, CertificateSourceRecord
 from .operator_results import CertificateSourceNotFoundError
 
 if TYPE_CHECKING:

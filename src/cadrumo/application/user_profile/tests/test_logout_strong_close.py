@@ -32,7 +32,8 @@ import pytest
 from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody import profile_session_path
 from ....adapters.persistence.storage.master_key import current_active_bucket_session, login_throttle_path
-from ....core import ProfileSessionRefusalReason, read_pointer
+from ....core import ProfileSessionRefusalReason
+from ....core.bucket_pointer import read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._login_session import bind_resumed_profile_session, login_profile, logout_active_profile

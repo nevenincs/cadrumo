@@ -63,3 +63,6 @@ def select_provider(
     if not isinstance(provider, AuthProvider):
         raise TypeError("outbound auth factory returned an object outside the AuthProvider contract")
     return provider
+
+
+__all__ = ["AuthProvider", "select_provider"]

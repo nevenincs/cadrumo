@@ -291,7 +291,7 @@ def apply_cotejo[StateT](
     demanding them would refuse the very reconciliation that helps supply
     them; a profile already past setup is held to the complete contract.
     """
-    from ...core import require_active_bucket_id
+    from ...core.bucket_pointer import require_active_bucket_id
 
     profile_id = require_active_bucket_id()
     repository = ProfileRecordRepository.for_current_session(profile_id)

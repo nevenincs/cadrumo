@@ -18,7 +18,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
-from ....core import AuthProviderKind, BucketPointer, write_pointer
+from ....core import AuthProviderKind
+from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
 from ....core.errors import get_registered_error_code, resolve_error_message
 from ....tests.profile_capsule import open_test_profile_session
@@ -27,7 +28,7 @@ from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
 from ..operator import build_live_auth_preflight_report
 from ..operator import test_operator_auth as run_operator_auth_test
-from ..operator_probes import _probe_local_session
+from ..operator_probes import probe_local_session
 from ..operator_results import AuthOperationRequiresCustodySessionError
 from ..operator_scope import active_profile_storage_span
 
@@ -253,7 +254,7 @@ def test_local_session_probe_degrades_to_absent_instead_of_raising(bucket_a_sess
     with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
         pass
 
-    probe = _probe_local_session(AuthProviderKind.CERTIFICATE.value, settings=settings_b)
+    probe = probe_local_session(AuthProviderKind.CERTIFICATE.value, settings=settings_b)
 
     assert probe.present is False
     assert probe.state == "no_session"

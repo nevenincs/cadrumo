@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+import cadrumo.application.auth.certificate_sources as _certificate_sources_module
+
 from ....core.config import Settings
 from ....tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from ....tests.user_profile import register_minimal_profile
@@ -25,7 +27,6 @@ from ..certificate_source_operations import (
 from ..credentials import resolve_active_certificate_credentials
 from ..operator import configure_operator_auth, inspect_operator_auth
 from ..operator_results import CertificateSourceNotFoundError
-import cadrumo.application.auth.certificate_sources as _certificate_sources_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

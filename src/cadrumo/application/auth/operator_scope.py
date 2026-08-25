@@ -82,7 +82,7 @@ def auth_operator_settings_scope(settings: Settings | None) -> Generator[Setting
 
 def active_bucket_id_from_settings(settings: Settings) -> str | None:
     """Resolve the active bucket for ``settings`` without falling through to process globals."""
-    from ..user_profile import observe_active_profile_pointer
+    from ..user_profile.profile_pointer import observe_active_profile_pointer
 
     override = (settings.cadrumo_active_profile or "").strip()
     if override:
@@ -334,3 +334,17 @@ def resolve_auth_operation_scope(
             translated_message="application.auth.operator.errors.provider_not_configured",
         )
     return AuthOperationScope(bucket_id=bucket_id, provider_ids=provider_ids)
+
+
+__all__ = [
+    "AuthOperationScope",
+    "active_bucket_id_from_settings",
+    "active_profile_storage_span",
+    "assert_auth_cleanup_not_in_progress",
+    "assert_auth_recovery_not_in_progress",
+    "assert_certificate_secret_mutation_not_in_progress",
+    "auth_mutation_span",
+    "auth_operator_settings_scope",
+    "operator_auth_revocation_is_reachable",
+    "resolve_auth_operation_scope",
+]

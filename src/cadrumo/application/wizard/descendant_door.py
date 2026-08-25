@@ -172,7 +172,7 @@ def persist_descendant_door_answers(answers: Mapping[str, str]) -> UserProfileRe
     authoritative current record before constructing the replacement, so a
     count-shrink never strands a descendant index above the answered count.
     """
-    from ...core import require_active_bucket_id
+    from ...core.bucket_pointer import require_active_bucket_id
     from ...domain.user_profile import UserProfileFact
     from ..user_profile import (
         ProfileFactWriteDoor,

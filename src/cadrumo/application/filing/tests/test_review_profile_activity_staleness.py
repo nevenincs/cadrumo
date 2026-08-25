@@ -35,7 +35,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period, read_pointer
+from ....core import Period
+from ....core.bucket_pointer import read_pointer
 from ....core.config import load_settings
 from ....domain.filing import CasillaSchemaProvider, ModeloDraft
 from ....domain.submission import ModeloDraftStatus

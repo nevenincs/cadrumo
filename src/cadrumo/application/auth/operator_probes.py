@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from ..workflow import WorkflowState
 
 
-def _classify_identity_alignment(profile_tax_id: str, provider_identity: str) -> str:
+def classify_identity_alignment(profile_tax_id: str, provider_identity: str) -> str:
     """Classify a Cl@ve Móvil identity against the active profile tax id.
 
     The single home for the five-way alignment ladder shared by the live
@@ -133,28 +133,30 @@ def bind_profile_auth_settings(
     )
 
 
-def _live_auth_identity_state(
+def live_auth_identity_state(
     provider_kind: AuthProviderKind | None,
     *,
     settings: Settings,
     state: WorkflowState | None = None,
 ) -> tuple[bool, bool, str]:
+    """Project whether the configured live-auth identity is usable."""
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return False, provider_kind is AuthProviderKind.CERTIFICATE, "not_applicable"
     values = _active_profile_path_values(state)
     facts = clave_auth_facts_from_profile_values(values)
     credentials = resolve_clave_credentials(provider_kind, settings=settings, facts=facts)
     provider_identity = credentials.dni_nie if credentials is not None else ""
-    alignment = _classify_identity_alignment(facts.tax_id, provider_identity)
+    alignment = classify_identity_alignment(facts.tax_id, provider_identity)
     return bool(facts.tax_id), bool(provider_identity), alignment
 
 
-def _live_auth_identity_kind(
+def live_auth_identity_kind(
     provider_kind: AuthProviderKind | None,
     *,
     settings: Settings,
     state: WorkflowState | None = None,
 ) -> str:
+    """Return the safe identity-kind label for the configured provider."""
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return ""
     from ...adapters.outbound.aeat.auth import ClaveMovilConfigurationError, classify_identity
@@ -167,7 +169,8 @@ def _live_auth_identity_kind(
         return "invalid_or_missing"
 
 
-def _live_auth_mode(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
+def live_auth_mode(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
+    """Project the configured interactive mode without acquiring a session."""
     if provider_kind is AuthProviderKind.CLAVE_MOVIL:
         return "non_qr" if settings.cadrumo_clave_prefer_non_qr else "qr"
     if provider_kind is AuthProviderKind.CERTIFICATE:
@@ -186,7 +189,7 @@ class _LocalSessionProbe(BaseModel):
     summary: str = ""
 
 
-def _probe_local_session(provider: str, *, settings: Settings | None = None) -> _LocalSessionProbe:
+def probe_local_session(provider: str, *, settings: Settings | None = None) -> _LocalSessionProbe:
     """Inspect the persisted AEAT session token for ``provider`` on disk.
 
     A pure local read — it never opens a browser or contacts AEAT. It
@@ -346,7 +349,7 @@ def _probe_configured_provider(
         )
 
     if kind is AuthProviderKind.CERTIFICATE:
-        return _probe_certificate_bundle(
+        return probe_certificate_bundle(
             certificate_path,
             settings=settings,
             certificate_credentials=certificate_credentials,
@@ -407,7 +410,7 @@ def _classify_bundle_health(bundle_health: CertificateHealth) -> _ProviderProbeO
     )
 
 
-def _probe_certificate_bundle(
+def probe_certificate_bundle(
     certificate_path: str,
     *,
     settings: Settings | None = None,
@@ -518,9 +521,16 @@ def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _Provide
     )
 
 
-classify_identity_alignment = _classify_identity_alignment
-live_auth_identity_kind = _live_auth_identity_kind
-live_auth_identity_state = _live_auth_identity_state
-live_auth_mode = _live_auth_mode
-probe_local_session = _probe_local_session
-probe_certificate_bundle = _probe_certificate_bundle
+__all__ = [
+    "ProviderConfigurationProbe",
+    "bind_profile_auth_settings",
+    "classify_identity_alignment",
+    "live_auth_identity_kind",
+    "live_auth_identity_state",
+    "live_auth_mode",
+    "probe_certificate_bundle",
+    "probe_clave_credentials",
+    "probe_local_session",
+    "probe_provider_configuration",
+    "probe_provider_credentials",
+]

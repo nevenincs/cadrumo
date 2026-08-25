@@ -13,7 +13,8 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, NoRecoveryOutcome, resolve_active_bucket_id
+from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, NoRecoveryOutcome
+from ...core.bucket_pointer import resolve_active_bucket_id
 from ...domain.deadlines import TaxpayerProfile
 from ..operator_actions import DeclaredNextAction
 from ..state_projection import build_auth_readiness

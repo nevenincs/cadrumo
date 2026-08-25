@@ -204,7 +204,7 @@ def persist_patch(
     facts = tuple(
         UserProfileFact(path=path, value=value) for path, value in profile_values_from_patch(flow, supplied).items()
     )
-    from ...core import require_active_bucket_id
+    from ...core.bucket_pointer import require_active_bucket_id
 
     apply_profile_fact_changes(
         profile_id=require_active_bucket_id(),

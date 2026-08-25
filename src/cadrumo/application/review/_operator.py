@@ -261,7 +261,7 @@ def _render_summary(value: str) -> str:
 
 
 def _active_bucket_id() -> str:
-    from ...core import require_active_bucket_id
+    from ...core.bucket_pointer import require_active_bucket_id
 
     return require_active_bucket_id()
 

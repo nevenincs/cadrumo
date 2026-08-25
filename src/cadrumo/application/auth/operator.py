@@ -41,7 +41,7 @@ from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.identity import tax_id_identity_token
 from ...core.time import now
-from .._workflow_auth_models import (
+from .models import (
     AuthCleanupOperationKind,
 )
 from ..auth_credentials import ActiveCertificateCredentials
@@ -1247,3 +1247,15 @@ def _append_bucket_events(
     for action, object_id in events:
         updated = _append_bucket_event(updated, action=action, object_id=object_id)
     return updated
+
+
+__all__ = [
+    "build_live_auth_preflight_report",
+    "configure_operator_auth",
+    "inspect_operator_auth",
+    "list_operator_auth_providers",
+    "login_operator_auth",
+    "logout_operator_auth",
+    "reset_operator_auth",
+    "test_operator_auth",
+]

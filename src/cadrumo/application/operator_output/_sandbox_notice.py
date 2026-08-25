@@ -33,7 +33,8 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
     mid-process ``switch`` is reflected on the very next command.
     """
     from ...application.user_profile import CommittedProfileRepository, ProfileNotFoundError
-    from ...core import FormerProductStateError, resolve_active_bucket_id
+    from ...core import FormerProductStateError
+    from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.external_constants import SANDBOX_LABEL_PREFIX
     from ...core.i18n import tr
     from ...core.json_contract import NoticeSeverity
