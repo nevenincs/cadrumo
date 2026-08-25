@@ -14,36 +14,35 @@ from queue import Empty
 
 import pytest
 
-from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
-from cadrumo.application.operations.interactions import (
+from .....application.operations.capabilities import OperationRequestStoragePolicy
+from .....application.operations.interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
     OperationInteractionRequest,
     OperationPendingInteraction,
 )
-from cadrumo.application.operations.models import (
+from .....application.operations.models import (
     OperationIdentity,
     OperationTerminalReceipt,
 )
-from cadrumo.application.operations.persistence.events import (
+from .....application.operations.persistence.events import (
     OperationPhaseEvent,
     OperationProgressEvent,
     OperationTerminalEvent,
 )
-from cadrumo.application.operations.persistence.idempotency import OperationIdempotencyClaim
-from cadrumo.application.operations.persistence.journal import (
+from .....application.operations.persistence.idempotency import OperationIdempotencyClaim
+from .....application.operations.persistence.journal import (
     OperationObservationCursorAheadError,
     OperationObservationMaterialization,
     OperationObservationUnknownOperationError,
     OperationPersistedSnapshot,
 )
-from cadrumo.application.operations.persistence.leases import (
+from .....application.operations.persistence.leases import (
     OperationLeaseDisposition,
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-
+from .....application.operations.persistence.replay import OperationReplayStatus
 from .....core import (
     OperationEffect,
     OperationInteractionKind,
