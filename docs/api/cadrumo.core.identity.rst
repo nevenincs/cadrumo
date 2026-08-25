@@ -6,6 +6,12 @@ cadrumo.core.identity package
    :show-inheritance:
    :ignore-module-all:
 
+.. py:data:: SubjectTaxId
+   :module: cadrumo.core.identity
+
+.. py:data:: TaxIdIdentityToken
+   :module: cadrumo.core.identity
+
 
 Submodules
 ----------

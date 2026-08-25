@@ -14,6 +14,7 @@ os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
 
 import sys
 from pathlib import Path
+from typing import TypeAliasType, TypeVar
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -224,7 +225,8 @@ autodoc_default_options = {
     # subclasses do not leak their full underscore-prefixed constructor
     # signature into the rendered Settings page.
     "exclude-members": (
-        "__init__,model_config,model_fields,model_computed_fields,"
+        "__init__,__pydantic_serializer__,__pydantic_validator__,"
+        "model_config,model_fields,model_computed_fields,"
         "Config,model_post_init,settings_customise_sources,model_validate,"
         "model_validate_json,model_validate_strings,model_dump,model_dump_json,"
         "model_copy,model_construct,model_extra,model_fields_set,"
@@ -240,6 +242,35 @@ autoclass_content = "class"
 
 autodoc_typehints = "description"
 autodoc_typehints_format = "short"
+
+_PUBLIC_TYPE_ALIAS_TARGETS = {
+    "CasillaId": "cadrumo.core.CasillaId",
+    "SubjectTaxId": "cadrumo.core.identity.SubjectTaxId",
+    "TaxIdIdentityToken": "cadrumo.core.identity.TaxIdIdentityToken",
+}
+
+
+def _format_project_type_alias(annotation, config=None):
+    """Link canonical public aliases and render implementation aliases literally.
+
+    PEP 695 aliases and generic type variables are not classes.  Rendering them
+    through the extension's default ``py:class`` role creates a dead link and,
+    for private callable aliases, falsely advertises a public object.  The two
+    intentionally public aliases have generator-owned ``py:data`` targets;
+    every other alias/type parameter remains readable code without acquiring a
+    public documentation identity.
+    """
+    if isinstance(annotation, TypeVar):
+        return f"``{annotation.__name__}``"
+    if isinstance(annotation, TypeAliasType):
+        target = _PUBLIC_TYPE_ALIAS_TARGETS.get(annotation.__name__)
+        if target is not None:
+            return f":py:data:`~{target}`"
+        return f"``{annotation.__name__}``"
+    return None
+
+
+typehints_formatter = _format_project_type_alias
 
 # Be tolerant of the wider AEAT dep tree at autodoc-import time. These are
 # either heavy native deps that pull a lot of platform-specific shared
