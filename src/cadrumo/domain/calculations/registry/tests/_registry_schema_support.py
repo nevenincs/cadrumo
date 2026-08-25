@@ -14,7 +14,11 @@ from pydantic import ValidationError
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
-from .. import (
+from ..authority import bundled_authority
+from ..coverage import build_model_law_coverage_ledger
+from ..errors import RegistryLoadError, RegistryValidationError
+from ..loader import load_modelo_file, load_registry_tree
+from ..schema import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
     ExportFieldDefinition,
@@ -24,16 +28,10 @@ from .. import (
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
-    RegistryLoadError,
     RegistrySnapshot,
-    RegistryValidationError,
-    RegistryValidator,
-    build_model_law_coverage_ledger,
-    build_snapshot,
-    bundled_authority,
-    load_modelo_file,
-    load_registry_tree,
 )
+from ..snapshot import build_snapshot
+from ..validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
