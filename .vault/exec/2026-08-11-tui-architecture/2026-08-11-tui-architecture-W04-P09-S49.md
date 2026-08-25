@@ -3,6 +3,7 @@ tags: ['#exec', '#tui-architecture']
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
+body_hash: 'sha256:1c7c7408f62d0febf5551bbbb0c000968efe847e372795d99b2657b9bb235985'
 step_id: 'S49'
 related: ["[[2026-08-11-tui-architecture-plan]]"]
 ---
@@ -32,3 +33,6 @@ S49 remains open pending independent review.
 Corrective review pass adds a descendant-focus scroll hook to the owning form
 screen. Focused actions now scroll into the one canonical `ContentScroll`
 viewport; the overflow assertion remains unchanged and passes deterministically.
+
+Independent review approved S49. The plan step is closed; S50 is the next open
+step and no S50 implementation is included in this record.
