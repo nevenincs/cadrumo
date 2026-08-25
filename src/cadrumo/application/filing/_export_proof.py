@@ -20,7 +20,7 @@ from ...core import (
     PriorDomiciliationElection,
 )
 from ...core.identity import CalculationRevisionId, ContentDigest
-from ...core.time import UtcInstant, now
+from ...core.time import UtcInstant
 from ...domain.calculations.registry import ModeloId, RevisionId
 from ...domain.filing import ModeloDraft
 from ...domain.submission import ModeloDraftStatus
@@ -40,20 +40,16 @@ _CANONICAL_WRITER = "cadrumo.application.filing.export_draft"
 
 
 class FilingExportProofCoordinate(BaseModel):
-    """Law-selection coordinate shared by both proof channels."""
+    """Non-sensitive revision/layout identity shared by both proof channels."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     modelo: ModeloId
     revision: RevisionId
-    filing_year: int = Field(ge=2000, le=2099)
-    period: Period
     layout_ids: tuple[_Token, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
     def _require_coherent_coordinate(self) -> FilingExportProofCoordinate:
-        if self.period.filing_year != self.filing_year:
-            raise ValueError("proof period must belong to the declared filing year")
         if len(self.layout_ids) != len(set(self.layout_ids)):
             raise ValueError("proof layout identities must be unique")
         return self
@@ -131,6 +127,8 @@ class FilingExportConformanceRequest(BaseModel):
 
     coordinate: FilingExportProofCoordinate
     classification: Literal["non_sensitive_mechanism_vector"]
+    filing_year: int = Field(ge=2000, le=2099)
+    period: Period
     draft: ModeloDraft
     producer_snapshot: FilingProducerSnapshot
     provenance: FilingExportPublicProvenance
@@ -140,7 +138,13 @@ class FilingExportConformanceRequest(BaseModel):
 
     @model_validator(mode="after")
     def _bind_vector_to_coordinate(self) -> FilingExportConformanceRequest:
-        _require_export_inputs_match(self.coordinate, self.draft, self.producer_snapshot)
+        _require_export_inputs_match(
+            self.coordinate,
+            self.draft,
+            self.producer_snapshot,
+            filing_year=self.filing_year,
+            period=self.period,
+        )
         _require_unique_dictionary_fields(self.dictionary_values)
         return self
 
@@ -211,7 +215,13 @@ class FilingExportSecureReplayEvidence(BaseModel):
 
     @model_validator(mode="after")
     def _bind_source_owned_inputs(self) -> FilingExportSecureReplayEvidence:
-        _require_export_inputs_match(self.coordinate, self.draft, self.producer_snapshot)
+        _require_export_inputs_match(
+            self.coordinate,
+            self.draft,
+            self.producer_snapshot,
+            filing_year=self.draft.period.filing_year,
+            period=self.draft.period,
+        )
         _require_unique_dictionary_fields(self.dictionary_values)
         return self
 
@@ -240,6 +250,8 @@ class FilingExportSecureCustodyRecord(BaseModel):
     draft_id: str = Field(min_length=1, max_length=128)
     payload_sha256: ContentDigest
     emitted_bytes: int = Field(gt=0)
+    attested_at: UtcInstant
+    valid_until: UtcInstant
     encrypted_at_rest: Literal[True]
     approved_calculation_revision: Literal[True]
     source_owned_draft: Literal[True]
@@ -249,6 +261,12 @@ class FilingExportSecureCustodyRecord(BaseModel):
     repeated_record_order: Literal[True]
     emitted_extent: Literal[True]
     source_pinned_probes_passed: Literal[True]
+
+    @model_validator(mode="after")
+    def _require_forward_validity_window(self) -> FilingExportSecureCustodyRecord:
+        if self.valid_until <= self.attested_at:
+            raise ValueError("secure replay validity must end after attestation")
+        return self
 
 
 @runtime_checkable
@@ -277,6 +295,7 @@ class FilingExportSecureReplayReceipt(BaseModel):
     canonical_writer: Literal["cadrumo.application.filing.export_draft"] = _CANONICAL_WRITER
     proof_schema_version: Literal["filing-export-secure-replay-v1"] = "filing-export-secure-replay-v1"
     attested_at: UtcInstant
+    valid_until: UtcInstant
     replay_passed: Literal[True] = True
     approved_calculation_revision: Literal[True] = True
     source_owned_draft: Literal[True] = True
@@ -289,6 +308,12 @@ class FilingExportSecureReplayReceipt(BaseModel):
     taxpayer_values_exposed: Literal[False] = False
     payload_digest_exposed: Literal[False] = False
     accepted_payload_hash_claimed: Literal[False] = False
+
+    @model_validator(mode="after")
+    def _require_forward_validity_window(self) -> FilingExportSecureReplayReceipt:
+        if self.valid_until <= self.attested_at:
+            raise ValueError("secure replay receipt validity must end after attestation")
+        return self
 
 
 class FilingExportProof(BaseModel):
@@ -407,7 +432,8 @@ def prove_secure_export_replay(
         provenance=evidence.provenance,
         source_authority_id=request.source_authority_id,
         custody_authority_id=request.custody_authority_id,
-        attested_at=now(),
+        attested_at=record.attested_at,
+        valid_until=record.valid_until,
     )
 
 
@@ -481,6 +507,9 @@ def _require_export_inputs_match(
     coordinate: FilingExportProofCoordinate,
     draft: ModeloDraft,
     producer_snapshot: FilingProducerSnapshot,
+    *,
+    filing_year: int,
+    period: Period,
 ) -> None:
     if draft.snapshot_ref.revision_id != coordinate.revision:
         raise ValueError("proof draft revision must match the requested coordinate")
@@ -488,7 +517,8 @@ def _require_export_inputs_match(
         raise ValueError("proof draft must be approved")
     if (
         draft.modelo != coordinate.modelo
-        or draft.period != coordinate.period
+        or draft.period != period
+        or draft.period.filing_year != filing_year
         or producer_snapshot.modelo.value != coordinate.modelo
     ):
         raise ValueError("proof draft and producer snapshot must match the requested coordinate")
@@ -507,7 +537,7 @@ def _require_conformance_receipt(
 ) -> None:
     if receipt.coordinate != request.coordinate or receipt.provenance != request.provenance:
         raise ValueError("conformance authority receipt conflicts with the requested official identity")
-    if result.modelo != request.coordinate.modelo or result.period != request.coordinate.period:
+    if result.modelo != request.coordinate.modelo or result.period != request.period:
         raise ValueError("canonical export receipt conflicts with the conformance coordinate")
     if receipt.emitted_bytes != result.byte_size:
         raise ValueError("conformance extent must match the canonical export receipt")

@@ -1,0 +1,50 @@
+"""Dynamic refusal coverage for the two-channel filing-export proof port."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from cadrumo.application.filing import FilingExportProofChannel, FilingExportProofCoordinate
+from cadrumo.core import RegistryAuthorityGrade
+from cadrumo.core.resources import bundled_path
+from cadrumo.domain.calculations.registry import (
+    bundled_authority,
+)
+
+from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+
+
+def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() -> None:
+    """S84 exposes both gaps dynamically; S85 owns vector enrollment."""
+    registry = bundled_authority()
+    proof = canonical_two_channel_filing_export_proof_authority(
+        workspace_root=_REPOSITORY_ROOT,
+        registry_root=bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        authority=registry,
+        secure_replay_receipts=(),
+    )
+    assessed = 0
+    for modelo in registry.modelos:
+        for revision in modelo.revisions.values():
+            if revision.authority_grade is not RegistryAuthorityGrade.FILING:
+                continue
+            coordinate = FilingExportProofCoordinate(
+                modelo=modelo.id,
+                revision=revision.id,
+                layout_ids=tuple(layout.id for layout in revision.export_layouts),
+            )
+            assessment = proof.assess_for(coordinate)
+            assert assessment.proof is None
+            assert {item.channel for item in assessment.refusals} == {
+                FilingExportProofChannel.CONFORMANCE,
+                FilingExportProofChannel.SECURE_REPLAY,
+            }
+            assessed += 1
+    assert assessed > 0

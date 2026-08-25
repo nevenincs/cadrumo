@@ -16,9 +16,22 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from cadrumo.application.filing import (
+    FilingExportConformanceReceipt,
+    FilingExportConformanceRequest,
+    FilingExportProofAssessment,
+    FilingExportProofChannel,
+    FilingExportProofCoordinate,
+    FilingExportProofRefusal,
+    FilingExportProofRefusalReason,
+    FilingExportPublicProvenance,
+    FilingExportSecureReplayReceipt,
     FilingProducerSnapshot,
     build_runtime_schema_provider,
     export_draft,
+    prove_export_conformance,
+)
+from cadrumo.application.filing import (
+    FilingExportProof as TwoChannelFilingExportProof,
 )
 from cadrumo.application.registry import (
     FilingExportEmissionProof,
@@ -34,6 +47,7 @@ from cadrumo.core import (
     RegistryAuthorityGrade,
     sha256_hex,
 )
+from cadrumo.core.time import now
 from cadrumo.domain.calculations.registry import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -44,7 +58,7 @@ from cadrumo.domain.calculations.registry import (
     ValidatedRegistryAuthority,
     render_fixed_width_export_field,
 )
-from cadrumo.domain.filing import ModeloDraft
+from cadrumo.domain.filing import FilingExportError, ModeloDraft
 
 from .pipeline._provenance_manifest import (
     ExportFragmentTarget,
@@ -62,13 +76,19 @@ from .pipeline._semantic_map_join import join_record_design_semantics
 from .pipeline._semantic_map_loader import load_semantic_map
 
 __all__ = [
+    "CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS",
     "CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES",
+    "CanonicalTwoChannelFilingExportProofAuthority",
+    "FilingExportConformanceVector",
     "FilingExportLiveProofEntry",
     "FilingExportOfficialOffsetProbe",
     "LiveFilingExportProofAuthority",
     "canonical_live_filing_export_proof_authority",
+    "canonical_two_channel_filing_export_proof_authority",
     "verify_filing_export_payload_acceptance",
 ]
+
+_CONFORMANCE_AUTHORITY_ID = "dev.registry.filing-export-conformance"
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,6 +142,189 @@ class FilingExportLiveProofEntry:
 # generation inputs and emitted bytes.  An empty tuple is an honest authority
 # with no successful entries; it is not permission to infer proof from layouts.
 CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES: tuple[FilingExportLiveProofEntry, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class FilingExportConformanceVector:
+    """One explicitly public mechanism vector; never taxpayer truth."""
+
+    request: FilingExportConformanceRequest
+
+
+# S85 owns dynamic enrollment.  Empty inputs are deliberate and yield typed
+# per-channel refusals; they are never treated as a waiver or proof.
+CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS: tuple[FilingExportConformanceVector, ...] = ()
+
+
+class CanonicalTwoChannelFilingExportProofAuthority:
+    """Require current public conformance and operator-custodied replay."""
+
+    def __init__(
+        self,
+        *,
+        workspace_root: Path,
+        registry_root: Path,
+        source_root: Path,
+        authority: ValidatedRegistryAuthority,
+        vectors: tuple[FilingExportConformanceVector, ...],
+        secure_replay_receipts: tuple[FilingExportSecureReplayReceipt, ...],
+    ) -> None:
+        """Bind canonical source roots and unique inputs for both channels."""
+        self._workspace_root = workspace_root.resolve()
+        self._registry_root = registry_root.resolve()
+        self._source_root = source_root.resolve()
+        self._authority = authority
+        self._vectors = vectors
+        self._secure_replay_receipts = secure_replay_receipts
+        _require_unique_coordinates(tuple(item.request.coordinate for item in vectors), channel="conformance")
+        _require_unique_coordinates(
+            tuple(item.coordinate for item in secure_replay_receipts),
+            channel="secure replay",
+        )
+
+    def assess_for(self, coordinate: FilingExportProofCoordinate) -> FilingExportProofAssessment:
+        """Return a complete proof or exact missing/conflicting channel refusals."""
+        refusals: list[FilingExportProofRefusal] = []
+        conformance: FilingExportConformanceReceipt | None = None
+        vector = next((item for item in self._vectors if item.request.coordinate == coordinate), None)
+        if vector is None:
+            refusals.append(self._refusal(coordinate, FilingExportProofChannel.CONFORMANCE))
+        else:
+            try:
+                provider = build_runtime_schema_provider(
+                    self._registry_root,
+                    source_root=self._source_root,
+                    filing_year=vector.request.filing_year,
+                    period=vector.request.period,
+                    modelos=(str(coordinate.modelo),),
+                )
+                conformance = prove_export_conformance(vector.request, authority=self, schema_provider=provider)
+            except (FilingExportError, OSError, RegistryValidationError, ValueError):
+                refusals.append(
+                    self._refusal(
+                        coordinate,
+                        FilingExportProofChannel.CONFORMANCE,
+                        FilingExportProofRefusalReason.PROOF_VALIDATION_FAILED,
+                    ),
+                )
+
+        replay = next((item for item in self._secure_replay_receipts if item.coordinate == coordinate), None)
+        if replay is None:
+            refusals.append(self._refusal(coordinate, FilingExportProofChannel.SECURE_REPLAY))
+        elif not replay.attested_at <= now() < replay.valid_until:
+            refusals.append(
+                self._refusal(
+                    coordinate,
+                    FilingExportProofChannel.SECURE_REPLAY,
+                    FilingExportProofRefusalReason.PROOF_VALIDATION_FAILED,
+                ),
+            )
+        elif conformance is not None and replay.provenance != conformance.provenance:
+            refusals.append(
+                self._refusal(
+                    coordinate,
+                    FilingExportProofChannel.SECURE_REPLAY,
+                    FilingExportProofRefusalReason.PROVENANCE_MISMATCH,
+                ),
+            )
+
+        if refusals:
+            return FilingExportProofAssessment(coordinate=coordinate, refusals=tuple(refusals))
+        if conformance is None or replay is None:
+            raise AssertionError("two-channel export proof reached an impossible incomplete state")
+        return FilingExportProofAssessment(
+            coordinate=coordinate,
+            proof=TwoChannelFilingExportProof(
+                coordinate=coordinate,
+                conformance=conformance,
+                secure_replay=replay,
+            ),
+        )
+
+    def verify_conformance(self, *, request, export_result, payload) -> FilingExportConformanceReceipt:
+        """Reopen all public authorities and check official literal byte spans."""
+        coordinate = request.coordinate
+        snapshot = self._authority.snapshot(
+            coordinate.modelo,
+            filing_year=request.filing_year,
+            period=request.period.registry_token,
+            grade=RegistryAuthorityGrade.FILING,
+        )
+        layout_ids = tuple(layout.id for layout in snapshot.revision.export_layouts)
+        if snapshot.revision.id != coordinate.revision or layout_ids != coordinate.layout_ids:
+            raise RegistryValidationError("conformance vector conflicts with the law-selected revision or layouts")
+        if len(snapshot.revision.export_layouts) != 1:
+            raise RegistryValidationError("conformance proof requires exactly one generated filing layout")
+        layout = snapshot.revision.export_layouts[0]
+        generation_entry = _ConformanceGenerationEntry(
+            modelo=coordinate.modelo,
+            revision=coordinate.revision,
+            design_epoch=request.provenance.design_epoch,
+            filing_year=request.filing_year,
+        )
+        verifier = LiveFilingExportProofAuthority(
+            workspace_root=self._workspace_root,
+            registry_root=self._registry_root,
+            source_root=self._source_root,
+            authority=self._authority,
+            entries=(),
+        )
+        manifest, manifest_path = verifier._verify_generation(entry=generation_entry, layout=layout)
+        actual_provenance = FilingExportPublicProvenance(
+            official_source_ref=manifest.source_ref,
+            official_source_sha256=manifest.source_sha256,
+            design_epoch=manifest.design_epoch,
+            generation_manifest_sha256=sha256_hex(manifest_path.read_bytes()),
+            semantic_map_sha256=manifest.semantic_map_sha256,
+            render_profile_sha256=manifest.render_profile_sha256,
+            loader_semantic_sha256=manifest.loader_semantic_sha256,
+            generated_outputs=tuple(
+                {
+                    "relative_path": item.relative_path,
+                    "sha256": item.sha256,
+                }
+                for item in manifest.output_files
+            ),
+            probes=request.provenance.probes,
+        )
+        if actual_provenance != request.provenance:
+            raise RegistryValidationError("conformance vector provenance is stale or conflicts with canonical sources")
+        _verify_public_vector_probes(layout=layout, payload=payload, provenance=actual_provenance)
+        if export_result.byte_size != len(payload):
+            raise RegistryValidationError("canonical conformance writer extent conflicts with emitted bytes")
+        return FilingExportConformanceReceipt(
+            coordinate=coordinate,
+            provenance=actual_provenance,
+            authority_id=_CONFORMANCE_AUTHORITY_ID,
+            emitted_bytes=len(payload),
+            checked_official_offsets=len(actual_provenance.probes),
+        )
+
+    @staticmethod
+    def _refusal(
+        coordinate: FilingExportProofCoordinate,
+        channel: FilingExportProofChannel,
+        reason: FilingExportProofRefusalReason = FilingExportProofRefusalReason.EVIDENCE_MISSING,
+    ) -> FilingExportProofRefusal:
+        return FilingExportProofRefusal(
+            coordinate=coordinate,
+            channel=channel,
+            reason=reason,
+            authority_id=_CONFORMANCE_AUTHORITY_ID if channel is FilingExportProofChannel.CONFORMANCE else None,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class _ConformanceGenerationEntry:
+    modelo: ModeloId
+    revision: RevisionId
+    design_epoch: str
+    filing_year: int
+
+
+def _require_unique_coordinates(coordinates: tuple[FilingExportProofCoordinate, ...], *, channel: str) -> None:
+    if len(coordinates) != len(set(coordinates)):
+        raise ValueError(f"filing export {channel} proof coordinates must be unique")
 
 
 class LiveFilingExportProofAuthority:
@@ -316,6 +519,52 @@ def canonical_live_filing_export_proof_authority(
         authority=authority,
         entries=CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES,
     )
+
+
+def canonical_two_channel_filing_export_proof_authority(
+    *,
+    workspace_root: Path,
+    registry_root: Path,
+    source_root: Path,
+    authority: ValidatedRegistryAuthority,
+    secure_replay_receipts: tuple[FilingExportSecureReplayReceipt, ...],
+) -> CanonicalTwoChannelFilingExportProofAuthority:
+    """Bind canonical public vectors and operator-supplied secure attestations."""
+    return CanonicalTwoChannelFilingExportProofAuthority(
+        workspace_root=workspace_root,
+        registry_root=registry_root,
+        source_root=source_root,
+        authority=authority,
+        vectors=CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
+        secure_replay_receipts=secure_replay_receipts,
+    )
+
+
+def _verify_public_vector_probes(
+    *,
+    layout: ExportLayoutDefinition,
+    payload: bytes,
+    provenance: FilingExportPublicProvenance,
+) -> None:
+    ordered = tuple(sorted(layout.records, key=lambda record: record.order))
+    first = ordered[0]
+    prefix_extent = layout.filing_envelope.prefix_extent if layout.filing_envelope is not None else 0
+    for probe in provenance.probes:
+        if probe.record_id != str(first.id) or not first.required or first.repeat is not None:
+            raise RegistryValidationError(
+                "official conformance probe must target the first required non-repeating record",
+            )
+        field = next((item for item in first.fields if str(item.id) == probe.field_id), None)
+        if field is None or field.offset is None or field.length is None or field.literal is None:
+            raise RegistryValidationError("official conformance probe must target a positioned literal field")
+        expected_offset = prefix_extent + field.offset - 1
+        if probe.emitted_offset != expected_offset or probe.length != field.length:
+            raise RegistryValidationError("official conformance probe span conflicts with the selected layout")
+        expected = _literal_bytes(field, encoding=first.encoding)
+        if payload[probe.emitted_offset : probe.emitted_offset + probe.length] != expected:
+            raise RegistryValidationError(
+                f"conformance payload disagrees at official field {probe.record_id!r}/{probe.field_id!r}",
+            )
 
 
 def verify_filing_export_payload_acceptance(

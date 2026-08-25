@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 import pytest
 from pydantic import ValidationError
 
@@ -119,12 +121,14 @@ def test_secure_request_cannot_carry_caller_supplied_secret_inputs() -> None:
 
 
 def test_public_replay_receipt_excludes_secret_payload_facts() -> None:
+    attested_at = now()
     receipt = FilingExportSecureReplayReceipt(
         coordinate=_coordinate(),
         provenance=_provenance(),
         source_authority_id="calculation-revision-source",
         custody_authority_id="secure-object-custody",
-        attested_at=now(),
+        attested_at=attested_at,
+        valid_until=attested_at + timedelta(hours=1),
     )
 
     public_fields = receipt.model_dump()
