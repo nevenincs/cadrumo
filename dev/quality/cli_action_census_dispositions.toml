@@ -2,17 +2,6 @@
 schema_version = 3
 
 [[disposition]]
-path = "src/cadrumo/adapters/inbound/tui/_theme.py"
-enclosing_symbol = "_notice_action_target"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat "
-role = "excluded"
-reason = "src/cadrumo/adapters/inbound/tui/_theme.py:285 _notice_action_target: this bare command literal has no typed action envelope or bindings; it is excluded from recovery ownership."
-symbol = "<command-literal>"
-enclosing_function = "_notice_action_target"
-
-[[disposition]]
 path = "src/cadrumo/adapters/persistence/storage/_iva_deduction_schema.py"
 enclosing_symbol = "upgrade_bienes_inversion_v1_payload"
 candidate_role = "definition"
@@ -22,51 +11,6 @@ role = "excluded"
 reason = "src/cadrumo/adapters/persistence/storage/_iva_deduction_schema.py:90 upgrade_bienes_inversion_v1_payload: this 'remediation' value is an internal domain value, not a typed operator action; it is excluded from recovery ownership."
 symbol = "remediation"
 enclosing_function = "upgrade_bienes_inversion_v1_payload"
-
-[[disposition]]
-path = "src/cadrumo/application/filing/_calculate.py"
-enclosing_symbol = "DeclaracionCalculateSummary"
-candidate_role = "definition"
-alias = "next_action"
-action_identity = "<declaration>"
-role = "canonical_owner"
-reason = "src/cadrumo/application/filing/_calculate.py:120 DeclaracionCalculateSummary: this typed action field is the canonical source-schema owner."
-
-[[disposition]]
-path = "src/cadrumo/application/filing/_calculate.py"
-enclosing_symbol = "DeclaracionCalculateSummary._enforce_repair_hint_invariant"
-candidate_role = "producer"
-alias = "next_action"
-action_identity = "self.next_action.value"
-role = "producer"
-reason = "src/cadrumo/application/filing/_calculate.py:144 DeclaracionCalculateSummary._enforce_repair_hint_invariant: this source selects or supplies the typed action to its consumer."
-
-[[disposition]]
-path = "src/cadrumo/application/filing/_calculate.py"
-enclosing_symbol = "DeclaracionCalculateSummary._enforce_repair_hint_invariant"
-candidate_role = "transformer"
-alias = "next_action"
-action_identity = "self.next_action"
-role = "transformer"
-reason = "src/cadrumo/application/filing/_calculate.py:139 DeclaracionCalculateSummary._enforce_repair_hint_invariant: this source relays a typed action without selecting its target."
-
-[[disposition]]
-path = "src/cadrumo/application/filing/_calculate.py"
-enclosing_symbol = "summarise_calculation"
-candidate_role = "assignment"
-alias = "next_action"
-action_identity = "_next_action_for(draft.status, blocker_count=counts[BaseSeverity.ERROR])"
-role = "producer"
-reason = "src/cadrumo/application/filing/_calculate.py:227 summarise_calculation: this source selects or supplies the typed action to its consumer."
-
-[[disposition]]
-path = "src/cadrumo/application/filing/_calculate.py"
-enclosing_symbol = "summarise_calculation"
-candidate_role = "producer"
-alias = "next_action"
-action_identity = "next_action"
-role = "producer"
-reason = "src/cadrumo/application/filing/_calculate.py:231 summarise_calculation: this source selects or supplies the typed action to its consumer."
 
 [[disposition]]
 path = "src/cadrumo/application/ledger/_actions_classification.py"
@@ -1698,7 +1642,7 @@ candidate_role = "assignment"
 alias = "next_action"
 action_identity = "_profile_next_action_notice(record)"
 role = "producer"
-reason = "src/cadrumo/entrypoints/cli/_config/_manager_frontend.py:173 _overview_notices: this source selects or supplies the typed action to its consumer."
+reason = "src/cadrumo/entrypoints/cli/_config/_manager_frontend.py:174 _overview_notices: this source selects or supplies the typed action to its consumer."
 
 [[disposition]]
 path = "src/cadrumo/entrypoints/cli/_ledger.py"
@@ -2020,28 +1964,6 @@ symbol = "<command-literal>"
 enclosing_function = "rule_apply"
 
 [[disposition]]
-path = "src/cadrumo/entrypoints/cli/_modelo_behavior_support.py"
-enclosing_symbol = "_bindings_discovery_command"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat app modelo bindings list --missing"
-role = "excluded"
-reason = "src/cadrumo/entrypoints/cli/_modelo_behavior_support.py:297 _bindings_discovery_command: this bare command literal has no typed action envelope or bindings; it is excluded from recovery ownership."
-symbol = "<command-literal>"
-enclosing_function = "_bindings_discovery_command"
-
-[[disposition]]
-path = "src/cadrumo/entrypoints/cli/_modelo_behavior_support.py"
-enclosing_symbol = "_bindings_discovery_command"
-candidate_role = "command_literal"
-alias = "<command-literal>"
-action_identity = "aeat app modelo bindings list --modelo "
-role = "excluded"
-reason = "src/cadrumo/entrypoints/cli/_modelo_behavior_support.py:299 _bindings_discovery_command: this bare command literal has no typed action envelope or bindings; it is excluded from recovery ownership."
-symbol = "<command-literal>"
-enclosing_function = "_bindings_discovery_command"
-
-[[disposition]]
 path = "src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py"
 enclosing_symbol = "bindings_resolve"
 candidate_role = "assignment"
@@ -2163,6 +2085,17 @@ role = "excluded"
 reason = "src/cadrumo/entrypoints/cli/_root_landing.py:78 _quick_start_lines: this bare command literal has no typed action envelope or bindings; it is excluded from recovery ownership."
 symbol = "<command-literal>"
 enclosing_function = "_quick_start_lines"
+
+[[disposition]]
+path = "src/cadrumo/entrypoints/tui/components/widgets.py"
+enclosing_symbol = "_notice_action_target"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat "
+role = "excluded"
+reason = "src/cadrumo/entrypoints/tui/components/widgets.py:39 _notice_action_target: this bare command literal has no typed action envelope or bindings; it is excluded from recovery ownership."
+symbol = "<command-literal>"
+enclosing_function = "_notice_action_target"
 
 [[authored_message_exclusion]]
 fingerprint = "src/cadrumo/core/errors/__init__.py|CadrumoError.__init__|super().__init__|text|9d1ae9a2c7cae9cacfd6322a57aeaebbbae71a0eda0bf628dc41764acf1f5f5a|1"

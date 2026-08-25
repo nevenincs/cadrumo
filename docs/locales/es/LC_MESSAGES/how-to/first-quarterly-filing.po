@@ -173,12 +173,10 @@ msgid ""
 "it calculates. Attach in that order: a draft bundles its evidence when you verify it, so an invoice attached "
 "afterwards does not reach the filing."
 msgstr ""
-"El resultado de la verificación es la señal de que el borrador está listo. Cuando `granted_verificado_completo` está "
-"en true, exporta el archivo. La exportación se niega hasta que cada fila de gasto deducible lleve vinculada la "
-"evidencia de la factura de compra; este ejemplo de primera presentación omite esa evidencia, así que la exportación y"
-" el marcador de presentado posterior al portal se muestran como paneles ilustrativos. La cadena completa de evidencia"
-" a exportación se ejecuta de principio a fin, realmente, en [Preparar una presentación de IVA con el Modelo "
-"303](modelo-303.md):"
+"El resultado de la verificación indica que el borrador está listo. La verificación se niega hasta que cada fila de "
+"gasto deducible tenga vinculada la evidencia de la factura de compra, por lo que este ejemplo registra la factura del "
+"proveedor y la adjunta antes de calcular. Hazlo en ese orden: el borrador incorpora su evidencia al verificarlo, de "
+"modo que una factura adjuntada después no llega a la presentación."
 
 #: ../../how-to/first-quarterly-filing.md:96
 msgid ""
@@ -216,4 +214,3 @@ msgstr "[El flujo de presentación](filing-spine.md)"
 #: ../../how-to/first-quarterly-filing.md:113
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Subir tu modelo exportado en el portal de la AEAT](file-at-aeat.md)"
-

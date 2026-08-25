@@ -10,6 +10,7 @@ from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
     InputKind,
+    NoRevisionForPeriodError,
     RegistryValidator,
     build_snapshot,
 )
@@ -84,7 +85,7 @@ def test_the_pre_2011_ejercicios_resolve_to_no_revision(filing_year: int) -> Non
     """
     modelo, catalogues = _load_modelo_347()
 
-    with pytest.raises(Exception) as caught:
+    with pytest.raises(NoRevisionForPeriodError) as caught:
         build_snapshot(
             modelo,
             catalogues,

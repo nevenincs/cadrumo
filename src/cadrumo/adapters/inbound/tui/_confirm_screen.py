@@ -36,7 +36,7 @@ _CONFIRM_DIALOG_CSS = """
 #confirm-actions Button { margin: 0 0 0 1; }
 """
 """Styling carried by the dialog itself, mirroring
-:mod:`~cadrumo.adapters.inbound.tui._field_edit_screen`: a host that did not
+:mod:`~cadrumo.entrypoints.tui.profile.editor`: a host that did not
 happen to declare these rules would render the dialog unstyled otherwise."""
 
 

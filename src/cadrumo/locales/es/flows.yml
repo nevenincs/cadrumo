@@ -72,6 +72,9 @@ flows:
         %{unchanged} ya coincidentes, %{diverging} discrepantes.'
       censal_pull_no_provider: Elija cómo se identifica ante la AEAT antes de leer
         sus datos censales.
+      censal_pull_review_applied: Se aplicó la propuesta censal exacta revisada de la AEAT.
+      censal_pull_review_rejected: Se rechazó la propuesta censal revisada de la AEAT;
+        el perfil no cambió.
       certificate: Certificado
       certificate_active: Certificado activo
       certificate_done: 'Identificación: %{provider}; certificado activo: %{name}.'
@@ -101,6 +104,12 @@ flows:
       working: Ejecutando {action}...
     actions:
       section: Acciones
+    censal_review:
+      apply: Aplicar esta propuesta exacta
+      decision: Decisión
+      reject: Rechazar sin modificar el perfil
+      required: Elija aplicar o rechazar.
+      title: Revise la propuesta censal exacta de la AEAT
     choice_unavailable: Opción no disponible
     column:
       field: Campo

@@ -33,29 +33,13 @@ from sqlalchemy import event
 
 from ......core import SecureObjectWrite
 from ......core.classification import SensitivityClass
-from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError, SecureObjectRevisionConflictError
-from ...tests.engine_bootstrap import bootstrap_sqlite_engine
-from ..secure_objects import SecureObjectRepository
+from ._secure_objects_support import _ephemeral_secure_repo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NAMESPACE = "cadrumo-test.write.batching"
 _WRITTEN_AT = datetime(2026, 5, 22, 18, 0, 0, tzinfo=UTC)
-
-
-@contextmanager
-def _ephemeral_secure_repo(
-    tmp_path: Path,
-    database_name: str,
-) -> Iterator[tuple[Path, Any, SecureObjectRepository]]:
-    db_path = tmp_path / database_name
-    with EphemeralMasterKeyProvider():
-        engine = bootstrap_sqlite_engine(db_path)
-        try:
-            yield db_path, engine, SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
 
 
 def _write(key: str, payload: bytes, *, written_at: datetime = _WRITTEN_AT) -> SecureObjectWrite:

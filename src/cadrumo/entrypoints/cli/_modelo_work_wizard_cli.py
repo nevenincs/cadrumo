@@ -1,16 +1,16 @@
 # ruff: noqa: E501
-"""Behavior for the guided ``aeat app modelo work wizard`` command.
+"""Behavior for the guided Modelo work wizard command.
 
 An operator knows "gross income" and "deductible expenses" in plain language, not
 that Modelo 130 casilla ``06`` is "Retenciones e ingresos a cuenta". The
 wizard walks a work unit's *outstanding* manual-input surface —
 ``input_kind = "manual"`` casillas plus any binding or relation the registry
-still needs (the same set ``aeat app modelo bindings list --missing``
+still needs (the same set the canonical bindings discovery action
 surfaces) — one question at a time, showing each item's official label, help
 text, and legal grounding before asking for a value. Every value the operator
 confirms then flows through the exact same
 :func:`~application.modelo.calculate_modelo_work_revision` composition
-path that ``aeat app modelo work calculate`` uses (via
+path that the canonical calculation action uses (via
 :func:`~._modelo_cli_support.work_calculate_input_bundle_from_cli`); the
 wizard is a guided front end over that one calculation path, not a second one
 (``aeat-architecture-boundaries``).
@@ -67,6 +67,7 @@ from ...application.modelo import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     calculate_modelo_work_revision,
+    modelo_work_wizard_retry_exhausted_precondition,
     profile_resolvable_binding_ids,
     registry_bindings_for_scope,
     registry_casillas_for_registry_scope,
@@ -78,8 +79,8 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import InputKind, RegistrySnapshotError, RegistryValidationError
 from ...domain.user_profile import ProfileNotFoundError
-from ._common import activate_subcommand_output_language
-from ._errors import CliOutboundPayloadBoundaryError
+from ._common import activate_subcommand_output_language, attach_cli_policy_verdict
+from ._errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
     MISSING_INPUT_TRANSLATED_MESSAGES,
@@ -209,12 +210,19 @@ def _drive_wizard_calculation(
             continue
         _emit_wizard_result(ctx, calculation_result, tuple(prompted))
         return
-    raise typer.BadParameter(
-        tr(
-            "cli.app.modelo.work.wizard_retry_exhausted",
-            default="The wizard could not resolve every calculation input after {limit} follow-up prompts. Run `aeat app modelo work calculate` directly and supply the remaining --binding / --relation values by hand.",
-            limit=_MAX_MISSING_INPUT_RETRIES,
-        )
+    failure = modelo_work_wizard_retry_exhausted_precondition(
+        work_unit_id=unit.work_unit_id,
+        retry_limit=_MAX_MISSING_INPUT_RETRIES,
+    )
+    raise attach_cli_policy_verdict(
+        CliRefusedBoundaryError(
+            tr(
+                "cli.app.modelo.work.wizard_retry_exhausted",
+                default="The wizard could not resolve every calculation input after {limit} follow-up prompts.",
+                limit=_MAX_MISSING_INPUT_RETRIES,
+            )
+        ),
+        verdict=failure.verdict,
     )
 
 
@@ -552,15 +560,11 @@ def _emit_wizard_result(
     from ._common import _emit_envelope
 
     calculation_revision = calculation_result.revision
-    unit_for_modality = calculation_result.work_unit
     saved_confirmation = tr(
         "cli.app.modelo.work.wizard_saved",
-        default="Saved as draft calculation revision %{revision_id} (state: %{state}). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period %{period}` and re-inspect this one with `aeat app modelo work revision %{revision_id}`.",
+        default="Saved as draft calculation revision %{revision_id} (state: %{state}). It is persisted and can be resumed later.",
         revision_id=calculation_revision.calculation_revision_id,
         state=calculation_revision.state.value,
-        modelo=unit_for_modality.modelo,
-        year=unit_for_modality.filing_year,
-        period=unit_for_modality.period.registry_token,
     )
     prompted_payload = tuple(
         (

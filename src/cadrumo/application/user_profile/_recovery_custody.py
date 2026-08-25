@@ -60,12 +60,12 @@ if TYPE_CHECKING:
     from pathlib import Path
     from uuid import UUID
 
-    from ...adapters.persistence.storage import RecoveryKey
     from ._aggregate import CommittedProfileView, ProfileRestoreAuthority
     from ._custody_ports import (
         ProfileCustodyEnvelopePort,
         ProfileCustodyRecoveryEnvelopePort,
         ProfileCustodySentinelPort,
+        ProfileRecoveryKeyPort,
     )
 
 _RECOVERY_KDF_SALT_BYTES = 16
@@ -83,7 +83,7 @@ class ProfileRecoveryEnrollment:
     """
 
     envelope: ProfileCustodyRecoveryEnvelopePort
-    recovery_key: RecoveryKey
+    recovery_key: ProfileRecoveryKeyPort
 
 
 @dataclass(frozen=True, slots=True)

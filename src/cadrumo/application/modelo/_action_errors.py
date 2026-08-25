@@ -32,11 +32,12 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import cast
 
+from ...core import ActionEvidenceProvenance
 from ...core.errors import CoreNotFoundError
 from ...domain.modelos import ModeloError
 from ..operator_actions import PreconditionVerdict
 from ..workflow import WorkflowResult
-from ._preconditions import ModeloPreconditionFailure
+from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
     "ley-58-2003:art-119",
@@ -111,8 +112,42 @@ class VerificationReportNotFoundError(ModeloError, KeyError):
     """Raised when a verification report lookup fails."""
 
 
-class AmendmentEvidenceMissingError(ModeloError):
+class AmendmentEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when the modelo-amend path lacks imported official evidence."""
+
+
+def amendment_evidence_missing_precondition(
+    *,
+    work_unit_id: str,
+    filing_record_id: str,
+) -> ModeloPreconditionFailure:
+    """Return the declared no-action refusal for an unattested amendment baseline."""
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.amend_wizard",
+        scenario_id="modelo.work.amend_wizard.external_evidence.missing",
+        evidence_id="modelo.work.amend_wizard.external_evidence",
+        evidence_values={
+            "work_unit_id": work_unit_id,
+            "filing_record_id": filing_record_id,
+            "external_evidence_present": False,
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+    )
+
+
+def modelo_work_wizard_retry_exhausted_precondition(
+    *,
+    work_unit_id: str,
+    retry_limit: int,
+) -> ModeloPreconditionFailure:
+    """Return the declared no-action outcome after the wizard exhausts its retries."""
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.wizard",
+        scenario_id="modelo.work.wizard.inputs.retry_exhausted",
+        evidence_id="modelo.work.wizard.retry_limit",
+        evidence_values={"work_unit_id": work_unit_id, "retry_limit": retry_limit},
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+    )
 
 
 class AmendmentM303RectificativaMotiveError(ModeloError):
@@ -366,4 +401,6 @@ __all__ = [
     "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
     "WorkUnitRevisionDivergenceError",
+    "amendment_evidence_missing_precondition",
+    "modelo_work_wizard_retry_exhausted_precondition",
 ]

@@ -34,6 +34,7 @@ Submodules
    cadrumo.application.calculations._per_grupo_member_keys
    cadrumo.application.calculations._ports
    cadrumo.application.calculations._prorrata_regularizacion
+   cadrumo.application.calculations._registry_preconditions
    cadrumo.application.calculations._relation_prefill
    cadrumo.application.calculations._revision_carry_gate
    cadrumo.application.calculations._row_set_assembly

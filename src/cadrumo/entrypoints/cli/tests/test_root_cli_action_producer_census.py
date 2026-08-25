@@ -1,4 +1,4 @@
-"""Closed producer census for the S88 root CLI action migration."""
+"""Closed producer census for the root CLI action migration."""
 
 from __future__ import annotations
 

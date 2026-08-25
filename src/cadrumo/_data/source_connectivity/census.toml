@@ -239,7 +239,7 @@ completion_criterion = "A source owner supplies direction, relationship type, st
 candidate_id = "rows.refund-operation"
 disposition = "ingress_blocked"
 owner = "source-connectivity-campaign"
-review_condition = "Modelo 360 declares refund-operation row bindings and the worksheet pull has a typed assembler, but assembled observations have no durable source repository and calculation-revision handoff owned by a live resolver."
+review_condition = "Reopen only when a secure owner retains the full official M360 request/document carrier: refund country/year/period, operation type, invoice/import document number/date, base, VAT quota, deductible proportion, requested amount, currency, nature (including Other description), and supplier VAT identity/name/address; every document has immutable durable identity/fingerprint; and S98 proves encrypted revision persistence/replay, diagnostics, review, and supported official repeated-record export."
 expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/application/calculations/_row_set_assembly.py:174",
@@ -262,8 +262,9 @@ summary = "Worksheet rows dispatch to the typed refund-operation observation ass
 
 [entries.bounded_follow_up]
 action_id = "source-casilla.rows-refund-ingress"
+owner = "source-connectivity-campaign"
 deadline = 2026-11-30
-completion_criterion = "A bounded slice persists assembled refund observations securely and proves resolver ownership, diagnostics, provenance, encrypted revision round trip, and operator reachability."
+completion_criterion = "Keep ingress_blocked until the review condition is satisfied: the full carrier, secure owner, immutable durable identity and fingerprint, and S98 proof must all exist before resolver enrollment or any connected claim; S99 independently reviews that evidence."
 
 [[entries]]
 candidate_id = "rows.donativo-donor"
@@ -277,12 +278,12 @@ capability_locators = [
 capability_ids = ["row_assembler:per_donativo_donor"]
 advisory_destination_refs = ["modelo:182:rows:donativo-donor"]
 registry_destination_candidates = [
-  { kind = "binding_source", modelo_id = "182", revision_id = "2007-y-siguientes", filing_year = 2007, period = "2007 0A", source_kind = "donativo_donor" },
+  { kind = "binding_source", modelo_id = "182", revision_id = "2025", filing_year = 2025, period = "2025 0A", source_kind = "donativo_donor" },
 ]
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/_data/registry/aeat/modelos/182/revisions/2007-y-siguientes/bindings/0001-bindings.toml:3"
+reference = "src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/bindings/0001-bindings.toml:3"
 summary = "Validated Modelo 182 bindings already declare the donor source family."
 
 [[entries.grounding]]

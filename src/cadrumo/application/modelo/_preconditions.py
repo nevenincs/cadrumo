@@ -162,6 +162,30 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
     _profile(
+        "modelo.readiness",
+        "modelo.readiness.export_layout.renderable",
+        "modelo.readiness.export_layout.unrenderable",
+        action_id="operator.modelo.describe",
+    ),
+    _profile(
+        "modelo.work.amend_wizard",
+        "modelo.work.amend_wizard.external_evidence.present",
+        "modelo.work.amend_wizard.external_evidence.missing",
+    ),
+    _profile(
+        "modelo.work.wizard",
+        "modelo.work.wizard.inputs.resolved",
+        "modelo.work.wizard.inputs.retry_exhausted",
+    ),
+    *(
+        _profile(
+            leaf,
+            "modelo.iva_wallet.taxpayer.identity_available",
+            f"{leaf}.taxpayer_identity_missing",
+        )
+        for leaf in ("modelo.iva_wallet.seed", "modelo.iva_wallet.correct", "modelo.iva_wallet.override")
+    ),
+    _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.borrador_snapshot.active",
         "modelo.work.calculate.borrador_snapshot.load_failed",

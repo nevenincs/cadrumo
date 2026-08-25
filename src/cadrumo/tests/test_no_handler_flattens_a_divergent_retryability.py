@@ -28,7 +28,7 @@ excluded rather than assumed:
   this shape at roughly thirty sites, and whether those codes should be
   retryable at all is an open question for whoever owns that surface --
   `test_custody_retryable_codes_are_declared` records the same boundary. Gating
-  them here would be this campaign answering a question it does not own.
+  them here would make this test answer a question it does not own.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ from ._inventory import SRC_CADRUMO, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-#: The packages this campaign answers for.
+#: The packages covered by this check.
 _SCOPED_PACKAGES = ("application/user_profile", "adapters/persistence/storage")
 
 #: A boundary that applies one answer to two opposite situations.
@@ -131,7 +131,7 @@ def _flattening_handlers(tree: ast.AST, divergent: dict[str, set[str]]) -> list[
 
 
 def _scoped_modules() -> list[Path]:
-    """Return the production modules of the packages this campaign answers for."""
+    """Return the production modules covered by this check."""
     modules: list[Path] = []
     for package in _SCOPED_PACKAGES:
         root = SRC_CADRUMO / Path(package)

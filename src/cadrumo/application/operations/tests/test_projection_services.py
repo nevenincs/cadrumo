@@ -88,14 +88,14 @@ from ..persistence import (
     operation_conflict_scope_reference,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 _NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
 _OPERATION_ID = "1" * 64
 _INTERACTION_ID = "2" * 64
 _TOKEN = "3" * 64
 _PROPOSAL = "4" * 64
 _DEFINITION_ID = "operations.projection.test"
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 class ProjectionRequest(BaseModel):

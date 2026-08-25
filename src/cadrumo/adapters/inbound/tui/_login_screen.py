@@ -40,6 +40,7 @@ from textual.widgets import Button, Footer, Input, Label, Select, Static
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import tr
+from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes
 from ....entrypoints.tui.components.widgets import ContentScroll
 from ._credential_screen import (
@@ -48,7 +49,6 @@ from ._credential_screen import (
     CredentialAttempt,
     run_credential_app,
 )
-from ._status_bar import PinnedStatusBar
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence

@@ -29,6 +29,22 @@ applies_from = 1999-11-20
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22309"
 review_status = "reviewed"
 
+[sources."aeat-dr-194-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2019"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_194/files/03-194-orden-de-18-de-enero-de-1999-actualizado-por-orden-hac-1276-2019.pdf"
+sha256 = "792cd3ab3f1e94ce7afd62a6fa37710253aec7b801e3097ad27741f90a657d5a"
+bytes = 288829
+retrieved_at = 2026-08-15
+# The AEAT historical-index title is retained verbatim despite the PDF filename
+# (DR194_2016.pdf); the document itself identifies its design as Ejercicio 2019.
+applies_from = 2019-01-01
+applies_to = 2019-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR194_2016.pdf"
+review_status = "reviewed"
+
 [sources."aeat-dr-194-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -59,6 +75,10 @@ sha256 = "4a738a126ddb465aac236b687aa25441b7cb71ec4b0ef6ea940096a3747b2651"
 bytes = 183268
 retrieved_at = 2026-07-21
 applies_from = 2024-01-01
+# This official edition identifies ejercicio 2024 only. No successor is
+# bundled, so retaining an open-ended application window would manufacture
+# 2025-and-later design authority.
+applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_194_2024.pdf"
 review_status = "reviewed"
 

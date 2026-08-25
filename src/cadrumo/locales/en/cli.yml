@@ -1976,10 +1976,10 @@ cli:
         pull_divergences_notice: 'The census authority reports {count} field(s) differently
           from your declared answer: {axes}. Your answer stands; resolve each one
           yourself.'
-        pull_help: Read your identity and address from AEAT's censal record and preview
-          or enroll them onto the active profile.
-        pull_preview_notice: 'Preview only: nothing was written to the profile. Re-run
-          with --apply to enroll these facts.'
+        pull_apply_help: Acquire once and open the exact reviewed censo proposal before applying.
+        pull_help: Preview your identity and address from AEAT's censal record, or review
+          and apply one exact proposal through the canonical resumable operation.
+        pull_preview_notice: 'Preview only: nothing was written to the profile.'
         pull_verified_tier_notice: These facts were read from the census authority
           itself, so the censo enrolment counts as verified.
         pull_withheld_notice: 'The values for {count} field(s) are withheld from output:

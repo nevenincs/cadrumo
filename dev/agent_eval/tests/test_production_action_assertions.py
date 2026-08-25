@@ -1,4 +1,4 @@
-"""Tests for observed condition/action assertions derived from S42 coverage."""
+"""Tests for observed condition/action assertions derived from the production matrix."""
 
 from __future__ import annotations
 

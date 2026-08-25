@@ -23,7 +23,7 @@ import pytest
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...storage import OutboundStoragePermissionError, OutboundStorageValidationError
 from .._document_link_resolver import list_drive_folder_documents
-from ._drive_media_server import drive_files_list_endpoint
+from .drive_media_server import drive_files_list_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

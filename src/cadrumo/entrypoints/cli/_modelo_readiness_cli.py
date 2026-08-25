@@ -4,29 +4,17 @@ from __future__ import annotations
 
 import typer
 
-from ...application.operator_actions import ActionReference
+from ...application.modelo import modelo_export_readiness_refusal
 from ...application.state_projection import (
-    MODELO_READINESS_MISSING_PROFILE_ACTION,
-    OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE,
-    OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE,
     ModeloReadinessRequest,
     ProjectionModeloReadiness,
     build_operator_state_projection,
 )
-from ...core import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    Period,
-    PeriodError,
-)
-from ...core.json_contract import (
-    Notice,
-    NoticeSeverity,
-    ResolvedActionArgument,
-)
+from ...core import Period, PeriodError
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import ProfileNotFoundError
-from ._common import _emit_envelope, _no_active_profile_refusal, resolve_notice_action
+from ._common import _emit_envelope, _no_active_profile_refusal, resolve_cli_precondition_action
 from ._errors import CliRefusedBoundaryError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
@@ -128,7 +116,6 @@ def _readiness_result(
                 label=req.label,
                 legal_refs=list(req.legal_refs),
                 modelos=list(req.modelos),
-                operator_action=MODELO_READINESS_MISSING_PROFILE_ACTION,
             )
             for req in report.missing
         ],
@@ -137,7 +124,6 @@ def _readiness_result(
                 binding_id=req.binding_id,
                 source=req.source,
                 input_channel=req.input_channel,
-                operator_action=OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE[req.source],
             )
             for req in report.missing_bindings
         ],
@@ -150,7 +136,6 @@ def _readiness_result(
                 transaction_id=issue.transaction_id,
                 reason=issue.reason.value,
                 detail=issue.detail,
-                operator_action=OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE[issue.reason],
             )
             for issue in report.ledger_issues
         ],
@@ -165,7 +150,13 @@ def _readiness_lines(
     filing_year: int,
     period: str | None,
 ) -> list[str]:
-    export_context = _export_readiness_context(report)
+    export_refusal = modelo_export_readiness_refusal(
+        modelo=report.modelo,
+        filing_year=report.filing_year,
+        period=report.period,
+        registry_ready=report.registry_ready,
+    )
+    export_context = None if export_refusal is None else export_refusal.context
     lines = [
         f"profile_id\t{report.profile_id}",
         f"modelo\t{modelo}",
@@ -183,13 +174,6 @@ def _readiness_lines(
         f"missing\t{len(report.missing)}",
         f"missing_bindings\t{len(report.missing_bindings)}",
     ]
-    if report.missing_bindings:
-        command_period = period or report.period.registry_token
-        lines.append(
-            "missing_bindings_command\t"
-            f"aeat app modelo bindings list --modelo {modelo} --year {filing_year} "
-            f"--period {command_period} --missing",
-        )
     lines.extend(_readiness_ledger_export_lines(report, export_context))
     lines.extend(_readiness_detail_lines(report))
     if _ledger_ready_but_bindings_missing(report):
@@ -213,7 +197,6 @@ def _readiness_ledger_export_lines(
         f"ledger_issues\t{len(report.ledger_issues)}",
         f"export_ready\t{export_context is None}",
         f"export_refusal\t{export_context['reason'] if export_context is not None else ''}",
-        _readiness_finish_line(export_context),
     ]
 
 
@@ -267,27 +250,19 @@ def _readiness_notices(report: ProjectionModeloReadiness) -> tuple[Notice, ...]:
                 },
             ),
         )
-    if export_context := _export_readiness_context(report):
+    if export_refusal := modelo_export_readiness_refusal(
+        modelo=report.modelo,
+        filing_year=report.filing_year,
+        period=report.period,
+        registry_ready=report.registry_ready,
+    ):
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="modelo.readiness.export_unsupported",
-                message=(
-                    f"Modelo {report.modelo} cannot produce a local fichero-BOE export: {export_context['reason']}."
-                ),
-                action=resolve_notice_action(
-                    action=ActionReference(action_id="operator.modelo.describe"),
-                    argument_bindings=(
-                        ResolvedActionArgument(
-                            argument_name="modelo",
-                            status=ActionArgumentStatus.RESOLVED,
-                            value=report.modelo,
-                            source=ActionArgumentSource.VERDICT_CONTEXT,
-                            source_key="modelo",
-                        ),
-                    ),
-                ),
-                context=export_context,
+                message=(f"Modelo {report.modelo} cannot produce a local fichero-BOE export: {export_refusal.reason}."),
+                action=resolve_cli_precondition_action(export_refusal.precondition_failure.verdict),
+                context=export_refusal.context,
             ),
         )
     return tuple(notices)
@@ -295,37 +270,6 @@ def _readiness_notices(report: ProjectionModeloReadiness) -> tuple[Notice, ...]:
 
 def _ledger_ready_but_bindings_missing(report: ProjectionModeloReadiness) -> bool:
     return report.ledger_ready is True and not report.binding_ready and bool(report.missing_bindings)
-
-
-def _export_readiness_context(report: ProjectionModeloReadiness) -> dict[str, str] | None:
-    if not report.registry_ready:
-        return None
-    from ...application.filing import build_runtime_schema_provider, export_layout_renderability_reason
-
-    provider = build_runtime_schema_provider(
-        filing_year=report.period.filing_year,
-        period=report.period,
-        modelos=(report.modelo,),
-    )
-    subview = provider.get_subview(report.modelo)
-    layout = subview.export_layouts[0] if subview.export_layouts else None
-    reason = export_layout_renderability_reason(report.modelo, layout)
-    if reason is None:
-        return None
-    context = {
-        "modelo": str(report.modelo),
-        "reason": reason,
-    }
-    if layout is not None:
-        context["layout_id"] = str(layout.id)
-        context["layout_format"] = str(layout.format)
-    return context
-
-
-def _readiness_finish_line(export_context: dict[str, str] | None) -> str:
-    if export_context is not None:
-        return "finish_line\tlocal calculation, verification, and internal filing only; fichero-BOE export unsupported"
-    return "finish_line\texport verified-complete revision via 'aeat app modelo export' (local finish line)"
 
 
 __all__ = ["modelo_readiness"]

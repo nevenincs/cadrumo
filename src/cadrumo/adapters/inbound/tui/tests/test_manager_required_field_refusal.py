@@ -24,10 +24,11 @@ from .....application.user_profile import (
 )
 from .....core import require_active_bucket_id
 from .....entrypoints.cli import persist_active_profile_field
+from .....entrypoints.tui.components.status import PinnedStatusBar
+from .....entrypoints.tui.profile.overview import ProfileManagerApp
 from .....tests.manager_pilot import wait_until_settled
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
-from .. import ProfileManagerApp
 
 pytestmark = [
     pytest.mark.integration,
@@ -74,14 +75,12 @@ def _stored() -> dict[str, object | None]:
 
 
 def _notice(app: ProfileManagerApp) -> str:
-    from .. import PinnedStatusBar
-
     return app.query_one("#manager-status", PinnedStatusBar).message
 
 
 async def _submit(app, pilot, path: str, value: str) -> None:
     """Drive one real edit: open the dialog, type, press save."""
-    from .._manager_screen import FieldEditScreen
+    from .....entrypoints.tui.profile.editor import FieldEditScreen
 
     field = app._field_by_key[path]
     app.push_screen(FieldEditScreen(field), app._apply_edit_for(field))

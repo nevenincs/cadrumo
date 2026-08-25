@@ -58,8 +58,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError, model_validator
 
-from ...adapters.persistence.storage import custody, master_key
-from ...adapters.persistence.storage.custody import profile_session_path
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     BucketPointer,
@@ -84,21 +82,22 @@ from ...domain.user_profile import ProfileNotFoundError, UserProfileError
 from ._authentication import ProfilePasswordProofOperation
 from ._capsule_record import ProfileRecordSession
 from ._custody_ports import (
-    ProfileBucketSessionPort,
     ProfileCustodyLocalRecordStore,
     ProfileCustodyPasswordMaterialPort,
-    ProfilePersistedSessionPort,
-    ProfileSessionResumeOutcomePort,
     default_profile_bucket_event_history_repository,
     default_profile_custody_local_record_store,
+    load_profile_custody_password_material,
     map_profile_authentication_proof_failure,
-    profile_advance_session_idle_deadline,
-    profile_bind_bucket_session,
     profile_is_keyring_unavailable,
-    profile_is_persisted_session,
-    profile_session_serves_bucket,
     refuse_profile_login_without_password_channel,
     unlock_profile_custody_password,
+)
+from ._login_session_port import (
+    ProfileBucketSessionPort,
+    ProfileLoginSessionPort,
+    ProfilePersistedSessionPort,
+    ProfileSessionResumeOutcomePort,
+    profile_login_session_port,
 )
 from ._profile_pointer_transaction import (
     ActiveProfilePointerTransaction,
@@ -119,6 +118,11 @@ _log = get_logger(__name__)
 
 _HANDOVER_JOURNAL_FILENAME = "profile-login-handover.v1.json"
 _HANDOVER_JOURNAL_MAX_BYTES = 4 * 1024
+
+
+def _login_sessions() -> ProfileLoginSessionPort:
+    """Resolve the login-session aggregate composed for this host context."""
+    return profile_login_session_port()
 
 
 class _HandoverPhase(StrEnum):
@@ -611,8 +615,8 @@ def _revoke_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> 
         storage_root: The Cadrumo storage root owning the bucket keystore.
         bucket_id: Identifier of the profile whose stored session to revoke.
     """
-    custody.delete_profile_session(storage_root=storage_root, profile_id=UUID(bucket_id))
-    master_key.reset_login_throttle(storage_root=storage_root, bucket_id=bucket_id)
+    _login_sessions().delete_acceleration_receipt(storage_root=storage_root, profile_id=UUID(bucket_id))
+    _login_sessions().reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
 
 
 def close_profile_session_artefacts(*, storage_root: Path, bucket_id: str) -> None:
@@ -655,7 +659,7 @@ def logout_active_profile() -> str | None:
     selection to revoke, otherwise ``None`` for an idempotent logged-out call.
     """
     storage_root = effective_storage_root()
-    live = master_key.current_active_bucket_session()
+    live = _login_sessions().current_session()
     live_bucket_id = live.bucket_id if live is not None else None
     with active_profile_pointer_transaction(storage_root) as pointer_transaction:
         selected = pointer_transaction.read()
@@ -663,7 +667,7 @@ def logout_active_profile() -> str | None:
         target_ids = _distinct_bucket_ids(live_bucket_id, selected_bucket_id)
         if not target_ids:
             return None
-        master_key.close_active_bucket_session()
+        _login_sessions().close_active_session()
         for bucket_id in target_ids:
             close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
         pointer_transaction.clear()
@@ -678,11 +682,11 @@ def revoke_live_profile_secret_for_custody_delete(*, bucket_id: str) -> ProfileC
     owner performs both the identity query and the zeroisation; callers only
     receive a durable, non-secret outcome they can receipt.
     """
-    session = master_key.current_active_bucket_session()
-    if not profile_session_serves_bucket(session, bucket_id):
+    session = _login_sessions().current_session()
+    if not _login_sessions().session_serves_bucket(session, bucket_id):
         return ProfileCustodySessionOwnerEffect.VERIFIED_ABSENT
-    master_key.close_active_bucket_session()
-    if profile_session_serves_bucket(master_key.current_active_bucket_session(), bucket_id):
+    _login_sessions().close_active_session()
+    if _login_sessions().session_serves_bucket(_login_sessions().current_session(), bucket_id):
         raise UserProfileError(
             translated_message="errors.integrity.integrity_storage_profile_custody_record",
             context={"bucket_id": bucket_id, "owner": "process-secret-revocation"},
@@ -696,7 +700,7 @@ def remove_profile_session_acceleration_for_custody_delete(
     bucket_id: str,
 ) -> ProfileCustodySessionOwnerEffect:
     """Remove the actual persisted session acceleration and verify its absence."""
-    path = profile_session_path(storage_root=storage_root, profile_id=UUID(bucket_id))
+    path = _login_sessions().acceleration_receipt_path(storage_root=storage_root, profile_id=UUID(bucket_id))
     was_present = os.path.lexists(path)
     close_profile_session_artefacts(storage_root=storage_root, bucket_id=bucket_id)
     if os.path.lexists(path):
@@ -758,7 +762,7 @@ def bind_resumed_profile_session(
     # The session takes and owns its own copy.
     try:
         idle_minutes, _ = _bucket_session_windows()
-        session = master_key.BucketSession.open_resumed(
+        session = _login_sessions().open_resumed_session(
             bucket_id=bucket_id,
             dek=bytes(dek),
             idle_minutes=idle_minutes,
@@ -768,10 +772,10 @@ def bind_resumed_profile_session(
             storage_root=storage_root,
         )
     finally:
-        custody.zeroise(dek)
+        _login_sessions().zeroise_owned_buffer(dek)
 
     session.touch(instant)
-    profile_bind_bucket_session(session)
+    _login_sessions().bind_session(session)
     _activate_record_authority(bucket_id=bucket_id, dek=session.dek, storage_root=storage_root)
     _persist_advanced_idle_deadline(
         storage_root=storage_root,
@@ -790,7 +794,7 @@ def _activate_record_authority(*, bucket_id: str, dek: bytes, storage_root: Path
     has opened therefore makes every fact consumer prove both the session and
     the exact capsule it reads.
     """
-    material = custody.load_committed_profile_password_material(UUID(bucket_id), root=storage_root)
+    material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
     activate_profile_record_session(ProfileRecordSession.from_envelope(envelope=material.envelope, dek=dek))
 
 
@@ -802,9 +806,9 @@ def _resume_acceleration_receipt(
 ) -> tuple[ProfileSessionResumeOutcomePort, bytearray | None]:
     """Resume only against the envelope that is current for this capsule."""
     profile_id = UUID(bucket_id)
-    material = custody.load_committed_profile_password_material(profile_id, root=storage_root)
+    material = load_profile_custody_password_material(profile_id, root=storage_root)
     envelope = material.envelope
-    return custody.resume_profile_session(
+    return _login_sessions().resume_acceleration_receipt(
         storage_root=storage_root,
         profile_id=profile_id,
         custody_generation=envelope.password_generation,
@@ -827,12 +831,12 @@ def _persist_advanced_idle_deadline(
     it only costs an earlier idle expiry, which is the fail-closed
     direction.
     """
-    if not profile_is_persisted_session(record):  # pragma: no cover - typed at the call site
+    if not _login_sessions().is_persisted_receipt(record):  # pragma: no cover - typed at the call site
         return
     if new_idle_deadline <= record.idle_deadline:
         return
     try:
-        advanced = profile_advance_session_idle_deadline(
+        advanced = _login_sessions().advance_acceleration_idle_deadline(
             storage_root=storage_root,
             profile_id=profile_id,
             record=record,
@@ -945,7 +949,7 @@ def _can_resume_idempotent_login(
     selected = attempt.selected
     if selected is None or selected.bucket_id != attempt.target.bucket_id:
         return False
-    return live_session is None or profile_session_serves_bucket(live_session, attempt.target.bucket_id)
+    return live_session is None or _login_sessions().session_serves_bucket(live_session, attempt.target.bucket_id)
 
 
 def _resume_idempotent_login_if_allowed(
@@ -954,7 +958,7 @@ def _resume_idempotent_login_if_allowed(
     now: datetime,
 ) -> ProfilePersistedSessionPort | None:
     """Resume only when the durable pointer and local binding already agree."""
-    live_before = master_key.current_active_bucket_session()
+    live_before = _login_sessions().current_session()
     if not _can_resume_idempotent_login(attempt=attempt, live_session=live_before):
         return None
     return _resume_for_idempotent_login(bucket_id=attempt.target.bucket_id, now=now)
@@ -1035,8 +1039,8 @@ def _resume_for_idempotent_login(
     anchored to the AAD-bound, deadline-authenticated record, never to
     process memory alone.
     """
-    live = master_key.current_active_bucket_session()
-    if profile_session_serves_bucket(live, bucket_id) and live is not None and not live.is_expired(now):
+    live = _login_sessions().current_session()
+    if _login_sessions().session_serves_bucket(live, bucket_id) and live is not None and not live.is_expired(now):
         peeked, _ = _resume_acceleration_receipt(
             storage_root=effective_storage_root(),
             bucket_id=bucket_id,
@@ -1070,7 +1074,7 @@ def _authenticate_login_candidate(
     passphrase_callback: Callable[[], str] | None,
 ) -> _CandidateProfileLogin:
     """Apply the throttle gate before authenticating the candidate profile."""
-    evaluation = master_key.evaluate_login_throttle(
+    evaluation = _login_sessions().evaluate_throttle(
         storage_root=attempt.storage_root,
         bucket_id=attempt.target.bucket_id,
         now=now,
@@ -1095,7 +1099,7 @@ def _finish_candidate_login(
         # Resetting an online-control cache must never turn an already
         # authenticated candidate into an A teardown. It is performed
         # while B is still only transaction-local.
-        master_key.reset_login_throttle(storage_root=attempt.storage_root, bucket_id=attempt.target.bucket_id)
+        _login_sessions().reset_throttle(storage_root=attempt.storage_root, bucket_id=attempt.target.bucket_id)
         return _promote_candidate_login(
             candidate=candidate,
             target_label=attempt.target.label,
@@ -1119,14 +1123,14 @@ def _authenticate_candidate_or_record_failure(
     passphrase_callback: Callable[[], str] | None,
 ) -> _CandidateProfileLogin:
     """Authenticate B into unbound candidate memory and nothing else."""
-    material = custody.load_committed_profile_password_material(UUID(bucket_id), root=storage_root)
+    material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
     password = _resolve_login_password(passphrase_callback)
     try:
         unlocked = unlock_profile_custody_password(material, password=password)
     except BaseException as exc:
         refusal = map_profile_authentication_proof_failure(exc, operation=ProfilePasswordProofOperation.LOGIN)
         if refusal is not None:
-            master_key.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
+            _login_sessions().record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now)
             raise refusal from exc
         raise
 
@@ -1134,7 +1138,7 @@ def _authenticate_candidate_or_record_failure(
     try:
         idle_minutes, absolute_minutes = _bucket_session_windows()
         absolute_deadline = now + timedelta(minutes=absolute_minutes)
-        session = master_key.BucketSession.open_resumed(
+        session = _login_sessions().open_resumed_session(
             bucket_id=bucket_id,
             dek=bytes(dek_buffer),
             idle_minutes=idle_minutes,
@@ -1149,7 +1153,7 @@ def _authenticate_candidate_or_record_failure(
             session.close()
             raise
     finally:
-        custody.zeroise(dek_buffer)
+        _login_sessions().zeroise_owned_buffer(dek_buffer)
     return _CandidateProfileLogin(
         bucket_id=bucket_id,
         session=session,
@@ -1174,7 +1178,7 @@ def _promote_candidate_login(
     # gate: it is absent in an ordinary invocation, which is a fresh process.
     # This binding survives for its own separate job -- closing the in-process
     # session object by identity, further down in _retire_previous_authorities.
-    previous_live = master_key.current_active_bucket_session()
+    previous_live = _login_sessions().current_session()
     retired_bucket_ids = _retired_bucket_ids(
         live_bucket_id=_live_bucket_id(previous_live),
         selected_bucket_id=selected_bucket_id,
@@ -1324,7 +1328,7 @@ def _bind_candidate_promotion(
         # Both context bindings are in-process and do not perform I/O.  A has
         # not been closed, so an unexpected later failure can rebind it before
         # the durable pointer is restored.
-        profile_bind_bucket_session(candidate.session)
+        _login_sessions().bind_session(candidate.session)
         previous_record = bind_active_profile_record_session(candidate.record_session)
         bound = handover.at_least_phase(_HandoverPhase.B_BOUND)
         if bound != handover:
@@ -1450,12 +1454,15 @@ def _rollback_candidate_promotion(
 ) -> None:
     """Restore A and erase every B candidate artefact after swap failure."""
     try:
-        custody.delete_profile_session(storage_root=storage_root, profile_id=candidate.material.envelope.profile_id)
+        _login_sessions().delete_acceleration_receipt(
+            storage_root=storage_root,
+            profile_id=candidate.material.envelope.profile_id,
+        )
     finally:
         if previous_live is not None:
-            profile_bind_bucket_session(previous_live)
+            _login_sessions().bind_session(previous_live)
         else:
-            master_key.close_active_bucket_session()
+            _login_sessions().close_active_session()
         if previous_record is not None:
             bind_active_profile_record_session(previous_record)
         else:
@@ -1527,7 +1534,7 @@ def _mint_or_warn(
     """
     try:
         idle_minutes, absolute_minutes = _bucket_session_windows()
-        custody.mint_profile_session(
+        _login_sessions().mint_acceleration_receipt(
             storage_root=storage_root,
             profile_id=material.envelope.profile_id,
             custody_generation=material.envelope.password_generation,

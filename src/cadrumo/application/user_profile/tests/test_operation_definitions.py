@@ -28,9 +28,9 @@ from ....application.operations import (
     OperationRequest,
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
+    OperationSupervisor,
     OperationTerminalCondition,
 )
-from ....application.operations._supervisor import OperationSupervisor
 from ....application.operations.persistence import OperationPersistedSnapshot
 from ....core import read_pointer
 from ....tests.secure_sql import isolated_profile_storage_root

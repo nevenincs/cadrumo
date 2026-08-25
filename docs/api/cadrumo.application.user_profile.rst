@@ -45,6 +45,7 @@ Submodules
    cadrumo.application.user_profile._language_resolver
    cadrumo.application.user_profile._lifecycle
    cadrumo.application.user_profile._login_session
+   cadrumo.application.user_profile._login_session_port
    cadrumo.application.user_profile._operation_definitions
    cadrumo.application.user_profile._overview
    cadrumo.application.user_profile._passphrase_rotation
@@ -55,6 +56,7 @@ Submodules
    cadrumo.application.user_profile._profile_repository
    cadrumo.application.user_profile._projections
    cadrumo.application.user_profile._prospective_password
+   cadrumo.application.user_profile._recovery_contracts
    cadrumo.application.user_profile._recovery_custody
    cadrumo.application.user_profile._registration
    cadrumo.application.user_profile._repository

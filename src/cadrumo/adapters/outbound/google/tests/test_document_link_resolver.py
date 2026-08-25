@@ -27,7 +27,7 @@ from ...storage import (
     OutboundStorageValidationError,
 )
 from .._document_link_resolver import _download_drive_file_from_service, parse_drive_file_id, resolve_document_link
-from ._drive_media_server import drive_media_endpoint
+from .drive_media_server import drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

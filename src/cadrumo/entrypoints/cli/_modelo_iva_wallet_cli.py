@@ -12,7 +12,6 @@ from ...application.modelo import (
     ModeloIvaWalletCorrectionNoRecordError,
     ModeloIvaWalletCorrectionSealedError,
     ModeloIvaWalletSeedNegativeAmountError,
-    ModeloIvaWalletSeedNoTaxpayerError,
     correct_iva_compensation_period_for_bucket,
     record_iva_compensation_override_for_bucket,
     seed_iva_compensation_period_for_bucket,
@@ -105,14 +104,6 @@ def iva_wallet_seed_cmd(ctx: typer.Context, filing_year: int, period: str, amoun
     except ModeloIvaWalletSeedNegativeAmountError as exc:
         assert exc.translated_message is not None
         raise typer.BadParameter(tr(exc.translated_message, default="Amount must be non-negative.")) from exc
-    except ModeloIvaWalletSeedNoTaxpayerError as exc:
-        assert exc.translated_message is not None
-        raise typer.BadParameter(
-            tr(
-                exc.translated_message,
-                default="Active profile has no identity.tax_id configured. Set it via config profile.",
-            )
-        ) from exc
     except IvaCompensationSeedConflictError as exc:
         raise typer.BadParameter(
             tr(
@@ -172,14 +163,6 @@ def iva_wallet_correct_cmd(
     except ModeloIvaWalletSeedNegativeAmountError as exc:
         assert exc.translated_message is not None
         raise typer.BadParameter(tr(exc.translated_message, default="Amount must be non-negative.")) from exc
-    except ModeloIvaWalletSeedNoTaxpayerError as exc:
-        assert exc.translated_message is not None
-        raise typer.BadParameter(
-            tr(
-                exc.translated_message,
-                default="Active profile has no identity.tax_id configured. Set it via config profile.",
-            )
-        ) from exc
     except ModeloIvaWalletCorrectionNoRecordError as exc:
         assert exc.translated_message is not None
         raise typer.BadParameter(
@@ -187,7 +170,7 @@ def iva_wallet_correct_cmd(
                 exc.translated_message,
                 filing_year=filing_year,
                 period=period,
-                default=f"No seeded compensation record exists for {filing_year}/{period}. Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing seed.",
+                default=f"No seeded compensation record exists for {filing_year}/{period}; correction overwrites an existing seed.",
             )
         ) from exc
     except ModeloIvaWalletCorrectionSealedError as exc:
@@ -274,14 +257,6 @@ def iva_wallet_override_cmd(
     except ModeloIvaWalletSeedNegativeAmountError as exc:
         assert exc.translated_message is not None
         raise typer.BadParameter(tr(exc.translated_message, default="Amount must be non-negative.")) from exc
-    except ModeloIvaWalletSeedNoTaxpayerError as exc:
-        assert exc.translated_message is not None
-        raise typer.BadParameter(
-            tr(
-                exc.translated_message,
-                default="Active profile has no identity.tax_id configured. Set it via config profile.",
-            )
-        ) from exc
     selected_amount = decision.selected_amount
     override_result = IvaWalletOverrideResult(
         filing_year=filing_year,

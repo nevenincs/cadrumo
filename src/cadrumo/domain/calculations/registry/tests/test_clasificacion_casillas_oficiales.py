@@ -99,11 +99,11 @@ def _layoutless_revisions() -> list[tuple[str, str]]:
 def test_layoutless_revision_is_explicitly_undefined(modelo_id: str, revision_id: str) -> None:
     """A revision with no export layout classifies every casilla as UNDEFINED.
 
-    This pinned modelo 130 as its layoutless subject. The campaign then authored
-    130's export layout, so the subject stopped being layoutless and the case
-    failed on its own premise rather than on the classifier -- a decayed premise,
-    not a regression. The subject is now derived from the property it needs, so
-    a revision leaves this gate exactly when it gains a layout.
+    This pinned modelo 130 as its layoutless subject. The subject later gained
+    an export layout, so it stopped being layoutless and the case failed on its
+    own premise rather than on the classifier -- a decayed premise, not a
+    regression. The subject is now derived from the property it needs, so a
+    revision leaves this gate exactly when it gains a layout.
     """
     revision = bundled_authority().validate_modelo(modelo_id).revisions[revision_id]
 
@@ -114,9 +114,9 @@ def test_layoutless_revision_is_explicitly_undefined(modelo_id: str, revision_id
 
 
 def test_revision_with_a_layout_addresses_at_least_one_casilla() -> None:
-    """The contrapositive, which cannot go vacuous as the campaign authors layouts.
+    """The contrapositive, which cannot go vacuous as the registry gains layouts.
 
-    The layoutless population shrinks by design as this campaign proceeds and
+    The layoutless population shrinks by design as authoring proceeds and
     would eventually empty, silently retiring the check above. This asserts the
     other direction on a revision that HAS a layout, so classification stays
     covered no matter how far the authoring gets.

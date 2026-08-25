@@ -407,7 +407,16 @@ PROFILE_COMMAND_SPECS = (
         f"{_CONFIG}._censo_payloads",
         "CensoPullResult",
         LIVE_PROFILE_WRITE,
-        (_option("apply", ("--apply",), _BOOL, "cli.config.profile.censo.apply_help", default=False, flag=True),),
+        (
+            _option(
+                "apply",
+                ("--apply",),
+                _BOOL,
+                "cli.config.profile.censo.pull_apply_help",
+                default=False,
+                flag=True,
+            ),
+        ),
     ),
     _leaf(
         "config_profile_complete_setup",

@@ -172,11 +172,10 @@ msgid ""
 "it calculates. Attach in that order: a draft bundles its evidence when you verify it, so an invoice attached "
 "afterwards does not reach the filing."
 msgstr ""
-"Az ellenőrzés eredménye a jelzés arról, hogy a piszkozat kész. Amikor a `granted_verificado_completo` igaz értéket "
-"mutat, exportálja a fájlt. Az export elutasítja a műveletet, amíg minden levonható-kiadás sor nem hordoz "
-"összekapcsolt beszerzési-számla bizonyítékot; ez az első benyújtási példa kihagyja azt a bizonyítékot, ezért az "
-"export és a portál utáni benyújtási jelölő megjelenítő keretként szerepel. A teljes, bizonyítéktól exportig tartó "
-"lánc elejétől a végéig, végrehajtva fut a [Modelo 303 IVA-benyújtás előkészítése](modelo-303.md) oldalon:"
+"Az ellenőrzés eredménye jelzi, hogy a piszkozat elkészült. Az ellenőrzés mindaddig elutasítja a műveletet, amíg "
+"minden levonható kiadási sorhoz nincs beszerzési számla bizonyítéka kapcsolva, ezért a példa a számítás előtt "
+"rögzíti és csatolja a szállítói számlát. Ebben a sorrendben járjon el: a piszkozat az ellenőrzéskor foglalja magába a "
+"bizonyítékot, így a később csatolt számla nem kerül be a bevallásba."
 
 #: ../../how-to/first-quarterly-filing.md:96
 msgid ""
@@ -213,4 +212,3 @@ msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 #: ../../how-to/first-quarterly-filing.md:113
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Töltse fel az exportált modelóját az AEAT-portálon](file-at-aeat.md)"
-

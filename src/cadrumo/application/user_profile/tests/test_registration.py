@@ -322,9 +322,9 @@ def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_pa
         decomposed_material = load_committed_profile_password_material(UUID(decomposed_profile.profile_id))
         assert unlock_profile_custody_password(composed_material, password=composed).dek is not None
         assert unlock_profile_custody_password(decomposed_material, password=decomposed).dek is not None
-        with pytest.raises(Exception) as composed_refusal:
+        with pytest.raises(ProfileCustodyPasswordError) as composed_refusal:
             unlock_profile_custody_password(composed_material, password=decomposed)
-        with pytest.raises(Exception) as decomposed_refusal:
+        with pytest.raises(ProfileCustodyPasswordError) as decomposed_refusal:
             unlock_profile_custody_password(decomposed_material, password=composed)
         assert isinstance(composed_refusal.value, ProfileCustodyPasswordError)
         assert isinstance(decomposed_refusal.value, ProfileCustodyPasswordError)

@@ -34,6 +34,8 @@ from ....domain.modelos import (
 )
 from .._modelo_cli_support import parse_row_spec as _parse_row_spec
 
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
 
 def _output_language(language: str):
     """Pin the rendered language for assertions that match message TEXT.
@@ -44,9 +46,6 @@ def _output_language(language: str):
     rather than the assertion rewritten in Spanish.
     """
     return override_settings(cadrumo_output_language=language)
-
-
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 # ---------------------------------------------------------------------------

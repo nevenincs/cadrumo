@@ -127,6 +127,7 @@ Submodules
    cadrumo.domain.calculations.registry._static_inspection
    cadrumo.domain.calculations.registry._supplementary_orden
    cadrumo.domain.calculations.registry._support_matrix
+   cadrumo.domain.calculations.registry._supported_filing_years
    cadrumo.domain.calculations.registry._temporal
    cadrumo.domain.calculations.registry._toml_helpers
    cadrumo.domain.calculations.registry._validate

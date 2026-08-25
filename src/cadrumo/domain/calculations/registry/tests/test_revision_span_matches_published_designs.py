@@ -440,8 +440,7 @@ def _catalogue_ejercicio_span() -> dict[str, tuple[int, int]]:
     2000-11-28 to 2014-09-26, which are promulgation and repeal dates, and
     Modelo 210's run 2022-06-01 to 2025-12-31, which is a DEVENGO span on an
     axis that is not an ejercicio. Reading either as coverage would repeat the
-    update-date-as-governed-period conflation this campaign has twice had to
-    undo.
+    update-date-as-governed-period conflation already corrected twice.
 
     So the rule is checked against the dates themselves rather than against a
     list of modelos, and the designs it admits are exactly those whose catalogue
@@ -1966,7 +1965,7 @@ def test_a_box_added_or_removed_without_movement_reaches_the_verdict() -> None:
     whether the signal works.
         WHY THE PAIRS COME FROM THE CATALOGUE AND NOT FROM REVISIONS. This walked the
     designs each REVISION claims, which made its liveness depend on how revisions
-    happen to be carved. As the campaign split the spanning revisions, that
+    happen to be carved. As the spanning revisions were split, that
     population fell to two across the whole tree, and the assertion below began
     failing for want of an example rather than for want of the signal. The
     property being proved is about the COMPARATOR, so it is now measured over
@@ -2001,8 +2000,7 @@ def test_no_bundled_design_file_disappears_from_the_inventory() -> None:
     all of them. Withhold a design file and the boundary it formed simply stops being
     reported: the verdict names fewer violations, which reads as a split landing rather
     than as an instrument going blind. That is the most dangerous direction for this
-    gate, because the whole campaign measures its own progress by this verdict getting
-    shorter.
+    gate, because a shorter verdict would then reward the gate's own blindness.
 
     THE ENUMERATION IS DERIVED INDEPENDENTLY, which is what makes the check possible at
     all. It globs the corpus directory itself rather than asking the inventory under

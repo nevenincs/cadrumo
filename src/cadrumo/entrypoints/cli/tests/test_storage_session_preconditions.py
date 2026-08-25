@@ -1,4 +1,4 @@
-"""S70 persistence-session refusals keep action policy at the CLI boundary."""
+"""Persistence-session refusals keep action policy at the CLI boundary."""
 
 from __future__ import annotations
 

@@ -46,7 +46,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.tests._inventory import repo_path
+from cadrumo.tests import repo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

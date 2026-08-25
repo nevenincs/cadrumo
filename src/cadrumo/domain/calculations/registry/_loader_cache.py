@@ -45,7 +45,7 @@ from ....core import (
 )
 from ....core.config import load_settings
 from ....core.resources import bundled_path
-from ._errors import RegistryLoadError
+from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
 from ._ids import RevisionId
 from ._toml_helpers import as_toml_table as _as_toml_table
 
@@ -526,7 +526,11 @@ def toml_file_fingerprint(path: Path) -> tuple[str, int, int, str]:
         stat = path.stat()
     except OSError as exc:
         raise RegistryLoadError(
-            f"{path}: registry TOML could not be fingerprinted; retry after concurrent registry writes settle: {exc}",
+            f"{path}: registry TOML could not be fingerprinted: {exc}",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={"path": str(path), "registry_tree_quiescent": False, "operation": "toml_stat"},
+            ),
         ) from exc
     return str(path), stat.st_size, stat.st_mtime_ns, _toml_content_digest(path)
 
@@ -539,7 +543,11 @@ def _toml_content_digest(path: Path) -> str:
         data = path.read_bytes()
     except OSError as exc:
         raise RegistryLoadError(
-            f"{path}: registry TOML could not be fingerprinted; retry after concurrent registry writes settle: {exc}",
+            f"{path}: registry TOML could not be fingerprinted: {exc}",
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.TREE_QUIESCENT,
+                facts={"path": str(path), "registry_tree_quiescent": False, "operation": "toml_read"},
+            ),
         ) from exc
     return hashlib.blake2b(data, digest_size=16).hexdigest()
 

@@ -1,0 +1,110 @@
+[revisions."2024"]
+authority_grade = "applicability"
+# valid_from is canonicalised to the ejercicio-start convention (January 1 of
+# period_selector.year_from), not the orden's own effective date -- that fact
+# already has its home on orden-hfp-886-2023:art-1's legal.effective_from.
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+period_selector = { years = [2024], periods = ["0A"] }
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-1",
+    "orden-hfp-886-2023:art-2",
+    "orden-hfp-886-2023:art-3",
+    "orden-hfp-886-2023:art-4",
+    "orden-hac-1504-2024:art-9",
+    "orden-hac-1504-2024:df-unica",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "boe-modelo-721-2024-layout",
+    "aeat-modelo-721-procedure",
+]
+orden_aplicabilidad = [
+    "orden-hfp-886-2023:art-1",
+    "orden-hac-1504-2024:art-9",
+    "orden-hac-1504-2024:df-unica",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: S49 finite BOE-package review. VERIFIED -- the bundled HAC/1504/2024 PDF is the immutable official amendment package (827110 bytes; SHA-256 27995a7285f61a3a3ff2ddd259d9b252143d2ef6fc5d999936738bbd8b116a31), and its final provision first applies the substituted annex to exercise 2024. This applicability-grade revision is therefore selected only for 2024 0A. NOT CLAIMED -- the separately published AEAT SOAP/XML material is not pair-complete here: the historical 2023 description endpoint no longer supplies its bytes, so no 2023/2024 AEAT service-package inventory, service serializer, validation matrix, record design, or filing-grade authority is asserted. The BOE amendment is kind form_spec, not record_design; export layouts remain empty. NOT CLAIMED -- no independent figure oracle exists and the informational casillas remain manual or informational facts.
+"""
+reviewed_at = 2026-08-25
+
+[revisions."2024".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+The 2024 annex amendment is a distinct finite authority package, but this applicability-grade registry holds no source-derived field identity mapping from which a casilla-continuity transition could be asserted. The family is empty deliberately: it must be revisited only with a complete technical-contract inventory, rather than inferring continuity from matching labels."""
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-quater",
+    "orden-hfp-886-2023:art-1",
+    "orden-hfp-886-2023:art-2",
+    "orden-hfp-886-2023:art-3",
+    "orden-hfp-886-2023:art-4",
+    "orden-hac-1504-2024:art-9",
+    "orden-hac-1504-2024:df-unica",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "boe-modelo-721-2024-layout",
+    "aeat-modelo-721-procedure",
+]
+
+[revisions."2024".family_dispositions.formulas]
+reason = """
+A formula computes a casilla of this revision from others, and this revision computes nothing. Measured on the revision itself: it declares SEVEN casillas and ZERO formulas, and not one casilla is input_kind computed -- ejercicio and tipo-declaracion are informational, and custodio.nombre-razon-social, custodio.codigo-pais, moneda.clave-token, moneda.saldo-31-diciembre and moneda.saldo-inicio are all manual. The declaration reports the existence and the year-end and year-start balances of \
+monedas virtuales held abroad through a custodio, under RD 1065/2007 art. 42 quater; it settles no tax and derives no figure from another figure, so there is nothing for a formula to express. The family is inapplicable by this modelo's nature rather than merely unbuilt."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["aeat-modelo-721-procedure"]
+
+[revisions."2024".family_dispositions.relations]
+reason = """
+A relation folds a value from ANOTHER modelo's revision into this one's calculation, and this revision has no calculation to fold into. Measured on it: SEVEN casillas, ZERO formulas, and no casilla with input_kind = computed. The declaration reports the custodio, the clave of each moneda virtual, and its balances at 31 December and at the start of the year, all entered by the contribuyente from the custodio's own records; nothing here is derived from a figure another modelo filed. Its sibling \
+modelo 720, the equivalent declaration for bienes y derechos situados en el extranjero, disposes the same family for the same shape. The family is inapplicable by this modelo's nature rather than merely unpopulated."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["aeat-modelo-721-procedure"]
+
+
+[revisions."2024".family_dispositions.verification_predicates]
+reason = """
+A verification predicate guards a CALCULATED result -- characteristically that a positive economic input did not resolve to a zero base or cuota. This revision calculates nothing to guard: it declares ZERO formulas, no casilla is input_kind = computed, and it has neither a base nor a cuota casilla, its formulas family being dispositioned inapplicable on that same measurement. The declaration reports the existence and valuation of monedas virtuales held abroad under RD 1065/2007 art. 42 quater; \
+it settles no tax, so there is no computed result for an implication to constrain. The under-declaration risk this family exists to catch is real but lives elsewhere: an unreported holding surfaces on the contribuyente's OWN IRPF or IS return, which is where a predicate can bind a base to a cuota."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["aeat-modelo-721-procedure"]
+
+
+[revisions."2024".family_dispositions.projection_endpoints]
+reason = """
+FilingProjectionRef (cadrumo.core) is a CLOSED discriminated union, and every member is scoped to the modelo whose repeated rows it describes; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming this modelo's own casillas can validate while the union carries no modelo-721 member. It carries none. The union is not single-modelo -- it holds m303_ and m200_ members -- so this is stated as a scoping rule rather than as a member count or a prefix, both of \
+which go stale the moment another modelo is added. Sibling modelo 720 disposes the family on the same rule."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["aeat-modelo-721-procedure"]
+
+[revisions."2024".family_dispositions.live_cross_references]
+reason = """
+A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for modelo 721: no adapter under adapters/outbound/aeat references it -- the only textual hits are byte-offset tuples in a sede test, not modelo references -- and the application never performs \
+live AEAT submission in any case, per the standing prohibition on live filing. There is consequently no host to allow, no method to bound and no guard policy to name. Sibling modelo 210 disposes the family on exactly this ground. Should an adapter ever read this modelo, the family becomes applicable and this disposition must be revisited rather than inherited."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["aeat-modelo-721-procedure"]
+
+[revisions."2024".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels. Modelo 721's bundled layout authority is a BOE anexo the shipped parser refuses -- no field rows in the base document, a first field at position 58 in the amendment -- and no label-printing specimen is bundled. Authoring patterns without such a document would invent them. Modelo \
+100's 2020 revision disposes this family on exactly this ground while its 2021-2024 siblings populate theirs, so the family is evidence-scoped by revision rather than absent by nature: acquire a label-printing artefact and it becomes applicable, at which point this disposition must be revisited rather than inherited."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["aeat-modelo-721-procedure"]
+
+[revisions."2024".family_dispositions.bindings]
+reason = """
+A binding serves two shapes and neither is available here. As a CASILLA resolver it reads a value from a declared source: no casilla of this revision does, its seven being two informational and five manual, and the revision declares no formulas at all. As a LAYOUT descriptor it names a record field -- the shape modelo 720 uses for all fifty-two of its bindings, none of which any casilla references -- and this modelo's layout authority is a BOE anexo the shipped parser refuses, so there is no \
+readable record field to name. That second shape is not mandatory in any case: 24 of the 78 revisions carrying an export layout declare no bindings at all, so an absent bindings family is a normal end state rather than an unfinished one. If this revision's layout ever lands and materialises repeating rows through binding_rows, the family becomes applicable and this disposition must be revisited rather than inherited."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["aeat-modelo-721-procedure"]
+
+[revisions."2024".family_dispositions.export_layouts]
+reason = """
+AEAT publishes no positional record design for modelo 721. Measured on the source catalogue: no source cited by this modelo or any revision carries kind = 'record_design'. The cited 2024 layout source is kind = 'form_spec' -- the substituted orden anexo, a printable form rather than a positional design a fixed-width writer could be authored from. Its sibling modelo 720, the equivalent declaration for bienes y derechos abroad, sits in the \
+same shape. Authoring a layout here would require inventing byte offsets AEAT has not published, which is fabricating wire facts. The runtime filing check still refuses a filing-grade snapshot from a revision carrying no layout, so this disposition records why one cannot exist and grants nothing."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["aeat-modelo-721-procedure", "boe-modelo-721-2024-layout"]

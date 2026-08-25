@@ -22,10 +22,10 @@ def _m303_revision_id(*, filing_year: int, period: str) -> str:
     return str(resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period).revision.id)
 
 
-def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
+def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
     tmp_path: Path,
 ) -> None:
-    """In-scope compensation override names the seed verb, not the obsolete mode flag."""
+    """No seed inference is made when a compensation record is absent."""
     with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_GUIDANCE_PROFILE,
@@ -67,10 +67,7 @@ def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
         )
 
     assert result.exit_code != 0, "Expected non-zero exit when compensation binding is supplied without a seeded wallet"
-    assert "iva-wallet seed" in result.output, f"Error output must name the iva-wallet seed verb; got:\n{result.output}"
-    assert "--mode" not in result.output, (
-        f"Error output must NOT reference the obsolete --mode flag; got:\n{result.output}"
-    )
+    assert "iva-wallet seed" not in result.output, f"Refusal must not infer a seed command; got:\n{result.output}"
 
 
 def test_m303_in_scope_missing_wallet_surfaces_override_verb_not_seed(

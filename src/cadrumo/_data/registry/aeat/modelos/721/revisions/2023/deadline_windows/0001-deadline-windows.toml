@@ -1,0 +1,12 @@
+# Plazo de presentacion del Modelo 721: 1 enero - 31 marzo del año siguiente
+# al ejercicio (Orden HFP/886/2023 art. 4). Primera declaracion = ejercicio 2023.
+
+[[revisions."2023".deadline_windows]]
+id = "modelo-721-2023-0a"
+filing_year = 2023
+period = "2023 0A"
+period_kind = "annual"
+opens_on = 2024-01-01
+closes_on = 2024-03-31
+legal_refs = ["orden-hfp-886-2023:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-721-procedure"]

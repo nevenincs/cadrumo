@@ -42,6 +42,7 @@ from .._export import (
     ModeloIvaWalletDecisionProvenance,
     export_modelo_revision,
     iva_wallet_decision_export_provenance,
+    modelo_export_readiness_refusal,
 )
 from ._export_test_support import (
     _M130_RENDIMIENTO_NETO_CASILLA,
@@ -53,6 +54,35 @@ from ._export_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_export_readiness_refusal_declares_and_binds_the_catalogue_action(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Layout-readiness selection is application-owned; the CLI only resolves it."""
+    from .. import _export as export_module
+
+    class _Subview:
+        export_layouts: tuple[object, ...] = ()
+
+    class _Provider:
+        def get_subview(self, modelo: str) -> _Subview:
+            assert modelo == "999"
+            return _Subview()
+
+    monkeypatch.setattr(export_module, "build_runtime_schema_provider", lambda **_kwargs: _Provider())
+
+    refusal = modelo_export_readiness_refusal(
+        modelo="999",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        registry_ready=True,
+    )
+
+    assert refusal is not None
+    verdict = refusal.precondition_failure.verdict
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.describe"
+    assert verdict.no_recovery_outcome is None
+    assert verdict.argument_bindings[0].value == "999"
 
 
 def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
@@ -87,7 +117,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
     assert "justificante" in payload["official_evidence_message"]
     assert "consulta de declaraciones presentadas" in payload["official_evidence_message"]
     assert "CSV cotejo" in payload["official_evidence_message"]
-    assert "aeat app modelo reconcile pull" in payload["official_evidence_next_action"]
+    assert "official_evidence_next_action" not in payload
     [provenance] = payload["casilla_provenance"]
     assert _casilla_id_from_payload(provenance["casilla_id"]) == _M130_RENDIMIENTO_NETO_CASILLA
     assert provenance["formula_id"] is None

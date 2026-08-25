@@ -111,6 +111,8 @@ from ._action_errors import (
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     WorkUnitRevisionDivergenceError,
+    amendment_evidence_missing_precondition,
+    modelo_work_wizard_retry_exhausted_precondition,
 )
 from ._amendment_actions import amend_modelo_revision
 from ._binding_readiness import profile_resolvable_binding_ids
@@ -173,6 +175,7 @@ from ._export import (
     ModeloExportResult,
     ModeloExportUnsupportedError,
     export_modelo_revision,
+    modelo_export_readiness_refusal,
 )
 from ._external_import_actions import (
     ExternalFilingBaselineSource,
@@ -835,6 +838,7 @@ __all__ = [
     "WorkUnitRevisionDivergenceError",
     "active_natural_target_work_units",
     "amend_modelo_revision",
+    "amendment_evidence_missing_precondition",
     "apply_calculation_shortcut_inputs",
     "apply_iva_compensation_decision_binding",
     "assemble_work_unit_history",
@@ -919,6 +923,7 @@ __all__ = [
     "mark_revision_verificado_completo",
     "modelo_202_modality_for_work_unit",
     "modelo_applicability_refusal",
+    "modelo_export_readiness_refusal",
     "modelo_reconcile",
     "modelo_reconcile_bytes",
     "modelo_work_address_from_operator_target",
@@ -928,6 +933,7 @@ __all__ = [
     "modelo_work_profile_baseline_missing_paths",
     "modelo_work_profile_baseline_validation_issues",
     "modelo_work_profile_preflight_report",
+    "modelo_work_wizard_retry_exhausted_precondition",
     "natural_target_work_units",
     "open_review_only_workspace",
     "parse_casilla_lexical_spreadsheet",

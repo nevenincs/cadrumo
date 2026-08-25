@@ -508,8 +508,8 @@ async def pull_censal_datos():
     declared, and committing the result belong to
     :func:`~cadrumo.application.user_profile.censal_facts_from_read`,
     :func:`~cadrumo.application.user_profile.reconcile_censal_read`, and
-    :func:`~cadrumo.application.user_profile.apply_censal_read`, the last
-    routing through the single cotejo apply authority. Keeping
+    the canonical ``user-profile.censo-review`` operation, the last routing
+    its encrypted reviewed operand through the single cotejo apply authority. Keeping
     acquisition apart from adoption is what lets an operator preview a
     read without writing anything.
 

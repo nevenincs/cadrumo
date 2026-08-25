@@ -14,4 +14,5 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.export._errors
+   cadrumo.application.export._google_operation
    cadrumo.application.export._tabular

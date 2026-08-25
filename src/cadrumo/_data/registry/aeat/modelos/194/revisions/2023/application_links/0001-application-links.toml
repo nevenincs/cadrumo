@@ -1,0 +1,53 @@
+[[revisions."2023".application_links]]
+id = "modelo-194-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-modelo-194-procedure", "boe-modelo-194-form-layout"]
+
+[[revisions."2023".application_links]]
+id = "modelo-194-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-modelo-194-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-194-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-modelo-194-procedure"]
+
+[[revisions."2023".application_links]]
+id = "modelo-194-review"
+surface = "review"
+consumer = "cadrumo.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-modelo-194-procedure"]
+[[revisions."2023".application_links]]
+id = "modelo-194-approval"
+surface = "approval"
+consumer = "cadrumo.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-modelo-194-procedure"]
+[[revisions."2023".application_links]]
+id = "modelo-194-reconciliation"
+surface = "reconciliation"
+consumer = "cadrumo.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-modelo-194-procedure"]
+[[revisions."2023".application_links]]
+id = "modelo-194-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-1999-11-18:apartado-cuarto"]
+source_refs = ["aeat-modelo-194-procedure"]
+

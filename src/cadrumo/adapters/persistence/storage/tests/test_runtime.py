@@ -18,6 +18,7 @@ from ..bucket import bucket_paths
 from ..errors import StorageValidationError
 from ..master_key import BucketSession, activate_session
 from ..runtime import (
+    _SYNTHETIC_SESSION_BUCKET_IDS,
     StorageRuntime,
     StorageRuntimeReadinessCode,
     inspect_bucket_storage_runtime,
@@ -87,6 +88,17 @@ def _sealed_session(bucket_id: str) -> BucketSession:
 
 def _issue_codes(runtime: StorageRuntime) -> tuple[StorageRuntimeReadinessCode, ...]:
     return tuple(issue.code for issue in runtime.readiness.issues)
+
+
+def test_the_synthetic_bucket_exemption_is_still_what_makes_this_matter() -> None:
+    """Anchor: the reason stated above must still be true of the code.
+
+    This gate argues from a specific fact -- that the ephemeral provider's
+    bucket id is a member of the set that disables the cross-bucket check. If
+    that stops being true the argument needs rewriting, and a docstring nobody
+    re-checks is how a gate ends up defending a hazard that moved.
+    """
+    assert "ephemeral" in _SYNTHETIC_SESSION_BUCKET_IDS
 
 
 def test_runtime_ready_when_route_and_active_session_match(tmp_path: Path) -> None:

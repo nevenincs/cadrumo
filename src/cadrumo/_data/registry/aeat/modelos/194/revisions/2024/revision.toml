@@ -1,0 +1,46 @@
+[revisions."2024"]
+# Applicability-grade Modelo 194 record-design era. This revision models only
+# the five manual hoja-resumen fields grounded in the approving Orden; it does
+# not declare an export layout or infer any unbundled design year.
+authority_grade = "applicability"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+period_selector = { year_from = 2024, year_to = 2024, periods = ["0A"] }
+orden_aplicabilidad = ["orden-1999-11-18:apartado-cuarto"]
+legal_refs = [
+    "orden-1999-11-18:apartado-cuarto",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-108",
+    "orden-hac-1504-2024:art-primero",
+    "orden-hac-1504-2024:df-unica",
+]
+source_refs = [
+    "aeat-modelo-194-procedure",
+    "boe-modelo-194-form-layout",
+    "aeat-dr-194-2024",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: inspected the official AEAT hash-pinned Modelo 194 design for ejercicio 2024 and the cited full BOE amendment. The revision is bounded exactly to the design's stated ejercicio; no record-design evidence is reused for a different year. The five hoja-resumen casillas remain manual input, no export layout is declared, and no authority grade is promoted. No 2025 successor is bundled or declared, so every 2025-and-later selection is refused rather than inheriting this source."""
+reviewed_at = 2026-08-25
+
+[revisions."2024".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+No casilla continuity evolution is declared. This applicability-grade revision carries only the five manual hoja-resumen boxes, while the hash-pinned record design is used solely to bound the revision's era. A continuity stamp would assert box identity across record-design eras that this work has not compared field-by-field; the unevidenced 2020-2022 interval is therefore not bridged by inference.
+"""
+legal_refs = [
+    "orden-1999-11-18:apartado-cuarto",
+    "orden-hac-1504-2024:art-primero",
+    "orden-hac-1504-2024:df-unica",
+]
+source_refs = [
+    "boe-modelo-194-form-layout",
+    "aeat-dr-194-2024",
+]
+
+# Reconcile-when-present for Modelo 194 revision 2024. The
+# hoja-resumen prints five declaration boxes and every one is operator input, so
+# none is engine-computed: each is reconciled against the filing WHEN the filing
+# prints it, and all are EXCLUDED from the coverage denominator
+# (min_coverage = 0), so enrollment can never lower coverage or flip a
+# legitimate filing's verdict.

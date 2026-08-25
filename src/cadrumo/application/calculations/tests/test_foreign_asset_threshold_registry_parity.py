@@ -13,10 +13,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.mark.parametrize(
-    ("modelo", "groups", "legal_refs", "source_refs"),
+    ("modelo", "filing_year", "groups", "legal_refs", "source_refs"),
     [
         (
             "720",
+            2025,
             (
                 ForeignAssetObligationGroup.CUENTAS,
                 ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS,
@@ -31,6 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
         ),
         (
             "721",
+            2024,
             (ForeignAssetObligationGroup.MONEDAS_VIRTUALES,),
             {"rd-1065-2007:art-42-quater", "ley-58-2003:da-18"},
             {"aeat-modelo-721-procedure"},
@@ -39,11 +41,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 )
 def test_effective_registry_revision_supplies_each_modelos_threshold_and_grounding(
     modelo: str,
+    filing_year: int,
     groups: tuple[ForeignAssetObligationGroup, ...],
     legal_refs: set[str],
     source_refs: set[str],
 ) -> None:
-    thresholds = foreign_asset_declaration_thresholds(modelo=modelo, filing_year=2025)
+    thresholds = foreign_asset_declaration_thresholds(modelo=modelo, filing_year=filing_year)
 
     assert set(thresholds) == set(groups)
     for group in groups:

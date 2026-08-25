@@ -27,7 +27,14 @@ from ._composition import (
     compose_operation_services,
 )
 from ._events import OperationLogSeverity
-from ._interactions import OperationResponseIntent
+from ._interactions import (
+    OperationApplyResponse,
+    OperationConsumedInteraction,
+    OperationInteractionRequest,
+    OperationPendingInteraction,
+    OperationRejectResponse,
+    OperationResponseIntent,
+)
 from ._models import (
     CredentialFreeOperationRequest,
     OperationDefinitionId,
@@ -126,13 +133,17 @@ from ._registry import (
 )
 from ._replay import OperationEventCursor
 from ._secret_submission import (
+    EphemeralSecretSubmission,
     OperationEphemeralSecretDeclaration,
     OperationSecretKind,
     OperationSecretRequirement,
 )
+from ._supervisor import OperationSupervisor
 
 __all__ = [
     "CredentialFreeOperationRequest",
+    "EphemeralSecretSubmission",
+    "OperationApplyResponse",
     "OperationBaselinePolicy",
     "OperationCancellation",
     "OperationCancellationRefusalCode",
@@ -146,6 +157,7 @@ __all__ = [
     "OperationClosePolicy",
     "OperationComposedServices",
     "OperationConflictScope",
+    "OperationConsumedInteraction",
     "OperationDeadline",
     "OperationDefinition",
     "OperationDefinitionId",
@@ -166,6 +178,7 @@ __all__ = [
     "OperationId",
     "OperationIdentity",
     "OperationInteractionKind",
+    "OperationInteractionRequest",
     "OperationLifecycle",
     "OperationLogSeverity",
     "OperationNoPendingInteractionV1",
@@ -177,6 +190,7 @@ __all__ = [
     "OperationObservationSuccessV1",
     "OperationObservationVersionHeader",
     "OperationOwnedResource",
+    "OperationPendingInteraction",
     "OperationPublicContractSetV1",
     "OperationPublicDefinitionContractV1",
     "OperationPublicDefinitionRegistrationV1",
@@ -199,6 +213,7 @@ __all__ = [
     "OperationReconciliationPolicy",
     "OperationReference",
     "OperationRegistry",
+    "OperationRejectResponse",
     "OperationReplayPolicy",
     "OperationRequest",
     "OperationRequestStoragePolicy",
@@ -233,6 +248,7 @@ __all__ = [
     "OperationSubmission",
     "OperationSubmissionReceiptV1",
     "OperationSubmissionService",
+    "OperationSupervisor",
     "OperationTerminalCondition",
     "OperationTerminalReceipt",
     "OperationUnsupportedInteractionV1",

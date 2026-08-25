@@ -66,7 +66,7 @@ def _register_in_separate_process_child(
     result_queue: Queue[_ChildRegistrationResult],
 ) -> None:
     """Create one profile the way an operator invocation does: a fresh process."""
-    settings, token = _child_settings(storage_root)
+    settings, token, composition = _child_settings(storage_root)
     _ = settings
     try:
         outcome = register_profile_with_credentials(
@@ -74,7 +74,7 @@ def _register_in_separate_process_child(
         )
         result_queue.put({"profile_id": outcome.profile_id, "label": outcome.label})
     finally:
-        _close_child_login(token)
+        _close_child_login(token, composition)
 
 
 def _register_in_separate_process(storage_root: Path, label: str, password: str) -> _ChildRegistrationResult:
@@ -104,7 +104,7 @@ def _attempt_registration_in_separate_process_child(
     result_queue: Queue[_ChildRefusalResult],
 ) -> None:
     """Report whatever the registration door tells the operator, refusal included."""
-    settings, token = _child_settings(storage_root)
+    settings, token, composition = _child_settings(storage_root)
     _ = settings
     try:
         try:
@@ -122,7 +122,7 @@ def _attempt_registration_in_separate_process_child(
         else:
             result_queue.put({"refused": False, "translated_message": None, "cause": None})
     finally:
-        _close_child_login(token)
+        _close_child_login(token, composition)
 
 
 def _attempt_registration_in_separate_process(storage_root: Path, label: str, password: str) -> _ChildRefusalResult:

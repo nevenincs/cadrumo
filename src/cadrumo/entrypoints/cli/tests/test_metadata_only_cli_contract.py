@@ -47,7 +47,7 @@ def _probe(arguments: tuple[str, ...], *, locale: str) -> dict[str, object]:
         print(json.dumps({{"exit_code": result.exit_code, "output": result.output, "forbidden": forbidden}}))
         """
     )
-    # S603-RATIONALE-FRESH-PROCESS-METADATA: argv is the current trusted
+    # Security rationale: argv is the current trusted
     # interpreter plus an in-repo constant script; no operator input reaches it.
     completed = subprocess.run(  # noqa: S603
         [sys.executable, "-c", script],
@@ -123,7 +123,7 @@ def test_root_shell_completion_reads_registration_metadata_only(locale: str, exp
         print(json.dumps({{"items": [[item.value, item.help] for item in items], "forbidden": forbidden}}))
         """
     )
-    # S603-RATIONALE-FRESH-PROCESS-METADATA: same fixed interpreter/script
+    # Security rationale: same fixed interpreter/script
     # boundary as `_probe`; a fresh module table is the property under test.
     completed = subprocess.run(  # noqa: S603
         [sys.executable, "-c", script],

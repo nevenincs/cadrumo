@@ -79,7 +79,10 @@ _HARNESS = (
     import json
     import os
     import sys
+    from contextlib import ExitStack
 
+    from cadrumo.adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
+    from cadrumo.application.user_profile import bind_profile_custody_port, bind_profile_login_session_port
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
@@ -90,6 +93,9 @@ _HARNESS = (
         """
     payload = json.loads(sys.argv[1])
     settings = Settings(_env_file=None, **payload["settings"])
+    composition = ExitStack()
+    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
+    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
     token = config_module._settings_override.set(settings)
     exit_code = 0
     try:
@@ -140,7 +146,10 @@ _HARNESS = (
                 print("S14_STATE_CHANGED", file=sys.stderr)
                 exit_code = exit_code or 98
     finally:
-        config_module._settings_override.reset(token)
+        try:
+            config_module._settings_override.reset(token)
+        finally:
+            composition.__exit__(None, None, None)
     raise SystemExit(exit_code)
         """
     )
@@ -152,7 +161,10 @@ _WINDOWS_HANDLE_HARNESS = (
     import json
     import os
     import sys
+    from contextlib import ExitStack
 
+    from cadrumo.adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
+    from cadrumo.application.user_profile import bind_profile_custody_port, bind_profile_login_session_port
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
@@ -164,6 +176,9 @@ _WINDOWS_HANDLE_HARNESS = (
         """
     payload = json.loads(sys.argv[1])
     settings = Settings(_env_file=None, **payload["settings"])
+    composition = ExitStack()
+    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
+    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
     argv = bootstrap_argv(
         profile_handle=payload.get("profile_handle"),
         secrets_handle=payload.get("secrets_handle"),
@@ -229,7 +244,10 @@ _WINDOWS_HANDLE_HARNESS = (
                 print("S14_STATE_CHANGED", file=sys.stderr)
                 exit_code = exit_code or 98
     finally:
-        config_module._settings_override.reset(token)
+        try:
+            config_module._settings_override.reset(token)
+        finally:
+            composition.__exit__(None, None, None)
     raise SystemExit(exit_code)
         """
     )

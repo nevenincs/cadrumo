@@ -1,6 +1,6 @@
 """Opting into the published key on a bucket holding real tax data is refused.
 
-The end-to-end form of the NIF canary. Earlier work in this campaign covered
+The end-to-end form of the NIF canary. Earlier tests covered
 the guard's predicate, then its judgement; what remained unexecuted was the
 entry path that CALLS it -- ``_provider_enter``, the whole of which coverage
 reported as unrun. Until now the link between "the operator entered the

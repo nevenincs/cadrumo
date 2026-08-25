@@ -71,6 +71,9 @@ flows:
         %{unchanged} ja coincidents, %{diverging} discrepants.'
       censal_pull_no_provider: Trieu com us identifiqueu davant l'AEAT abans de llegir
         les vostres dades censals.
+      censal_pull_review_applied: S'ha aplicat la proposta censal exacta revisada de l'AEAT.
+      censal_pull_review_rejected: S'ha rebutjat la proposta censal revisada de l'AEAT;
+        el perfil no ha canviat.
       certificate: Certificat
       certificate_active: Certificat actiu
       certificate_done: 'Identificació: %{provider}; certificat actiu: %{name}.'
@@ -101,6 +104,12 @@ flows:
       working: S'està executant {action}...
     actions:
       section: Accions
+    censal_review:
+      apply: Aplica aquesta proposta exacta
+      decision: Decisió
+      reject: Rebutja sense modificar el perfil
+      required: Trieu aplicar o rebutjar.
+      title: Reviseu la proposta censal exacta de l'AEAT
     choice_unavailable: Opció no disponible
     column:
       field: Camp

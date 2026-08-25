@@ -2119,10 +2119,10 @@ cli:
         pull_divergences_notice: 'L''autoritat censal informa de {count} camp(s) amb
           valors diferents dels que has declarat: {axes}. La teva resposta es manté;
           resol cada discrepància tu mateix.'
-        pull_help: Llegeix la teva identitat i el teu domicili de les dades censals
-          de l'AEAT i previsualitza'ls o inscriu-los al perfil actiu.
-        pull_preview_notice: 'Només previsualització: no s''ha escrit res al perfil.
-          Torna a executar amb --apply per inscriure aquestes dades.'
+        pull_apply_help: Adquireix una vegada i obre la proposta censal exacta revisada abans d'aplicar-la.
+        pull_help: Previsualitza la identitat i el domicili de les dades censals de l'AEAT,
+          o revisa i aplica una proposta exacta mitjançant l'operació canònica reanudable.
+        pull_preview_notice: 'Només previsualització: no s''ha escrit res al perfil.'
         pull_verified_tier_notice: Aquests fets s'han llegit directament de l'autoritat
           censal, de manera que la incorporació al cens compta com a verificada.
         pull_withheld_notice: 'Els valors de {count} camp(s) s''oculten a la sortida:

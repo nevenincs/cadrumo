@@ -68,6 +68,6 @@ def all_test_control_modules() -> tuple[Path, ...]:
     Recomputed here rather than imported from the src-side inventory so the
     two halves of the census meet without either side naming the other's tree.
     """
-    from cadrumo.tests._inventory import discover_test_control_modules
+    from cadrumo.tests import discover_test_control_modules
 
     return tuple(sorted(set(discover_test_control_modules()) | set(project_test_control_modules())))

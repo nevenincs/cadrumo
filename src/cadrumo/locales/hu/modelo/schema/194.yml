@@ -5,7 +5,63 @@ modelo:
         official_name: null
         title: null
       revision:
-        2019-y-siguientes:
+        '2019':
+          casilla:
+            '01':
+              help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja
+                pozitív.
+              label: Pozitív adóalappal rendelkező kedvezményezettek teljes száma
+            '02':
+              help: A pozitív alappal rendelkező kedvezményezetti rekordok levonási
+                alapjainak összege.
+              label: A levonások és előlegfizetések alapja
+            '03':
+              help: A bevallott jövedelmekre alkalmazott levonások és előlegfizetések
+                összege.
+              label: Levonások és előlegfizetések
+            '04':
+              help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja
+                negatív.
+              label: Negatív adóalappal rendelkező kedvezményezettek teljes száma
+            '05':
+              help: A negatív alappal rendelkező kedvezményezetti rekordok levonási
+                alapjainak összege.
+              label: A levonások és előlegfizetések negatív alapja
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null
+        '2023':
+          casilla:
+            '01':
+              help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja
+                pozitív.
+              label: Pozitív adóalappal rendelkező kedvezményezettek teljes száma
+            '02':
+              help: A pozitív alappal rendelkező kedvezményezetti rekordok levonási
+                alapjainak összege.
+              label: A levonások és előlegfizetések alapja
+            '03':
+              help: A bevallott jövedelmekre alkalmazott levonások és előlegfizetések
+                összege.
+              label: Levonások és előlegfizetések
+            '04':
+              help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja
+                negatív.
+              label: Negatív adóalappal rendelkező kedvezményezettek teljes száma
+            '05':
+              help: A negatív alappal rendelkező kedvezményezetti rekordok levonási
+                alapjainak összege.
+              label: A levonások és előlegfizetések negatív alapja
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: null
+          field:
+            label: null
+        '2024':
           casilla:
             '01':
               help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja

@@ -1,6 +1,6 @@
 """Every fully-qualified ``cadrumo.*`` docstring reference must resolve.
 
-This campaign has now been misled by prose three times, each in a different
+This check has now been misled by prose three times, each in a different
 way, and each time the prose named something:
 
 - ``safe_repository_id`` described a two-layer path contract whose second layer
@@ -19,7 +19,7 @@ names a function, class or module confidently is trusted more than an absence
 would be -- so a stale name is worse than no name.
 
 **Scope is deliberate.** Only FULLY-QUALIFIED ``cadrumo.*`` targets are
-checked, and only in the packages this campaign answers for. A bare
+checked, and only in the packages covered by this check. A bare
 ``:class:`BucketPaths``` is ambiguous by design -- the docs build's
 missing-reference resolver is what turns it into a link, and guessing at its
 answer here would fight that decision. A dotted ``cadrumo.`` path is not
@@ -47,7 +47,7 @@ from ._inventory import SRC_CADRUMO, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-#: The packages this campaign answers for.
+#: The packages covered by this check.
 _SCOPED_PACKAGES = (
     "adapters/persistence/storage",
     "application/user_profile",

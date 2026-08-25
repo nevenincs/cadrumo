@@ -17,6 +17,8 @@ from .._paths import DOCS_SRC_DIR, HARNESS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ..cli import app
 from ..manager import LocaleError, LocaleManager, _flatten_leaf_values, locale_catalogue_source
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
 
 def _catalogue_source(locale: str) -> Path:
     """Resolve one committed catalogue's source path, shard directory or flat file.
@@ -30,8 +32,6 @@ def _catalogue_source(locale: str) -> Path:
         raise AssertionError(f"no committed catalogue found for locale {locale!r}")
     return source
 
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _LOCALES = ("ca", "en", "es", "hu")
 _PROSE_NAME_RE = re.compile(r"\bCadrumo\b")

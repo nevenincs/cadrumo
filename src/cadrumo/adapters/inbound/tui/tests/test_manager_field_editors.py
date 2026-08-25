@@ -31,10 +31,11 @@ from .....entrypoints.cli import (
     persist_active_profile_field,
     profile_field_value_refusal,
 )
+from .....entrypoints.tui.profile.editor import FieldEditScreen
+from .....entrypoints.tui.profile.overview import ProfileManagerApp
 from .....tests.manager_pilot import wait_until_settled
 from .....tests.profile_capsule import load_test_profile_record
 from .....tests.secure_sql import isolated_profile_storage_root
-from .. import FieldEditScreen, ProfileManagerApp
 
 pytestmark = [
     pytest.mark.integration,

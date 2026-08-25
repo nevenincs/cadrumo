@@ -18,7 +18,7 @@ rule, because a fixed-width record is contiguous and an interior span no row
 covers is a dropped row rather than something AEAT left undescribed.
 
 It runs only in the repair pass, so a design whose records already tile is never
-offered it -- the guard this campaign learned to apply to every row-adding
+offered it -- the guard every row-adding change must apply
 change.
 """
 

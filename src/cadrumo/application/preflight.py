@@ -538,27 +538,43 @@ def probe_registry_referential_integrity() -> PreflightCheck:
             facts=facts,
         )
 
+    return _probe_registry_authority(authority)
+
+
+def _probe_registry_authority(authority: object) -> PreflightCheck:
+    """Validate one loaded authority through the production snapshot path."""
+    from collections import Counter
+
+    from ..domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
+
     revisions_checked = 0
     failure_count = 0
-    for modelo in authority.modelos:
+    grade_counts: Counter[str] = Counter()
+    for modelo in authority.modelos:  # ty: ignore[unresolved-attribute]
         for revision in modelo.revisions.values():
             filing_year, period = _representative_filing_context(revision)
             if filing_year is None or period is None:
                 continue
             revisions_checked += 1
+            requested_grade = revision.effective_authority_grade
+            grade_counts[requested_grade.value] += 1
             try:
-                authority.snapshot(
+                authority.snapshot(  # ty: ignore[unresolved-attribute]
                     modelo.id,
                     filing_year=filing_year,
                     period=period,
                     revision_id=revision.id,
-                    grade=revision.effective_authority_grade,
+                    grade=requested_grade,
                 )
             except (RegistryValidationError, RegistrySnapshotError):
                 failure_count += 1
 
     if failure_count:
-        facts = {"revisions_checked": revisions_checked, "failure_count": failure_count}
+        facts: dict[str, str | int | bool] = {
+            "revisions_checked": revisions_checked,
+            "failure_count": failure_count,
+        }
+        facts.update({f"grade_{grade}_count": count for grade, count in sorted(grade_counts.items())})
         return _failed_check(
             check="registry:referential-integrity",
             severity=HealthSeverity.ERROR,
@@ -568,7 +584,11 @@ def probe_registry_referential_integrity() -> PreflightCheck:
     return _healthy_check(
         check="registry:referential-integrity",
         severity=HealthSeverity.OK,
-        facts={"revisions_checked": revisions_checked, "failure_count": 0},
+        facts={
+            "revisions_checked": revisions_checked,
+            "failure_count": 0,
+            **{f"grade_{grade}_count": count for grade, count in sorted(grade_counts.items())},
+        },
     )
 
 

@@ -11,9 +11,10 @@ registry referential-integrity gate over the bundled production authority.
 
 from __future__ import annotations
 
+import ast
+import inspect
 import sys
 from dataclasses import replace
-from datetime import date
 from pathlib import Path
 
 import pytest
@@ -198,16 +199,12 @@ def test_registry_row_healthy_when_all_references_resolve() -> None:
     assert row.severity is HealthSeverity.OK
 
 
-def test_registry_probe_snapshots_every_real_revision_at_its_declared_grade(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_registry_probe_snapshots_every_real_revision_at_its_declared_grade() -> None:
     """Bundled applicability, calculation, and filing revisions retain their exact grade."""
     from ...domain.calculations.registry import (
-        RegistrySnapshot,
-        RevisionId,
-        ValidatedRegistryAuthority,
         bundled_authority,
     )
+    from ..preflight import _probe_registry_authority
 
     authority = bundled_authority()
     expected = {
@@ -216,40 +213,41 @@ def test_registry_probe_snapshots_every_real_revision_at_its_declared_grade(
         for revision in modelo.revisions.values()
         if _representative_context_exists(revision)
     }
-    observed: dict[tuple[str, str], RegistryAuthorityGrade] = {}
-    original = ValidatedRegistryAuthority.snapshot
-
-    def tracking_snapshot(
-        self: ValidatedRegistryAuthority,
-        modelo_id: str,
-        *,
-        filing_year: int,
-        period: str,
-        on: date | None = None,
-        revision_id: RevisionId | None = None,
-        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
-    ) -> RegistrySnapshot:
-        assert revision_id is not None
-        observed[(modelo_id, revision_id)] = grade
-        return original(
-            self,
-            modelo_id,
-            filing_year=filing_year,
-            period=period,
-            on=on,
-            revision_id=revision_id,
-            grade=grade,
-        )
-
-    monkeypatch.setattr(ValidatedRegistryAuthority, "snapshot", tracking_snapshot)
-    row = probe_registry_referential_integrity()
+    row = _probe_registry_authority(authority)
 
     assert row.healthy is True
-    assert observed == expected
-    assert set(observed.values()) == set(RegistryAuthorityGrade)
+    assert set(expected.values()) == set(RegistryAuthorityGrade)
+    assert {key: value for key, value in row.facts.items() if key.startswith("grade_")} == {
+        f"grade_{grade.value}_count": sum(observed is grade for observed in expected.values())
+        for grade in RegistryAuthorityGrade
+    }
 
 
-def test_registry_probe_still_reports_real_dangling_references(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_registry_probe_binds_the_snapshot_grade_to_the_observed_revision_grade() -> None:
+    """The reported grade and snapshot keyword share one production local."""
+    from ..preflight import _probe_registry_authority
+
+    tree = ast.parse(inspect.getsource(_probe_registry_authority))
+    assignments = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == "requested_grade" for target in node.targets)
+    ]
+    assert len(assignments) == 1
+    assert ast.unparse(assignments[0].value) == "revision.effective_authority_grade"
+    snapshot_calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "snapshot"
+    ]
+    assert len(snapshot_calls) == 1
+    grade_keyword = next(keyword for keyword in snapshot_calls[0].keywords if keyword.arg == "grade")
+    assert isinstance(grade_keyword.value, ast.Name)
+    assert grade_keyword.value.id == "requested_grade"
+
+
+def test_registry_probe_still_reports_real_dangling_references() -> None:
     """Removing the real legal catalogue makes snapshot reference validation red."""
     from ...domain.calculations import registry as registry_module
 
@@ -259,19 +257,19 @@ def test_registry_probe_still_reports_real_dangling_references(monkeypatch: pyte
         catalogues=authority.catalogues.model_copy(update={"legal": {}}),
         _snapshots={},
     )
-    monkeypatch.setattr(registry_module, "bundled_authority", lambda: broken)
+    from ..preflight import _probe_registry_authority
 
-    row = probe_registry_referential_integrity()
+    row = _probe_registry_authority(broken)
 
     assert row.healthy is False
     assert row.severity is HealthSeverity.ERROR
     assert int(row.facts["failure_count"]) > 0
 
 
-def test_registry_probe_keeps_an_ungraded_revision_fail_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_registry_probe_keeps_an_ungraded_revision_fail_closed() -> None:
     """Passing the effective floor never turns an absent grade into a declaration."""
     from ...domain.calculations import registry as registry_module
-    from ...domain.calculations.registry._snapshot import _check_snapshot_authority_grade
+    from ..preflight import _probe_registry_authority
 
     authority = registry_module.bundled_authority()
     source_modelo = authority.modelos[0]
@@ -279,27 +277,20 @@ def test_registry_probe_keeps_an_ungraded_revision_fail_closed(monkeypatch: pyte
     ungraded = source_revision.model_copy(update={"authority_grade": None})
     modelo = source_modelo.model_copy(update={"revisions": {ungraded.id: ungraded}})
 
-    class UngradedAuthority:
-        modelos = (modelo,)
-
-        @staticmethod
-        def snapshot(
-            modelo_id: str,
-            *,
-            filing_year: int,
-            period: str,
-            revision_id: str,
-            grade: RegistryAuthorityGrade,
-        ) -> None:
-            del modelo_id, filing_year, period, revision_id
-            _check_snapshot_authority_grade(modelo, ungraded, requested_grade=grade)
-
-    monkeypatch.setattr(registry_module, "bundled_authority", UngradedAuthority)
-
-    row = probe_registry_referential_integrity()
+    broken = replace(
+        authority,
+        modelos=(modelo,),
+        _modelos_by_id={modelo.id: modelo},
+        _snapshots={},
+    )
+    row = _probe_registry_authority(broken)
 
     assert row.healthy is False
-    assert row.facts == {"revisions_checked": 1, "failure_count": 1}
+    assert row.facts == {
+        "revisions_checked": 1,
+        "failure_count": 1,
+        f"grade_{ungraded.effective_authority_grade.value}_count": 1,
+    }
 
 
 def _representative_context_exists(revision: object) -> bool:

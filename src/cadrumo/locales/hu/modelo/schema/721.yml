@@ -5,7 +5,40 @@ modelo:
         official_name: null
         title: null
       revision:
-        2023-y-siguientes:
+        '2023':
+          casilla:
+            ejercicio:
+              help: null
+              label: A külföldi virtuális pénznemekről szóló bevallás tárgyát képező
+                adóév
+            tipo-declaracion:
+              help: null
+              label: A bevallás típusa (eredeti / kiegészítő / helyettesítő)
+            x-cdqn6t3fchkmubj3dti6iprf5lo62qbj:
+              help: null
+              label: A letétkezelő országkódja (ISO 3166-1 alfa-2)
+            x-cdqn6t3fchkmubjedtmm4sj55lp62ujfdomn6rr3d5gmo:
+              help: null
+              label: A külföldi virtuális pénznem letétkezelőjének neve vagy cégneve
+            x-dlnmspb4c4n66r31epiiqt3fddims:
+              help: null
+              label: A virtuális pénznem azonosítója (ticker / token ID, például BTC,
+                ETH)
+            x-dlnmspb4c4n76obcchniqcph5li6ior9clmm4sj5:
+              help: null
+              label: A virtuális pénznem egyenlege vagy értéke december 31-én, euróban
+                kifejezve
+            x-dlnmspb4c4n76obcchniqqbed5hmiro:
+              help: null
+              label: A virtuális pénznem egyenlege vagy értéke az időszak elején (jelentős
+                változások esetén)
+          construct:
+            modelo-721-informative:
+              field:
+                title: null
+          field:
+            label: null
+        '2024':
           casilla:
             ejercicio:
               help: null

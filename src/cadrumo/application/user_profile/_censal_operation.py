@@ -44,9 +44,15 @@ from ..operations import (
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ._capsule_record import ProfileRecordConflictError
 from ._censal_observation import CensalObservation
-from ._censo_sync import CENSAL_ADOPTABLE_PATHS, censal_facts_from_read, reconcile_censal_read
+from ._censo_sync import (
+    CENSAL_ADOPTABLE_PATHS,
+    CENSO_SOURCE_TAG,
+    censal_facts_from_read,
+    reconcile_censal_read,
+)
 from ._cotejo_apply import apply_cotejo
 from ._profile_record_repository import ProfileRecordRepository
+from ._projections import record_to_effective_facts
 
 CENSAL_OPERATION_DEFINITION_ID = "user-profile.censo-review"
 CENSAL_PHASE_PREFLIGHT = "censo.preflight"
@@ -182,6 +188,25 @@ class CensalOperationRequest(BaseModel):
         return value
 
 
+def build_censal_operation_request(record: UserProfileRecord) -> CensalOperationRequest:
+    """Bind the exact baseline and safe per-field defaults for frontend review."""
+    effective = record_to_effective_facts(record)
+    return CensalOperationRequest(
+        baseline=CensalProfileBaseline.from_record(record),
+        field_intents=tuple(
+            CensalReviewedFieldIntent(
+                path=path,
+                intent=(
+                    CensalFieldIntent.ADOPT
+                    if (current := effective.get(path)) is None or current.source == CENSO_SOURCE_TAG
+                    else CensalFieldIntent.PRESERVE
+                ),
+            )
+            for path in CENSAL_ADOPTABLE_PATHS
+        ),
+    )
+
+
 class CensalOperationOutcome(StrEnum):
     """Settled domain outcome represented by the executor result reference."""
 
@@ -271,7 +296,11 @@ def build_censal_operation_registration(
             schema_version=1,
             model_type=CensalOperationRequest,
         ),
-        result_schema=None,
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="user-profile.censo-review.result",
+            schema_version=1,
+            model_type=CensalOperationResult,
+        ),
         review_projection_schema=CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
         interaction_response_schema=CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
         reviewed_operand_type=CensalReviewedOperand,
@@ -531,4 +560,5 @@ __all__ = [
     "CensalReviewedOperand",
     "build_censal_operation_definition",
     "build_censal_operation_registration",
+    "build_censal_operation_request",
 ]

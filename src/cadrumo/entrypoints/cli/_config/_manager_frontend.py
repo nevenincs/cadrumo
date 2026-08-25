@@ -387,7 +387,7 @@ def present_profile_manager(*, label: str | None = None) -> None:
     return: by the time this call comes back, every change the operator
     made is already on the encrypted record.
     """
-    from ....adapters.inbound.tui import run_profile_manager_tui
+    from ....entrypoints.tui.profile.overview import run_profile_manager_tui
     from ._manager_actions import manager_actions
 
     overview, persist = _active_profile_manager_storage(label=label)

@@ -119,7 +119,7 @@ from ._applicability_modelo202 import (
 from ._applicability_payer_facts import PayerFact, payer_fact_holds
 from ._applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
 from ._applicability_routes import TaxRoute
-from ._errors import RegistryValidationError
+from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from ._ids import LegalRefId, ModeloId
 from ._schema import ApplicabilityRuleDefinition
 
@@ -197,6 +197,8 @@ class ModeloApplicability(BaseModel):
     verdict: ApplicabilityVerdict
     reason: _OperatorReason
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    failure: RegistryFailureClassification | None = None
+    """Domain facts for a boundary to project when applicability is incomplete."""
 
     @property
     def applicable(self) -> bool:
@@ -315,7 +317,10 @@ class ModeloApplicabilityRule(BaseModel):
             return None
         if self.required_income_categories:
             if not profile.irpf_income_categories:
-                return _incomplete_applicability(self.modelo)
+                return _incomplete_applicability(
+                    self.modelo,
+                    entity_type_declared=profile.entity_type is not None,
+                )
             if profile.irpf_income_categories.isdisjoint(self.required_income_categories):
                 return self._not_applicable()
         if self.required_estimation_regimes:
@@ -348,7 +353,7 @@ class ModeloApplicabilityRule(BaseModel):
             profile: The :class:`TaxpayerProfile` to evaluate against this rule.
         """
         if profile.entity_type is None:
-            return _incomplete_applicability(self.modelo)
+            return _incomplete_applicability(self.modelo, entity_type_declared=False)
         if (result := self._entity_type_result(profile)) is not None:
             return result
         if (
@@ -482,8 +487,8 @@ member's; the entity's own obligation is the informational Modelo 184.
 
 _INCOMPLETE_UNDECLARED_REASON = (
     "No se puede determinar la aplicabilidad: el tipo de contribuyente no "
-    "está declarado. Declare primero el tipo de entidad y, en su caso, las "
-    "categorías de renta del IRPF con 'aeat config profile edit'."
+    "está declarado. Faltan el tipo de entidad y, en su caso, las "
+    "categorías de renta del IRPF."
 )
 """``INCOMPLETE`` rationale for an *undeclared taxpayer model*.
 
@@ -610,6 +615,7 @@ def _incomplete_applicability(
     modelo: str,
     *,
     unruled: bool = False,
+    entity_type_declared: bool = False,
 ) -> ModeloApplicability:
     """Return the explicit ``INCOMPLETE`` applicability for ``modelo``.
 
@@ -621,8 +627,10 @@ def _incomplete_applicability(
         modelo: The AEAT modelo identifier the verdict decides.
         unruled: ``True`` when the cause is a *missing seed rule* for the
             modelo — the profile may be fully declared. ``False`` (the
-            default) when the cause is an *undeclared taxpayer model* —
-            the operator must declare their taxpayer type first.
+            default) when the cause is an *undeclared taxpayer model*.
+        entity_type_declared: Whether the profile supplied its entity-type
+            fact.  Retained as a fact for the application boundary; it is not
+            a domain recovery instruction.
 
     Returns:
         A :class:`ModeloApplicability` with ``INCOMPLETE`` verdict and the
@@ -634,6 +642,18 @@ def _incomplete_applicability(
         verdict=ApplicabilityVerdict.INCOMPLETE,
         reason=reason,
         legal_refs=_INCOMPLETE_LEGAL_REFS,
+        failure=(
+            None
+            if unruled
+            else RegistryFailureClassification(
+                condition=RegistryFailureCondition.TAXPAYER_MODEL_DECLARED,
+                facts={
+                    "modelo": modelo,
+                    "taxpayer_model_declared": False,
+                    "entity_type_declared": entity_type_declared,
+                },
+            )
+        ),
     )
 
 

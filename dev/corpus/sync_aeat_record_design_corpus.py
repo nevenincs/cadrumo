@@ -207,6 +207,12 @@ _REQUIRED = (
         "194", "194 - Diseño de registro actualizado en 2023", "ant_100_199/archivos/DR_Mod_194-2023.pdf", "h100"
     ),
     _RequiredArtifact(
+        "194",
+        "194 - Orden de 18 de enero de 1999 (actualizado por Orden HAC/1276/2019)",
+        "DR_100_199/archivos/DR194_2016.pdf",
+        "h100",
+    ),
+    _RequiredArtifact(
         "210", "210 - Devengos entre 01/06/2022 y 01/01/2026", "DR_200_299/archivos_22/dr210e22.xls", "h200"
     ),
     _RequiredArtifact("216", "216 - Ejercicios 2020 a 2023", "DR_200_299/archivos_20/216v01e2020_v1.07.xlsx", "h200"),

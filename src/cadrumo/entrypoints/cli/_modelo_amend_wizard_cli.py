@@ -78,6 +78,7 @@ from ...application.modelo import (
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
+    amendment_evidence_missing_precondition,
     get_calculation_revision,
     get_filing_record,
     registry_casillas_for_registry_scope,
@@ -187,10 +188,16 @@ def run_modelo_work_amend_wizard(
     except ModeloRecordNotFoundError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
     if baseline.external_evidence is None:
-        raise deps.bad_parameter_from_error(
-            AmendmentEvidenceMissingError(
-                f"filing record {baseline.filing_record_id!r} has no external_evidence; the amendment wizard requires an imported AEAT-attested baseline (`aeat app modelo filing-record import`). Locally-filed returns are corrected through the standard re-file path (calculate -> verify -> file)."
-            )
+        raise AmendmentEvidenceMissingError(
+            context={
+                "work_unit_id": unit.work_unit_id,
+                "filing_record_id": baseline.filing_record_id,
+                "external_evidence_present": False,
+            },
+            precondition_failure=amendment_evidence_missing_precondition(
+                work_unit_id=unit.work_unit_id,
+                filing_record_id=baseline.filing_record_id,
+            ),
         ) from None
     try:
         casilla_rows = _baseline_casilla_rows(unit)
@@ -629,11 +636,6 @@ def _emit_amend_wizard_result(
     from ._common import _emit_envelope
     from ._modelo_rendering import filing_record_payload
 
-    export_next_action = tr(
-        "cli.app.modelo.work.amend_wizard_export_next_action",
-        work_unit_id=unit.work_unit_id,
-        default="Amendment filed as a draft internal record. Export the AEAT-importable fichero-BOE with `aeat app modelo export {work_unit_id} --output PATH`.",
-    )
     corrected_payload = tuple(
         (
             AmendWizardCorrectedCasillaPayload(
@@ -656,7 +658,6 @@ def _emit_amend_wizard_result(
             "m303_rectificativa_motive": m303_rectificativa_motive,
             "amendment_reason": reason,
             "corrected_casillas": corrected_payload,
-            "export_next_action": export_next_action,
         }
     )
     lines = [
@@ -668,7 +669,6 @@ def _emit_amend_wizard_result(
             f"corrected\t{row.number}\t{previous_value}\t{corrected_value}"
             for row, previous_value, corrected_value in corrections
         ),
-        export_next_action,
     ]
     _emit_envelope(ctx, command="modelo.work.amend_wizard", result=result, lines=lines)
 

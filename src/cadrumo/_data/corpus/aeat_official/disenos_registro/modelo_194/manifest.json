@@ -1,12 +1,12 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "194",
-  "retrieved_at": "2026-07-21",
+  "retrieved_at": "2026-08-15",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html"
   ],
-  "artefact_count": 2,
+  "artefact_count": 3,
   "artefacts": [
     {
       "modelo": "194",
@@ -31,6 +31,18 @@
       "bytes": 148101,
       "sha256": "83cd9a332e0016607e87332bea8c3e5d33f0b0f8373ec56f820d82414ca76a7b",
       "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "194",
+      "title": "194 - Orden de 18 de enero de 1999 (actualizado por Orden HAC/1276/2019)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR194_2016.pdf",
+      "stored_path": "files/03-194-orden-de-18-de-enero-de-1999-actualizado-por-orden-hac-1276-2019.pdf",
+      "original_filename": "DR194_2016.pdf",
+      "content_type": "application/pdf",
+      "bytes": 288829,
+      "sha256": "792cd3ab3f1e94ce7afd62a6fa37710253aec7b801e3097ad27741f90a657d5a",
+      "retrieved_at": "2026-08-15"
     }
   ]
 }

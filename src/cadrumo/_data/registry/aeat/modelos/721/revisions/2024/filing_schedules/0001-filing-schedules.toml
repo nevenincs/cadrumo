@@ -1,0 +1,8 @@
+[[revisions."2024".filing_schedules]]
+id = "modelo-721-anual"
+period_kind = "annual"
+periods = ["0A"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hfp-886-2023:art-2", "orden-hfp-886-2023:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-721-procedure"]
+

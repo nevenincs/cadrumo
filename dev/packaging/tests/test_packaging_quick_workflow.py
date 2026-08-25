@@ -90,7 +90,7 @@ def test_quick_workflow_mints_no_promotable_evidence() -> None:
 
 
 def test_quick_workflow_triggers_on_artifact_relevant_pushes() -> None:
-    """Main pushes finish their signal while superseded PR revisions cancel."""
+    """Main pushes complete the quick workflow while superseded pull requests cancel."""
     document = _quick_document()
     triggers = document[True] if True in document else document["on"]
     assert set(triggers) == {"workflow_dispatch", "push", "pull_request"}

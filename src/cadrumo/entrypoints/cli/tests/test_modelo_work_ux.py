@@ -621,11 +621,11 @@ def test_work_calculate_confirms_the_draft_was_saved(_isolated_cli_backend: Path
     assert payload["saved"] is True
     confirmation = payload["saved_confirmation"]
     assert payload["calculation_revision_id"] in confirmation
-    assert "--modelo 111" in confirmation
-    assert "--year 2025" in confirmation
-    assert "--period 1T" in confirmation
-    assert f"work revisions {work_unit_id}" not in confirmation
-    assert "work revision" in confirmation
+    assert "aeat app" not in confirmation
+    assert "--modelo" not in confirmation
+    assert "--year" not in confirmation
+    assert "--period" not in confirmation
+    assert "persisted" in confirmation
 
 
 def test_work_revision_shows_persisted_casilla_values(_isolated_cli_backend: Path) -> None:

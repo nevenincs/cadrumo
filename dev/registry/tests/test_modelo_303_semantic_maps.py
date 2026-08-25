@@ -32,8 +32,8 @@ from cadrumo.domain.calculations.registry import (
     ExportEncoding,
     RegistryRevisionInspection,
     RegistryValidationError,
+    load_registry_tree,
 )
-from cadrumo.domain.calculations.registry import load_registry_tree
 
 from ..analysis.m303_semantic_census import (
     M303_SEMANTIC_CENSUS_EXPECTATIONS,

@@ -1,0 +1,27 @@
+# The two header facts are the only casillas of this revision a verification can
+# reconcile without an oracle. Sibling modelo 720 -- the equivalent declaration
+# for bienes y derechos situados en el extranjero -- carries the same expectation
+# over its own decl.ejercicio and decl.tipo-declaracion, and for the same reason:
+# the remaining casillas are the custodio identity and the moneda balances, which
+# are the contribuyente's own reported facts rather than anything this
+# application derives, so there is nothing of ours to check them against.
+#
+# No casilla is listed as externally grounded. That claim requires a bundled
+# AEAT-authoritative oracle carrying the expected figure AND the engine
+# independently reproducing it; this revision computes nothing at all, so making
+# the claim would be false. discrepancy_causes names extraction_unreliable
+# because this modelo's layout authority is a BOE anexo that the shipped parser
+# refuses -- no field rows in the base document, and a first field at position 58
+# in the amendment -- so a mismatch here is far more likely to be the extraction
+# than the filing.
+
+[[revisions."2024".verification_expectations]]
+id = "modelo-721-informative-summary-verification"
+computed_casilla_ids = ["ejercicio", "tipo-declaracion"]
+tolerance = "0.00"
+rounding = "none"
+min_coverage = "1.0"
+discrepancy_causes = ["extraction_unreliable"]
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-quater", "orden-hfp-886-2023:art-1"]
+source_refs = ["aeat-modelo-721-procedure"]
+

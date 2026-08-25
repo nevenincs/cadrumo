@@ -1,0 +1,10 @@
+[[revisions."2019".workbook_parity_refs]]
+id = "modelo-194-record-design"
+workbook_source = "boe-modelo-194-form-layout"
+fixture_id = "modelo-194-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-1999-11-18:apartado-cuarto"]
+source_refs = ["boe-modelo-194-form-layout"]
+

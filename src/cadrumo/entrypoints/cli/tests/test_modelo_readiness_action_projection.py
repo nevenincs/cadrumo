@@ -1,4 +1,4 @@
-"""The modelo-readiness triple carries typed action axes beside native facts."""
+"""Modelo readiness carries native facts, not locally selected action axes."""
 
 from __future__ import annotations
 
@@ -7,26 +7,18 @@ import pytest
 from ....application.ledger import LedgerPreflightIssue, LedgerPreflightIssueReason
 from ....application.state_projection import (
     CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS,
-    MODELO_READINESS_MISSING_PROFILE_ACTION,
-    OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE,
-    OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE,
     ProjectionModeloBindingRequirement,
     ProjectionModeloReadiness,
 )
 from ....application.user_profile import ProfilePreflightRequirement
-from ....core import BindingSourceKind, OperatorActionAxis, Period
+from ....core import BindingSourceKind, Period
 from ....core.i18n import tr
 from .._modelo_readiness_cli import _readiness_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def test_readiness_action_projections_are_total_over_their_native_codes() -> None:
-    assert MODELO_READINESS_MISSING_PROFILE_ACTION is OperatorActionAxis.SET_PROFILE_FACT
-    assert set(OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE) == set(BindingSourceKind)
-    assert set(OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE) == set(LedgerPreflightIssueReason)
-    assert set(OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE.values()) <= set(OperatorActionAxis)
-    assert set(OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE.values()) <= set(OperatorActionAxis)
+def test_readiness_locale_projection_is_total_over_native_binding_codes() -> None:
     assert set(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS) == set(BindingSourceKind)
 
 
@@ -45,25 +37,7 @@ def test_binding_readiness_locale_projection_resolves_every_key_in_every_catalog
         setter(BindingSourceKind.PROFILE, "forbidden")
 
 
-@pytest.mark.parametrize(
-    ("source", "expected_action"),
-    (
-        (BindingSourceKind.RETENCIONES_AGGREGATION, OperatorActionAxis.SUPPLY_MANUAL_INPUT),
-        (BindingSourceKind.WITHHOLDING, OperatorActionAxis.SUPPLY_MANUAL_INPUT),
-        (BindingSourceKind.FOREIGN_ASSET, OperatorActionAxis.SUPPLY_MANUAL_INPUT),
-        (BindingSourceKind.ATRIBUCION_MEMBER, OperatorActionAxis.SET_PROFILE_FACT),
-        (BindingSourceKind.RELATED_PARTY_OPERATION, OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE),
-        (BindingSourceKind.REFUND_OPERATION, OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE),
-    ),
-)
-def test_non_ledger_binding_sources_project_their_actual_operator_workflow(
-    source: BindingSourceKind,
-    expected_action: OperatorActionAxis,
-) -> None:
-    assert OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE[source] is expected_action
-
-
-def test_readiness_payload_projects_actions_without_dropping_native_facts() -> None:
+def test_readiness_payload_preserves_facts_without_selecting_actions() -> None:
     period = Period.from_year_and_code(2026, "1T")
     report = ProjectionModeloReadiness(
         profile_id="11111111-1111-4111-8111-111111111111",
@@ -111,8 +85,8 @@ def test_readiness_payload_projects_actions_without_dropping_native_facts() -> N
     )
 
     assert payload.missing[0].selector == "tax_residence.jurisdiction_scope"
-    assert payload.missing[0].operator_action is OperatorActionAxis.SET_PROFILE_FACT
     assert payload.missing_bindings[0].source is BindingSourceKind.PREVIOUS_FILING
-    assert payload.missing_bindings[0].operator_action is OperatorActionAxis.FILE_PRIOR_PERIOD
     assert payload.ledger_issues[0].reason == LedgerPreflightIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE.value
-    assert payload.ledger_issues[0].operator_action is OperatorActionAxis.RESOLVE_IDENTITY
+    assert "operator_action" not in payload.missing[0].model_dump()
+    assert "operator_action" not in payload.missing_bindings[0].model_dump()
+    assert "operator_action" not in payload.ledger_issues[0].model_dump()

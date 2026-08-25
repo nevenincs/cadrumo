@@ -986,7 +986,8 @@ msgstr ""
 "Un fitxer de perfil portable conté dades del contribuent, inclosos "
 "l'identificador tributari, l'activitat i l'historial de presentacions "
 "local. Desa'l com a dada tributària sensible i no l'adjuntis a una "
-"sol·licitud d'ajuda tret que n'hagis eliminat les dades personals."
+"sol·licitud d'ajuda. Consulta [importació, exportació i "
+"evidència](../reference/import-export-and-evidence.md)."
 
 #: ../../how-to/profile-setup.md:380
 msgid ""

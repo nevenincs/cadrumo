@@ -122,8 +122,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
     assert "ledger_ready_scope\ttransaction_preflight_only" in text_readiness.output
     assert "export_ready\tTrue" in text_readiness.output
     assert "export_refusal\t\n" in text_readiness.output
-    assert "finish_line\texport verified-complete revision via 'aeat app modelo export'" in text_readiness.output
     assert "readiness_note\tledger_ready only means" in text_readiness.output
-    assert (
-        "missing_bindings_command\taeat app modelo bindings list --modelo 100 --year 2025 --period 0A --missing"
-    ) in text_readiness.output
+    assert "missing_bindings_command" not in text_readiness.output
+    assert "finish_line" not in text_readiness.output
+    assert all("operator_action" not in row for row in readiness_missing.values())

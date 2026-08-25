@@ -142,19 +142,6 @@ def test_no_record_outlives_its_violation() -> None:
     )
 
 
-def test_the_synthetic_bucket_exemption_is_still_what_makes_this_matter() -> None:
-    """Anchor: the reason stated above must still be true of the code.
-
-    This gate argues from a specific fact -- that the ephemeral provider's
-    bucket id is a member of the set that disables the cross-bucket check. If
-    that stops being true the argument needs rewriting, and a docstring nobody
-    re-checks is how a gate ends up defending a hazard that moved.
-    """
-    from ..adapters.persistence.storage.runtime import _SYNTHETIC_SESSION_BUCKET_IDS
-
-    assert "ephemeral" in _SYNTHETIC_SESSION_BUCKET_IDS
-
-
 def test_a_dynamic_import_of_test_support_is_still_seen() -> None:
     """DISCRIMINATING: an import no ``ast.Import`` node describes.
 

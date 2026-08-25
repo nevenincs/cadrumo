@@ -127,6 +127,7 @@ from ._models import (
     UsageSummary,
 )
 from ._providers import rasterise_pdf_pages_to_base64_png
+from ._providers.base import ProviderCompletion, ProviderRequest
 from ._retention import select_retention_removal_keys
 from ._supply_nature_proposal import (
     SUPPLY_NATURE_PROMPT_ID,
@@ -181,6 +182,8 @@ __all__ = [
     "OperatorIvaDerivationResult",
     "PromptDefinition",
     "PromptRegistry",
+    "ProviderCompletion",
+    "ProviderRequest",
     "RejectedRoleProposal",
     "SemanticColumnRoleMapper",
     "SupplyNatureProposal",

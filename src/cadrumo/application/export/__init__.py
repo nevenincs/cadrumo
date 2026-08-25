@@ -34,6 +34,9 @@ from __future__ import annotations
 
 from ._google_operation import (
     GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
+    GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
+    GOOGLE_SHEETS_EXPORT_PHASE_PLAN,
+    GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT,
     GoogleSheetsExportCapabilityDisabledError,
     GoogleSheetsExportOperationRequest,
     GoogleSheetsExportOperationResult,
@@ -53,6 +56,9 @@ from ._tabular import (
 
 __all__ = [
     "GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID",
+    "GOOGLE_SHEETS_EXPORT_PHASE_APPLY",
+    "GOOGLE_SHEETS_EXPORT_PHASE_PLAN",
+    "GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT",
     "ExportSerializationFormat",
     "GoogleSheetsExportCapabilityDisabledError",
     "GoogleSheetsExportOperationRequest",

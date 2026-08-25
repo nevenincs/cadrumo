@@ -50,7 +50,6 @@ def _valid_kwargs(**overrides: object) -> dict[str, object]:
         # row is a COMPLEMENTARIA, not an M303 rectificativa, so it has no motive.
         "m303_rectificativa_motive": None,
         "corrected_casillas": (),
-        "export_next_action": "aeat app modelo export <work_unit_id> --output PATH",
     }
     base.update(overrides)
     return base
@@ -76,7 +75,6 @@ def test_work_amend_wizard_result_round_trips_valid_row() -> None:
         ("status", "bogus"),
         ("kind", "bogus"),
         ("live_submission", "yes"),
-        ("export_next_action", ""),
         ("amends_filing_record_id", "not-a-hex-64-id"),
     ),
 )

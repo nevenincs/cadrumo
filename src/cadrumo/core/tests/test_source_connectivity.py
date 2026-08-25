@@ -65,7 +65,7 @@ class _CoreProtocolTestAuthority:
 
 
 class _WorkflowAuthorityWithoutConnection(_CoreProtocolTestAuthority):
-    """Deliberately stale implementation of the pre-S141 workflow seam."""
+    """Deliberately stale implementation of the earlier workflow seam."""
 
     def operator_workflow_reaches_source(  # type: ignore[override]
         self,

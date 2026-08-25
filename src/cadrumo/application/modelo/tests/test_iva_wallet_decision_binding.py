@@ -7,10 +7,11 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import ActionConditionality, CasillaId, NoRecoveryOutcome, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from .. import _iva_wallet_seed as iva_wallet_seed_module
 from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
 )
@@ -29,6 +30,24 @@ _M303_PRIOR_COMPENSATION_CASILLA: CasillaId = validated_casilla_id(
 )
 _M303_PRIOR_COMPENSATION_BINDING: BindingId = "modelo-303-compensacion-pendiente-anteriores"
 _M303_REPERCUTIDO_GENERAL_CUOTA_BINDING: BindingId = "modelo-303-iva-repercutido-general-cuota"
+
+
+def test_wallet_missing_taxpayer_is_an_application_owned_no_action_outcome(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Seed/correct/override do not turn missing identity into CLI profile-edit prose."""
+    monkeypatch.setattr(iva_wallet_seed_module, "taxpayer_nif_for_bucket", lambda _bucket_id: None)
+
+    with pytest.raises(iva_wallet_seed_module.ModeloIvaWalletSeedNoTaxpayerError) as raised:
+        iva_wallet_seed_module.seed_iva_compensation_period_for_bucket(
+            bucket_id=_BUCKET_ID,
+            period=Period.from_year_and_code(2026, "1T"),
+            amount=Decimal("1"),
+        )
+
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.action is None
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
 def _decision(

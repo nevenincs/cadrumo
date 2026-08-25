@@ -85,7 +85,7 @@ def test_family_pages_carry_more_than_their_link_skeleton(rendered_pages: dict[s
     family_pages = sorted(name for name in rendered_pages if _FAMILY_PAGE.match(name))
     assert family_pages, f"no family landing page was generated; pages were {sorted(rendered_pages)}"
 
-    stubs = []
+    under_described_pages = []
     for name in family_pages:
         lines = rendered_pages[name].splitlines()
         prose = [
@@ -96,11 +96,11 @@ def test_family_pages_carry_more_than_their_link_skeleton(rendered_pages: dict[s
         # The title line itself is prose by this measure, so a bare stub still yields
         # one entry; more than one means the page says something beyond its own name.
         if len(prose) < 2:
-            stubs.append(f"{name} ({len(prose)} non-heading, non-bullet line(s))")
+            under_described_pages.append(f"{name} ({len(prose)} non-heading, non-bullet line(s))")
 
-    assert not stubs, (
+    assert not under_described_pages, (
         "these family landing pages are link skeletons -- a heading and a list, with no "
-        f"orientation for the reader: {stubs}"
+        f"orientation for the reader: {under_described_pages}"
     )
 
 
@@ -110,3 +110,17 @@ def test_every_family_page_offers_a_way_back_to_the_index(rendered_pages: dict[s
         name for name in sorted(rendered_pages) if _FAMILY_PAGE.match(name) and "/cli/index" not in rendered_pages[name]
     ]
     assert not orphans, f"these family pages never link back to the CLI reference index: {orphans}"
+
+
+def test_every_nested_group_is_enrolled_in_its_family_toctree(rendered_pages: dict[str, str]) -> None:
+    """Generated group pages must be reachable by Sphinx as well as prose links."""
+    missing = []
+    for name in sorted(rendered_pages):
+        match = re.fullmatch(r"cli/([^/]+)/([^/]+)\.rst", name)
+        if match is None:
+            continue
+        family, group = match.groups()
+        family_page = rendered_pages[f"cli/{family}.rst"]
+        if f"   {family}/{group}\n" not in family_page:
+            missing.append(name)
+    assert not missing, f"these generated CLI group pages are absent from their family toctree: {missing}"

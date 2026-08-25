@@ -169,8 +169,18 @@ def test_catalogue_support_requires_exact_route_path_and_command_identity() -> N
         "canonical_cli_path": ("app", "modelo", "work", "calculate"),
     }
     assert catalogue.supports(**exact)
-    assert not catalogue.supports(**(exact | {"command_id": "modelo.work.wizard"}))
-    assert not catalogue.supports(**(exact | {"canonical_cli_path": ("app", "quickfile")}))
+    assert not catalogue.supports(
+        entrypoint_id="cli",
+        command_id="modelo.work.wizard",
+        route_id=ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
+        canonical_cli_path=("app", "modelo", "work", "calculate"),
+    )
+    assert not catalogue.supports(
+        entrypoint_id="cli",
+        command_id="modelo.work.calculate",
+        route_id=ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
+        canonical_cli_path=("app", "quickfile"),
+    )
 
 
 def test_public_facade_exposes_the_workflow_catalogue() -> None:

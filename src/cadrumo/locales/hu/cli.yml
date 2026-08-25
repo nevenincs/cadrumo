@@ -2113,10 +2113,10 @@ cli:
         pull_divergences_notice: 'A népesség-nyilvántartó hatóság {count} mezőnél
           eltérő értéket jelez a megadott válaszodhoz képest: {axes}. A válaszod változatlan
           marad; minden eltérést neked kell rendezni.'
-        pull_help: Beolvassa a személyazonosságodat és a lakcímedet az AEAT nyilvántartási
-          adataiból, majd előnézetet ad vagy rögzíti azokat az aktív profilban.
-        pull_preview_notice: 'Csak előnézet: a profilba semmi nem került. Az adatok
-          rögzítéséhez futtasd újra a --apply kapcsolóval.'
+        pull_apply_help: Egyszer olvas, majd alkalmazás előtt megnyitja a pontos ellenőrzött javaslatot.
+        pull_help: Előnézetet ad az AEAT nyilvántartási személyazonosságáról és címéről,
+          vagy a kanonikus folytatható művelettel ellenőriz és alkalmaz egy pontos javaslatot.
+        pull_preview_notice: 'Csak előnézet: a profilba semmi nem került.'
         pull_verified_tier_notice: Ezeket a tényeket közvetlenül a népesség-nyilvántartó
           hatóságtól olvastuk, ezért a censo felvétele ellenőrzöttnek számít.
         pull_withheld_notice: 'A(z) {count} mező értéke ki van takarva a kimenetben:

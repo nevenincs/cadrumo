@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import ast
 import importlib
 import subprocess
 import sys
 import textwrap
+from pathlib import Path
 from types import ModuleType
 
 import pytest
@@ -108,3 +110,64 @@ def test_importing_user_profile_keeps_censal_operation_lazy() -> None:
     )
 
     assert completed.returncode == 0, completed.stderr
+
+
+def test_censal_write_authority_is_not_redeclared_in_production() -> None:
+    """Anti-redeclaration gate: reviewed live apply has one exact owner."""
+
+    package_root = Path(__file__).resolve().parents[3]
+    sources = {
+        path.relative_to(package_root).as_posix(): path.read_text(encoding="utf-8")
+        for path in package_root.rglob("*.py")
+        if "tests" not in path.parts
+    }
+    trees = {relative: ast.parse(source) for relative, source in sources.items()}
+    assert all(
+        not any(
+            isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == "apply_censal_read"
+            for node in ast.walk(tree)
+        )
+        for tree in trees.values()
+    )
+
+    def called_name(node: ast.Call) -> str | None:
+        if isinstance(node.func, ast.Name):
+            return node.func.id
+        if isinstance(node.func, ast.Attribute):
+            return node.func.attr
+        return None
+
+    callers = {
+        relative
+        for relative, tree in trees.items()
+        if not relative.endswith("user_profile/_cotejo_apply.py")
+        and any(isinstance(node, ast.Call) and called_name(node) == "apply_cotejo" for node in ast.walk(tree))
+    }
+    assert callers == {
+        "application/user_profile/_censal_operation.py",
+        "entrypoints/cli/_config/_censo_file.py",
+    }
+    canonical_calls = [
+        node
+        for node in ast.walk(trees["application/user_profile/_censal_operation.py"])
+        if isinstance(node, ast.Call) and called_name(node) == "apply_cotejo"
+    ]
+    assert len(canonical_calls) == 1
+    assert {keyword.arg for keyword in canonical_calls[0].keywords} == {"reviewed_proposal"}
+    frontend_functions = {
+        "entrypoints/_censal_review.py": "_run",
+        "entrypoints/cli/_config/_censo_file.py": "censo_pull",
+        "entrypoints/cli/_config/_manager_actions.py": "_run_censal_pull",
+    }
+    for relative, function_name in frontend_functions.items():
+        function = next(
+            node
+            for node in ast.walk(trees[relative])
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == function_name
+        )
+        forbidden = {called_name(node) for node in ast.walk(function) if isinstance(node, ast.Call)} & {
+            "apply_censal_read",
+            "apply_profile_fact_changes",
+            "apply_manager_profile_field_mutation",
+        }
+        assert forbidden == set()

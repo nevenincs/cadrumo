@@ -1,6 +1,6 @@
 @step Preview the census facts AEAT holds for you.
 @static aeat config profile censo pull
 @blocked live-aeat The pull reads the AEAT sede consulta over an authenticated session; the sandbox refuses live frames.
-@step Apply the facts returned by a new authenticated read; this does not resume the earlier preview.
+@step Acquire once, review the exact proposal, and apply it through the canonical resumable operation.
 @static aeat config profile censo pull --apply
-@blocked live-aeat The current CLI apply performs another authenticated AEAT read, so the sandbox cannot execute it or treat the earlier preview as its reviewed operand.
+@blocked live-aeat The operation reads AEAT once and requires an interactive exact-proposal review, which the documentation sandbox cannot answer.

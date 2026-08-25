@@ -4,12 +4,14 @@ Both transports of the CLI pull-and-file standard live here: ``pull``
 reads the taxpayer's censal state live from AEAT's *Mis Datos Censales*
 consulta, and ``file --file PATH`` reads a Certificado de Situación
 Censal (procedure G313) the operator downloaded from Sede themselves.
-They differ in transport and evidence tier, never in how they reconcile:
-both commit through the single cotejo apply authority
+They differ in transport and evidence tier. Certificate files commit through
+the single cotejo apply authority
 (:func:`~cadrumo.application.user_profile.apply_cotejo`, which delegates
 to the manual-enrolment write path and emits exactly one
-``CENSO_APPLIED`` per apply-commit; no parallel write route), and both
-default to preview with ``--apply`` as the commit door.
+``CENSO_APPLIED`` per apply-commit; no parallel write route). The live pull is
+preview-only until its frontend can complete the canonical
+``user-profile.censo-review`` interaction; ``--apply`` fails before acquisition
+instead of bypassing that reviewed operation.
 
 ``file`` parses through the inbound censo adapter — today structure-only,
 so every document meets an instructive refusal — and enrolls at the
@@ -105,18 +107,21 @@ def censo_pull(
     ctx: typer.Context,
     apply: bool = False,
 ) -> None:
-    """Read the censal consulta and preview — or with ``--apply``, enroll — its facts."""
+    """Preview the censal consulta, refusing legacy direct apply before acquisition."""
     import asyncio
 
     from ....application.live import pull_censal_datos
     from ....application.user_profile import (
         CENSAL_ADOPTABLE_PATHS,
-        apply_censal_read,
+        CENSO_SOURCE_TAG,
+        CensalFieldIntent,
         censal_facts_from_read,
         reconcile_censal_read,
         record_to_effective_facts,
     )
-    from ....application.workflow import workflow_state_repository
+    from ....domain.user_profile import UserProfileFact
+    from ....entrypoints import run_censal_review
+    from ._censo_review_ui import confirm_censal_review
 
     # Refuse an absent active profile before the read, not after: the live
     # navigation can trigger a Cl@ve push, and asking the operator to
@@ -125,9 +130,6 @@ def censo_pull(
     state = _state()
     record = state.active_profile_record()
 
-    read = asyncio.run(pull_censal_datos())
-    projected = censal_facts_from_read(read)
-    reconciliation = reconcile_censal_read(record, projected, incoming_identity=read.identity.nif)
     # Read the EFFECTIVE facts, not the value projection: a path the
     # operator cleared survives here as ``value=None`` where the value
     # projection drops it entirely. That distinction is the whole
@@ -136,39 +138,74 @@ def censo_pull(
     effective = record_to_effective_facts(record)
 
     if apply:
-        # The live door adopts only the blank paths and defers every
-        # disagreement, but it commits through the SAME single apply
-        # authority the artefact door uses, so one ``CENSO_APPLIED`` marks
-        # the commit and the deferred axes land in the one
-        # ``censo.divergencia`` namespace an operator reviews.
-        workflow_state_repository().save(apply_censal_read(state, read))
+        from ....core.config import Settings
 
-    adopted = tuple(
-        CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in reconciliation.adopted
-    )
-    divergences = tuple(
-        CensoPullDivergencePayload(
-            path=path,
-            profile_value=(fact.value if (fact := effective.get(path)) is not None else None),
-            aeat_value=value,
+        reviewed = run_censal_review(actor_ref="operator:cli-censo", decide=confirm_censal_review)
+        projected = tuple(
+            UserProfileFact(path=field.path, value=field.observed_value, source=CENSO_SOURCE_TAG)
+            for field in reviewed.projection.fields
+            if field.observed_value is not None
         )
-        for path, value in reconciliation.divergences
-    )
-    unchanged = _unchanged_facts(
-        projected=projected,
-        reconciliation=reconciliation,
-        adoptable_paths=CENSAL_ADOPTABLE_PATHS,
-    )
+        adopted = tuple(
+            CensoFactPayload(path=field.path, value=field.observed_value, source=CENSO_SOURCE_TAG)
+            for field in reviewed.projection.fields
+            if field.intent is CensalFieldIntent.ADOPT and field.observed_value is not None
+        )
+        divergences = tuple(
+            CensoPullDivergencePayload(
+                path=field.path,
+                profile_value=(current.value if (current := effective.get(field.path)) is not None else None),
+                aeat_value=field.observed_value,
+            )
+            for field in reviewed.projection.fields
+            if field.intent is CensalFieldIntent.PRESERVE
+            and field.observed_value is not None
+            and ((current := effective.get(field.path)) is None or current.value != field.observed_value)
+        )
+        unchanged = tuple(
+            CensoFactPayload(path=field.path, value=field.observed_value, source=CENSO_SOURCE_TAG)
+            for field in reviewed.projection.fields
+            if field.intent is CensalFieldIntent.PRESERVE
+            and field.observed_value is not None
+            and (current := effective.get(field.path)) is not None
+            and current.value == field.observed_value
+        )
+        source_url = str(Settings.external_constants().aeat.domains.sede) + str(
+            Settings.external_constants().aeat.sede_paths.censal_datos
+        )
+    else:
+        read = asyncio.run(pull_censal_datos())
+        projected = censal_facts_from_read(read)
+        reconciliation = reconcile_censal_read(record, projected, incoming_identity=read.identity.nif)
+        adopted = tuple(
+            CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
+            for fact in reconciliation.adopted
+        )
+        divergences = tuple(
+            CensoPullDivergencePayload(
+                path=path,
+                profile_value=(fact.value if (fact := effective.get(path)) is not None else None),
+                aeat_value=value,
+            )
+            for path, value in reconciliation.divergences
+        )
+        unchanged = _unchanged_facts(
+            projected=projected,
+            reconciliation=reconciliation,
+            adoptable_paths=CENSAL_ADOPTABLE_PATHS,
+        )
+        source_url = str(read.source_url)
+
     result = CensoPullResult(
         applied=apply,
-        source_url=str(read.source_url),
+        source_url=source_url,
         adopted=adopted,
         unchanged=unchanged,
         divergences=divergences,
     )
     lines = _pull_lines(
         applied=apply,
-        source_url=str(read.source_url),
+        source_url=source_url,
         adopted=adopted,
         unchanged=unchanged,
         divergences=divergences,
@@ -337,9 +374,9 @@ def _divergence_notices(divergences: tuple[CensoPullDivergencePayload, ...]) -> 
 def _tier_notices(*, applied: bool, adopted: tuple[CensoFactPayload, ...]) -> list[Notice]:
     """State what the run actually did: enrolled at the verified tier, or previewed.
 
-    Preview is intentionally actionless. Applying is a fresh write decision
-    and needs the originating live-read request to be materialised again; this
-    success notice cannot claim either from its diagnostic payload.
+    Preview is intentionally actionless. Applying requires the canonical
+    reviewed operation; this success notice cannot claim approval from its
+    diagnostic payload.
     """
     notices: list[Notice] = []
     if applied and adopted:

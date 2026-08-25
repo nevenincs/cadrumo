@@ -52,7 +52,7 @@ def _summary_fields():
 
 def _resumen_casillas():
     modelo = next(m for m in bundled_authority().modelos if str(m.id) == "188")
-    revision = modelo.revisions["2019-y-siguientes"]
+    revision = modelo.revisions["2023-y-siguientes"]
     return tuple(c for c in revision.casillas if "resumen" in tuple(c.section or ()))
 
 

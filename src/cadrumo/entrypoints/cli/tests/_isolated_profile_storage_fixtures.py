@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -34,12 +35,18 @@ _LIVE_FX_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
 _LIVE_FX_SETTINGS = {"cadrumo_output_language": "en", "cadrumo_live_tests_enabled": "1"}
 
 
+class _LiveFxBackendArguments(TypedDict):
+    bucket_id: str
+    dispose_engine_around: bool
+    settings_overrides: dict[str, str]
+
+
 #: The shared arguments both live-FX bindings below are built from. They are
 #: module constants rather than a wrapper's parameters: what must not drift
 #: between the two scopes is these VALUES, and naming them once achieves that
 #: without a function that returns a different fixture per call -- a shape the
 #: static fixture census cannot resolve.
-_LIVE_FX_BACKEND_ARGUMENTS = {
+_LIVE_FX_BACKEND_ARGUMENTS: _LiveFxBackendArguments = {
     "bucket_id": _LIVE_FX_BUCKET_ID,
     "dispose_engine_around": True,
     "settings_overrides": _LIVE_FX_SETTINGS,

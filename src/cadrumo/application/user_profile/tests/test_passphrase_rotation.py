@@ -93,7 +93,7 @@ def test_the_new_passphrase_opens_the_profile_and_the_old_one_no_longer_does(tmp
 
         material = load_committed_profile_password_material(profile_id)
         assert unlock_profile_custody_password(material, password=_REPLACEMENT).dek is not None
-        with pytest.raises(Exception) as refused:
+        with pytest.raises(ProfileCustodyPasswordError) as refused:
             unlock_profile_custody_password(material, password=_CURRENT)
         assert isinstance(refused.value, ProfileCustodyPasswordError)
 
@@ -349,7 +349,7 @@ def test_rotation_preserves_composed_and_decomposed_passwords_exactly(
 
         material = load_committed_profile_password_material(profile_id)
         assert unlock_profile_custody_password(material, password=replacement).dek is not None
-        with pytest.raises(Exception) as refused:
+        with pytest.raises(ProfileCustodyPasswordError) as refused:
             unlock_profile_custody_password(material, password=equivalent)
         assert isinstance(refused.value, ProfileCustodyPasswordError)
 

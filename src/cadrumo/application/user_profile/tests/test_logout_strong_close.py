@@ -63,7 +63,6 @@ def _register_and_login(storage_root: Path) -> str:
     return outcome.profile_id
 
 
-@pytest.mark.os_keychain  # cross-process resume needs a minted acceleration receipt
 def test_logout_clears_the_live_session_the_pointer_and_the_persisted_acceleration(
     tmp_path: Path,
 ) -> None:

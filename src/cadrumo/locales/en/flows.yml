@@ -68,6 +68,9 @@ flows:
         already matching, %{diverging} differing.'
       censal_pull_no_provider: Choose how you identify to AEAT before reading your
         censal data.
+      censal_pull_review_applied: The exact reviewed AEAT censal proposal was applied.
+      censal_pull_review_rejected: The reviewed AEAT censal proposal was rejected;
+        the profile was not changed.
       certificate: Certificate
       certificate_active: Active certificate
       certificate_done: 'Identification: %{provider}; active certificate: %{name}.'
@@ -97,6 +100,12 @@ flows:
       working: Running {action}...
     actions:
       section: Actions
+    censal_review:
+      apply: Apply this exact proposal
+      decision: Decision
+      reject: Reject without changing the profile
+      required: Choose apply or reject.
+      title: Review the exact AEAT censal proposal
     choice_unavailable: Unavailable choice
     column:
       field: Field

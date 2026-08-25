@@ -531,6 +531,9 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
                 )
                 + "\n"
             )
+        if groups:
+            family_parts.extend(("\n.. toctree::\n", "   :hidden:\n\n"))
+            family_parts.extend(f"   {family}/{group}\n" for group in groups)
         if groups or direct:
             family_parts.append("\n" + docs_chrome("docs.cli.family.index_link_line", language) + "\n")
         family_content = "".join(family_parts)

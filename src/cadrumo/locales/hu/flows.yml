@@ -70,6 +70,8 @@ flows:
         %{unchanged} már egyezett, %{diverging} eltér.'
       censal_pull_no_provider: A nyilvántartási adatok beolvasása előtt válassza ki,
         hogyan azonosítja magát az AEAT felé.
+      censal_pull_review_applied: Az AEAT pontosan ellenőrzött nyilvántartási javaslata alkalmazva lett.
+      censal_pull_review_rejected: Az ellenőrzött AEAT-javaslat elutasítva; a profil nem változott.
       certificate: Tanúsítvány
       certificate_active: Aktív tanúsítvány
       certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
@@ -100,6 +102,12 @@ flows:
       working: '{action} folyamatban...'
     actions:
       section: Műveletek
+    censal_review:
+      apply: A pontos javaslat alkalmazása
+      decision: Döntés
+      reject: Elutasítás a profil módosítása nélkül
+      required: Válassza az alkalmazást vagy az elutasítást.
+      title: Az AEAT pontos nyilvántartási javaslatának ellenőrzése
     choice_unavailable: Nem elérhető választási lehetőség
     column:
       field: Mező

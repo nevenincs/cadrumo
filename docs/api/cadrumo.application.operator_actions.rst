@@ -15,3 +15,4 @@ Submodules
 
    cadrumo.application.operator_actions._catalogue
    cadrumo.application.operator_actions._models
+   cadrumo.application.operator_actions._preconditions

@@ -18,7 +18,7 @@ import pytest
 
 from .....application.user_profile import ProfileFieldChoice, ProfileFieldView
 from .....domain.user_profile import ProfileSetupState
-from .. import ProfileManagerApp
+from .....entrypoints.tui.profile.overview import ProfileManagerApp
 
 pytestmark = [
     pytest.mark.unit,

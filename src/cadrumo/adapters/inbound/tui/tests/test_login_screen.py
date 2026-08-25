@@ -22,9 +22,9 @@ from textual.widgets import Button, Input, Select
 
 from .....application.user_profile import login_profile, logout_active_profile
 from .....entrypoints.cli import attempt_login, attempt_registration
+from .....entrypoints.tui.components.status import PinnedStatusBar
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import LoginApp, LoginChoice
-from .._status_bar import PinnedStatusBar
 
 pytestmark = [
     pytest.mark.integration,
