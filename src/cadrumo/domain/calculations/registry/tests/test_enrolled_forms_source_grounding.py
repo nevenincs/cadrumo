@@ -47,11 +47,14 @@ def test_capital_mobiliario_summary_guidance_and_layout_sources_are_separated(
     assert layout.authority == "boe"
     assert layout.kind == "form_spec"
 
-    revision = modelo.revisions["2019-y-siguientes"]
-    for formula in revision.formulas:
-        for citation in formula.source_citations:
-            assert citation.source_ref == procedure_ref
-            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+    # Every declared revision, not one pinned id: the ids are re-authored per
+    # orden (187 is 2022-y-siguientes, 188 is 2023-y-siguientes, 194 carries
+    # three), so pinning one both rots and narrows what this asserts.
+    for revision in modelo.revisions.values():
+        for formula in revision.formulas:
+            for citation in formula.source_citations:
+                assert citation.source_ref == procedure_ref
+                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
 
 
 def test_deenrolled_modelo_198_has_no_registry_sources() -> None:
