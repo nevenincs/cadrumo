@@ -7,9 +7,14 @@ from datetime import date
 import pytest
 
 from .....core import Period
-from .._schema import DeadlineWindowDefinition, PeriodSelector
+from .._schema import (
+    DeadlineWindowDefinition,
+    ModeloScheduleDefinition,
+    PeriodSelector,
+    SupportedFilingYearsCatalogue,
+)
 from .._validate import RegistryValidator
-from .._validate_revision_rules import validate_deadline_window_ownership
+from .._validate_revision_rules import validate_deadline_window_ownership, validate_periodic_deadline_completeness
 from ._referential_integrity_support import (
     RegistryValidationError,
     minimal_catalogues,
@@ -115,3 +120,32 @@ def test_registry_build_accumulates_missing_and_ambiguous_canonical_owners() -> 
     assert "ambiguous revision selection" in message
     assert "deadline window 'missing-window' has no unique canonical owner" in message
     assert "modelo 130: no revision for year=2024 period='0A' revision=None" in message
+
+
+def test_periodic_deadline_completeness_bites_on_one_planted_missing_cell() -> None:
+    schedule = ModeloScheduleDefinition(
+        id="monthly",
+        period_kind="monthly",
+        periods=("01", "02"),
+        legal_refs=("ley-58-2003:art-29",),
+        source_refs=("aeat-manual-modelo",),
+    )
+    revision = minimal_revision(deadline_windows=(_window("january", "01"),)).model_copy(
+        update={
+            "valid_from": date(2024, 1, 1),
+            "valid_to": date(2024, 12, 31),
+            "period_selector": PeriodSelector(year_from=2024, year_to=2024, periods=("01", "02")),
+            "filing_schedules": (schedule,),
+        },
+    )
+    modelo = minimal_modelo(revision)
+
+    assert validate_periodic_deadline_completeness(modelo, supported_filing_years=(2024,)) == [
+        "modelo 130 revision test-revision: periodic filing schedule coordinate (2024, '02') has no deadline window",
+    ]
+
+    catalogues = minimal_catalogues().model_copy(
+        update={"supported_filing_years": SupportedFilingYearsCatalogue(years=(2024,))},
+    )
+    with pytest.raises(RegistryValidationError, match=r"coordinate \(2024, '02'\) has no deadline window"):
+        RegistryValidator(catalogues).validate_modelo(modelo)

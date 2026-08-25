@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Collection, Iterable
 from datetime import date, timedelta
 
-from ....core import M210_TIPO_RENTA_CODE_PROJECTION
+from ....core import M210_TIPO_RENTA_CODE_PROJECTION, registry_period_kind
 from ._deadline_coordinate import DeadlineSemanticCoordinate, deadline_window_semantic_coordinates
 from ._errors import RegistrySnapshotError
 from ._schema import DatedValue, InputKind, ModeloDefinition, ModeloRevision, ParameterDefinition
@@ -117,6 +117,56 @@ def validate_deadline_window_ownership(modelo: ModeloDefinition) -> list[str]:
                     f"{window.id!r} belongs to canonically selected revision "
                     f"{selected_revision.id!r} for filing coordinate ({filing_year}, {period!r})",
                 )
+    return failures
+
+
+def validate_periodic_deadline_completeness(
+    modelo: ModeloDefinition,
+    *,
+    supported_filing_years: Collection[int],
+) -> list[str]:
+    """Require every selected periodic schedule coordinate to own a window.
+
+    The supported-year horizon is supplied by the registry-wide catalogue.
+    Candidate tokens come only from authored filing schedules, and
+    :func:`select_revision` decides which revision governs each coordinate.
+    ``registry_period_kind`` validates the shared period vocabulary; it is not
+    replaced by a deadline-specific parser or cadence table.
+    """
+    periodic_kinds = {"monthly", "quarterly"}
+    candidate_periods = sorted(
+        {
+            period
+            for revision in modelo.revisions.values()
+            for schedule in revision.filing_schedules
+            if schedule.period_kind in periodic_kinds
+            for period in schedule.periods
+        },
+    )
+    failures: list[str] = []
+    for filing_year in supported_filing_years:
+        for period in candidate_periods:
+            try:
+                selected = select_revision(modelo, filing_year=filing_year, period=period)
+            except RegistrySnapshotError:
+                continue
+            selected_schedules = tuple(
+                schedule
+                for schedule in selected.filing_schedules
+                if schedule.period_kind in periodic_kinds and period in schedule.periods
+            )
+            if not selected_schedules:
+                continue
+            registry_period_kind(period)
+            if any(
+                window.filing_year == filing_year and window.period.registry_token == period
+                for window in selected.deadline_windows
+            ):
+                continue
+            failures.append(
+                f"modelo {modelo.id} revision {selected.id}: periodic filing schedule coordinate "
+                f"({filing_year}, {period!r}) has no deadline window",
+            )
     return failures
 
 

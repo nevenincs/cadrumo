@@ -557,7 +557,7 @@ def test_modelo_303_sii_2026_monthly_deadlines_are_exactly_grounded() -> None:
         assert window.payment_cutoff_on == payment_cutoff_on
         assert (
             "aeat-modelo-303-procedure"
-            if window.period.registry_token == "12"
+            if window.id == "modelo-303-2026-12-mensual"
             else "aeat-calendario-contribuyente-2026-domiciliacion"
         ) in window.source_refs
 
