@@ -9,9 +9,10 @@ from typing import Literal, override
 
 from pydantic import BaseModel, model_validator
 
-from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.persistence.journal import OperationLeaseRepository
-from cadrumo.application.operations.persistence.leases import (
+from ....application.journal_repository import JournalRepositoryBase
+from ....application.operations.models import OperationId
+from ....application.operations.persistence.journal import OperationLeaseRepository
+from ....application.operations.persistence.leases import (
     OperationConflictScopeReference,
     OperationLeaseDisposition,
     OperationLeaseObservation,
@@ -19,8 +20,6 @@ from cadrumo.application.operations.persistence.leases import (
     OperationLeaseResult,
     OperationOwnerLease,
 )
-
-from ....application.journal_repository import JournalRepositoryBase
 from ....core import STRICT_FROZEN_CONFIG, StorageCategory, exclusive_file_lock, is_link_like, storage_location
 from ....core.time import validate_utc_aware
 from ..storage import RepositoryError
