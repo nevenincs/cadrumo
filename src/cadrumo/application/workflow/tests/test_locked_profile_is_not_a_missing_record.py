@@ -44,9 +44,22 @@ _PUBLISHER_SOURCE = dedent(
     from __future__ import annotations
 
     import sys
+    from contextlib import ExitStack
     from pathlib import Path
 
+    from cadrumo.adapters.persistence.storage import (
+        build_profile_custody_port,
+        build_profile_login_session_port,
+    )
+    from cadrumo.application.user_profile import (
+        bind_profile_custody_port,
+        bind_profile_login_session_port,
+    )
     from cadrumo.application.workflow.tests._locked_profile_support import publish_capsule_and_pointer
+
+    composition = ExitStack()
+    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
+    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
 
     publish_capsule_and_pointer(Path(sys.argv[1]))
     """,
