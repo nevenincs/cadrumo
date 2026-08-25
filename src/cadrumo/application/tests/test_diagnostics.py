@@ -43,11 +43,18 @@ from ..diagnostics import (
     secure_object_unreadable_total,
 )
 from ..operator_actions import ConditionEvidence, PreconditionVerdict
+from ..overview import declare_next_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ACTIVE_BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 _OTHER_BUCKET_ID = "55555555-5555-4555-8555-555555555555"
+
+
+#: A declared continuation this module never expects to see rendered. It was a
+#: bare sentinel string until ``next_action`` became a typed record; the action
+#: id now carries the same "must not appear in the output" identity.
+_UNRENDERED_NEXT_ACTION = declare_next_action("operator.profile.descendiente")
 
 
 @pytest.fixture(autouse=True)
@@ -479,7 +486,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session("11111111-1111-4111-8111-111111111111"),
     ):
-        base = register_minimal_profile(
+        register_minimal_profile(
             profile_id="11111111-1111-4111-8111-111111111111",
             overrides={
                 "identity.tax_id": "00000000T",
@@ -494,7 +501,10 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
             },
         )
 
-        no_provider = base
+        # The seeding door publishes the profile CAPSULE and returns its
+        # UserProfileRecord; local auth readiness lives on the WorkflowState,
+        # which is a separate record read from its own repository.
+        no_provider = workflow_state_repository().load()
         provider_only = update_auth(no_provider, provider="clave_movil")
         fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
 
@@ -825,7 +835,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
         profile_total_keys=40,
         auth_provider="",
         login_ready=False,
-        next_action="unused-status-field",
+        next_action=_UNRENDERED_NEXT_ACTION,
     )
     check = profile_check(report)
 
@@ -875,7 +885,7 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
         profile_total_keys=40,
         auth_provider="",
         login_ready=False,
-        next_action="unused-status-field",
+        next_action=_UNRENDERED_NEXT_ACTION,
     )
     check = profile_check(report)
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
@@ -896,7 +906,11 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
     # The application renderer retains the diagnosis and leaves typed action
     # projection to the entrypoint boundary.
     assert "identity.tax_id" in rendered
-    assert "unused-status-field" not in rendered
+    # The status report's declared continuation must not leak into the
+    # application-level rendering: projecting it is the entrypoint's job. The
+    # action id is the greppable identity now that the field is a typed record
+    # rather than the free string this once pinned.
+    assert _UNRENDERED_NEXT_ACTION.action.action_id not in rendered
 
 
 def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:

@@ -130,6 +130,7 @@ from ._applicability import (
 )
 from ._authority import (
     RegistryAuthorityCapture,
+    RegistryAuthorityLifecycleObserver,
     StampedRegistryRelease,
     ValidatedRegistryAuthority,
     bundled_authority,
@@ -1142,6 +1143,7 @@ __all__ = [
     "RecordId",
     "RefundOperationObservation",
     "RegistryAuthorityCapture",
+    "RegistryAuthorityLifecycleObserver",
     "RegistryCalculationEntry",
     "RegistryCalculationResult",
     "RegistryCalculationUnresolvedOutcome",

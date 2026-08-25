@@ -25,7 +25,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import ActionEvidenceProvenance, CasillaId, Modelo
+from ...core import ActionEvidenceProvenance, CasillaId, Modelo, RegistryAuthorityGrade
 from ...domain.calculations.registry import BindingId, ModeloRevision, RegistrySnapshot, RelationId
 from ...domain.deadlines import IVARegime
 from ...domain.modelos import (
@@ -135,7 +135,12 @@ def prepare_calculation(
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
     require_profile_ready_for_work_unit(work_unit)
-    snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
+    # Calculate needs the amount-computing rung, not the filing rung: this
+    # prepares an in-memory calculation and renders no fichero or export layout.
+    snapshot = _resolve_registry_snapshot_for_work_unit(
+        work_unit,
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     casilla_inputs = _validate_casilla_input_ids(snapshot.revision, casilla_inputs)
     if backend_casilla_inputs is not None:
         backend_casilla_inputs = _validate_casilla_input_ids(snapshot.revision, backend_casilla_inputs)

@@ -6,6 +6,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Literal
 from uuid import UUID
 
 import pytest
@@ -173,16 +174,16 @@ def test_reviewed_proposal_refuses_foreign_profile_baseline_without_effect(tmp_p
 
 
 @pytest.mark.parametrize(
-    ("kwargs", "message"),
+    ("missing_effect", "message"),
     [
-        ({"adopted": ()}, "requires both adopted facts and divergences"),
-        ({"divergences": ()}, "requires both adopted facts and divergences"),
-        ({}, "requires both adopted facts and divergences"),
+        ("adopted", "requires both adopted facts and divergences"),
+        ("divergences", "requires both adopted facts and divergences"),
+        ("none", "requires both adopted facts and divergences"),
     ],
 )
 def test_incomplete_direct_mode_refuses_before_publication(
     tmp_path: Path,
-    kwargs: dict[str, object],
+    missing_effect: Literal["adopted", "divergences", "none"],
     message: str,
 ) -> None:
     with _subject(tmp_path) as (profile_id, session):
@@ -191,22 +192,33 @@ def test_incomplete_direct_mode_refuses_before_publication(
         history_before = ProfileRecordStore(session=session).history()
 
         with pytest.raises(ValueError, match=message):
-            apply_cotejo(WorkflowState(), **kwargs)
+            if missing_effect == "adopted":
+                apply_cotejo(WorkflowState(), adopted=())
+            elif missing_effect == "divergences":
+                apply_cotejo(WorkflowState(), divergences=())
+            else:
+                apply_cotejo(WorkflowState())
 
         assert repository.load(profile_id) == before
         assert ProfileRecordStore(session=session).history() == history_before
 
 
 @pytest.mark.parametrize("direct_effect", ["adopted", "divergences"])
-def test_reviewed_and_direct_mixed_mode_refuses_before_publication(tmp_path: Path, direct_effect: str) -> None:
+def test_reviewed_and_direct_mixed_mode_refuses_before_publication(
+    tmp_path: Path,
+    direct_effect: Literal["adopted", "divergences"],
+) -> None:
     with _subject(tmp_path) as (profile_id, session):
         repository = ProfileRecordRepository.for_current_session(profile_id)
         before = repository.load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
-        kwargs: dict[str, object] = {"reviewed_proposal": _proposal(before), direct_effect: ()}
+        proposal = _proposal(before)
 
         with pytest.raises(ValueError, match="cannot be combined with direct cotejo effects"):
-            apply_cotejo(WorkflowState(), **kwargs)
+            if direct_effect == "adopted":
+                apply_cotejo(WorkflowState(), reviewed_proposal=proposal, adopted=())
+            else:
+                apply_cotejo(WorkflowState(), reviewed_proposal=proposal, divergences=())
 
         assert repository.load(profile_id) == before
         assert ProfileRecordStore(session=session).history() == history_before

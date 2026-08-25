@@ -5,3 +5,4 @@ cadrumo.application.operator_actions._models module
    :members:
    :show-inheritance:
    :ignore-module-all:
+   :exclude-members: PreconditionOutcomeInvariant

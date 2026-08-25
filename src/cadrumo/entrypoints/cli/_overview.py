@@ -624,7 +624,9 @@ def _overview_calendar_all_profiles(
         f"to\t{rng.to_date.isoformat()}",
         f"profiles\t{len(active_buckets)}",
     ]
-    all_lines.extend(f"profile_locked\t{pointer.bucket_id}\t{pointer.label}" for pointer in locked)
+    for pointer in locked:
+        all_lines.append(f"profile\t{pointer.bucket_id}\t{pointer.label}")
+        all_lines.append(f"profile_locked\t{pointer.bucket_id}\t{pointer.label}")
     all_lines.extend(f"profile_setup_incomplete\t{pointer.bucket_id}\t{pointer.label}" for pointer in setup_incomplete)
     all_coverage_notices: list[Notice] = []
     all_calendars: list[dict[str, object]] = []

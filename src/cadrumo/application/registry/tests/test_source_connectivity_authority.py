@@ -244,9 +244,7 @@ def test_independent_expectation_rejects_census_owned_workflow_and_destination_m
         command_id=proof.operator_reachability.command_id,
         route_id=proof.operator_reachability.route_id,
         canonical_cli_path=proof.operator_reachability.canonical_cli_path,
-        destination_identities=(
-            ("casilla_semantic_role", "100", "2025", "2025", "0A", "inventory.increase"),
-        ),
+        destination_identities=(("casilla_semantic_role", "100", "2025", "2025", "0A", "inventory.increase"),),
     )
     constrained = replace(authority, independent_expectations=(expectation,))
 
@@ -265,7 +263,7 @@ def test_independent_expectation_rejects_census_owned_workflow_and_destination_m
     assert constrained.destinations_match(connection, expectation.destination_identities)
     assert not constrained.destinations_match(
         connection,
-        (("casilla_semantic_role", "100", "inventory.decrease"),),
+        (("casilla_semantic_role", "100", "2025", "2025", "0A", "inventory.decrease"),),
     )
 
 
@@ -471,6 +469,7 @@ def test_coverage_composer_classifies_live_executable_evidence_failures(
     )
     after_limb = next(limb for limb in after_drift.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
 
+    assert after_limb.refusal is not None
     assert (after_limb.outcome, after_limb.refusal.reason) == ("refused", expected_reason)
     assert expected_detail in after_limb.refusal.detail
 
@@ -548,6 +547,7 @@ def test_coverage_composer_classifies_structured_live_proof_failures(
     )
     limb = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
 
+    assert limb.refusal is not None
     assert (limb.outcome, limb.refusal.reason) == ("refused", "missing_evidence")
     assert expected_detail in limb.refusal.detail
 
@@ -608,6 +608,7 @@ def test_coverage_composer_fails_closed_on_generic_live_proof_validation_error(
     )
     limb = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("100", "2025"))
 
+    assert limb.refusal is not None
     assert (limb.outcome, limb.refusal.reason) == ("refused", "missing_evidence")
     assert "connected connectivity row requires complete connected_proof" in limb.refusal.detail
 

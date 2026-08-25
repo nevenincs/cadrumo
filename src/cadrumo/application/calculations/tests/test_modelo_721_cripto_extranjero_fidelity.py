@@ -82,8 +82,9 @@ from ....tests.registry_observations import registry_grounded_observation_rows
 from ....tests.secure_sql import isolated_runtime_profile
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from .._foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings
-from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest, assert_two_ejercicio_round_trip
+from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
+from ._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -144,7 +145,13 @@ _M721_LEGAL_REFS = _MONEDAS_VIRTUALES_THRESHOLD.legal_refs
 
 
 def _values_for(observation: RegistryModeloObservation, casilla_id: CasillaId) -> tuple[Decimal, ...]:
-    return tuple(obs.value for obs in observation.observations if obs.casilla_id == casilla_id)
+    values: list[Decimal] = []
+    for item in observation.observations:
+        if item.casilla_id != casilla_id:
+            continue
+        assert isinstance(item.value, Decimal), f"casilla {casilla_id!r} must carry a numeric observation"
+        values.append(item.value)
+    return tuple(values)
 
 
 def _advisory_observation(

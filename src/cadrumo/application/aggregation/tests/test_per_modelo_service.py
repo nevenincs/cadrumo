@@ -377,10 +377,11 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
     assert resolution.binding_values == {}
     assert dict(resolution.row_binding_values) == expected_row_values
     assert resolution.source_transaction_ids == (_ledger_identity("tx-account-ad"),)
-    assert {item.source_ref for item in resolution.provenance} == {
-        f"ledger_transaction:{_ledger_identity('tx-account-ad')}",
-        "payable_invoice:payable-account-ch",
-    }
+    # M720 is deliberately grounding-blocked: the resolver emits NO
+    # provenance because no upstream carrier id can truthfully stand in for
+    # an authoritative persisted identity of the resolved asset. The
+    # contributing sources stay visible through source_transaction_ids.
+    assert resolution.provenance == ()
 
 
 def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenance() -> None:
@@ -454,10 +455,11 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
     assert resolution.binding_values == {}
     assert dict(resolution.row_binding_values) == expected_row_values
     assert resolution.source_transaction_ids == (_ledger_identity("tx-security-li"),)
-    assert {item.source_ref for item in resolution.provenance} == {
-        f"ledger_transaction:{_ledger_identity('tx-security-li')}",
-        "payable_invoice:payable-insurance-ch",
-    }
+    # M720 is deliberately grounding-blocked: the resolver emits NO
+    # provenance because no upstream carrier id can truthfully stand in for
+    # an authoritative persisted identity of the resolved asset. The
+    # contributing sources stay visible through source_transaction_ids.
+    assert resolution.provenance == ()
 
 
 def test_command_rejects_observations_from_non_selected_provider_family() -> None:

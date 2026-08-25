@@ -21,6 +21,7 @@ from ....application.user_profile import (
     register_profile_with_credentials,
 )
 from ....core import assess_profile_password
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile import UserProfileFact
 from ....entrypoints.tui.secret.app import (
     RecoveryHandoverCancelledError,
@@ -51,7 +52,7 @@ def _attempt_registration(
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=passphrase,
-            facts=(UserProfileFact(path="preferences.output_language", value=output_language),),
+            facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
             recovery_handover=recovery_handover,
         )
     except RecoveryHandoverCancelledError:

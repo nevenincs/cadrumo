@@ -111,7 +111,7 @@ class OperationLeaseStorage(JournalRepositoryBase[_OperationLeaseRecord]):
         return record
 
     def current_unlocked(self, scope_ref: OperationConflictScopeReference) -> OperationOwnerLease | None:
-        """Load the scope's exact lease state while the caller owns :attr:`lock_target`."""
+        """Load the scope's exact lease state while the caller owns ``lock_target``."""
         record = self._record_unlocked(scope_ref)
         return None if record is None else record.lease
 

@@ -109,12 +109,18 @@ def assert_snapshot_matches_work_unit_revision(
     resolved_period = period if period is not None else work_unit.period
     raise WorkUnitRevisionDivergenceError(
         translated_message="application.modelo.errors.work_unit_revision_divergence",
+        # The context keys ARE the message template's placeholder names. They
+        # had drifted -- the catalogue asks for work_unit_id, work_unit_revision
+        # and law_revision -- so the rendered refusal showed those three
+        # placeholders literally and named NEITHER revision nor the work unit,
+        # which is precisely the guidance an operator needs to re-create it.
         context={
+            "work_unit_id": work_unit.work_unit_id,
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
             "period": resolved_period.registry_token,
-            "work_unit_revision_id": work_unit.revision_id,
-            "resolved_revision_id": snapshot.revision.id,
+            "work_unit_revision": work_unit.revision_id,
+            "law_revision": snapshot.revision.id,
         },
     )
 

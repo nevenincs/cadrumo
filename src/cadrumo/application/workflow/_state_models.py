@@ -236,7 +236,7 @@ class WorkflowState(BaseModel):
 
         ``secure_objects`` (a :class:`SecureObjectRepository` override) and
         ``schema`` are optional overrides forwarded to
-        :func:`~cadrumo.application.user_profile.build_lifecycle_service`; a
+        the canonical user-profile lifecycle service; a
         per-bucket store and the bundled schema are resolved when ``None``.
 
         This is the convenience view for callers that legitimately act only on

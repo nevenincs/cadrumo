@@ -6,6 +6,9 @@ cadrumo.core.identity package
    :show-inheritance:
    :ignore-module-all:
 
+.. py:data:: ContentDigest
+   :module: cadrumo.core.identity
+
 .. py:data:: SubjectTaxId
    :module: cadrumo.core.identity
 

@@ -108,14 +108,15 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "reviewed"
 
 # The historical AEAT artefact is a hash-pinned inspection receipt. Its index
-# title says it was updated in 2012, but neither that title nor the PDF states
-# a complete filing-period window. Deliberately omit epoch and applicability
+# title establishes its 2012 design era, but neither that title nor the PDF
+# states a complete filing-period window. Deliberately omit applicability
 # fields and cite it from no revision: it cannot become selected design
 # authority for the unevidenced 2002-to-May-2024 interval.
 [sources."aeat-dr-038-2012-inspection"]
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2012"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_038/files/02-038-orden-hac-66-2002-de-15-de-enero-actualizado-a-18-01-2012.pdf"
 sha256 = "e9008d9c0c407c76143d6997f3a5fb52a2a482c40571f395da7dcf8a8fee3d9d"
 bytes = 79486

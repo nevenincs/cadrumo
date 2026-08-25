@@ -19,8 +19,6 @@ flows:
     select_unknown: 'Tria un dels valors acceptats: %{choices}.'
     tui_abandoned: El flux {flow_id} s'ha tancat en el mode {mode} abans d'enviar-lo
       o desar-lo; no s'ha registrat res.
-    unexpected_app_type: La pantalla interactiva no està associada a una aplicació
-      de flux.
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
       el flux des d'un terminal real o guia'l amb un fitxer de respostes.
   login:

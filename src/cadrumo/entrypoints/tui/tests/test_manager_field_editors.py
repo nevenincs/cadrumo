@@ -27,6 +27,7 @@ from ....application.user_profile import (
     register_profile_with_credentials,
 )
 from ....core import require_active_bucket_id
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.cli import (
     persist_active_profile_field,
     profile_field_value_refusal,
@@ -52,10 +53,6 @@ editor is the only thing under test."""
 _DATE_PATH = "auth.fecha_validez"
 """A field the schema declares ``date``. Typed into, and its accepted layout
 is exactly what a box cannot state for itself."""
-
-_ENUM_PATH = "preferences.output_language"
-"""A field the schema declares ``enum``, kept beside the boolean so the
-choice editor is not proved only by the case that just gained it."""
 
 _EMAIL_PATH = "identity.email"
 """A field the schema declares ``email``. Typed into, and the one content
@@ -205,7 +202,7 @@ async def test_an_enum_field_keeps_its_choice_editor(tmp_path) -> None:
         app = _manager()
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
-            _open(app, _ENUM_PATH)
+            _open(app, PROFILE_OUTPUT_LANGUAGE_PATH)
             await pilot.pause()
             assert app.screen.query("#edit-options")
             assert not app.screen.query("#edit-input")
@@ -355,8 +352,8 @@ def test_the_dialog_judge_agrees_with_the_write_door() -> None:
         (_DATE_PATH, _VALID_DATE),
         (_BOOLEAN_PATH, "on"),
         (_BOOLEAN_PATH, "true"),
-        (_ENUM_PATH, "klingon"),
-        (_ENUM_PATH, "en"),
+        (PROFILE_OUTPUT_LANGUAGE_PATH, "klingon"),
+        (PROFILE_OUTPUT_LANGUAGE_PATH, "en"),
         (_TEXT_PATH, "Ada Lovelace"),
         (_EMAIL_PATH, "banana"),
         (_EMAIL_PATH, "op@example.test"),
@@ -384,7 +381,7 @@ def test_every_refusal_kind_reaches_the_operator_as_words() -> None:
 
     by_kind = {
         ProfileValueRefusalKind.DATE: (_DATE_PATH, _MALFORMED_DATE),
-        ProfileValueRefusalKind.ENUM: (_ENUM_PATH, "klingon"),
+        ProfileValueRefusalKind.ENUM: (PROFILE_OUTPUT_LANGUAGE_PATH, "klingon"),
         ProfileValueRefusalKind.BOOLEAN: (_BOOLEAN_PATH, "on"),
         ProfileValueRefusalKind.NUMERIC: ("attribution_entity_socios.share_pct", "999"),
         ProfileValueRefusalKind.EMAIL: (_EMAIL_PATH, "banana"),

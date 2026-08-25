@@ -19,6 +19,7 @@ from .. import (
     OperationOwnedResource,
     OperationReconciliationOutcome,
     OperationReconciliationPolicy,
+    OperationRejectResponse,
     OperationReplayPolicy,
     OperationTerminalCondition,
     OperationTerminalReceipt,
@@ -27,7 +28,6 @@ from ..persistence import (
     OperationLeaseObservationDisposition,
     OperationPersistedSnapshot,
     OperationReconciliationEvent,
-    OperationReplayLimit,
     operation_conflict_scope_reference,
 )
 from .test_supervisor import (
@@ -61,10 +61,11 @@ def test_detach_preserves_real_journal_cursor_replay_and_pending_interaction(tmp
         )
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
         waiting = asyncio.run(supervisor.start(operation_id))
-        initial_replay = asyncio.run(supervisor.replay(operation_id, 0, limit=OperationReplayLimit(20)))
+        initial_replay = asyncio.run(supervisor.replay(operation_id, 0, limit=20))
         saved_cursor = initial_replay.next_cursor
         detached = asyncio.run(supervisor.detach(operation_id))
         response = _response(intent="reject", operation_id=operation_id, revision=waiting.revision)
+        assert isinstance(response, OperationRejectResponse)
         consumed = asyncio.run(supervisor.reject(response))
         observer_journal, observer_leases, observer_operands = _repositories(
             storage_root=storage_root, profile_objects=profile.repository
@@ -77,7 +78,7 @@ def test_detach_preserves_real_journal_cursor_replay_and_pending_interaction(tmp
             owner_id="4" * 64,
             token="5" * 64,
         )
-        missed = asyncio.run(observer.replay(operation_id, saved_cursor, limit=OperationReplayLimit(20)))
+        missed = asyncio.run(observer.replay(operation_id, saved_cursor, limit=20))
         reloaded = asyncio.run(observer_journal.load(operation_id))
 
     assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
@@ -111,6 +112,7 @@ def test_duplicate_response_is_refused_after_detach_and_same_owner_supervisor_re
         assert waiting.pending_interaction is not None
         assert asyncio.run(owner.detach(operation_id)) == waiting
         response = _response(intent="reject", operation_id=operation_id, revision=waiting.revision)
+        assert isinstance(response, OperationRejectResponse)
         restarted = _supervisor(
             registry=registry, journal=journal, leases=leases, operands=operands, owner_id="1" * 64, token="2" * 64
         )
@@ -234,7 +236,7 @@ def test_expired_running_operation_reconciles_to_unknown_interruption_without_fa
             storage_root=storage_root, profile_objects=profile.repository
         )
         reloaded = asyncio.run(reloaded_journal.load(operation_id))
-        replay = asyncio.run(reloaded_journal.read_after(operation_id, 0, limit=OperationReplayLimit(20)))
+        replay = asyncio.run(reloaded_journal.read_after(operation_id, 0, limit=20))
         scope_ref = operation_conflict_scope_reference(
             definition_id=reloaded.identity.definition_id,
             subject_ref=reloaded.identity.subject_ref,

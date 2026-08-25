@@ -359,12 +359,12 @@ def test_snapshot_command_uses_the_validated_revision_and_filing_year() -> None:
 def test_snapshot_command_delegates_exact_snapshot_coordinates(monkeypatch: pytest.MonkeyPatch) -> None:
     """Deleting either snapshot coordinate changes the command's only dispatcher call."""
     snapshot = _snapshot("190", filing_year=2025, period="0A")
-    cells = (
-        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="11111111A"),
-    )
+    cells = (RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="11111111A"),)
     calls: list[tuple[object, ...]] = []
 
-    def dispatch(grouping: object, dispatched_cells: object, revision: object, *, filing_year: int) -> tuple[str, tuple[()]]:
+    def dispatch(
+        grouping: object, dispatched_cells: object, revision: object, *, filing_year: int
+    ) -> tuple[str, tuple[()]]:
         calls.append((grouping, dispatched_cells, revision, filing_year))
         return ("withholding", ())
 
@@ -389,9 +389,7 @@ def test_snapshot_command_preserves_the_dispatcher_unknown_grouping_refusal() ->
 
 def test_snapshot_command_preserves_the_dispatcher_invalid_row_refusal() -> None:
     snapshot = _snapshot("190", filing_year=2025, period="0A")
-    cells = (
-        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
-    )
+    cells = (RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),)
 
     with pytest.raises(RegistryValidationError) as excinfo:
         assemble_observations_for_snapshot("per_perceptor", cells, snapshot)

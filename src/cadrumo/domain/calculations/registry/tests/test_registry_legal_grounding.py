@@ -200,14 +200,32 @@ def _direct_string_literals(node: ast.AST) -> tuple[tuple[str, int], ...]:
     return ()
 
 
-#: A source-reference holder has both a data-shaped name and a data context.
-#: Module or function constants can declare source evidence through the holder
-#: name. Class bodies, however, also contain plain assignments for enum and
-#: condition values; those are evidence data only when their annotation carries
-#: a registry source-reference type. Constructor ``source_refs=`` remains an
-#: explicit data context regardless of its enclosing scope.
+#: A name that HOLDS registry source references, as opposed to one that merely
+#: begins with the same letters. The token must end after ``SOURCE_REF`` or
+#: ``SOURCE_REFS`` -- at the end of the name or before an underscore -- so
+#: ``source_refs``, ``source_ref``, ``source_ref_ids`` and
+#: ``revision_source_refs`` all match while ``source_reference`` does not.
+#:
+#: Measured before narrowing, so it is known to discard only two families:
+#: of the production names containing ``SOURCE_REF``, this keeps
+#: ``source_ref``, ``source_refs``, ``source_ref_ids``,
+#: ``record_design_source_ref``, ``reduction_source_refs``,
+#: ``registry_source_refs``, ``revision_source_refs``, ``source_refs_by_key``,
+#: ``target_binding_source_refs`` and ``xsd_source_refs``, and drops only
+#: ``source_reference`` and ``source_reference_count``.
+#:
+#: The holder NAME is the whole test. Keying on the annotation instead would
+#: blind the gate to every genuine holder spelled with a local alias --
+#: ``tuple[_RegistrySourceRef, ...]`` on the IVA rate schema,
+#: ``tuple[_Token, ...]`` across the regimen-simplificado rows, and the bare
+#: ``tuple[str, ...]`` carriers -- because only two of the tree's spellings are
+#: the canonical ``SourceRefId``/``SourceRefs``.
 _SOURCE_REF_HOLDER_NAME = re.compile(r"SOURCE_REFS?(?:_|$)")
-_SOURCE_REF_TYPE_NAMES = frozenset({"SourceRefId", "SourceRefs"})
+
+#: ``Field(...)`` metadata describes a field; it does not declare evidence. The
+#: value walk therefore reads the default only, so a field's prose cannot be
+#: reported as an unregistered source ref.
+_FIELD_METADATA_KEYWORDS = frozenset({"description", "title", "alias", "examples", "json_schema_extra", "deprecated"})
 
 
 def _is_source_ref_holder(name: str) -> bool:
@@ -215,14 +233,31 @@ def _is_source_ref_holder(name: str) -> bool:
     return _SOURCE_REF_HOLDER_NAME.search(name.upper()) is not None
 
 
-def _annotation_carries_source_refs(annotation: ast.AST) -> bool:
-    """Whether an annotation makes a class attribute source-reference data."""
-    return any(isinstance(node, ast.Name) and node.id in _SOURCE_REF_TYPE_NAMES for node in ast.walk(annotation))
+def _is_enum_member(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> bool:
+    """Whether ``node`` assigns an enum member, whose value is its own identity token.
+
+    A ``StrEnum`` member named for a condition -- ``RELATION_SOURCE_REFS_VALID``
+    -- carries a diagnostic code as its value, not a registry source id.
+    """
+    parent = parents.get(node)
+    if not isinstance(parent, ast.ClassDef):
+        return False
+    return any(
+        (isinstance(base, ast.Name) and base.id.endswith("Enum"))
+        or (isinstance(base, ast.Attribute) and base.attr.endswith("Enum"))
+        for base in parent.bases
+    )
 
 
-def _is_class_body_assignment(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> bool:
-    """Whether ``node`` is declared directly in a class body."""
-    return isinstance(parents.get(node), ast.ClassDef)
+def _declared_value(value: ast.AST) -> ast.AST | None:
+    """The value a declaration actually assigns, unwrapping ``Field(...)`` metadata."""
+    if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "Field":
+        for keyword in value.keywords:
+            if keyword.arg == "default":
+                return keyword.value
+        positional = [arg for arg in value.args]
+        return positional[0] if positional else None
+    return value
 
 
 def _source_ref_value_nodes(tree: ast.AST) -> tuple[ast.AST, ...]:
@@ -230,23 +265,18 @@ def _source_ref_value_nodes(tree: ast.AST) -> tuple[ast.AST, ...]:
     parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
     values: list[ast.AST] = []
     for node in ast.walk(tree):
+        value: ast.AST | None = None
         if isinstance(node, ast.Assign):
             names = [target.id for target in node.targets if isinstance(target, ast.Name)]
-            if any(_is_source_ref_holder(name) for name in names) and not _is_class_body_assignment(node, parents):
-                values.append(node.value)
+            if any(_is_source_ref_holder(name) for name in names) and not _is_enum_member(node, parents):
+                value = _declared_value(node.value)
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-            is_source_ref_holder = _is_source_ref_holder(node.target.id)
-            is_typed_class_data = _is_class_body_assignment(node, parents) and _annotation_carries_source_refs(
-                node.annotation
-            )
-            if (
-                node.value is not None
-                and is_source_ref_holder
-                and (not _is_class_body_assignment(node, parents) or is_typed_class_data)
-            ):
-                values.append(node.value)
+            if node.value is not None and _is_source_ref_holder(node.target.id):
+                value = _declared_value(node.value)
         elif isinstance(node, ast.keyword) and node.arg == "source_refs":
-            values.append(node.value)
+            value = node.value
+        if value is not None:
+            values.append(value)
     return tuple(values)
 
 
@@ -321,28 +351,53 @@ def test_production_python_source_ref_literals_resolve_to_catalogue_and_corpus(
     verify_source_catalogue(bundled_path(), {ref: catalogues.sources[ref] for ref in refs})
 
 
-def test_source_ref_literal_scanner_reads_planted_data_but_not_condition_members() -> None:
-    """A source-ref-shaped condition name cannot hide or fabricate evidence data."""
+def test_source_ref_literal_scanner_reads_every_holder_spelling_but_not_enum_members() -> None:
+    """Evidence data is found by holder NAME, whatever type spells it.
+
+    The alias cases are the ones that matter: keying on a canonical
+    ``SourceRefId``/``SourceRefs`` annotation made every locally-aliased holder
+    invisible, which is a silent hole rather than a narrowing. An enum member
+    and a field's prose are the two shapes that are genuinely not evidence.
+    """
     literals = _source_ref_literals(
         ast.parse(
             """
-class Condition:
+class Condition(StrEnum):
     RELATION_SOURCE_REFS_VALID = "internal.condition.source_refs_valid"
 
-_MODULE_SOURCE_REFS = ("module-unregistered-source-ref",)
+_MODULE_SOURCE_REFS = ("module-ref",)
 
-class Evidence:
-    source_refs: tuple[SourceRefId, ...] = ("typed-unregistered-source-ref",)
+class Canonical:
+    source_refs: tuple[SourceRefId, ...] = ("canonical-ref",)
 
-Finding(source_refs=("keyword-unregistered-source-ref",))
+class AliasedRate:
+    source_refs: tuple[_RegistrySourceRef, ...] = ("alias-ref",)
+
+class TokenRow:
+    source_refs: tuple[_Token, ...] = ("token-ref",)
+
+class BareStr:
+    source_refs: tuple[str, ...] = ("bare-str-ref",)
+
+class Described:
+    source_refs: tuple[_RegistrySourceRef, ...] = Field(
+        default=("described-ref",),
+        description="Registry source-reference identities backing this rate.",
+    )
+
+Finding(source_refs=("keyword-ref",))
 """
         )
     )
 
     assert {value for value, _line_number in literals} == {
-        "module-unregistered-source-ref",
-        "typed-unregistered-source-ref",
-        "keyword-unregistered-source-ref",
+        "module-ref",
+        "canonical-ref",
+        "alias-ref",
+        "token-ref",
+        "bare-str-ref",
+        "described-ref",
+        "keyword-ref",
     }
 
 

@@ -1,7 +1,7 @@
-cadrumo.entrypoints.tui.devtools._fixture module
+cadrumo.entrypoints.tui.devtools.surfaces module
 ================================================
 
-.. automodule:: cadrumo.entrypoints.tui.devtools._fixture
+.. automodule:: cadrumo.entrypoints.tui.devtools.surfaces
    :members:
    :show-inheritance:
    :ignore-module-all:

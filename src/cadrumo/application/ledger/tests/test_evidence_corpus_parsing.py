@@ -108,6 +108,7 @@ def test_malformed_pdf_raises_not_crashes() -> None:
     # content or paths. Assert the contract, not the swallowed prose.
     with pytest.raises(LLMPdfRasterisationError) as rasterisation:
         rasterise_pdf_pages_to_base64_png(data)
+    assert rasterisation.value.context is not None
     assert rasterisation.value.context["rasterisation_stage"] == "document_open"
     assert rasterisation.value.context["rasterisation_error_type"]
 
@@ -121,6 +122,7 @@ def test_empty_pdf_raises_not_crashes() -> None:
     # content or paths. Assert the contract, not the swallowed prose.
     with pytest.raises(LLMPdfRasterisationError) as rasterisation:
         rasterise_pdf_pages_to_base64_png(data)
+    assert rasterisation.value.context is not None
     assert rasterisation.value.context["rasterisation_stage"] == "document_open"
     assert rasterisation.value.context["rasterisation_error_type"]
 

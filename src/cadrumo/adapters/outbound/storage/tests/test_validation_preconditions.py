@@ -6,6 +6,7 @@ import ast
 import inspect
 from dataclasses import dataclass
 from types import ModuleType
+from typing import override
 
 import pytest
 
@@ -176,15 +177,21 @@ def _validation_carriers(module: ModuleType) -> dict[str, ast.Call]:
     class Visitor(ast.NodeVisitor):
         owner = "<module>"
 
+        @override
         def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
             prior_owner = self.owner
             self.owner = node.name
             self.generic_visit(node)
             self.owner = prior_owner
 
+        @override
         def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-            self.visit_FunctionDef(node)
+            prior_owner = self.owner
+            self.owner = node.name
+            self.generic_visit(node)
+            self.owner = prior_owner
 
+        @override
         def visit_Call(self, node: ast.Call) -> None:
             if _call_name(node.func) == "OutboundStorageValidationError":
                 message = _translated_message(node)

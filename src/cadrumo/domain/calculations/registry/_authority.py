@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from threading import Condition, RLock
+from typing import Protocol, override
 
 from .... import __version__
 from ....core import RegistryAuthorityGrade
@@ -84,6 +85,47 @@ _SourceEvidenceFingerprints = tuple[tuple[str, int, int], ...]
 type RegistryAuthorityProjection = RegistryRevisionInspection | RegistrySnapshot
 
 
+class RegistryAuthorityLifecycleObserver(Protocol):
+    """Observe authority construction, publication, and cache-reset transitions."""
+
+    def authority_construction_started(self, *, root: Path, source_root: Path) -> None:
+        """Observe a cold construction after the owner identity is selected."""
+        ...
+
+    def authority_published(self, *, root: Path, source_root: Path, generation: int) -> None:
+        """Observe publication of one current authority incarnation."""
+        ...
+
+    def registry_cache_reset_requested(self) -> None:
+        """Observe a reset request before it waits for active authority readers."""
+        ...
+
+    def registry_cache_reset_acquired(self) -> None:
+        """Observe a reset after it exclusively owns the authority lifecycle."""
+        ...
+
+
+class _SilentRegistryAuthorityLifecycleObserver:
+    """Production default for callers that do not consume lifecycle telemetry."""
+
+    __slots__ = ()
+
+    def authority_construction_started(self, *, root: Path, source_root: Path) -> None:
+        del root, source_root
+
+    def authority_published(self, *, root: Path, source_root: Path, generation: int) -> None:
+        del root, source_root, generation
+
+    def registry_cache_reset_requested(self) -> None:
+        return
+
+    def registry_cache_reset_acquired(self) -> None:
+        return
+
+
+_SILENT_AUTHORITY_LIFECYCLE_OBSERVER = _SilentRegistryAuthorityLifecycleObserver()
+
+
 @dataclass(frozen=True, slots=True)
 class RegistryAuthorityCapture:
     """One isolated law-selected registry projection with its native generation."""
@@ -106,9 +148,11 @@ class _FingerprintKey[T]:
     digest: str
     fingerprints: T
 
+    @override
     def __hash__(self) -> int:
         return hash(self.digest)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, _FingerprintKey) and self.digest == other.digest
 
@@ -258,11 +302,21 @@ class ValidatedRegistryAuthority:
     _state_lock: AbstractContextManager[object] = field(default_factory=RLock, init=False, repr=False)
 
     @classmethod
-    def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
+    def load(
+        cls,
+        root: Path,
+        *,
+        source_root: Path,
+        lifecycle_observer: RegistryAuthorityLifecycleObserver = _SILENT_AUTHORITY_LIFECYCLE_OBSERVER,
+    ) -> ValidatedRegistryAuthority:
         """Load registry TOML and construct a reusable :class:`ValidatedRegistryAuthority` instance."""
         resolved_root = root.expanduser().resolve()
         resolved_source_root = source_root.expanduser().resolve()
-        return _load_authority(resolved_root, resolved_source_root)
+        return _load_authority(
+            resolved_root,
+            resolved_source_root,
+            lifecycle_observer=lifecycle_observer,
+        )
 
     def _bind_capture_incarnation(
         self,
@@ -683,6 +737,8 @@ def bundled_revision_inspection(
 def _load_authority(
     root: Path,
     source_root: Path,
+    *,
+    lifecycle_observer: RegistryAuthorityLifecycleObserver,
 ) -> ValidatedRegistryAuthority:
     """Load one root through its sole current-identity authority slot.
 
@@ -709,15 +765,24 @@ def _load_authority(
 
             _begin_authority_transition(state, key)
             try:
+                lifecycle_observer.authority_construction_started(root=root, source_root=source_root)
                 authority = _load_validated_authority(root, source_root, identity, source_evidence_key)
             except Exception as exc:
                 _publish_authority_failure(state, exc)
                 raise
             _publish_authority(state, authority)
+            lifecycle_observer.authority_published(
+                root=root,
+                source_root=source_root,
+                generation=state.generation,
+            )
             return authority
 
 
-def reset_registry_caches() -> None:
+def reset_registry_caches(
+    *,
+    lifecycle_observer: RegistryAuthorityLifecycleObserver = _SILENT_AUTHORITY_LIFECYCLE_OBSERVER,
+) -> None:
     """Drop every memoised registry layer so the next read recompiles from disk.
 
     The compiled-tree lru, the authority load caches and the tree-fingerprint
@@ -731,7 +796,9 @@ def reset_registry_caches() -> None:
     )
     from ._loader_fingerprints import clear_fingerprint_cache
 
+    lifecycle_observer.registry_cache_reset_requested()
     with _AUTHORITY_LOAD_BARRIER.reset():
+        lifecycle_observer.registry_cache_reset_acquired()
         _invalidate_authority_generations()
         _load_registry_tree_cached.cache_clear()
         clear_fingerprint_cache()

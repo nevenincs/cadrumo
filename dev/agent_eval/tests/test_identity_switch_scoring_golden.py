@@ -24,11 +24,10 @@ import pytest
 from cadrumo_harness.mcp import (
     IDENTITY_READ_CONSOLE_TOOLS,
     SessionIdentityState,
+    build_tool_descriptors,
     identity_gate_refusal,
     tool_name_for_command,
 )
-
-from cadrumo.application.operator_surface import command_classification
 
 from .. import (
     LiveToolCallRecord,
@@ -99,11 +98,13 @@ def test_identity_scenario_loads_and_passes_the_shared_golden_dimensions() -> No
 
 
 def test_scenario_constants_are_real_and_correctly_shaped() -> None:
-    """Ground the test's command keys against the live surface + the real classification."""
+    """Ground the test's command keys against the live descriptor policy."""
     valid = valid_cli_commands()
     assert _MUTATING in valid and _SWITCH in valid and _IDENTITY_READ_VERB in valid
     # The mutating verb is genuinely non-read-only; the switch and identity-read verbs exist.
-    assert not command_classification(_MUTATING).read_only
+    descriptors_by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
+    assert _MUTATING in descriptors_by_key
+    assert not descriptors_by_key[_MUTATING].annotations.read_only_hint
     # The two console reads are the declared console identity tools.
     assert _WHOAMI in IDENTITY_READ_CONSOLE_TOOLS
     assert _HARNESS_LOAD in IDENTITY_READ_CONSOLE_TOOLS

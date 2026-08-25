@@ -20,10 +20,13 @@ from ..adapters.persistence.storage.master_key import (
 )
 from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ..adapters.persistence.storage.tests.profile_capsule_runtime import (
+    derive_test_bucket_key,
+    publish_test_profile_capsule,
+)
 from ..core import StorageCategory, storage_location
 from ..core.classification import SensitivityClass
 from ..core.config import load_settings, override_settings
-from .profile_capsule import _test_bucket_key, publish_test_profile_capsule
 from .secure_sql import (
     dev_test_database_password,
     isolated_cli_runtime_profile,
@@ -209,15 +212,15 @@ class TestHarnessReapsSessionKeys:
 def _control_session() -> BucketSession:
     """Open the control bucket under the one test-owned key derivation.
 
-    Sharing :func:`~cadrumo.tests.profile_capsule._test_bucket_key` with the
+    Sharing the persistence test runtime's canonical key derivation with the
     published capsule is what makes this session able to read what publication
     wrote; a pair of arbitrary key literals would open a session that agrees
     with nothing else in the bucket.
     """
     return BucketSession.open(
         bucket_id=_CONTROL_BUCKET_ID,
-        kek=_test_bucket_key(_CONTROL_BUCKET_ID, purpose="kek"),
-        dek=_test_bucket_key(_CONTROL_BUCKET_ID, purpose="dek"),
+        kek=derive_test_bucket_key(_CONTROL_BUCKET_ID, purpose="kek"),
+        dek=derive_test_bucket_key(_CONTROL_BUCKET_ID, purpose="dek"),
         idle_minutes=15,
         opened_at=datetime.now(UTC),
     )

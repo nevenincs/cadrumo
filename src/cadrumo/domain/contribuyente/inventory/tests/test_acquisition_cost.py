@@ -8,7 +8,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.contribuyente.inventory import (
+from ....filing_evidence import FilingEvidenceReference
+from .. import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
@@ -22,7 +23,6 @@ from cadrumo.domain.contribuyente.inventory import (
     compute_inventory_valuation,
     inventory_acquisition_fingerprint,
 )
-from cadrumo.domain.filing_evidence import FilingEvidenceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

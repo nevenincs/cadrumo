@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from ....application.user_profile import ProfileValidationIssue
 from ....core.errors import BaseSeverity
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from .._config_payloads import ProfileIssuePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -16,7 +17,7 @@ def test_profile_validation_payload_preserves_the_source_severity_enum() -> None
     source = ProfileValidationIssue(
         severity=BaseSeverity.WARNING,
         code="effective_window_end_not_enforced",
-        path="preferences.output_language",
+        path=PROFILE_OUTPUT_LANGUAGE_PATH,
         message="a later fact should supersede this value",
     )
     payload = ProfileIssuePayload(
@@ -37,7 +38,7 @@ def test_profile_validation_payload_rejects_arbitrary_severity_tokens(severity: 
             {
                 "severity": severity,
                 "code": "effective_window_end_not_enforced",
-                "path": "preferences.output_language",
+                "path": PROFILE_OUTPUT_LANGUAGE_PATH,
                 "message": "a later fact should supersede this value",
             },
         )

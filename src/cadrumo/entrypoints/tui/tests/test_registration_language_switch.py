@@ -25,6 +25,7 @@ from textual.widgets._select import SelectOverlay
 from ....application.user_profile import login_profile
 from ....core import assess_profile_password, require_active_bucket_id
 from ....core.i18n import output_language, tr
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....entrypoints.cli import attempt_registration
 from ....entrypoints.tui.secret.app import RecoveryWordsScreen, RegistrationApp
 from ....tests.profile_capsule import load_test_profile_record
@@ -39,9 +40,6 @@ _TERMINAL_SIZE = (140, 60)
 _PASSWORD = "registration-language-operator-secret"  # noqa: S105 - synthetic test fixture
 _STARTING_LANGUAGE = "en"
 _TARGET_LANGUAGE = "hu"
-
-_OUTPUT_LANGUAGE_PATH = "preferences.output_language"
-"""Where the created profile keeps the language chosen on this screen."""
 
 
 def _screen() -> RegistrationApp:
@@ -207,6 +205,9 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
                 await pilot.pause(0.1)
             assert isinstance(pilot.app.screen, RecoveryWordsScreen)
             recovery = pilot.app.screen
+            assert str(recovery.query_one("#words-heading", Static).content) == tr(
+                "cli.config.custody.recovery_words_heading", locale=_TARGET_LANGUAGE
+            ), "the recovery handoff must retain the registration surface's explicit language"
             recovery.query_one("#field-recovery-verification", Input).value = str(
                 recovery.query_one("#words-value", Static).render()
             )
@@ -224,14 +225,14 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
         login_profile(name="Language Subject", passphrase_callback=lambda: _PASSWORD)
         record = load_test_profile_record(require_active_bucket_id())
         stored = {fact.path: fact.value for fact in record.facts}
-        assert stored.get(_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
+        assert stored.get(PROFILE_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
             "the profile must be created in the language the chooser was left on"
         )
 
 
 @pytest.mark.asyncio
 async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None:
-    """The override the screen renders under must not colour anything after it.
+    """The screen's explicit locale must not colour anything after it.
 
     This is the hazard the sanctioned-override inventory in
     ``locales/tests/test_dynamic_prefix_registry_coverage.py`` exists to
@@ -241,13 +242,10 @@ async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None
     registration screen is listed there as reviewed rather than
     ctx-scoped, because a Textual app has no command context to scope to.
 
-    What this pins is the outcome, not the means. The screen closes its
-    override on the way out, but removing that close does not fail this
-    test and is not what makes the screen safe: the override is entered
-    on the app's own message-pump task, whose context the caller does not
-    share. What does fail this test is moving the site to a mechanism
-    that reaches past the task — an environment variable and a
-    settings-cache reset — which is the substitution worth catching.
+    Registration passes the selected locale at each translation boundary.
+    It does not mutate settings, process environment, or shared caches, so
+    independently running and nested UI tasks cannot inherit one another's
+    screen-local choice.
 
     The mid-screen assertion is the control: without proof that the
     override was live inside the screen, an unchanged caller language
@@ -264,10 +262,8 @@ async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None
             await pilot.pause()
             await _choose(pilot, _TARGET_LANGUAGE)
             assert app.title == tr("flows.registration.title", locale=_TARGET_LANGUAGE), (
-                "the override must be live inside the screen, or the assertion below is vacuous"
+                "the explicit locale must be live inside the screen, or the assertion below is vacuous"
             )
             await pilot.press("escape")
 
-        assert output_language() == before, (
-            "the screen's language override must not survive it and reach the caller's rendering"
-        )
+        assert output_language() == before, "the screen's explicit language must not reach the caller's rendering"

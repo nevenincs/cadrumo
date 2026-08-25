@@ -5,3 +5,4 @@ cadrumo.application.aggregation._irnr_income_ledger module
    :members:
    :show-inheritance:
    :ignore-module-all:
+   :exclude-members: LedgerAggregationResultBase

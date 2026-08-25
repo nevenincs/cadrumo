@@ -582,7 +582,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         carry-capable Modelo 303 row. Generic observation storage intentionally
         remains readable for legacy evidence and unrelated consumers. Callers
         that co-emit this envelope with a history projection use
-        :meth:`to_secure_object_write` and the storage backend's batch boundary
+        ``to_secure_object_write`` and the storage backend's batch boundary
         so the pair cannot half-persist.
         """
         law_revision_id = _validate_observation_casilla_ids(observation)

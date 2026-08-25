@@ -10,8 +10,8 @@ from shutil import copyfile
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.tests.fixtures import RECOGNISED_FIXTURE_PROVENANCES
-from cadrumo.tests.fixtures.external_layout_candidates import (
+from ... import RECOGNISED_FIXTURE_PROVENANCES
+from .. import (
     AEAT_PUBLISHED_FACSIMILE_CLASSIFICATION,
     EXTERNAL_LAYOUT_CANDIDATE_KINDS,
     EXTERNAL_LAYOUT_MODELOS,
@@ -36,7 +36,10 @@ _SIDECARS = tuple(_ROOT / modelo / f"{kind}.json" for modelo, kind in sorted(_EX
 
 def _adjudicated_payload() -> dict[str, object]:
     candidate = load_external_layout_candidate(_ROOT / "130" / "plain.json")
-    return candidate.model_dump(mode="python")
+    payload: dict[str, object] = {}
+    for key, value in candidate.model_dump(mode="python").items():
+        payload[str(key)] = value
+    return payload
 
 
 def test_candidate_inventory_is_exactly_five_modelos_by_two_variants() -> None:
@@ -67,8 +70,9 @@ def test_candidate_sidecar_is_strict_frozen_and_bound_to_its_filename(sidecar_pa
     assert isinstance(candidate, ExternalLayoutCandidate)
     assert candidate.modelo == sidecar_path.parent.name
     assert candidate.candidate_kind == sidecar_path.stem
+    frozen_field = "modelo"
     with pytest.raises(ValidationError, match="frozen"):
-        candidate.modelo = "130"  # type: ignore[misc]
+        setattr(candidate, frozen_field, "130")
 
 
 @pytest.mark.parametrize("sidecar_path", _SIDECARS, ids=lambda path: f"{path.parent.name}-{path.stem}")

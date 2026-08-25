@@ -1,4 +1,4 @@
-"""Boundary proofs for canonical TUI presentation components."""
+"""Boundary proofs for the canonical TUI presentation-component package."""
 
 from __future__ import annotations
 

@@ -76,6 +76,21 @@ _SETTINGS_PREAMBLE = dedent(
     )
     token = config_module._settings_override.set(settings)
     from cadrumo.application import wizard as _wizard
+
+    from contextlib import ExitStack
+
+    from cadrumo.adapters.persistence.storage import (
+        build_profile_custody_port,
+        build_profile_login_session_port,
+    )
+    from cadrumo.application.user_profile import (
+        bind_profile_custody_port,
+        bind_profile_login_session_port,
+    )
+
+    composition = ExitStack()
+    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
+    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
     """,
 )
 

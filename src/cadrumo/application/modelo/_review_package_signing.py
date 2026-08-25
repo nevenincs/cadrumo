@@ -20,7 +20,7 @@ Key custody (``sensitive-financial-data-secure-storage-only`` /
 ``no-legacy-compatibility``): the private key is generated once per profile
 bucket and persisted ONLY as ciphertext through
 :class:`~adapters.persistence.storage.SecureObjectRepository` at
-:attr:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.sensitivity` sensitivity
+``MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.sensitivity`` classification
 (:data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE`).
 It is never logged, never written to a plaintext file, and never leaves this
 module as raw bytes except transiently in process memory to sign. The public

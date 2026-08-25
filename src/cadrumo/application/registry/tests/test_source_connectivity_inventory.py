@@ -58,14 +58,14 @@ def test_every_loaded_revision_has_deterministic_connectivity_records() -> None:
             assert tuple(row.casilla_id for row in destinations) == tuple(
                 sorted(casilla.id for casilla in revision.casillas)
             )
-            assert tuple(row.binding_id for row in bindings) == tuple(sorted(binding.id for binding in revision.bindings))
+            assert tuple(row.binding_id for row in bindings) == tuple(
+                sorted(binding.id for binding in revision.bindings)
+            )
             assert tuple(row.relation_id for row in relations) == tuple(
                 sorted(relation.id for relation in revision.relations)
             )
             exercised.add((str(modelo.id), str(revision.id)))
 
     assert exercised == {
-        (str(modelo.id), str(revision.id))
-        for modelo in authority.modelos
-        for revision in modelo.revisions.values()
+        (str(modelo.id), str(revision.id)) for modelo in authority.modelos for revision in modelo.revisions.values()
     }

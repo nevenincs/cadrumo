@@ -1,7 +1,8 @@
 """Crypto substrate: AEAD primitives plus encrypted SQLAlchemy helpers.
 
 Public surface for the at-rest crypto stack. Re-exports the AEAD
-primitives (:func:`encrypt_record`, :func:`decrypt_record`,
+primitives (:func:`~cadrumo.adapters.persistence.storage.crypto.encrypt_record`,
+:func:`~cadrumo.adapters.persistence.storage.crypto.decrypt_record`,
 :func:`derive_key`, :class:`EncryptedBlob`, and the
 :data:`KEY_SIZE` / :data:`NONCE_SIZE` / :data:`GCM_TAG_SIZE`
 constants) alongside the SQLAlchemy ``TypeDecorator`` set

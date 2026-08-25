@@ -18,7 +18,12 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.setup_answers import SETUP_ANSWER_FIELDS, SetupAnswers, project_setup_answers
+from ....core.setup_answers import (
+    PROFILE_OUTPUT_LANGUAGE_PATH,
+    SETUP_ANSWER_FIELDS,
+    SetupAnswers,
+    project_setup_answers,
+)
 from .._catalogue import SETUP_FLOW
 from .._models import WizardQuestion
 from .._persistence import project_answers
@@ -95,7 +100,7 @@ def test_both_projections_agree_on_a_populated_record() -> None:
     }
     values["identity.tax_id"] = "12345678Z"
     values["iva.regime"] = "GENERAL"
-    values["preferences.output_language"] = "en"
+    values[PROFILE_OUTPUT_LANGUAGE_PATH] = "en"
     values["taxpayer_type.entity_type"] = ""
     values["taxpayer_type.legal_entity_form"] = ""
     values["renta_filing.declaration_type"] = ""

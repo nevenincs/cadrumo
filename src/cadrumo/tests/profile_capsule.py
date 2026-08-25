@@ -9,23 +9,23 @@ binds the exact record session around each read or replacement.
 from __future__ import annotations
 
 import contextlib
-from base64 import b64encode
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
-from hashlib import sha256
 from pathlib import Path
 from uuid import UUID
 
 from ..adapters.persistence.storage import custody
 from ..adapters.persistence.storage.custody import (
-    ProfileCustodyEnvelope,
-    ProfileCustodyKdfParameters,
-    ProfileCustodyWrappedDek,
     create_profile_custody_sentinel,
     list_current_profile_custody_capsule_ids,
 )
 from ..adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
+from ..adapters.persistence.storage.tests.profile_capsule_runtime import (
+    derive_test_bucket_key,
+    new_test_profile_custody_envelope,
+    test_profile_recovery_envelope,
+)
 from ..application.user_profile import (
     ProfileCapsuleLifecycle,
     ProfileCustodyRecoveryEnvelopePort,
@@ -103,8 +103,8 @@ def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
         with override_settings(cadrumo_active_profile=identity):
             session = BucketSession.open(
                 bucket_id=identity,
-                kek=_test_bucket_key(identity, purpose="kek"),
-                dek=_test_bucket_key(identity, purpose="dek"),
+                kek=derive_test_bucket_key(identity, purpose="kek"),
+                dek=derive_test_bucket_key(identity, purpose="dek"),
                 idle_minutes=15,
                 opened_at=datetime.now(UTC),
                 storage_root=effective_storage_root(),
@@ -115,58 +115,6 @@ def open_test_profile_session(profile_id: str | UUID) -> Iterator[str]:
         close_active_profile_record_session()
 
 
-def _test_bucket_key(identity: str, *, purpose: str) -> bytes:
-    """Derive one deterministic 32-byte test key for ``identity``.
-
-    Deterministic rather than random so repeated spans over the same bucket
-    inside one test agree, which is exactly the durability the retired
-    keystore file used to supply.  Domain-separated by ``purpose`` so the
-    key-encryption key and the data key are never the same bytes.
-    """
-    return sha256(f"cadrumo-test-bucket:{purpose}:{identity}".encode("ascii")).digest()
-
-
-def _new_test_envelope(profile_id: UUID) -> ProfileCustodyEnvelope:
-    seed = sha256(f"profile-record-test:{profile_id}".encode("ascii")).digest()
-    second = sha256(seed).digest()
-    return ProfileCustodyEnvelope.create(
-        profile_id=profile_id,
-        password_generation=1,
-        dek_epoch=b64encode(seed[:16]).decode("ascii"),
-        kdf=ProfileCustodyKdfParameters(
-            algorithm="argon2id",
-            version=19,
-            memory_mib=19,
-            iterations=2,
-            parallelism=1,
-            salt_b64=b64encode(seed[16:]).decode("ascii"),
-            output_bytes=32,
-        ),
-        wrapped_dek=ProfileCustodyWrappedDek(
-            nonce_b64=b64encode(seed[:12]).decode("ascii"),
-            ciphertext_b64=b64encode(seed).decode("ascii"),
-            tag_b64=b64encode(second[:16]).decode("ascii"),
-        ),
-    )
-
-
-@contextmanager
-def _test_recovery_envelope(
-    profile_id: UUID,
-    *,
-    dek: bytes,
-    dek_epoch: str,
-) -> Iterator[ProfileCustodyRecoveryEnvelopePort]:
-    """Mint a production recovery wrapper and bound its secret lifetime."""
-    from ..application.user_profile import mint_profile_creation_recovery
-
-    enrollment = mint_profile_creation_recovery(profile_id=profile_id, dek=dek, dek_epoch=dek_epoch)
-    try:
-        yield enrollment.envelope
-    finally:
-        enrollment.recovery_key.wipe()
-
-
 def mint_test_profile_recovery_envelope(
     profile_id: UUID,
     *,
@@ -174,7 +122,7 @@ def mint_test_profile_recovery_envelope(
     dek_epoch: str,
 ) -> ProfileCustodyRecoveryEnvelopePort:
     """Mint a creation wrapper while immediately wiping the fixture mnemonic."""
-    with _test_recovery_envelope(profile_id, dek=dek, dek_epoch=dek_epoch) as envelope:
+    with test_profile_recovery_envelope(profile_id, dek=dek, dek_epoch=dek_epoch) as envelope:
         return envelope
 
 
@@ -341,56 +289,6 @@ def set_active_test_profile_facts(
     return upsert_test_profile_facts(active, facts, root=root)
 
 
-def publish_test_profile_capsule(
-    profile_id: str | UUID,
-    *,
-    label: str,
-    root: Path | None = None,
-) -> UserProfileRecord:
-    """Bring one test bucket into existence the only way production ever does.
-
-    A bucket root under ``buckets/`` is created exactly once, by capsule
-    publication's atomic no-replace rename; the storage layer refuses every
-    other creator. A fixture that materialises the directory tree directly
-    therefore builds a state no production path can reach, AND occupies the
-    destination publication must claim -- so the next capsule published for
-    that identity is refused outright. This is the fixture-side door onto the
-    one creating authority, for helpers that need a real bucket before any
-    record exists.
-
-    Custody material is derived from the profile's immutable identity through
-    the same :func:`_test_bucket_key` derivation a later
-    :func:`open_test_profile_session` binds, so the published capsule opens
-    under the session the caller goes on to activate. No active session is
-    required here, which is what lets this run BEFORE the bucket exists.
-
-    The record is exactly what the production credential door publishes: one
-    revision-one record with no facts, left deliberately incomplete, because
-    completing setup is a separate operator act.
-    """
-    identity = UUID(canonical_profile_bucket_id(profile_id))
-    storage_root = effective_storage_root(root)
-    dek = _test_bucket_key(str(identity), purpose="dek")
-    envelope = _new_test_envelope(identity)
-    initial = UserProfileRecord(profile_id=str(identity), setup_state=ProfileSetupState.INCOMPLETE)
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
-    try:
-        with _test_recovery_envelope(identity, dek=dek, dek_epoch=envelope.dek_epoch) as recovery_envelope:
-            ProfileCapsuleLifecycle(root=storage_root).create(
-                label=label,
-                profile_id=identity,
-                password_envelope=envelope,
-                sentinel=create_profile_custody_sentinel(envelope=envelope, dek=dek),
-                data_files={},
-                initial_record=initial,
-                record_session=session,
-                recovery_envelope=recovery_envelope,
-            )
-    finally:
-        session.close()
-    return initial
-
-
 def seed_test_profile_record(
     record: UserProfileRecord,
     *,
@@ -402,7 +300,7 @@ def seed_test_profile_record(
     storage_root = effective_storage_root(root)
     dek = _active_bucket_dek(identity)
     if identity not in list_current_profile_custody_capsule_ids(root=storage_root):
-        envelope = _new_test_envelope(identity)
+        envelope = new_test_profile_custody_envelope(identity)
         session = ProfileRecordSession.from_envelope(envelope=envelope, dek=dek)
         initial = _rebuild_record(
             record,
@@ -411,7 +309,11 @@ def seed_test_profile_record(
             previous_record_digest=None,
         )
         try:
-            with _test_recovery_envelope(identity, dek=dek, dek_epoch=envelope.dek_epoch) as recovery_envelope:
+            with test_profile_recovery_envelope(
+                identity,
+                dek=dek,
+                dek_epoch=envelope.dek_epoch,
+            ) as recovery_envelope:
                 ProfileCapsuleLifecycle(root=storage_root).create(
                     label=label,
                     profile_id=identity,
@@ -499,7 +401,6 @@ __all__ = [
     "load_test_profile_record",
     "mint_test_profile_recovery_envelope",
     "open_test_profile_session",
-    "publish_test_profile_capsule",
     "replace_test_profile_record",
     "seed_test_profile_record",
     "set_active_test_profile_facts",

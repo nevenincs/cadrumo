@@ -12,7 +12,8 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from dev.benchmarks.cli.capture_baseline import (
+
+from ..capture_baseline import (
     DEFAULT_OUTPUT,
     _copy_source_snapshot,
     _load_raw_evidence,

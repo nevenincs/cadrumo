@@ -47,8 +47,9 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core import Period
 from ....domain.calculations.registry import (
     BindingId,
+    ModeloRevision,
     RegistryValidationError,
-    load_modelo_directory,
+    bundled_authority,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     validate_ledger_impatriado_income_aggregation_binding_definition,
 )
@@ -78,7 +79,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ANNUAL_2024 = Period.from_year_and_code(2024, "0A")
 _BASE_CASILLA = "impatriado.base-liquidable-general"
-_M151_REGISTRY_DIR = Path(__file__).resolve().parents[3] / "_data" / "registry" / "aeat" / "modelos" / "151"
+
+
+def _m151_revision_for(period: Period) -> ModeloRevision:
+    """Return the revision AEAT binds to modelo 151 for ``period``.
+
+    The revision is resolved from the period rather than pinned by id: the
+    open ``2015-y-siguientes`` span was split into ``2015-2022`` and
+    ``2025-y-siguientes``, and every id literal naming the old span stopped
+    resolving. Resolution survives the next split; an id literal does not.
+    """
+    return (
+        bundled_authority()
+        .snapshot(
+            "151",
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        )
+        .revision
+    )
+
+
 _BUCKET_ID = "16161616-1616-4616-8616-161616161616"
 
 
@@ -254,7 +275,7 @@ def test_registry_binding_resolves_es_source_total_into_base() -> None:
     binding), aggregates a mixed ES/foreign catalogue, and asserts the binding
     value equals the ES-source total — segregated foreign income never reaches it.
     """
-    revision = load_modelo_directory(_M151_REGISTRY_DIR).revisions["2015-y-siguientes"]
+    revision = _m151_revision_for(_ANNUAL_2024)
     es_row = _impatriado_transaction("bind-es", amount=Decimal("120000.00"), source_jurisdiction="ES")
     foreign_row = _impatriado_transaction("bind-de", amount=Decimal("55000.00"), source_jurisdiction="DE")
     catalogue = TransactionCatalogue.from_transactions((es_row, foreign_row))
@@ -273,7 +294,7 @@ def _mixed_and_business_binding_values() -> tuple[Decimal, Decimal]:
     :class:`~domain.transactions.Transaction` through the real aggregation and
     the real registry binding, so nothing under test is hand-built.
     """
-    revision = load_modelo_directory(_M151_REGISTRY_DIR).revisions["2015-y-siguientes"]
+    revision = _m151_revision_for(_ANNUAL_2024)
     binding_id: BindingId = "modelo-151-impatriado-base-liquidable-general"
     resolved: list[Decimal] = []
     for classification, pct in (
@@ -473,7 +494,7 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
 
 def test_registry_binding_definition_validates_and_rejects_wrong_casilla() -> None:
     """The build-time validator accepts the shipped binding and rejects an off-target one."""
-    revision = load_modelo_directory(_M151_REGISTRY_DIR).revisions["2015-y-siguientes"]
+    revision = _m151_revision_for(_ANNUAL_2024)
     binding = next(b for b in revision.bindings if b.id == "modelo-151-impatriado-base-liquidable-general")
     # Shipped binding validates.
     validate_ledger_impatriado_income_aggregation_binding_definition(binding)

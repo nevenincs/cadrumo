@@ -66,9 +66,7 @@ def assemble_row_sets_for_snapshot(
     """
     bindings_by_grouping = _bindings_by_grouping(snapshot)
     grouping_by_binding = {
-        binding_id: grouping
-        for grouping, binding_ids in bindings_by_grouping.items()
-        for binding_id in binding_ids
+        binding_id: grouping for grouping, binding_ids in bindings_by_grouping.items() for binding_id in binding_ids
     }
     row_owners: dict[tuple[str, int], int] = {}
     prepared: list[tuple[str, tuple[_RowSetCellShape, ...]]] = []
@@ -103,10 +101,7 @@ def assemble_row_sets_for_snapshot(
     # completed initialization.
     from ...calculations import assemble_observations_for_snapshot
 
-    return tuple(
-        assemble_observations_for_snapshot(grouping, cells, snapshot)
-        for grouping, cells in prepared
-    )
+    return tuple(assemble_observations_for_snapshot(grouping, cells, snapshot) for grouping, cells in prepared)
 
 
 def _bindings_by_grouping(snapshot: RegistrySnapshot) -> Mapping[str, frozenset[str]]:

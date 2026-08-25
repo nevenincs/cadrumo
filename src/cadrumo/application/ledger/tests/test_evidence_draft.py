@@ -417,7 +417,10 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
                 evidence_id=record.evidence_id,
                 settings=isolated_settings,
             )
-        assert "vision" in str(raised.value).lower()
+        # The refusal is instructive through its TYPED payload, not prose: the
+        # verdict builder deliberately keeps no message string, so the failed
+        # condition and the capability fact are what tell the caller why.
+        assert dict(raised.value.context)["llm_vision_enabled"] is False
         assert raised.value.terminal_precondition_verdict is not None
         assert raised.value.terminal_precondition_verdict.failed_condition_id == (
             LedgerPreconditionCondition.EVIDENCE_VISION_CAPABILITY_ENABLED.value

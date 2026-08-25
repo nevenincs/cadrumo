@@ -18,15 +18,33 @@ def test_public_type_aliases_have_one_canonical_facade_target(tmp_path: pytest.T
 
     manager.scaffold()
 
-    core_stub = (tmp_path / "api" / "cadrumo.core.rst").read_text(encoding="utf-8")
-    identity_stub = (tmp_path / "api" / "cadrumo.core.identity.rst").read_text(encoding="utf-8")
+    core_api_text = (tmp_path / "api" / "cadrumo.core.rst").read_text(encoding="utf-8")
+    identity_api_text = (tmp_path / "api" / "cadrumo.core.identity.rst").read_text(encoding="utf-8")
+    registry_api_text = (tmp_path / "api" / "cadrumo.domain.calculations.registry.rst").read_text(encoding="utf-8")
     all_stub_text = "\n".join(path.read_text(encoding="utf-8") for path in (tmp_path / "api").glob("*.rst"))
-    assert ".. py:data:: CasillaId\n   :module: cadrumo.core" in core_stub
-    assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity" in identity_stub
-    assert ".. py:data:: SubjectTaxId\n   :module: cadrumo.core.identity" in identity_stub
+    assert ".. py:data:: CasillaId\n   :module: cadrumo.core" in core_api_text
+    assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity" in identity_api_text
+    assert ".. py:data:: SubjectTaxId\n   :module: cadrumo.core.identity" in identity_api_text
+    assert ".. py:data:: ContentDigest\n   :module: cadrumo.core.identity" in identity_api_text
     assert all_stub_text.count(".. py:data:: CasillaId\n") == 1
     assert all_stub_text.count(".. py:data:: TaxIdIdentityToken\n") == 1
     assert all_stub_text.count(".. py:data:: SubjectTaxId\n") == 1
+    assert all_stub_text.count(".. py:data:: ContentDigest\n") == 1
+    assert ".. py:function:: collect_registry_tree_fingerprints" in registry_api_text
+    assert all_stub_text.count(".. py:function:: collect_registry_tree_fingerprints\n") == 1
+
+
+def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: pytest.TempPathFactory) -> None:
+    """Pydantic generic consumers must not re-index their defining objects."""
+    manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
+    manager.scaffold()
+
+    owner = (tmp_path / "api" / "cadrumo.application.aggregation._models.rst").read_text(encoding="utf-8")
+    consumer = (tmp_path / "api" / "cadrumo.application.aggregation._renta_ledger.rst").read_text(
+        encoding="utf-8",
+    )
+    assert "LedgerAggregationResultBase" not in owner
+    assert ":exclude-members: LedgerAggregationResultBase" in consumer
 
 
 def test_scaffold_produces_conformant_tree(tmp_path: pytest.TempPathFactory) -> None:

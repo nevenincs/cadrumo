@@ -93,6 +93,7 @@ class Session(BaseModel):
 
     @property
     def size(self) -> tuple[int, int]:
+        """Return the configured terminal dimensions as a width-height pair."""
         return (self.width, self.height)
 
 

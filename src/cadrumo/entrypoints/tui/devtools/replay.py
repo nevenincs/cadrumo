@@ -18,10 +18,10 @@ from typing import Any, Protocol, cast
 from textual.app import App
 from textual.pilot import Pilot
 
-from ._fixture import ensure_profile, ensure_session, harness_storage
-from ._frame import Frame, capture
-from ._journal import Click, Fill, Press, Session, Type
-from ._surfaces import resolve
+from .fixture import ensure_profile, ensure_session, harness_storage
+from .frame import Frame, capture
+from .journal import Click, Fill, Press, Session, Type
+from .surfaces import resolve
 
 
 class _ValueWidget(Protocol):

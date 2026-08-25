@@ -48,6 +48,7 @@ from ...core.i18n import tr
 from ...core.identity import ProfileId
 from ...core.json_contract import Notice
 from ...core.redaction import ALWAYS_REDACT_KEY_TERMS
+from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
 # ``ProfileSetupState`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
@@ -203,7 +204,7 @@ def profile_field_choices(
             ProfileFieldChoice(value="false", label=tr("flows.confirm.no")),
         )
     if field.type is ProfileFieldType.ENUM:
-        if path == "preferences.output_language":
+        if path == PROFILE_OUTPUT_LANGUAGE_PATH:
             return tuple(
                 ProfileFieldChoice(
                     value=token,

@@ -71,9 +71,7 @@ def test_m193_deferred_source_preserves_manual_gasto_casillas_without_connected_
     assert candidate_id not in connected_candidate_ids()
     assert all(fixture.candidate_id != candidate_id for fixture in CONNECTED_PROOF_FIXTURES)
     assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[BindingSourceKind.WITHHOLDING].value == "enrolled"
-    assert any(
-        BindingSourceKind.WITHHOLDING in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP
-    )
+    assert any(BindingSourceKind.WITHHOLDING in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
 
     coverage = compose_source_connectivity_coverage(
         authority=resources().modelos.authority, census=census, as_of=date(2026, 8, 25)

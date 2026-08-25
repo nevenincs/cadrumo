@@ -41,7 +41,7 @@ Public surface:
 * :func:`emit_bucket_events` — the plural append-save primitive, for one
   atomic mutation that records several transitions. N events still become
   N catalogue entries; only the number of round-trips collapses.
-* :func:`build_bucket_event` — the derive half alone, for a caller that must
+* :func:`~cadrumo.domain.buckets.build_bucket_event` — the derive half alone, for a caller that must
   commit the event in the same unit of work as the state change it records.
 
 The adapter repository also exposes a ``to_secure_object_write`` method so

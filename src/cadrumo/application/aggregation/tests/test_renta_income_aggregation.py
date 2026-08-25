@@ -12,6 +12,7 @@ from ._secure_objects_fixtures import secure_objects
 __all__ = ["secure_objects"]
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.transactions import (
@@ -240,6 +241,7 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
         bucket_id="test",
         period=_Q1_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
 
     # q2_only is outside Q1 window so it produces one compact summary entry.
@@ -259,6 +261,7 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
         bucket_id="test",
         period=_Q2_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
 
     # Q2 is cumulative YTD: Jan-Jun, so all three transactions qualify
@@ -296,6 +299,7 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
         bucket_id="test",
         period=_Q1_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert {o.transaction_id for o in result.observations} == {in_window.transaction_id}
@@ -332,6 +336,7 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
         bucket_id="test",
         period=_Q1_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
     full_scan = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 

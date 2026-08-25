@@ -15,7 +15,7 @@ from ...core import (
     ProfilePasswordRefusalReason,
 )
 
-_MESSAGE_KEYS: Final[dict[ProfilePasswordRefusalReason, str]] = {
+_MESSAGE_LOCALE_KEYS: Final[dict[ProfilePasswordRefusalReason, str]] = {
     ProfilePasswordRefusalReason.CONTAINS_SURROGATE: (
         "application.user_profile.errors.profile_password_contains_surrogate"
     ),
@@ -68,7 +68,7 @@ def prospective_profile_password_refusal(
         reason=reason,
         scalar_count=assessment.scalar_count,
         utf8_byte_count=assessment.utf8_byte_count,
-        translated_message=_MESSAGE_KEYS[reason],
+        translated_message=_MESSAGE_LOCALE_KEYS[reason],
     )
 
 

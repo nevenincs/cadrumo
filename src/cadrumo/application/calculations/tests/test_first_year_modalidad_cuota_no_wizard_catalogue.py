@@ -61,19 +61,37 @@ from cadrumo.application.calculations._relation_prefill import (
     activity_start_date_for_bucket,
     _first_year_modalidad_cuota_no_m202,
 )
-from cadrumo.core import Period
+from cadrumo.core import Period, RegistryAuthorityGrade
 from cadrumo.core.resources import resources
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.domain.user_profile import UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.secure_sql import isolated_runtime_profile
 from cadrumo.tests.profile_capsule import seed_test_profile_record
 from cadrumo.application.modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
-from ....domain.user_profile import ProfileSetupState
+)
+
+# Custody is composed AFTER the catalogue probe above, so it cannot perturb the
+# discriminating precondition this child exists to prove. The ports are bound by
+# an explicit composition root that a `python -c` child does not inherit.
+from contextlib import ExitStack
+
+from cadrumo.adapters.persistence.storage import (
+    build_profile_custody_port,
+    build_profile_login_session_port,
+)
+from cadrumo.application.user_profile import (
+    bind_profile_custody_port,
+    bind_profile_login_session_port,
+)
+
+composition = ExitStack()
+composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
+composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
 
 _PROFILE_ID = "20020020-0200-4200-8200-200200200200"
 _BUCKET = _PROFILE_ID
@@ -88,6 +106,11 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
             UserProfileFact(path="identity.legal_name", value="No Wizard SL"),
             UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value="false"),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
@@ -111,7 +134,18 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
+    # This child asks a CALCULATION question -- it resolves a modalidad and
+    # calculates, and never renders a fichero or an export layout -- so it asks
+    # for the calculation rung. Modelo 200's revision declares exactly that rung
+    # and deliberately refuses the filing rung while it spans two incompatible
+    # AEAT layouts, so demanding filing here would be asking for an authority
+    # this work does not need and the registry is right to withhold.
+    snapshot = resources().modelos.authority.snapshot(
+        "200",
+        filing_year=2025,
+        period="0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     work_unit = create_work_unit(
         bucket_id=_BUCKET,
         modelo="200",

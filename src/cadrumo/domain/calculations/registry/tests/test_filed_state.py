@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .._bindings import RegistryModeloObservation
+from .._bindings import CasillaObservation, RegistryModeloObservation
 from .._errors import RegistryValidationError
 from .._filed_state import (
     RegistryFiledStateComparison,
@@ -101,6 +101,11 @@ def _filed_observation(calculation: RegistryCalculationResult) -> RegistryModelo
     )
 
 
+def _observation_with_one_cent_delta(observation: CasillaObservation) -> CasillaObservation:
+    assert isinstance(observation.value, Decimal)
+    return observation.model_copy(update={"value": observation.value + Decimal("0.01")})
+
+
 def test_filed_state_comparison_satisfies_matching_computed_casilla_ids() -> None:
     calculation = _modelo_130_calculation()
 
@@ -140,7 +145,7 @@ def test_filed_state_comparison_rejects_legacy_casilla_list_keys() -> None:
 def test_filed_state_drift_rejects_blank_registry_provenance_refs() -> None:
     """Drift rows are operator-facing provenance carriers, not free-text bags."""
     for field_name in ("formula_id", "legal_refs", "source_refs"):
-        payload = {
+        payload: dict[str, object] = {
             "casilla_id": _M130_RESULTADO_FINAL_CASILLA,
             "local_value": Decimal("1.00"),
             "filed_value": Decimal("2.00"),
@@ -161,9 +166,7 @@ def test_filed_state_comparison_reports_value_drift() -> None:
     # `observations` tuple — the canonical storage — to drift one entry.
     observation = _filed_observation(calculation)
     drifted_observations = tuple(
-        obs.model_copy(update={"value": obs.value + Decimal("0.01")})
-        if obs.casilla_id == _M130_RESULTADO_FINAL_CASILLA
-        else obs
+        _observation_with_one_cent_delta(obs) if obs.casilla_id == _M130_RESULTADO_FINAL_CASILLA else obs
         for obs in observation.observations
     )
     observation = observation.model_copy(update={"observations": drifted_observations})
@@ -266,9 +269,7 @@ def test_filed_state_drift_carries_formula_provenance() -> None:
     calculation = _modelo_130_calculation()
     observation = _filed_observation(calculation)
     drifted_observations = tuple(
-        obs.model_copy(update={"value": obs.value + Decimal("0.01")})
-        if obs.casilla_id == _M130_RESULTADO_FINAL_CASILLA
-        else obs
+        _observation_with_one_cent_delta(obs) if obs.casilla_id == _M130_RESULTADO_FINAL_CASILLA else obs
         for obs in observation.observations
     )
     observation = observation.model_copy(update={"observations": drifted_observations})
@@ -333,9 +334,7 @@ def test_filed_state_comparison_default_tolerance_is_exact() -> None:
     calculation = _modelo_130_calculation()
     observation = _filed_observation(calculation)
     drifted_observations = tuple(
-        obs.model_copy(update={"value": obs.value + Decimal("0.01")})
-        if obs.casilla_id == _M130_RESULTADO_FINAL_CASILLA
-        else obs
+        _observation_with_one_cent_delta(obs) if obs.casilla_id == _M130_RESULTADO_FINAL_CASILLA else obs
         for obs in observation.observations
     )
     observation = observation.model_copy(update={"observations": drifted_observations})
@@ -361,9 +360,7 @@ def test_filed_state_comparison_absorbs_a_drift_within_an_explicit_tolerance() -
     calculation = _modelo_130_calculation()
     observation = _filed_observation(calculation)
     drifted_observations = tuple(
-        obs.model_copy(update={"value": obs.value + Decimal("0.01")})
-        if obs.casilla_id == _M130_RESULTADO_FINAL_CASILLA
-        else obs
+        _observation_with_one_cent_delta(obs) if obs.casilla_id == _M130_RESULTADO_FINAL_CASILLA else obs
         for obs in observation.observations
     )
     observation = observation.model_copy(update={"observations": drifted_observations})
@@ -423,9 +420,7 @@ def test_filed_state_comparison_reports_composite_missing_and_drift() -> None:
     # casilla_values is a derived @property; mutate the typed
     # `observations` tuple to drop "04" and drift "19".
     mutated_observations = tuple(
-        obs.model_copy(update={"value": obs.value + Decimal("0.01")})
-        if obs.casilla_id == _M130_RESULTADO_FINAL_CASILLA
-        else obs
+        _observation_with_one_cent_delta(obs) if obs.casilla_id == _M130_RESULTADO_FINAL_CASILLA else obs
         for obs in observation.observations
         if obs.casilla_id != _M130_PAGO_FRACCIONADO_CASILLA
     )

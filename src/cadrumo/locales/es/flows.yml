@@ -19,8 +19,6 @@ flows:
     select_unknown: 'Elige uno de los valores aceptados: %{choices}.'
     tui_abandoned: El flujo {flow_id} se cerró en el modo {mode} antes de enviarlo
       o guardarlo; no se ha registrado nada.
-    unexpected_app_type: La pantalla interactiva no está asociada a una aplicación
-      de flujo.
     unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
       el flujo desde un terminal real o guíalo con un archivo de respuestas.
   login:

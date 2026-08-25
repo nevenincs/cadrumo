@@ -17,6 +17,7 @@ from ....application.diagnostics import build_cli_version_report
 from ....core import StorageCategory, storage_path
 from ....core.config import load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.buckets import BucketEventType
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
@@ -190,11 +191,11 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     operator_pointer = read_profile_bucket("operator")
     assert operator_pointer is not None, "config profile create did not register the 'operator' bucket"
     operator_profile_id = operator_pointer.bucket_id
-    set_active_test_profile_facts((UserProfileFact(path="preferences.output_language", value="en"),))
+    set_active_test_profile_facts((UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="en"),))
 
     with open_test_profile_session(operator_profile_id):
         refreshed = load_test_profile_record(operator_profile_id)
-    assert fact_value(refreshed, "preferences.output_language") == "en"
+    assert fact_value(refreshed, PROFILE_OUTPUT_LANGUAGE_PATH) == "en"
 
     # `config profile status` reads the profile-bound secure store, needing an
     # active bucket session that the in-process test runner does not re-open per invoke
@@ -214,7 +215,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     with open_test_profile_session(operator_profile_id):
         stored = load_test_profile_record(operator_profile_id)
     assert fact_value(stored, "identity.tax_id") == "00000000T"
-    assert fact_value(stored, "preferences.output_language") == "en"
+    assert fact_value(stored, PROFILE_OUTPUT_LANGUAGE_PATH) == "en"
 
     # overview calendar reads the profile-bound store for obligation derivation,
     # needing an active bucket session that the in-process test runner does not re-open

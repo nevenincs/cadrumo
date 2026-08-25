@@ -17,7 +17,8 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...application.modelo import (
@@ -26,13 +27,15 @@ from ...application.modelo import (
     calculation_result_summary,
     modelo_work_deadline_posture,
 )
+from ...core import CasillaId
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
-from ...domain.calculations.registry import BooleanBindingEncodedValue
+from ...domain.calculations.registry import BooleanBindingEncodedValue, CasillaObservation
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     Modelo184MemberRow,
+    ModeloRecord,
     ModeloVerificationFinding,
     VerificationReport,
     WorkUnit,
@@ -250,7 +253,7 @@ def _short_id_text(value: str | None) -> str:
     return short_id(value) or ""
 
 
-def _has_m349_detail_rows(rev) -> bool:
+def _has_m349_detail_rows(rev: CalculationRevision) -> bool:
     return any(getattr(row, "row_type", None) == "operador" for row in rev.detail_rows)
 
 
@@ -258,7 +261,7 @@ def _is_m349_row_field_template_casilla(casilla_id: str) -> bool:
     return casilla_id.startswith(_M349_ROW_FIELD_TEMPLATE_PREFIXES)
 
 
-def _visible_calculation_casilla_values(rev):
+def _visible_calculation_casilla_values(rev: CalculationRevision) -> Mapping[CasillaId, Decimal]:
     if not _has_m349_detail_rows(rev):
         return rev.casilla_values
     return {
@@ -268,7 +271,7 @@ def _visible_calculation_casilla_values(rev):
     }
 
 
-def _visible_calculation_observations(rev):
+def _visible_calculation_observations(rev: CalculationRevision) -> tuple[CasillaObservation, ...]:
     if not _has_m349_detail_rows(rev):
         return rev.observations
     return tuple(
@@ -305,7 +308,7 @@ def _human_state_label(state: str) -> str:
     return calculation_revision_state_label(state)
 
 
-def work_unit_payload(unit) -> WorkUnitPayload:
+def work_unit_payload(unit: WorkUnit) -> WorkUnitPayload:
     return WorkUnitPayload(
         work_unit_id=unit.work_unit_id,
         short_work_unit_id=short_id(unit.work_unit_id) or "",
@@ -330,7 +333,7 @@ def work_unit_payload(unit) -> WorkUnitPayload:
     )
 
 
-def work_unit_lines(unit, *, include_bucket_id: bool = True) -> list[str]:
+def work_unit_lines(unit: WorkUnit, *, include_bucket_id: bool = True) -> list[str]:
     lines = [
         f"work_unit_id\t{unit.work_unit_id}",
         f"short_work_unit_id\t{_short_id_text(unit.work_unit_id)}",
@@ -362,7 +365,7 @@ def work_unit_lines(unit, *, include_bucket_id: bool = True) -> list[str]:
     return lines
 
 
-def work_unit_list_lines(units, *, include_discarded: bool) -> list[str]:
+def work_unit_list_lines(units: Sequence[WorkUnit], *, include_discarded: bool) -> list[str]:
     lines = [
         "operation\tmodelo.work.list",
         f"include_discarded\t{include_discarded}",
@@ -389,7 +392,7 @@ def work_unit_list_lines(units, *, include_discarded: bool) -> list[str]:
     return lines
 
 
-def work_unit_plazo_lines(unit) -> list[str]:
+def work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
     """Render deadline posture and unassessed preview lines for the work unit."""
     posture = modelo_work_deadline_posture(unit)
     if posture is None:
@@ -517,7 +520,7 @@ def _work_unit_deadline_output_from_posture(
     ]
 
 
-def work_unit_deadline_output(unit) -> tuple[WorkDeadlinePosturePayload | None, list[Notice]]:
+def work_unit_deadline_output(unit: WorkUnit) -> tuple[WorkDeadlinePosturePayload | None, list[Notice]]:
     """Project a work unit's filing deadline onto payload and notice rows.
 
     The JSON branch emits
@@ -527,7 +530,7 @@ def work_unit_deadline_output(unit) -> tuple[WorkDeadlinePosturePayload | None, 
     return _work_unit_deadline_output_from_posture(modelo_work_deadline_posture(unit))
 
 
-def detail_row_payloads(rev) -> tuple[DetailRowPayload, ...]:
+def detail_row_payloads(rev: CalculationRevision) -> tuple[DetailRowPayload, ...]:
     """Return materialised :class:`DetailRowPayload` rows for the JSON calculation payload."""
     rows: list[DetailRowPayload] = []
     for index, detail_row in enumerate(rev.detail_rows, start=1):
@@ -542,7 +545,7 @@ def detail_row_payloads(rev) -> tuple[DetailRowPayload, ...]:
     return tuple(rows)
 
 
-def calculation_revision_payload(rev) -> CalculationRevisionPayload:
+def calculation_revision_payload(rev: CalculationRevision) -> CalculationRevisionPayload:
     """Project a calculation revision into the shared JSON payload.
 
     The returned
@@ -606,7 +609,7 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
     )
 
 
-def result_summary_lines(rev) -> list[str]:
+def result_summary_lines(rev: CalculationRevision) -> list[str]:
     """Return the headline-result summary block for a calculation revision."""
     summary = calculation_result_summary(rev)
     if summary is None or not summary.rows:
@@ -625,7 +628,7 @@ def result_summary_lines(rev) -> list[str]:
     return lines
 
 
-def result_summary_payload(rev) -> tuple[ResultSummaryRowPayload, ...]:
+def result_summary_payload(rev: CalculationRevision) -> tuple[ResultSummaryRowPayload, ...]:
     """Return headline-result summary rows for the JSON payload.
 
     Each row is a
@@ -645,7 +648,7 @@ def result_summary_payload(rev) -> tuple[ResultSummaryRowPayload, ...]:
     )
 
 
-def casilla_inline_trace(obs) -> str | None:
+def casilla_inline_trace(obs: CasillaObservation) -> str | None:
     """Render the inline formula trace for one computed casilla observation.
 
     Returns the ``op(refs) = op(values) = value`` trace string for a formula
@@ -714,7 +717,7 @@ def _formula_operation_label(operation: str) -> str:
     return tr(key, default=default)
 
 
-def casilla_trace_verbose_line(obs) -> str:
+def casilla_trace_verbose_line(obs: CasillaObservation) -> str:
     """Render the full LedgerEntry detail for one computed casilla observation.
 
     Exposes the complete typed
@@ -735,7 +738,7 @@ def casilla_trace_verbose_line(obs) -> str:
     )
 
 
-def calculation_revision_lines(rev, *, verbose: bool = False) -> list[str]:
+def calculation_revision_lines(rev: CalculationRevision, *, verbose: bool = False) -> list[str]:
     lines = [
         f"calculation_revision_id\t{rev.calculation_revision_id}",
         f"work_unit_id\t{rev.work_unit_id}",
@@ -757,7 +760,10 @@ def calculation_revision_lines(rev, *, verbose: bool = False) -> list[str]:
     observation_by_casilla = {obs.casilla_id: obs for obs in _visible_calculation_observations(rev)}
     for casilla, value in sorted(_visible_calculation_casilla_values(rev).items()):
         observation = observation_by_casilla.get(casilla)
-        trace = casilla_inline_trace(observation) if observation is not None else None
+        if observation is None:
+            lines.append(f"casilla\t{casilla}\t{value}")
+            continue
+        trace = casilla_inline_trace(observation)
         if trace is None:
             lines.append(f"casilla\t{casilla}\t{value}")
             continue
@@ -771,7 +777,7 @@ def calculation_revision_lines(rev, *, verbose: bool = False) -> list[str]:
     return lines
 
 
-def calculation_observation_lines(rev) -> list[str]:
+def calculation_observation_lines(rev: CalculationRevision) -> list[str]:
     """Return a stable text view of a revision's typed casilla observations."""
     payload = calculation_revision_payload(rev)
     observations = sorted(payload.observations, key=lambda obs: obs.casilla_id)
@@ -800,7 +806,7 @@ def calculation_observation_lines(rev) -> list[str]:
     return lines
 
 
-def filing_record_payload(record) -> ModeloRecordPayload:
+def filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
     """Project a :class:`~cadrumo.domain.modelos.ModeloRecord` into :class:`ModeloRecordPayload` JSON form.
 
     When the record carries :class:`~cadrumo.domain.modelos.ExternalEvidence`, the
@@ -836,7 +842,7 @@ def filing_record_payload(record) -> ModeloRecordPayload:
     )
 
 
-def filing_record_lines(record) -> list[str]:
+def filing_record_lines(record: ModeloRecord) -> list[str]:
     """Render a :class:`~cadrumo.domain.modelos.ModeloRecord` as stable text lines.
 
     External evidence, when present, is printed as explicit

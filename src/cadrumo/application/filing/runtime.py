@@ -600,7 +600,7 @@ def registry_tree_fingerprint(
     """Return the TTL-cached registry tree fingerprint for runtime schema loading.
 
     Delegates the walk to the canonical
-    :func:`~domain.calculations.registry.collect_registry_tree_fingerprints`,
+    :func:`~cadrumo.domain.calculations.registry.collect_registry_tree_fingerprints`,
     rather than a second hand-rolled tree walk: that collector adds a content
     digest for mutable (non-bundled) trees specifically because
     ``(size, mtime_ns)`` alone cannot distinguish two successive writes of

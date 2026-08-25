@@ -113,18 +113,15 @@ def _observation(
     flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,
     iva: Decimal,
 ) -> IvaLedgerObservation:
-    deduction = (
-        {
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
-            "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
-                source_locator=f"invoice:{ledger_id}",
-                evidence_digest="d" * 64,
-            ),
-        }
-        if flow is IvaFlowDirection.SOPORTADO
-        else {}
-    )
+    deduction_fact_kind: IvaDeductionFactKind | None = None
+    deduction_provenance: IvaDeductionClassificationProvenance | None = None
+    if flow is IvaFlowDirection.SOPORTADO:
+        deduction_fact_kind = IvaDeductionFactKind.DOMESTIC_CURRENT
+        deduction_provenance = IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator=f"invoice:{ledger_id}",
+            evidence_digest="d" * 64,
+        )
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
@@ -134,7 +131,8 @@ def _observation(
         base_amount=Decimal("100.00"),
         iva_amount=iva,
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
-        **deduction,
+        deduction_fact_kind=deduction_fact_kind,
+        deduction_provenance=deduction_provenance,
     )
 
 
@@ -392,7 +390,8 @@ def test_iva_history_observation_refuses_missing_registry_casilla_provenance() -
 
     with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
         _iva_compensation_history_observation(
-            snapshot=snapshot,
+            modelo_id="303",
+            revision_id=snapshot.revision.id,
             casillas=casillas_without_resultado,
             formulas=formulas,
             casilla_id=_M303_RESULTADO_CASILLA,
@@ -452,7 +451,8 @@ def test_iva_history_observation_rejects_mismatched_formula_operand_projection()
 
     with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
         _iva_compensation_history_observation(
-            snapshot=snapshot,
+            modelo_id="303",
+            revision_id=snapshot.revision.id,
             casillas=casillas,
             formulas=formulas,
             casilla_id=_M303_DISPONIBLE_CASILLA,

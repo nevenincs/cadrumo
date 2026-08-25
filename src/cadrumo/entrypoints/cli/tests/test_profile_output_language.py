@@ -29,6 +29,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 from click.testing import Result
 
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage
 from ....tests.user_profile import register_cli_profile
@@ -88,16 +89,16 @@ def test_registration_writes_profile_output_language() -> None:
         **{
             "identity.tax_id": "00000000T",
             "activities.description": "Servicios",
-            "preferences.output_language": "en",
+            PROFILE_OUTPUT_LANGUAGE_PATH: "en",
         },
     )
 
     facts = _profile_facts("default")
-    assert facts["preferences.output_language"] == "en"
+    assert facts[PROFILE_OUTPUT_LANGUAGE_PATH] == "en"
     with open_test_profile_session(profile_id):
         record = workflow_state_repository().load().active_profile_record()
         assert record is not None
-        assert fact_value(record, "preferences.output_language") == "en"
+        assert fact_value(record, PROFILE_OUTPUT_LANGUAGE_PATH) == "en"
 
 
 def test_config_profile_edit_quiet_validates_profile_output_language() -> None:
@@ -118,7 +119,7 @@ def test_config_profile_edit_quiet_validates_profile_output_language() -> None:
 
     valid_result = _invoke(("config", "profile", "edit", "default", "--quiet", "--output-language", "ca"))
     assert valid_result.exit_code == 0, valid_result.output
-    assert _profile_facts("default")["preferences.output_language"] == "ca"
+    assert _profile_facts("default")[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
 
     invalid_result = _invoke(("config", "profile", "edit", "default", "--quiet", "--output-language", "zz"))
     assert invalid_result.exit_code != 0
@@ -129,7 +130,7 @@ def test_config_profile_edit_quiet_validates_profile_output_language() -> None:
     with open_test_profile_session(profile_id):
         reloaded = workflow_state_repository().load().active_profile_record()
         assert reloaded is not None
-        assert fact_value(reloaded, "preferences.output_language") == "ca"
+        assert fact_value(reloaded, PROFILE_OUTPUT_LANGUAGE_PATH) == "ca"
 
 
 def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
@@ -154,7 +155,7 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
             "identity.name": "Output",
             "identity.surnames": "Language",
             "activities.description": "Servicios",
-            "preferences.output_language": "en",
+            PROFILE_OUTPUT_LANGUAGE_PATH: "en",
             "contact.postcode": "08001",
             "iva.regime": "EXENTO",
             "tax_residence.jurisdiction_scope": "common_regime",
@@ -187,7 +188,7 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
         assert fact_value(record, "contact.postcode") == "28010"
         # Every other field the operator did NOT supply is unchanged —
         # the wizard must not have rewritten them to descriptor defaults.
-        assert fact_value(record, "preferences.output_language") == "en"
+        assert fact_value(record, PROFILE_OUTPUT_LANGUAGE_PATH) == "en"
         assert fact_value(record, "identity.tax_id") == "00000000T"
         assert fact_value(record, "activities.description") == "Servicios"
         assert fact_value(record, "iva.regime") == "EXENTO"
@@ -200,7 +201,7 @@ def test_global_language_flag_overrides_profile_for_invocation() -> None:
         **{
             "identity.tax_id": "00000000T",
             "activities.description": "Servicios",
-            "preferences.output_language": "ca",
+            PROFILE_OUTPUT_LANGUAGE_PATH: "ca",
         },
     )
 
@@ -215,7 +216,7 @@ def test_global_language_flag_overrides_profile_for_invocation() -> None:
     assert result.exit_code == 0, result.output
     # The profile language survives the invocation untouched.
     facts = _profile_facts("default")
-    assert facts["preferences.output_language"] == "ca"
+    assert facts[PROFILE_OUTPUT_LANGUAGE_PATH] == "ca"
 
 
 def test_config_repair_labels_render_in_profile_output_language() -> None:
@@ -235,7 +236,7 @@ def test_config_repair_labels_render_in_profile_output_language() -> None:
         **{
             "identity.tax_id": "00000000T",
             "activities.description": "Servicios",
-            "preferences.output_language": "en",
+            PROFILE_OUTPUT_LANGUAGE_PATH: "en",
         },
     )
 

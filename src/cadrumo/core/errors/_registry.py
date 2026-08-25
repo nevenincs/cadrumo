@@ -489,7 +489,7 @@ def get_error_exit_code(category: ErrorCategory) -> int:
     }[category]
 
 
-def resolve_error_message(error: BaseException, code: ErrorCode | None = None) -> str:
+def resolve_error_message(error: BaseException, code: ErrorCode | None = None, *, locale: str | None = None) -> str:
     """Resolve the user-facing message for ``error``.
 
     ``translated_message`` is a translation key (e.g.
@@ -503,10 +503,10 @@ def resolve_error_message(error: BaseException, code: ErrorCode | None = None) -
     interpolation = _coerce_interpolation_kwargs(getattr(error, "context", None))
     translated_message = getattr(error, "translated_message", None)
     if isinstance(translated_message, str) and translated_message:
-        return tr(translated_message, **interpolation)
+        return tr(translated_message, locale=locale, **interpolation)
     if error.args and isinstance(error.args[0], str) and error.args[0]:
         return error.args[0]
-    return tr(resolved_code.message_key, **interpolation)
+    return tr(resolved_code.message_key, locale=locale, **interpolation)
 
 
 def _coerce_interpolation_kwargs(

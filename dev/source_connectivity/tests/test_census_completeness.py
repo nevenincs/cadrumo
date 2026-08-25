@@ -240,13 +240,12 @@ def test_new_calculation_helpers_preserve_their_reviewed_inventory_or_non_source
         assign_capabilities_to_census(discovered, mutated)
 
 
-def test_s112_helpers_have_no_new_connectivity_candidate_or_connected_outcome() -> None:
-    """S114 closes the reviewed helper handoff without manufacturing a source claim."""
+def test_reviewed_helpers_have_no_new_connectivity_candidate_or_connected_outcome() -> None:
+    """The reviewed helper handoff closes without manufacturing a source claim."""
     manifest = load_source_connectivity_census()
     assignments = assign_capabilities_to_census(discovered_source_capability_ids(REPO_ROOT), manifest)
     helper_ids = {
-        "calculation_helper:src/cadrumo/domain/calculations/registry/_temporal.py:"
-        "revision_selection_coordinates",
+        "calculation_helper:src/cadrumo/domain/calculations/registry/_temporal.py:revision_selection_coordinates",
         "calculation_helper:src/cadrumo/domain/portals/_errors.py:portal_integrity_error",
     }
     census_claims = {

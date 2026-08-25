@@ -60,7 +60,11 @@ _BUCKET_ID = _PROFILE_ID
 _M390_YEAR = 2025
 _M390_PERIOD = "0A"
 _M390_FIRST_QUARTER = Period.from_year_and_code(_M390_YEAR, "1T")
-_M390_REVISION = "2010-y-siguientes"
+#: The law-determined revision for ``(390, _M390_YEAR, _M390_PERIOD)``. The open
+#: ``2010-y-siguientes`` span was split into per-year revisions, so the pinned
+#: literal named a revision the modelo no longer declares. It stays a literal
+#: because the work unit only ever ASSERTS it equals the resolved revision.
+_M390_REVISION = "2025"
 _M353_YEAR = 2026
 _M353_PERIOD = "12"
 _CLOCK = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)

@@ -15,6 +15,7 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.i18n import output_language
+from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .. import login_profile, register_profile_with_credentials
@@ -48,7 +49,7 @@ def isolated_language_state(tmp_path: Path) -> Iterator[str]:
 def _seed_profile_language(language: str, *, profile_id: str) -> None:
     register_minimal_profile(
         profile_id=profile_id,
-        overrides={"preferences.output_language": language},
+        overrides={PROFILE_OUTPUT_LANGUAGE_PATH: language},
     )
 
 

@@ -1,7 +1,7 @@
-cadrumo.entrypoints.tui.devtools._replay module
+cadrumo.entrypoints.tui.devtools.fixture module
 ===============================================
 
-.. automodule:: cadrumo.entrypoints.tui.devtools._replay
+.. automodule:: cadrumo.entrypoints.tui.devtools.fixture
    :members:
    :show-inheritance:
    :ignore-module-all:

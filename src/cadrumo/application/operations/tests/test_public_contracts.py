@@ -8,8 +8,9 @@ from typing import Annotated, TypedDict
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
-import cadrumo.application.operations as public_operations
-from cadrumo.application.operations import (
+from ....core import OperationEventKind, OperationInteractionKind, OperationLifecycle
+from ... import operations as public_operations
+from .. import (
     OperationBaselinePolicy,
     OperationCancellation,
     OperationCancellationRefusalCode,
@@ -65,10 +66,9 @@ from cadrumo.application.operations import (
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
-from cadrumo.application.operations._model_contract import require_strict_frozen_operation_model_graph
-from cadrumo.application.operations.owner import OperationExecutorContext
-from cadrumo.application.operations.persistence import OperationReplayStatus
-from cadrumo.core import OperationEventKind, OperationInteractionKind, OperationLifecycle
+from .._model_contract import require_strict_frozen_operation_model_graph
+from ..owner import OperationExecutorContext
+from ..persistence import OperationReplayStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

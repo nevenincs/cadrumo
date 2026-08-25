@@ -19,7 +19,7 @@ import pytest
 # The bounded controls for this detector live beside it in the dev tree; this
 # module holds only the expensive full-corpus proof and reuses their discovery
 # primitives.
-from ..tests.test_every_test_module_is_collectable import (
+from ...tests.test_every_test_module_is_collectable import (
     _MINIMUM_PLAUSIBLE_MODULE_COUNT,
     collection_report,
     discover_test_roots,

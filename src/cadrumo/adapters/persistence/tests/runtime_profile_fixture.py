@@ -23,7 +23,7 @@ def bucket_scoped_runtime_profile_fixture(
     *,
     autouse: bool = True,
     name: str = "_runtime_profile",
-) -> Callable[[Path], Iterator[TestRuntimeProfile]]:
+) -> Callable[..., Iterator[TestRuntimeProfile]]:
     """Build a ``_runtime_profile``-shaped fixture pinned to ``bucket_id``.
 
     A distinct ``bucket_id`` per test module keeps the bucket-scoped
@@ -53,7 +53,7 @@ def default_bucket_runtime_profile_fixture(
     *,
     autouse: bool = True,
     name: str = "_runtime_profile",
-) -> Callable[[Path], Iterator[TestRuntimeProfile]]:
+) -> Callable[..., Iterator[TestRuntimeProfile]]:
     """Build a runtime-profile fixture on the DEFAULT bucket.
 
     The sibling above pins a bucket; this one deliberately does not, which is a
@@ -81,7 +81,7 @@ def bucket_scoped_transaction_catalogue_fixture(
     bucket_id: str,
     *,
     name: str,
-) -> Callable[[Path], Iterator[TransactionCatalogueRepository]]:
+) -> Callable[..., Iterator[TransactionCatalogueRepository]]:
     """Build a fixture yielding a :class:`TransactionCatalogueRepository`.
 
     The repository is opened on an isolated runtime profile pinned to

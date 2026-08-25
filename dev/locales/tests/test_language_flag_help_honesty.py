@@ -84,8 +84,8 @@ def _run_console(args: list[str], env: dict[str, str]) -> subprocess.CompletedPr
 # The English and Spanish help descriptions for ``config profile create`` are
 # distinct, locale-authored strings (``cli.config.profile.create_help``). They
 # are the observable proof that help text rendered in the chosen language.
-_CREATE_HELP_EN = "Initialize a new active profile."
-_CREATE_HELP_ES = "Inicializa un nuevo perfil activo."
+_CREATE_HELP_EN = "Create an active profile with mandatory verified recovery."
+_CREATE_HELP_ES = "Crea un perfil activo con recuperación obligatoria y verificada."
 _CALENDAR_HELP_HU = "A határidő-naptár megjelenítése az aktív profilhoz"
 _CALENDAR_FROM_HELP_HU = "A naptárablak kezdő dátuma"
 _CALENDAR_TO_HELP_HU = "A naptárablak záró dátuma"

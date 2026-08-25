@@ -432,14 +432,10 @@ def _worksheet_row_resolution(
     """
     row_binding_values = resolve_foreign_asset_binding_row_values(context.revision, observations)
     row_bindings = tuple(
-        binding
-        for binding in context.revision.bindings
-        if binding.source is BindingSourceKind.FOREIGN_ASSET
+        binding for binding in context.revision.bindings if binding.source is BindingSourceKind.FOREIGN_ASSET
     )
     groupings = {
-        selector.grouping
-        for binding in row_bindings
-        if (selector := binding_row_set_selector(binding)) is not None
+        selector.grouping for binding in row_bindings if (selector := binding_row_set_selector(binding)) is not None
     }
     if len(groupings) != 1:
         raise ValueError("Modelo 720 foreign-asset row bindings must declare one row-set grouping")

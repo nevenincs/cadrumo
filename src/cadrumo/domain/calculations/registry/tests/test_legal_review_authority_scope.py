@@ -16,13 +16,29 @@ from .._snapshot import _check_snapshot_filing_capability, build_validated_snaps
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_M182_LEGACY_OPERATOR_REVIEWED_REFS = frozenset(
+    {
+        "orden-eha-3021-2007:art-1",
+        "orden-eha-3021-2007:art-5",
+        "ley-35-2006:art-68.3",
+        "ley-58-2003:art-93",
+    }
+)
+_M182_AMENDMENT_AGENT_REVIEWED_REFS = frozenset(
+    {
+        "orden-hac-1430-2025:art-2",
+        "orden-hac-1430-2025:df-unica",
+    }
+)
+
 
 def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
-    """M182's operator-reviewed legal refs do not promote the revision itself.
+    """M182's mixed legal-reference reviews do not promote the revision itself.
 
-    The inputs are live rather than assumed: the revision is ``agent_reviewed``
-    while all four of its legal refs are ``operator_reviewed``, so if reference
-    review promoted a revision this would yield a filing snapshot. It does not.
+    The inputs are live rather than assumed: four legacy refs are
+    ``operator_reviewed`` while the two exact 2025 HAC/1430 amendment refs are
+    ``agent_reviewed``. Neither reference category promotes the
+    ``agent_reviewed`` applicability-grade revision to filing authority.
 
     This asserted a ``pending_review`` refusal, which the campaign's own stamping
     of M182 retired. The pending-review path is not lost -- the parametrized
@@ -37,19 +53,24 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
     )
     revision = authority.modelo("182").revisions["2025"]
     assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
-    assert revision.legal_refs, "the non-promotion claim needs the revision to cite legal refs at all"
-    assert all(
-        authority.catalogues.legal[ref].review_status is LegalReviewStatus.OPERATOR_REVIEWED
-        for ref in revision.legal_refs
-        if ref in authority.catalogues.legal
-    ), "the claim is about OPERATOR-reviewed references failing to promote the revision"
+    assert revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
+    legal_review_statuses = {str(ref): authority.catalogues.legal[ref].review_status for ref in revision.legal_refs}
+    assert set(legal_review_statuses) == _M182_LEGACY_OPERATOR_REVIEWED_REFS | _M182_AMENDMENT_AGENT_REVIEWED_REFS
+    assert {
+        ref
+        for ref, review_status in legal_review_statuses.items()
+        if review_status is LegalReviewStatus.OPERATOR_REVIEWED
+    } == _M182_LEGACY_OPERATOR_REVIEWED_REFS
+    assert {
+        ref for ref, review_status in legal_review_statuses.items() if review_status is LegalReviewStatus.AGENT_REVIEWED
+    } == _M182_AMENDMENT_AGENT_REVIEWED_REFS
 
     # Through the PUBLIC accessor the revision is untouched, so it still declares
     # applicability grade and the newer authority-grade gate answers first. That is
-    # the refusal this modelo actually earns here: operator-reviewed legal refs do
-    # not promote it, which is the claim, and the grade names why more directly than
-    # the missing layout does. The sibling tests above clear the grade deliberately
-    # where the later gates are the subject.
+    # the refusal this modelo actually earns here: neither operator-reviewed legacy
+    # refs nor agent-reviewed amendments promote it, and the grade names why more
+    # directly than the missing layout does. The sibling tests below clear the
+    # grade deliberately where the later gates are the subject.
     with pytest.raises(
         RegistryValidationError,
         match=r"modelo 182 revision 2025 declares .applicability. authority grade",

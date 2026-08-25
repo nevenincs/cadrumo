@@ -85,8 +85,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from cadrumo.domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
-
+    from ...domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
     from .._workflow_auth_models import (
         AuthCleanupCertificateSource,
         AuthCleanupIntent,

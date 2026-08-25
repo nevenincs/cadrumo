@@ -199,6 +199,73 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             key_factory=lambda v: f"errors.prefix.{v}",
             values=tuple(c.value.lower() for c in ErrorCategory),
         ),
+        *_diagnostics_range_registrations(),
+        *_custody_stdin_registrations(),
+        *_modelo_work_help_registrations(),
+    )
+
+
+def _diagnostics_range_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the shared since/until/provider options every range command declares.
+
+    ``_range(prefix)`` in ``entrypoints/cli/_app_diagnostics_command_specs.py``
+    builds the same three options for each diagnostics range command, so the
+    value space is the set of commands that call it.
+    """
+    commands = ("run_health", "runs", "latency", "errors", "llm_usage")
+    return tuple(
+        FStringKeyRegistration(
+            description=f"cli.diagnostics.*.{option}_help",
+            key_factory=lambda command, option=option: f"cli.diagnostics.{command}.{option}_help",
+            values=commands,
+        )
+        for option in ("since", "until", "provider")
+    )
+
+
+def _custody_stdin_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the stdin refusal keys both secret-reading doors declare.
+
+    ``_read_secrets_stdin`` / ``_read_secrets_fd`` take a ``diagnostic_prefix``
+    that names which payload failed, so the value space is those two callers.
+    """
+    prefixes = ("secrets", "profile_secrets")
+    return tuple(
+        FStringKeyRegistration(
+            description=f"cli.config.custody.errors.*_stdin_{tail}",
+            key_factory=lambda prefix, tail=tail: f"cli.config.custody.errors.{prefix}_stdin_{tail}",
+            values=prefixes,
+        )
+        for tail in ("too_large", "invalid_json", "missing_fields")
+    )
+
+
+def _modelo_work_help_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the per-option help keys the modelo work command specs declare.
+
+    The option and argument names are literals in
+    ``MODELO_WORK_COMMAND_SPECS``, so the spec tuple IS the enumeration source
+    -- the same relationship ``ErrorCategory`` has to ``errors.prefix.*``.
+    Deriving from it rather than hand-listing keeps the registration correct
+    when an option is added or renamed, which a literal list could not.
+    """
+    from cadrumo.entrypoints.cli._modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
+
+    prefix = "cli.app.modelo.work."
+    names = sorted(
+        {
+            help_key.value.removeprefix(prefix)
+            for spec in MODELO_WORK_COMMAND_SPECS
+            for parameter in spec.parameters or ()
+            if (help_key := parameter.help_key) is not None and help_key.value.startswith(prefix)
+        }
+    )
+    return (
+        FStringKeyRegistration(
+            description="cli.app.modelo.work.*_help (MODELO_WORK_COMMAND_SPECS parameters)",
+            key_factory=lambda name: f"{prefix}{name}",
+            values=tuple(names),
+        ),
     )
 
 

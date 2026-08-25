@@ -15,7 +15,7 @@ os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
 
 import sys
 from pathlib import Path
-from typing import TypeAliasType, TypeVar
+from typing import Annotated, get_origin
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -250,29 +250,6 @@ _PUBLIC_TYPE_ALIAS_TARGETS = {
     "SubjectTaxId": "cadrumo.core.identity.SubjectTaxId",
     "TaxIdIdentityToken": "cadrumo.core.identity.TaxIdIdentityToken",
 }
-
-
-def _format_project_type_alias(annotation, config=None):
-    """Link canonical public aliases and render implementation aliases literally.
-
-    PEP 695 aliases and generic type variables are not classes.  Rendering them
-    through the extension's default ``py:class`` role creates a dead link and,
-    for private callable aliases, falsely advertises a public object.  The two
-    intentionally public aliases have generator-owned ``py:data`` targets;
-    every other alias/type parameter remains readable code without acquiring a
-    public documentation identity.
-    """
-    if isinstance(annotation, TypeVar):
-        return f"``{annotation.__name__}``"
-    if isinstance(annotation, TypeAliasType):
-        target = _PUBLIC_TYPE_ALIAS_TARGETS.get(annotation.__name__)
-        if target is not None:
-            return f":py:data:`~{target}`"
-        return f"``{annotation.__name__}``"
-    return None
-
-
-typehints_formatter = _format_project_type_alias
 
 # Be tolerant of the wider AEAT dep tree at autodoc-import time. These are
 # either heavy native deps that pull a lot of platform-specific shared
@@ -971,6 +948,51 @@ def _should_resolve_deferred_models() -> bool:
 
 _PY_SUFFIX_INDEX: dict[str, list[str]] = {}
 
+_TYPING_ALIAS_FACTORIES = frozenset(
+    {
+        "Annotated",
+        "AsyncIterator",
+        "Awaitable",
+        "Callable",
+        "Collection",
+        "Iterable",
+        "Iterator",
+        "Literal",
+        "Mapping",
+        "MutableMapping",
+        "Protocol",
+        "Sequence",
+    }
+)
+_ALIAS_NAME_SUFFIXES = (
+    "Builder",
+    "Collector",
+    "Cursor",
+    "Facts",
+    "Fetcher",
+    "Guard",
+    "Kind",
+    "Policy",
+    "Port",
+    "Predicate",
+    "Projection",
+    "Reference",
+    "Resolver",
+    "Scalar",
+    "Store",
+    "Token",
+    "Type",
+    "Value",
+)
+
+
+def _subscript_root_name(node: ast.expr) -> str | None:
+    """Return the root identifier of a subscription expression."""
+    value = node.value if isinstance(node, ast.Subscript) else None
+    while isinstance(value, ast.Attribute):
+        value = value.value
+    return value.id if isinstance(value, ast.Name) else None
+
 
 def _declared_type_hint_names() -> frozenset[str]:
     """Return source-declared aliases and TypeVars that are not API objects."""
@@ -990,6 +1012,19 @@ def _declared_type_hint_names() -> frozenset[str]:
                 and node.value.func.id == "TypeVar"
             ):
                 names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+            elif isinstance(node, ast.Assign):
+                target_names = tuple(target.id for target in node.targets if isinstance(target, ast.Name))
+                alias_like = (
+                    _subscript_root_name(node.value) in _TYPING_ALIAS_FACTORIES
+                    or (isinstance(node.value, ast.BinOp) and isinstance(node.value.op, ast.BitOr))
+                    or (
+                        isinstance(node.value, ast.Name)
+                        and node.value.id[:1].isupper()
+                        and any(name.endswith(_ALIAS_NAME_SUFFIXES) for name in target_names)
+                    )
+                )
+                if alias_like:
+                    names.update(target_names)
     return frozenset(names - _PUBLIC_TYPE_ALIAS_TARGETS.keys())
 
 
@@ -1062,6 +1097,10 @@ def _resolve_short_reference(app, env, node, contnode):
     short = parts[-1] if parts else ""
     if not short or not short.isidentifier():
         return None
+    # ``country`` is an upstream locale-library annotation, not the unrelated
+    # in-tree callable that happens to share its final component.
+    if target == "country":
+        return contnode
 
     if not _PY_SUFFIX_INDEX:
         _PY_SUFFIX_INDEX.update(_build_py_suffix_index(env))
@@ -1073,6 +1112,18 @@ def _resolve_short_reference(app, env, node, contnode):
         # is implementation vocabulary, not a missing public class.  Preserve
         # it as inline code; a real documented candidate always takes priority.
         if short in _LITERAL_TYPE_HINT_NAMES:
+            return contnode
+        if target.startswith(("bs4.", "textual.")) or target in {
+            "Coordinate",
+            "CursorType",
+            "PlaywrightError",
+            "Shape",
+            "TC",
+            "calc_sheets_export",
+            "country",
+            "textual.geometry.Size",
+            "typing.Union",
+        }:
             return contnode
         return None
 
@@ -1270,6 +1321,37 @@ def setup(app):
         The extension metadata declaring parallel-read/write safety.
     """
 
+    def _skip_non_owner_autodoc_member(app, what, name, obj, skip, options):
+        """Keep private/generated typing objects out of public object indexing."""
+        if name in {"__pydantic_serializer__", "__pydantic_validator__"}:
+            return True
+        generic_metadata = getattr(obj, "__pydantic_generic_metadata__", None)
+        if isinstance(generic_metadata, dict) and generic_metadata.get("origin") is not None:
+            return True
+        if get_origin(obj) is Annotated:
+            return True
+        return None
+
+    # Napoleon's optional private/special-member listener probes ``__doc__``
+    # on every candidate before deciding to skip it.  A deferred Pydantic
+    # serializer deliberately raises on that probe, even though autodoc's own
+    # exclude-members contract has already made the descriptor non-public.
+    # None of Napoleon's inclusion switches are enabled here, so disconnecting
+    # that redundant selector preserves member selection and prevents an
+    # excluded implementation descriptor from aborting public API discovery.
+    for listener in tuple(app.events.listeners.get("autodoc-skip-member", ())):
+        handler = listener.handler
+        if handler.__module__ == "sphinx.ext.napoleon" and handler.__name__ == "_skip_member":
+            if any(
+                (
+                    app.config.napoleon_include_init_with_doc,
+                    app.config.napoleon_include_private_with_doc,
+                    app.config.napoleon_include_special_with_doc,
+                )
+            ):
+                raise RuntimeError("Napoleon member inclusion is incompatible with the Pydantic API boundary")
+            app.disconnect(listener.id)
+
     def _resolve_deferred_models(app):
         """Import the diagnostics module and run its idempotent model rebuild.
 
@@ -1279,8 +1361,11 @@ def setup(app):
         if not _should_resolve_deferred_models():
             return
         from cadrumo.application import diagnostics
+        from cadrumo.core.errors import ErrorEnvelope
 
         diagnostics._ensure_models_rebuilt()
+        if not ErrorEnvelope.__pydantic_complete__:
+            raise RuntimeError("the canonical ErrorEnvelope model did not resolve for API documentation")
 
     def _generate_cli_reference(app):
         """Render the CLI reference fresh from the live command tree.
@@ -1402,6 +1487,7 @@ def setup(app):
         check_sequence_goldens(app, pages=pages)
 
     app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings)
+    app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
     app.connect("builder-inited", _generate_glossary_reference)

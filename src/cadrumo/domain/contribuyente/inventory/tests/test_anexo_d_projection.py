@@ -9,7 +9,8 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.contribuyente.inventory import (
+from ....filing_evidence import FilingEvidenceReference
+from .. import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
@@ -36,7 +37,6 @@ from cadrumo.domain.contribuyente.inventory import (
     compute_inventory_anexo_d_projection,
     fingerprint_prior_authoritative_closing,
 )
-from cadrumo.domain.filing_evidence import FilingEvidenceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -288,8 +288,9 @@ def test_projection_refuses_output_override_and_result_forgery() -> None:
         _ledger(movements=(_purchase(),), physical="130.00", select_physical=True)
     )
     movement_result = compute_inventory_anexo_d_projection(_ledger(movements=(_purchase(),), physical="130.00"))
+    unsupported_override: dict[str, object] = {"authoritative_closing_value": Decimal("999")}
     with pytest.raises(TypeError):
-        compute_inventory_anexo_d_projection(_ledger(), **{"authoritative_closing_value": Decimal("999")})
+        compute_inventory_anexo_d_projection(_ledger(), **unsupported_override)
     assert result.closing_conflict is not None
     correlated_physical_fingerprint = "8" * 64
     for mutation in (

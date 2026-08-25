@@ -101,6 +101,23 @@ def test_non_leaf_retirement_boolean_pairs_and_modelo_choices_are_truthful() -> 
     assert "303" in modelo.choices
 
 
+def test_retired_profile_transfer_leaves_do_not_resolve_or_register() -> None:
+    """The archive/export and restore doors replace the retired profile-root leaves."""
+    profile_path = ("aeat", "config", "profile")
+    registrations = {row.cli_path: row.command for row in command_registration_metadata()}
+
+    for path in ((*profile_path, "archive", "export"), (*profile_path, "restore")):
+        spec = COMMAND_GRAPH.resolve_path(path)
+        assert spec.result_schema.identity is not None
+        assert registrations[path[1:]] == spec.result_schema.identity
+
+    for retired_leaf in ("export", "import"):
+        retired_path = (*profile_path, retired_leaf)
+        with pytest.raises(LookupError, match="unknown command spec path"):
+            COMMAND_GRAPH.resolve_path(retired_path)
+        assert retired_path[1:] not in registrations
+
+
 def test_every_projected_target_matches_its_authored_spec() -> None:
     expected = COMMAND_GRAPH.by_schema_identity()
     for row in command_registration_metadata():

@@ -170,6 +170,7 @@ class Frame:
     geometry: list[str] = field(default_factory=list)
 
     def render(self) -> str:
+        """Render the captured bands as the operator-facing frame text."""
         rule = "─" * 8
         out = [
             f"{rule} frame {self.index} {rule} {self.surface} · "

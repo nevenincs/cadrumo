@@ -26,7 +26,7 @@ def isolated_profile_storage_fixture(
     name: str = "_isolated_storage",
     dispose_engine_around: bool = False,
     settings_overrides: Mapping[str, object] | Callable[[Path], Mapping[str, object]] | None = None,
-) -> Callable[[Path], Iterator[None]]:
+) -> Callable[..., Iterator[None]]:
     """Build a bare isolation fixture that yields no value.
 
     A distinct contract from :func:`profile_storage_root_fixture` above: that
@@ -51,7 +51,12 @@ def isolated_profile_storage_fixture(
     def _isolated_profile_storage(tmp_path: Path) -> Iterator[None]:
         if dispose_engine_around:
             dispose_engine()
-        resolved_overrides = settings_overrides(tmp_path) if callable(settings_overrides) else settings_overrides
+        if settings_overrides is None:
+            resolved_overrides: dict[str, object] = {}
+        elif isinstance(settings_overrides, Mapping):
+            resolved_overrides = dict(settings_overrides)
+        else:
+            resolved_overrides = dict(settings_overrides(tmp_path))
         settings_cm = override_settings(**resolved_overrides) if resolved_overrides else nullcontext()
         with settings_cm, isolated_profile_storage_root(tmp_path=tmp_path):
             if dispose_engine_around:
@@ -70,7 +75,7 @@ def bucket_session_storage_fixture(
     *,
     autouse: bool = True,
     name: str = "_isolated_backend",
-) -> Callable[[Path], Iterator[None]]:
+) -> Callable[..., Iterator[None]]:
     """Build an isolation fixture that also holds an active bucket session.
 
     A third contract beside the two above: this one opens an isolated storage
