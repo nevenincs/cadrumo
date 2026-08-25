@@ -17,7 +17,7 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Never, Protocol
 
 if TYPE_CHECKING:
     # playwright is the optional `browser` extra; this type is annotation-only.
@@ -33,6 +33,19 @@ from ._errors import (
 )
 
 logger = get_logger(__name__)
+
+
+def _raise_playwright_stealth_unavailable(cause: ImportError) -> Never:
+    """Translate a missing stealth dependency into the browser safety contract."""
+    raise BrowserEvasionError(
+        "Browser evasion support is unavailable",
+        failure_mode=BrowserFailureMode.EVASION_FAILED,
+        precondition_verdict=browser_no_action_verdict(
+            condition=BrowserPreconditionCondition.EVASION_SUPPORT_AVAILABLE,
+            facts={"browser_evasion_support_available": False},
+            outcome=NoRecoveryOutcome.SAFETY,
+        ),
+    ) from cause
 
 
 class EvasionStrategy(Protocol):
@@ -70,17 +83,9 @@ class PlaywrightStealthEvasion:
         """
         try:
             from playwright_stealth import Stealth
-        except ImportError as e:
+        except ImportError as exc:
             logger.error("playwright-stealth is not installed; evasion failed", exc_info=True)
-            raise BrowserEvasionError(
-                "Browser evasion support is unavailable",
-                failure_mode=BrowserFailureMode.EVASION_FAILED,
-                precondition_verdict=browser_no_action_verdict(
-                    condition=BrowserPreconditionCondition.EVASION_SUPPORT_AVAILABLE,
-                    facts={"browser_evasion_support_available": False},
-                    outcome=NoRecoveryOutcome.SAFETY,
-                ),
-            ) from e
+            _raise_playwright_stealth_unavailable(exc)
 
         await Stealth().apply_stealth_async(context)
         logger.debug("playwright-stealth evasion applied")

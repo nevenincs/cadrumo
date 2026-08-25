@@ -15,7 +15,7 @@ import pytest
 from .....application.storage.calc_sheets import CALC_SHEETS_ENGINE_VERSION, SheetExportPlan
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, TaxDomain
 from .....domain.calculations.registry import ModeloDefinition, ModeloRevision, RegistrySnapshot
-from ...storage import OutboundStorageConflictError, OutboundStorageValidationError
+from ...storage import OutboundStorageConflictError, OutboundStorageError, OutboundStorageValidationError
 from .._calc_sheets_apply import apply_export_plan, preview_export_plan
 from .._calc_sheets_pull import (
     MetadataMatchState,
@@ -98,7 +98,7 @@ def _synthetic_snapshot() -> RegistrySnapshot:
 
 
 def _assert_closed_outcome(
-    error: BaseException,
+    error: OutboundStorageError,
     *,
     condition_id: str,
     facts: dict[str, str | int | bool],
@@ -170,7 +170,10 @@ print(json.dumps({{
         capture_output=True,
         text=True,
     )
-    return json.loads(completed.stdout)
+    payload = json.loads(completed.stdout)
+    assert isinstance(payload, dict)
+    assert all(isinstance(key, str) for key in payload)
+    return {key: value for key, value in payload.items()}
 
 
 def test_apply_missing_google_api_client_is_a_closed_safety_outcome() -> None:

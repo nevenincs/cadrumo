@@ -5,7 +5,6 @@ from __future__ import annotations
 import ast
 import asyncio
 import inspect
-import sys
 from dataclasses import dataclass
 from types import ModuleType
 from typing import override
@@ -24,7 +23,7 @@ from .._errors import (
     BrowserEvasionError,
     BrowserPreconditionCondition,
 )
-from ..evasion import PlaywrightStealthEvasion
+from ..evasion import _raise_playwright_stealth_unavailable
 from ..profile import Profile
 from ..session import BrowserSession
 
@@ -109,7 +108,7 @@ _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         (("browser_closeable", "False"),),
         NoRecoveryOutcome.SAFETY,
     ),
-    "evasion:PlaywrightStealthEvasion.apply:BrowserEvasionError:Browser evasion support is unavailable": _contract(
+    "evasion:_raise_playwright_stealth_unavailable:BrowserEvasionError:Browser evasion support is unavailable": _contract(
         BrowserPreconditionCondition.EVASION_SUPPORT_AVAILABLE,
         (("browser_evasion_support_available", "False"),),
         NoRecoveryOutcome.SAFETY,
@@ -284,20 +283,12 @@ def test_browser_producers_have_no_direct_verdict_constructor_or_authored_recove
     assert delegate_calls == [(errors_module.__name__, "no_action_precondition_verdict")]
 
 
-@pytest.mark.asyncio
-async def test_missing_evasion_support_has_an_exact_runtime_safety_verdict(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setitem(sys.modules, "playwright_stealth", None)
+def test_missing_evasion_support_has_an_exact_runtime_safety_verdict() -> None:
+    cause = ImportError("playwright-stealth is unavailable")
+    with pytest.raises(BrowserEvasionError) as raised:
+        _raise_playwright_stealth_unavailable(cause)
 
-    async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=True)
-        context = await browser.new_context()
-        try:
-            with pytest.raises(BrowserEvasionError) as raised:
-                await PlaywrightStealthEvasion().apply(context)
-        finally:
-            await context.close()
-            await browser.close()
-
+    assert raised.value.__cause__ is cause
     _assert_terminal_contract(
         raised.value,
         condition=BrowserPreconditionCondition.EVASION_SUPPORT_AVAILABLE,
@@ -312,7 +303,7 @@ async def test_page_content_failure_has_an_exact_runtime_safety_verdict() -> Non
         browser = await playwright.chromium.launch(headless=True)
         context = await browser.new_context()
         page = await context.new_page()
-        page.on("load", lambda: asyncio.create_task(page.close()))
+        page.on("load", lambda _page: asyncio.create_task(page.close()))
         session = BrowserSession(
             playwright=playwright,
             settings=Settings(),
