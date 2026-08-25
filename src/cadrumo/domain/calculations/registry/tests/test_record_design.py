@@ -66,7 +66,16 @@ def test_modelo_200_workbook_recovers_source_declared_totals_and_variable_envelo
     _modelo, catalogues = _committed_registry_tree()
     source = catalogues.sources["aeat-dr-200-2025"]
     workbook_path = bundled_path() / source.corpus_path
-    declared_totals, formula_anchors = _official_total_rows(workbook_path)
+
+    # The formula half of this evidence lives only in the .xlsx rendering of the
+    # same AEAT workbook. xlrd reads the .xls the catalogue pins and returns the
+    # CACHED total -- 627.0 -- but no formula text, so "=SUM(C6:C118)" is
+    # unavailable from it at all. Reading the sibling keeps the assertion that
+    # the total is a sum over the record rows rather than a number that happens
+    # to sit beside them, and the parse below still runs against the pinned
+    # binary, so the two formats corroborate rather than one replacing the other.
+    formula_source = workbook_path.with_suffix(".xlsx")
+    declared_totals, formula_anchors = _official_total_rows(formula_source)
 
     assert declared_totals
     assert formula_anchors["DP200001"] == ("A119", "C119", "=SUM(C6:C118)", 627)
