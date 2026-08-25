@@ -11,9 +11,6 @@ related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
 
-
-
-
 # Generate the leaf-condition-scenario matrix from live surface and production verdict declarations
 
 ## Scope

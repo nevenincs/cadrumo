@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-25'
-body_hash: 'sha256:ecc2afd898273197dc01c7c55ed84b4d432fbe449167ee64973fa30450ea4dfc'
+body_hash: 'sha256:b2c355ece422034c5831f42ecc344b14850d899ebb5a9b3a9d50b81557677081'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -363,6 +363,6 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S252` - Adjudicate registry, revision, readiness, lifecycle, and modelo page contracts across the twelve residual registry-backed documentation pages against current authority; `docs/_sequences/contracts/ and docs/how-to/ and docs/reference/`.
 - [x] `W06.P12.S253` - Replace stale ledger-evidence and invoice output assumptions with stable authority-backed dynamic witnesses on ledger-evidence and manage-invoices; `docs/_sequences/contracts/ledger-evidence/ and docs/_sequences/contracts/manage-invoices/`.
 - [x] `W06.P12.S254` - Reconcile verification-report history and provenance sequences with current Modelo 303 identifiers and authoritative frame structure; `docs/_sequences/contracts/verification-reports/ and src/cadrumo/application/verification/`.
-- [ ] `W06.P12.S255` - Reconcile the censo-update sequence with the current censal projection and reviewed-apply authority; `docs/_sequences/contracts/censo-update/ and src/cadrumo/application/user_profile/`.
+- [x] `W06.P12.S255` - Reconcile the censo-update sequence with the current censal projection and reviewed-apply authority; `docs/_sequences/contracts/censo-update/ and src/cadrumo/application/user_profile/`.
 - [ ] `W06.P12.S256` - Separate volatile workstation free-memory diagnostics from deterministic golden state while preserving real registry-integrity failures and host-health evidence; `docs/_sequences/contracts/workstation-setup/ and src/cadrumo/application/diagnostics.py and src/cadrumo/core/observability/`.
 - [ ] `W06.P12.S257` - Route CLI and manager censal apply through the canonical user-profile.censo-review operation, preserving one acquisition, encrypted reviewed operand, exact baseline, resume-without-reread, and apply_cotejo sole-writer authority; `src/cadrumo/application/user_profile/_censal_operation.py and src/cadrumo/entrypoints/cli/_config/ and src/cadrumo/adapters/inbound/tui/`.

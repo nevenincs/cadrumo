@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:0003d6ad86722c53975041a6518e791f00a7c6e13f136533f4ed326129497d4a'
+body_hash: 'sha256:3bf05a726447f1cbf2e9e70570d66c066ed9660a2a49336eb4d224054e1452b8'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -256,6 +256,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S252]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S253]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S254]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S255]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -638,6 +639,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S252` - Adjudicate registry, revision, readiness, lifecycle, and modelo page contracts across the twelve residual registry-backed documentation pages against current authority
 - `2026-08-13-profile-password-custody-W06-P12-S253` - Replace stale ledger-evidence and invoice output assumptions with stable authority-backed dynamic witnesses on ledger-evidence and manage-invoices
 - `2026-08-13-profile-password-custody-W06-P12-S254` - Reconcile verification-report history and provenance sequences with current Modelo 303 identifiers and authoritative frame structure
+- `2026-08-13-profile-password-custody-W06-P12-S255` - Reconcile the censo-update sequence with the current censal projection and reviewed-apply authority
 
 ### plan
 

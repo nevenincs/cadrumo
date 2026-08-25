@@ -5,45 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:a18dc602a200aa2598fc6a4a6782a0c91e2cf88e8f35d03fcb30b949f55d3187'
+body_hash: 'sha256:ca3cc2435338d1659cce7b75cf6c426f2e64fe19fc9920144a9ef03d77d194fa'
 step_id: 'S13'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace registry-temporal-coverage with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S13 and 2026-08-14-registry-temporal-coverage-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Replace the single-representative-year assessment with a derived modelo, filing-year, period and schema-family matrix over the validated authority that assesses every claimed year up to the assessment horizon, proven by property on a real long-span open revision and ## Scope
-
-- `src/cadrumo/domain/calculations/registry/_coverage.py`
-- `src/cadrumo/domain/calculations/registry/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Replace the single-representative-year assessment with a derived modelo, filing-year, period and schema-family matrix over the validated authority that assesses every claimed year up to the assessment horizon, proven by property on a real long-span open revision
 
