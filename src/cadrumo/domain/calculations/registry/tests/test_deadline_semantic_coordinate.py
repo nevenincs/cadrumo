@@ -6,8 +6,7 @@ from datetime import date
 
 import pytest
 
-from cadrumo.core import Period, ResultDisposition
-
+from .....core import Period, ResultDisposition
 from .. import (
     DeadlineSemanticCoordinate,
     DeadlineWindowDefinition,

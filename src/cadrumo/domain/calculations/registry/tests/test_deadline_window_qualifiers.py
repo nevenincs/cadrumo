@@ -7,8 +7,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import M210_TIPO_RENTA_CODE_PROJECTION, ResultDisposition, TipoRentaIrnr
-
+from .....core import M210_TIPO_RENTA_CODE_PROJECTION, ResultDisposition, TipoRentaIrnr
 from .. import DeadlineWindowDefinition, RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
