@@ -89,6 +89,23 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     assert "missing repeated-row materialization" in summaries
 
 
+def test_asset_amortization_census_retains_the_unsettled_legal_boundary() -> None:
+    manifest = load_source_connectivity_census()
+    amortization = next(
+        entry for entry in manifest.entries if entry.candidate_id == "assets.amortization-ledger"
+    )
+
+    assert amortization.disposition.value == "ingress_blocked"
+    assert amortization.expires_on == date(2026, 12, 31)
+    assert amortization.bounded_follow_up is not None
+    assert amortization.bounded_follow_up.action_id == "source-casilla.assets-amortization-ingress"
+    assert "exclusive future source" in amortization.review_condition
+    assert "casilla 0208" in amortization.review_condition
+    assert "casilla 0227" in amortization.review_condition
+    assert "finca casilla 0131 separate" in amortization.review_condition
+    assert "current encrypted scalar ledger remains ingress-blocked" in amortization.review_condition
+
+
 def test_modelo_036_manual_profile_evidence_uses_its_exact_event_coordinate() -> None:
     """Keep M036's human-filed censo event out of ordinary filing-period tokens."""
     manifest = load_source_connectivity_census()

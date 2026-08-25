@@ -1,7 +1,9 @@
 """Declarative S170 fixed point, backed by the canonical import-hygiene scanner."""
 from __future__ import annotations
 
+import inspect
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -22,8 +24,14 @@ _CADRUMO = _ROOT / "src/cadrumo"
 _CANONICAL = _CADRUMO / "application/modelo/work_addressing.py"
 _MODULE = "cadrumo.application.modelo.work_addressing"
 _RETIRED = frozenset({"cadrumo.application.modelo._work_addressing", "cadrumo.application.modelo.work_unit_selection"})
+_DEFINED_SYMBOLS = frozenset(
+    name
+    for name in work_addressing.__all__
+    if (inspect.isclass(value := getattr(work_addressing, name)) or inspect.isfunction(value))
+    and getattr(value, "__module__", None) == _MODULE
+)
 _SPEC = CanonicalAuthoritySpec(
-    targets=(CanonicalAuthorityTarget(_MODULE, _CANONICAL, frozenset(work_addressing.__all__)),),
+    targets=(CanonicalAuthorityTarget(_MODULE, _CANONICAL, _DEFINED_SYMBOLS),),
     retired_modules=_RETIRED,
     facade_modules=frozenset({"cadrumo.application.modelo"}),
     inert_modules=frozenset({"cadrumo.application.modelo"}),
@@ -57,7 +65,7 @@ def test_work_selection_fixed_point_is_discovery_complete() -> None:
         "def outer():\n def inner():\n  WorkUnitCatalogueRepository().load(); return select_modelo_work_resolution()",
         "repository-owning selector wrapper",
     ),
-    ("def f(value: 'ModeloWorkResolution'): pass", "indirect addressing symbol consumer"),
+    ("def f(value: 'ModeloWorkResolution'): pass", "indirect authority symbol consumer"),
     ],
 )
 def test_adversarial_import_authority_mutants_are_rejected(source: str, expected: str, tmp_path: Path) -> None:
@@ -66,18 +74,20 @@ def test_adversarial_import_authority_mutants_are_rejected(source: str, expected
     assert expected in {hit.kind for hit in scan_canonical_authority(_SPEC, (path,))}
 
 
-def test_rag_discovery_returns_the_canonical_owner(tmp_path: Path) -> None:
-    status_dir = tmp_path / "rag-client-status"
+@pytest.mark.resident_service
+def test_rag_discovery_returns_the_canonical_owner() -> None:
+    status_dir = Path(os.environ["_VAULTSPEC_RAG_PYTEST_SINGLETON_ROOT"]) / "client-status"
     status_dir.mkdir()
     version = subprocess.run(
-        ["vaultspec-rag", "--version"],  # noqa: S607
+        ["uv", "tool", "run", "--from", "vaultspec-rag==0.4.2", "vaultspec-rag", "--version"],  # noqa: S607
         cwd=_ROOT, capture_output=True, text=True, check=False, timeout=15,
     )
     assert version.returncode == 0, version.stderr
     assert "0.4.2" in version.stdout, version.stdout
     result = subprocess.run(  # noqa: S603
         [  # noqa: S607
-            "vaultspec-rag", "--status-dir", str(status_dir), "search",
+            "uv", "tool", "run", "--from", "vaultspec-rag==0.4.2", "vaultspec-rag",
+            "--status-dir", str(status_dir), "search",
             "Modelo work-unit selector repository wrapper natural catalogue scan facade import",
             "--type", "code", "--port", "8766", "--timeout", "45.0", "--json",
         ],

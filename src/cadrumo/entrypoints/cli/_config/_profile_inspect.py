@@ -184,9 +184,9 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
     ``aeat app modelo describe <modelo>`` rather than emitting a bare error.
     """
     from ....application.modelo.work_addressing import (
-        ModeloWorkRegistryYearMismatchError as _ModeloWorkRegistryYearMismatchError,
+        ModeloWorkRegistryYearMismatchError,
+        resolve_registry_revision_for_work_target,
     )
-    from ....application.modelo.work_addressing import resolve_registry_revision_for_work_target
     from ....domain.calculations.registry import (
         AmbiguousRevisionSelectionError,
         NoRevisionForPeriodError,
@@ -227,7 +227,7 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
             translated_message="cli.config.profile.preflight_revision_unresolved",
             context={"modelo": modelo, "filing_year": period.filing_year, "period": period.registry_token},
         ) from exc
-    except _ModeloWorkRegistryYearMismatchError as exc:
+    except ModeloWorkRegistryYearMismatchError as exc:
         # An explicit ``--revision-id`` override that is unknown to the
         # modelo or does not cover the filing year. List the registered
         # revisions so the operator can correct the override.

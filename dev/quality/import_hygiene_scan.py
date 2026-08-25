@@ -188,7 +188,9 @@ def _static_string(node: ast.AST, scope: _AuthorityScope) -> str | None:
 
 def _qualified_value(node: ast.AST, scope: _AuthorityScope) -> str | None:
     if isinstance(node, ast.Name):
-        return scope.qualified.get(node.id)
+        return scope.qualified.get(node.id) or (
+            node.id if node.id in {"__import__", "delattr", "dict", "getattr", "setattr"} else None
+        )
     if isinstance(node, ast.Attribute):
         base = _qualified_value(node.value, scope)
         return f"{base}.{node.attr}" if base else None
@@ -310,26 +312,26 @@ class _CanonicalAuthorityAnalyzer:
                 if target:
                     for alias in node.names:
                         scope.qualified[alias.asname or alias.name] = f"{target}.{alias.name}"
-        for _ in range(len(nodes) + 1):
-            changed = False
-            for node in nodes:
-                if not isinstance(node, (ast.Assign, ast.AnnAssign)) or node.value is None:
+        assignments = sorted(
+            (node for node in nodes if isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is not None),
+            key=lambda node: (node.lineno, node.col_offset),
+        )
+        for node in assignments:
+            targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
+            for target in targets:
+                if not isinstance(target, ast.Name):
                     continue
-                targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
-                for target in targets:
-                    if not isinstance(target, ast.Name):
-                        continue
-                    scope.literals[target.id] = node.value
-                    string = _static_string(node.value, scope)
-                    qualified = _qualified_value(node.value, scope)
-                    if string is not None and scope.strings.get(target.id) != string:
-                        scope.strings[target.id] = string
-                        changed = True
-                    if qualified is not None and scope.qualified.get(target.id) != qualified:
-                        scope.qualified[target.id] = qualified
-                        changed = True
-            if not changed:
-                break
+                scope.literals[target.id] = node.value
+                string = _static_string(node.value, scope)
+                qualified = _qualified_value(node.value, scope)
+                if string is None:
+                    scope.strings.pop(target.id, None)
+                else:
+                    scope.strings[target.id] = string
+                if qualified is None:
+                    scope.qualified.pop(target.id, None)
+                else:
+                    scope.qualified[target.id] = qualified
 
     def _check_definition(self, node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> None:
         target = self.targets.get(node.name)
@@ -342,8 +344,6 @@ class _CanonicalAuthorityAnalyzer:
         for alias in node.names:
             if alias.name in self.spec.retired_modules:
                 self.add("retired private module import", node, alias.name)
-            if alias.name in self.spec.facade_modules:
-                self.add("facade import/package access", node, alias.name)
 
     def _check_import_from(self, node: ast.ImportFrom, scope: _AuthorityScope) -> None:
         target = resolve_relative_import(self.module, self.path.name == "__init__.py", node.level, node.module)
@@ -376,7 +376,7 @@ class _CanonicalAuthorityAnalyzer:
             if self.path.resolve() != self.targets[name].path.resolve():
                 self.add("duplicate authority binding", node, name)
         qualified = _qualified_value(node.value, scope)
-        if qualified in self.qualified_targets and not names & self.targets.keys():
+        if names and qualified in self.qualified_targets and not names & self.targets.keys():
             self.add("aliased authority binding", node, qualified)
         if names & self.spec.export_container_names:
             exported = _literal_strings(node.value, scope) & self.targets.keys()
@@ -389,13 +389,13 @@ class _CanonicalAuthorityAnalyzer:
             imported = _static_string(node.args[0], scope)
             if imported in self.spec.retired_modules:
                 self.add("dynamic authority import/access", node, imported or "")
-            elif imported in self.spec.facade_modules:
-                self.add("facade import/package access", node, imported or "")
         expression = _qualified_value(node, scope)
         if expression in self.spec.retired_modules:
             self.add("dynamic authority import/access", node, expression or "")
         elif expression in self.qualified_targets and self.spec.forbid_qualified_access:
             self.add("qualified authority access", node, expression or "")
+        elif any(expression == f"{facade}.{symbol}" for facade in self.spec.facade_modules for symbol in self.targets):
+            self.add("facade import/package access", node, expression or "")
 
     def _check_qualified_access(self, node: ast.Attribute, scope: _AuthorityScope) -> None:
         expression = _qualified_value(node, scope)
