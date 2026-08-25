@@ -23,8 +23,7 @@ import pytest
 import yaml
 
 from .. import harness_root, iter_personas
-from .._workspace import materialise_plugin
-from ._plugin_cohort import TestPluginCohort
+from .._workspace import _PluginPythonCohort, materialise_plugin
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -55,7 +54,7 @@ def _agent_frontmatter(path: Path) -> dict[str, object]:
     return frontmatter
 
 
-def test_plugin_manifest_carries_required_fields(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_plugin_manifest_carries_required_fields(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
     output = tmp_path / "plugin"
     manifest = materialise_plugin(output, cohort=plugin_cohort)
     assert manifest.plugin_name == "cadrumo"
@@ -75,7 +74,9 @@ def test_plugin_manifest_carries_required_fields(tmp_path: Path, plugin_cohort: 
     assert "aeat Spanish-tax CLI" not in document["description"]
 
 
-def test_plugin_emits_the_skills_tree_from_the_authored_source(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_plugin_emits_the_skills_tree_from_the_authored_source(
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
+) -> None:
     output = tmp_path / "plugin"
     manifest = materialise_plugin(output, cohort=plugin_cohort)
     assert manifest.skills_written == len(_shipped_skill_names())
@@ -85,7 +86,7 @@ def test_plugin_emits_the_skills_tree_from_the_authored_source(tmp_path: Path, p
     assert (output / "skills" / "cadrumo-preparar-modelo-130" / "reference" / "casillas.md").is_file()
 
 
-def test_plugin_skill_document_matches_the_shipped_bytes(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_plugin_skill_document_matches_the_shipped_bytes(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, cohort=plugin_cohort)
     shipped = harness_root().joinpath("skills", "cadrumo-preparar-modelo-130", "SKILL.md").read_text(encoding=_UTF_8)
@@ -93,7 +94,7 @@ def test_plugin_skill_document_matches_the_shipped_bytes(tmp_path: Path, plugin_
     assert written == shipped
 
 
-def test_plugin_agents_carry_claude_frontmatter_never_mode(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_plugin_agents_carry_claude_frontmatter_never_mode(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
     output = tmp_path / "plugin"
     manifest = materialise_plugin(output, cohort=plugin_cohort)
     slugs = _persona_slugs()
@@ -108,7 +109,9 @@ def test_plugin_agents_carry_claude_frontmatter_never_mode(tmp_path: Path, plugi
         assert "mode" not in frontmatter
 
 
-def test_read_only_persona_maps_to_a_disallowed_tools_denylist(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_read_only_persona_maps_to_a_disallowed_tools_denylist(
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
+) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, cohort=plugin_cohort)
     agents_dir = output / "agents"
@@ -120,7 +123,9 @@ def test_read_only_persona_maps_to_a_disallowed_tools_denylist(tmp_path: Path, p
     assert "disallowedTools" not in classifier
 
 
-def test_plugin_agent_body_preserves_the_shipped_persona_prose(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_plugin_agent_body_preserves_the_shipped_persona_prose(
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
+) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, cohort=plugin_cohort)
     written = (output / "agents" / "cadrumo-coordinator.md").read_text(encoding=_UTF_8)
@@ -130,7 +135,7 @@ def test_plugin_agent_body_preserves_the_shipped_persona_prose(tmp_path: Path, p
 
 
 def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(
-    tmp_path: Path, plugin_cohort: TestPluginCohort
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
 ) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, cohort=plugin_cohort)
@@ -196,7 +201,7 @@ def test_exact_closed_world_cohort_interpolates_into_manifest_and_mcp_launch(
     }
 
 
-def test_persona_default_interpolates_into_user_config(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_persona_default_interpolates_into_user_config(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, persona_default="cadrumo-verifier", cohort=plugin_cohort)
     document = json.loads((output / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
@@ -206,7 +211,7 @@ def test_persona_default_interpolates_into_user_config(tmp_path: Path, plugin_co
     assert persona["required"] is False
 
 
-def test_default_persona_is_the_full_surface(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_default_persona_is_the_full_surface(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
     output = tmp_path / "plugin"
     materialise_plugin(output, cohort=plugin_cohort)
     document = json.loads((output / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
@@ -214,7 +219,7 @@ def test_default_persona_is_the_full_surface(tmp_path: Path, plugin_cohort: Test
 
 
 def test_emitted_plugin_passes_claude_validate_strict_when_cli_present(
-    tmp_path: Path, plugin_cohort: TestPluginCohort
+    tmp_path: Path, plugin_cohort: _PluginPythonCohort
 ) -> None:
     """The emitted tree is schema-valid; where ``claude`` exists, prove it strict.
 
@@ -249,7 +254,7 @@ def test_materialiser_has_no_cohortless_or_version_override_compatibility() -> N
     assert "version" not in parameters
 
 
-def test_foreign_harness_bytes_are_refused(tmp_path: Path, plugin_cohort: TestPluginCohort) -> None:
+def test_foreign_harness_bytes_are_refused(tmp_path: Path, plugin_cohort: _PluginPythonCohort) -> None:
     plugin_cohort.harness_wheel.write_bytes(b"foreign harness")
     with pytest.raises(ValueError, match="cadrumo-harness"):
         materialise_plugin(tmp_path / "plugin", cohort=plugin_cohort)
