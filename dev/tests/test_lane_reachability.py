@@ -502,8 +502,19 @@ def test_the_harness_modules_are_excluded_by_the_integration_lanes_but_covered_b
     lanes = declared_lanes(_ROOT)
     targets = (
         "src/cadrumo/tests/test_worker_count_hook_harness.py",
-        "dev/harness/test_full_corpus_collectability_harness.py",
+        "dev/harness/tests/test_full_corpus_collectability_harness.py",
     )
+
+    # Pin the targets to files that EXIST before asserting a lane covers them.
+    # Without this the check is satisfied by string agreement between this tuple
+    # and the justfile, which is how it passed while both named a path that had
+    # moved: `just test-harness` handed pytest a missing file, exited 4, and this
+    # gate stayed green because the two strings still matched each other.
+    for target in targets:
+        assert (_ROOT / target).is_file(), (
+            f"{target} does not exist, so 'the harness lane covers it' cannot be a real claim; "
+            "update this tuple and the justfile's harness members together"
+        )
 
     integration_lanes = [lane for lane in lanes if lane.recipe in {"test-integration", "test-integration-parallel"}]
     assert integration_lanes, "the integration recipe(s) must still be declared"
