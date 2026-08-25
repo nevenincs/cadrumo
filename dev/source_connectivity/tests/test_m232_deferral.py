@@ -15,6 +15,7 @@ from ..live_proof import CONNECTED_PROOF_FIXTURES, connected_candidate_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+
 def test_m232_remains_measurably_ingress_blocked_until_its_missing_authority_exists() -> None:
     entry = next(
         item
