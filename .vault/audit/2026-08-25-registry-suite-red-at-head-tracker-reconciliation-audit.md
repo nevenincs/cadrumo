@@ -83,6 +83,14 @@ routes its changes to existing authorities. `P03.S23` owns draining the remainin
 isolated clusters without duplicating those authorities. Campaign closure still
 requires the isolated nodes and a fresh sequential whole-tree run to pass.
 
+### non-executable-rows | medium | Two checked findings were not plan work
+
+`P03.S19` and `P03.S20` described adjudication findings and explicitly stated that
+nothing was implemented. Keeping them checked would require fictional execution
+records and make findings indistinguishable from delivered changes. Both identifiers
+are retired through the plan CLI. Their durable content remains in the audit history;
+any future implementation must be enrolled under the owning production campaign.
+
 ## Recommendations
 
 - Retire S09, S12, and S14 through the canonical plan CLI and preserve the
