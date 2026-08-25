@@ -13,17 +13,16 @@ from queue import Empty
 
 import pytest
 
-from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
-from cadrumo.application.operations.models import OperationIdentity
-from cadrumo.application.operations.persistence.events import OperationPhaseEvent
-from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.persistence.leases import (
+from .....application.operations.capabilities import OperationRequestStoragePolicy
+from .....application.operations.models import OperationIdentity
+from .....application.operations.persistence.events import OperationPhaseEvent
+from .....application.operations.persistence.journal import OperationPersistedSnapshot
+from .....application.operations.persistence.leases import (
     OperationLeaseDisposition,
     OperationLeaseObservationDisposition,
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-
 from .....core import OperationEffect, OperationLifecycle, exclusive_file_lock
 from ...storage import RepositoryError
 from ..journal import OperationJournalRepository
