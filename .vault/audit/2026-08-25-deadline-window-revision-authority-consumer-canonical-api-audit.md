@@ -5,11 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:fc1ad22b55c90366b2e7b1e18895a9ce7d0f4d91220907b34695c3480f5c341f'
+body_hash: 'sha256:324bf77845bb2d6c4e2da34d8b93d2129fd320d55dcd6f990fb72c3205b07f3c'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
 ---
-# Audit canonical deadline API consumption across application surfaces
+# `deadline-window-revision-authority` audit: `consumer canonical API`
 
 ## Scope
 
@@ -19,15 +19,15 @@ related:
 
 ## Findings
 
-### consumer-canonical-api | high | workflow exact-target lookup masked duplicate obligations
+### workflow-first-match-mask | high | workflow exact-target lookup masked duplicate obligations
 
-`resolve_deadline_stage_obligation` selected `matches[0]`, allowing an invalid canonical schedule with duplicate modelo-period obligations to reach workflow as one row. Commit `73346a8654` routes exact target narrowing through `_target_obligation_from_schedule`, which raises `ScheduleComputationError` when more than one canonical row matches.
+`resolve_deadline_stage_obligation` selected `matches[0]`, allowing an invalid canonical schedule with duplicate modelo-period obligations to reach workflow as one row. Commit `73346a8654` routes exact target narrowing through `_target_obligation_from_schedule`, which raises `ScheduleComputationError` when more than one canonical row matches. This finding is resolved.
 
-### consumer-canonical-api | resolved | observational event dedupe is not obligation dedupe
+### evidence-dedupe-boundary | low | observational event dedupe does not alter obligation multiplicity
 
 `_calendar_evidence.py` reconciles duplicate local/live evidence for the same filing event after legal obligations have already been produced by `DeadlineEngine`. It does not collapse `Schedule.obligations` and is retained.
 
-### consumer-canonical-api | resolved | all application deadline projections consume canonical domain APIs
+### canonical-consumer-chain | low | application deadline projections use canonical domain APIs
 
 Vaultspec RAG and exact confirmation found overview calendar/agenda/backlog consuming `DeadlineEngine`, work posture consuming `resolve_filing_closes_on`, qualified M210 notices consuming `resolve_filing_window`, and explain/workflow consuming schedules. No application-local revision selector, qualifier matcher, cadence generator, deadline catalogue, or period parser remains.
 
