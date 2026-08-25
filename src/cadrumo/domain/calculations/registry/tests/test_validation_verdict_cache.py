@@ -44,6 +44,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _bundled_registry_root() -> Path:
     return bundled_path("registry", "aeat").expanduser().resolve()
 
+
+def _reset_validation_proof_state() -> None:
+    """Reset registry memos and this test's corpus-write observability.
+
+    ``reset_registry_caches`` deliberately covers only production registry
+    memoization.  The corpus counter is test-only observability, so each
+    independently measured cold or warm construction resets it here.
+    """
+    reset_registry_caches()
     ve.reset_corpus_text_cache()
 
 
@@ -90,7 +99,7 @@ def _require_quiescent_tree(root: Path, before: dict[str, tuple[int, int]]) -> N
 def test_direct_registry_validator_performs_zero_corpus_cache_writes(tmp_path: Path) -> None:
     """A bare ``RegistryValidator`` accumulates dirty state but never flushes."""
     with override_settings(cadrumo_corpus_text_cache_dir=tmp_path / "corpus"):
-        reset_registry_caches()
+        _reset_validation_proof_state()
         modelos, catalogues = load_registry_tree(_bundled_registry_root())
         validator = RegistryValidator(catalogues, source_root=bundled_path())
 
@@ -108,7 +117,7 @@ def test_authority_validation_writes_once_then_a_verdict_hit_skips_revalidation(
         cadrumo_corpus_text_cache_dir=tmp_path / "corpus",
         cadrumo_validation_verdict_cache_dir=tmp_path / "verdict",
     ):
-        reset_registry_caches()
+        _reset_validation_proof_state()
         tree_before = _tree_state(root)
 
         authority = bundled_authority()
@@ -124,7 +133,7 @@ def test_authority_validation_writes_once_then_a_verdict_hit_skips_revalidation(
         # Second cold construction: delete the corpus file and drop in-process
         # memos, so a re-validation would necessarily re-extract and rewrite it.
         ve._corpus_text_cache_path().unlink()
-        reset_registry_caches()
+        _reset_validation_proof_state()
 
         skipped_authority = bundled_authority()
 
@@ -148,7 +157,7 @@ def test_fingerprint_mismatch_deletes_the_stale_verdict_and_revalidates(tmp_path
         cadrumo_corpus_text_cache_dir=tmp_path / "corpus",
         cadrumo_validation_verdict_cache_dir=tmp_path / "verdict",
     ):
-        reset_registry_caches()
+        _reset_validation_proof_state()
 
         # Plant a verdict whose key belongs to a superseded fingerprint (the
         # effect of a touched registry file), then force a fresh construction.
@@ -169,6 +178,6 @@ def test_fingerprint_mismatch_deletes_the_stale_verdict_and_revalidates(tmp_path
         assert rewritten.verdict_key != "superseded-fingerprint", "the stale verdict must be replaced, not trusted"
         assert rewritten.outcome == VERDICT_OUTCOME_GREEN
         # The rewritten verdict now certifies the tree: a fresh load hits it and skips.
-        reset_registry_caches()
+        _reset_validation_proof_state()
         bundled_authority()
         assert ve._disk_cache_write_count == 0, "the rewritten verdict must certify the current tree"
