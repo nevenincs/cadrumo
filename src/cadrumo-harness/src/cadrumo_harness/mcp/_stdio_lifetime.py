@@ -284,6 +284,24 @@ def _exit_on_watched_death(pid: int, exe: str, reason: str = "watched_process_ex
     os._exit(0)
 
 
+def _exit_if_current(
+    stop: threading.Event,
+    pid: int,
+    exe: str,
+    reason: str = "watched_process_exit",
+) -> None:
+    """Hard-exit only while *stop* still owns the active generation.
+
+    The lock is intentionally held through :func:`os._exit`, which never
+    returns. Thus either disarm wins the lock and makes this a no-op, or the
+    genuine death decision wins and shutdown cannot be revoked halfway through.
+    """
+    with _watchdog_lock:
+        if _active_watchdog is not stop or stop.is_set():
+            return
+        _exit_on_watched_death(pid, exe, reason)
+
+
 def _walk_ancestor_pids(
     start_pid: int,
     parents: dict[int, int],
@@ -656,7 +674,7 @@ if sys.platform == "win32":
                     if stop.is_set():
                         _close_targets(targets)
                         return
-                    _exit_on_watched_death(dead.pid, dead.exe)
+                    _exit_if_current(stop, dead.pid, dead.exe)
                 if not failed:
                     continue
                 # The wait failed on live targets: release the handles and
@@ -689,7 +707,7 @@ if sys.platform == "win32":
                 orphan_confirmations,
             )
             if unanchored_polls >= orphan_confirmations:
-                _exit_on_watched_death(0, "<unanchored>", reason="unanchored_orphan")
+                _exit_if_current(stop, 0, "<unanchored>", reason="unanchored_orphan")
 
     def _anchor_on_client(watched: list[_WatchedProcess], resolved: int | None) -> bool:
         """Add the client anchor to ``watched``; report whether one is held.
@@ -951,10 +969,10 @@ def _posix_watchdog(
         if stop.wait(poll_seconds):
             return
         if os.getppid() != initial_ppid:
-            _exit_on_watched_death(initial_ppid, "parent")
+            _exit_if_current(stop, initial_ppid, "parent")
         for pid in extra_pids:
             if not _pid_alive(pid):
-                _exit_on_watched_death(pid, "explicit-client")
+                _exit_if_current(stop, pid, "explicit-client")
         anchored = _posix_round_is_anchored()
         if anchored is None or anchored:
             # Either an ancestor is alive, or the snapshot failed and the answer
@@ -971,7 +989,7 @@ def _posix_watchdog(
         if unanchored_polls == 1:
             _emit_event("stdio_watchdog_disarmed", reason="no_live_ancestor")
         if unanchored_polls >= orphan_confirmations:
-            _exit_on_watched_death(0, "<unanchored>", reason="unanchored_orphan")
+            _exit_if_current(stop, 0, "<unanchored>", reason="unanchored_orphan")
 
 
 def _arm_posix_watchdog(

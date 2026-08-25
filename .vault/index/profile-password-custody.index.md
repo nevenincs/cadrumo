@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e04d07584d6040f69029a055e69bbbad7f39e841e9f4d29e65a7ce60165deba7'
+body_hash: 'sha256:0872b783b9f2282156f2f43ebfc52d5076df7f0351391ee9c8a1c140a6744e99'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -250,6 +250,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S241]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S242]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S245]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S246]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S248]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S249]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S250]]'
@@ -319,6 +320,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s249-provisioning-sequence-review-audit]]'
   - '[[2026-08-25-profile-password-custody-modelo-220-source-grounding-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s245-warm-runtime-recovery-review-audit]]'
+  - '[[2026-08-25-profile-password-custody-s246-watchdog-disarm-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s250-operation-composition-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s251-filing-spine-cumulative-state-audit]]'
   - '[[2026-08-25-profile-password-custody-s252-registry-documentation-authority-review-audit]]'
@@ -392,6 +394,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s249-provisioning-sequence-review-audit` - `profile-password-custody` audit: `S249 provisioning sequence review`
 - `2026-08-25-profile-password-custody-modelo-220-source-grounding-review-audit` - `profile-password-custody` audit: `modelo 220 source grounding review`
 - `2026-08-25-profile-password-custody-s245-warm-runtime-recovery-review-audit` - `profile-password-custody` audit: `S245 warm-runtime recovery review`
+- `2026-08-25-profile-password-custody-s246-watchdog-disarm-review-audit` - `profile-password-custody` audit: `S246 watchdog disarm review`
 - `2026-08-25-profile-password-custody-s250-operation-composition-review-audit` - `profile-password-custody` audit: `S250 operation composition review`
 - `2026-08-25-profile-password-custody-s251-filing-spine-cumulative-state-audit` - `profile-password-custody` audit: `S251 filing-spine cumulative-state formal review`
 - `2026-08-25-profile-password-custody-s252-registry-documentation-authority-review-audit` - `profile-password-custody` audit: `s252 registry documentation authority review`
@@ -643,6 +646,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S248` - Reconcile Modelo 303 2026 and Modelo 390 2022-2025 semantic-role constraint signatures against their official record-design authority so the shared-role validator passes without weakening compatibility checks
 - `2026-08-13-profile-password-custody-W06-P12-S249` - Reconcile profile and recovery provisioning sequences on check-aeat-notifications, quickstart, profile-setup, and troubleshooting with mandatory creation channels and current status/list composition
 - `2026-08-13-profile-password-custody-W06-P12-S245` - Migrate harness warm-runtime profile provisioning to the mandatory verified recovery handoff and prove real runtime startup succeeds
+- `2026-08-13-profile-password-custody-W06-P12-S246` - Repair the harness serial watchdog kill-switch and disarm lifecycle so the full integration suite terminates cleanly without weakening timeout enforcement
 - `2026-08-13-profile-password-custody-W06-P12-S250` - Restore or truthfully re-document operation composition projections on classify-with-llm, import-bank-statements, Modelo 390, and troubleshooting before regenerating their sequences
 - `2026-08-13-profile-password-custody-W06-P12-S251` - Repair filing-spine cumulative state so reused seed identity resolves the latest draft target and its documentation sequence proves the intended state transition
 - `2026-08-13-profile-password-custody-W06-P12-S252` - Adjudicate registry, revision, readiness, lifecycle, and modelo page contracts across the twelve residual registry-backed documentation pages against current authority
