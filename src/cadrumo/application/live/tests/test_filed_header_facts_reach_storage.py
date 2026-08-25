@@ -64,7 +64,7 @@ def _leaked_header_keys(metadata: dict[str, str]) -> list[str]:
 
 def test_captured_header_facts_are_readable_back_out_of_storage(tmp_path: Path) -> None:
     """The end the bug was at: persisted, then read back, with provenance intact."""
-    from ...live import persist_filed_calculation_observation
+    from ..filed_observation_persistence import persist_filed_calculation_observation
 
     observation = _prior_303_observation(
         pending_compensation=Decimal("0.00"),

@@ -221,7 +221,6 @@ async def capture_expedientes_bulk(
     """Capture each requested declaration-register view while reporting isolated failures."""
     if year_from > year_to:
         raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
             translated_message="live.errors.year_range_invalid",
         )
 
