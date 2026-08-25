@@ -78,6 +78,7 @@ from ...domain.bienes_inversion import (
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
     DataBindingDefinition,
+    ExportLayoutDefinition,
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )
@@ -199,6 +200,33 @@ class ModeloExportReadinessRefusal(BaseModel):
     precondition_failure: ModeloPreconditionFailure
 
 
+def _modelo_export_layout_readiness_refusal(
+    *,
+    modelo: str,
+    layout: ExportLayoutDefinition | None,
+) -> ModeloExportReadinessRefusal | None:
+    """Project one resolved export layout into the application readiness contract."""
+    reason = export_layout_renderability_reason(modelo, layout)
+    if reason is None:
+        return None
+    context = {"modelo": modelo, "reason": reason}
+    if layout is not None:
+        context["layout_id"] = str(layout.id)
+        context["layout_format"] = str(layout.format)
+    return ModeloExportReadinessRefusal(
+        reason=reason,
+        context=context,
+        precondition_failure=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.readiness",
+            scenario_id="modelo.readiness.export_layout.unrenderable",
+            evidence_id="modelo.readiness.export_layout",
+            evidence_values=context,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            action_argument_values={"modelo": modelo},
+        ),
+    )
+
+
 def modelo_export_readiness_refusal(
     *,
     modelo: str,
@@ -221,25 +249,7 @@ def modelo_export_readiness_refusal(
     )
     subview = provider.get_subview(modelo)
     layout = subview.export_layouts[0] if subview.export_layouts else None
-    reason = export_layout_renderability_reason(modelo, layout)
-    if reason is None:
-        return None
-    context = {"modelo": modelo, "reason": reason}
-    if layout is not None:
-        context["layout_id"] = str(layout.id)
-        context["layout_format"] = str(layout.format)
-    return ModeloExportReadinessRefusal(
-        reason=reason,
-        context=context,
-        precondition_failure=build_modelo_precondition_failure_for_scenario(
-            subject_leaf_key="modelo.readiness",
-            scenario_id="modelo.readiness.export_layout.unrenderable",
-            evidence_id="modelo.readiness.export_layout",
-            evidence_values=context,
-            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-            action_argument_values={"modelo": modelo},
-        ),
-    )
+    return _modelo_export_layout_readiness_refusal(modelo=modelo, layout=layout)
 
 
 type _Sha256Ref = Annotated[str, Field(min_length=71, max_length=71, pattern=r"^sha256:[0-9a-f]{64}$")]
