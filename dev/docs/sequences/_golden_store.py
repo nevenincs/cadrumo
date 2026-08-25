@@ -12,7 +12,7 @@ re-executes the sequence in its sandbox and rewrites the file
 through :func:`write_golden`; the author reviews the git diff — which IS the
 behaviour-change review — and commits the golden with the CLI change that
 legitimately moved it. A missing or hand-corrupted golden reads as an
-instructive :class:`~dev.docs.sequences._errors.SequenceGoldenError` naming the
+instructive :class:`~dev.docs.sequences.errors.SequenceGoldenError` naming the
 exact refresh invocation.
 
 Storage policy per frame kind:
@@ -49,9 +49,9 @@ from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.observability import GOLDEN_MASK_FIELDS, MASK_SENTINEL
 
 from ..._paths import REPO_ROOT, UTF_8
-from ._errors import SequenceGoldenError
 from ._runner import CapturedValue, EnvelopeSource, SequenceTranscript
 from ._schema import FrameKind, SequenceId
+from .errors import SequenceGoldenError
 
 __all__ = [
     "PACKAGE_VERSION_TOKEN",

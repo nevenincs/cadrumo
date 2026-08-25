@@ -30,13 +30,13 @@ from .. import (
     SANDBOX_PROFILE_ID,
     FrameKind,
     ParsedSequence,
-    SequenceExecutionError,
     SequenceTranscript,
     execute_page_sequences,
     execute_sequence,
     parse_sequence,
     sequence_sandbox,
 )
+from ..errors import SequenceExecutionError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

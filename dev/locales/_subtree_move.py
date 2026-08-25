@@ -28,7 +28,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
-from ._errors import LocaleError
+from .errors import LocaleError
 
 _MODELO_SCHEMA_PREFIX = "modelo.schema."
 

@@ -12,8 +12,8 @@ build-tooling error into the runtime error-code registry.
 
 :class:`SequenceParseError` is *accumulating*: the parser collects every grammar
 and structural violation it can find in a single pass and raises one error that
-enumerates them all, each naming the offending line, rather than aborting on the
-first fault. An author fixing a directive sees the whole worklist at once.
+enumerates them all, each naming the offending line, rather than aborting on
+the first fault. An author fixing a directive sees the whole worklist at once.
 """
 
 from __future__ import annotations

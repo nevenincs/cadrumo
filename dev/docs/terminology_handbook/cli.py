@@ -41,7 +41,6 @@ from ._curation import (
     set_term,
 )
 from ._enums import TermStatus
-from ._errors import TerminologyError
 from ._ratchet import check_curation_backlog_ratchet
 from ._scaffold import ScaffoldAction, ScaffoldPlan, scaffold_handbook
 from ._seed_import import (
@@ -51,6 +50,7 @@ from ._seed_import import (
     parse_iate_tbx,
     parse_ubterm_csv,
 )
+from .errors import TerminologyError
 
 app = typer.Typer(name="terminology", help=tr("Terminology Handbook maintenance."), no_args_is_help=True)
 

@@ -9,11 +9,11 @@ import pytest
 from typer.testing import CliRunner
 
 from .. import (
-    TerminologyLoadError,
     check_curation_backlog_ratchet,
     load_curation_backlog_ratchet_baseline,
 )
 from ..cli import app
+from ..errors import TerminologyLoadError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

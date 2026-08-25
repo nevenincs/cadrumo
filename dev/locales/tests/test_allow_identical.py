@@ -14,7 +14,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ..manager import LocaleError, LocaleManager
+from ..errors import LocaleError
+from ..manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

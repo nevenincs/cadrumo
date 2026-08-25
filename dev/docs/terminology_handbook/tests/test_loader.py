@@ -25,12 +25,11 @@ from .. import (
     GrammaticalGender,
     PartOfSpeech,
     TerminologyHandbook,
-    TerminologyLoadError,
-    TerminologyValidationError,
     TermStatus,
     load_bundled_terminology_handbook,
     load_terminology_handbook,
 )
+from ..errors import TerminologyLoadError, TerminologyValidationError
 from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

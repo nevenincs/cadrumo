@@ -39,13 +39,6 @@ from ._compare import (
     evaluate_expectations,
 )
 from ._contracts import read_sequence_contract, sequence_contract_path
-from ._errors import (
-    SequenceEngineError,
-    SequenceExecutionError,
-    SequenceGoldenError,
-    SequenceGoldenMismatchError,
-    SequenceParseError,
-)
 from ._golden_store import (
     REPO_ROOT_TOKEN,
     SANDBOX_STORAGE_ROOT_TOKEN,
@@ -111,13 +104,8 @@ __all__ = [
     "FrameKind",
     "GoldenFrame",
     "ParsedSequence",
-    "SequenceEngineError",
-    "SequenceExecutionError",
     "SequenceFrame",
     "SequenceGolden",
-    "SequenceGoldenError",
-    "SequenceGoldenMismatchError",
-    "SequenceParseError",
     "SequenceSandbox",
     "SequenceTranscript",
     "StaticBlocker",

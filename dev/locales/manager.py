@@ -21,7 +21,6 @@ from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.core.i18n import extract_placeholders
 from cadrumo.core.logging import get_logger
 
-from ._errors import LocaleError
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
 from ._revision_drift import RevisionMoveCandidate, classify_revision_moves
 from ._subtree_move import (
@@ -32,6 +31,7 @@ from ._subtree_move import (
     plan_locale_subtree_move,
 )
 from ._write_guard import CatalogueWriteGuard, catalogue_write_guard
+from .errors import LocaleError
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
 type LocaleNode = str | dict[str, "LocaleNode"] | None

@@ -53,7 +53,7 @@ from cadrumo.core.external_constants import UTF_8_ENCODING
 
 from .._paths import REPO_ROOT
 from ._ast_scanner import declares_locale_keys, scan_source_text
-from ._errors import LocaleError
+from .errors import LocaleError
 from .manager import LocaleManager, _parse_locale
 
 #: The change to compare when the caller names none. ``staged`` is the useful

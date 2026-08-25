@@ -51,7 +51,6 @@ from cadrumo.core import scan_directory
 from ..._paths import REPO_ROOT, UTF_8
 from ._compare import check_transcript, evaluate_expectations
 from ._contracts import read_sequence_contract
-from ._errors import SequenceEngineError, SequenceParseError
 from ._golden_store import (
     read_golden,
     refresh_invocation,
@@ -66,6 +65,7 @@ from ._runner import (
     execute_sequence,
 )
 from ._schema import ParsedSequence, SequenceId
+from .errors import SequenceEngineError, SequenceParseError
 
 _UTF_8: Final[str] = UTF_8
 _NonEmptyText = Annotated[str, StringConstraints(min_length=1)]

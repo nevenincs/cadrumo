@@ -16,7 +16,6 @@ import pytest
 
 from .. import (
     TerminologyHandbook,
-    TerminologyValidationError,
     approved_completeness_validator,
     default_handbook_validators,
     id_uniqueness_validator,
@@ -27,6 +26,7 @@ from .. import (
     relation_integrity_validator,
 )
 from .._validators import _bundled_legal_ref_ids
+from ..errors import TerminologyValidationError
 from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

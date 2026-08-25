@@ -16,11 +16,11 @@ from .. import (
     CaptureBinding,
     ExpectAssertion,
     FrameKind,
-    SequenceParseError,
     StaticBlocker,
     parse_sequence,
     result_frame_asserts_result_payload,
 )
+from ..errors import SequenceParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

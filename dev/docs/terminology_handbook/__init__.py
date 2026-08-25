@@ -37,7 +37,6 @@ from ._curation import (
 )
 from ._enrolment import EnrolmentCandidate, SeedLabel, collect_enrolment_candidates
 from ._enums import ConceptDomain, TermStatus
-from ._errors import TerminologyError, TerminologyLoadError, TerminologyValidationError
 from ._loader import (
     HandbookValidator,
     TerminologyHandbook,
@@ -118,10 +117,7 @@ __all__ = [
     "SeedTerm",
     "TermSection",
     "TermStatus",
-    "TerminologyError",
     "TerminologyHandbook",
-    "TerminologyLoadError",
-    "TerminologyValidationError",
     "apply_scaffold_plan",
     "apply_seed_entries",
     "approved_completeness_validator",

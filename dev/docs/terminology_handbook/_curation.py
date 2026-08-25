@@ -26,7 +26,6 @@ from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._enums import TermStatus
-from ._errors import TerminologyValidationError
 from ._loader import TerminologyHandbook, load_terminology_handbook, terminology_concepts_dir
 from ._schema import (
     ConceptRecord,
@@ -36,6 +35,7 @@ from ._schema import (
 )
 from ._serialize import serialise_concept
 from ._validators import default_handbook_validators
+from .errors import TerminologyValidationError
 
 __all__ = [
     "AuditReport",

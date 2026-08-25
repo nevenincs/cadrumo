@@ -45,7 +45,7 @@ from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
 from ._enums import ConceptDomain, TermStatus
-from ._errors import TerminologyValidationError
+from .errors import TerminologyValidationError
 
 __all__ = [
     "ConceptRecord",

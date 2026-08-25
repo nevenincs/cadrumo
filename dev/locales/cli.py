@@ -20,9 +20,9 @@ from ._subtree_move import (
     LocaleSubtreeMoveResult,
     normalise_key_prefix,
 )
+from .errors import LocaleError
 from .manager import (
     LocaleAuditResult,
-    LocaleError,
     LocaleFileAudit,
     LocaleManager,
     LocalePlaceholderMismatch,

@@ -21,13 +21,13 @@ from .. import (
     EnrolmentCandidate,
     ScaffoldAction,
     SeedLabel,
-    TerminologyValidationError,
     build_scaffold_plan,
     collect_enrolment_candidates,
     load_terminology_handbook,
     scaffold_handbook,
     serialise_concept,
 )
+from ..errors import TerminologyValidationError
 from ._support import write_concept_fragment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

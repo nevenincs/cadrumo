@@ -34,8 +34,8 @@ from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core import freeze_toml, read_toml, scan_directory, to_str_keyed_dict
 from cadrumo.core.resources import bundled_path
 
-from ._errors import TerminologyLoadError, TerminologyValidationError
 from ._schema import ConceptRecord
+from .errors import TerminologyLoadError, TerminologyValidationError
 
 __all__ = [
     "HandbookValidator",
@@ -45,8 +45,8 @@ __all__ = [
 ]
 
 #: A validation hook: receives the assembled, narrower-derived handbook and
-#: raises :class:`~dev.docs.terminology_handbook._errors.TerminologyValidationError`
-#: (or any :class:`~dev.docs.terminology_handbook._errors.TerminologyError`) on a
+#: raises :class:`~dev.docs.terminology_handbook.errors.TerminologyValidationError`
+#: (or any :class:`~dev.docs.terminology_handbook.errors.TerminologyError`) on a
 #: violation. The sibling validation step supplies these; the loader runs
 #: them as the final compile stage. Returning normally means "passed".
 HandbookValidator = Callable[["TerminologyHandbook"], None]

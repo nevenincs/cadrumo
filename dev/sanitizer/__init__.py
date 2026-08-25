@@ -14,7 +14,7 @@ cleartext-free audit output from :class:`SanitizationResult`.
 
 Callers outside :mod:`dev.sanitizer` must import
 exclusively from this module — the private modules
-(``_records``, ``_errors``, ``_pipeline``, ``_streams``,
+(``_records``, ``errors``, ``_pipeline``, ``_streams``,
 ``_metadata``, ``_dynamic``, ``_structtree``, ``_determinism``,
 ``_residual_identity``) are implementation details.
 
@@ -28,13 +28,6 @@ Examples:
 
 from __future__ import annotations
 
-from ._errors import (
-    AlreadySanitizedError,
-    SanitizationError,
-    SanitizerSourceParseError,
-    SignaturePresentError,
-    UnknownSurfaceError,
-)
 from ._pipeline import SANITIZER_VERSION, sanitize_pdf
 from ._records import (
     AddressReplacement,
@@ -66,7 +59,6 @@ __all__ = [
     "CHECKSUM_VERIFIED_KINDS",
     "SANITIZER_VERSION",
     "AddressReplacement",
-    "AlreadySanitizedError",
     "ArbitraryReplacement",
     "CsvReplacement",
     "DeterminismFlags",
@@ -79,14 +71,10 @@ __all__ = [
     "Replacement",
     "ResidualFinding",
     "ResidualKind",
-    "SanitizationError",
     "SanitizationResult",
     "SanitizationWarning",
-    "SanitizerSourceParseError",
     "ScrubbedSurface",
-    "SignaturePresentError",
     "TokenMap",
-    "UnknownSurfaceError",
     "accounted_for_values",
     "checksum_valid_spans",
     "sanitize_pdf",

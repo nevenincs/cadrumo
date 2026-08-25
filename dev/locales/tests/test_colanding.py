@@ -14,7 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import LocaleError, LocaleManager, check_colanding, resolve_change
+from .. import LocaleManager, check_colanding, resolve_change
+from ..errors import LocaleError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

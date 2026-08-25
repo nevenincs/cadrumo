@@ -13,7 +13,6 @@ from cadrumo.tests.cli_runner import invoke_typer_app
 from .. import (
     DOCS_SRC_DIR,
     HARNESS_SRC_DIR,
-    LocaleError,
     LocaleManager,
     LocaleNode,
     scan_namespace_markers,
@@ -21,6 +20,7 @@ from .. import (
 )
 from .._paths import LOCALES_DIR, SRC_DIR
 from ..cli import app
+from ..errors import LocaleError
 from ..manager import locale_catalogue_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -29,7 +29,7 @@ from cadrumo.core.external_constants import OutputLanguage
 
 from ..._paths import REPO_ROOT, UTF_8
 from ..terminology_handbook import TerminologyHandbook
-from ..terminology_handbook._errors import TerminologyLoadError
+from ..terminology_handbook.errors import TerminologyLoadError
 
 __all__ = [
     "QUERY_ALIAS_AUTHORITY_RELPATH",

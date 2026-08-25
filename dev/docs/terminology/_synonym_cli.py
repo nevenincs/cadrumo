@@ -9,7 +9,7 @@ from typing import Annotated, Final
 import typer
 
 from ..._paths import UTF_8
-from ..terminology_handbook import TerminologyLoadError
+from ..terminology_handbook.errors import TerminologyLoadError
 from ._synonym_mining import (
     SynonymCandidateObservation,
     load_synonym_ratification_queue,
