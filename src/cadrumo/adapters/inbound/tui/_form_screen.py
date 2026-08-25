@@ -30,6 +30,7 @@ from rich.cells import cell_len
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.events import DescendantFocus
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, SelectionList, Static
 
@@ -332,6 +333,10 @@ class FormScreen(Screen["Mapping[str, str] | None"]):
         self.query_one("#form-banner", Static).update(self._page.title)
         self.query_one("#form-body", Vertical).border_title = self._page.section
         self._render_rows()
+
+    def on_descendant_focus(self, event: DescendantFocus) -> None:
+        """Keep the focused action inside the single outer scroll viewport."""
+        event.widget.scroll_visible(animate=False)
 
     def _render_rows(self) -> None:
         """Rebuild the row set from the current field list and values.

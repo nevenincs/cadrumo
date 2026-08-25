@@ -28,3 +28,7 @@ them. Ruff passes and the focused form lane passes (10 tests).
 ## Notes
 
 S49 remains open pending independent review.
+
+Corrective review pass adds a descendant-focus scroll hook to the owning form
+screen. Focused actions now scroll into the one canonical `ContentScroll`
+viewport; the overflow assertion remains unchanged and passes deterministically.
