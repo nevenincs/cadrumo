@@ -231,6 +231,18 @@ _REQUIRED = (
         "h100",
     ),
     _RequiredArtifact(
+        "165",
+        "165 - Orden HAP/2455/2013",
+        "ant_100_199/archivos/DLogicos_mod_165.pdf",
+        "h100",
+    ),
+    _RequiredArtifact(
+        "165",
+        "165 - Orden HAP/2455/2013 (actualizado por Orden HFP/1822/2016)",
+        "DR_100_199/archivos/DR165_2016.pdf",
+        "h100",
+    ),
+    _RequiredArtifact(
         "151", "151 - Orden HAP/2783/2015 (Ejercicios 2015-2022)", "DR_100_199/archivos/dr151e15v12.xls", "h100"
     ),
     _RequiredArtifact(
