@@ -29,6 +29,7 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .._errors import RegistryLoadError
+from .._ids import SourceRefId
 from .._m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
     load_m303_annual_orden_censuses,
@@ -39,12 +40,15 @@ from .._m303_orden_manifest import (
     check_m303_annual_orden_census_artefact,
     collect_m303_annual_orden_fingerprints,
 )
+from .._schema_references import SourceReference
+
+CensusArtefactPayload = dict[str, object]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 
 @pytest.fixture(scope="module")
-def registry_sources() -> dict:
+def registry_sources() -> dict[SourceRefId, SourceReference]:
     """The real source catalogue, loaded once for the module."""
     _modelos, catalogues = bundled_registry_tree()
     return dict(catalogues.sources)
@@ -70,7 +74,9 @@ def _root_carrying(tmp_path: Path, text: str) -> Path:
     return root
 
 
-def test_the_shipped_censuses_equal_a_fresh_extraction(registry_sources: dict) -> None:
+def test_the_shipped_censuses_equal_a_fresh_extraction(
+    registry_sources: dict[SourceRefId, SourceReference],
+) -> None:
     """The artefact is the corpus, not merely a plausible file shaped like it.
 
     Compared as whole models, so a field that silently stopped being extracted
@@ -112,31 +118,57 @@ def test_the_artefact_is_fingerprinted_so_an_edit_re_keys_the_cache(tmp_path: Pa
     assert collect_m303_annual_orden_fingerprints(root) != before
 
 
-def _wrong_source_digest(payload: dict) -> None:
-    payload["censuses"][0]["source_content_digest"] = "0" * 64
+def _object_mapping(value: object, *, description: str) -> CensusArtefactPayload:
+    if not isinstance(value, dict):
+        raise TypeError(f"{description} must be an object")
+    payload: CensusArtefactPayload = {}
+    for key, item in value.items():
+        if not isinstance(key, str):
+            raise TypeError(f"{description} keys must be strings")
+        payload[key] = item
+    return payload
 
 
-def _wrong_census_extractor(payload: dict) -> None:
-    payload["censuses"][0]["extractor_version"] = "m303-bogus-v0"
+def _census_rows(payload: CensusArtefactPayload) -> list[CensusArtefactPayload]:
+    raw_rows = payload.get("censuses")
+    if not isinstance(raw_rows, list):
+        raise TypeError("census artefact payload must contain a list of censuses")
+    rows = [_object_mapping(raw_row, description="census artefact payload rows") for raw_row in raw_rows]
+    payload["censuses"] = rows
+    return rows
 
 
-def _wrong_envelope_extractor(payload: dict) -> None:
+def _json_object(text: str) -> CensusArtefactPayload:
+    parsed: object = json.loads(text)
+    return _object_mapping(parsed, description="census artefact payload")
+
+
+def _wrong_source_digest(payload: CensusArtefactPayload) -> None:
+    _census_rows(payload)[0]["source_content_digest"] = "0" * 64
+
+
+def _wrong_census_extractor(payload: CensusArtefactPayload) -> None:
+    _census_rows(payload)[0]["extractor_version"] = "m303-bogus-v0"
+
+
+def _wrong_envelope_extractor(payload: CensusArtefactPayload) -> None:
     payload["extractor_version"] = "m303-bogus-v0"
 
 
-def _wrong_schema_version(payload: dict) -> None:
+def _wrong_schema_version(payload: CensusArtefactPayload) -> None:
     payload["schema_version"] = "bogus-v0"
 
 
-def _unknown_source_ref(payload: dict) -> None:
-    payload["censuses"][0]["source_ref"] = "not-a-real-source"
+def _unknown_source_ref(payload: CensusArtefactPayload) -> None:
+    _census_rows(payload)[0]["source_ref"] = "not-a-real-source"
 
 
-def _duplicate_source_ref(payload: dict) -> None:
-    payload["censuses"][1]["source_ref"] = payload["censuses"][0]["source_ref"]
+def _duplicate_source_ref(payload: CensusArtefactPayload) -> None:
+    rows = _census_rows(payload)
+    rows[1]["source_ref"] = rows[0]["source_ref"]
 
 
-def _foreign_field(payload: dict) -> None:
+def _foreign_field(payload: CensusArtefactPayload) -> None:
     payload["unexpected"] = True
 
 
@@ -154,9 +186,9 @@ def _foreign_field(payload: dict) -> None:
 )
 def test_every_tampering_refuses_rather_than_serving(
     tmp_path: Path,
-    registry_sources: dict,
+    registry_sources: dict[SourceRefId, SourceReference],
     shipped_artefact_text: str,
-    tamper: Callable[[dict], None],
+    tamper: Callable[[CensusArtefactPayload], None],
 ) -> None:
     """Each way the artefact can be wrong yields ``None``, never a served census.
 
@@ -164,7 +196,7 @@ def test_every_tampering_refuses_rather_than_serving(
     and never a wrong one. Parametrized rather than collapsed into one test so a
     failure names which guard stopped holding.
     """
-    payload = json.loads(shipped_artefact_text)
+    payload = _json_object(shipped_artefact_text)
     tamper(payload)
     root = _root_carrying(tmp_path, json.dumps(payload, indent=2) + "\n")
 
@@ -173,7 +205,7 @@ def test_every_tampering_refuses_rather_than_serving(
 
 def test_the_untampered_copy_loads_so_the_refusals_are_not_vacuous(
     tmp_path: Path,
-    registry_sources: dict,
+    registry_sources: dict[SourceRefId, SourceReference],
     shipped_artefact_text: str,
 ) -> None:
     """The control for the parametrized refusals above.
@@ -187,7 +219,10 @@ def test_the_untampered_copy_loads_so_the_refusals_are_not_vacuous(
     assert load_m303_annual_orden_censuses(root, sources=registry_sources) is not None
 
 
-def test_an_absent_artefact_falls_back_instead_of_raising(tmp_path: Path, registry_sources: dict) -> None:
+def test_an_absent_artefact_falls_back_instead_of_raising(
+    tmp_path: Path,
+    registry_sources: dict[SourceRefId, SourceReference],
+) -> None:
     """A registry with no artefact at all must load, slowly, not refuse."""
     root = tmp_path / "aeat"
     (root / "m303_orden_anual").mkdir(parents=True)
@@ -197,7 +232,7 @@ def test_an_absent_artefact_falls_back_instead_of_raising(tmp_path: Path, regist
 
 def test_the_build_gate_refuses_a_stale_artefact(
     tmp_path: Path,
-    registry_sources: dict,
+    registry_sources: dict[SourceRefId, SourceReference],
     shipped_artefact_text: str,
 ) -> None:
     """The build-side half: a committed artefact that no longer matches the corpus.
@@ -206,8 +241,14 @@ def test_the_build_gate_refuses_a_stale_artefact(
     and version-correct but simply WRONG about the BOE text — the runtime cannot,
     because re-deriving the truth is the parse the artefact exists to avoid.
     """
-    payload = json.loads(shipped_artefact_text)
-    payload["censuses"][0]["difficult_justification"]["percentage"] = "99.99"
+    payload = _json_object(shipped_artefact_text)
+    first_census = _census_rows(payload)[0]
+    difficult_justification = _object_mapping(
+        first_census["difficult_justification"],
+        description="census difficult justification",
+    )
+    difficult_justification["percentage"] = "99.99"
+    first_census["difficult_justification"] = difficult_justification
     artefact_path = tmp_path / M303_ORDEN_CENSUS_ARTEFACT_FILENAME
     artefact_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
 
@@ -219,7 +260,10 @@ def test_the_build_gate_refuses_a_stale_artefact(
         )
 
 
-def test_the_build_gate_refuses_an_absent_artefact(tmp_path: Path, registry_sources: dict) -> None:
+def test_the_build_gate_refuses_an_absent_artefact(
+    tmp_path: Path,
+    registry_sources: dict[SourceRefId, SourceReference],
+) -> None:
     """A deleted artefact is a build failure, not a silent regeneration."""
     with pytest.raises(RegistryLoadError, match="census artefact is missing"):
         check_m303_annual_orden_census_artefact(
@@ -229,7 +273,9 @@ def test_the_build_gate_refuses_an_absent_artefact(tmp_path: Path, registry_sour
         )
 
 
-def test_the_build_gate_passes_on_the_committed_artefact(registry_sources: dict) -> None:
+def test_the_build_gate_passes_on_the_committed_artefact(
+    registry_sources: dict[SourceRefId, SourceReference],
+) -> None:
     """The anti-vacuity control for both build-gate refusals above."""
     check_m303_annual_orden_census_artefact(
         artefact_path=m303_orden_census_artefact_path(bundled_path("registry", "aeat")),
