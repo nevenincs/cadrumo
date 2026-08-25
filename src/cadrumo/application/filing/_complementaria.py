@@ -43,7 +43,6 @@ from ...domain.filing import (
     CasillaInputs,
     CasillaSchemaProvider,
     ModeloAmendmentError,
-    ModeloBuilderError,
     ModeloCode,
     ModeloComplementaria,
     ModeloDraft,
@@ -53,6 +52,7 @@ from ...domain.filing import (
     ModeloValueKind,
     make_amendment_id,
 )
+from .errors import ModeloApplicationError as ModeloBuilderError
 
 _logger = get_logger(__name__)
 

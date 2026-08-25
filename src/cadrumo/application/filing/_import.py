@@ -48,8 +48,9 @@ from ...adapters.inbound.justificante import parse_justificante
 from ...core import Modelo, Period, PeriodError
 from ...core.logging import get_logger
 from ...core.time import MADRID_TZ
-from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft, ModeloImportError
+from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft
 from ...domain.justificante import Justificante
+from .errors import ModeloApplicationError as ModeloImportError
 from .runtime import ModeloOperatorProfile
 
 if TYPE_CHECKING:

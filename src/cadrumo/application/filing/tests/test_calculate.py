@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import ActionConditionality, CasillaId, NoRecoveryOutcome, Period, validated_casilla_id
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....domain.filing import (
@@ -17,10 +17,8 @@ from ....domain.filing import (
 )
 from ....domain.submission import ModeloDraftStatus
 from ....tests.filing import build_registry_filing_draft
-from .. import (
-    DeclaracionCalculateNextAction,
-    summarise_calculation,
-)
+from .. import summarise_calculation
+from ..errors import FilingPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -33,10 +31,6 @@ _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_
 _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
 _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
 _M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
-
-
-def _hint() -> str:
-    return "filing.test_calculate.hint"
 
 
 def _finding_message(code: str) -> tr:
@@ -89,13 +83,13 @@ def _finding(severity: BaseSeverity, code: str) -> ModeloValidationFinding:
     )
 
 
-def test_clean_validated_draft_routes_to_review() -> None:
+def test_clean_validated_draft_carries_no_fabricated_continuation() -> None:
     draft = _make_draft(status=ModeloDraftStatus.VALIDADO)
     summary = summarise_calculation(draft)
-    assert summary.next_action is DeclaracionCalculateNextAction.REVIEW
     assert summary.blocker_count == 0
     assert summary.warning_count == 0
     assert summary.info_count == 0
+    assert summary.precondition_verdict is None
 
 
 def test_summary_carries_typed_period_not_combined_string() -> None:
@@ -108,33 +102,42 @@ def test_summary_carries_typed_period_not_combined_string() -> None:
 
 
 @pytest.mark.parametrize(
-    ("status", "expected_action"),
-    [
-        (ModeloDraftStatus.LISTO_PARA_PRESENTAR, DeclaracionCalculateNextAction.APPROVE),
-        (ModeloDraftStatus.APROBADO, DeclaracionCalculateNextAction.EXPORT),
-        (ModeloDraftStatus.APROBACION_CADUCADA, DeclaracionCalculateNextAction.REFRESH_APPROVAL),
-        (ModeloDraftStatus.PRESENTADA, DeclaracionCalculateNextAction.AMEND),
-    ],
+    "status",
+    (
+        ModeloDraftStatus.LISTO_PARA_PRESENTAR,
+        ModeloDraftStatus.APROBADO,
+        ModeloDraftStatus.APROBACION_CADUCADA,
+        ModeloDraftStatus.PRESENTADA,
+    ),
     ids=("ready-to-submit", "approved", "approval-stale", "submitted"),
 )
-def test_clean_draft_routes_by_status(
-    status: ModeloDraftStatus,
-    expected_action: DeclaracionCalculateNextAction,
-) -> None:
+def test_clean_draft_lifecycle_status_does_not_invent_an_action(status: ModeloDraftStatus) -> None:
     draft = _make_draft(status=status)
     summary = summarise_calculation(draft)
-    assert summary.next_action is expected_action
+    assert summary.status is status
+    assert summary.precondition_verdict is None
 
 
-def test_any_status_with_error_routes_to_resolve_blockers() -> None:
+def test_any_status_with_error_carries_a_typed_terminal_blocker_condition() -> None:
     draft = _make_draft(
         status=ModeloDraftStatus.APROBADO,
         findings=(_finding(BaseSeverity.ERROR, "casilla-required-missing"),),
     )
-    summary = summarise_calculation(draft, repair_hints=(_hint(),))
-    assert summary.next_action is DeclaracionCalculateNextAction.RESOLVE_BLOCKERS
+    summary = summarise_calculation(draft)
     assert summary.blocker_count == 1
-    assert summary.repair_hints == (_hint(),)
+    verdict = summary.precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == FilingPreconditionCondition.CALCULATION_FINDINGS_CLEAR.value
+    assert verdict.action is None
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.evidence[0].values == {
+        "draft_id": draft.draft_id,
+        "modelo": draft.modelo,
+        "period": draft.period.registry_token,
+        "filing_year": draft.period.filing_year,
+        "blocker_count": 1,
+    }
 
 
 def test_summary_counts_findings_by_severity() -> None:
@@ -150,24 +153,7 @@ def test_summary_counts_findings_by_severity() -> None:
     assert summary.info_count == 1
     assert summary.warning_count == 2
     assert summary.blocker_count == 0
-    assert summary.next_action is DeclaracionCalculateNextAction.REVIEW
-
-
-@pytest.mark.parametrize(
-    ("findings", "repair_hints"),
-    [
-        ((_finding(BaseSeverity.ERROR, "blocker"),), ()),
-        ((), (_hint(),)),
-    ],
-    ids=("required-for-blockers", "rejected-outside-blockers"),
-)
-def test_repair_hints_must_match_resolve_blockers_state(
-    findings: tuple[ModeloValidationFinding, ...],
-    repair_hints: tuple[str, ...],
-) -> None:
-    draft = _make_draft(status=ModeloDraftStatus.VALIDADO, findings=findings)
-    with pytest.raises(ValueError, match=r"repair_hints"):
-        summarise_calculation(draft, repair_hints=repair_hints)
+    assert summary.precondition_verdict is None
 
 
 def test_summary_is_frozen() -> None:

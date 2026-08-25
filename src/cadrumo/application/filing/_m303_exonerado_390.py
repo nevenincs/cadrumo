@@ -9,8 +9,8 @@ from ...domain.calculations.registry import (
     SourceReference,
     project_m303_exonerado_390_activity_rows,
 )
-from ...domain.filing import FilingExportError
 from ...domain.modelos import M303Exonerado390FilingEvidence
+from .errors import ModeloApplicationError as FilingExportError
 
 type _ExoneradoProjectionRef = M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef
 

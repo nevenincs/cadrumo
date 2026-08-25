@@ -46,6 +46,9 @@ from cadrumo.core.i18n import MissingTranslationError
 from cadrumo.domain.calculations.registry import RegistryLoadError, load_modelo_directory
 
 from .adjudications import AdjudicationSet
+from pydantic import TypeAdapter, ValidationError
+
+from cadrumo.core.identity import ContinuidadId
 
 __all__ = [
     "AeipAmbiguity",
@@ -94,8 +97,21 @@ ANEXO_A_SECTION_LEAF = "deducciones_inversion_empresarial_res"
 # without renaming the chains that already exist.
 CHAIN_PREFIX = "irpf-aeip-"
 CHAIN_COLUMN_LEAF = "aplicado"
-CHAIN_ID_MAX_LENGTH = 128
-CHAIN_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$")
+
+# The one authority for chain-id shape. A hand-copied regex here had drifted
+# wider than the canonical constraint (it admitted "." and ":"), so the planner
+# could emit an id that only failed later, at registry load.
+_CHAIN_ID_ADAPTER = TypeAdapter(ContinuidadId)
+CHAIN_ID_MAX_LENGTH: int = int(_CHAIN_ID_ADAPTER.json_schema()["maxLength"])
+
+
+def chain_id_is_wellformed(candidate: str) -> bool:
+    """Report whether ``candidate`` satisfies the canonical continuidad-id shape."""
+    try:
+        _CHAIN_ID_ADAPTER.validate_python(candidate)
+    except ValidationError:
+        return False
+    return True
 
 _APLICADO_SUFFIX = re.compile(r":\s*Aplicado en esta declaraci[oó]n\s*$", re.IGNORECASE)
 _WRAPPING_QUOTES = re.compile(r"^\s*[“”«»\"](?P<title>.+?)[“”«»\"]\s*$")
@@ -482,7 +498,7 @@ def _detect_ambiguities(
                     ),
                 ),
             )
-        elif not CHAIN_ID_PATTERN.match(chain_id):
+        elif not chain_id_is_wellformed(chain_id):
             found.append(
                 AeipAmbiguity(
                     kind="oversize_chain_id",

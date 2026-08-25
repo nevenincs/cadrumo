@@ -82,7 +82,8 @@ from ...domain.calculations.registry import (
     rate_box_coverage_shortfalls,
     xml_dictionary_entries,
 )
-from ...domain.filing import CasillaCollection, FilingExportError, ModeloDraft
+from ...domain.filing import CasillaCollection, ModeloDraft
+from .errors import ModeloApplicationError as FilingExportError
 from .runtime import CasillaRecordMetadata, RegistrySchemaAccessor
 
 #: ``record_type`` of the bank-account (DID) page in the DR303 export layout.

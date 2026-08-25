@@ -87,7 +87,8 @@ from ...domain.calculations.registry import (
 from ...domain.calculations.registry import (
     clear_fingerprint_cache as _clear_loader_fingerprint_cache,
 )
-from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError, registry_schema_version
+from ...domain.filing import CasillaCollection, CasillaSchema, registry_schema_version
+from .errors import ModeloApplicationError as ModeloBuilderError
 
 
 def _empty_source_references() -> dict[SourceRefId, SourceReference]:

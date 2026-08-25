@@ -163,9 +163,6 @@ from ...domain.filing import (
     ModeloBindingValue as _ModeloBindingValue,
 )
 from ...domain.filing import (
-    ModeloBuilderError as _ModeloBuilderError,
-)
-from ...domain.filing import (
     ModeloCasillaProvenance as _ModeloCasillaProvenance,
 )
 from ...domain.filing import (
@@ -204,7 +201,6 @@ from ...domain.filing import (
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ...domain.submission import ModeloDraftStatus as _ModeloDraftStatus
 from ._calculate import (
-    DeclaracionCalculateNextAction,
     DeclaracionCalculateSummary,
     summarise_calculation,
 )
@@ -273,7 +269,7 @@ from ._review import (
     unapprove_draft,
 )
 from ._runtime_repository import modelo_record_repository_for_application
-from .errors import ModeloApplicationError, ModeloCalculateError
+from .errors import ModeloApplicationError, ModeloApplicationError as _ModeloBuilderError, ModeloCalculateError
 from .runtime import (
     ModeloOperatorProfile,
     build_runtime_schema_provider,
@@ -1203,7 +1199,6 @@ __all__ = [
     "M202_UNSUPPORTED_PRODUCER_IDS",
     "AmendmentEvidence",
     "ChargeAccountSelection",
-    "DeclaracionCalculateNextAction",
     "DeclaracionCalculateSummary",
     "DeclaracionExportFormat",
     "DeclaracionExportResult",
