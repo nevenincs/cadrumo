@@ -25,7 +25,7 @@ from ....core import Period
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import clear_output_language_cache
-from ....core.time import now, today_madrid
+from ....core.time import frozen_clock, now, today_madrid
 from ....domain.calculations.registry import bundled_authority
 from ....domain.modelos import (
     ExternalEvidenceKind,
@@ -35,7 +35,6 @@ from ....domain.user_profile import ProfileSetupState
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
-from .. import _overview as overview_module
 from .._overview import _calendar_shift_reason_text, _live_censo_verified_profile_keys, _profile_to_taxpayer, _state
 from ._overview_calendar_support import (
     _SOURCE_URL,
@@ -215,68 +214,66 @@ def test_calendar_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -
     )
 
 
-def test_calendar_json_matches_application_coordinates_for_every_supported_year(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_calendar_json_matches_application_coordinates_for_every_supported_year() -> None:
     """Real CLI fleet parity consumes the canonical horizon and application projection."""
-    reference_today = today_madrid()
-    monkeypatch.setattr(overview_module, "today_madrid", lambda: reference_today)
-    current = _state()
-    profile = _profile_to_taxpayer(current)
-    record = current.active_profile_record()
-    raw_values = record_to_values(record) if record is not None else None
-    supported_years = bundled_authority().catalogues.supported_filing_years
-    assert supported_years is not None
+    with frozen_clock(now()):
+        reference_today = today_madrid()
+        current = _state()
+        profile = _profile_to_taxpayer(current)
+        record = current.active_profile_record()
+        raw_values = record_to_values(record) if record is not None else None
+        supported_years = bundled_authority().catalogues.supported_filing_years
+        assert supported_years is not None
 
-    for filing_year in supported_years.years:
-        from_date = date(filing_year, 1, 1)
-        to_date = date(filing_year + 1, 12, 31)
-        result = _invoke(
-            [
-                "--format",
-                "json",
-                "app",
-                "overview",
-                "calendar",
-                "--from",
-                from_date.isoformat(),
-                "--to",
-                to_date.isoformat(),
-                "--allow-incomplete",
-            ],
-        )
-        assert result.exit_code == 0, result.output
-
-        expected_calendar = build_overview_calendar(
-            profile,
-            OverviewCalendarRange(from_date=from_date, to_date=to_date),
-            today=reference_today,
-            raw_values=raw_values,
-        )
-        expected = tuple(
-            (
-                entry.modelo,
-                str(entry.period),
-                entry.adjusted_closes_on.isoformat(),
-                entry.user_state.value,
+        for filing_year in supported_years.years:
+            from_date = date(filing_year, 1, 1)
+            to_date = date(filing_year + 1, 12, 31)
+            result = _invoke(
+                [
+                    "--format",
+                    "json",
+                    "app",
+                    "overview",
+                    "calendar",
+                    "--from",
+                    from_date.isoformat(),
+                    "--to",
+                    to_date.isoformat(),
+                    "--allow-incomplete",
+                ],
             )
-            for entry in expected_calendar.entries
-            if entry.period.filing_year == filing_year
-        )
-        entries = json.loads(result.output)["result"]["entries"]
-        actual = tuple(
-            (
-                entry["modelo"],
-                entry["period"],
-                entry["adjusted_closes_on"],
-                entry["user_state"],
-            )
-            for entry in entries
-            if entry["period"].startswith(f"{filing_year} ")
-        )
+            assert result.exit_code == 0, result.output
 
-        assert expected, filing_year
-        assert actual == expected, filing_year
+            expected_calendar = build_overview_calendar(
+                profile,
+                OverviewCalendarRange(from_date=from_date, to_date=to_date),
+                today=reference_today,
+                raw_values=raw_values,
+            )
+            expected = tuple(
+                (
+                    entry.modelo,
+                    str(entry.period),
+                    entry.adjusted_closes_on.isoformat(),
+                    entry.user_state.value,
+                )
+                for entry in expected_calendar.entries
+                if entry.period.filing_year == filing_year
+            )
+            entries = json.loads(result.output)["result"]["entries"]
+            actual = tuple(
+                (
+                    entry["modelo"],
+                    entry["period"],
+                    entry["adjusted_closes_on"],
+                    entry["user_state"],
+                )
+                for entry in entries
+                if entry["period"].startswith(f"{filing_year} ")
+            )
+
+            assert expected, filing_year
+            assert actual == expected, filing_year
 
 
 def test_calendar_text_localizes_shift_label_but_json_keeps_token() -> None:
