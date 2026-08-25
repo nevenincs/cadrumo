@@ -56,7 +56,7 @@ def test_local_observation_refuses_ambiguous_printed_number_with_canonical_candi
 
     with pytest.raises(ModeloLocalObservationError) as exc_info:
         _canonical_casilla_values(
-            snapshot=snapshot,
+            revision=snapshot.revision,
             casilla_values={_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")},
         )
 
