@@ -90,7 +90,7 @@ def test_profile_bound_route_allows_active_bucket(tmp_path: Path) -> None:
 
 def test_profile_bound_route_uses_pointer_from_stale_settings(tmp_path: Path) -> None:
     settings = Settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language=OutputLanguage.EN)
-    write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
+    write_pointer(tmp_path, BucketPointer.selected(bucket_id="operator", transition_revision=0))
     decision = inspect_storage_write_policy("profile-bound", settings=settings)
     assert decision.allowed is True
     assert decision.code is StorageWritePolicyCode.ALLOWED_ACTIVE_BUCKET
