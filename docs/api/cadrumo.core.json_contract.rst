@@ -5,3 +5,8 @@ cadrumo.core.json_contract module
    :members:
    :show-inheritance:
    :ignore-module-all:
+   :exclude-members: OutputRootSchema
+
+.. autoclass:: cadrumo.core.json_contract.OutputRootSchema
+   :members:
+   :show-inheritance:

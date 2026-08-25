@@ -15,7 +15,7 @@ os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
 
 import sys
 from pathlib import Path
-from typing import TypeAliasType, TypeVar
+from typing import Annotated, get_origin
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
@@ -250,29 +250,6 @@ _PUBLIC_TYPE_ALIAS_TARGETS = {
     "SubjectTaxId": "cadrumo.core.identity.SubjectTaxId",
     "TaxIdIdentityToken": "cadrumo.core.identity.TaxIdIdentityToken",
 }
-
-
-def _format_project_type_alias(annotation, config=None):
-    """Link canonical public aliases and render implementation aliases literally.
-
-    PEP 695 aliases and generic type variables are not classes.  Rendering them
-    through the extension's default ``py:class`` role creates a dead link and,
-    for private callable aliases, falsely advertises a public object.  The two
-    intentionally public aliases have generator-owned ``py:data`` targets;
-    every other alias/type parameter remains readable code without acquiring a
-    public documentation identity.
-    """
-    if isinstance(annotation, TypeVar):
-        return f"``{annotation.__name__}``"
-    if isinstance(annotation, TypeAliasType):
-        target = _PUBLIC_TYPE_ALIAS_TARGETS.get(annotation.__name__)
-        if target is not None:
-            return f":py:data:`~{target}`"
-        return f"``{annotation.__name__}``"
-    return None
-
-
-typehints_formatter = _format_project_type_alias
 
 # Be tolerant of the wider AEAT dep tree at autodoc-import time. These are
 # either heavy native deps that pull a lot of platform-specific shared
@@ -1135,7 +1112,9 @@ def _resolve_short_reference(app, env, node, contnode):
         if target.startswith(("bs4.", "textual.")) or target in {
             "Coordinate",
             "CursorType",
+            "PlaywrightError",
             "Shape",
+            "TC",
             "calc_sheets_export",
             "country",
             "textual.geometry.Size",
@@ -1338,6 +1317,14 @@ def setup(app):
         The extension metadata declaring parallel-read/write safety.
     """
 
+    def _skip_non_owner_autodoc_member(app, what, name, obj, skip, options):
+        """Keep private/generated typing objects out of public object indexing."""
+        if name in {"__pydantic_serializer__", "__pydantic_validator__"}:
+            return True
+        if get_origin(obj) is Annotated:
+            return True
+        return None
+
     def _resolve_deferred_models(app):
         """Import the diagnostics module and run its idempotent model rebuild.
 
@@ -1470,6 +1457,7 @@ def setup(app):
         check_sequence_goldens(app, pages=pages)
 
     app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings)
+    app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
     app.connect("builder-inited", _generate_glossary_reference)

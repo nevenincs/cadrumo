@@ -73,6 +73,14 @@ _PUBLIC_DATA_ALIASES: dict[str, tuple[str, ...]] = {
     "cadrumo.core": ("CasillaId",),
     "cadrumo.core.identity": ("SubjectTaxId", "TaxIdIdentityToken"),
 }
+_PUBLIC_FUNCTION_ALIASES: dict[str, tuple[str, ...]] = {
+    "cadrumo.domain.calculations.registry": ("collect_registry_tree_fingerprints",),
+}
+_EXPLICIT_GENERIC_CLASSES: dict[str, tuple[str, ...]] = {
+    "cadrumo.application.aggregation._models": ("LedgerAggregationResultBase",),
+    "cadrumo.core._precondition_action_invariants": ("PreconditionOutcomeInvariant",),
+    "cadrumo.core.json_contract": ("OutputRootSchema",),
+}
 
 
 def _public_data_aliases(module_name: str) -> list[str]:
@@ -86,6 +94,14 @@ def _public_data_aliases(module_name: str) -> list[str]:
                 "",
             )
         )
+    return lines
+
+
+def _public_function_aliases(module_name: str) -> list[str]:
+    """Render canonical Python-domain targets for public function aliases."""
+    lines: list[str] = []
+    for alias in _PUBLIC_FUNCTION_ALIASES.get(module_name, ()):
+        lines.extend((f".. py:function:: {alias}", f"   :module: {module_name}", ""))
     return lines
 
 
@@ -298,6 +314,7 @@ class ApiStubManager:
             "",
         ]
         lines.extend(_public_data_aliases(pkg_name))
+        lines.extend(_public_function_aliases(pkg_name))
 
         if sub_packages:
             lines.append(self._toctree_block(sub_packages, "Subpackages"))
@@ -335,9 +352,22 @@ class ApiStubManager:
             "   :members:",
             "   :show-inheritance:",
             "   :ignore-module-all:",
-            "",
         ]
+        explicit_classes = _EXPLICIT_GENERIC_CLASSES.get(mod_name, ())
+        if explicit_classes:
+            lines.append(f"   :exclude-members: {','.join(explicit_classes)}")
+        lines.append("")
         lines.extend(_public_data_aliases(mod_name))
+        lines.extend(_public_function_aliases(mod_name))
+        for class_name in explicit_classes:
+            lines.extend(
+                (
+                    f".. autoclass:: {mod_name}.{class_name}",
+                    "   :members:",
+                    "   :show-inheritance:",
+                    "",
+                )
+            )
         return "\n".join(lines)
 
     def _expected_stub_contents(self, all_modules: list[tuple[str, bool]] | None = None) -> dict[str, str]:

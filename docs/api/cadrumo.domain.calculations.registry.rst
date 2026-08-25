@@ -6,6 +6,9 @@ cadrumo.domain.calculations.registry package
    :show-inheritance:
    :ignore-module-all:
 
+.. py:function:: collect_registry_tree_fingerprints
+   :module: cadrumo.domain.calculations.registry
+
 
 Submodules
 ----------
