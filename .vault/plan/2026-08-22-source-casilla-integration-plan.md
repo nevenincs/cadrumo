@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-25'
-body_hash: 'sha256:011e70cc8dfac7805c56c158ffbea431248d81b844d46a2136f83bf0d5e5fe6b'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -18,6 +16,8 @@ related:
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research]]'
+modified: '2026-08-25'
+body_hash: 'sha256:1eaad4b69ed5889b519ee6968b1078ccf92c0c561563194893fbf0001bef0fad'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
@@ -368,7 +368,7 @@ Repeat discovery and bounded delivery until the census reaches a stable, fully a
 
 - [x] `W06.P20.S112` - regenerate and compare the canonical connectivity census after completed source slices, record capability-selector drift without adjudicating it, and hand the result to S113/S115; `.vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S112.md; .vault/index/source-casilla-integration.index.md`.
 - [x] `W06.P20.S113` - classify the two S112-discovered structural helper identities under existing source-connectivity governance and hand their evidence-backed not_applicable disposition to S115 without census mutation; `.vault/research/2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research.md; .vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S113.md; .vault/index/source-casilla-integration.index.md`.
-- [ ] `W06.P20.S114` - deliver every newly adjudicated connection through the canonical vertical-slice contract; `src/cadrumo/application/aggregation`.
+- [ ] `W06.P20.S114` - close S114 with no vertical slice: S112 found no new candidate and S113 classified both reviewed helpers not_applicable; `dev/source_connectivity/tests/test_census_completeness.py, S114 exec, source plan, generated feature index`.
 - [ ] `W06.P20.S115` - classify every rejected or blocked candidate with evidence, owner, review condition, and bounded follow-up; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W06.P20.S116` - rerun discovery until two consecutive runs produce no unclassified or unactioned candidate; `.vault/audit/2026-08-22-source-casilla-connectivity-close-audit.md`.
 - [ ] `W06.P20.S117` - prove the final census has no expired deferral, unexplained disappearance, or unsupported connected claim; `dev/source_connectivity/tests/test_campaign_close.py`.
