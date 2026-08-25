@@ -35,6 +35,7 @@ from pathlib import Path
 
 import pytest
 
+from .. import ModeloRevision
 from .._loader import load_registry_tree
 from ._gate_support import fragment_declaring
 
@@ -53,7 +54,7 @@ _NON_RECARGO_TERMS = frozenset(
 )
 
 
-def _m390_revisions(root: Path) -> dict[str, object]:
+def _m390_revisions(root: Path) -> dict[str, ModeloRevision]:
     """Return every Modelo 390 revision declaring the box-34 casilla.
 
     Derived rather than pinned to a revision id: annual epochs are split as AEAT
