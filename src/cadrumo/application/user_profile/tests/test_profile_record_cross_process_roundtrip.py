@@ -64,7 +64,21 @@ _PUBLISHER_SOURCE = dedent(
     from __future__ import annotations
 
     import sys
+    from contextlib import ExitStack
     from pathlib import Path
+
+    from cadrumo.adapters.persistence.storage import (
+        build_profile_custody_port,
+        build_profile_login_session_port,
+    )
+    from cadrumo.application.user_profile import (
+        bind_profile_custody_port,
+        bind_profile_login_session_port,
+    )
+
+    composition = ExitStack()
+    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
+    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
 
     from cadrumo.application.user_profile.tests._profile_record_boundary_support import (
         advance_to_revision_two,
