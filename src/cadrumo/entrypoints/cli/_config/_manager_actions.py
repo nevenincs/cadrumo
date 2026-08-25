@@ -485,13 +485,14 @@ def _run_export() -> ManagerActionOutcome:
 
     from pydantic import SecretStr
 
-    from ....adapters.inbound.tui import FormField, FormPage, ManagerActionOutcome
+    from ....adapters.inbound.tui import ManagerActionOutcome
     from ....application.user_profile import (
         ProfileBundleExportPurpose,
         ProfileBundleExportRequest,
         ProfileBundleExportTransport,
         export_profile_bundle,
     )
+    from ....entrypoints.tui.components.forms import FormField, FormPage
     from ._manager_frontend import present_form
 
     page = FormPage(
@@ -671,8 +672,8 @@ def _auth_form_page(
     Returns:
         The :class:`~cadrumo.adapters.inbound.tui.FormPage` to present.
     """
-    from ....adapters.inbound.tui import FormField, FormFieldKind, FormPage, form_choices
     from ....core import AuthProviderKind, ClaveMovilRoute
+    from ....entrypoints.tui.components.forms import FormField, FormFieldKind, FormPage, form_choices
 
     fields = [
         FormField(
@@ -1154,7 +1155,7 @@ def _row_page(
     title come from the shared schema-label helpers, so this page names a
     field exactly as the manager's own table does.
     """
-    from ....adapters.inbound.tui import FormField, FormFieldKind, FormPage, form_choices
+    from ....entrypoints.tui.components.forms import FormField, FormFieldKind, FormPage, form_choices
 
     section = _chosen_section(sections, values)
     fields: list[FormField] = [
@@ -1191,8 +1192,8 @@ def _row_field(section: ProfileSectionDefinition, field: ProfileFieldDefinition)
     date is refused beside the box rather than by the batch commit, which
     reports one field's fault as the whole row's.
     """
-    from ....adapters.inbound.tui import FormField, FormFieldKind, form_choices
     from ....application.user_profile import profile_field_choices
+    from ....entrypoints.tui.components.forms import FormField, FormFieldKind, form_choices
 
     declared = profile_field_choices(field, path=f"{section.key}.{field.key}")
     return FormField(
@@ -1277,8 +1278,9 @@ def google_export_action() -> ManagerAction:
 
 def _run_google_export() -> ManagerActionOutcome:
     """Collect parameters, then adapt them through the canonical export service."""
-    from ....adapters.inbound.tui import FormField, FormPage, ManagerActionDisposition, ManagerActionOutcome
+    from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
     from ....core.errors import CadrumoError
+    from ....entrypoints.tui.components.forms import FormField, FormPage
     from ._google_sync_calc import execute_google_sheets_export
     from ._manager_frontend import present_form
 

@@ -25,10 +25,11 @@ from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-    from ....adapters.inbound.tui import FormPage, RegistrationAttempt
+    from ....adapters.inbound.tui import RegistrationAttempt
     from ....application.user_profile import ProfileOverview, ProfileRecoveryEnrollment, ProfileRegistrationOutcome
     from ....core.json_contract import Notice
     from ....domain.user_profile import ProfileFieldDefinition, ProfileValueRefusalKind, UserProfileRecord
+    from ....entrypoints.tui.components.forms import FormPage
 
 
 _ROUTING_META_KEYS = frozenset(

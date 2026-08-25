@@ -17,9 +17,16 @@ from textual.app import App
 from textual.containers import ScrollableContainer
 from textual.widgets import Button, DataTable, Input, SelectionList, Static
 
+from cadrumo.entrypoints.tui.components.forms import (
+    FormField,
+    FormFieldKind,
+    FormPage,
+    form_choices,
+    multi_choice_tokens,
+)
 from cadrumo.entrypoints.tui.components.widgets import ContentScroll
 
-from .. import FormApp, FormField, FormFieldKind, FormPage, FormScreen, form_choices, multi_choice_tokens
+from .. import FormApp, FormScreen
 
 pytestmark = [
     pytest.mark.unit,

@@ -24,8 +24,6 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass, field
-from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar, override
 
 from rich.cells import cell_len
@@ -36,6 +34,14 @@ from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, SelectionList, Static
 
 from ....core.i18n import tr
+from ....entrypoints.tui.components.forms import (
+    FormChoice,
+    FormField,
+    FormFieldKind,
+    FormPage,
+    form_choices,
+    multi_choice_tokens,
+)
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     install_cadrumo_themes,
@@ -44,7 +50,7 @@ from ....entrypoints.tui.components.theme import (
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator, Mapping, Sequence
+    from collections.abc import Callable, Iterator, Mapping
 
 type FormRebuild = Callable[[Mapping[str, str]], FormPage]
 """Recomputes a page from the answers given to it so far."""
@@ -55,70 +61,6 @@ type FormPresenter = Callable[[FormPage, FormRebuild | None], Mapping[str, str] 
 Takes the rebuild callable positionally so a host can supply the same
 shape whether or not the page regenerates itself.
 """
-
-
-class FormFieldKind(StrEnum):
-    """How one field is edited."""
-
-    TEXT = "text"
-    """A free-text value typed into an input."""
-
-    MULTI_CHOICE = "multi_choice"
-    """Any number of values picked from a fixed list, stored comma-separated."""
-
-    SINGLE_CHOICE = "single_choice"
-    """Exactly one value picked from a fixed list.
-
-    Also how a yes/no question is asked: two named options read better on a
-    page of mixed fields than a checkbox whose meaning depends on which row
-    the cursor happens to be on.
-    """
-
-
-@dataclass(frozen=True, slots=True)
-class FormChoice:
-    """One selectable option: the token stored, and the words shown."""
-
-    value: str
-    label: str
-
-
-@dataclass(frozen=True, slots=True)
-class FormField:
-    """One value the page collects.
-
-    ``validate`` returns a refusal to show, or ``None`` to accept. It runs
-    when the operator leaves the edit dialog, so a bad value is caught
-    where it was typed rather than at submit, when they have forgotten
-    which field it came from.
-    """
-
-    key: str
-    label: str
-    value: str = ""
-    kind: FormFieldKind = FormFieldKind.TEXT
-    choices: tuple[FormChoice, ...] = ()
-    hint: str = ""
-    validate: Callable[[str], str | None] | None = None
-    """Per-field check, owned by the caller — this screen has no opinion on
-    what any particular value means."""
-    secret: bool = False
-    """Whether the typed value is masked as it is entered.
-
-    Only meaningful on a ``TEXT`` field. A passphrase or recovery word is
-    read off the same terminal a shoulder can see, the same way the
-    dedicated login and registration screens already mask their password
-    inputs — a plain :class:`~textual.widgets.Input` here would be the one
-    place on this page a secret is shown back in clear while it is typed."""
-
-
-@dataclass(frozen=True, slots=True)
-class FormPage:
-    """The whole page: a title, a section heading, and the fields."""
-
-    title: str
-    section: str
-    fields: tuple[FormField, ...] = field(default_factory=tuple)
 
 
 _MULTI_CHOICE_SEPARATOR = ","
@@ -590,16 +532,6 @@ def presenting_forms_through(presenter: FormPresenter) -> Iterator[None]:
 def active_form_presenter() -> FormPresenter | None:
     """The presenter bound for this context, or ``None`` to start an application."""
     return _ACTIVE_FORM_PRESENTER.get()
-
-
-def multi_choice_tokens(value: str) -> tuple[str, ...]:
-    """Split a stored multi-choice value back into its tokens."""
-    return tuple(token for token in value.split(_MULTI_CHOICE_SEPARATOR) if token)
-
-
-def form_choices(pairs: Sequence[tuple[str, str]]) -> tuple[FormChoice, ...]:
-    """Build the choice tuple from ``(value, label)`` pairs."""
-    return tuple(FormChoice(value=value, label=label) for value, label in pairs)
 
 
 __all__ = [
