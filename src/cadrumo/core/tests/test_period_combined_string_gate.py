@@ -104,6 +104,17 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
     AllowlistRule(
         path=_path(r"^docs/_sequences/"),
         reason=(
+            "captured CLI transcripts record a work_unit LISTING, whose own columns "
+            "carry modelo, filing year and period separately; the token appears only in "
+            "the operator-supplied NAME column, which is a label the app never parses "
+            "back into a period"
+        ),
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"work_unit"),
+    ),
+    AllowlistRule(
+        path=_path(r"^docs/_sequences/"),
+        reason=(
             "captured CLI transcripts record the argv an author typed; the token is a "
             "recorded evidence FILENAME, and the sequence is a replay artefact rather "
             "than a call site that could parse it"
