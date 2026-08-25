@@ -3,9 +3,10 @@ tags:
   - '#adr'
   - '#cli-testimonial'
 date: '2026-06-04'
-modified: '2026-08-15'
+modified: '2026-08-25'
 body_hash: 'sha256:a2dd1e4ece5c666c0555f4f9ef4f9a3101acc52d735285623750b16fa52b4572'
-related: []
+related:
+  - '[[2026-06-30-cli-persona-testimonials-w05-closure-audit]]'
 ---
 
 # `cli-testimonial` adr: `retrospective authority alignment` | (**status:** `accepted`)
