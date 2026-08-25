@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:0872b783b9f2282156f2f43ebfc52d5076df7f0351391ee9c8a1c140a6744e99'
+body_hash: 'sha256:d0c4f16f5dd425734de641fdc4696df34cec0479772056e306a78d40be35d471'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -262,6 +262,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S256]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S258]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S259]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S260]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -325,6 +326,8 @@ related:
   - '[[2026-08-25-profile-password-custody-s251-filing-spine-cumulative-state-audit]]'
   - '[[2026-08-25-profile-password-custody-s252-registry-documentation-authority-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s253-ledger-invoice-witnesses-audit]]'
+  - '[[2026-08-25-profile-password-custody-s259-m220-grounding-review-audit]]'
+  - '[[2026-08-25-profile-password-custody-s260-m182-deadline-review-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -399,6 +402,8 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-25-profile-password-custody-s251-filing-spine-cumulative-state-audit` - `profile-password-custody` audit: `S251 filing-spine cumulative-state formal review`
 - `2026-08-25-profile-password-custody-s252-registry-documentation-authority-review-audit` - `profile-password-custody` audit: `s252 registry documentation authority review`
 - `2026-08-25-profile-password-custody-s253-ledger-invoice-witnesses-audit` - `profile-password-custody` audit: `s253 ledger invoice witnesses`
+- `2026-08-25-profile-password-custody-s259-m220-grounding-review-audit` - `profile-password-custody` audit: `S259 M220 grounding review`
+- `2026-08-25-profile-password-custody-s260-m182-deadline-review-audit` - `profile-password-custody` audit: `S260 M182 deadline review`
 
 ### exec
 
@@ -656,6 +661,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S256` - Separate volatile workstation free-memory diagnostics from deterministic golden state while preserving real registry-integrity failures and host-health evidence
 - `2026-08-13-profile-password-custody-W06-P12-S258` - Make registry referential-integrity preflight validate every revision at its declared authority grade while retaining full reference checks and real invalid-reference failures across applicability, calculation, and filing revisions
 - `2026-08-13-profile-password-custody-W06-P12-S259` - Correct Modelo 220 revision 2025 source grounding so it cites official authority applicable within its validity window and does not borrow the later 2026 form source
+- `2026-08-13-profile-password-custody-W06-P12-S260` - Reconcile Modelo 182 deadline windows with canonical revision ownership so no revision projects filing years outside its evidenced design era and unsupported 2026 remains refused
 
 ### plan
 
