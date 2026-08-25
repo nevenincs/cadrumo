@@ -9,11 +9,10 @@ declarations.
 from __future__ import annotations
 
 import tomllib
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -91,7 +90,21 @@ type CapabilityCoverageSelector = Literal[
 type RegistryDestinationCandidateKind = Literal["binding_source", "casilla_semantic_role"]
 type RegistryDestinationPeriod = Period | CensoModeloEventKind
 type HydratedTomlValue = (
-    str | int | float | bool | date | datetime | tuple[HydratedTomlValue, ...] | dict[str, HydratedTomlValue]
+    str
+    | int
+    | float
+    | bool
+    | date
+    | datetime
+    | Period
+    | CensoModeloEventKind
+    | BindingSourceKind
+    | ModeloCalculationRouteId
+    | SourceConnectivityDisposition
+    | SourceConnectivityExecutableEvidenceRole
+    | SourceConnectivityGroundingLocatorKind
+    | tuple[HydratedTomlValue, ...]
+    | dict[str, HydratedTomlValue]
 )
 
 
@@ -313,11 +326,21 @@ def _validate_source_reference_groundings(
             )
 
 
+def _is_toml_list(value: object) -> TypeGuard[list[object]]:
+    """Recognise one TOML array before recursively validating its members."""
+    return isinstance(value, list)
+
+
+def _is_toml_table(value: object) -> TypeGuard[dict[object, object]]:
+    """Recognise one TOML table before validating its string keys and values."""
+    return isinstance(value, dict)
+
+
 def _freeze_toml_arrays(value: object) -> HydratedTomlValue:
     """Hydrate TOML arrays into the canonical strict immutable tuple shape."""
-    if isinstance(value, list):
+    if _is_toml_list(value):
         return tuple(_freeze_toml_arrays(item) for item in value)
-    if isinstance(value, Mapping):
+    if _is_toml_table(value):
         frozen: dict[str, HydratedTomlValue] = {}
         for key, item in value.items():
             if not isinstance(key, str):
@@ -350,7 +373,7 @@ def _hydrate_census_tokens(value: HydratedTomlValue, *, field_name: str | None =
         return token_type(value)
     if isinstance(value, tuple):
         return tuple(_hydrate_census_tokens(item) for item in value)
-    if isinstance(value, Mapping):
+    if isinstance(value, dict):
         return {key: _hydrate_census_tokens(item, field_name=key) for key, item in value.items()}
     return value
 
