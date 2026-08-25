@@ -22,7 +22,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.browser import SiteHealthState
 from ....adapters.persistence.storage import (
     WORKFLOW_RUN_NAMESPACE,
     ClassificationError,
@@ -41,6 +40,7 @@ from ....core import (
     storage_path,
 )
 from ....core.config import override_settings
+from ....core.errors import SiteHealthState
 from ....core.external_constants import OutputLanguage
 from ....domain.deadlines import ObligationStatus
 from ....domain.submission import ModeloDraftStatus

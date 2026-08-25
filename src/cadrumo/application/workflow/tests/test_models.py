@@ -31,10 +31,9 @@ from cadrumo.application.workflow.run_models import (
 
 from ....adapters.outbound.aeat.browser import (
     SiteHealthEvidence,
-    SiteHealthState,
     SiteHealthStatus,
 )
-from ....adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
+from ....adapters.outbound.aeat.browser._site_health import parse_site_health_url
 from ....core import (
     ActionArgumentStatus,
     ActionConditionality,
@@ -43,6 +42,7 @@ from ....core import (
     NoRecoveryOutcome,
     Period,
 )
+from ....core.errors import SiteHealthState
 from ....domain.deadlines import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ....tests.aeat_literal_fixtures import aeat_url
 from ...operator_actions import (
@@ -307,7 +307,7 @@ class TestSiteHealthAlert:
 
     def _status(self) -> SiteHealthStatus:
         evidence = SiteHealthEvidence(
-            url=_URL_ADAPTER.validate_python(aeat_url("sede", "/")),
+            url=parse_site_health_url(aeat_url("sede", "/")),
             http_status=503,
             html_fragment="<html>servicio temporalmente no disponible</html>",
             detected_markers=("servicio temporalmente no disponible",),

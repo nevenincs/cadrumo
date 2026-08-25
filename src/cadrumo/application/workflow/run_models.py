@@ -33,7 +33,6 @@ from typing import Annotated, Literal
 
 from pydantic import AwareDatetime, BaseModel, BeforeValidator, Field, field_validator, model_validator
 
-from ...adapters.outbound.aeat.browser import SiteHealthState, SiteHealthStatus
 from ...core import (
     STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
 )
@@ -42,6 +41,7 @@ from ...core import (
     Modelo,
     Period,
 )
+from ...core.errors import SiteHealthState, SiteHealthStatusLike
 from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...domain.deadlines import ModeloDeadline, ObligationStatus
@@ -144,7 +144,7 @@ class WorkflowSiteHealthFacts(BaseModel):
         return self
 
     @classmethod
-    def from_status(cls, status: SiteHealthStatus) -> WorkflowSiteHealthFacts:
+    def from_status(cls, status: SiteHealthStatusLike) -> WorkflowSiteHealthFacts:
         """Project adapter status without URL, marker text, or HTML evidence."""
         return cls(
             alert_code=f"workflow.site.{status.state.value}",

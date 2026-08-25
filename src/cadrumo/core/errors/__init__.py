@@ -8,12 +8,24 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
+from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar, Protocol, TypeVar, cast, runtime_checkable
 
 if TYPE_CHECKING:
     from ._registry import ErrorEnvelope
 
 VerdictT = TypeVar("VerdictT")
+
+
+class SiteHealthState(StrEnum):
+    """Closed catalogue of layer-neutral AEAT site-health classifications."""
+
+    OK = "ok"
+    MANTENIMIENTO = "mantenimiento"
+    WAF_CHALLENGE = "waf_challenge"
+    RATE_LIMITED = "rate_limited"
+    UNREACHABLE = "unreachable"
+    UNKNOWN_ERROR = "unknown_error"
 
 
 @runtime_checkable
@@ -37,12 +49,12 @@ class SiteHealthEvidenceLike(Protocol):
         ...
 
     @property
-    def http_status(self) -> object:
+    def http_status(self) -> int:
         """HTTP status code returned by the probed URL."""
         ...
 
     @property
-    def detected_markers(self) -> Sequence[object]:
+    def detected_markers(self) -> Sequence[str]:
         """Sequence of markers detected in the response that triggered classification."""
         ...
 
@@ -63,7 +75,7 @@ class SiteHealthStatusLike(Protocol):
     """
 
     @property
-    def state(self) -> object:
+    def state(self) -> SiteHealthState:
         """Classified site-health state (e.g. mantenimiento, WAF challenge, rate limit)."""
         ...
 
@@ -370,6 +382,7 @@ __all__ = [
     "RedactionError",
     "SiteHealthError",
     "SiteHealthEvidenceLike",
+    "SiteHealthState",
     "SiteHealthStatusLike",
     "TerminalPreconditionErrorMixin",
     "bind_error_code",

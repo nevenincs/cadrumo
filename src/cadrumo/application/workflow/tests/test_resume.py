@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthState, SiteHealthStatus
-from ....adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
+from ....adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthStatus
+from ....adapters.outbound.aeat.browser._site_health import parse_site_health_url
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import (
@@ -22,7 +22,7 @@ from ....core import (
     Period,
     validated_casilla_id,
 )
-from ....core.errors import SiteHealthError, resolve_error_message
+from ....core.errors import SiteHealthError, SiteHealthState, resolve_error_message
 from ....domain.calculations.registry import CasillaObservation
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import (
@@ -219,7 +219,7 @@ def test_site_unavailable_recorder_persists_a_resumable_operator_decision() -> N
     status = SiteHealthStatus(
         state=SiteHealthState.MANTENIMIENTO,
         evidence=SiteHealthEvidence(
-            url=_URL_ADAPTER.validate_python(aeat_url("sede", "/")),
+            url=parse_site_health_url(aeat_url("sede", "/")),
             http_status=503,
             html_fragment="<html>servicio temporalmente no disponible</html>",
             detected_markers=("servicio temporalmente no disponible",),

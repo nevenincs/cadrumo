@@ -299,9 +299,9 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
 
     from ...adapters.outbound.aeat.browser import (
         SiteHealthEvidence,
-        SiteHealthState,
         SiteHealthStatus,
     )
+    from ...core.errors import SiteHealthState
     from ..diagnostics import render_browser_connectivity_text
 
     status = SiteHealthStatus(
@@ -478,9 +478,10 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     three workflow states (no provider, provider only, fully
     authenticated) and asserting the report shape across each.
     """
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+
     from ...tests.profile_capsule import open_test_profile_session
     from ..auth.actions import update_auth
-    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),

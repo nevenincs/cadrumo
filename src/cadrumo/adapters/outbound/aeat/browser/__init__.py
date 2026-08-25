@@ -15,7 +15,7 @@ Major declarations:
   :func:`create_browser_session` and :func:`default_browser_session_factory`
   — the session abstraction and its factories.
 * :func:`run_health_check` with :class:`SiteHealthStatus` and
-  :class:`SiteHealthState` — the reachability probe and its verdict.
+  :class:`core.errors.SiteHealthState` — the reachability probe and its verdict.
 * :class:`EvasionStrategy` and :class:`PlaywrightStealthEvasion` — the
   bot-detection evasion seam.
 * :class:`BrowserError`, :class:`BrowserValidationError`, and
@@ -33,7 +33,6 @@ See Also:
 
 from __future__ import annotations
 
-from .errors import BrowserError, BrowserFailureMode, BrowserValidationError
 from ._factory import (
     DefaultBrowserSession,
     create_browser_session,
@@ -43,7 +42,6 @@ from ._factory import (
 )
 from ._site_health import (
     SiteHealthEvidence,
-    SiteHealthState,
     SiteHealthStatus,
 )
 from ._site_health_parsers import (
@@ -52,6 +50,7 @@ from ._site_health_parsers import (
     parse_rate_limit_response,
     parse_waf_challenge,
 )
+from .errors import BrowserError, BrowserFailureMode, BrowserValidationError
 from .evasion import BrowserEvasionError, EvasionStrategy, PlaywrightStealthEvasion
 from .health import run_health_check
 from .profile import Profile
@@ -68,7 +67,6 @@ __all__ = [
     "PlaywrightStealthEvasion",
     "Profile",
     "SiteHealthEvidence",
-    "SiteHealthState",
     "SiteHealthStatus",
     "create_browser_session",
     "default_browser_session_factory",

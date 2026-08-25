@@ -25,7 +25,6 @@ See Also:
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Final
 
 from pydantic import (
@@ -38,42 +37,11 @@ from pydantic import (
 )
 
 from .....core import STRICT_FROZEN_CONFIG
+from .....core.errors import SiteHealthState
 from .....core.redaction import redact_for_log
 from .errors import BrowserValidationError
 
 _MAX_HTML_FRAGMENT_CHARS: Final = 4096
-
-
-class SiteHealthState(StrEnum):
-    """Closed catalogue of AEAT site-health classifications.
-
-    Parser functions emit these states inside :class:`SiteHealthStatus`.
-    :class:`~core.errors.SiteHealthError` then carries non-OK states across
-    the browser/application boundary.
-
-    Values:
-        OK: No anomaly detected; the response looks like a healthy
-            AEAT page.
-        MANTENIMIENTO: A scheduled / unplanned maintenance banner or
-            interstitial was detected.
-        WAF_CHALLENGE: A Web Application Firewall rejection or
-            challenge page (``Request blocked``, reference / support
-            IDs, etc.).
-        RATE_LIMITED: Server answered with HTTP 429 or 503 indicating
-            the caller is being throttled.
-        UNREACHABLE: Transport-level failure (DNS, TCP, TLS,
-            Playwright navigation timeout) before a response body
-            could be inspected.
-        UNKNOWN_ERROR: Reserved for future unclassified failures; no
-            parser currently emits this state.
-    """
-
-    OK = "ok"
-    MANTENIMIENTO = "mantenimiento"
-    WAF_CHALLENGE = "waf_challenge"
-    RATE_LIMITED = "rate_limited"
-    UNREACHABLE = "unreachable"
-    UNKNOWN_ERROR = "unknown_error"
 
 
 class _SiteHealthRecord(BaseModel):
@@ -126,8 +94,6 @@ class SiteHealthEvidence(_SiteHealthRecord):
     def _validate_markers(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Enforce per-item length bounds on every detected marker."""
         for marker in value:
-            if not isinstance(marker, str):
-                raise ValueError(f"detected_markers entries must be str, got {type(marker).__name__}")
             if len(marker) < 1 or len(marker) > 128:
                 raise BrowserValidationError(f"detected_markers entry must be 1..128 chars, got length {len(marker)}")
         return value
@@ -161,3 +127,8 @@ class SiteHealthStatus(_SiteHealthRecord):
 
 _URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
 """Module-level adapter used by parser call sites to validate URLs."""
+
+
+def parse_site_health_url(value: str) -> AnyHttpUrl:
+    """Validate one URL for a concrete site-health evidence record."""
+    return _URL_ADAPTER.validate_python(value)

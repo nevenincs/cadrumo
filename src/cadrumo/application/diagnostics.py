@@ -64,7 +64,7 @@ from ..core import (
 )
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
-from ..core.errors import SiteHealthError
+from ..core.errors import SiteHealthError, SiteHealthState
 from ..core.i18n import tr
 from ..core.logging import default_log_file_path, get_logger
 from ..core.redaction import CLI_PROFILE_ID_PLACEHOLDER
@@ -625,7 +625,7 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
 
 
 def _ok_site_health_status(url: str) -> SiteHealthStatus:
-    from ..adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthState, SiteHealthStatus
+    from ..adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthStatus
 
     return SiteHealthStatus(
         state=SiteHealthState.OK,
