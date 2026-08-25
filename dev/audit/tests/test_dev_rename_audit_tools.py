@@ -53,6 +53,44 @@ def test_semantic_leak_classifier_uses_cadrumo_paths_and_keeps_aeat_as_authority
     assert frozenset() == semantic._VERIFIED_NON_LEAK_PATHS
 
 
+def _semantic_gate_exit_code(monkeypatch: pytest.MonkeyPatch, result: dict[str, object]) -> int:
+    """Run the RAG gate with one deterministic tax-base result."""
+    monkeypatch.setattr(semantic, "check_health", lambda: True)
+    monkeypatch.setattr(semantic, "run_search", lambda query: [result] if query == "calculate tax base" else [])
+
+    with pytest.raises(SystemExit) as exited:
+        semantic.main()
+
+    assert isinstance(exited.value.code, int)
+    return exited.value.code
+
+
+def test_semantic_gate_fails_for_adapter_tax_base_calculation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An adapter that divides gross by a rate is a real tax-base calculation leak."""
+    result = {
+        "path": "src/cadrumo/adapters/inbound/einvoice/_parsers.py",
+        "score": 0.64,
+        "function_name": "calculate_tax_base",
+        "snippet": "def calculate_tax_base(gross, rate):\n    return gross / (1 + rate)\n",
+    }
+
+    assert _semantic_gate_exit_code(monkeypatch, result) == 1
+
+
+def test_semantic_gate_keeps_structured_tax_base_read_transcriptive(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A parser reading Facturae's named base is not a second base calculation."""
+    result = {
+        "path": "src/cadrumo/adapters/inbound/einvoice/_parsers.py",
+        "score": 0.59,
+        "snippet": (
+            'parsed.taxable_base = _decimal(_first_text(totals, "TotalGrossAmountBeforeTaxes"))\n'
+            "parsed.grand_total = _facturae_invoice_total(base=parsed.taxable_base)\n"
+        ),
+    }
+
+    assert _semantic_gate_exit_code(monkeypatch, result) == 0
+
+
 def test_evidence_builder_targets_the_live_cadrumo_fixture_corpus() -> None:
     """A corpus build writes only beneath the current product test tree."""
     corpus = REPO_ROOT / build_evidence_corpus._CORPUS
