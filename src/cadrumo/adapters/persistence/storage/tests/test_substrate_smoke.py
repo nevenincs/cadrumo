@@ -17,7 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core import DirectoryEntryKind, exclusive_file_lock, scan_directory
+from .....core import exclusive_file_lock
+from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....tests.master_key import EphemeralMasterKeyProvider
 from .. import (
     EncryptedBlobStore,

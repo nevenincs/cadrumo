@@ -9,7 +9,7 @@ from typing import Final
 
 import pytest
 
-from cadrumo.core import iter_directory
+from cadrumo.core.directory_scan import iter_directory
 
 from ..._paths import UTF_8
 from ..proof_cache import (

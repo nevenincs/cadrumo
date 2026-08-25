@@ -68,7 +68,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import iter_directory
+from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.logging import get_logger
 
 from .._paths import UTF_8

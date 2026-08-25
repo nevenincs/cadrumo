@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 from _pytest.pathlib import LOCK_TIMEOUT, ensure_deletable, make_numbered_dir_with_cleanup
 
-from ..core import scan_directory
+from ..core.directory_scan import scan_directory
 from ._collection_storage_root import (
     _ABANDONED_AFTER_SECONDS,
     _LOCK_NAME,

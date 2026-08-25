@@ -34,7 +34,7 @@ import sys
 import pytest
 import yaml
 
-from ..core import scan_directory
+from ..core.directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -38,7 +38,7 @@ from typing import Final
 
 import pytest
 
-from .. import DirectoryEntryKind, scan_directory
+from ..directory_scan import DirectoryEntryKind, scan_directory
 from .._storage_taxonomy import (
     STORAGE_TAXONOMY,
     StorageCategory,

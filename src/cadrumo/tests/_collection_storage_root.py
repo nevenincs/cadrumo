@@ -28,7 +28,7 @@ import time
 from pathlib import Path
 from tempfile import gettempdir
 
-from ..core import scan_directory
+from ..core.directory_scan import scan_directory
 
 _STEM = "cadrumo-pytest-"
 

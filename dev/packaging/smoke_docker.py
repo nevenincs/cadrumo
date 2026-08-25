@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import iter_directory
+from cadrumo.core.directory_scan import iter_directory
 
 from .._paths import REPO_ROOT, UTF_8
 from ._base_image import linux_base_image

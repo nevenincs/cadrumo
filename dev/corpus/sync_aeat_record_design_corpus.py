@@ -23,7 +23,7 @@ if str(_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.corpus"
 
-from cadrumo.core import iter_directory, scan_directory  # noqa: E402
+from cadrumo.core.directory_scan import iter_directory, scan_directory  # noqa: E402
 
 from ..packaging._hashing import sha256_path  # noqa: E402
 

@@ -40,7 +40,7 @@ from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ....application.ledger.actions_manual import create_manual_transaction, ledger_transaction_payload
 from ....application.ledger.review_projection import ledger_transaction_review_status
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
 from ....core.observability import (
     canonicalise,

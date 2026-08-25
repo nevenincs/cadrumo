@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .. import load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands

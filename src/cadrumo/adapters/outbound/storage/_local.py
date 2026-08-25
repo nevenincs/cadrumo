@@ -24,7 +24,8 @@ from pathlib import Path
 from ....application.operator_actions import (
     no_action_precondition_verdict,
 )
-from ....core import ActionEvidenceProvenance, NoRecoveryOutcome, iter_directory, scan_directory
+from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....core.directory_scan import iter_directory, scan_directory
 from ....core.atomic_write import DurableWriteBatch, atomic_write_hardened_bytes, atomic_write_text
 from ....core.errors import CoreValidationError
 from ....core.external_constants import UTF_8_ENCODING

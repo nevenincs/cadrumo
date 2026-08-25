@@ -26,7 +26,7 @@ from typing import Final, Literal
 
 import pytest
 
-from cadrumo.core import DirectoryEntryKind, scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry import (
     ExportComputedKey,
     ExportEncoding,

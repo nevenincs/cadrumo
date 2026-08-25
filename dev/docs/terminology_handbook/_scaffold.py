@@ -39,7 +39,8 @@ from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
-from cadrumo.core import ConceptLifecycle, iter_directory
+from cadrumo.core import ConceptLifecycle
+from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._enrolment import EnrolmentCandidate

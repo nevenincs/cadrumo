@@ -20,7 +20,7 @@ import re
 from collections.abc import Iterable
 from pathlib import Path
 
-from ...core import scan_directory
+from ...core.directory_scan import scan_directory
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from .catalogue import WIZARD_FLOWS
 from .models import WizardFlow, WizardQuestion

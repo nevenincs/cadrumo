@@ -36,7 +36,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....core.config import override_settings
 from ....core.i18n import tr
 from ..errors import AggregationConfigError, AggregationValidationError, t

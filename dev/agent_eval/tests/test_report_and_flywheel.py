@@ -17,7 +17,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .._flywheel import failure_signature, promote_failure, write_promoted_scenario
 from .._live_scoring import LiveInvariantVerdict, LiveScenarioScore

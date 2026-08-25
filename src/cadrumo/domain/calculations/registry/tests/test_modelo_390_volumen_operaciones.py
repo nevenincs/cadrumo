@@ -43,7 +43,7 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (

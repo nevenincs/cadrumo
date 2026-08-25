@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
 from .._ast_scanner import scan_namespace_markers, scan_source_tree

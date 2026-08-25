@@ -73,7 +73,7 @@ from typing import Any, Final
 
 import yaml
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 

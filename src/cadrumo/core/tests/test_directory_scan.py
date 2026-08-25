@@ -15,6 +15,7 @@ a tree that lost the interesting entries.
 
 from __future__ import annotations
 
+import importlib
 import inspect
 import os
 import shutil
@@ -22,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from .._directory_scan import DirectoryEntryKind, iter_directory, scan_directory
+from ..directory_scan import DirectoryEntryKind, iter_directory, scan_directory
 from ..errors import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -388,18 +389,13 @@ def test_a_relative_root_is_scanned_and_kept_relative(tree: Path) -> None:
         os.chdir(origin)
 
 
-def test_the_primitive_is_reachable_through_the_core_facade() -> None:
-    """Consumers import from ``cadrumo.core``, never from the private module.
+def test_the_primitive_is_owned_by_its_public_defining_module() -> None:
+    """The inert core namespace cannot become a second scan authority."""
+    core = importlib.import_module("cadrumo.core")
 
-    Spelled relatively because the relative-imports gate forbids an absolute
-    ``cadrumo.*`` self-import inside the package. Both spellings resolve to the
-    same :mod:`sys.modules` entry, so the facade assertions below are unchanged
-    by it -- what is under test is that the names are re-exported and declared
-    in ``__all__``, not how this module happens to reach them.
-    """
-    from ... import core
-
-    assert core.scan_directory is scan_directory
-    assert core.iter_directory is iter_directory
-    assert core.DirectoryEntryKind is DirectoryEntryKind
-    assert {"scan_directory", "iter_directory", "DirectoryEntryKind"} <= set(core.__all__)
+    assert inspect.getmodule(scan_directory).__name__ == "cadrumo.core.directory_scan"
+    assert inspect.getmodule(iter_directory).__name__ == "cadrumo.core.directory_scan"
+    assert DirectoryEntryKind.__module__ == "cadrumo.core.directory_scan"
+    assert not {"scan_directory", "iter_directory", "DirectoryEntryKind"} & set(core.__all__)
+    for name in ("scan_directory", "iter_directory", "DirectoryEntryKind"):
+        assert not hasattr(core, name)

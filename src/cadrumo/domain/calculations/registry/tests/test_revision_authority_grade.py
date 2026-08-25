@@ -21,7 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core import UNDECLARED_REGISTRY_AUTHORITY_GRADE, DirectoryEntryKind, RegistryAuthorityGrade, scan_directory
+from .....core import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
+from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryLoadError

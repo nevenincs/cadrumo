@@ -11,7 +11,8 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ......adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from ......core import CasillaId, CasillaValueKind, DirectoryEntryKind, Period, scan_directory, validated_casilla_id
+from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id
+from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......core.config import Settings
 from ......tests.secure_sql import TestRuntimeProfile
 from ..errors import SedeValidationError

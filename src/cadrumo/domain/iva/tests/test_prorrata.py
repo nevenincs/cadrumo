@@ -24,7 +24,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ..errors import ProrrataInputError, ProrrataSectorError
 from .._prorrata import (
     InputClassification,

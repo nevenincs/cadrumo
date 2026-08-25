@@ -37,6 +37,8 @@ from ....core import (
     DraftDiscrepancyKind,
     FieldGroundingOutcome,
     FieldOrigin,
+)
+from ....core.directory_scan import (
     scan_directory,
 )
 from ..closure_findings import closure_findings

@@ -21,7 +21,8 @@ from urllib.parse import quote, urljoin, urlsplit
 
 from pydantic import AnyUrl
 
-from .....core import Period, scan_directory
+from .....core import Period
+from .....core.directory_scan import scan_directory
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings, load_settings
 from .....core.external_constants import UTF_8_ENCODING

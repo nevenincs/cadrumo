@@ -339,7 +339,14 @@ def test_operator_short_id_refuses_ordered_prefix_or_suffix_ambiguity(work_repo:
     operator_id = "a" * 12
     prefix_match = unit.model_copy(update={"work_unit_id": operator_id + "0" * 52})
     suffix_match = unit.model_copy(update={"work_unit_id": "1" * 52 + operator_id})
-    catalogue = WorkUnitCatalogue.from_work_units((prefix_match, suffix_match))
+    # Deliberately synthetic ids make the two documented matching orientations
+    # collide; persistence never sees this adversarial, selector-only catalogue.
+    catalogue = WorkUnitCatalogue.model_construct(
+        work_units={
+            prefix_match.work_unit_id: prefix_match,
+            suffix_match.work_unit_id: suffix_match,
+        }
+    )
 
     with pytest.raises(ModeloWorkVisibleTargetAmbiguousError) as raised:
         select_modelo_work_resolution(

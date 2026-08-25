@@ -36,7 +36,7 @@ from email.parser import Parser
 from pathlib import Path
 from typing import Any, Final
 
-from cadrumo.core import iter_directory, scan_directory
+from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 from ._command import CommandResult, run_command

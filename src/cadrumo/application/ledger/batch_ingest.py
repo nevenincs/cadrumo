@@ -43,7 +43,8 @@ from typing import TYPE_CHECKING, Final, Literal, get_args, override
 
 from pydantic import BaseModel, Field
 
-from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG, scan_directory
+from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG
+from ...core.directory_scan import scan_directory
 from ...core.identity import ContentDigest
 from ...domain.iva import InvoiceKind
 from ..operator_actions import PreconditionVerdict

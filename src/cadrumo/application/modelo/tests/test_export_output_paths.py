@@ -24,6 +24,8 @@ from ....core import (
     Period,
     PriorDomiciliationElection,
     ResultDisposition,
+)
+from ....core.directory_scan import (
     iter_directory,
 )
 from ....domain.buckets import BucketEventType

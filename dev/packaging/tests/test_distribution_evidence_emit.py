@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .._acquire_common import venv_bin_dir
 from .._command import CommandResult, run_command

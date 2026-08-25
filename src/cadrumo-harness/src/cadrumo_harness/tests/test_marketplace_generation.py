@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import DirectoryEntryKind, scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
 from .._workspace import _PluginPythonCohort, materialise_marketplace, materialise_plugin
 

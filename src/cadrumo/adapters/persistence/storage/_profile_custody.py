@@ -35,6 +35,9 @@ from ....application.user_profile.custody_ports import (
     ProfileCustodySecureObjectRepositoryPort,
     ProfileCustodySentinelPort,
     ProfileCustodyUnlockPort,
+    ProfilePassphraseEncryptedRecord,
+    ProfilePassphraseKdfParameters,
+    ProfilePassphraseKdfPolicy,
     ProfileRecordCryptoError,
     ProfileRecordCryptoPort,
     ProfileRecordEncryptedBlob,
@@ -75,6 +78,7 @@ from . import (
     secure_object_repository_for_bucket,
     secure_object_repository_for_staged_bucket,
 )
+from ._kdf_salt import KDF_SALT_BYTES
 
 
 def _capsule_relative(category: StorageCategory) -> Path:
@@ -263,6 +267,34 @@ class _PersistenceProfileSnapshotStore:
 
 
 class _PersistenceProfileRecordCrypto:
+    def passphrase_kdf_policy(self) -> ProfilePassphraseKdfPolicy:
+        return ProfilePassphraseKdfPolicy(
+            version=master_key.ARGON2_VERSION,
+            minimum_memory_cost_kib=master_key.MIN_MEMORY_COST_KIB,
+            maximum_memory_cost_kib=master_key.MAX_MEMORY_COST_KIB,
+            minimum_time_cost=master_key.MIN_TIME_COST,
+            maximum_time_cost=master_key.MAX_TIME_COST,
+            minimum_parallelism=master_key.MIN_PARALLELISM,
+            maximum_parallelism=master_key.MAX_PARALLELISM,
+            salt_bytes=KDF_SALT_BYTES,
+        )
+
+    def passphrase_kdf_window_accepts(
+        self,
+        *,
+        memory_cost: int,
+        time_cost: int,
+        parallelism: int,
+        salt: bytes,
+    ) -> bool:
+        policy = self.passphrase_kdf_policy()
+        return (
+            policy.minimum_memory_cost_kib <= memory_cost <= policy.maximum_memory_cost_kib
+            and policy.minimum_time_cost <= time_cost <= policy.maximum_time_cost
+            and policy.minimum_parallelism <= parallelism <= policy.maximum_parallelism
+            and len(salt) == policy.salt_bytes
+        )
+
     def encrypt_record(
         self,
         plaintext: bytes,
@@ -288,6 +320,72 @@ class _PersistenceProfileRecordCrypto:
             return crypto.decrypt_record(adapter_blob, key=key, associated_data=associated_data)
         except Exception as exc:
             raise ProfileRecordCryptoError("profile record decryption failed") from exc
+
+    def seal_with_passphrase(
+        self,
+        plaintext: bytes,
+        *,
+        passphrase: bytes,
+        associated_data: bytes,
+    ) -> ProfilePassphraseEncryptedRecord:
+        try:
+            parameters = master_key.KdfParams.default()
+            sealing_key = master_key.derive_kek_with_params(
+                passphrase,
+                parameters.salt,
+                memory_cost=parameters.memory_cost,
+                time_cost=parameters.time_cost,
+                parallelism=parameters.parallelism,
+            )
+            blob = crypto.encrypt_record(
+                plaintext,
+                key=sealing_key,
+                associated_data=associated_data,
+            )
+        except Exception as exc:
+            raise ProfileRecordCryptoError("profile passphrase record encryption failed") from exc
+        return ProfilePassphraseEncryptedRecord(
+            parameters=ProfilePassphraseKdfParameters(
+                version=parameters.version,
+                memory_cost=parameters.memory_cost,
+                time_cost=parameters.time_cost,
+                parallelism=parameters.parallelism,
+                salt=parameters.salt,
+            ),
+            blob=ProfileRecordEncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext),
+        )
+
+    def open_with_passphrase(
+        self,
+        blob: ProfileRecordEncryptedBlob,
+        *,
+        passphrase: bytes,
+        parameters: ProfilePassphraseKdfParameters,
+        associated_data: bytes,
+    ) -> bytes:
+        policy = self.passphrase_kdf_policy()
+        if parameters.version != policy.version or not self.passphrase_kdf_window_accepts(
+            memory_cost=parameters.memory_cost,
+            time_cost=parameters.time_cost,
+            parallelism=parameters.parallelism,
+            salt=parameters.salt,
+        ):
+            raise ProfileRecordCryptoError("profile passphrase KDF parameters are unsupported")
+        try:
+            sealing_key = master_key.derive_kek_with_params(
+                passphrase,
+                parameters.salt,
+                memory_cost=parameters.memory_cost,
+                time_cost=parameters.time_cost,
+                parallelism=parameters.parallelism,
+            )
+            return crypto.decrypt_record(
+                crypto.EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext),
+                key=sealing_key,
+                associated_data=associated_data,
+            )
+        except Exception as exc:
+            raise ProfileRecordCryptoError("profile passphrase record decryption failed") from exc
 
 
 class _PersistenceProfileCustody:

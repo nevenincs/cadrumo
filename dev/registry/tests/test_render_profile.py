@@ -10,7 +10,8 @@ import pytest
 import rtoml
 from pydantic import ValidationError
 
-from cadrumo.core import FilingProducerKey, scan_directory
+from cadrumo.core import FilingProducerKey
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,

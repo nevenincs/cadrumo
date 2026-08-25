@@ -21,7 +21,8 @@ from typing import Any, TypedDict
 
 import pytest
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, iter_directory, scan_directory
+from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.directory_scan import iter_directory, scan_directory
 from .....core.atomic_write import atomic_write_text
 from .....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from .....core.i18n import tr

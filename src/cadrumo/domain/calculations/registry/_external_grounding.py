@@ -77,6 +77,8 @@ from ....core import (
     ElidedProse,
     ExternalOracleCorpus,
     RegistrySelectorPeriodCode,
+)
+from ....core.directory_scan import (
     scan_directory,
 )
 from ....core.external_constants import UTF_8_ENCODING

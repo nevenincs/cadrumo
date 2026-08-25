@@ -12,7 +12,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core import assess_profile_password as _assess_profile_password
+from .....core.credentials import assess_profile_password as _assess_profile_password
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,

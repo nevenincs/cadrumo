@@ -25,7 +25,22 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from ...core import STORAGE_ROOT_MODE, STORAGE_TAXONOMY, StorageArea, StorageCategory, StorageLifecycle, StorageLocation, StorageNodeKind, StorageScope, bucket_scoped_storage_path, ensure_storage_tree, is_link_like, iter_directory, scan_directory, storage_location, storage_path
+from ...core import (
+    STORAGE_ROOT_MODE,
+    STORAGE_TAXONOMY,
+    StorageArea,
+    StorageCategory,
+    StorageLifecycle,
+    StorageLocation,
+    StorageNodeKind,
+    StorageScope,
+    bucket_scoped_storage_path,
+    ensure_storage_tree,
+    is_link_like,
+    storage_location,
+    storage_path,
+)
+from ...core.directory_scan import iter_directory, scan_directory
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import load_settings
 from ...core.logging import get_logger

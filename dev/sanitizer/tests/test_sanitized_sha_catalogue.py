@@ -31,7 +31,7 @@ import hashlib
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests import FIXTURES_DIR
 
 from ..fixtures import SANITIZED_SHAS

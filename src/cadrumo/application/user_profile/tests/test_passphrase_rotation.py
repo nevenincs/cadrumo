@@ -20,7 +20,7 @@ from ....adapters.persistence.storage.custody import (
     parse_profile_custody_recovery_envelope,
     unlock_profile_custody_recovery,
 )
-from ....core import (
+from ....core.credentials import (
     PROFILE_PASSWORD_MAX_SCALARS,
     PROFILE_PASSWORD_MIN_SCALARS,
     ProfilePasswordRefusalReason,

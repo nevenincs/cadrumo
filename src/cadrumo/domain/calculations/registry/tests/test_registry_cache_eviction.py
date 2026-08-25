@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .....core.config import override_settings
 from .._compiled_cache import _evict_stale_registry_pickles
 from .._loader_cache import registry_disk_cache_max_entries

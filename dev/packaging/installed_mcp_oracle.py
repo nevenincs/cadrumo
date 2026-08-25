@@ -29,7 +29,7 @@ from mcp.client.stdio import stdio_client
 from mcp.types import CallToolResult, TextResourceContents
 from pydantic import AnyUrl
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
 from ._command import run_command

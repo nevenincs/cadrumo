@@ -20,7 +20,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ......core import scan_directory
+from ......core.directory_scan import scan_directory
 from ......core.config import Settings
 from ......tests import FIXTURES_DIR
 from .. import (

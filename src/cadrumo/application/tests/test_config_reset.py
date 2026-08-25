@@ -13,7 +13,7 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.persistence.storage.custody import profile_session_path
-from ...core import iter_directory, scan_directory
+from ...core.directory_scan import iter_directory, scan_directory
 from ...core.bucket_pointer import read_pointer
 from ...tests.profile_capsule import open_test_profile_session
 

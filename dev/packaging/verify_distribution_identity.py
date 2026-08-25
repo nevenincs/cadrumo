@@ -34,7 +34,8 @@ from cadrumo_harness import (
 )
 
 import cadrumo
-from cadrumo.core import PRODUCT_IDENTITY, scan_directory
+from cadrumo.core import PRODUCT_IDENTITY
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 

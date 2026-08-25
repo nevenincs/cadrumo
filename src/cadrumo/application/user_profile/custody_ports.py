@@ -482,8 +482,56 @@ class ProfileRecordEncryptedBlob(BaseModel):
         return cls(nonce=payload[:12], ciphertext=payload[12:])
 
 
+@dataclass(frozen=True, slots=True)
+class ProfilePassphraseKdfPolicy:
+    """Supported Argon2id version and window for passphrase-sealed records."""
+
+    version: int
+    minimum_memory_cost_kib: int
+    maximum_memory_cost_kib: int
+    minimum_time_cost: int
+    maximum_time_cost: int
+    minimum_parallelism: int
+    maximum_parallelism: int
+    salt_bytes: int
+
+
+@dataclass(frozen=True, slots=True)
+class ProfilePassphraseKdfParameters:
+    """Persisted KDF parameters accompanying one passphrase-sealed record."""
+
+    version: int
+    memory_cost: int
+    time_cost: int
+    parallelism: int
+    salt: bytes
+
+
+@dataclass(frozen=True, slots=True)
+class ProfilePassphraseEncryptedRecord:
+    """Neutral KDF metadata and AEAD ciphertext minted by persistence."""
+
+    parameters: ProfilePassphraseKdfParameters
+    blob: ProfileRecordEncryptedBlob
+
+
 class ProfileRecordCryptoPort(Protocol):
-    """AEAD operations required by the capsule record authority."""
+    """AEAD and passphrase-sealing operations for profile-owned records."""
+
+    def passphrase_kdf_policy(self) -> ProfilePassphraseKdfPolicy:
+        """Return the single supported Argon2id version and cost window."""
+        ...
+
+    def passphrase_kdf_window_accepts(
+        self,
+        *,
+        memory_cost: int,
+        time_cost: int,
+        parallelism: int,
+        salt: bytes,
+    ) -> bool:
+        """Return whether persisted parameters satisfy the supported cost window."""
+        ...
 
     def encrypt_record(
         self,
@@ -503,6 +551,27 @@ class ProfileRecordCryptoPort(Protocol):
         associated_data: bytes | None = None,
     ) -> bytes:
         """Decrypt one record and verify its authenticated associated data."""
+        ...
+
+    def seal_with_passphrase(
+        self,
+        plaintext: bytes,
+        *,
+        passphrase: bytes,
+        associated_data: bytes,
+    ) -> ProfilePassphraseEncryptedRecord:
+        """Derive a fresh passphrase key and seal one record under it."""
+        ...
+
+    def open_with_passphrase(
+        self,
+        blob: ProfileRecordEncryptedBlob,
+        *,
+        passphrase: bytes,
+        parameters: ProfilePassphraseKdfParameters,
+        associated_data: bytes,
+    ) -> bytes:
+        """Derive the persisted passphrase key and authenticate one record."""
         ...
 
 
@@ -1484,6 +1553,9 @@ __all__ = [
     "ProfileCustodySecureObjectRepositoryPort",
     "ProfileCustodySentinelPort",
     "ProfileCustodyUnlockPort",
+    "ProfilePassphraseEncryptedRecord",
+    "ProfilePassphraseKdfParameters",
+    "ProfilePassphraseKdfPolicy",
     "ProfileRecordCryptoError",
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",

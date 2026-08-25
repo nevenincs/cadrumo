@@ -9,7 +9,7 @@ from functools import cache
 from pathlib import Path
 from typing import Final
 
-from ..core import DirectoryEntryKind, scan_directory
+from ..core.directory_scan import DirectoryEntryKind, scan_directory
 
 SRC_CADRUMO: Path = Path(__file__).resolve().parents[1]
 """Root of the ``src/cadrumo`` package tree."""

@@ -32,7 +32,7 @@ from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
-from ....core import (
+from ....core.credentials import (
     PROFILE_PASSWORD_MAX_SCALARS,
     PROFILE_PASSWORD_MIN_SCALARS,
     PassphraseStrength,

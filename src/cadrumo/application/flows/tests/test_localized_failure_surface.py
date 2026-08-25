@@ -22,7 +22,8 @@ from pydantic import BaseModel
 
 from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ....application.flows.engine import answer, start_flow
-from ....core import STRICT_FROZEN_CONFIG, scan_directory
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.directory_scan import scan_directory
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n import tr
 from ....tests.locale_catalogue import flatten_catalogue, shard_keys, shard_payload

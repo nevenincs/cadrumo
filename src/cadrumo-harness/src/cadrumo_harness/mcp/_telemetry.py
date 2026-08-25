@@ -36,7 +36,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.config import load_settings
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.hashing import sha256_hex

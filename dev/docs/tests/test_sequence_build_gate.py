@@ -23,7 +23,7 @@ from typing import cast
 import pytest
 from sphinx.application import Sphinx
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests.env_scope import scoped_env_var
 
 from ..._paths import REPO_ROOT

@@ -18,7 +18,7 @@ from typing import Final, Literal, cast
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core import iter_directory
+from cadrumo.core.directory_scan import iter_directory
 from cadrumo.domain.calculations.registry import (
     ENCODING_ALIAS_MAP,
     CasillaFieldKind,

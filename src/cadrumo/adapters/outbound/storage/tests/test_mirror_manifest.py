@@ -10,7 +10,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome, iter_directory, scan_directory
+from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....core.directory_scan import iter_directory, scan_directory
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageRemoteMirrorPolicy
 from .. import (

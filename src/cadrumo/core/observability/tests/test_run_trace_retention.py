@@ -19,7 +19,8 @@ from pathlib import Path
 import pytest
 
 from ....tests.storage_scope import relocated_storage_path, storage_overrides
-from ... import DirectoryEntryKind, StorageCategory, scan_directory
+from ... import StorageCategory
+from ...directory_scan import DirectoryEntryKind, scan_directory
 from ...config import override_settings
 from .._models import RunOutcome, RunTrace
 from .._store import EVENTS_FILENAME, TRACE_FILENAME, prune_run_traces, save_trace

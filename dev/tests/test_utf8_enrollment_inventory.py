@@ -52,7 +52,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests import (
     aeat_relative,
     bare_utf8_literal_violations,

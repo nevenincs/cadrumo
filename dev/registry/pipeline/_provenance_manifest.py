@@ -15,7 +15,7 @@ from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from cadrumo.core import iter_directory
+from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.atomic_write import atomic_write_publish_once_bytes
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
 from cadrumo.domain.calculations.registry import (

@@ -9,7 +9,7 @@ from typing import NamedTuple
 
 import pytest
 
-from ..core import DirectoryEntryKind, scan_directory
+from ..core.directory_scan import DirectoryEntryKind, scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -19,7 +19,7 @@ from cadrumo.application.operator_surface import (
     ResultSchemaInventoryRow,
     resolve_manifest_action_profiles,
 )
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.i18n import extract_placeholders, lookup_translation_entry
 from cadrumo.entrypoints.cli import build_verb_input_schemas, command_schema_refs
 

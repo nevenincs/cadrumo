@@ -17,7 +17,8 @@ from typing import cast
 
 from pydantic import ValidationError
 
-from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml, scan_directory
+from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
+from ...core.directory_scan import scan_directory
 from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint, path_stat_fingerprint

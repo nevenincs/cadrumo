@@ -33,7 +33,8 @@ from pathlib import Path
 import pytest
 
 from ....tests.storage_scope import storage_overrides
-from ... import StorageCategory, scan_directory
+from ... import StorageCategory
+from ...directory_scan import scan_directory
 from ...config import override_settings
 from .. import (
     RunOutcome,

@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import iter_directory
+from ....core.directory_scan import iter_directory
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     RegistryValidationError,

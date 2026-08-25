@@ -20,8 +20,10 @@ from ....core import (
     StorageNodeKind,
     StorageScope,
     ensure_storage_tree,
-    scan_directory,
     storage_path,
+)
+from ....core.directory_scan import (
+    scan_directory,
 )
 from ....core.config import load_settings, override_settings
 from .._models import StorageAreaDisposition, StorageOccupancy, StorageTreeIssueKind

@@ -36,8 +36,10 @@ from ....core import (
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
-    scan_directory,
     validated_casilla_id,
+)
+from ....core.directory_scan import (
+    scan_directory,
 )
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import RegistrySnapshot

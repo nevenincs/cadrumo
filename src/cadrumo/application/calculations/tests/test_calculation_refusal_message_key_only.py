@@ -29,7 +29,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import NoRecoveryOutcome, scan_directory
+from ....core import NoRecoveryOutcome
+from ....core.directory_scan import scan_directory
 from ..errors import (
     BindingPrefillTypeError,
     CalculationRefusalPrecondition,

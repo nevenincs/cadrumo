@@ -32,7 +32,7 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.packaging"
 
-from cadrumo.core import scan_directory  # noqa: E402
+from cadrumo.core.directory_scan import scan_directory  # noqa: E402
 
 from ._acquire_common import (  # noqa: E402
     AcquisitionError,

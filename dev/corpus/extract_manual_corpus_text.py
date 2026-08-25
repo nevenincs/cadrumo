@@ -42,6 +42,8 @@ from cadrumo.core import (
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
     normalise_corpus_text,
+)
+from cadrumo.core.directory_scan import (
     scan_directory,
 )
 from cadrumo.core.hashing import sha256_file

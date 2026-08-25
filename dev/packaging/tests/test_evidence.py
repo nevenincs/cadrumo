@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import iter_directory
+from cadrumo.core.directory_scan import iter_directory
 
 from .._command import run_command
 from .._hashing import sha256_path

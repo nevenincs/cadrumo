@@ -22,7 +22,7 @@ if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
 if not __package__:
     __package__ = "dev.docs"
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 
 from .._paths import REPO_ROOT

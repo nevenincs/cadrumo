@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ._action_test_support import (
     _BUCKET_ID,
     _OTHER_BUCKET_ID,

@@ -701,9 +701,10 @@ def test_pointer_capture_and_cas_refuse_a_real_pointer_link(tmp_path: Path) -> N
     with pytest.raises(OSError, match=r"link|reparse|symbolic"):
         _observe_pointer(tmp_path)
 
-    assert outside.read_text(encoding="utf-8") == BucketPointer.selected(
-        bucket_id=str(_PROFILE_ID), transition_revision=1
-    ).to_toml()
+    assert (
+        outside.read_text(encoding="utf-8")
+        == BucketPointer.selected(bucket_id=str(_PROFILE_ID), transition_revision=1).to_toml()
+    )
 
 
 def test_journal_writer_refuses_an_existing_leaf_and_never_overwrites_it(tmp_path: Path) -> None:

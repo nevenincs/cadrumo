@@ -10,7 +10,8 @@ from typing import Any, cast, override
 import pytest
 from pydantic import ValidationError
 
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, scan_directory
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.directory_scan import scan_directory
 from ....core.resources import resources
 from ...calculations.registry import IvaLedgerObservation
 from ...invoices import IvaRate

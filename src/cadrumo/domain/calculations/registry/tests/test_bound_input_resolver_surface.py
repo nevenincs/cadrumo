@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from ... import registry
 from .. import __all__ as registry_public_names
 from .. import resolve_available_bound_inputs_by_casilla_id

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .. import (
     ExportFieldDefinition,
     ExportLayoutDefinition,

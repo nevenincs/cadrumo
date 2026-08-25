@@ -9,7 +9,7 @@ from shutil import rmtree
 
 import pytest
 
-from cadrumo.core import DirectoryEntryKind, scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.hashing import hash_file
 from cadrumo.domain.calculations.registry import RegistryValidationError
 

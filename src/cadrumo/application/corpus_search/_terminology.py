@@ -42,6 +42,8 @@ from ...core import (
     STR_KEYED_MAPPING_ADAPTER,
     ConceptLifecycle,
     fold_diacritics,
+)
+from ...core.directory_scan import (
     scan_directory,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN

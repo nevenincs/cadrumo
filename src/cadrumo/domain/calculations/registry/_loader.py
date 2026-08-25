@@ -18,11 +18,13 @@ from pydantic import BaseModel, ValidationError
 
 from ....core import (
     OBJECT_TUPLE_ADAPTER,
-    DirectoryEntryKind,
     FilingProducerKey,
     compile_filing_projection_ref,
     freeze_toml,
     read_toml,
+)
+from ....core.directory_scan import (
+    DirectoryEntryKind,
     scan_directory,
 )
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache

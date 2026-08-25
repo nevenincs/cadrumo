@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .. import scan_directory
+from ..directory_scan import scan_directory
 from ..manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,

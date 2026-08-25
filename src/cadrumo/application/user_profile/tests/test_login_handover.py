@@ -39,7 +39,8 @@ from ....adapters.persistence.storage.custody import (
     profile_session_path,
     resume_profile_session,
 )
-from ....core import ProfileSessionRefusalReason, iter_directory
+from ....core import ProfileSessionRefusalReason
+from ....core.directory_scan import iter_directory
 from ....core import config as config_module
 from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import Settings

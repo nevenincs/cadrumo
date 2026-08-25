@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .....core.decimal import coerce_fixed_width_decimal
 from .. import (
     ExportEncoding,

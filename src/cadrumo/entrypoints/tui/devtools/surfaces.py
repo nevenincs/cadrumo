@@ -49,7 +49,7 @@ class Surface:
 
 
 def _registration() -> App[Any]:
-    from ....core import assess_profile_password
+    from ....core.credentials import assess_profile_password
     from ....entrypoints.tui.secret.app import RegistrationApp
 
     return RegistrationApp(assess=assess_profile_password, register=registration_attempt)

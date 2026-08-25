@@ -35,7 +35,8 @@ from typing import Any
 import pytest
 
 from ...tests.attribute_scope import scoped_attribute
-from .. import DirectoryEntryKind, atomic_write, scan_directory
+from .. import atomic_write
+from ..directory_scan import DirectoryEntryKind, scan_directory
 from ..atomic_write import (
     _write_all,
     atomic_write_best_effort_bytes,

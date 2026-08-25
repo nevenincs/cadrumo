@@ -12,7 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
-from ...core import scan_directory
+from ...core.directory_scan import scan_directory
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_run_health import (
     ErrorsBreakdownReport,

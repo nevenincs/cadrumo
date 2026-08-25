@@ -36,7 +36,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import assess_profile_password
+from ...core.credentials import assess_profile_password
 from ...core.errors import CadrumoError
 from ...core.identity import BucketId, ProfileId
 from ...core.time import now as _utc_now

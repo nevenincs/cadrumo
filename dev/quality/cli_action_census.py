@@ -37,7 +37,7 @@ from typing import Final, cast, override
 import yaml
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.errors import declared_error_codes
 
 from .._paths import REPO_ROOT, UTF_8

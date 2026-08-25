@@ -89,7 +89,7 @@ from typing import cast
 import click
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ....tests import REPO_ROOT
 from ....tests.cli_runner import cadrumo_click_command
 

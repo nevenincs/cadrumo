@@ -40,6 +40,8 @@ from ..core import (
     ActionEvidenceProvenance,
     AuthProviderKind,
     NoRecoveryOutcome,
+)
+from ..core.directory_scan import (
     iter_directory,
 )
 from ..core.config import Settings, load_settings

@@ -41,7 +41,8 @@ from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, scan_directory
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.directory_scan import scan_directory
 from .. import NON_REGISTRY_MODELOS, Modelo, read_toml
 from .errors import AuthorizationManifestError
 

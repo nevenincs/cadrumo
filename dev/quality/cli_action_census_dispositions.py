@@ -20,7 +20,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, cast, override
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
 from .cli_action_census import (

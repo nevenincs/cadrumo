@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ... import scan_directory
+from ...directory_scan import scan_directory
 from .. import (
     CorpusBundleError,
     CorpusBundleVerificationError,

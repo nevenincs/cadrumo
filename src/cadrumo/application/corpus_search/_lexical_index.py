@@ -33,11 +33,13 @@ from pathlib import Path
 from ...core import (
     STR_KEYED_MAPPING_ADAPTER,
     fts_or_group,
-    scan_directory,
     spanish_stemmer,
     spanish_word_tokens,
     stem_spanish_terms,
     stem_spanish_text,
+)
+from ...core.directory_scan import (
+    scan_directory,
 )
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path

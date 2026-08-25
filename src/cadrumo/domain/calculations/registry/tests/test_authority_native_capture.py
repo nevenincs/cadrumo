@@ -11,7 +11,8 @@ from threading import Barrier, Event, Lock, Thread
 
 import pytest
 
-from .....core import RegistryAuthorityGrade, scan_directory
+from .....core import RegistryAuthorityGrade
+from .....core.directory_scan import scan_directory
 from .....tests import REPO_ROOT
 from .. import (
     RegistryAuthorityCapture,

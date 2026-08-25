@@ -34,16 +34,10 @@ from cadrumo.application.user_profile.bundle_encryption import (
     encrypt_profile_bundle_for_passphrase,
 )
 
-from ....adapters.persistence.storage import KDF_SALT_BYTES
-from ....adapters.persistence.storage.master_key import (
-    MAX_PARALLELISM,
-    MIN_MEMORY_COST_KIB,
-    MIN_TIME_COST,
-    KdfParams,
-)
 from ....domain.user_profile.errors import UserProfileValidationError
 from ....domain.user_profile.portable_export import UserProfilePortableExport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ..custody_ports import default_profile_record_crypto_port
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -69,10 +63,12 @@ def test_the_writers_own_envelope_survives_the_window_and_a_strict_roundtrip() -
     bundle = _bundle()
     envelope = encrypt_profile_bundle_for_passphrase(bundle, passphrase=_PASSPHRASE)
 
-    canonical = KdfParams.default()
-    assert envelope.memory_cost == canonical.memory_cost
-    assert envelope.time_cost == canonical.time_cost
-    assert envelope.parallelism == canonical.parallelism
+    policy = default_profile_record_crypto_port().passphrase_kdf_policy()
+    assert envelope.kdf_version == policy.version
+    assert envelope.memory_cost == policy.minimum_memory_cost_kib
+    assert envelope.time_cost == policy.minimum_time_cost
+    assert envelope.parallelism == policy.minimum_parallelism
+    assert len(base64.b64decode(envelope.salt_b64)) == policy.salt_bytes
 
     reparsed = EncryptedProfileBundleExport.model_validate_json(envelope.model_dump_json())
     assert reparsed == envelope
@@ -81,16 +77,20 @@ def test_the_writers_own_envelope_survives_the_window_and_a_strict_roundtrip() -
 
 
 @pytest.mark.parametrize(
-    "field_name,value",
+    "field_name,bound_name,offset",
     (
-        ("memory_cost", 8),
-        ("memory_cost", MIN_MEMORY_COST_KIB - 1),
-        ("time_cost", MIN_TIME_COST - 1),
-        ("parallelism", MAX_PARALLELISM + 1),
+        ("memory_cost", None, 8),
+        ("memory_cost", "minimum_memory_cost_kib", -1),
+        ("time_cost", "minimum_time_cost", -1),
+        ("parallelism", "maximum_parallelism", 1),
     ),
     ids=("memory-far-below", "memory-just-below", "iterations-below", "lanes-above"),
 )
-def test_an_out_of_window_cost_axis_refuses_at_load(field_name: str, value: int) -> None:
+def test_an_out_of_window_cost_axis_refuses_at_load(
+    field_name: str,
+    bound_name: str | None,
+    offset: int,
+) -> None:
     """A stored envelope declaring a weaker derivation than the window never loads.
 
     ``memory-just-below`` is the case that matters: an off-by-one below the
@@ -98,6 +98,8 @@ def test_an_out_of_window_cost_axis_refuses_at_load(field_name: str, value: int)
     number that merely happens to reject an absurd value.
     """
     payload = json.loads(encrypt_profile_bundle_for_passphrase(_bundle(), passphrase=_PASSPHRASE).model_dump_json())
+    policy = default_profile_record_crypto_port().passphrase_kdf_policy()
+    value = offset if bound_name is None else getattr(policy, bound_name) + offset
     payload[field_name] = value
 
     with pytest.raises(ValidationError):
@@ -105,18 +107,21 @@ def test_an_out_of_window_cost_axis_refuses_at_load(field_name: str, value: int)
 
 
 @pytest.mark.parametrize(
-    "salt_b64",
-    (
-        base64.b64encode(b"x").decode("ascii"),
-        base64.b64encode(b"S" * (KDF_SALT_BYTES - 1)).decode("ascii"),
-        base64.b64encode(b"S" * (KDF_SALT_BYTES * 2)).decode("ascii"),
-        "not base64!!",
-    ),
+    "salt_case",
+    ("one-byte", "one-short", "double-length", "not-base64"),
     ids=("one-byte", "one-short", "double-length", "not-base64"),
 )
-def test_a_salt_that_is_not_exactly_one_kdf_salt_refuses_at_load(salt_b64: str) -> None:
+def test_a_salt_that_is_not_exactly_one_kdf_salt_refuses_at_load(salt_case: str) -> None:
     """A short salt derives a different key and reads as a wrong passphrase; refuse it first."""
     payload = json.loads(encrypt_profile_bundle_for_passphrase(_bundle(), passphrase=_PASSPHRASE).model_dump_json())
+    salt_bytes = default_profile_record_crypto_port().passphrase_kdf_policy().salt_bytes
+    encoded = {
+        "one-byte": base64.b64encode(b"x").decode("ascii"),
+        "one-short": base64.b64encode(b"S" * (salt_bytes - 1)).decode("ascii"),
+        "double-length": base64.b64encode(b"S" * (salt_bytes * 2)).decode("ascii"),
+        "not-base64": "not base64!!",
+    }
+    salt_b64 = encoded[salt_case]
     payload["salt_b64"] = salt_b64
 
     with pytest.raises(ValidationError):

@@ -38,7 +38,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.inbound.einvoice import ParsedEInvoice, parse_einvoice_document
-from ....core import iter_directory
+from ....core.directory_scan import iter_directory
 from ....domain.invoices import InvoiceClass
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -20,7 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core import CasillaId, scan_directory, validated_casilla_id
+from .....core import CasillaId, validated_casilla_id
+from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .._remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference

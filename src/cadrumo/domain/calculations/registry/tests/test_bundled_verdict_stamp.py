@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .._authority import stamp_bundled_registry_release
 from .._identity import read_registry_identity_stamp, registry_identity_stamp_location
 from .._loader import clear_fingerprint_cache

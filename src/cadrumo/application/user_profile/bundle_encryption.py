@@ -6,20 +6,8 @@ import base64
 import binascii
 from typing import Final
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...adapters.persistence.storage import ARGON2_VERSION, KDF_SALT_BYTES
-from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, encrypt_record
-from ...adapters.persistence.storage.master_key import (
-    MAX_MEMORY_COST_KIB,
-    MAX_PARALLELISM,
-    MAX_TIME_COST,
-    MIN_MEMORY_COST_KIB,
-    MIN_PARALLELISM,
-    MIN_TIME_COST,
-    KdfParams,
-    derive_kek_with_params,
-)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...domain.user_profile.errors import UserProfileValidationError
@@ -28,6 +16,11 @@ from .bundle import (
     SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
     UnsupportedBundleSchemaVersionError,
     validate_bundle_payload,
+)
+from .custody_ports import (
+    ProfilePassphraseKdfParameters,
+    ProfileRecordEncryptedBlob,
+    default_profile_record_crypto_port,
 )
 
 _ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION: Final[int] = 1
@@ -52,10 +45,9 @@ class EncryptedProfileBundleExport(BaseModel):
     actually made. Every field on this record is stamped explicitly by
     :func:`encrypt_profile_bundle_for_passphrase`.
 
-    The three Argon2 cost axes and the salt length carry the same window as
-    :class:`KdfParams`, the record the writer stamps them from, read from that
-    declaration rather than restated. They were bare integers and a bare
-    string, which made this the one storage KDF record that could describe an
+    The three Argon2 cost axes and the salt length carry the same window as the
+    composed persistence KDF policy that the writer stamps them from. They were
+    bare integers and a bare string, which made this the one storage KDF record that could describe an
     arbitrarily weak derivation: eight kibibytes, one iteration, a one-byte
     salt. The writer never emitted such a set, so nothing this build wrote was
     weak -- what the looseness cost was that a re-exported envelope could
@@ -64,11 +56,9 @@ class EncryptedProfileBundleExport(BaseModel):
     at the boundary from a wrong passphrase, sending an operator to recover a
     passphrase that was never wrong.
 
-    Reading the window from :class:`KdfParams` rather than restating it is what
-    keeps the bound this record VALIDATES against from drifting away from the
-    parameters the writer STAMPS: a cost bump on the enrolment record moves
-    both together, and the writer's own output stays inside the bound by
-    construction rather than by two numbers happening to agree.
+    Reading the window through the application crypto port rather than
+    restating it is what keeps the bound this record validates against from
+    drifting away from the parameters the writer stamps.
     """
 
     model_config = _STRICT_FROZEN
@@ -78,23 +68,38 @@ class EncryptedProfileBundleExport(BaseModel):
     payload_schema_version: int
     kdf: str = Field(min_length=1)
     kdf_version: int
-    memory_cost: int = Field(ge=MIN_MEMORY_COST_KIB, le=MAX_MEMORY_COST_KIB)
-    time_cost: int = Field(ge=MIN_TIME_COST, le=MAX_TIME_COST)
-    parallelism: int = Field(ge=MIN_PARALLELISM, le=MAX_PARALLELISM)
+    memory_cost: int
+    time_cost: int
+    parallelism: int
     salt_b64: str
     ciphertext_b64: str
 
     @field_validator("salt_b64")
     @classmethod
     def _check_salt_b64(cls, value: str) -> str:
-        """Refuse a salt that is not canonical base64 of exactly the KDF length."""
+        """Refuse a salt that is not canonical base64."""
         try:
-            decoded = base64.b64decode(value.encode("ascii"), validate=True)
+            base64.b64decode(value.encode("ascii"), validate=True)
         except (UnicodeEncodeError, binascii.Error) as exc:
             raise ValueError("salt_b64 must be canonical base64") from exc
-        if len(decoded) != KDF_SALT_BYTES:
-            raise ValueError(f"salt_b64 must encode exactly {KDF_SALT_BYTES} bytes")
         return value
+
+    @model_validator(mode="after")
+    def _check_kdf_window(self) -> EncryptedProfileBundleExport:
+        """Refuse KDF costs and salt lengths outside the composed policy."""
+        salt = base64.b64decode(self.salt_b64.encode("ascii"), validate=True)
+        crypto = default_profile_record_crypto_port()
+        policy = crypto.passphrase_kdf_policy()
+        if len(salt) != policy.salt_bytes:
+            raise ValueError(f"salt_b64 must encode exactly {policy.salt_bytes} bytes")
+        if not crypto.passphrase_kdf_window_accepts(
+            memory_cost=self.memory_cost,
+            time_cost=self.time_cost,
+            parallelism=self.parallelism,
+            salt=salt,
+        ):
+            raise ValueError("passphrase KDF parameters are outside the supported window")
+        return self
 
 
 def encrypt_profile_bundle_for_passphrase(
@@ -103,16 +108,13 @@ def encrypt_profile_bundle_for_passphrase(
     passphrase: str,
 ) -> EncryptedProfileBundleExport:
     """Encrypt ``bundle`` under ``passphrase`` and return a transport envelope."""
-    params = KdfParams.default()
-    sealing_key = derive_kek_with_params(
-        passphrase.encode(UTF_8_ENCODING),
-        params.salt,
-        memory_cost=params.memory_cost,
-        time_cost=params.time_cost,
-        parallelism=params.parallelism,
-    )
     payload = bundle.model_dump_json().encode(UTF_8_ENCODING)
-    encrypted = encrypt_record(payload, key=sealing_key, associated_data=_ENCRYPTED_BUNDLE_AAD)
+    encrypted = default_profile_record_crypto_port().seal_with_passphrase(
+        payload,
+        passphrase=passphrase.encode(UTF_8_ENCODING),
+        associated_data=_ENCRYPTED_BUNDLE_AAD,
+    )
+    params = encrypted.parameters
     return EncryptedProfileBundleExport(
         encrypted_bundle_schema_version=_ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION,
         payload_model=_ENCRYPTED_BUNDLE_PAYLOAD_MODEL,
@@ -123,7 +125,7 @@ def encrypt_profile_bundle_for_passphrase(
         time_cost=params.time_cost,
         parallelism=params.parallelism,
         salt_b64=base64.b64encode(params.salt).decode("ascii"),
-        ciphertext_b64=base64.b64encode(encrypted.to_wire()).decode("ascii"),
+        ciphertext_b64=base64.b64encode(encrypted.blob.to_wire()).decode("ascii"),
     )
 
 
@@ -175,38 +177,35 @@ def decrypt_profile_bundle_with_passphrase(
             translated_message="errors.refused.refused_user_profile_validation",
             context={"kdf_supported": False},
         )
-    # Gated against the Argon2 ALGORITHM version the writer stamps, which is
-    # what ``KdfParams.default()`` carries -- deliberately not against the
+    # Gated against the Argon2 ALGORITHM version the writer stamps --
+    # deliberately not against the
     # file-backed provider's ``KDF_PARAMS_VERSION``, a different concept naming
     # the master.kdf record SHAPE. The two are unequal, so confusing them would
     # refuse every bundle this build writes.
     #
-    # ``ARGON2_VERSION`` is a sound target rather than merely the nearest one:
-    # its module declares the number ONCE as ``Argon2Version = Literal[19]`` and
-    # reads the constant back out of that annotation, so the value this compares
-    # against and the type the parameter record validates under cannot drift
-    # apart.
-    if envelope.kdf_version != ARGON2_VERSION:
+    crypto = default_profile_record_crypto_port()
+    kdf_policy = crypto.passphrase_kdf_policy()
+    if envelope.kdf_version != kdf_policy.version:
         raise UserProfileValidationError(
             translated_message="errors.refused.refused_user_profile_validation",
             context={
                 "envelope_kdf_version": str(envelope.kdf_version),
-                "supported_kdf_version": str(ARGON2_VERSION),
+                "supported_kdf_version": str(kdf_policy.version),
             },
         )
     try:
         salt = base64.b64decode(envelope.salt_b64.encode("ascii"), validate=True)
         ciphertext = base64.b64decode(envelope.ciphertext_b64.encode("ascii"), validate=True)
-        sealing_key = derive_kek_with_params(
-            passphrase.encode(UTF_8_ENCODING),
-            salt,
-            memory_cost=envelope.memory_cost,
-            time_cost=envelope.time_cost,
-            parallelism=envelope.parallelism,
-        )
-        plaintext = decrypt_record(
-            EncryptedBlob.from_wire(ciphertext),
-            key=sealing_key,
+        plaintext = crypto.open_with_passphrase(
+            ProfileRecordEncryptedBlob.from_wire(ciphertext),
+            passphrase=passphrase.encode(UTF_8_ENCODING),
+            parameters=ProfilePassphraseKdfParameters(
+                version=envelope.kdf_version,
+                memory_cost=envelope.memory_cost,
+                time_cost=envelope.time_cost,
+                parallelism=envelope.parallelism,
+                salt=salt,
+            ),
             associated_data=_ENCRYPTED_BUNDLE_AAD,
         )
     except Exception as exc:

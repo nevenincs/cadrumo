@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 
 from .. import harness_root, iter_operator_rules, iter_personas
 from .._workspace import materialise_workspace

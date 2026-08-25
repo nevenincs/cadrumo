@@ -39,7 +39,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests._size_budget import (
     CALLABLE_POLICY,
     MIN_SCANNED_CALLABLES,

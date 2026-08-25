@@ -30,7 +30,7 @@ from typing import NamedTuple
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests import ast_for_path, qualified_name, repo_relative
 
 from .._paths import REPO_ROOT

@@ -17,7 +17,7 @@ from textual.worker import WorkerCancelled
 
 from ....application.user_profile.profile_repository import CommittedProfileRepository
 from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
-from ....core import assess_profile_password
+from ....core.credentials import assess_profile_password
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import UserProfileFact
 from ....entrypoints.tui.secret.app import (

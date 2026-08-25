@@ -10,7 +10,7 @@ from typing import NamedTuple
 import pytest
 
 from cadrumo.adapters.persistence.storage.errors import SecureStorageError
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.errors import ERROR_REGISTRY, CadrumoError, get_registered_error_code
 from cadrumo.tests import (
     SRC_CADRUMO,

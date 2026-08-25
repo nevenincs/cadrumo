@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import scan_directory
+from ....core.directory_scan import scan_directory
 from ...modelo import ModeloExportCommand
 from ...modelo import _export as modelo_export
 from ...modelo import _m303_filing_evidence as m303_filing_evidence

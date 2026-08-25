@@ -31,7 +31,8 @@ from ....application.provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from ....core import LOCAL_TRANSPORT_LABEL, AcceleratorKind, scan_directory
+from ....core import LOCAL_TRANSPORT_LABEL, AcceleratorKind
+from ....core.directory_scan import scan_directory
 from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes

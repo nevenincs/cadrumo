@@ -55,10 +55,10 @@ summary = "The M036 lifecycle records a declaration already filed at Sede or in 
 candidate_id = "inventory.stock-valuation"
 disposition = "connect_candidate"
 owner = "source-connectivity-campaign"
-review_condition = "The accepted 2025 inventory prerequisites are complete through the strict schema-v3 projection for 0177, 0181, and 0182. The candidate remains disconnected until S39 and its follow-on resolver, source-mesh, orchestration, ownership, registry-binding, and live-proof steps connect that projection to calculation revisions."
+review_condition = "Encrypted schema-v3 persistence, the canonical inventory resolver, source-mesh enrollment, registry row bindings, calculation orchestration, source identity, and caller-override refusal are connected for M100/2025. The candidate remains non-terminal until grounded repeated activity-row casillas are materialized, rendered into the supported official filing structure, and verified end to end without fabricated activity-envelope facts."
 capability_locators = [
   "src/cadrumo/adapters/persistence/profile/inventory.py:121",
-  "src/cadrumo/application/inventory/_source_readiness.py:33",
+  "src/cadrumo/application/inventory/_source_readiness.py:32",
   "src/cadrumo/domain/contribuyente/inventory/__init__.py:1161",
   "src/cadrumo/domain/contribuyente/inventory/__init__.py:1367",
   "src/cadrumo/application/inventory/_service.py:413",
@@ -91,8 +91,8 @@ summary = "Encrypted FINANCIAL schema-v3 inventory ledger repository persists ac
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/inventory/_source_readiness.py:33"
-summary = "Executable readiness acknowledges completed encrypted persistence while remaining false for the missing resolver, source-mesh, binding, orchestration, and ownership boundary."
+reference = "src/cadrumo/application/inventory/_source_readiness.py:32"
+summary = "Executable readiness acknowledges the connected resolver, source mesh, registry row bindings, orchestration, source identity, and caller-override refusal while remaining false for missing repeated-row materialization, filing rendering, and end-to-end verification."
 
 [[entries.grounding]]
 locator_kind = "repository"
@@ -304,7 +304,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Manual M193 gasto casillas remain direct entry, not source ownership; withholding storage is separate. Reopen only when a secure owner retains a non-synthetic contributor/representative carrier with durable identity/fingerprint and capture provenance, a resolver resolves canonical gasto193_contributor, and diagnostics, provenance, encrypted persistence/replay, review, and supported repeated-record export are proven for both revisions."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/application/calculations/_row_set_assembly.py:178",
+  "src/cadrumo/application/calculations/_row_set_assembly.py:180",
 ]
 capability_ids = ["row_assembler:per_gasto193_contribuyente"]
 advisory_destination_refs = ["modelo:193:rows:gasto-contributor"]
@@ -320,7 +320,7 @@ summary = "Validated Modelo 193 bindings already declare the gasto-contributor s
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/calculations/_row_set_assembly.py:178"
+reference = "src/cadrumo/application/calculations/_row_set_assembly.py:180"
 summary = "Worksheet rows dispatch to the typed gasto-contributor observation assembler."
 
 [entries.bounded_follow_up]
@@ -336,7 +336,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Manual M296 box/direct caller paths are not canonical recipient sources; M180/M193 withholding storage is separate. Reopen only when a secure non-lossy M296 repository retains declarant-owned recipient, representative, Annex and conditional-field identity/fingerprint/provenance, a row-preserving withholding296 resolver proves encrypted persistence/replay, diagnostics, review, and source-owned repeated-record export."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/application/calculations/_row_set_assembly.py:180",
+  "src/cadrumo/application/calculations/_row_set_assembly.py:182",
 ]
 capability_ids = ["row_assembler:per_perceptor_296"]
 advisory_destination_refs = ["modelo:296:rows:withholding"]
@@ -348,7 +348,7 @@ summary = "Current Modelo 296 registry bindings are relation-prefill declaration
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/calculations/_row_set_assembly.py:180"
+reference = "src/cadrumo/application/calculations/_row_set_assembly.py:182"
 summary = "Worksheet rows already dispatch to a typed Withholding296 observation assembler."
 
 [entries.bounded_follow_up]

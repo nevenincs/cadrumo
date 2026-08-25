@@ -10,13 +10,15 @@ from uuid import UUID
 import pytest
 
 from ......core import (
+    StorageCategory,
+    storage_location,
+)
+from ......core.credentials import (
     PROFILE_PASSWORD_MAX_SCALARS,
     PROFILE_PASSWORD_MAX_UTF8_BYTES,
     PROFILE_PASSWORD_MIN_SCALARS,
     ProfilePasswordRefusalReason,
-    StorageCategory,
     assess_profile_password,
-    storage_location,
 )
 from ... import __all__ as storage_exports
 from .. import (

@@ -72,8 +72,12 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     inventory = next(entry for entry in manifest.entries if entry.candidate_id == "inventory.stock-valuation")
 
     assert inventory.disposition.value == "connect_candidate"
-    assert "prerequisites are complete" in inventory.review_condition
-    assert "S39" in inventory.review_condition
+    assert "canonical inventory resolver" in inventory.review_condition
+    assert "source-mesh enrollment" in inventory.review_condition
+    assert "registry row bindings" in inventory.review_condition
+    assert "repeated activity-row casillas" in inventory.review_condition
+    assert "verified end to end" in inventory.review_condition
+    assert "fabricated activity-envelope facts" in inventory.review_condition
     assert "complete acquisition cost" not in inventory.review_condition
     assert "explicit-closing authority remain blocking" not in inventory.review_condition
     summaries = " ".join(item.summary for item in inventory.grounding)

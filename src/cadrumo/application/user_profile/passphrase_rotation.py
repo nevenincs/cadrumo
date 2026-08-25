@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import assess_profile_password
+from ...core.credentials import assess_profile_password
 from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
 from ...core.paths import effective_storage_root

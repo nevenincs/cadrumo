@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import iter_directory, scan_directory
+from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from ..._paths import REPO_ROOT as _REPO_ROOT
 from ..campaign import _LANES

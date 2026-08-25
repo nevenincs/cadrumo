@@ -57,7 +57,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ...tests import SRC_CADRUMO, non_test_package_python_files, repo_relative
-from .. import scan_directory
+from ..directory_scan import scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

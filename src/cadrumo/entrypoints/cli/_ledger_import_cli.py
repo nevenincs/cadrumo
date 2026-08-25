@@ -11,7 +11,7 @@ import typer
 
 from ...application.ledger.actions_import import LedgerProviderID, import_ledger_source
 from ...application.ledger.models import LedgerSourceImportCommand, LedgerSourceImportResult, LedgerSourceValidationReport, LedgerSourceVerificationReport
-from ...core import DirectoryEntryKind, scan_directory
+from ...core.directory_scan import DirectoryEntryKind, scan_directory
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr

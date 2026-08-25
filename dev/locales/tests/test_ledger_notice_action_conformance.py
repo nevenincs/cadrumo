@@ -11,7 +11,7 @@ from types import ModuleType
 
 import pytest
 
-from cadrumo.core import scan_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.entrypoints.cli import (
     _ledger,
     _ledger_business_invoice_cli,

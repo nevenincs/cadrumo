@@ -11,7 +11,8 @@ from ...tests import isolated_profile_backend as _isolated_backend
 
 __all__ = ["_isolated_backend"]
 
-from ....core import Modelo, scan_directory
+from ....core import Modelo
+from ....core.directory_scan import scan_directory
 from ...modelo import ModeloReconciliationVerdict, ReconciliationEvidenceInvalidError, list_modelo_reconciliations
 from ..justificante import JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE, reconcile_capture
 from ._justificante_reconcile_support import (

@@ -49,6 +49,8 @@ from .....core import (
     OperationLifecycle,
     OperationTerminalCondition,
     exclusive_file_lock,
+)
+from .....core.directory_scan import (
     scan_directory,
 )
 from ...storage import RepositoryError

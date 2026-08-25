@@ -6,7 +6,7 @@ from dataclasses import FrozenInstanceError, fields
 
 import pytest
 
-from .. import (
+from ..credentials import (
     PassphraseStrength,
     ProfilePasswordAssessment,
     ProfilePasswordRefusalReason,

@@ -143,7 +143,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core import DirectoryEntryKind, PeriodKind, RegistryAuthorityGrade, registry_period_kind, scan_directory
+from .....core import PeriodKind, RegistryAuthorityGrade, registry_period_kind
+from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from .....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from .....core.resources import bundled_path

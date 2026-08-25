@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .....core import scan_directory
+from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
 from .._loader import load_registry_tree
 from .._schema import RegistryCatalogues

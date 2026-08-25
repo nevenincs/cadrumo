@@ -194,7 +194,7 @@
             "src/cadrumo/application/workflow/_profile_health.py::_health_precondition_verdict": 12,
             "src/cadrumo/application/workflow/_profile_health.py::assess_active_profile_health": 16,
             "src/cadrumo/application/workflow/_resume.py::resolve_modelo_workflow_resume_target": 27,
-            "src/cadrumo/core/_directory_scan.py::_walk": 11,
+            "src/cadrumo/core/directory_scan.py::_walk": 11,
             "src/cadrumo/core/_filing_projection_ref.py::compile_filing_projection_ref": 11,
             "src/cadrumo/core/corpus_text.py::resolve_anchored_extracted_unit": 14,
             "src/cadrumo/core/errors/_registry.py::_stringify_context_value": 13,

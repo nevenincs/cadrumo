@@ -58,7 +58,8 @@ import click
 import pytest
 
 from cadrumo.application.operator_surface import HelpSurface, build_help_document, build_root_landing_report
-from cadrumo.core import ActionEvidenceProvenance, scan_directory
+from cadrumo.core import ActionEvidenceProvenance
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.entrypoints.cli._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES

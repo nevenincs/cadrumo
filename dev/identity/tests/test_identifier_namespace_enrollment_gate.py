@@ -98,7 +98,8 @@ from typing import Final
 
 import pytest
 
-from cadrumo.core import identity, scan_directory
+from cadrumo.core import identity
+from cadrumo.core.directory_scan import scan_directory
 
 from ..identifier_noun_census import annotation_text, is_bare_str
 

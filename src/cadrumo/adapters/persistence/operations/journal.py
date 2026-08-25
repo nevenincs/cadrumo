@@ -35,8 +35,10 @@ from ....core import (
     STRICT_FROZEN_CONFIG,
     StorageCategory,
     exclusive_file_lock,
-    scan_directory,
     storage_location,
+)
+from ....core.directory_scan import (
+    scan_directory,
 )
 from ..storage import RepositoryError
 from ._journal_validation import OperationJournalRecord, validate_advance

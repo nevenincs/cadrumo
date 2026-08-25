@@ -52,7 +52,8 @@ from typing import Final, cast
 
 from pydantic import ValidationError
 
-from cadrumo.core import PRODUCT_IDENTITY, scan_directory
+from cadrumo.core import PRODUCT_IDENTITY
+from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 from ..docs.download_matrix import load_descriptor, required_evidence_rows

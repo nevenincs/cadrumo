@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
-from ...core import (
+from ...core.credentials import (
     PROFILE_PASSWORD_MAX_SCALARS,
     PROFILE_PASSWORD_MAX_UTF8_BYTES,
     PROFILE_PASSWORD_MIN_SCALARS,
