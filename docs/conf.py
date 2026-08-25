@@ -47,12 +47,13 @@ _PROJECT_URLS = _PYPROJECT.get("urls", {})
 if not isinstance(_PROJECT_URLS, dict):
     raise ValueError("pyproject.toml [project.urls] must be a table")
 _DOCS_BASE_URL = os.environ.get("CADRUMO_DOCS_BASE_URL", "").rstrip("/")
-# Cadrumo documentation type ramp: Instrument Serif for display headings,
-# Hanken Grotesk for text, JetBrains Mono for code.
+# Cadrumo documentation type ramp: Newsreader for display headings,
+# Hanken Grotesk for text, JetBrains Mono for code. The display face matches
+# the product site so headings read as one brand across both surfaces.
 _DOCS_FONT_STACK = (
     '"Hanken Grotesk", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
 )
-_DOCS_HEADING_FONT_STACK = '"Instrument Serif", ui-serif, Georgia, "Times New Roman", serif'
+_DOCS_HEADING_FONT_STACK = '"Newsreader", ui-serif, Georgia, "Times New Roman", serif'
 _DOCS_MONO_FONT_STACK = '"JetBrains Mono", ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace'
 _REPOSITORY_URL = str(_PROJECT_URLS.get("Repository", ""))
 _ISSUES_URL = str(_PROJECT_URLS.get("Issues", ""))
@@ -366,16 +367,32 @@ html_theme_options = {
     "sidebar_hide_name": True,
     "announcement": "cadrumo-site-broadcast",
     "light_css_variables": {
-        # Cadrumo documentation theme tokens:
-        # warm paper neutrals — page #faf8f4, surface #f1eee7, border
-        # #e4ded4, ink #1c1a17, secondary #6b655c — with the rust accent
-        # #c4553b (hover #a94931) mapped onto Furo's semantic variables.
+        # Cadrumo documentation theme tokens: warm paper neutrals — page
+        # #faf8f4, surface #f1eee7, border #e4ded4, ink #1c1a17 — with the
+        # rust accent mapped onto Furo's semantic variables.
+        #
+        # THE ACCENT HAS TWO ROLES AND THIS PALETTE NOW HONOURS BOTH.
+        # #c4553b is the canonical brand accent and it measures 4.20:1
+        # against the page ground, 3.85:1 against the secondary surface and
+        # 4.46:1 against a card. Every one of those is under the 4.5 that
+        # body-size text needs, and these variables colour LINKS — the most
+        # common piece of coloured text in a documentation site. So every
+        # link on every page failed WCAG 1.4.3, on all three grounds.
+        #
+        # The product site hit this exact wall and resolved it by splitting
+        # the accent rather than moving it: the brand value stays canonical
+        # for fills, rules and display italics, and a darker sibling carries
+        # the accent wherever it is INK AT READING SIZE. #9e4029 is that
+        # sibling, and it measures 6.15 / 5.63 / 6.52 on the three grounds.
+        # These variables are the ink role, so they take the ink value; the
+        # brand value survives as --cadrumo-accent in cadrumo-docs.css for
+        # the decorative uses.
         "color-brand-primary": "#1c1a17",
-        "color-brand-content": "#c4553b",
-        "color-brand-visited": "#c4553b",
+        "color-brand-content": "#9e4029",
+        "color-brand-visited": "#9e4029",
         "color-foreground-primary": "#1c1a17",
-        "color-foreground-secondary": "#6b655c",
-        "color-foreground-muted": "#8a8478",
+        "color-foreground-secondary": "#5f594f",
+        "color-foreground-muted": "#6b655c",
         "color-foreground-border": "#d5cec1",
         "color-background-primary": "#faf8f4",
         "color-background-secondary": "#f1eee7",
@@ -385,10 +402,10 @@ html_theme_options = {
         "color-card-border": "#e4ded4",
         "color-card-background": "#ffffff",
         "color-card-marginals-background": "#f1eee7",
-        "color-link": "#c4553b",
-        "color-link--hover": "#a94931",
-        "color-link--visited": "#c4553b",
-        "color-link--visited--hover": "#a94931",
+        "color-link": "#9e4029",
+        "color-link--hover": "#7f3320",
+        "color-link--visited": "#9e4029",
+        "color-link--visited--hover": "#7f3320",
         "color-link-underline": "transparent",
         "color-link-underline--hover": "#c4553b",
         "color-link-underline--visited": "transparent",
@@ -403,15 +420,15 @@ html_theme_options = {
         "color-admonition-title--warning": "#1c1a17",
         "color-sidebar-background": "transparent",
         "color-sidebar-background-border": "transparent",
-        "color-sidebar-link-text": "#6b655c",
+        "color-sidebar-link-text": "#5f594f",
         "color-sidebar-link-text--top-level": "#4d483f",
         "color-sidebar-item-background--current": "#ece8df",
         "color-sidebar-item-background--hover": "#ece8df",
         "color-toc-background": "transparent",
-        "color-toc-item-text": "#6b655c",
+        "color-toc-item-text": "#5f594f",
         "color-toc-item-text--hover": "#1c1a17",
-        "color-toc-item-text--active": "#c4553b",
-        "color-toc-title-text": "#8a8478",
+        "color-toc-item-text--active": "#9e4029",
+        "color-toc-title-text": "#6b655c",
         "font-stack": _DOCS_FONT_STACK,
         "font-stack--headings": _DOCS_HEADING_FONT_STACK,
         "font-stack--monospace": _DOCS_MONO_FONT_STACK,
@@ -421,8 +438,8 @@ html_theme_options = {
         # inverted onto the ink #1c1a17, with the rust accent lifted for
         # contrast on dark surfaces.
         "color-brand-primary": "#f1eee7",
-        "color-brand-content": "#dd7a5f",
-        "color-brand-visited": "#dd7a5f",
+        "color-brand-content": "#e0785c",
+        "color-brand-visited": "#e0785c",
         "color-foreground-primary": "#f1eee7",
         "color-foreground-secondary": "#b3ab9d",
         "color-foreground-muted": "#8f887b",
@@ -435,10 +452,10 @@ html_theme_options = {
         "color-card-border": "#38342c",
         "color-card-background": "#24211c",
         "color-card-marginals-background": "#24211c",
-        "color-link": "#dd7a5f",
-        "color-link--hover": "#e69579",
-        "color-link--visited": "#dd7a5f",
-        "color-link--visited--hover": "#e69579",
+        "color-link": "#e0785c",
+        "color-link--hover": "#ec8a68",
+        "color-link--visited": "#e0785c",
+        "color-link--visited--hover": "#ec8a68",
         "color-link-underline": "transparent",
         "color-link-underline--hover": "#dd7a5f",
         "color-link-underline--visited": "transparent",

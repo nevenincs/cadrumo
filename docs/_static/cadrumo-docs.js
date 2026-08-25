@@ -1735,6 +1735,52 @@
     });
   }
 
+  /* ── Accessibility repairs on theme-generated markup ───────────────── */
+
+  /* Two defects that live in markup this project does not author -- Furo's
+   * sidebar captions and the CLI frames' output blocks -- and that no
+   * stylesheet can reach, because both are attributes rather than
+   * presentation.
+   *
+   * 1. Sphinx renders a sidebar caption as <p class="caption" role="heading">
+   *    with no aria-level. role="heading" REQUIRES aria-level, so a screen
+   *    reader gets a heading of undefined rank; axe reports it as a critical
+   *    aria-required-attr failure, eight per page. The captions sit above
+   *    top-level nav groups inside a <nav>, so level 2 is their real rank.
+   *
+   * 2. A command frame's output is a <pre> that scrolls, and a block that
+   *    scrolls with nothing focusable inside it cannot be reached or panned
+   *    by keyboard at all (WCAG 2.1.1). tabindex="0" makes it a stop; a
+   *    scrollable region also needs an accessible name once it is focusable,
+   *    and role="group" plus a label is the least invasive way to give it
+   *    one without inventing visible text.
+   *
+   * Both are applied at runtime rather than patched into the theme so a Furo
+   * upgrade cannot silently drop them. */
+  function initA11yRepairs() {
+    var captions = document.querySelectorAll('.sidebar-tree .caption[role="heading"]:not([aria-level])');
+    Array.prototype.forEach.call(captions, function (caption) {
+      caption.setAttribute("aria-level", "2");
+    });
+
+    /* Deferred a frame: whether a block overflows is a layout question, and
+     * at DOMContentLoaded the web fonts have not necessarily swapped in, so
+     * measuring here would sometimes decide a block fits when it will not. */
+    requestAnimationFrame(markScrollableOutputs);
+  }
+
+  function markScrollableOutputs() {
+    var outputs = document.querySelectorAll(".cadrumo-frame-output, .cadrumo-frame-stderr");
+    Array.prototype.forEach.call(outputs, function (output) {
+      if (output.scrollWidth <= output.clientWidth && output.scrollHeight <= output.clientHeight) return;
+      if (!output.hasAttribute("tabindex")) output.setAttribute("tabindex", "0");
+      if (!output.hasAttribute("role")) output.setAttribute("role", "group");
+      if (!output.hasAttribute("aria-label")) {
+        output.setAttribute("aria-label", output.classList.contains("cadrumo-frame-stderr") ? "Command error output" : "Command output");
+      }
+    });
+  }
+
   ready(function () {
     initBroadcast();
     initNavActive();
@@ -1745,5 +1791,6 @@
     initSequences();
     initHoverHelp();
     initDownloadCards();
+    initA11yRepairs();
   });
 })();
