@@ -231,10 +231,20 @@ class TestImportFromJustificante:
                 pdf,
                 schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
             )
-        # The import error carries a translated_message locale key (not a raw
-        # args[0] string); assert the operator-facing rendered text, which
-        # interpolates the underlying builder detail via resolve_error_message.
-        assert "previous_year_economic_activity_net_income" in resolve_error_message(excinfo.value)
+        # The operator-facing message names the failing stage, not the binding:
+        # the builder's typed context carries the modelo, revision and registry
+        # error type, and the binding that has no supplied value is carried by
+        # the chained registry refusal it wraps. That chained context is the
+        # durable home of the name, so it is what is asserted.
+        causes = []
+        cause = excinfo.value.__cause__
+        while cause is not None:
+            causes.append(cause)
+            cause = cause.__cause__
+        contexts = [dict(getattr(cause, "context", {}) or {}) for cause in causes]
+        assert any(
+            context.get("binding_id") == "irpf.previous_year_economic_activity_net_income" for context in contexts
+        ), contexts
 
     def test_unsupported_modelo_raises_import_error(self, schema_provider: RegistrySchemaAccessor) -> None:
         pdf = _FIXTURES / "modelo_100_2025A.pdf"
@@ -252,11 +262,14 @@ class TestImportFromJustificante:
     ) -> None:
         pdf = _justificante_pdf_without_period(tmp_path, modelo="130", ejercicio="2026")
 
-        with pytest.raises(ModeloImportError, match="period token '0A'"):
+        with pytest.raises(ModeloImportError) as excinfo:
             import_filing_from_justificante(
                 pdf,
                 schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
             )
+        error = excinfo.value
+        assert error.translated_message == "application.filing.import.errors.period_token_undeclared"
+        assert dict(error.context)["period_code"] == "0A"
 
     def test_missing_pdf_raises_parse_error(
         self,
