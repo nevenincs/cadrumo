@@ -14,11 +14,7 @@ from typing import TYPE_CHECKING
 from pydantic import TypeAdapter, ValidationError
 
 from ....adapters.outbound.google import (
-    CalcSheetsApplyResult,
-    CalcSheetsExportPreview,
     GoogleAuthError,
-    apply_export_plan,
-    preview_export_plan,
     relation_edit_payload,
     resolve_active_profile,
 )
@@ -26,15 +22,6 @@ from ....adapters.outbound.storage import (
     OutboundStorageError,
     build_google_credentials,
     resolve_drive_root_folder_id,
-)
-from ....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
-from ....application.storage.calc_sheets import (
-    OperatorInputs,
-    RelationValues,
-    SheetExportPlan,
-    TabName,
-    build_export_plan,
-    export_modelo_to_sheets,
 )
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.config import load_settings
@@ -66,6 +53,7 @@ if TYPE_CHECKING:
         PullResult,
         RowSetEdit,
     )
+    from ....application.export import GoogleSheetsExportOperationResult
     from ....domain.calculations.registry import RegistrySnapshot
 
 
@@ -160,71 +148,25 @@ def google_sync_calc_export(
     dry_run: bool = False,
 ) -> None:
     """Export the registry calculation surface for a modelo + period to a Google Sheets workbook."""
-    from ....application.calculations import resolve_relations_from_local_store
-    from ....application.user_profile import resolve_active_capability
-    from ....core import ServiceCapability
-
-    if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.google.sync.calc.export.capability_disabled",
-        )
-
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
-
-    try:
-        credentials, root_folder_id = resolve_credentials_and_root(active)
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    filing_period = filing_period_or_refusal(modelo=modelo, period=period, year=year)
-    snapshot = load_snapshot(modelo, filing_period)
-    if prefill_relations:
-        plan = build_export_plan(
-            snapshot,
-            operator_inputs=OperatorInputs(),
-            relation_resolver=resolve_relations_from_local_store,
-        )
-    else:
-        plan = build_export_plan(
-            snapshot,
-            operator_inputs=OperatorInputs(),
-            relation_values=RelationValues(),
-        )
-
-    if dry_run:
-        _emit_calc_export_preview(
-            ctx,
-            active=active,
-            snapshot=snapshot,
-            plan=plan,
-            credentials=credentials,
-            root_folder_id=root_folder_id,
-        )
-        return
-
-    try:
-        result: CalcSheetsApplyResult = export_modelo_to_sheets(
-            plan,
-            credentials=credentials,
-            root_folder_id=root_folder_id,
-            sync_run_repository=SyncRunRecordRepository(),
-            apply_export_plan=apply_export_plan,
-        )
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
+    active, result = execute_google_sheets_export(
+        modelo=modelo,
+        period=period,
+        year=year,
+        prefill_relations=prefill_relations,
+        dry_run=dry_run,
+    )
 
     export_result = GoogleSyncCalcExportResult(
         profile=active,
-        modelo=snapshot.modelo.id,
-        revision=snapshot.revision.id,
-        period=snapshot.period,
-        year=snapshot.filing_year,
-        engine_version=plan.metadata.engine_version,
-        registry_sha=plan.metadata.registry_sha,
-        root_folder_id=root_folder_id,
+        modelo=result.modelo,
+        revision=result.revision,
+        period=result.period.registry_token,
+        year=result.period.filing_year,
+        engine_version=result.engine_version,
+        registry_sha=result.registry_sha,
+        root_folder_id=result.root_folder_id or "",
+        dry_run=result.dry_run,
+        spreadsheet_exists=result.spreadsheet_exists,
         folder_id=result.folder_id,
         spreadsheet_id=result.spreadsheet_id,
         spreadsheet_url=result.spreadsheet_url,
@@ -232,95 +174,76 @@ def google_sync_calc_export(
         formula_cells_written=result.formula_cells_written,
         protected_ranges_written=result.protected_ranges_written,
         tab_count=result.tab_count,
+        ranges_to_clear=list(result.ranges_to_clear),
+        value_cells_changed=result.value_cells_changed,
+        value_cells_unchanged=result.value_cells_unchanged,
+        formula_cells_to_write=result.formula_cells_to_write,
+    )
+    lines = (
+        "operation\tconfig.google.sync.calc.export",
+        f"profile\t{active}",
+        f"modelo\t{result.modelo}",
+        f"revision\t{result.revision}",
+        f"period\t{result.period.registry_token}",
+        f"year\t{result.period.filing_year}",
+        f"dry_run\t{result.dry_run}",
+        f"folder_id\t{result.folder_id}",
+        f"spreadsheet_id\t{result.spreadsheet_id}",
+        f"spreadsheet_url\t{result.spreadsheet_url}",
+        f"value_cells_written\t{result.value_cells_written}",
+        f"formula_cells_written\t{result.formula_cells_written}",
+        f"protected_ranges_written\t{result.protected_ranges_written}",
+        f"tab_count\t{result.tab_count}",
     )
     _emit_envelope(
         ctx,
         command="config.google.sync.calc.export",
         result=export_result,
-        lines=(
-            "operation\tconfig.google.sync.calc.export",
-            f"profile\t{active}",
-            f"modelo\t{snapshot.modelo.id}",
-            f"revision\t{snapshot.revision.id}",
-            f"period\t{snapshot.period}",
-            f"year\t{snapshot.filing_year}",
-            f"engine_version\t{plan.metadata.engine_version}",
-            f"registry_sha\t{plan.metadata.registry_sha}",
-            f"folder_id\t{result.folder_id}",
-            f"spreadsheet_id\t{result.spreadsheet_id}",
-            f"spreadsheet_url\t{result.spreadsheet_url}",
-            f"value_cells_written\t{result.value_cells_written}",
-            f"formula_cells_written\t{result.formula_cells_written}",
-            f"protected_ranges_written\t{result.protected_ranges_written}",
-            f"tab_count\t{result.tab_count}",
-        ),
+        lines=lines,
     )
 
 
-def _emit_calc_export_preview(
-    ctx: typer.Context,
+def execute_google_sheets_export(
     *,
-    active: str,
-    snapshot: RegistrySnapshot,
-    plan: SheetExportPlan,
-    credentials: object,
-    root_folder_id: str,
-) -> None:
-    """Preview an export and emit it, without ever calling ``apply_export_plan``.
+    modelo: str,
+    period: str,
+    year: int,
+    prefill_relations: bool = False,
+    dry_run: bool = False,
+) -> tuple[str, GoogleSheetsExportOperationResult]:
+    """Adapt CLI input to the public application export contract once."""
+    from uuid import UUID
 
-    ``dry_run`` state is primary result data, never a notice: whether the
-    preview found an existing target to diff against, what it would clear,
-    and what would change ARE the output this branch exists to produce.
-    """
+    from ....application.export import (
+        GoogleSheetsExportCapabilityDisabledError,
+        GoogleSheetsExportOperationRequest,
+        GoogleSheetsExportRootFolderRequiredError,
+    )
+    from ....entrypoints._operation_composition import compose_google_sheets_export_service
+
     try:
-        preview: CalcSheetsExportPreview = preview_export_plan(
-            plan,
-            credentials=credentials,
-            root_folder_id=root_folder_id,
+        active = resolve_active_profile()
+        result = compose_google_sheets_export_service().execute(
+            GoogleSheetsExportOperationRequest(
+                profile_id=UUID(active),
+                modelo=modelo,
+                filing_year=year,
+                period=period,
+                prefill_relations=prefill_relations,
+                dry_run=dry_run,
+            )
         )
+    except GoogleSheetsExportCapabilityDisabledError as exc:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.google.sync.calc.export.capability_disabled",
+        ) from exc
+    except GoogleSheetsExportRootFolderRequiredError as exc:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.google.sync.calc.export.root_folder_required",
+        ) from exc
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
-
-    export_result = GoogleSyncCalcExportResult(
-        profile=active,
-        modelo=snapshot.modelo.id,
-        revision=snapshot.revision.id,
-        period=snapshot.period,
-        year=snapshot.filing_year,
-        engine_version=plan.metadata.engine_version,
-        registry_sha=plan.metadata.registry_sha,
-        root_folder_id=root_folder_id,
-        dry_run=True,
-        spreadsheet_exists=preview.spreadsheet_exists,
-        folder_id=preview.folder_id,
-        spreadsheet_id=preview.spreadsheet_id,
-        spreadsheet_url=preview.spreadsheet_url,
-        value_cells_written=len(plan.value_cells),
-        formula_cells_written=len(plan.formula_cells),
-        protected_ranges_written=len(plan.protected_ranges),
-        tab_count=len(TabName),
-        ranges_to_clear=list(preview.ranges_to_clear),
-        value_cells_changed=preview.value_cells_changed,
-        value_cells_unchanged=preview.value_cells_unchanged,
-        formula_cells_to_write=preview.formula_cells_to_write,
-    )
-    lines: list[str] = [
-        "operation\tconfig.google.sync.calc.export",
-        f"profile\t{active}",
-        f"modelo\t{snapshot.modelo.id}",
-        f"revision\t{snapshot.revision.id}",
-        f"period\t{snapshot.period}",
-        f"year\t{snapshot.filing_year}",
-        "dry_run\tTrue",
-        f"spreadsheet_exists\t{preview.spreadsheet_exists}",
-        f"ranges_to_clear\t{len(preview.ranges_to_clear)}",
-        f"value_cells_changed\t{preview.value_cells_changed}",
-        f"value_cells_unchanged\t{preview.value_cells_unchanged}",
-        f"formula_cells_to_write\t{preview.formula_cells_to_write}",
-    ]
-    for address in preview.ranges_to_clear:
-        lines.append(f"range_to_clear\t{address}")
-    _emit_envelope(ctx, command="config.google.sync.calc.export", result=export_result, lines=tuple(lines))
+    return active, result
 
 
 def google_sync_calc_verify(
@@ -688,6 +611,7 @@ def _assemble_pull_observations(
 
 
 __all__ = [
+    "execute_google_sheets_export",
     "google_sync_calc_compute",
     "google_sync_calc_export",
     "google_sync_calc_pull",

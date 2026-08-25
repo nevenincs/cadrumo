@@ -1276,37 +1276,10 @@ def google_export_action() -> ManagerAction:
 
 
 def _run_google_export() -> ManagerActionOutcome:
-    """Collect modelo/period/year, then run the exact export the CLI verb runs.
-
-    Delegates to the same building blocks
-    ``aeat config google sync calc export`` composes
-    (:mod:`cadrumo.entrypoints.cli._config._google_sync_calc`) rather than
-    restating them: the credential/root resolution, the snapshot load, and
-    the plan build-and-apply are the identical private helpers that module
-    already owns, reached here as an intra-package import within
-    ``cadrumo.entrypoints.cli._config`` -- not a second opinion about how a
-    modelo gets exported to a workbook, and not a second opinion about when
-    Google export is available, which is checked through the same
-    :func:`~cadrumo.application.user_profile.resolve_active_capability` gate
-    the CLI verb checks, before anything else runs.
-    """
-    from ....application.user_profile import resolve_active_capability
-    from ....core import ServiceCapability
-
-    if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
-        # The same refusal the CLI verb gives for the same reason: a second,
-        # differently-worded opinion about capability posture is exactly
-        # what this module exists not to grow. The button stays visible and
-        # reachable either way -- a hidden button is not a legible refusal.
-        from ....adapters.inbound.tui import ManagerActionDisposition, ManagerActionOutcome
-
-        return ManagerActionOutcome(
-            message=tr("cli.config.google.sync.calc.export.capability_disabled"),
-            disposition=ManagerActionDisposition.REFUSED,
-        )
-
+    """Collect parameters, then adapt them through the canonical export service."""
     from ....adapters.inbound.tui import FormField, FormPage, ManagerActionDisposition, ManagerActionOutcome
     from ....core.errors import CadrumoError
+    from ._google_sync_calc import execute_google_sheets_export
     from ._manager_frontend import present_form
 
     page = FormPage(
@@ -1338,7 +1311,7 @@ def _run_google_export() -> ManagerActionOutcome:
         return ManagerActionOutcome(message=tr("flows.manager.action.abandoned"))
 
     try:
-        modelo, spreadsheet_url = _export_active_profile_to_google_sheets(
+        _profile, result = execute_google_sheets_export(
             modelo=collected[_GOOGLE_EXPORT_MODELO_KEY].strip(),
             period=collected[_GOOGLE_EXPORT_PERIOD_KEY].strip(),
             year=int(collected[_GOOGLE_EXPORT_YEAR_KEY].strip()),
@@ -1350,7 +1323,11 @@ def _run_google_export() -> ManagerActionOutcome:
         )
 
     return ManagerActionOutcome(
-        message=tr("flows.manager.action.google_export_done", modelo=modelo, spreadsheet_url=spreadsheet_url),
+        message=tr(
+            "flows.manager.action.google_export_done",
+            modelo=result.modelo,
+            spreadsheet_url=result.spreadsheet_url or "",
+        ),
     )
 
 
@@ -1368,52 +1345,6 @@ def _validated_google_export_year(value: str) -> str | None:
     if not text.isdigit() or not (2000 <= int(text) <= 2099):
         return tr("flows.manager.action.google_export_year_invalid")
     return None
-
-
-def _export_active_profile_to_google_sheets(*, modelo: str, period: str, year: int) -> tuple[str, str]:
-    """Run the export ``aeat config google sync calc export`` runs, and nothing else.
-
-    Every step here is the identical private helper or application call the
-    CLI command composes, in the same order, wrapped in the same refusal
-    boundary: :class:`~cadrumo.entrypoints.cli._errors.CliRefusedBoundaryError`
-    (a :class:`~cadrumo.core.errors.CadrumoError`) for a resolution failure,
-    the same ``_google_refusal`` wrap for a live Google adapter failure. The
-    caller catches the common ``CadrumoError`` base once rather than this
-    function inventing its own outcome shape.
-
-    Returns:
-        The exported modelo id and the resulting spreadsheet's URL.
-    """
-    from ....adapters.outbound.google import (
-        GoogleAuthError,
-        apply_export_plan,
-        resolve_active_profile,
-    )
-    from ....adapters.outbound.storage import OutboundStorageError
-    from ....application.storage.calc_sheets import OperatorInputs, RelationValues, build_export_plan
-    from ._google_errors import _google_refusal
-    from ._google_sync_calc import filing_period_or_refusal, load_snapshot, resolve_credentials_and_root
-
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
-
-    try:
-        credentials, root_folder_id = resolve_credentials_and_root(active)
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    filing_period = filing_period_or_refusal(modelo=modelo, period=period, year=year)
-    snapshot = load_snapshot(modelo, filing_period)
-    plan = build_export_plan(snapshot, operator_inputs=OperatorInputs(), relation_values=RelationValues())
-
-    try:
-        result = apply_export_plan(plan, credentials=credentials, root_folder_id=root_folder_id)
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    return snapshot.modelo.id, result.spreadsheet_url
 
 
 def logout_action() -> ManagerAction:

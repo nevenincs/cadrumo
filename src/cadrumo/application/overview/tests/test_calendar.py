@@ -11,7 +11,9 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ....adapters.outbound.aeat.sede import Declaracion, RemoteNotification
 from ....core import Period
+from ....domain.calculations.registry import ApplicabilityVerdict, bundled_authority, derive_modelo_applicability
 from ....domain.deadlines import (
+    DeadlineEngine,
     EntityType,
     IVARegime,
     LegalEntityForm,
@@ -840,6 +842,56 @@ def test_build_preserves_each_modelo_303_2025_obligation_once_in_canonical_order
         ("303", 2025, "3T"),
         ("303", 2025, "4T"),
     )
+
+
+def test_calendar_preserves_every_applicable_engine_row_for_all_supported_years() -> None:
+    """Fleet parity derives its year horizon and expected rows from canonical owners."""
+    profile = _profile()
+    authority = bundled_authority()
+    supported_years = authority.catalogues.supported_filing_years
+    assert supported_years is not None
+
+    for filing_year in supported_years.years:
+        today = date(filing_year, 1, 1)
+        schedule = DeadlineEngine().compute(profile, filing_year, today=today)
+        calendar = build_overview_calendar(
+            profile,
+            OverviewCalendarRange(
+                from_date=date(filing_year, 1, 1),
+                to_date=date(filing_year + 1, 12, 31),
+            ),
+            today=today,
+        )
+
+        expected = tuple(
+            (
+                obligation.modelo,
+                obligation.period.filing_year,
+                obligation.period.registry_token,
+                obligation.opens_on,
+                obligation.closes_on,
+                obligation.payment_cutoff_on,
+                obligation.status,
+            )
+            for obligation in schedule.obligations
+            if derive_modelo_applicability(profile, obligation.modelo).verdict is ApplicabilityVerdict.APPLICABLE
+        )
+        actual = tuple(
+            (
+                entry.modelo,
+                entry.period.filing_year,
+                entry.period.registry_token,
+                entry.opens_on,
+                entry.closes_on,
+                entry.payment_cutoff_on,
+                entry.status,
+            )
+            for entry in calendar.entries
+            if entry.period.filing_year == filing_year
+        )
+
+        assert expected, filing_year
+        assert actual == expected, filing_year
 
 
 def test_build_tape_invocation_2025q4_through_2026q2_spans_year_boundary() -> None:

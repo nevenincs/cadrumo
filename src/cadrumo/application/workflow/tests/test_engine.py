@@ -17,6 +17,7 @@ import pytest
 
 from ....application.state_projection import build_pending_obligations
 from ....core.errors import ErrorCategory, build_error_envelope
+from ....domain.calculations.registry import bundled_authority
 from ....domain.deadlines import (
     DeadlineEngine,
     IVARegime,
@@ -175,7 +176,7 @@ def test_workflow_engine_avoids_outbound_adapter_imports() -> None:
 
 
 def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -> None:
-    """Both consumers expose the exact rows emitted by the deadline authority."""
+    """Both consumers expose every supported year's exact authority schedule."""
     profile = TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
@@ -184,20 +185,23 @@ def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
     )
-    today = date(2026, 4, 12)
+    supported_years = bundled_authority().catalogues.supported_filing_years
+    assert supported_years is not None
 
-    schedule = compute_obligation_schedule(DeadlineEngine(), profile, today=today)
-    authority_rows = tuple(
-        (obligation.modelo, obligation.period, obligation.opens_on, obligation.closes_on, obligation.status)
-        for obligation in schedule.obligations
-    )
-    projection_rows = tuple(
-        (obligation.modelo, obligation.period, obligation.opens_on, obligation.closes_on, obligation.status)
-        for obligation in build_pending_obligations(profile, today=today)
-    )
+    for filing_year in supported_years.years:
+        today = date(filing_year, 1, 1)
+        schedule = compute_obligation_schedule(DeadlineEngine(), profile, today=today)
+        authority_rows = tuple(
+            (obligation.modelo, obligation.period, obligation.opens_on, obligation.closes_on, obligation.status)
+            for obligation in schedule.obligations
+        )
+        projection_rows = tuple(
+            (obligation.modelo, obligation.period, obligation.opens_on, obligation.closes_on, obligation.status)
+            for obligation in build_pending_obligations(profile, today=today)
+        )
 
-    assert authority_rows
-    assert projection_rows == authority_rows
+        assert authority_rows, filing_year
+        assert projection_rows == authority_rows, filing_year
 
 
 def test_workflow_target_selection_refuses_duplicate_canonical_schedule_rows() -> None:

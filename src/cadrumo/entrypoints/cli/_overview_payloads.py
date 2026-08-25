@@ -468,6 +468,10 @@ class OverviewCalendarResult(OutputSchema):
     entries: list[OverviewCalendarEntrySummaryPayload] = []
     events: list[OverviewCalendarEventSummaryPayload] = []
     warnings: list[OverviewCalendarWarningPayload] = []
+    generated_at: str | None = None
+    completeness: OverviewCalendarCompletenessPayload | None = None
+    taxpayer_model_declared: bool | None = None
+    incomplete_reason: str | None = None
     suppressed_entries: list[OverviewSuppressedCalendarEntryPayload] = []
     profiles: list[OverviewCalendarProfilePayload] = []
     coverage: OverviewObligationCoveragePayload | None = None

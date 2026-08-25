@@ -32,6 +32,18 @@ See Also:
 
 from __future__ import annotations
 
+from ._google_operation import (
+    GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
+    GoogleSheetsExportCapabilityDisabledError,
+    GoogleSheetsExportOperationRequest,
+    GoogleSheetsExportOperationResult,
+    GoogleSheetsExportRemoteResult,
+    GoogleSheetsExportRootFolderRequiredError,
+    GoogleSheetsExportService,
+    build_google_sheets_export_operation_definition,
+    build_google_sheets_export_operation_registration,
+    build_google_sheets_export_service,
+)
 from ._tabular import (
     ExportSerializationFormat,
     TabularExportResult,
@@ -40,8 +52,18 @@ from ._tabular import (
 )
 
 __all__ = [
+    "GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID",
     "ExportSerializationFormat",
+    "GoogleSheetsExportCapabilityDisabledError",
+    "GoogleSheetsExportOperationRequest",
+    "GoogleSheetsExportOperationResult",
+    "GoogleSheetsExportRemoteResult",
+    "GoogleSheetsExportRootFolderRequiredError",
+    "GoogleSheetsExportService",
     "TabularExportResult",
+    "build_google_sheets_export_operation_definition",
+    "build_google_sheets_export_operation_registration",
+    "build_google_sheets_export_service",
     "serialize_tabular_rows",
     "verify_export_metadata",
 ]
