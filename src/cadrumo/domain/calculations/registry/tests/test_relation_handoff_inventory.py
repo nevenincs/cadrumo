@@ -127,6 +127,29 @@ def test_relation_handoff_applicability_measures_period_and_clean_state_contract
     assert audit.unresolved_count == 0
     assert all(record.runtime_clean_state == "unmeasured" for record in audit.records)
 
+    # Modelo 200's 2024 span intentionally remains calculation-grade: this
+    # audit reads its relation contract, not a filing layout.  Keeping its
+    # direct annual-settlement row in the live result proves the audit asks the
+    # canonical authority for that truthful grade rather than skipping it.
+    modelo_200_202 = next(
+        record
+        for record in audit.records
+        if (
+            record.target_modelo,
+            record.target_revision,
+            record.relation_id,
+            record.target_period,
+        )
+        == (
+            "200",
+            "2024-y-siguientes",
+            "modelo-200-2024-rel-202-pagos-fraccionados",
+            "0A",
+        )
+    )
+    assert modelo_200_202.source_modelo == "202"
+    assert modelo_200_202.applicability == "active"
+
     # The corpus populates every closed state, so no branch below passes vacuously.
     assert {record.applicability for record in audit.records} == {"active", "not_applicable"}
     assert {record.clean_state_mode for record in audit.records} == {"required", "conditional", "advisory"}

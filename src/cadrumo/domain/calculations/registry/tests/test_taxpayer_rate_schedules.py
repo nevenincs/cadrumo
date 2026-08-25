@@ -6,6 +6,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .. import FormulaExpression, ParameterId, build_snapshot
 from .._binding_selector_utils import selector_as_dict
@@ -14,7 +15,12 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _modelo_revision(modelo_id: str, revision_id: str):
+def _modelo_revision(
+    modelo_id: str,
+    revision_id: str,
+    *,
+    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+):
     modelo, catalogues = _committed_modelo(modelo_id)
     return build_snapshot(
         modelo,
@@ -23,6 +29,7 @@ def _modelo_revision(modelo_id: str, revision_id: str):
         filing_year=2025,
         period="0A",
         revision_id=revision_id,
+        grade=grade,
     ).revision
 
 
@@ -78,7 +85,11 @@ def test_natural_person_route_has_irpf_tarifa_bracket_schedules() -> None:
 def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     """Modelo 200 carries the LIS Art. 29 rate schedule for legal entities."""
 
-    revision = _modelo_revision("200", "2024-y-siguientes")
+    revision = _modelo_revision(
+        "200",
+        "2024-y-siguientes",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     parameters = {parameter.id: parameter for parameter in revision.parameters}
 
     scalar_rates = {

@@ -7,7 +7,7 @@ from datetime import date
 
 import pytest
 
-from .....core import normalise_corpus_text, scan_directory
+from .....core import RegistryAuthorityGrade, normalise_corpus_text, scan_directory
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_file
@@ -690,11 +690,17 @@ def test_modelo_200_regimen_especial_disminucion_casillas_cite_ley_49_2002_exemp
     """The Modelo 200 régimen-especial disminución corrections (casillas
     03276-03280, page 026f → [00392]) exclude a Ley 49/2002 entity's exempt
     income from the base imponible. Each MUST cite arts. 6 and 7 as the binding
-    exemption provisions; the snapshot builds (legal grounding + foundation
-    construct legal-ref coverage) under full bundled-corpus validation."""
+    exemption provisions.  This is a legal/calculation assertion, so its
+    snapshot earns the calculation-grade validation of those facts, never a
+    filing-layout claim."""
     from ._registry_schema_support import _committed_snapshot
 
-    snapshot = _committed_snapshot("200", 2025, "0A")
+    snapshot = _committed_snapshot(
+        "200",
+        2025,
+        "0A",
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     revision = snapshot.revision
 
     disminucion_casilla_ids = ("03276", "03277", "03278", "03279", "03280")
