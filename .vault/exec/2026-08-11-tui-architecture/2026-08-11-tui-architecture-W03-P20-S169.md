@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:89cfa1c1c5b02e7d868b5353945e8a5b5fbeaf5e5c1b63b348e05c03c99b175d'
+body_hash: 'sha256:d9bdb2068ddd18123cd1e614106ccb91a7b37b859b4b486578ba14ccbf3df48b'
 step_id: 'S169'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -43,12 +43,13 @@ related:
 - Reconciled the adapter-owned recipient replay guard, deleting retired accounting/allowlist references and retaining its governed bare-kernel mutation path.
 - Added real encrypted-SQL absent and present interleaving proofs for bare and enveloped singleton observations, asserting one read and payload/revision cohesion.
 - Ran direct-import AST, exact source, and semantic discovery fixed-point checks; rebuilt the semantic code index before the final query.
+- Replaced repository-call counters with live SQLAlchemy cursor instrumentation that counts the encrypted singleton `SELECT` itself and drives the independent writer at that SQL boundary.
 
 ## Outcome
 
 Shared commit `49577a525c` delivered the principal hard move, both singleton-kernel changes, the work-unit decoder collapse, and the replay-guard relocation. This S169 closure commit carries the remaining integrity-context preservation, stale documentation correction, relocation-accounting changes, and encrypted-SQL observation tests.
 
-The one-record proofs run against real encrypted SQL for both wire shapes. Each present-row interleaving returns the first payload with its own revision despite a write after the read; each absent-row read reports the absent sentinel after exactly one repository load. Existing encrypted roundtrip, CAS, and lineage coverage remains on the same governed secure-object routes.
+The one-record proofs run against real encrypted SQL for both wire shapes. Each present-row interleaving returns the first payload with its own revision despite a write after the read; each absent-row read reports the absent sentinel after exactly one secure-object `SELECT`. The event gate counts the actual driver cursor statement and does not replace, wrap, or mock the repository. Existing encrypted roundtrip, CAS, and lineage coverage remains on the same governed secure-object routes.
 
 Scoped Ruff passed. The AST fixed point found twenty direct application consumers, no old protocol definition or package re-export, no retired replay module, and no singleton secondary-read helper. The source code semantic index was refreshed before its final discovery check.
 
@@ -59,3 +60,7 @@ The first focused test run exposed loss of the pre-existing structured classific
 The initial rerun was briefly blocked by an unrelated concurrent absence of `cadrumo.core.resources.errors`; the module settled without S169 edits. Earlier active-bucket coverage also names concurrent custody and authentication relocation entries outside S169 ownership; they are not included here.
 
 The shared index contained an unrelated staged quality configuration file before S169 staging. This commit is made with explicit paths only, leaving that index entry untouched. The plan remains open for independent review.
+
+Formal-review remediation replaces the four monkeypatch/call-count probes with SQLAlchemy `before_cursor_execute` and `after_cursor_execute` listeners. The present-row listener suppresses only the nested independent writer's own statements, so any later reader query remains visible and fails the exact one-SELECT assertion. Ruff and compilation pass; exact source census finds no mocked `load`, monkeypatch, call counter, or wrapper remnant.
+
+The focused real-SQL suite is temporarily blocked before the test bodies by the concurrent custody relocation: `_ProfileCustodyTransactionCapability._publish_verified_create` calls the absent `verify_staged_create_label` method while provisioning an isolated profile. No custody code is changed here; retry after the shared tree advances. The plan remains open pending that rerun and independent review.
