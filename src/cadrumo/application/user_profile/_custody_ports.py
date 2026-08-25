@@ -1071,6 +1071,13 @@ def replace_profile_custody_password_envelope(
     )
 
 
+def load_profile_custody_password_material(
+    profile_id: UUID, *, root: Path | None = None
+) -> ProfileCustodyPasswordMaterialPort:
+    """Load committed password proof material through the custody boundary."""
+    return custody.load_committed_profile_password_material(profile_id, root=root)
+
+
 def map_profile_authentication_proof_failure(
     error: BaseException,
     *,

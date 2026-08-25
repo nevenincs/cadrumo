@@ -27,12 +27,12 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from secrets import token_bytes
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.persistence.storage.custody import load_committed_profile_password_material
 from ...core import assess_profile_password
 from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
@@ -43,6 +43,7 @@ from ._authentication import ProfilePasswordProofOperation
 from ._capsule_record import ProfileRecordCommandEvent, ProfileRecordSession, ProfileRecordStore
 from ._custody_ports import (
     create_profile_custody_registration_material,
+    load_profile_custody_password_material,
     map_profile_authentication_proof_failure,
     profile_custody_recovery_envelope_path,
     replace_profile_custody_password_envelope,
@@ -65,7 +66,7 @@ class ProfilePassphraseRotationError(CadrumoError):
         self,
         message: str | None = None,
         *,
-        context: dict[str, object] | None = None,
+        context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
         password_refusal: ProspectiveProfilePasswordRefusal | None = None,
     ) -> None:
@@ -142,7 +143,7 @@ def rotate_profile_passphrase(
 
     storage_root = effective_storage_root(root)
     with profile_custody_transaction_lock(storage_root, profile_id):
-        material = load_committed_profile_password_material(profile_id, root=storage_root)
+        material = load_profile_custody_password_material(profile_id, root=storage_root)
         current = material.envelope
         try:
             unlock = unlock_profile_custody_password(material, password=current_passphrase)
