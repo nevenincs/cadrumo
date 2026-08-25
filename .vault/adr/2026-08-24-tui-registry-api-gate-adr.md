@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:1f1ac4d2bdeca27b25dc0ce9079b3f7f410fd1a5433ae8f9487ba423dec9f8ab'
+body_hash: 'sha256:5e9232b2f32dae6816d49990f75844920c2be57e8bfd023aff96ee29005a5ec7'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -25,6 +25,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]'
   - '[[2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit]]'
+  - '[[2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit]]'
 ---
 
 # `tui-registry-api-gate` adr: `read-only Modelo workspace projection and capability facade` | (**status:** `accepted`)

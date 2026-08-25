@@ -5,12 +5,13 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:38838500cbd5a25c2ccde3a636175f4d4c2de6e99d6f1f3e069a57b475ce6570'
+body_hash: 'sha256:8eaf2bb8337a5ba4e100c031dafc93b6a33338043373debc63aa908598a83dd6'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]"
   - '[[2026-08-25-tui-architecture-s160-native-work-capture-owner-atomicity-reconciliation-audit]]'
+  - '[[2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit]]'
 ---
 # `tui-architecture` reference: `S128 Workspace projection composition`
 

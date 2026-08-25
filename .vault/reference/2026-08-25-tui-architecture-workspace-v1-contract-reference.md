@@ -5,12 +5,13 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:0c59fb4314da7f2164306d183b64ce8e1d985e32dc1cc0b0a2627e202f7abb08'
+body_hash: 'sha256:f63f9700c5c3fe4ba22aaa05ca1adb073c2cffb8ca0760d8a50481ca72460a00'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-plan]]"
+  - '[[2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit]]'
 ---
 
 # `tui-architecture` reference: `Workspace V1 contract blueprint`
