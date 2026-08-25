@@ -882,3 +882,49 @@ here the caller genuinely needs the rung the registry does not declare.
 Note also `CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES` in
 `dev/registry/filing_export_proof.py` is currently an empty tuple, so the live
 proof authority enrols no coordinates; these eight tests construct their own.
+
+### five recurring causes behind the application-layer failures
+
+Found while closing the application lane. Each is a class, not a site, and every
+one of them produces a red that looks like a product bug and is not.
+
+**A. Prose refusals became typed payloads.** The widest, ~10 tests over four
+modules. `pytest.raises(..., match=...)` and `str(exc)` assertions survive
+against errors that now carry only `translated_message` plus a typed `context`.
+Three sub-shapes: the token moved from the message into `context`; the detail
+moved into the CHAINED CAUSE's context; or there is no message AT ALL by design
+— `ledger_no_recovery_verdict` deliberately keeps "no copy-paste command
+string", so `str(exc) == ""` and the typed verdict is the whole instructive
+payload. Any test still regexing refusal prose in this repo is on borrowed time.
+
+**B. Composition-root migration stopped at the process boundary.** 19 tests over
+two modules. Ports moved behind a `ContextVar` bound by an explicit composition
+root; a `python -c` child inherits no binding and dies with "profile custody
+infrastructure has not been composed". Any test spawning a child that touches
+custody needs the composition preamble.
+
+**C. Registry span splits orphan pinned revision ids.** M390's open
+`2010-y-siguientes` became per-year `2021`-`2025`, so a pinned id raises
+`KeyError`. Live site: `application/aggregation/tests/test_iva_cash_accounting.py:550`,
+which also asks for 2026 that M390 lacks, failing twice over. The fix is to
+RESOLVE the revision, never to substitute a fresh literal — a new literal rots
+on the next split. Discriminate first: two sibling hits in `test_iva_ledger.py`
+build a synthetic revision that merely echoes the string back and are not
+registry-coupled.
+
+**D. Fixture clocks dated into the future.** `_CLOCK = 2026-10-15` used as a
+profile `created_at` while the validator requires `created_at <= updated_at` and
+the seeding helper stamps `updated_at = now()`. These red when the wall clock
+passes them, not when anything changes, so they are invisible to any
+change-triggered review.
+
+**E. Fixtures manufacturing states no production path reaches.** The
+generalisation of the others. An autouse `reset_secure_object_store` truncates
+`secure_objects` wholesale, removing the profile capsule's one current record
+row — a state creation cannot produce (the row is written before the stage
+commit marker, and nothing ever deletes that namespace) and no production path
+reaches. The guard is therefore CORRECT and the fixture is wrong, but the
+tempting repair is to route around the guard by supplying what it would have
+loaded. Cheapest tell: a refusal whose message describes corruption ("must
+contain exactly one..."). Fix the fixture; a sibling test usually already shows
+the right shape.
