@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import typer
+
 if TYPE_CHECKING:
     from ....application.auth import ApoderadoService
     from ....application.workflow import ProfileBucketPointer
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 _REPRESENTED_NIF_KEY = "represented-nif"
@@ -33,7 +35,7 @@ def _active_profile_pointer() -> ProfileBucketPointer:
 
 
 def apoderado_scopes_list(
-    ctx: object,
+    ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List all available representative scopes in the vocabulary."""
@@ -45,11 +47,11 @@ def apoderado_scopes_list(
     payload = svc.catalogue.model_dump(mode="json")
     lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in svc.catalogue.scopes]
     scopes_result = ApoderadoScopesListResult.model_validate(payload)
-    _emit_envelope(ctx, command="config.auth.apoderado.scopes.list", result=scopes_result, lines=lines)
+    emit_envelope(ctx, command="config.auth.apoderado.scopes.list", result=scopes_result, lines=lines)
 
 
 def apoderado_status(
-    ctx: object,
+    ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
@@ -80,11 +82,11 @@ def apoderado_status(
         catalogue_version=result.catalogue_version,
         configured_at=result.configured_at,
     )
-    _emit_envelope(ctx, command="config.auth.apoderado.status", result=status_result, lines=lines)
+    emit_envelope(ctx, command="config.auth.apoderado.status", result=status_result, lines=lines)
 
 
 def apoderado_configure(
-    ctx: object,
+    ctx: typer.Context,
     represented_nif: str | None = None,
     scope: list[str] | None = None,
     output_language: OutputLanguage | None = None,
@@ -150,7 +152,7 @@ def apoderado_configure(
         configured_at=result.configured_at,
         notes=result.notes,
     )
-    _emit_envelope(ctx, command="config.auth.apoderado.configure", result=configure_result, lines=lines)
+    emit_envelope(ctx, command="config.auth.apoderado.configure", result=configure_result, lines=lines)
 
 
 def _collect_apoderado_answers_interactively(
@@ -228,7 +230,7 @@ def _collect_apoderado_answers_interactively(
 
 
 def apoderado_clear(
-    ctx: object,
+    ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
@@ -246,11 +248,11 @@ def apoderado_clear(
         f"bucket_id\t{pointer.bucket_id}",
         f"cleared\t{cleared}",
     ]
-    _emit_envelope(ctx, command="config.auth.apoderado.clear", result=clear_result, lines=lines)
+    emit_envelope(ctx, command="config.auth.apoderado.clear", result=clear_result, lines=lines)
 
 
 def apoderado_check(
-    ctx: object,
+    ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
