@@ -36,7 +36,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ....core import resolve_repository_bucket_id
+from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....domain.modelos import (

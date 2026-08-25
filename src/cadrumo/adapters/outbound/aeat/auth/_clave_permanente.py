@@ -53,7 +53,8 @@ from urllib.parse import quote, urlsplit
 
 from pydantic import ValidationError
 
-from .....core import AuthProviderDescription, AuthProviderKind, require_active_bucket_id
+from .....core import AuthProviderDescription, AuthProviderKind
+from .....core.bucket_pointer import require_active_bucket_id
 from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret

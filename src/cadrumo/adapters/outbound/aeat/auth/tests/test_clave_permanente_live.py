@@ -107,7 +107,7 @@ async def test_clave_permanente_provider_full_login_with_central_playwright() ->
     finally:
         await provider.close()
 
-    from ......core import require_active_bucket_id
+    from ......core.bucket_pointer import require_active_bucket_id
     from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 
     storage_state_path = aeat_auth_session_storage_state_path(

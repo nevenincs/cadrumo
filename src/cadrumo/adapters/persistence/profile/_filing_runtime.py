@@ -26,7 +26,7 @@ See Also:
 
 from __future__ import annotations
 
-from ....core import resolve_repository_bucket_id
+from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....domain.filing import ModeloDraftError
 
 

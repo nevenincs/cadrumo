@@ -563,7 +563,7 @@ async def _open_register_page(
             "AeatSession has no persisted auth session; run `aeat config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
-    from .....core import require_active_bucket_id
+    from .....core.bucket_pointer import require_active_bucket_id
 
     profile = Profile(name=require_active_bucket_id())
     if playwright is not None:

@@ -37,7 +37,8 @@ if TYPE_CHECKING:
 
     from ._bucket_session import BucketSession
 
-from .....core import StorageCategory, resolve_active_bucket_id
+from .....core import StorageCategory
+from .....core.bucket_pointer import resolve_active_bucket_id
 from .....core.logging import get_logger
 from ..crypto import (
     KEY_SIZE,

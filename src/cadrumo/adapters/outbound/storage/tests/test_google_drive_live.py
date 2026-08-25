@@ -75,7 +75,7 @@ def _require_drive_configured() -> None:
 
 @contextmanager
 def _active_profile_storage_session() -> Iterator[None]:
-    from .....core import resolve_active_bucket_id
+    from .....core.bucket_pointer import resolve_active_bucket_id
 
     active = resolve_active_bucket_id()
     if active is None:

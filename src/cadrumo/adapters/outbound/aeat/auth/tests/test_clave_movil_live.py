@@ -69,7 +69,7 @@ async def test_clave_movil_provider_probes_persisted_session_with_central_playwr
     settings = _settings_or_skip()
     if not settings.cadrumo_clave_movil_dni_nie:
         pytest.fail("CADRUMO_CLAVE_MOVIL_DNI_NIE is not configured after live opt-in")
-    from ......core import require_active_bucket_id
+    from ......core.bucket_pointer import require_active_bucket_id
     from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 
     storage_state_path = aeat_auth_session_storage_state_path(
@@ -116,7 +116,7 @@ async def test_clave_movil_provider_full_login_with_central_playwright_when_expl
     finally:
         await provider.close()
 
-    from ......core import require_active_bucket_id
+    from ......core.bucket_pointer import require_active_bucket_id
     from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 
     storage_state_path = aeat_auth_session_storage_state_path(

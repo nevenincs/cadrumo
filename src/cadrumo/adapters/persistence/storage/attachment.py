@@ -236,7 +236,7 @@ class AttachmentStore(BaseModel):
             return self.bucket_id
         if self.objects is not None:
             return None
-        from ....core import resolve_active_bucket_id
+        from ....core.bucket_pointer import resolve_active_bucket_id
 
         return resolve_active_bucket_id()
 

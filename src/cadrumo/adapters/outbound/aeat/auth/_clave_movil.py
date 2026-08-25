@@ -636,7 +636,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 record_to_values,
             )
             from .....application.workflow import read_profile_bucket_by_id
-            from .....core import resolve_active_bucket_id
+            from .....core.bucket_pointer import resolve_active_bucket_id
             from .....domain.user_profile import ProfileNotFoundError
 
             bucket_id = resolve_active_bucket_id()
@@ -755,7 +755,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
     # ── Encrypted session state ────────────────────────────────────────────
 
     def _storage_state_path(self) -> Path:
-        from .....core import require_active_bucket_id
+        from .....core.bucket_pointer import require_active_bucket_id
         from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 
         profile = require_active_bucket_id()
