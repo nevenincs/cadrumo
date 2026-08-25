@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:ae9accf3c2bdc7842a85205ee5767751d66f1429efdc91f2a7a435ce23352673'
+body_hash: 'sha256:0bd5c39ddc9fe27421e0405573fb44d8b45b0669ea910b1dfefa6a0bed93983d'
 related: []
 ---
 
@@ -689,6 +689,49 @@ Narrowing the registry instead would contradict RD 1065/2007. Neither is a
 patch, and `aeat-registry-authority-flow` reserves the period grammar as one
 authority with no parallel boundaries or aliases, so this is not a call to make
 inside a test fixture.
+
+## The modelo 200 "attestation" was mostly a caller over-demanding a rung
+
+This campaign spent hours treating modelo 200's `calculation` authority grade as
+a missing operator attestation worth roughly a hundred tests. That framing was
+wrong, and the correction generalises.
+
+`ValidatedRegistryAuthority.snapshot` documents `grade` as "the rung of
+authority the CALLER needs", defaulting to the strictest. The calculate path
+passed nothing, so it silently demanded FILING from every modelo it touched.
+Modelo 200's revision declares `calculation` -- the rung defined as "can
+additionally compute the modelo's amounts" -- so a Sociedades filer could not
+CALCULATE: work done entirely in memory, producing no fichero, refused for
+authority it never needed.
+
+Fixed by threading an optional rung through
+`resolve_registry_snapshot_for_work_unit` (defaulting to FILING, so its
+ten-plus other callers are byte-identical) and passing CALCULATION from the two
+calculate-path sites. Measured in an isolated worktree at one commit, with and
+without the diff: **190 failed -> 172, eighteen newly passing, none newly
+failing.**
+
+This is the third instance of one shape, and the shape is worth naming: **ask
+what the caller needs before concluding the registry is under-declared.**
+
+- modelo 036 is censal, filed on AEAT's sede, produces no fichero here.
+- modelo 721 is informative, declares `calculation_class = "informative"` and
+  ships no export or formulas family.
+- modelo 200 IS a filing modelo, but the CALCULATE path is not a filing
+  operation.
+
+In all three the registry was right and the caller over-demanded.
+
+### What the remaining modelo 200 clusters actually are
+
+Not attestation either. Requesting the calculation rung in
+`test_export_implicit_decimal_slots` moves it from 13 failures to 12, proving a
+calculation-rung snapshot does carry the export family. The twelve that remain
+fail on assertions of the form `modelo-200-page-001b-casilla-00041 is no
+longer...`: the tests pin export field ids the registry no longer declares,
+which is drift against the modelo 200 export-layout sweep
+(`registry(modelo-200, modelo-714)`). That belongs to whoever owns that sweep,
+and no attestation closes it.
 
 ## Durable lesson
 
