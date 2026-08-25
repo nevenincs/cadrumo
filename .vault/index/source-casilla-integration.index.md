@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:22bc8acda3f6f23e9f5fa86cb1671f52016303605ef6b08735dc96804c0ef296'
+body_hash: 'sha256:962aa47f2e1a735e34a74d818284ae5ce34e01e75a20a1d13bb36dcda6bc0398'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -129,6 +129,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P18-S107]]'
   - '[[2026-08-22-source-casilla-integration-W05-P18-summary]]'
   - '[[2026-08-22-source-casilla-integration-W05-P19-S108]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P19-S109]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -198,6 +199,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-s98-m360-terminal-refusal-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s99-m360-terminal-closure-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-w05-p17-m182-terminal-closure-final-audit]]'
+  - '[[2026-08-25-source-casilla-integration-w05-p18-m193-terminal-closure-final-audit]]'
   - '[[2026-08-25-source-casilla-integration-w05-p18-s104-m193-grounding-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-w05-p18-s105-m193-terminal-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-w05-p18-s106-m193-refusal-lifecycle-review-audit]]'
@@ -276,6 +278,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s98-m360-terminal-refusal-review-audit` - `source-casilla-integration` audit: `S98 M360 terminal refusal review`
 - `2026-08-25-source-casilla-integration-s99-m360-terminal-closure-review-audit` - `source-casilla-integration` audit: `S99 M360 terminal deferral closure review`
 - `2026-08-25-source-casilla-integration-w05-p17-m182-terminal-closure-final-audit` - `source-casilla-integration` audit: `W05 P17 Modelo 182 terminal closure final review`
+- `2026-08-25-source-casilla-integration-w05-p18-m193-terminal-closure-final-audit` - `source-casilla-integration` audit: `W05 P18 Modelo 193 terminal closure final review`
 - `2026-08-25-source-casilla-integration-w05-p18-s104-m193-grounding-review-audit` - `source-casilla-integration` audit: `W05 P18 S104 Modelo 193 grounding review`
 - `2026-08-25-source-casilla-integration-w05-p18-s105-m193-terminal-deferral-review-audit` - `source-casilla-integration` audit: `W05 P18 S105 Modelo 193 terminal deferral review`
 - `2026-08-25-source-casilla-integration-w05-p18-s106-m193-refusal-lifecycle-review-audit` - `source-casilla-integration` audit: `W05 P18 S106 Modelo 193 refusal lifecycle review`
@@ -404,6 +407,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P18-S107` - close the M193 census disposition and obtain formal review
 - `2026-08-22-source-casilla-integration-W05-P18-summary` - `source-casilla-integration` `W05.P18` summary
 - `2026-08-22-source-casilla-integration-W05-P19-S108` - adjudicate M296 withholding-row semantics and source ownership from official evidence
+- `2026-08-22-source-casilla-integration-W05-P19-S109` - recast Modelo 296 withholding rows as a bounded registry-blocked refusal pending a non-lossy encrypted M296 owner, declarant-owned recipient/representative/Annex identity and provenance, row-preserving resolver lifecycle, and source-owned repeated-record export proof while preserving manual/direct paths and the distinct M180/M193 withholding lifecycle
 
 ### plan
 
