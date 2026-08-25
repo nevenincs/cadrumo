@@ -6,7 +6,7 @@ import pytest
 
 from .....core import EstadoCasillaOficial, validated_casilla_id
 from .. import RegistryValidationError, bundled_authority, clasificar_casillas_oficiales
-from .. import _export as owner
+from .. import export as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -168,7 +168,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.calculations.registry._formula_runtime_ops.UnresolvedFormulaDependencyError",
+        "cadrumo.domain.calculations.registry.formula_runtime_ops.UnresolvedFormulaDependencyError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_UNRESOLVED_FORMULA_DEPENDENCY",
             category=ErrorCategory.ERROR,
@@ -178,7 +178,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.calculations.registry._formula_runtime_ops.UnresolvedFormulaOutcomeError",
+        "cadrumo.domain.calculations.registry.formula_runtime_ops.UnresolvedFormulaOutcomeError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_UNRESOLVED_FORMULA_OUTCOME",
             category=ErrorCategory.ERROR,

@@ -8,11 +8,11 @@ known source modelo and that its declared
 matching source revisions.
 
 See Also:
-    :mod:`cadrumo.domain.calculations.registry._bindings_previous_filing`
+    :mod:`cadrumo.domain.calculations.registry.bindings_previous_filing`
         Selector parsing into canonical source modelo, period, and casilla ids.
-    :mod:`cadrumo.domain.calculations.registry._validate_source_casilla_ids`
+    :mod:`cadrumo.domain.calculations.registry.validate_source_casilla_ids`
         Shared source-revision membership check and non-canonical diagnostics.
-    :mod:`cadrumo.domain.calculations.registry._validate_relation_sources`
+    :mod:`cadrumo.domain.calculations.registry.validate_relation_sources`
         Sibling closure validation for relation source selectors.
 """
 
@@ -23,7 +23,7 @@ from collections.abc import Iterable, Mapping
 from ....core import BindingSourceKind
 from ._bindings_previous_filing import previous_filing_source_reference
 from .errors import RegistryValidationError
-from ._schema import DataBindingDefinition, ModeloDefinition
+from .schema import DataBindingDefinition, ModeloDefinition
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 
 
@@ -68,9 +68,9 @@ def _validate_previous_filing_binding(
 
     The supplied :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition`
     is parsed by
-    :func:`cadrumo.domain.calculations.registry._bindings_previous_filing.previous_filing_source_reference`,
+    :func:`cadrumo.domain.calculations.registry.bindings_previous_filing.previous_filing_source_reference`,
     then each matching source revision is checked through
-    :func:`cadrumo.domain.calculations.registry._validate_source_casilla_ids.source_casilla_id_reference_failure`.
+    :func:`cadrumo.domain.calculations.registry.validate_source_casilla_ids.source_casilla_id_reference_failure`.
     """
     failures: list[str] = []
     try:

@@ -305,7 +305,7 @@ def test_ambiguous_resolution_carries_candidates_on_typed_field_not_message() ->
     (no mock) so the genuine ``select_revision`` dedup branch fires, then
     asserts the refusal context carries both candidate ids verbatim.
     """
-    from ....domain.calculations.registry import AmbiguousRevisionSelectionError
+    from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
     from .._config._profile_inspect import _resolve_preflight_revision_id
     from ..errors import CliRefusedBoundaryError
 

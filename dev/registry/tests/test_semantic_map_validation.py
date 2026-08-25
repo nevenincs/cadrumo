@@ -13,7 +13,8 @@ from cadrumo.core import (
     M303ProrrataActivityProjectionRef,
     validated_casilla_id,
 )
-from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_revision_inspection
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 
 from ..pipeline import _semantic_map_validation
 from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
@@ -586,4 +587,4 @@ def test_validation_module_carries_no_legacy_layout_dependency() -> None:
     assert "export_layouts" not in attribute_names
     assert "resolve_export_layout" not in referenced_names
     assert "export_layouts" not in string_constants
-    assert "cadrumo.domain.calculations.registry._export" not in imported_modules
+    assert "cadrumo.domain.calculations.registry.export" not in imported_modules

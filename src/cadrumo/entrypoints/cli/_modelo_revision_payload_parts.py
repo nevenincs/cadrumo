@@ -22,7 +22,7 @@ from ...application.modelo._result_summary import ResultSummaryRole
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
-from ...domain.calculations.registry import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
+from cadrumo.domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
 
 
 class DetailRowPayload(OutputSchema):

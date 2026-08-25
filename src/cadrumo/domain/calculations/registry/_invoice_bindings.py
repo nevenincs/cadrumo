@@ -13,7 +13,7 @@ from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import (
+from .binding_selector_utils import (
     BindingExportDataType,
     intracommunity_clave_validator,
     invariant_diagnostics,
@@ -22,12 +22,12 @@ from ._binding_selector_utils import (
     uppercase_alpha_code,
     validate_rectification_fields,
 )
-from ._binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
-from ._ids import BindingId
-from ._ledger_binding_resolution import independent_quantity_facts
+from .ids import BindingId
+from .ledger_binding_resolution import independent_quantity_facts
 from ._m347_threshold import m347_declarable_party_ids
-from ._schema import DataBindingDefinition, ModeloRevision
+from .schema import DataBindingDefinition, ModeloRevision
 
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
 _InvoiceGrouping = Literal["operator_clave", "operator_clave_period"]

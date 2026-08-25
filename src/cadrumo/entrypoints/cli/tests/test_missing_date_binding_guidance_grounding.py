@@ -15,13 +15,10 @@ from ....application.modelo._data_inventory import profile_requirements_for_bind
 from ....application.user_profile.preflight import build_profile_preflight_requirement
 from ....core import Period, PeriodError
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    DataBindingDefinition,
-    RegistrySnapshotError,
-    RegistryValidationError,
-    RevisionId,
-    binding_profile_keys,
-)
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
 from ....domain.modelos import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.loader import load_user_profile_schema
 from .._modelo_behavior_support import _date_binding_profile_requirements

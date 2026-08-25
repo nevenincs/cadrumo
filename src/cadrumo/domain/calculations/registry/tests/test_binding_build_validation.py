@@ -34,13 +34,13 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .. import RegistryCatalogues, RegistryValidator
-from .._bindings import (
+from ..bindings import (
     _BINDING_SELECTOR_REGISTRY,
     _BINDING_VALIDATOR_REGISTRY,
     validate_binding_selector_shape,
 )
 from ..errors import RegistryValidationError
-from .._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
+from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
 from ._registry_schema_support import _committed_modelo, _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

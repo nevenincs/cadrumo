@@ -5,7 +5,7 @@ coverage, and reconciliation-total closure for a :class:`ModeloRevision` within
 its :class:`ModeloDefinition`.
 
 The D3 ``orden_aplicabilidad`` gate lives in its sibling module
-:mod:`cadrumo.domain.calculations.registry._validate_orden_aplicabilidad`.
+:mod:`cadrumo.domain.calculations.registry.validate_orden_aplicabilidad`.
 """
 
 from __future__ import annotations
@@ -13,10 +13,10 @@ from __future__ import annotations
 from collections.abc import Collection
 
 from ....core import M210_TIPO_RENTA_CODE_PROJECTION
-from ._deadline_coordinate import DeadlineSemanticCoordinate, deadline_window_semantic_coordinates
+from .deadline_coordinate import DeadlineSemanticCoordinate, deadline_window_semantic_coordinates
 from .errors import RegistrySnapshotError
-from ._schema import InputKind, ModeloDefinition, ModeloRevision, filing_schedule_period_kind_mismatches
-from ._temporal import select_revision
+from .schema import InputKind, ModeloDefinition, ModeloRevision, filing_schedule_period_kind_mismatches
+from .temporal import select_revision
 from ._validate_parameter_temporal import _bracket_coverage_gaps as _bracket_coverage_gaps
 from ._validate_parameter_temporal import (
     validate_bracket_table_temporal_coverage as validate_bracket_table_temporal_coverage,

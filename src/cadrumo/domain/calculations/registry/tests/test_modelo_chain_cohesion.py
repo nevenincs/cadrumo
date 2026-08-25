@@ -24,8 +24,8 @@ from collections.abc import Mapping
 
 import pytest
 
-from .._binding_selector_utils import selector_as_dict
-from .._schema import ModeloDefinition, RelationDefinition
+from ..binding_selector_utils import selector_as_dict
+from ..schema import ModeloDefinition, RelationDefinition
 from .._validate_relation_periods import select_relation_source_revisions
 from ._registry_schema_support import _committed_registry_tree
 

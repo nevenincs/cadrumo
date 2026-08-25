@@ -54,11 +54,11 @@ from ...iva import (
     validate_iva_deduction_fact,
 )
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import invariant_diagnostics, selector_against_model
-from ._binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, selector_against_model
+from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
-from ._ids import BindingId
-from ._ledger_binding_resolution import (
+from .ids import BindingId
+from .ledger_binding_resolution import (
     UnroutedLedgerQuantity,
     assert_quantity_readers_cover_independent_facts,
     independent_quantity_facts,
@@ -66,7 +66,7 @@ from ._ledger_binding_resolution import (
     unrouted_ledger_family_quantities,
     unsupported_ledger_family_observations,
 )
-from ._schema import DataBindingDefinition, ModeloRevision
+from .schema import DataBindingDefinition, ModeloRevision
 from ._schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_tuple
 
 # Ledger-aggregation binding source kinds. Re-exported from

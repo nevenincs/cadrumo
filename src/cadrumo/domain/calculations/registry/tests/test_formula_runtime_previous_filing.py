@@ -9,18 +9,18 @@ import pytest
 from .....core import RegistryAuthorityGrade
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from .._bindings import (
+from ..bindings import (
     previous_filing_observation_requirements,
     previous_filing_source_reference,
     resolve_previous_filing_binding_values,
 )
 from ..errors import RegistryValidationError
-from .._relations import (
+from ..relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
-from .._schema import RegistrySnapshot
+from ..schema import RegistrySnapshot
 from ._formula_runtime_support import (
     _M100_PAGOS_FRACCIONADOS_CASILLA,
     _M100_RENDIMIENTO_NETO_ACTIVIDADES_CASILLA,

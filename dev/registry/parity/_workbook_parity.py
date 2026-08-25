@@ -40,20 +40,22 @@ from cadrumo.core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from cadrumo.core.hashing import hash_file as _hash_file
 from cadrumo.core.logging import get_logger
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.ids import (
     BindingId,
-    EvidenceTier,
     LegalRefId,
-    RegistrySnapshot,
-    RegistryValidationError,
     RelationId,
     SourceRefId,
     WorkbookOutputId,
-    calculate_registry_snapshot,
-    declared_casilla_ids,
     is_registry_id,
-    registry_snapshot_id_for,
 )
+from cadrumo.domain.calculations.registry.schema import (
+    EvidenceTier,
+    RegistrySnapshot,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.casilla_membership import declared_casilla_ids
+from cadrumo.domain.calculations.registry.snapshot_coordinate import registry_snapshot_id_for
 
 from ._workbook_parity_models import (
     SyntheticInputSet,

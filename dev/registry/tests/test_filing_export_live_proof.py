@@ -26,7 +26,7 @@ from cadrumo.core import (
     sha256_hex,
 )
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..filing_export_proof import (
     FilingExportLiveProofEntry,

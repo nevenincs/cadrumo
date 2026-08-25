@@ -23,7 +23,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from ....core import CasillaId, Period, StorageCategory, storage_path, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ...calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from .._amendment import (
     AmendmentKind,
     CasillaChange,

@@ -36,7 +36,7 @@ from functools import cache
 
 import pytest
 
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )
@@ -148,7 +148,7 @@ def _continuity_backing() -> dict[str, str]:
     authority, because this gate makes a claim about the SHIPPED catalogues and
     must stay answerable while the registry is refusing validation for unrelated
     reasons. It mirrors exactly what the loader does at
-    :func:`~cadrumo.domain.calculations.registry._modelo_localization._localised_casilla`:
+    :func:`~cadrumo.domain.calculations.registry.modelo_localization._localised_casilla`:
     read ``id`` and ``continuidad_id`` off the raw casilla table and derive both
     keys with the same two canonical encoders.
 
@@ -331,7 +331,7 @@ def test_modelo_spanish_values_are_authority_source() -> None:
     """Every enrolled Modelo key resolves to one non-blank Spanish source value.
 
     A null occurrence value is NOT automatically an offender.
-    :func:`~cadrumo.domain.calculations.registry._modelo_localization.resolve_modelo_localization`
+    :func:`~cadrumo.domain.calculations.registry.modelo_localization.resolve_modelo_localization`
     advances on the absence of a VALUE and carries the casilla's continuity key
     in the same chain, so a casilla whose ``continuidad_id`` has a populated
     continuity label already renders correct Spanish. Demanding a value on the

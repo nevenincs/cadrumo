@@ -12,8 +12,8 @@ import pytest
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path, resources
 from .. import RegistryValidator, verify_legal_catalogue
-from .._corpus_catalogue import verify_source_catalogue
-from .._schema import ModeloDefinition, RegistryCatalogues
+from ..corpus_catalogue import verify_source_catalogue
+from ..schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

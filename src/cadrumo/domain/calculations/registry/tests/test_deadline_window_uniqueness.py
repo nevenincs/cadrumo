@@ -7,8 +7,8 @@ from datetime import date
 import pytest
 
 from .....core import Period, ResultDisposition
-from .._schema import DeadlineWindowDefinition, PeriodSelector
-from .._validate import RegistryValidator
+from ..schema import DeadlineWindowDefinition, PeriodSelector
+from ..validate import RegistryValidator
 from .._validate_revision_rules import validate_deadline_window_uniqueness
 from ._referential_integrity_support import (
     RegistryValidationError,

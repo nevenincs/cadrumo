@@ -1,7 +1,7 @@
 """One-shot transcriber: ground three structural not_applicable family dispositions.
 
 ``build_revision_coverage_manifest``
-(:mod:`cadrumo.domain.calculations.registry._schema_family_coverage`) reads an
+(:mod:`cadrumo.domain.calculations.registry.schema_family_coverage`) reads an
 empty schema family as ``BLOCKED_PENDING_EVIDENCE`` unless the revision
 declares a ``family_dispositions`` entry carrying a reason, ``legal_refs`` and
 ``source_refs``. Three of the nineteen enrolled families carry a discriminator
@@ -19,7 +19,7 @@ research required:
 
 ``relations``
     ``validate_informative_class_invariant``
-    (:mod:`cadrumo.domain.calculations.registry._validate_revision_rules`)
+    (:mod:`cadrumo.domain.calculations.registry.validate_revision_rules`)
     hard-refuses a non-empty ``relations`` family on any revision of a
     ``calculation_class == "informative"`` modelo. The declaration states a
     registry-enforced truth.
@@ -88,7 +88,11 @@ from pathlib import Path
 
 from cadrumo.core import Modelo
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import ModeloDefinition, ModeloRevision, load_registry_tree
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    ModeloRevision,
+)
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
 REGISTRY_ROOT = bundled_path("registry", "aeat")
 MODELOS_ROOT = REGISTRY_ROOT / "modelos"

@@ -28,7 +28,7 @@ from .. import (
     validate_ledger_iva_aggregation_binding_definition,
 )
 from .._ledger_bindings import _IvaLedgerSelector
-from .._schema import PeriodSelector
+from ..schema import PeriodSelector
 from ._ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA,
     _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA,

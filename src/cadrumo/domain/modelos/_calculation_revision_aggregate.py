@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.identity import SubjectTaxId
-from ..calculations.registry import RegistrySnapshot, SourceReference
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot, SourceReference
 from ..justificante import Justificante
 from ._calculation_revision import CalculationRevision
 from ._calculation_revision_amendment import (

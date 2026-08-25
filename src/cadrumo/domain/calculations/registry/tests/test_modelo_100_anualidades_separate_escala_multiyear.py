@@ -46,7 +46,7 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .. import RegistrySnapshot, calculate_registry_snapshot
-from .._authority import ValidatedRegistryAuthority
+from ..authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

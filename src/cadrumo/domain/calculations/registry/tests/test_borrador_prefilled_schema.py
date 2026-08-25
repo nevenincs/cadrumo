@@ -7,8 +7,8 @@ from functools import cache
 import pytest
 
 from .....core.resources import resources
-from .._ids import BindingId
-from .._schema import DataBindingDefinition
+from ..ids import BindingId
+from ..schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -24,12 +24,12 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .._remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
+from ..remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
 from .._renta_web_open_oracle import (
     RentaWebOpenOracle,
     RentaWebOpenReplayDriver,
 )
-from .._schema import LiveCrossReferenceDecision
+from ..schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

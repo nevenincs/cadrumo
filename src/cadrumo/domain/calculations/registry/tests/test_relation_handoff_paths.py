@@ -6,7 +6,7 @@ import pytest
 
 from .....core import BindingSourceKind, Modelo
 from .. import audit_registry_handoff_paths, bundled_authority, selector_as_dict
-from .._iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
+from ..iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

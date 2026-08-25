@@ -7,7 +7,7 @@ from functools import lru_cache
 from .....core import CasillaId, validated_casilla_id
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_tree import bundled_registry_tree
-from .._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 
 _WWW6_HOST = aeat_host("www6")
 

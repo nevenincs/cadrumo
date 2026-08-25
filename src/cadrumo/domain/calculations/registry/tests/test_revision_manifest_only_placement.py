@@ -21,10 +21,10 @@ from typing import Annotated
 import pytest
 
 from .....tests.registry_tree import bundled_registry_tree
-from .. import _loader
+from .. import loader as _loader
 from ..errors import RegistryLoadError
-from .._loader import load_modelo_directory
-from .._schema import (
+from ..loader import load_modelo_directory
+from ..schema import (
     REVISION_GOVERNANCE_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
     ModeloRevision,

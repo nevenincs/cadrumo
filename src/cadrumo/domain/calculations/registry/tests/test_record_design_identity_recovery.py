@@ -21,7 +21,7 @@ from __future__ import annotations
 import pytest
 
 from .. import RecordDesignField, RecordDesignSheet, extract_record_design
-from .._record_design import (
+from ..record_design import (
     _PdfParseState,
     _PdfSheetResult,
     _recovered_record_identity,

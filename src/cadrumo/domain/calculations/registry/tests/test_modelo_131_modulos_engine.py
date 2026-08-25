@@ -42,7 +42,7 @@ import pytest
 
 from .....core import RegistryAuthorityGrade
 from .....core.money import round_to_cents
-from .._formula_runtime import calculate_registry_snapshot
+from ..formula_runtime import calculate_registry_snapshot
 from ._modelo_131_modulos_engine_support import (
     _ALIMENTACION_647_1,
     _AUTOTAXI_721_2,

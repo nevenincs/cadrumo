@@ -114,7 +114,7 @@ def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
     """
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
-    from ...domain.calculations.registry import build_profile_grounding_index
+    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.user_profile.loader import load_user_profile_schema
 
     return ", ".join(
@@ -183,7 +183,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     )
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
-    from ...domain.calculations.registry import build_profile_grounding_index
+    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.deadlines import EntityType
     from ...domain.user_profile.loader import load_user_profile_schema
     from ._common import attach_cli_policy_verdict
@@ -305,7 +305,7 @@ def _overview_status_coverage(
         status_notices.append(notice)
         coverage_lines.append(f"coverage_advised\t{len(status_cal.coverage.advised)}\t{notice.message}")
 
-    from ...domain.calculations.registry import derive_tax_route
+    from cadrumo.domain.calculations.registry.applicability import derive_tax_route
 
     history_notice = overview_no_aeat_history_notice(
         tax_route=derive_tax_route(_profile_to_taxpayer(current)),
@@ -785,7 +785,7 @@ def overview_prepare(
     from ...application.ledger.preflight import preflight_ledger_tax_readiness
     from ...application.modelo._registry_discovery import registry_describe_modelo_for_scope
     from ...application.overview import build_data_prep_walkthrough
-    from ...domain.calculations.registry import RegistrySnapshotError
+    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 
     current = _state()
     bucket_id = current.active_profile_bucket_id()

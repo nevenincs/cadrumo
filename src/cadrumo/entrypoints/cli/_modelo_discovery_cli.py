@@ -41,13 +41,10 @@ from ...core import ActionArgumentSource, ActionArgumentStatus, Period, TaxDomai
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
-from ...domain.calculations.registry import (
-    InputKind,
-    ModeloEntry,
-    ModeloListRow,
-    RegistrySnapshotError,
-    RegistryValidationError,
-)
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.queries import ModeloListRow
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._common import _parse_iso_date, emit_envelope, resolve_notice_action
 from ._modelo_behavior_support import bare_period_error, resolve_year_period
@@ -238,7 +235,7 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     """
     from ...application.user_profile.preflight import format_profile_path_requirements
     from ...core.resources import resources
-    from ...domain.calculations.registry import build_profile_grounding_index
+    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.user_profile.loader import load_user_profile_schema
 
     if not checklist.unresolved_profile_keys:

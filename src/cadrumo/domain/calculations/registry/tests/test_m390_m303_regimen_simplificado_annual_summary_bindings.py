@@ -9,7 +9,7 @@ import pytest
 from .....core import BindingSourceKind, CasillaId, FilingProjectionRef
 from .....core.resources import resources
 from .....domain.modelos import M390_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY_CASILLA_IDS
-from .._bindings import (
+from ..bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
     validate_m303_regimen_simplificado_annual_summary_revision,
 )

@@ -16,12 +16,12 @@ from .. import (
     relation_consumption_index,
     relation_is_consumed,
 )
-from .._binding_selector_utils import selector_as_dict
+from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
-from .._iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
-from .._relation_aggregation import relation_aggregation_op
-from .._relations import relation_source_requirements
-from .._schema import (
+from ..iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
+from ..relation_aggregation import relation_aggregation_op
+from ..relations import relation_source_requirements
+from ..schema import (
     DataBindingDefinition,
     DependencyClassificationDefinition,
     InputKind,
@@ -30,7 +30,7 @@ from .._schema import (
     RegistryCatalogues,
     RelationDefinition,
 )
-from .._validate import RegistryValidator
+from ..validate import RegistryValidator
 from .._validate_relation_periods import select_relation_source_revisions
 from ._registry_schema_support import _committed_registry_tree
 

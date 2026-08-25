@@ -32,7 +32,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core import CasillaId
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import BindingId, FormulaId, InputKind, ModeloId
+from cadrumo.domain.calculations.registry.ids import (
+    BindingId,
+    FormulaId,
+    ModeloId,
+)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..terminology_handbook import ConceptDomain
 from ._casilla_anchor import casilla_reference_target

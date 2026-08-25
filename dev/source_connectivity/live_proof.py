@@ -52,7 +52,7 @@ from cadrumo.core._calculation_route import ModeloCalculationRouteId
 from cadrumo.core.resources import bundled_path
 from cadrumo.core.source_connectivity import SourceConnectivityConnectionIdentity
 from cadrumo.core.time import now
-from cadrumo.domain.calculations.registry import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.invoices import PaymentStatus
 from cadrumo.domain.iva import InvoiceKind, IvaCategory
 from cadrumo.domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue, derive_work_unit_id

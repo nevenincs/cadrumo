@@ -17,7 +17,7 @@ from pathlib import Path
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .. import ManualWorkedExamplePayload
+from ..external_grounding import ManualWorkedExamplePayload
 
 __all__ = ["oracle_declared_figures", "read_manual_worked_example"]
 

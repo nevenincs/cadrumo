@@ -22,7 +22,7 @@ from __future__ import annotations
 import pytest
 
 from .....tests.aeat_literal_fixtures import aeat_host
-from .._remote_state_guard import (
+from ..remote_state_guard import (
     AEAT_WRITE_FORBIDDEN_VERB_TOKENS,
     RemoteOperation,
     RemoteStateGuardPolicy,

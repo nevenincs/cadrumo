@@ -30,7 +30,7 @@ from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import clear_output_language_cache
 from ....core.time import frozen_clock, now, today_madrid
-from ....domain.calculations.registry import bundled_authority
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     ExternalEvidenceKind,
     upsert_filing_record,

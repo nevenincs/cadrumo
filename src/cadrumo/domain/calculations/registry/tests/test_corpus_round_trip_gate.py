@@ -18,8 +18,8 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import RegistryCatalogues, RegistryValidationError
-from .._schema import ExtractionProfileDefinition, ModeloDefinition
-from .._validate import RegistryValidator
+from ..schema import ExtractionProfileDefinition, ModeloDefinition
+from ..validate import RegistryValidator
 from ._gate_support import catalogues_for_m130_gate_tests
 from ._registry_schema_support import _committed_modelo
 

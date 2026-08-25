@@ -6,7 +6,7 @@ expectations, and deadline windows (``_validate_surfaces.py``) -- but every one
 of those checks only asks whether a cited source carries the *tier*, never
 whether the source's own text supports the specific claim the site is making.
 That is precisely where ``layout_authority`` stood before
-:func:`cadrumo.domain.calculations.registry._validate_layout_authority_content.validate_layout_authority_content`
+:func:`cadrumo.domain.calculations.registry.validate_layout_authority_content.validate_layout_authority_content`
 closed it, and that fix's calibration history is the cautionary lesson here:
 its first draft (a dispositive-content regex in ``_legal.py``) false-fired on
 630 of 633 legal-catalogue entries, and a second, narrower attempt still
@@ -67,7 +67,7 @@ from pathlib import Path
 from typing import Final
 
 from ....core.external_constants import UTF_8_ENCODING
-from ._schema import DeadlineWindowDefinition, SourceReference
+from .schema import DeadlineWindowDefinition, SourceReference
 from ._validate_evidence import EvidenceValidator
 
 #: A suppression notice must itself say something was suppressed or repealed.
@@ -97,7 +97,7 @@ def _carries_deadline_content(text: str) -> bool:
 def _read_source_text(source_root: Path, source: SourceReference) -> str | None:
     """Return the bundled file's raw text, or ``None`` when it cannot be read here.
 
-    Mirrors :func:`cadrumo.domain.calculations.registry._validate_layout_authority_content._read_source_text`.
+    Mirrors :func:`cadrumo.domain.calculations.registry.validate_layout_authority_content._read_source_text`.
     The suppression check runs at catalogue-build time, before any
     :class:`EvidenceValidator` is necessarily in scope for the source, so it
     reads the raw file directly rather than going through the evidence
@@ -123,7 +123,7 @@ def validate_suppression_notice_content(
     ``evidence_tier = "official_source_guidance"`` -- the only combination
     this kind currently ships under. A file that cannot be read from this
     root is skipped rather than reported, matching
-    :func:`~cadrumo.domain.calculations.registry._validate_layout_authority_content.validate_layout_authority_content`.
+    :func:`~cadrumo.domain.calculations.registry.validate_layout_authority_content.validate_layout_authority_content`.
 
     Args:
         sources: The registry source catalogue, keyed by source ID.

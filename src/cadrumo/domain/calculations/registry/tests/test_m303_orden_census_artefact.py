@@ -29,13 +29,13 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ..errors import RegistryLoadError
-from .._ids import SourceRefId
-from .._m303_orden_census_artefact import (
+from ..ids import SourceRefId
+from ..m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
     load_m303_annual_orden_censuses,
     m303_orden_census_artefact_path,
 )
-from .._m303_orden_manifest import (
+from ..m303_orden_manifest import (
     _generate_manifest_with_censuses,
     check_m303_annual_orden_census_artefact,
     collect_m303_annual_orden_fingerprints,

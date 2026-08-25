@@ -31,7 +31,7 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .._export import derive_export_layouts_from_bindings
+from ..export import derive_export_layouts_from_bindings
 from .._record_design_coverage import _extract_record_design
 from ._registry_schema_support import _committed_registry_tree
 

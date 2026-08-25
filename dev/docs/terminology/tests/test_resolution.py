@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry import bundled_authority
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from .._resolution import ChunkHit, TargetResolver
 
@@ -239,7 +239,7 @@ def test_code_module_resolves_to_its_api_stub(resolver: TargetResolver) -> None:
     out = resolver.resolve(_hit("src/cadrumo/domain/calculations/registry/_temporal.py"))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CODEBASE
-    assert out.record.target == "api/cadrumo.domain.calculations.registry._temporal.html"
+    assert out.record.target == "api/cadrumo.domain.calculations.registry.temporal.html"
 
 
 def test_package_init_resolves_to_the_package_stub(resolver: TargetResolver) -> None:

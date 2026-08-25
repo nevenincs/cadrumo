@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 
 from .....core import Period
-from .....domain.calculations.registry import AmbiguousRevisionSelectionError
+from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
 from .....tests.attribute_scope import scoped_attribute
 from .. import _profile_inspect
 from .._profile_inspect import _resolve_preflight_revision_id
@@ -74,7 +74,7 @@ def test_the_ambiguity_refusal_is_distinguishable_from_the_no_revision_refusal()
     refusal happened".
     """
     from .....application import modelo as _modelo_module
-    from .....domain.calculations.registry import NoRevisionForPeriodError
+    from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 
     def _unresolved(**_kwargs: object) -> str:
         raise NoRevisionForPeriodError(modelo_id="303", filing_year=1999, period="3T", revision_id=None)

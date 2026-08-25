@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry import RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 from ..checklist import CHECKLIST, render_checklist
 from ..manager import NewModeloError, NewModeloScaffoldManager, ScaffoldResult
@@ -183,7 +183,7 @@ def test_scaffolded_tree_reaches_directory_mode_validation(tmp_path: Path) -> No
     deliberately incomplete TODO metadata. This proves the scaffold reaches semantic
     validation rather than failing earlier on a malformed directory layout.
     """
-    from cadrumo.domain.calculations.registry import load_modelo_directory
+    from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
@@ -209,7 +209,10 @@ def test_scaffolded_toml_declares_only_fields_the_schema_knows(tmp_path: Path) -
     """
     import tomllib
 
-    from cadrumo.domain.calculations.registry import ModeloDefinition, ModeloRevision
+    from cadrumo.domain.calculations.registry.schema import (
+        ModeloDefinition,
+        ModeloRevision,
+    )
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)

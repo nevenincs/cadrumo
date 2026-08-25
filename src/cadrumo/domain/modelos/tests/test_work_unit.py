@@ -39,7 +39,7 @@ from ....core import Period
 from ....core.directory_scan import scan_directory
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry import RevisionId
+from cadrumo.domain.calculations.registry.ids import RevisionId
 from ...user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .._codes import ModeloCode
 from ..errors import ModeloValidationError

@@ -63,7 +63,7 @@ def test_registry_applicability_focused_bridge_is_absent() -> None:
 
 def test_facade_reexport_is_identity_equal_to_domain() -> None:
     """The package facade re-export resolves to the same object as the implementation."""
-    domain_mod = importlib.import_module("cadrumo.domain.calculations.registry._applicability")
+    domain_mod = importlib.import_module("cadrumo.domain.calculations.registry.applicability")
     facade_mod = importlib.import_module("cadrumo.domain.calculations.registry")
     assert facade_mod.derive_modelo_applicability is domain_mod.derive_modelo_applicability, (
         "package facade derive_modelo_applicability is not the same object as the domain implementation"
@@ -72,7 +72,7 @@ def test_facade_reexport_is_identity_equal_to_domain() -> None:
 
 def test_annual_withholding_summary_applicability_uses_art_108_not_art_109() -> None:
     """M180/M190 filing duty is RIRPF art. 108, not pago-fraccionado art. 109."""
-    domain_mod = importlib.import_module("cadrumo.domain.calculations.registry._applicability")
+    domain_mod = importlib.import_module("cadrumo.domain.calculations.registry.applicability")
     core_mod = importlib.import_module("cadrumo.core")
     rules_by_modelo = {rule.modelo: rule for rule in domain_mod.iter_modelo_applicability_rules()}
 

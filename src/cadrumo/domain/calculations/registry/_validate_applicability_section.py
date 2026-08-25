@@ -4,11 +4,11 @@ Validates the ``applicability`` schema family (W01.P03.S08) declared on a
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision`: its legal refs
 resolve to grounded legal authority, at most one rule is declared per
 revision, and the rule hydrates into the runtime
-:class:`~cadrumo.domain.calculations.registry._applicability.ModeloApplicabilityRule`
+:class:`~cadrumo.domain.calculations.registry.applicability.ModeloApplicabilityRule`
 without error.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+    :func:`cadrumo.domain.calculations.registry.validate_revision_sections.validate_revision_definition`
         Per-revision dispatcher that invokes every section validator,
         including relation, dependency-classification and filing-schedule
         validation in :mod:`_validate_dependency_sections`. This module's
@@ -22,9 +22,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....core import Modelo
-from ._applicability import hydrate_applicability_rule
+from .applicability import hydrate_applicability_rule
 from .errors import RegistryValidationError
-from ._schema import LegalReference, ModeloRevision
+from .schema import LegalReference, ModeloRevision
 from ._validate_helpers import missing_refs
 
 

@@ -22,6 +22,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from ....core import StorageCustodyProfile
+
 
 class StorageNamespaceScope(StrEnum):
     """Logical custody scope for a secure-object namespace."""
@@ -38,13 +40,6 @@ class StorageCustodyDisposition(StrEnum):
     FULL_CUSTODY_ONLY = "full_custody_only"
     DERIVED_REBUILDABLE = "derived_rebuildable"
     PROCESS_LOCAL = "process_local"
-
-
-class StorageCustodyProfile(StrEnum):
-    """Secure-object custody transport profile."""
-
-    FULL = "full"
-    STRUCTURED = "structured"
 
 
 _CUSTODY_PROFILE_DISPOSITIONS: dict[StorageCustodyProfile, frozenset[StorageCustodyDisposition]] = {

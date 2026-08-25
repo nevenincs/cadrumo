@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._schema import ConstructDefinition
-from .._validate import RegistryValidator
+from ..schema import ConstructDefinition
+from ..validate import RegistryValidator
 from .._validate_constructs import _CONSTRUCT_MEMBER_ATTRS, validate_construct_closure
 from .._validate_evidence import EvidenceValidator
 from ._referential_integrity_support import (

@@ -25,7 +25,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....core.tabular import coerce_cell_text
-from .._record_design import extract_record_design
+from ..record_design import extract_record_design
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

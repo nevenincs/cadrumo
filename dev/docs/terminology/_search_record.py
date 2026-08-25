@@ -23,7 +23,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core import CasillaId, Modelo
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import BindingId, FormulaId, InputKind
+from cadrumo.domain.calculations.registry.ids import (
+    BindingId,
+    FormulaId,
+)
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 __all__ = [
     "CasillaSearchRecord",

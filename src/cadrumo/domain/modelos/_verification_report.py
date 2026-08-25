@@ -34,7 +34,7 @@ from ...core import STRICT_FROZEN_CONFIG, CasillaId, OperatorActionAxis
 from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, VerificationReportId
 from ...core.time import validate_utc_aware
-from ..calculations.registry import LegalRefId, SourceRefId, VerificationExpectationId
+from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId, VerificationExpectationId
 from .errors import ModeloValidationError
 
 ModeloActorLabel = Annotated[

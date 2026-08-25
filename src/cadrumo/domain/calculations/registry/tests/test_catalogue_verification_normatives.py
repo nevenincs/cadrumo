@@ -11,10 +11,10 @@ from .....core import RegistryAuthorityGrade, normalise_corpus_text
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
-from .._corpus_catalogue import verify_source_file
+from ..corpus_catalogue import verify_source_file
 from ..errors import RegistryValidationError
-from .._legal import verify_legal_catalogue
-from .._loader import load_catalogue_file
+from ..legal import verify_legal_catalogue
+from ..loader import load_catalogue_file
 from ._catalogue_verification_support import (
     _FORMAL_WITHHOLDING_ARTICLE_REF,
     _FORMAL_WITHHOLDING_MODELOS,

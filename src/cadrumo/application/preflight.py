@@ -523,11 +523,8 @@ def probe_registry_referential_integrity() -> PreflightCheck:
     Returns:
         A single :class:`PreflightCheck` row for the registry-integrity dimension.
     """
-    from ..domain.calculations.registry import (
-        RegistrySnapshotError,
-        RegistryValidationError,
-        bundled_authority,
-    )
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
+    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 
     try:
         authority = bundled_authority()
@@ -547,7 +544,7 @@ def _probe_registry_authority(authority: object) -> PreflightCheck:
     """Validate one loaded authority through the production snapshot path."""
     from collections import Counter
 
-    from ..domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
+    from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 
     revisions_checked = 0
     failure_count = 0

@@ -24,19 +24,19 @@ from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
 from .. import ExportDraftAttribute, ExportJustification, ExportPadding
-from .._binding_selector_utils import (
+from ..binding_selector_utils import (
     BindingExportDataType,
     BindingFixedExportSelector,
     BindingRowExportSelector,
     binding_export_selector,
 )
 from ..errors import RegistryValidationError
-from .._export import (
+from ..export import (
     _justification_for_binding_data_type,
     _padding_for_binding_data_type,
     export_fields_overlap,
 )
-from .._schema import CasillaFieldKind, DataBindingDefinition, ExportFieldDefinition, ModeloRevision
+from ..schema import CasillaFieldKind, DataBindingDefinition, ExportFieldDefinition, ModeloRevision
 from .._schema_exports import FilingEnvelopePrefixFieldDeclaration, FilingEnvelopePrefixRole
 from ._loader_directory_mode_support import _committed_modelo, _committed_registry_modelos
 

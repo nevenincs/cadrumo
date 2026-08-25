@@ -19,12 +19,12 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .._corpus_catalogue import (
+from ..corpus_catalogue import (
     verify_source_catalogue,
     verify_source_file,
 )
 from ..errors import RegistryValidationError
-from .._schema import SourceReference
+from ..schema import SourceReference
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

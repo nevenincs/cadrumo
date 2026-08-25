@@ -9,7 +9,7 @@ import pytest
 from .....core import normalise_corpus_text
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from .._schema import ModeloDefinition, RegistryCatalogues
+from ..schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

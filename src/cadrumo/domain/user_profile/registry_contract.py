@@ -20,12 +20,13 @@ from .schema import (
 )
 
 if TYPE_CHECKING:
-    from ..calculations.registry import ModeloDefinition, ModeloRevision
+    from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
 from ...core.errors import BaseSeverity
-from ...domain.calculations.registry import ProfileSelector, RevisionId
+from cadrumo.domain.calculations.registry.bindings import ProfileSelector
+from cadrumo.domain.calculations.registry.ids import RevisionId
 
 
 class UserProfileRegistryContractIssue(BaseModel):

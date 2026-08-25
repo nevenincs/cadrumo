@@ -48,7 +48,7 @@ from ....core.directory_scan import (
 from ....core.config import load_settings
 from ....core.resources import bundled_path
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
-from ._ids import RevisionId
+from .ids import RevisionId
 from ._toml_helpers import as_toml_table as _as_toml_table
 
 REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"

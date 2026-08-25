@@ -25,9 +25,9 @@ from ..errors import (
     NoRevisionForPeriodError,
     RegistrySnapshotError,
 )
-from .._relations import relation_source_requirements
-from .._schema import ModeloDefinition
-from .._temporal import select_revision
+from ..relations import relation_source_requirements
+from ..schema import ModeloDefinition
+from ..temporal import select_revision
 from .._validate_revision_rules import validate_revision_windows
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 

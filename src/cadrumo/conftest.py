@@ -262,7 +262,7 @@ def _isolate_registry_caches() -> Iterator[None]:
     is needed for correctness, only for tidiness the temp directory does not
     require.
     """
-    from .domain.calculations.registry import clear_fingerprint_cache
+    from cadrumo.domain.calculations.registry.loader import clear_fingerprint_cache
     from .domain.calculations.registry._loader import _load_registry_tree_cached
 
     def _reset() -> None:

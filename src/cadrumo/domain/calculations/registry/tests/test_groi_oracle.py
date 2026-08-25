@@ -22,13 +22,13 @@ from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY, aeat_host
 from .._checker_oracle_flow import CheckerObservation, CheckerReplayDriver
 from ..errors import RegistryValidationError
-from .._groi_oracle import (
+from ..groi_oracle import (
     GROI_ORACLE_ID,
     GroiOracle,
     register_default,
 )
-from .._live_parity import LiveParityCatalogue, LiveParityOracle, OracleEnvironment
-from .._remote_state_guard import (
+from ..live_parity import LiveParityCatalogue, LiveParityOracle, OracleEnvironment
+from ..remote_state_guard import (
     AEAT_WRITE_FORBIDDEN_ACTIONS,
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -217,7 +217,7 @@ def test_replay_payload_roundtrip_via_groi_driver() -> None:
     """ReplayPayload.model_validate accepts the canonical JSON shape and the
     driver's collect_observation round-trips the same envelope faithfully."""
 
-    from .._live_parity import ReplayPayload
+    from ..live_parity import ReplayPayload
 
     raw = json.dumps(
         {
@@ -244,7 +244,7 @@ def test_replay_payload_roundtrip_via_groi_driver() -> None:
 def test_replay_payload_strict_rejects_extra_fields() -> None:
     """extra=forbid means unknown top-level keys raise ValidationError."""
 
-    from .._live_parity import ReplayPayload
+    from ..live_parity import ReplayPayload
 
     with pytest.raises(ValidationError, match="Extra"):
         ReplayPayload.model_validate({"observed": {}, "unknown_field": "x"})
@@ -253,7 +253,7 @@ def test_replay_payload_strict_rejects_extra_fields() -> None:
 def test_replay_payload_strict_rejects_non_string_value_in_observed() -> None:
     """Mapping[str, str] under strict mode rejects integer values."""
 
-    from .._live_parity import ReplayPayload
+    from ..live_parity import ReplayPayload
 
     with pytest.raises(ValidationError):
         ReplayPayload.model_validate({"observed": {"A28015865": 999}})

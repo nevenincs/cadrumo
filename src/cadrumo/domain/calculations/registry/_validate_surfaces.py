@@ -10,9 +10,9 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping
 
 from ....core import CasillaId
-from ._schema import LegalReference, ModeloRevision, SourceReference
+from .schema import LegalReference, ModeloRevision, SourceReference
 from ._schema_surfaces import CasillaDefinition
-from ._schema_verification import (
+from .schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     VerificationExpectationDefinition,
     verification_predicate_operator_name,

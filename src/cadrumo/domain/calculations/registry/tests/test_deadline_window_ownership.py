@@ -7,13 +7,13 @@ from datetime import date
 import pytest
 
 from .....core import Period
-from .._schema import (
+from ..schema import (
     DeadlineWindowDefinition,
     ModeloScheduleDefinition,
     PeriodSelector,
     SupportedFilingYearsCatalogue,
 )
-from .._validate import RegistryValidator
+from ..validate import RegistryValidator
 from .._validate_revision_rules import (
     validate_deadline_window_cadence,
     validate_deadline_window_ownership,

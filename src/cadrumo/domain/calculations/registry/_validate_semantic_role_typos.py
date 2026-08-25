@@ -9,7 +9,7 @@ from functools import lru_cache
 from typing import NamedTuple, Protocol
 
 from ....core import CasillaId
-from ._ids import RevisionId
+from .ids import RevisionId
 from ._validate_semantic_role_axes import (
     semantic_roles_are_axis_siblings,
     semantic_roles_are_modelo_prefix_siblings,

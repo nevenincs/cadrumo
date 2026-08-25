@@ -122,7 +122,8 @@ def _legal_refs_of(parameter_id: str) -> tuple[str, ...]:
     Deferred import for the reason the rate loader states: the registry import
     path reaches back into the domain packages this module belongs to.
     """
-    from ..calculations.registry import RegistryError, load_legal_parameters_only
+    from cadrumo.domain.calculations.registry.errors import RegistryError
+    from cadrumo.domain.calculations.registry.loader import load_legal_parameters_only
 
     try:
         parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
@@ -153,7 +154,8 @@ def load_retencion_actividades_rates() -> RirpfArt95RetencionRates:
     # Imported inside the function for the same reason the recargo loader does:
     # the full registry import path reaches back into the domain packages this
     # module belongs to, and a module-level import would close that cycle.
-    from ..calculations.registry import RegistryError, load_legal_parameters_only
+    from cadrumo.domain.calculations.registry.errors import RegistryError
+    from cadrumo.domain.calculations.registry.loader import load_legal_parameters_only
 
     try:
         parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
@@ -315,7 +317,8 @@ def load_administrador_retencion_rates() -> AdministradorRetencionRates:
     # loader does: the full registry import path reaches back into the domain
     # packages this module belongs to, and a module-level import would close
     # that cycle.
-    from ..calculations.registry import RegistryError, load_legal_parameters_only
+    from cadrumo.domain.calculations.registry.errors import RegistryError
+    from cadrumo.domain.calculations.registry.loader import load_legal_parameters_only
 
     try:
         parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))

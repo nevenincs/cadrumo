@@ -22,23 +22,23 @@ import pytest
 from .....core.resources import bundled_path
 from .. import CasillaConstraints, LegalRefId, load_modelo_directory
 from ..errors import RegistryValidationError
-from .._modelo_localization import casilla_occurrence_locale_key
-from .._schema import (
+from ..modelo_localization import casilla_occurrence_locale_key
+from ..schema import (
     CasillaDefinition,
     ModeloDefinition,
     ModeloRevision,
     PeriodSelector,
     RegistryCatalogues,
 )
-from .._validate import (
+from ..validate import (
     RegistryValidator,
 )
-from .._validate_cross_revision import (
+from ..validate_cross_revision import (
     declared_cross_revision_continuity_semantic_linkage_failures,
     summarize_non_overlapping_cross_revision_casilla_drift,
     validate_cross_revision_casilla_consistency,
 )
-from .._validate_registry_scope import validate_registry_scope
+from ..validate_registry_scope import validate_registry_scope
 from ._registry_schema_support import _committed_registry_tree
 from ._synthetic_locale_fixtures import (
     _synthetic_locale_scope,

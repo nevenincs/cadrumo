@@ -34,7 +34,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.state_projection import ProjectionModeloReadiness
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     IvaDeductionClassificationProvenance,

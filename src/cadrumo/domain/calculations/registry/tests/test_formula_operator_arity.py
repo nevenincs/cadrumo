@@ -10,8 +10,8 @@ from pydantic import ValidationError
 
 from ..errors import RegistryValidationError
 from .._formula_operator_contracts import FORMULA_OPERATOR_ARITIES
-from .._formula_runtime_ops import evaluate_args_op
-from .._schema import FormulaExpression
+from ..formula_runtime_ops import evaluate_args_op
+from ..schema import FormulaExpression
 from .._schema_base import FormulaOperator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

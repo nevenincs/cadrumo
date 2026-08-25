@@ -21,7 +21,7 @@ from decimal import Decimal
 import pytest
 
 from .. import RegistryValidationError
-from .._ledger_binding_resolution import (
+from ..ledger_binding_resolution import (
     assert_quantity_readers_cover_independent_facts,
     independent_quantity_facts,
 )

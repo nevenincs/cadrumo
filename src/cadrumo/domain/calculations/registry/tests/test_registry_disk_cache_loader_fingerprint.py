@@ -45,13 +45,13 @@ from .._compiled_cache import (
     _registry_disk_cache_key,
     loader_code_fingerprint,
 )
-from .._loader import (
+from ..loader import (
     _collect_registry_tree_fingerprints,
     _load_registry_tree_cached,
     clear_fingerprint_cache,
     load_registry_tree,
 )
-from .._schema import ModeloDefinition, RegistryCatalogues
+from ..schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

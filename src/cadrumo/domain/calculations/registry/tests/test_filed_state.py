@@ -10,16 +10,16 @@ from pydantic import ValidationError
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .._bindings import CasillaObservation, RegistryModeloObservation
+from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..errors import RegistryValidationError
-from .._filed_state import (
+from ..filed_state import (
     RegistryFiledStateComparison,
     RegistryFiledStateDrift,
     compare_calculation_to_filed_observation,
 )
-from .._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from .._schema import RegistrySnapshot
-from .._snapshot import build_snapshot
+from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..schema import RegistrySnapshot
+from ..snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

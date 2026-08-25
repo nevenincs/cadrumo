@@ -1,15 +1,15 @@
 """Per-revision registry section validation.
 
 Orchestrates validators for a modelo revision and collects their failures. The dispatcher builds a
-:class:`~cadrumo.domain.calculations.registry._validate_revision_context.RevisionValidationContext`
+:class:`~cadrumo.domain.calculations.registry.validate_revision_context.RevisionValidationContext`
 once and reuses it across record, surface, dependency, algorithm, completeness,
 and closure validators. Legal/source refs are checked through the shared
-:class:`~cadrumo.domain.calculations.registry._validate_evidence.EvidenceValidator`.
+:class:`~cadrumo.domain.calculations.registry.validate_evidence.EvidenceValidator`.
 
 See Also:
     :class:`cadrumo.domain.calculations.registry.RegistryValidator`
         Registry-level validator that calls :func:`validate_revision_definition`.
-    :mod:`cadrumo.domain.calculations.registry._validate_revision_closure`
+    :mod:`cadrumo.domain.calculations.registry.validate_revision_closure`
         Closure validators dispatched after section-level checks.
 """
 
@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from ._schema import LegalReference, ModeloDefinition, ModeloRevision, SourceReference
+from .schema import LegalReference, ModeloDefinition, ModeloRevision, SourceReference
 from ._validate_applicability_section import validate_applicability_section
 from ._validate_authority_grade import validate_authority_grade_section
 from ._validate_completeness import emit_completeness_gate_failures as _emit_completeness_gate_failures
@@ -46,10 +46,10 @@ from ._validate_revision_closure import validate_revision_closure_sections as _v
 from ._validate_revision_closure import validate_revision_reference_surfaces as _validate_revision_reference_surfaces
 from ._validate_revision_context import RevisionValidationContext, build_revision_validation_context
 from ._validate_revision_id_window_agreement import validate_revision_id_window_agreement
-from ._validate_revision_identity import (
+from .validate_revision_identity import (
     emit_revision_payload_failures as _emit_revision_payload_failures,
 )
-from ._validate_revision_identity import (
+from .validate_revision_identity import (
     revision_reference_identity_failures,
 )
 from ._validate_surfaces import (
@@ -82,7 +82,7 @@ def _validate_revision_surface_sections(
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` is validated
     with a shared
-    :class:`~cadrumo.domain.calculations.registry._validate_revision_context.RevisionValidationContext`
+    :class:`~cadrumo.domain.calculations.registry.validate_revision_context.RevisionValidationContext`
     so record, surface, dependency, algorithm, export, and extraction-profile
     checks consume the same declared-id indexes.
     """

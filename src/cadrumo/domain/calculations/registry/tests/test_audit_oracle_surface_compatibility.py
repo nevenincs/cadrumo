@@ -13,16 +13,16 @@ from __future__ import annotations
 
 import pytest
 
-from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
-from .._live_parity import (
+from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
+from ..live_parity import (
     _COMPATIBLE_SURFACE_PAIRS,
     LiveParityCatalogue,
     OracleEnvironment,
     audit_oracle_bindings,
 )
 from .._renta_web_open_oracle import RentaWebOpenOracle
-from .._schema import ModeloDefinition
+from ..schema import ModeloDefinition
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

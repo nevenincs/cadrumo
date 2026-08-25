@@ -11,9 +11,9 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from .errors import RegistryValidationError
-from ._ids import ModeloId, RelationId
-from ._period_offset_math import apply_period_offset
-from ._schema import ModeloDefinition, ModeloRevision, PeriodSelector, RelationDefinition, RelationRevisionSelector
+from .ids import ModeloId, RelationId
+from .period_offset_math import apply_period_offset
+from .schema import ModeloDefinition, ModeloRevision, PeriodSelector, RelationDefinition, RelationRevisionSelector
 
 
 @dataclass(frozen=True, slots=True)

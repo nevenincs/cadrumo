@@ -8,9 +8,9 @@ from decimal import Decimal
 import pytest
 
 from ..errors import RegistryValidationError
-from .._formula_runtime import calculate_registry_snapshot
-from .._formula_text_inputs import validated_text_input_casilla_ids
-from .._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..formula_runtime import calculate_registry_snapshot
+from ..formula_text_inputs import validated_text_input_casilla_ids
+from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ._formula_runtime_support import (
     _M130_AGRARIAN_VOLUME_CASILLA,
     _M130_AGRARIAN_WITHHELD_CASILLA,

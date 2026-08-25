@@ -33,7 +33,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import extract_record_design
-from .._export import derive_export_layouts_from_bindings
+from ..export import derive_export_layouts_from_bindings
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

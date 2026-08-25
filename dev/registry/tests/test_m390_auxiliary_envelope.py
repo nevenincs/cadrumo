@@ -10,11 +10,9 @@ from pydantic import ValidationError
 
 from cadrumo.core import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity, Period
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import (
-    RegistryValidationError,
-    bundled_revision_inspection,
-    load_catalogue_file,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
 from ..pipeline import _m390_auxiliary_envelope
 from ..pipeline._m390_auxiliary_envelope import (
@@ -252,6 +250,6 @@ def test_m390_auxiliary_authority_has_no_layout_or_historical_output_dependency(
     referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
     attribute_names = {node.attr for node in ast.walk(module) if isinstance(node, ast.Attribute)}
 
-    assert "cadrumo.domain.calculations.registry._export" not in imported_modules
+    assert "cadrumo.domain.calculations.registry.export" not in imported_modules
     assert "resolve_export_layout" not in referenced_names
     assert "export_layouts" not in attribute_names

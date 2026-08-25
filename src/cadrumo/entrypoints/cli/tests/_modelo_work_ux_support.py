@@ -10,7 +10,7 @@ import json
 import cadrumo.application.wizard.catalogue as _wizard_catalogue
 import cadrumo.application.wizard.persistence as _wizard_persistence
 from ....core.aggregation import BindingSourceKind
-from ....domain.calculations.registry import select_revision
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.registry_tree import bundled_registry_tree

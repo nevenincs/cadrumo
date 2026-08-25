@@ -13,7 +13,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ....deadlines import CalendarCCAA
-from .._schema import (
+from ..schema import (
     BicString,
     CalendarDate,
     CasillaDefinition,

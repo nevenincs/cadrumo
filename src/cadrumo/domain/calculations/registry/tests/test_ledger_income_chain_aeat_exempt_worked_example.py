@@ -100,7 +100,7 @@ from .. import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
-from .._schema_input_kind import InputKind
+from ..schema_input_kind import InputKind
 from ._registry_schema_support import _committed_modelo
 from ._scenarios import (
     RegistryCalculationScenario,

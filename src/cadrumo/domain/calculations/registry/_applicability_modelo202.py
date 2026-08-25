@@ -17,7 +17,7 @@ from ....core import Modelo
 from ....core.external_constants import MODELO_202_ART_40_3_INCN_THRESHOLD_EUR
 from ...deadlines import EntityType, TaxpayerProfile
 from .errors import RegistryFailureClassification, RegistryFailureCondition
-from ._ids import LegalRefId
+from .ids import LegalRefId
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 

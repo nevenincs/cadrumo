@@ -17,7 +17,7 @@ from .. import (
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
 )
-from .._loader import _collect_registry_tree_fingerprints, clear_fingerprint_cache
+from ..loader import _collect_registry_tree_fingerprints, clear_fingerprint_cache
 from .._loader_cache import registry_disk_cache_dir
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 

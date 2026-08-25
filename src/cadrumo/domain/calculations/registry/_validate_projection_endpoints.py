@@ -5,14 +5,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....core import CasillaId, FilingProjectionRef, filing_projection_ref_casilla_id
-from ._schema import (
+from .schema import (
     CasillaDefinition,
     LegalReference,
     ModeloRevision,
     ProjectionEndpointDeclaration,
     SourceReference,
 )
-from ._schema_input_kind import InputKind
+from .schema_input_kind import InputKind
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 

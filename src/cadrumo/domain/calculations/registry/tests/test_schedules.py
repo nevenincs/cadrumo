@@ -20,12 +20,12 @@ from types import SimpleNamespace
 import pytest
 
 from ..errors import RegistryValidationError
-from .._schedules import (
+from ..schedules import (
     _resolve_profile_fact,
     evaluate_profile_conditions,
     profile_condition_matches,
 )
-from .._schema import ProfilePredicateDefinition
+from ..schema import ProfilePredicateDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

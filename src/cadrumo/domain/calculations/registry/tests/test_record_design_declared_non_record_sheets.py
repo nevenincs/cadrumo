@@ -14,8 +14,8 @@ import pytest
 
 from .....core.resources import bundled_path
 from ..errors import RegistryValidationError
-from .._loader import load_catalogue_file
-from .._record_design import extract_record_design
+from ..loader import load_catalogue_file
+from ..record_design import extract_record_design
 from .._record_design_schema import (
     RecordDesignExtraction,
     RecordDesignSkippedSheet,

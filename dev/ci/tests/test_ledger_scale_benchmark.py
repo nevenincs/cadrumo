@@ -93,7 +93,7 @@ from cadrumo.application.modelo._filed_revision_observation import persist_filed
 from cadrumo.application.modelo._work_lifecycle import create_work_unit
 from cadrumo.core import CasillaId, Period, validated_casilla_id
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.domain.calculations.registry import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.invoices import InvoiceCatalogue
 from cadrumo.domain.transactions import (
     BusinessClassification,

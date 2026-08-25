@@ -13,8 +13,8 @@ from datetime import date
 
 import pytest
 
-from .._cross_revision_divergence import revisions_overlap
-from .._schema import ModeloRevision, PeriodSelector
+from ..cross_revision_divergence import revisions_overlap
+from ..schema import ModeloRevision, PeriodSelector
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,

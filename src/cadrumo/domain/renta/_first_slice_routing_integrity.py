@@ -36,7 +36,7 @@ through the abstract Protocol without naming ``renta``.
 from __future__ import annotations
 
 from ...core import CasillaId, Modelo
-from ..calculations.registry import register_cross_domain_snapshot_check
+from cadrumo.domain.calculations.registry.validate_references import register_cross_domain_snapshot_check
 
 
 def check_first_slice_routing(

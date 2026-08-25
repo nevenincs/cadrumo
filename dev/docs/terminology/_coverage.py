@@ -45,8 +45,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
-from cadrumo.domain.calculations.registry import (
-    RegistrySnapshotError,
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
 )

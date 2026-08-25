@@ -29,8 +29,8 @@ from .. import (
     discover_modelo_sources,
     load_modelo_source,
 )
-from .._export_value_policy import ExportValuePolicy
-from .._fixed_width_codec import render_fixed_width_export_field
+from ..export_value_policy import ExportValuePolicy
+from ..fixed_width_codec import render_fixed_width_export_field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

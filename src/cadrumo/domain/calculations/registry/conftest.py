@@ -7,10 +7,10 @@ import pytest
 from ....core import RegistryAuthorityGrade
 from ....core.resources import bundled_path, resources
 from ....tests.registry_tree import bundled_registry_tree
-from ._authority import ValidatedRegistryAuthority
-from ._ids import RevisionId
-from ._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
-from ._snapshot import build_snapshot
+from .authority import ValidatedRegistryAuthority
+from .ids import RevisionId
+from .schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from .snapshot import build_snapshot
 
 
 @pytest.fixture(scope="session")

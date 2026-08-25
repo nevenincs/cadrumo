@@ -223,7 +223,7 @@ def _bundled_legal_ref_ids() -> frozenset[str]:
     A restored instrument returning a different population is worse than a
     blocked one. This one stays blocked until the registry validates.
     """
-    from cadrumo.domain.calculations.registry import bundled_authority
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
     return frozenset(bundled_authority().catalogues.legal)
 

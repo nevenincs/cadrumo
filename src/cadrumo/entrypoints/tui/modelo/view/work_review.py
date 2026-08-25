@@ -35,7 +35,8 @@ from .....application.modelo.work_review_projection import (
 from .....core import EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
 from .....core.aggregation import BindingSourceKind
 from .....core.i18n import tr
-from .....domain.calculations.registry import InputKind, RelationConsumptionChannel
+from cadrumo.domain.calculations.registry.handoffs import RelationConsumptionChannel
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.filing import ModeloValueKind
 from .....domain.modelos import (
     ModeloVerificationFinding,

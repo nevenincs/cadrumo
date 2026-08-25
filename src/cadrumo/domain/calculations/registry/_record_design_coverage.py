@@ -14,13 +14,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ....core import CasillaId
-from ._bindings import binding_source_casilla_ids, binding_source_modelo
-from ._casilla_membership import casillas_by_id
+from .bindings import binding_source_casilla_ids, binding_source_modelo
+from .casilla_membership import casillas_by_id
 from .errors import RegistryValidationError
-from ._ids import LegalRefId, RevisionId
+from .ids import LegalRefId, RevisionId
 from ._record_design_schema import RecordDesignSheet
-from ._runtime_graph import expression_casilla_refs
-from ._schema import CasillaDefinition, DataBindingDefinition, ModeloRevision
+from .runtime_graph import expression_casilla_refs
+from .schema import CasillaDefinition, DataBindingDefinition, ModeloRevision
 
 
 def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
@@ -40,7 +40,7 @@ def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
     Returns:
         The parsed sheets, complete or not.
     """
-    from ._record_design import extract_record_design
+    from .record_design import extract_record_design
 
     return extract_record_design(path).accept_partial()
 
@@ -814,7 +814,7 @@ def build_diseno_coverage_report(
     # copied: a second literal would silently stop matching if the extractor
     # changed it, and `recovered_from_chart_geometry` would quietly go false for
     # every design instead of failing.
-    from ._record_design import _VISUAL_CHART_TYPE_CODE
+    from .record_design import _VISUAL_CHART_TYPE_CODE
 
     extracted_fields = sum(len(sheet.fields) for sheet in sheets)
     described_fields = sum(

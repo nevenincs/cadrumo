@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:6efd580ae49be1cd40f588f5105f957691725740b23f30b06dc704fed3d2d0bd'
+body_hash: 'sha256:6de0df9e4b9e82d79335bc663d198a0963acf7517c07e4d9f128c9434ab9807a'
 step_id: 'S170'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -25,18 +25,18 @@ related:
 - Converge direct import consumers, including review, external import, overview, calculation, history, reconciliation, taxation, workflow, CLI, registry, and tests.
 - Record the shared move/deletion/import sweep in commit `5dcd5a9c026` and boundary hardening in commit `82c906562d`.
 - Preserve boundary translations: history maps malformed caller ids to its established not-found error; reconciliation maps strict-id absence to its established not-found error and rejects a known cross-bucket id before scoped selection.
-- Prove capture-then-mutate selection against encrypted SQL statement instrumentation and add exact-AST fixed-point assertions for the public owner, removals, package inertness, scan replacements, and boundary consumers.
+- Prove capture-then-mutate selection against encrypted SQL statement instrumentation and enforce the public owner, removals, inert package, direct consumers, dynamic access, dataflow wrappers, and retired text through the reusable canonical import-authority scanner.
 
 ## Outcome
 
 - The pure selector accepts only a caller-supplied `WorkUnitCatalogue` and resolved bucket, with visible, strict-id, operator 12-character, and active-natural cardinality semantics owned by one public module.
 - Targeted compilation and Ruff passed. The boundary translation plus selector matrix passed 19 tests, and the expanded exact-AST fixed-point test passed.
-- Independent review passed in audit commit `4b802cc588`, with no remaining S170 finding.
+- The review PASS at `4b802cc588` over frozen source `a3dbaeee421` was superseded by the final integrated review recorded in `2026-08-25-tui-architecture-s170-remediation-review-audit`; it did not prove complete tracked-live discovery or the dynamic and semantic authority shapes required by S170.
 - After the directory-scan relocation landed, the post-review live rerun completed 73 tests in 194.37 seconds: 73 passed and one external auth-relocation import failed before S170 selector/review work. The sole failure was `ModuleNotFoundError` for `cadrumo.adapters.outbound.aeat.auth.session_probe` on the provider-selection to clave-movil path.
-- The current exact AST census and scoped Ruff gate passed after the review evidence was recorded.
-- A fresh code RAG index placed all semantic positive matches for the selector owner in `work_addressing.py`. Its current shared corpus reported incomplete coverage, so the exact AST census, rather than semantic absence, proves the zero-remnant result.
+- The corrective fixed-point gates share one reusable scanner over the complete tracked-live inventory, and their exact mutants cover relative imports, aliases, module and local dataflow, dynamic imports and exports, indirect export maps, nested definitions, and realistic repository-owned selector wrappers.
+- The resident-service discovery gate classifies every returned production owner, requires the sole canonical `work_addressing.py` result, rejects mixed canonical-plus-parallel results, and runs through the standard resident-service lane.
 
 ## Notes
 
 - The post-review external auth-relocation failure is outside the S170 surface and has not been changed here.
-- S170 is eligible for the coordinating plan lifecycle transition because the independent review passed and the current S170 exact census and Ruff gate are green.
+- S170 remains unchecked after the false PASS was retracted. The atomic remediation requires an independent clean-HEAD review before any lifecycle transition.

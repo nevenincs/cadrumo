@@ -37,11 +37,11 @@ import pytest
 
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.resources import bundled_path
-from .._binding_selector_utils import selector_as_dict
+from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
-from .._formula_runtime import calculate_registry_snapshot
-from .._legal import verify_legal_catalogue
-from .._schema import ParameterDefinition
+from ..formula_runtime import calculate_registry_snapshot
+from ..legal import verify_legal_catalogue
+from ..schema import ParameterDefinition
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

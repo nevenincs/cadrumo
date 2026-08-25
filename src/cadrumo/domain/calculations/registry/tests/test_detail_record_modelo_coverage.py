@@ -16,7 +16,7 @@ from collections.abc import Mapping
 import pytest
 
 from .....application.storage.calc_sheets import collect_row_sets
-from .._schema import ModeloDefinition
+from ..schema import ModeloDefinition
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

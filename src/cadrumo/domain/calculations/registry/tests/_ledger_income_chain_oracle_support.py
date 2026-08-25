@@ -23,7 +23,7 @@ from .. import build_snapshot
 from ._registry_schema_support import _committed_modelo
 
 if TYPE_CHECKING:
-    from .._schema import ModeloRevision
+    from ..schema import ModeloRevision
 
 #: The filing year both oracles pin. Shared because the revision resolved below
 #: is law-determined by it: a year that drifted between the two modules would

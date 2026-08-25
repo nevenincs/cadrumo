@@ -15,7 +15,7 @@ from ...core.identity import (
     SnapshotId,
 )
 from ...core.json_contract import OutputSchema
-from ...domain.calculations.registry import BindingId
+from cadrumo.domain.calculations.registry.ids import BindingId
 from ._app_live_payloads_support import _canonical_borrador_period, _canonical_borrador_utc_timestamp
 
 

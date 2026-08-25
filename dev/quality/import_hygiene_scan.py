@@ -111,6 +111,7 @@ class DelegatingWrapperRule:
     delegated_symbol: str
     collaborator_symbols: frozenset[str] = frozenset()
     receiver_methods: frozenset[tuple[str, str]] = frozenset()
+    keyword_source_methods: frozenset[tuple[str, str]] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
@@ -460,7 +461,27 @@ class _CanonicalAuthorityAnalyzer:
                     for call in calls
                     if isinstance(call.func, ast.Attribute) and isinstance(call.func.value, ast.Name)
                 }
-                if rule.collaborator_symbols & collaborator_names or rule.receiver_methods & receiver_methods:
+                keyword_sources = {
+                    (keyword.arg, source.func.attr)
+                    for keyword in returned.value.keywords
+                    if keyword.arg is not None
+                    and isinstance(keyword.value, ast.Name)
+                    for assignment in _scope_nodes(node.body)
+                    if isinstance(assignment, (ast.Assign, ast.AnnAssign))
+                    for target_node in (
+                        assignment.targets if isinstance(assignment, ast.Assign) else (assignment.target,)
+                    )
+                    if isinstance(target_node, ast.Name)
+                    and target_node.id == keyword.value.id
+                    and assignment.value is not None
+                    and isinstance((source := assignment.value), ast.Call)
+                    and isinstance(source.func, ast.Attribute)
+                }
+                if (
+                    rule.collaborator_symbols & collaborator_names
+                    or rule.receiver_methods & receiver_methods
+                    or rule.keyword_source_methods & keyword_sources
+                ):
                     self.add(rule.kind, node, node.name)
 
 

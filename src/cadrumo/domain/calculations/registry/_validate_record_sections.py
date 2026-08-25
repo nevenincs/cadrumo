@@ -21,14 +21,14 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from ....core import CasillaId
-from ._binding_selector_utils import selector_as_dict
-from ._bindings import (
+from .binding_selector_utils import selector_as_dict
+from .bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
     validate_m303_regimen_simplificado_annual_summary_revision,
 )
-from ._ids import BindingId
-from ._schema import (
+from .ids import BindingId
+from .schema import (
     CasillaDefinition,
     DataBindingDefinition,
     FormulaDefinition,

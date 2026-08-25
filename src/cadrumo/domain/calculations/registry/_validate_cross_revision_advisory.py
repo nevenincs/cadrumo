@@ -7,13 +7,13 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from ....core import CasillaId
-from ._cross_revision_divergence import (
+from .cross_revision_divergence import (
     CrossRevisionCasillaDivergence,
     iter_cross_revision_casilla_divergences,
 )
 from .errors import RegistryValidationError
-from ._ids import RevisionId
-from ._schema import ModeloDefinition
+from .ids import RevisionId
+from .schema import ModeloDefinition
 
 __all__ = (
     "CrossRevisionCasillaDriftSummary",

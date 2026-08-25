@@ -17,15 +17,17 @@ from pydantic import BaseModel
 from cadrumo.application.filing import FilingExportProofChannel, FilingExportProofCoordinate
 from cadrumo.core import RegistryAuthorityGrade
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.authority import (
     RegistryDiagnosticFilingRevision,
-    RegistryRevisionInspection,
-    RegistryValidationError,
-    StaticGeneratedArtifactInspection,
     ValidatedRegistryAuthority,
     bundled_authority,
     load_registry_diagnostic_classification,
 )
+from cadrumo.domain.calculations.registry.static_inspection import (
+    RegistryRevisionInspection,
+    StaticGeneratedArtifactInspection,
+)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..filing_export_proof import (
     CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,

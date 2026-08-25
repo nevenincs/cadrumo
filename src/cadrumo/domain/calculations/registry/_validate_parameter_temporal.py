@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date, timedelta
 
-from ._schema import DatedValue, ModeloRevision, ParameterDefinition
+from .schema import DatedValue, ModeloRevision, ParameterDefinition
 
 _FAR_FUTURE = date(9999, 12, 31)
 

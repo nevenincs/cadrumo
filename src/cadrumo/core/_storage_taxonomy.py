@@ -155,6 +155,13 @@ class StorageArea(StrEnum):
     EXPORTS = "exports"
 
 
+class StorageCustodyProfile(StrEnum):
+    """Portable-profile custody depth selected by application policy."""
+
+    FULL = "full"
+    STRUCTURED = "structured"
+
+
 class FingerprintParticipation(StrEnum):
     """Whether writes beneath a member move the data-root drift digest.
 
@@ -580,6 +587,7 @@ __all__ = [
     "FingerprintParticipation",
     "StorageArea",
     "StorageCategory",
+    "StorageCustodyProfile",
     "StorageGrouping",
     "StorageLifecycle",
     "StorageLocation",

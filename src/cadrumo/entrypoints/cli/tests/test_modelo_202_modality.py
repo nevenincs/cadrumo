@@ -36,11 +36,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import (
-    ApplicabilityVerdict,
-    Modelo202Modality,
-    derive_modelo_202_modality,
-)
+from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, Modelo202Modality, derive_modelo_202_modality
 from ....domain.deadlines import (
     EntityType,
     IVARegime,
@@ -188,7 +184,7 @@ def test_sl_with_declared_incn_is_applicable_for_modelo_202() -> None:
     for a legal entity; the INCN modality split is a downstream concern.
     """
 
-    from ....domain.calculations.registry import derive_modelo_applicability
+    from cadrumo.domain.calculations.registry.applicability import derive_modelo_applicability
 
     profile = _sl_profile(incn=_INCN_ABOVE_THRESHOLD)
     verdict = derive_modelo_applicability(profile, "202")
@@ -203,7 +199,7 @@ def test_natural_person_is_not_applicable_for_modelo_202() -> None:
     person before the INCN modality gate is even consulted.
     """
 
-    from ....domain.calculations.registry import derive_modelo_applicability
+    from cadrumo.domain.calculations.registry.applicability import derive_modelo_applicability
 
     profile = _natural_person_profile()
     verdict = derive_modelo_applicability(profile, "202")
@@ -218,7 +214,7 @@ def test_attribution_entity_is_not_applicable_for_modelo_202() -> None:
     gate must refuse them for Modelo 202.
     """
 
-    from ....domain.calculations.registry import derive_modelo_applicability
+    from cadrumo.domain.calculations.registry.applicability import derive_modelo_applicability
 
     profile = _attribution_entity_profile()
     verdict = derive_modelo_applicability(profile, "202")

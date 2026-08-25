@@ -25,9 +25,9 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import ExportExemptionReason, ExportLayoutFormat, RegistryAuthorityGrade
-from .._authority import ValidatedRegistryAuthority
-from .._schema import ModeloRevision
-from .._snapshot import _check_snapshot_filing_capability
+from ..authority import ValidatedRegistryAuthority
+from ..schema import ModeloRevision
+from ..snapshot import _check_snapshot_filing_capability
 from .._validate_export_exemption import (
     modelo_publishes_a_record_design,
     validate_export_exemption_declarations,
@@ -264,7 +264,7 @@ def _revalidate(casilla: object, **updates: object) -> object:
     ``model_copy`` deliberately skips validation, so a contradiction test must
     round-trip through ``model_validate`` to exercise the model validator.
     """
-    from .._schema import CasillaDefinition
+    from ..schema import CasillaDefinition
 
     payload = dict(casilla.__dict__)
     payload.update(updates)

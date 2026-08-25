@@ -24,7 +24,7 @@ import pytest
 from .....core import CasillaId, validated_casilla_id
 from .....core.directory_scan import scan_directory
 from .....tests import REPO_ROOT
-from .._runtime_graph import expression_binding_refs, expression_parameter_refs, expression_relation_refs
+from ..runtime_graph import expression_binding_refs, expression_parameter_refs, expression_relation_refs
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

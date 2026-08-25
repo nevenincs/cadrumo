@@ -29,7 +29,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .._loader import load_registry_tree
+from ..loader import load_registry_tree
 from .._record_design_coverage import build_diseno_coverage_report
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]

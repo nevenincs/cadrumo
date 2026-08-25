@@ -14,12 +14,12 @@ from cadrumo.core import (
     validated_casilla_id,
 )
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.schema import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
-    ExportValuePolicy,
-    RegistryValidationError,
 )
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..pipeline import _provenance_manifest
 from ..pipeline._provenance_manifest import (
@@ -594,7 +594,7 @@ def test_provenance_contract_has_no_legacy_layout_lookup_or_fallback_surface() -
     assert "bundled_authority" not in referenced_names
     assert "load_record_design_intermediate" not in referenced_names
     assert "extract_record_design" not in referenced_names
-    assert "cadrumo.domain.calculations.registry._export" not in imported_modules
+    assert "cadrumo.domain.calculations.registry.export" not in imported_modules
     assert "src/cadrumo/_data/registry" not in string_constants
     build_parameters = inspect.signature(build_export_fragment_provenance_manifest).parameters
     assert "intermediate" not in build_parameters

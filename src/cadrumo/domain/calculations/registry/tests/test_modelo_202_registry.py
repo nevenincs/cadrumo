@@ -10,11 +10,11 @@ import pytest
 
 from .....core import CasillaId
 from .....core.resources import bundled_path
-from .._formula_runtime import _evaluate_expression
-from .._legal import verify_legal_catalogue
-from .._schema import FormulaExpression, ModeloDefinition, RegistryCatalogues
-from .._snapshot import build_snapshot
-from .._validate import RegistryValidator
+from ..formula_runtime import _evaluate_expression
+from ..legal import verify_legal_catalogue
+from ..schema import FormulaExpression, ModeloDefinition, RegistryCatalogues
+from ..snapshot import build_snapshot
+from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

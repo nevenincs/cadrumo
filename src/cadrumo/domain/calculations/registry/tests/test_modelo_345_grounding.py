@@ -9,8 +9,8 @@ import pytest
 
 from .....core.resources import bundled_path, resources
 from .....domain.deadlines import shift_deadline
-from .._corpus_catalogue import verify_source_catalogue
-from .._legal import verify_legal_catalogue
+from ..corpus_catalogue import verify_source_catalogue
+from ..legal import verify_legal_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

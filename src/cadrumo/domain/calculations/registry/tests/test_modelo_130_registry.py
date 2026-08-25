@@ -19,10 +19,10 @@ from .. import (
     calculate_registry_snapshot,
     resolve_previous_filing_binding_values,
 )
-from .._authority import bundled_authority
-from .._binding_selector_utils import selector_as_dict
-from .._bindings import RegistryModeloObservation
-from .._temporal import select_revision
+from ..authority import bundled_authority
+from ..binding_selector_utils import selector_as_dict
+from ..bindings import RegistryModeloObservation
+from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

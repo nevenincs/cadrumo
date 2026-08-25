@@ -11,9 +11,9 @@ from collections.abc import Mapping
 
 from ....core import CasillaId
 from ....core.decimal import try_parse_canonical_decimal
-from ._schema_scalars import registry_scalar_value_type
+from .schema_scalars import registry_scalar_value_type
 from ._schema_surfaces import CasillaDefinition
-from ._schema_verification import (
+from .schema_verification import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     VERIFICATION_PREDICATE_SPECIFICATIONS,
     ParsedVerificationPredicate,

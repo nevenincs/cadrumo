@@ -21,7 +21,10 @@ _ROOT = Path(__file__).resolve().parents[2]
 _CADRUMO = _ROOT / "src/cadrumo"
 _CANONICAL = _CADRUMO / "application/modelo/work_addressing.py"
 _MODULE = "cadrumo.application.modelo.work_addressing"
-_RETIRED = frozenset({"cadrumo.application.modelo._work_addressing", "cadrumo.application.modelo.work_unit_selection"})
+_MODELO_PACKAGE = ".".join(("cadrumo", "application", "modelo"))
+_RETIRED = frozenset(
+    f"{_MODELO_PACKAGE}.{name}" for name in ("_" + "work_addressing", "work_unit_" + "selection")
+)
 _DEFINED_SYMBOLS = frozenset(
     name
     for name in work_addressing.__all__
@@ -39,6 +42,7 @@ _SPEC = CanonicalAuthoritySpec(
             "repository-owning selector wrapper",
             "select_modelo_work_resolution",
             collaborator_symbols=frozenset({"WorkUnitCatalogueRepository"}),
+            keyword_source_methods=frozenset({("catalogue", "load"), ("catalogue", "load_revisioned")}),
         ),
         DelegatingWrapperRule(
             "catalogue preselection wrapper",
@@ -56,15 +60,14 @@ _MUTANT_SPEC = CanonicalAuthoritySpec(
 )
 
 
-def _production_and_docs_corpus() -> tuple[Path, ...]:
-    roots = tuple((_ROOT / name).resolve() for name in ("docs", "packaging", "src"))
-    return tuple(path for path in tracked_live_files() if any(path.is_relative_to(root) for root in roots))
+def _tracked_live_corpus() -> tuple[Path, ...]:
+    return tracked_live_files()
 
 
 def test_work_selection_fixed_point_is_discovery_complete() -> None:
     assert not (_CADRUMO / "application/modelo/_work_addressing.py").exists()
     assert not (_CADRUMO / "application/modelo/work_unit_selection.py").exists()
-    assert scan_canonical_authority(_SPEC, _production_and_docs_corpus()) == []
+    assert scan_canonical_authority(_SPEC, _tracked_live_corpus()) == []
 
 
 @pytest.mark.parametrize(
@@ -74,6 +77,13 @@ def test_work_selection_fixed_point_is_discovery_complete() -> None:
     (
         "from cadrumo.application.modelo.work_addressing import select_modelo_work_resolution\n"
         "def outer():\n def inner():\n  WorkUnitCatalogueRepository().load(); return select_modelo_work_resolution()",
+        "repository-owning selector wrapper",
+    ),
+    (
+        "from cadrumo.application.modelo.work_addressing import select_modelo_work_resolution\n"
+        "def wrapper(repo, request, bucket_id):\n"
+        " catalogue = repo.load()\n"
+        " return select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)",
         "repository-owning selector wrapper",
     ),
     ("def f(value: 'ModeloWorkResolution'): pass", "indirect authority symbol consumer"),

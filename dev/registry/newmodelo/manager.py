@@ -23,7 +23,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.domain.calculations.registry import modelo_locale_key, revision_locale_key
+from cadrumo.domain.calculations.registry.modelo_localization import (
+    modelo_locale_key,
+    revision_locale_key,
+)
 
 __all__ = [
     "NewModeloError",

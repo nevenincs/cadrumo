@@ -36,7 +36,7 @@ from pathlib import Path
 import pytest
 
 from .. import ModeloRevision
-from .._loader import load_registry_tree
+from ..loader import load_registry_tree
 from ._gate_support import fragment_declaring
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

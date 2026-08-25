@@ -34,8 +34,8 @@ from .. import (
     select_revision,
     selector_as_dict,
 )
-from .._bindings import binding_source_casilla_ids, binding_source_modelo
-from .._snapshot import build_snapshot
+from ..bindings import binding_source_casilla_ids, binding_source_modelo
+from ..snapshot import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")

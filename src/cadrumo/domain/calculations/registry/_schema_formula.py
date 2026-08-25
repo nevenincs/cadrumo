@@ -13,9 +13,9 @@ from pydantic import ConfigDict, Field, TypeAdapter, ValidationError, model_vali
 from ....core import CasillaId
 from .errors import RegistryValidationError
 from ._formula_operator_contracts import require_formula_operator_arity
-from ._ids import BindingId, ParameterId, RelationId
+from .ids import BindingId, ParameterId, RelationId
 from ._schema_base import DateAxis, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs
-from ._schema_scalars import DecimalValue
+from .schema_scalars import DecimalValue
 
 __all__ = [
     "BracketEntry",

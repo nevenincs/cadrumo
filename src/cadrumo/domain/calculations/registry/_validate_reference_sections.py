@@ -2,13 +2,13 @@
 
 Per-section walkers that traverse the typed-ID fields of a
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision` and call into an
-:class:`~cadrumo.domain.calculations.registry._validate_reference_checker.IdReferenceChecker`
+:class:`~cadrumo.domain.calculations.registry.validate_reference_checker.IdReferenceChecker`
 to accumulate dangling-reference diagnostics.
 
 See Also:
     :func:`domain.calculations.registry._validate_references.check_all_id_references`
         Snapshot-level referential-integrity gate that invokes these walkers.
-    :mod:`cadrumo.domain.calculations.registry._validate_reference_checker`
+    :mod:`cadrumo.domain.calculations.registry.validate_reference_checker`
         Accumulator that owns the per-kind typed-id sets used here.
 """
 
@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 from ._validate_reference_checker import IdReferenceChecker
 
 if TYPE_CHECKING:
-    from ._schema import ModeloRevision
+    from .schema import ModeloRevision
 
 
 _CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
@@ -45,7 +45,7 @@ def check_construct_refs(checker: IdReferenceChecker, revision: ModeloRevision) 
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
     construct declarations. The
-    :class:`~cadrumo.domain.calculations.registry._validate_reference_checker.IdReferenceChecker`
+    :class:`~cadrumo.domain.calculations.registry.validate_reference_checker.IdReferenceChecker`
     supplies the typed member-id sets and legal/source-ref closure checks.
     """
     for construct in revision.constructs:
@@ -108,7 +108,7 @@ def check_binding_selector_shapes(checker: IdReferenceChecker, revision: ModeloR
             :class:`~cadrumo.domain.calculations.registry.ModeloRevision` whose
             binding selectors are validated.
     """
-    from ._bindings import validate_binding_selector_shape
+    from .bindings import validate_binding_selector_shape
 
     for binding in revision.bindings:
         checker.failures.extend(f"{checker.prefix}: {fail}" for fail in validate_binding_selector_shape(binding))

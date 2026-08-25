@@ -5,7 +5,7 @@ from collections.abc import Iterable, Mapping
 import pytest
 
 from .. import previous_filing_source_reference
-from .._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RelationDefinition
+from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RelationDefinition
 from .._validate_relation_periods import (
     select_relation_source_revisions,
     validate_relation_source_coordinate_coverage,

@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .._corpus_catalogue import verify_source_file
-from .._legal import verify_legal_catalogue
-from .._record_design import extract_record_design_pdf
+from ..corpus_catalogue import verify_source_file
+from ..legal import verify_legal_catalogue
+from ..record_design import extract_record_design_pdf
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

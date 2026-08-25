@@ -21,7 +21,7 @@ See Also:
 from __future__ import annotations
 
 from ....core.aggregation import ROW_SET_GROUPING_FOR_BINDING_SOURCE, BindingAggregationOp, BindingSourceKind
-from ._schema import DataBindingDefinition
+from .schema import DataBindingDefinition
 
 #: Binding ``source`` kinds whose aggregation defaults to ``rows`` (one detail
 #: row per observation) when the binding declares no explicit op. Every other

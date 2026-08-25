@@ -16,8 +16,8 @@ See Also:
 from __future__ import annotations
 
 from ....core import CasillaId
-from ._casilla_membership import casilla_noncanonical_reference_targets, declared_casilla_ids
-from ._schema import ModeloRevision
+from .casilla_membership import casilla_noncanonical_reference_targets, declared_casilla_ids
+from .schema import ModeloRevision
 
 
 def revision_output_ids(revision: ModeloRevision) -> set[CasillaId]:

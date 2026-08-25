@@ -11,7 +11,7 @@ from decimal import Decimal
 
 from ..core import CasillaId, RegistryAuthorityGrade
 from ..core.resources import bundled_path
-from ..domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ..domain.calculations.registry.tests import build_snapshot
 from ..tests.registry_tree import bundled_registry_tree
 

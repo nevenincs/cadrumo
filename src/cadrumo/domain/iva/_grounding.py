@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     # Type-only: importing these at runtime would close the cycle the local
     # imports below exist to avoid. The registry's binding modules consume the
     # public IVA facade, and these loaders are part of that facade.
-    from ..calculations.registry import LegalReference, SourceReference
+    from cadrumo.domain.calculations.registry.schema import LegalReference, SourceReference
 
 
 def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:
@@ -75,7 +75,7 @@ def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, So
     # Keep this import local: the registry's binding modules consume the public
     # IVA facade, and these loaders are part of that facade, so a module-level
     # import here would close an import cycle.
-    from ..calculations.registry import load_registry_tree
+    from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
     source_root = bundled_path()
     _, catalogues = load_registry_tree(source_root / "registry" / "aeat")
@@ -109,7 +109,8 @@ def legal_ref_failures(
         One message per failure, empty when every citation verified.
     """
     # Keep this import local: see :func:`registry_catalogues`.
-    from ..calculations.registry import RegistryValidationError, verify_legal_reference_grounding
+    from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+    from cadrumo.domain.calculations.registry.legal import verify_legal_reference_grounding
 
     failures: list[str] = []
     for ref_id in reference_ids:

@@ -9,7 +9,7 @@ import pytest
 from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .. import FormulaExpression, ParameterId, build_snapshot
-from .._binding_selector_utils import selector_as_dict
+from ..binding_selector_utils import selector_as_dict
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

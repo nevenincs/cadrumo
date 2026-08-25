@@ -14,7 +14,9 @@ from cadrumo.application.registry.source_connectivity import (
 )
 from cadrumo.core import BindingSourceKind, Modelo, Period, SourceConnectivityGroundingLocatorKind
 from cadrumo.core.resources import bundled_path, resources
-from cadrumo.domain.calculations.registry import CensoModeloEventKind, load_modelo_directory, select_revision
+from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..check import SourceConnectivityCheckError, check_capability_locators
 from ..discovery import (

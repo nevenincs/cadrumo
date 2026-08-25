@@ -16,15 +16,15 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, Period, hydrate_scenario_filing_period
-from .._authority import ValidatedRegistryAuthority
+from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistrySnapshotError, RegistryValidationError
-from .._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
-from .._ids import BindingId, LegalRefId, RelationId, SourceRefId
-from .._period_selector_match import selector_period_matches_request
-from .._runtime_graph import expression_binding_refs
-from .._schema import ModeloRevision
-from .._schema_input_kind import InputKind
-from .._snapshot_coordinate import registry_snapshot_id_for
+from ..formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
+from ..ids import BindingId, LegalRefId, RelationId, SourceRefId
+from ..period_selector_match import selector_period_matches_request
+from ..runtime_graph import expression_binding_refs
+from ..schema import ModeloRevision
+from ..schema_input_kind import InputKind
+from ..snapshot_coordinate import registry_snapshot_id_for
 
 ScenarioStatus = Literal["match", "mismatch"]
 

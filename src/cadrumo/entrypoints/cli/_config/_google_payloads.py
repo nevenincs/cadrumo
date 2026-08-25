@@ -37,7 +37,7 @@ from pydantic import Field
 from ....adapters.outbound.storage import ProviderKind
 from ....core import CasillaId
 from ....core.json_contract import OutputSchema
-from ....domain.calculations.registry import FormulaId, LegalRefId, RelationId, SourceRefId
+from cadrumo.domain.calculations.registry.ids import FormulaId, LegalRefId, RelationId, SourceRefId
 
 
 class GoogleRegisterResult(OutputSchema):

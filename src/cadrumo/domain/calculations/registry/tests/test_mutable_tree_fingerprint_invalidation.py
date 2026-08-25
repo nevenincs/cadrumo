@@ -32,8 +32,8 @@ import pytest
 from .....core.config import override_settings
 from .....core.resources import bundled_path
 from .. import ModeloDefinition
-from .._identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
-from .._loader import (
+from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
+from ..loader import (
     _collect_registry_directory_fingerprints,
     _collect_registry_tree_fingerprints,
     _collect_registry_tree_fingerprints_uncached,
@@ -44,7 +44,7 @@ from .._loader import (
     load_registry_tree,
 )
 from .._loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
-from .._verdict_cache import (
+from ..verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
     registry_validation_is_certified,
@@ -74,8 +74,8 @@ _CHILD_PROGRAM = """
 import os
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry._loader import load_registry_tree
-from cadrumo.domain.calculations.registry._loader_cache import registry_disk_cache_dir
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.loader_cache import registry_disk_cache_dir
 
 root = Path(os.environ["CADRUMO_TEST_MUTABLE_TREE_ROOT"])
 edited = Path(os.environ["CADRUMO_TEST_MUTABLE_TREE_EDITED_TEXT"])

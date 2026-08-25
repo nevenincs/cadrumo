@@ -15,7 +15,7 @@ from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import InvoiceCatalogueSourceResolver
 from ....core import Period
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import load_modelo_path
+from cadrumo.domain.calculations.registry.loader import load_modelo_path
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage

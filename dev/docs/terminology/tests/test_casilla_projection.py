@@ -25,7 +25,10 @@ import pytest
 
 from cadrumo.core import Modelo
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+    bundled_authority,
+)
 
 from .._casilla_projection import CasillaProjectionStats
 from .._search_record import CasillaSearchRecord

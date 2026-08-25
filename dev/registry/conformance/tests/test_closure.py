@@ -23,7 +23,11 @@ from cadrumo.core import (
     SourceConnectivityOperatorReachabilityProof,
 )
 from cadrumo.core.source_connectivity import SourceConnectivityConnectionIdentity
-from cadrumo.domain.calculations.registry import ModeloId, RevisionId, bundled_authority
+from cadrumo.domain.calculations.registry.ids import (
+    ModeloId,
+    RevisionId,
+)
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ..authorities import RegistryClosureAuthorities
 from ..cli import app

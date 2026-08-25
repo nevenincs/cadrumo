@@ -1588,7 +1588,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     from ...application.profile_preconditions import inspect_filing_taxpayer_identity_precondition
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
-    from ...domain.calculations.registry import build_profile_grounding_index
+    from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
     from ...domain.user_profile.loader import load_user_profile_schema
     from .errors import CliRefusedBoundaryError
 

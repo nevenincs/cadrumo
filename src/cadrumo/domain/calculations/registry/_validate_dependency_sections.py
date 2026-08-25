@@ -5,14 +5,14 @@ declared on a :class:`~cadrumo.domain.calculations.registry.ModeloRevision` for
 reference closure and legal grounding.
 
 Relation validation ties
-:class:`~cadrumo.domain.calculations.registry._schema.RelationDefinition` records
+:class:`~cadrumo.domain.calculations.registry.schema.RelationDefinition` records
 back to declared :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition`
 targets. Dependency classification validation checks
 :class:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition`
 rows against constructs, relations, and official-source evidence.
 
 See Also:
-    :func:`cadrumo.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
+    :func:`cadrumo.domain.calculations.registry.validate_revision_sections.validate_revision_definition`
         Per-revision dispatcher that invokes these section validators.
     :func:`cadrumo.domain.calculations.registry.relation_source_requirements`
         Runtime relation requirement projection that relies on validated
@@ -25,8 +25,8 @@ from collections.abc import Mapping
 
 from ....core import BindingSourceKind
 from ._bindings_previous_filing import previous_filing_source_reference
-from ._ids import BindingId
-from ._schema import (
+from .ids import BindingId
+from .schema import (
     ConstructDefinition,
     DataBindingDefinition,
     DependencyClassificationDefinition,
@@ -38,7 +38,7 @@ from ._schema import (
 )
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs
-from ._validate_revision_identity import duplicates
+from .validate_revision_identity import duplicates
 
 
 def validate_relation_section(

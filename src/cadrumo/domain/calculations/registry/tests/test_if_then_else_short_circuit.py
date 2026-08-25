@@ -18,7 +18,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._schema import FormulaExpression
+from ..schema import FormulaExpression
 from ._formula_runtime_support import _evaluate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

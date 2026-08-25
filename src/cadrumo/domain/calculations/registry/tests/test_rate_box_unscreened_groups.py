@@ -46,7 +46,7 @@ from .. import (
     rate_box_unscreened_groups,
     selector_as_dict,
 )
-from .._rate_box_partition import _NO_RATE_BLIND_SIBLING
+from ..rate_box_partition import _NO_RATE_BLIND_SIBLING
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

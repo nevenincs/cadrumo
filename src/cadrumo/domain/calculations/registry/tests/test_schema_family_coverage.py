@@ -22,10 +22,10 @@ from pydantic import BaseModel, ValidationError
 
 from .....core import UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS, RegistrySchemaFamilyDisposition
 from .....tests.registry_tree import bundled_registry_tree
-from .._coverage import REQUIRED_COVERAGE_TIERS
+from ..coverage import REQUIRED_COVERAGE_TIERS
 from ..errors import RegistryLoadError
-from .._loader import load_modelo_directory
-from .._schema import (
+from ..loader import load_modelo_directory
+from ..schema import (
     REVISION_COLLECTION_SHAPED_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
     REVISION_SCHEMA_FAMILY_FIELDS,
@@ -411,7 +411,7 @@ def test_every_bundled_revision_projects_a_coherent_manifest() -> None:
 
 def test_the_family_models_are_registry_models_under_the_strict_config() -> None:
     """The declaration rides the same strict frozen base as the rest of the schema."""
-    from .._schema import SchemaFamilyDispositionDeclaration
+    from ..schema import SchemaFamilyDispositionDeclaration
 
     assert issubclass(SchemaFamilyDispositionDeclaration, RegistryModel)
     assert issubclass(SchemaFamilyDispositionDeclaration, BaseModel)

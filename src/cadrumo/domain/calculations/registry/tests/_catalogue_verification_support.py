@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import cache
 
 from .....tests.registry_tree import bundled_registry_tree
-from .._schema import ModeloDefinition, RegistryCatalogues
+from ..schema import ModeloDefinition, RegistryCatalogues
 
 _FORMAL_WITHHOLDING_MODELOS = frozenset({"111", "115", "123", "180", "190", "193"})
 _M100_WITHHOLDING_IMPORT_SECTIONS = frozenset({"bindings", "relations", "dependency_classifications"})

@@ -30,7 +30,8 @@ from cadrumo.core import (
     SectorDiferenciadoLetra,
 )
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import ExportEncoding, load_modelo_directory
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.filing import FilingExportValidationError
 from cadrumo.domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 

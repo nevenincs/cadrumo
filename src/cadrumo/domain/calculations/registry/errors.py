@@ -20,7 +20,7 @@ from typing import Self
 
 from ....core import CasillaId, Modelo
 from ....core.errors import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
-from ._ids import BindingId, RelationId, RevisionId
+from .ids import BindingId, RelationId, RevisionId
 
 
 class RegistryFailureCondition(StrEnum):

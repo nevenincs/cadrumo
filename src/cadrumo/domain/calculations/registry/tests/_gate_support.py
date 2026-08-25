@@ -6,9 +6,9 @@ from pathlib import Path
 
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
-from .._loader import load_registry_tree
-from .._schema import RegistryCatalogues
-from .._snapshot import collect_snapshot_ref_ids
+from ..loader import load_registry_tree
+from ..schema import RegistryCatalogues
+from ..snapshot import collect_snapshot_ref_ids
 
 
 def fragment_declaring(directory: Path, anchor: str) -> Path:

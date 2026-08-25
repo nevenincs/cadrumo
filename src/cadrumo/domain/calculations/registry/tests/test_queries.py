@@ -12,14 +12,14 @@ from .....core import CasillaId, Modelo, validated_casilla_id
 from .....core.resources import resources
 from .. import relations_by_target_binding
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
-from .._queries import (
+from ..queries import (
     BindingSelectorQueryProjection,
     ModeloFormulaRow,
     RegistryQueryService,
     ResolvedRegistryQueryContext,
 )
 from .._query_reports import ModeloBindingsReport, ModeloCasillaDetailReport
-from .._schema import InputKind
+from ..schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -282,7 +282,7 @@ def test_binding_rows_report_decimal_input_channel_for_typed_enum_binding() -> N
 def test_input_casilla_id_map_exposes_only_canonical_ids() -> None:
     """``input_casilla_id_map`` must not reintroduce printed-number references."""
 
-    from .._runtime_graph import input_casilla_id_map
+    from ..runtime_graph import input_casilla_id_map
 
     service = _service()
     described = service.describe_modelo("303", period="1T")

@@ -14,10 +14,10 @@ from .....tests.aeat_literal_fixtures import (
     aeat_host,
     aeat_url,
 )
-from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
+from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ..errors import RegistryValidationError
-from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
-from .._live_parity import (
+from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
+from ..live_parity import (
     LiveParityCatalogue,
     OracleEnvironment,
     OracleSurfaceKind,
@@ -28,7 +28,7 @@ from .._live_parity import (
     evaluate_planned_operations,
     pre_flight_oracle_operations,
 )
-from .._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
+from ..remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 from .._renta_web_open_oracle import RentaWebOpenOracle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

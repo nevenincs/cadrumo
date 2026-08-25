@@ -11,8 +11,8 @@ from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .. import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
-from .._export import derive_export_layouts_from_bindings
-from .._snapshot import _check_snapshot_filing_capability, build_validated_snapshot
+from ..export import derive_export_layouts_from_bindings
+from ..snapshot import _check_snapshot_filing_capability, build_validated_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

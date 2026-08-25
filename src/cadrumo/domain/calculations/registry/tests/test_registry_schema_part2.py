@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from .....core import Period
 from .....core.resources import bundled_path
 from ..errors import RegistryValidationError
-from .._schema import (
+from ..schema import (
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,
     DeadlineWindowDefinition,
@@ -30,7 +30,7 @@ from .._schema import (
     ModeloRevision,
     ParameterDefinition,
 )
-from .._validate import RegistryValidator
+from ..validate import RegistryValidator
 from ._registry_schema_support import (
     _NUMERIC_CASILLA_01,
     _as_communication_revision,
@@ -802,7 +802,7 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
     ambiguous lookup contract; the validator rejects it at
     construction time.
     """
-    from .._schema import BracketEntry as _BracketEntry
+    from ..schema import BracketEntry as _BracketEntry
 
     numeric_bracket = _BracketEntry(
         lower_bound=Decimal("0"),

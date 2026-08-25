@@ -59,7 +59,7 @@ from .. import (
     RecordDesignSinglePositionCorrection,
     extract_record_design,
 )
-from .._record_design import (
+from ..record_design import (
     _collapse_stuttered_row_prefix,
     _extract_pdf_text_lines,
     _join_wrapped_row_descriptions,

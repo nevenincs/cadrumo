@@ -89,10 +89,10 @@ from collections.abc import Mapping
 
 from ....core import CasillaId, ExportExemptionReason, ExportLayoutFormat, RegistryAuthorityGrade
 from ....core.aggregation import BindingSourceKind
-from ._bindings import binding_source_casilla_ids, binding_source_modelo
-from ._export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
-from ._runtime_graph import expression_casilla_refs
-from ._schema import (
+from .bindings import binding_source_casilla_ids, binding_source_modelo
+from .export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
+from .runtime_graph import expression_casilla_refs
+from .schema import (
     CasillaDefinition,
     DataBindingDefinition,
     FormulaDefinition,

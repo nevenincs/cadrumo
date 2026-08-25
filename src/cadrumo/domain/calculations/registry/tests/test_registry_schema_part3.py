@@ -30,8 +30,8 @@ from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from ..errors import RegistryValidationError
-from .._schema_verification import VerificationExpectationDefinition, VerificationPredicateDefinition
-from .._validate import RegistryValidator
+from ..schema_verification import VerificationExpectationDefinition, VerificationPredicateDefinition
+from ..validate import RegistryValidator
 from ._registry_schema_support import _NUMERIC_CASILLA_01, _committed_modelo, _with_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

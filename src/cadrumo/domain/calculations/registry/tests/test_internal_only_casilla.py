@@ -22,7 +22,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._schema import CasillaDefinition, InputKind
+from ..schema import CasillaDefinition, InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

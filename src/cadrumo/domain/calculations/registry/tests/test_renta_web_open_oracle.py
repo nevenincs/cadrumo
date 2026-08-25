@@ -13,8 +13,8 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import aeat_host
 from ..errors import RegistryValidationError
-from .._live_parity import ParityFieldComparison
-from .._remote_state_guard import (
+from ..live_parity import ParityFieldComparison
+from ..remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
@@ -28,7 +28,7 @@ from .._renta_web_open_oracle import (
     serialize_renta_web_open_replay_decimal,
     validate_renta_web_open_expected_casilla_ids,
 )
-from .._schema import LiveCrossReferenceDecision
+from ..schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -347,7 +347,7 @@ def test_replay_payload_roundtrip_via_renta_web_open_driver() -> None:
     """ReplayPayload.model_validate accepts the canonical JSON shape and the
     Renta WEB Open replay driver round-trips the same envelope faithfully."""
 
-    from .._live_parity import ReplayPayload
+    from ..live_parity import ReplayPayload
     from .._renta_web_open_oracle import RentaWebOpenReplayDriver
 
     raw = json.dumps(
@@ -400,7 +400,7 @@ def test_renta_web_open_replay_driver_requires_observed_by_casilla_id() -> None:
 def test_replay_payload_strict_rejects_extra_fields_renta_web_open() -> None:
     """extra=forbid on ReplayPayload raises ValidationError for unknown keys."""
 
-    from .._live_parity import ReplayPayload
+    from ..live_parity import ReplayPayload
 
     with pytest.raises(ValidationError, match="Extra"):
         ReplayPayload.model_validate({"observed": {}, "stray_key": "oops"})
@@ -437,7 +437,7 @@ def test_live_payload_rejects_display_number_keyed_overrides() -> None:
 def test_replay_payload_strict_rejects_non_string_value_in_observed_renta_web_open() -> None:
     """Mapping[str, str] under strict mode rejects non-string values."""
 
-    from .._live_parity import ReplayPayload
+    from ..live_parity import ReplayPayload
 
     with pytest.raises(ValidationError):
         ReplayPayload.model_validate({"observed": {"Resultado de la declaracion": 12345.67}})

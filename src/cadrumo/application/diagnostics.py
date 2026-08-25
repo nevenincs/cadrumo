@@ -703,7 +703,7 @@ def _finding_tag(finding: DiagnosticFinding) -> str:
 
 
 def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSummary:
-    from ..domain.calculations.registry import ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
@@ -845,7 +845,8 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
     A failure routes the operator to a structured diagnostic rather
     than a runtime KeyError mid-calculation.
     """
-    from ..domain.calculations.registry import RegistryValidationError, ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())

@@ -21,7 +21,7 @@ from __future__ import annotations
 from functools import cache
 
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import load_registry_tree
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.categories import load_category_profile_registry
 from cadrumo.domain.user_profile.labels import profile_schema_locale_keys
 from cadrumo.domain.user_profile.loader import load_user_profile_schema

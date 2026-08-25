@@ -17,7 +17,7 @@ from pydantic import Field
 
 from ...core import CasillaId
 from ...core.json_contract import OutputSchema
-from ...domain.calculations.registry import LegalRefId, SourceRefId
+from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ._modelo_revision_payload_parts import CalculationRevisionCommandProjectionFields
 
 #: Closed set of CLI input channels a wizard step resolves to: a direct

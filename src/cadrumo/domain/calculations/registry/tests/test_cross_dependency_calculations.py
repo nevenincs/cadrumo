@@ -56,16 +56,16 @@ from .. import (
     resolve_available_bound_inputs_by_casilla_id,
     resolve_withholding_binding_values,
 )
-from .._authority import ValidatedRegistryAuthority
-from .._binding_selector_utils import selector_as_dict
-from .._bindings import RegistryModeloObservation, resolve_previous_filing_binding_values
-from .._relations import (
+from ..authority import ValidatedRegistryAuthority
+from ..binding_selector_utils import selector_as_dict
+from ..bindings import RegistryModeloObservation, resolve_previous_filing_binding_values
+from ..relations import (
     RegistryFoldRequirement,
     materialize_relation_binding_values,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
-from .._schema import ModeloRevision, RegistrySnapshot
+from ..schema import ModeloRevision, RegistrySnapshot
 from ._cross_dependency_calculation_support import (
     _casilla_inputs,
     _grounded_observations,

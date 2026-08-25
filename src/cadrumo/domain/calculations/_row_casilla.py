@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, CasillaId
 from ._row_source_identity import RowSourceIdentity
-from .registry import BindingId, RevisionId
+from cadrumo.domain.calculations.registry.ids import BindingId, RevisionId
 
 RowCasillaKey = tuple[CasillaId, int]
 

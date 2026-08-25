@@ -11,7 +11,8 @@ from shutil import rmtree
 import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from cadrumo.domain.calculations.registry import RegistryValidationError, load_modelo_directory
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
 from ..pipeline import _tree_publication
 from ..pipeline._provenance_manifest import (

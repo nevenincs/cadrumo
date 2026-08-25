@@ -9,7 +9,7 @@ Playwright issues it if the text matches the forbidden-actions denylist.
 
 The denylist mirrors the Spanish-language equivalents of the
 ``AEAT_WRITE_FORBIDDEN_ACTIONS`` constant declared in
-``cadrumo.domain.calculations.registry._remote_state_guard``. The runtime
+``cadrumo.domain.calculations.registry.remote_state_guard``. The runtime
 copy here is the second line of defense: the policy registration is the
 first (a click that bypasses this module would still need a policy that
 allows it, and the open-simulator policy explicitly forbids these

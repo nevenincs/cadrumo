@@ -51,8 +51,8 @@ from decimal import Decimal
 import pytest
 
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
-from .._formula_runtime import calculate_registry_snapshot
-from .._schema import InputKind, ParameterDefinition
+from ..formula_runtime import calculate_registry_snapshot
+from ..schema import InputKind, ParameterDefinition
 from .._validate_revision_rules import _bracket_coverage_gaps
 from ._registry_schema_support import _committed_snapshot
 
@@ -105,7 +105,7 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
     pre-2025 pyme flat rate) must now exist and the cuota calculation
     must complete without error.
     """
-    from .._formula_runtime import calculate_registry_snapshot
+    from ..formula_runtime import calculate_registry_snapshot
 
     # The micro-empresa lane applies when INCN < 1.000.000 EUR (LIS Art. 29.1).
     # Supply INCN = 500.000 EUR to route through the pyme bracket table.
@@ -178,7 +178,7 @@ def test_coverage_validator_fires_on_deliberate_gap() -> None:
     ``model_construct`` bypasses pydantic validation so the fixture can carry
     minimal fields without satisfying the production non-empty ref constraints.
     """
-    from .._schema import BracketEntry
+    from ..schema import BracketEntry
 
     bracket_2025 = BracketEntry(
         lower_bound=Decimal("0"),
@@ -212,7 +212,7 @@ def test_coverage_validator_passes_when_no_gap() -> None:
     and extend to ``revision_to`` without interruption must produce zero
     failures.  This guards against false positives in the coverage check.
     """
-    from .._schema import BracketEntry
+    from ..schema import BracketEntry
 
     bracket_2024 = BracketEntry(
         lower_bound=Decimal("0"),

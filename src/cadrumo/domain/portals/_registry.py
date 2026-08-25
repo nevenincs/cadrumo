@@ -15,8 +15,8 @@ from types import MappingProxyType
 
 from ...core.logging import get_logger
 from ...core.resources import resources
-from ...domain.calculations.registry import RevisionId
-from ..calculations.registry import RegistryError, RegistrySnapshotError
+from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistrySnapshotError
 from ..modelos import ModeloCode, ModeloValidationError
 from ._categories import PortalCategory
 from ._codes import Portal

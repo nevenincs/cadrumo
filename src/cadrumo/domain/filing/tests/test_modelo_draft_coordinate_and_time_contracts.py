@@ -29,7 +29,7 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind, Period
 from ....core.time import validate_utc_aware
-from ...calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ...submission import ModeloDraftStatus
 from .. import (
     ModeloBindingValue,

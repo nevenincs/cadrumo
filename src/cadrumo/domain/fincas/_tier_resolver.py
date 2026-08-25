@@ -38,7 +38,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.logging import get_logger
-from ..calculations.registry import LegalRefId
+from cadrumo.domain.calculations.registry.ids import LegalRefId
 from ._enums import ReduccionTier, UseType
 from .errors import TierResolutionError
 from ._models import Arrendamiento, Finca
@@ -282,7 +282,7 @@ def _resolve_prior_rent_rebaja_threshold(period_year: int) -> Decimal:
     Modelo 100. A missing registry revision or parameter is a grounding defect
     and raises :class:`RegistryValidationError`.
     """
-    from ..calculations.registry import read_parameter
+    from cadrumo.domain.calculations.registry.formula_runtime import read_parameter
 
     return read_parameter(
         Modelo.M100.value,
@@ -299,7 +299,7 @@ def _resolve_ejercicio_amendment_year(period_year: int) -> int:
     Modelo 100. A missing registry revision or parameter is a grounding defect
     and raises :class:`RegistryValidationError`.
     """
-    from ..calculations.registry import read_parameter
+    from cadrumo.domain.calculations.registry.formula_runtime import read_parameter
 
     value = read_parameter(
         Modelo.M100.value,
@@ -410,7 +410,7 @@ def _resolve_tier_reduccion_rate(period_year: int, tier_id: str) -> Decimal:
     ``"tier-90"``. A missing registry revision or parameter is a grounding
     defect and raises :class:`RegistryValidationError`.
     """
-    from ..calculations.registry import read_parameter
+    from cadrumo.domain.calculations.registry.formula_runtime import read_parameter
 
     return read_parameter(
         Modelo.M100.value,
@@ -427,7 +427,7 @@ def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
     ``-max``. A missing registry revision or parameter is a grounding defect
     and raises :class:`RegistryValidationError`.
     """
-    from ..calculations.registry import read_parameter
+    from cadrumo.domain.calculations.registry.formula_runtime import read_parameter
 
     ctx = {"filing_period": date(period_year, 12, 31)}
     age_min = int(
@@ -456,7 +456,7 @@ def _resolve_rehab_lookback_days(period_year: int) -> int:
     Modelo 100. A missing registry revision or parameter is a grounding defect
     and raises :class:`RegistryValidationError`.
     """
-    from ..calculations.registry import read_parameter
+    from cadrumo.domain.calculations.registry.formula_runtime import read_parameter
 
     value = read_parameter(
         Modelo.M100.value,

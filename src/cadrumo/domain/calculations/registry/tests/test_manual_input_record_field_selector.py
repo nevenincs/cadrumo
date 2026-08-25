@@ -24,12 +24,12 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingSourceKind
-from .._binding_selector_utils import (
+from ..binding_selector_utils import (
     ManualInputRecordFieldSelector,
     manual_input_record_field_selector,
 )
 from ..errors import RegistryValidationError
-from .._schema import DataBindingDefinition
+from ..schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

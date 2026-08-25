@@ -30,8 +30,8 @@ import pytest
 from .....core import corpus_redaction_marks, normalise_corpus_text, resolve_anchored_extracted_unit
 from .....core.resources import bundled_path
 from ..errors import RegistryValidationError
-from .._legal import verify_legal_reference, verify_legal_reference_grounding
-from .._schema import LegalReference
+from ..legal import verify_legal_reference, verify_legal_reference_grounding
+from ..schema import LegalReference
 from ._catalogue_verification_support import _registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

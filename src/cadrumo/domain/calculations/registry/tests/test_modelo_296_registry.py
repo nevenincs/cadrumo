@@ -6,7 +6,7 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
-from .._validate import RegistryValidator
+from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -25,7 +25,7 @@ from pydantic import ValidationError
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import load_modelo_path
-from .._schema import (
+from ..schema import (
     CasillaAlias,
     CasillaConstraints,
     CasillaDefinition,
@@ -33,7 +33,7 @@ from .._schema import (
     ModeloRevision,
     PeriodSelector,
 )
-from .._validate_registry_scope import validate_registry_scope
+from ..validate_registry_scope import validate_registry_scope
 from .._validate_semantic_role_axes import semantic_roles_are_axis_siblings
 from .._validate_semantic_role_typos import (
     _build_semantic_role_typo_index,

@@ -8,12 +8,10 @@ import pytest
 
 from cadrumo.core import content_hash_hex
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import (
-    FilingEnvelopeCloserDerivation,
-    RegistryValidationError,
-    bundled_revision_inspection,
-    load_registry_tree,
-)
+from cadrumo.domain.calculations.registry.schema import FilingEnvelopeCloserDerivation
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
 from ..pipeline._record_design_ir import (
     RecordDesignIntermediateField,

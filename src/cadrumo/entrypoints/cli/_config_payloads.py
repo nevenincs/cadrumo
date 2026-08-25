@@ -43,7 +43,7 @@ from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.time import validate_utc_aware
-from ...domain.calculations.registry import RevisionId
+from cadrumo.domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.values import ProfileSetupState
 
 # The two wizard-owned profile result schemas are deferred public targets owned

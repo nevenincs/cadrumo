@@ -29,8 +29,8 @@ import pytest
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .. import RegistrySnapshot, build_snapshot
-from .._formula_runtime import calculate_registry_snapshot
-from .._loader import load_registry_tree
+from ..formula_runtime import calculate_registry_snapshot
+from ..loader import load_registry_tree
 from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

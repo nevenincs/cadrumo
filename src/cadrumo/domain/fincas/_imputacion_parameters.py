@@ -77,7 +77,7 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     # load_registry_tree path pulls in registry._bindings which imports
     # from cadrumo.domain.iva (which itself imports rental upstream), so a
     # parameter-only loader is needed here to avoid import-time cycles.
-    from ..calculations.registry import load_legal_parameters_only
+    from cadrumo.domain.calculations.registry.loader import load_legal_parameters_only
 
     parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
     return _parameters_from_catalogue(parameters)

@@ -28,7 +28,7 @@ from .. import (
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
-from .._applicability import MODELO_APPLICABILITY_RULES
+from ..applicability import MODELO_APPLICABILITY_RULES
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -70,7 +70,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
     rule behind it.
     """
 
-    assert derive_modelo_applicability.__module__ == ("cadrumo.domain.calculations.registry._applicability")
+    assert derive_modelo_applicability.__module__ == ("cadrumo.domain.calculations.registry.applicability")
 
     modelos, _catalogues = _committed_registry_tree()
     authored = {

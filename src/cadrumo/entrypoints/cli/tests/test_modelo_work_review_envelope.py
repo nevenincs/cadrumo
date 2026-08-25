@@ -27,7 +27,7 @@ from ....core.json_contract import (
     derive_status,
 )
 from ....domain.calculations import RowSourceIdentity
-from ....domain.calculations.registry import bundled_authority
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

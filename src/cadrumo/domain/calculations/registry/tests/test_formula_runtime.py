@@ -8,11 +8,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .._bindings import CasillaObservation
+from ..bindings import CasillaObservation
 from ..errors import RegistryValidationError
-from .._formula_initial_values import materialise_observations
-from .._formula_runtime import RegistryCalculationEntry, calculate_registry_snapshot
-from .._schema import RegistrySnapshot
+from ..formula_initial_values import materialise_observations
+from ..formula_runtime import RegistryCalculationEntry, calculate_registry_snapshot
+from ..schema import RegistrySnapshot
 from ._formula_runtime_support import (
     _IVA_PRORRATA_PORCENTAJE_CASILLA,
     _M130_AGRARIAN_VOLUME_CASILLA,

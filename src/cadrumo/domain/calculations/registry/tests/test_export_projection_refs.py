@@ -36,8 +36,8 @@ from .. import (
     bundled_authority,
     derive_export_layouts_from_bindings,
 )
-from .._loader import _compile_export_semantic_field, _compile_projection_endpoint_declaration
-from .._snapshot import _validate_materialized_export_record_families
+from ..loader import _compile_export_semantic_field, _compile_projection_endpoint_declaration
+from ..snapshot import _validate_materialized_export_record_families
 from .._validate_evidence import EvidenceValidator
 from .._validate_exports import (
     _validate_export_record,

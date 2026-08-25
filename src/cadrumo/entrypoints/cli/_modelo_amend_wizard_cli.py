@@ -78,7 +78,7 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ...core.i18n import tr
-from ...domain.calculations.registry import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos import (
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,

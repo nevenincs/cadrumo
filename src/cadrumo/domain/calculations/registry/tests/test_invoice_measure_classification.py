@@ -29,7 +29,7 @@ from .._invoice_bindings import (
     _INVOICE_INDEPENDENT_QUANTITY_FACTS,
     _INVOICE_SCALAR_MEASURE_FACTS,
 )
-from .._ledger_binding_resolution import independent_quantity_facts
+from ..ledger_binding_resolution import independent_quantity_facts
 from ._record_design_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

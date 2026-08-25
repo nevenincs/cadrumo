@@ -36,7 +36,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import extract_record_design
-from .._record_design import (
+from ..record_design import (
     _EMPTY_CORRECTIONS,
     _better_page_record_lines,
     _collapse_stuttered_row_prefix,

@@ -13,9 +13,9 @@ import pytest
 from pydantic import ValidationError
 
 from .....tests.aeat_literal_fixtures import aeat_host
-from .._live_parity import _COMPATIBLE_SURFACE_PAIRS
-from .._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
-from .._schema import LiveCrossReferenceDecision
+from ..live_parity import _COMPATIBLE_SURFACE_PAIRS
+from ..remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
+from ..schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

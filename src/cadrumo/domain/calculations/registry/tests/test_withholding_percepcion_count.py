@@ -18,7 +18,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
-from .._schema import DataBindingDefinition, ModeloRevision, PeriodSelector
+from ..schema import DataBindingDefinition, ModeloRevision, PeriodSelector
 from .._withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

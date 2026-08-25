@@ -23,7 +23,9 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import bundled_path, resources
-from ...calculations.registry import RegistryValidationError, read_parameter, verify_legal_catalogue
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.formula_runtime import read_parameter
+from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 from .._enums import ReduccionTier
 from .._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,

@@ -16,7 +16,7 @@ from .. import (
     bundled_authority,
     derive_export_layouts_from_bindings,
 )
-from .._schema import PeriodSelector
+from ..schema import PeriodSelector
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

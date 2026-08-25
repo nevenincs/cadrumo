@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
-from ._schema import LegalReference, SourceReference
+from .schema import LegalReference, SourceReference
 
 
 def _missing_refs(

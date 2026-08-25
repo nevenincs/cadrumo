@@ -11,7 +11,7 @@ The declared resolution is two chains -- the later concept takes a new grounded
 is what makes that contract enforceable rather than advisory prose: a
 retired-then-resurrected chain is one shape of the non-contiguous chain rejected
 here, and the retirement policy in
-:mod:`cadrumo.domain.calculations.registry._validate_cross_revision` only proves
+:mod:`cadrumo.domain.calculations.registry.validate_cross_revision` only proves
 the chain left, never that it stayed gone.
 
 The evolution-kind and surface-scoped strictness rules below were later
@@ -23,9 +23,9 @@ from __future__ import annotations
 from collections import defaultdict
 from itertools import pairwise
 
-from ._cross_revision_divergence import ordered_revisions as _ordered_revisions
-from ._cross_revision_divergence import revisions_overlap
-from ._schema import ModeloDefinition, ModeloRevision
+from .cross_revision_divergence import ordered_revisions as _ordered_revisions
+from .cross_revision_divergence import revisions_overlap
+from .schema import ModeloDefinition, ModeloRevision
 
 __all__ = ("strict_continuity_chain_contiguity_failures",)
 

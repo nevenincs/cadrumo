@@ -499,7 +499,7 @@ def _trace_script(regime: str) -> str:
     snapshot_block = ""
     if regime == "inspection_snapshot":
         snapshot_block = """
-        from cadrumo.domain.calculations.registry import build_snapshot
+        from cadrumo.domain.calculations.registry.snapshot import build_snapshot
 
         for modelo in authority.modelos:
             for period in ("1T", "0A", "ANUAL", "1"):
@@ -540,7 +540,7 @@ def module_for(filename):
 
 def main():
     from cadrumo.core.resources._boundary import bundled_path
-    from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
     root = bundled_path("registry", "aeat")
     source_root = bundled_path()

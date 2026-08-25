@@ -18,8 +18,8 @@ import pytest
 from ..... import __version__
 from .....core.config import override_settings
 from .....core.resources import bundled_path
-from .._identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
-from .._verdict_cache import (
+from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
+from ..verdict_cache import (
     VERDICT_OUTCOME_GREEN,
     RegistryValidationVerdict,
     bundled_verdict_path,

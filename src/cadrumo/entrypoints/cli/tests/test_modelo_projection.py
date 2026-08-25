@@ -56,7 +56,7 @@ import pytest
 
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload

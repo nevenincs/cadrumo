@@ -36,7 +36,7 @@ import pytest
 
 from ..... import __version__
 from .....core.atomic_write import atomic_write_best_effort_text
-from .._identity import (
+from ..identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     RegistryIdentityStamp,
     read_registry_identity_stamp,
@@ -76,7 +76,7 @@ _READER_SOURCE = f"""
 import json, os, sys, time
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry._identity import read_registry_identity_stamp
+from cadrumo.domain.calculations.registry.identity import read_registry_identity_stamp
 
 root = Path(os.environ[{_CHILD_ROOT_ENV_VAR!r}])
 observed = []

@@ -19,15 +19,17 @@ from cadrumo.core.directory_scan import (
     scan_directory,
 )
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.schema import (
     CasillaFieldKind,
-    ExportEncoding,
-    ExportValuePolicy,
     ProjectionEndpointDeclaration,
+)
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.errors import (
     RegistryError,
     RegistryValidationError,
-    load_modelo_directory,
 )
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
 from ..pipeline import _export_tree
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
@@ -1500,10 +1502,10 @@ def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> N
     # call is still caught, because those survive tokenisation as code.
     source = _code_only_source(_export_tree).casefold()
 
-    assert "cadrumo.domain.calculations.registry._record_spec" not in imported_modules
+    assert "cadrumo.domain.calculations.registry.record_spec" not in imported_modules
     assert "resolve_export_layout" not in referenced_names
     assert "bundled_authority" not in referenced_names
-    assert "cadrumo.domain.calculations.registry._export" not in imported_modules
+    assert "cadrumo.domain.calculations.registry.export" not in imported_modules
     for forbidden in (
         "fallback",
         "fuzzy",

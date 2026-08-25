@@ -34,7 +34,7 @@ from __future__ import annotations
 
 from ...core import CasillaId
 from ...core.json_contract import OutputSchema
-from ...domain.calculations.registry import FormulaId, LegalRefId, ParameterId, RevisionId
+from cadrumo.domain.calculations.registry.ids import FormulaId, LegalRefId, ParameterId, RevisionId
 
 
 class CasillaDiffPayload(OutputSchema):

@@ -31,7 +31,7 @@ import pytest
 
 from .....core import ExportLayoutFormat
 from .. import bundled_authority
-from .._support_matrix import ModeloEntry, build_support_matrix
+from ..support_matrix import ModeloEntry, build_support_matrix
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

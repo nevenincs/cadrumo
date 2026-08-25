@@ -17,13 +17,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import EstadoCasillaOficial
-from cadrumo.domain.calculations.registry import (
-    CasillaFieldKind,
-    RegistryRevisionInspection,
-    clasificar_casillas_oficiales,
-    load_registry_tree,
-    select_revision,
-)
+from cadrumo.domain.calculations.registry.schema import CasillaFieldKind
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..analysis.m303_semantic_census import census_m303_semantic_map, resolve_semantic_home
 from ..pipeline._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate

@@ -31,7 +31,7 @@ from .. import (
     project_m303_prorrata_activity_rows,
     resolve_record_design_binary,
 )
-from .._formula_initial_values import initial_values
+from ..formula_initial_values import initial_values
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

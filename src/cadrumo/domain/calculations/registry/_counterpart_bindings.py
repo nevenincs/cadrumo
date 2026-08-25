@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind, CounterpartSourceKind
 from ....core.identity import TaxIdIdentityToken
-from ._binding_selector_utils import (
+from .binding_selector_utils import (
     intracommunity_clave_validator,
     invariant_diagnostics,
     selector_against_model,
@@ -20,7 +20,7 @@ from ._binding_selector_utils import (
     validate_rectification_fields,
 )
 from .errors import RegistryValidationError
-from ._ids import BindingId
+from .ids import BindingId
 from ._invoice_bindings import (
     InvoiceObservation,
     resolve_invoice_family_row_values,
@@ -37,7 +37,7 @@ from ._invoice_bindings import (
     invoice_selector as _invoice_selector,
 )
 from ._m347_threshold import m347_declarable_party_ids
-from ._schema import DataBindingDefinition, ModeloRevision
+from .schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
     "COUNTERPART_BINDING_SOURCE_KINDS",

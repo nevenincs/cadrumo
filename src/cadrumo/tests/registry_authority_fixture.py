@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import pytest
 
-from ..domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
 
 def bundled_registry_authority_fixture(*, name: str) -> Callable[[], ValidatedRegistryAuthority]:

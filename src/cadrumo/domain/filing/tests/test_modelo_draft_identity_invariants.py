@@ -24,7 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ...calculations.registry import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ...submission import ModeloDraftStatus
 from .. import ModeloDraft, ModeloValue, ModeloValueKind, registry_schema_version
 

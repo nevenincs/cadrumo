@@ -16,8 +16,8 @@ from .. import (
     RegistryValidator,
     applicable_filing_schedules,
 )
-from .._authority import ValidatedRegistryAuthority
-from .._schema import RegistrySnapshot
+from ..authority import ValidatedRegistryAuthority
+from ..schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

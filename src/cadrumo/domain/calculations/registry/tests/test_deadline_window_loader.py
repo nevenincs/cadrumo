@@ -8,7 +8,7 @@ import pytest
 
 from .....core import ResultDisposition
 from ..errors import RegistryLoadError
-from .._loader import load_modelo_directory, load_modelo_file
+from ..loader import load_modelo_directory, load_modelo_file
 from ._loader_directory_mode_support import _standard_manifest_text, _standard_revision_preamble_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

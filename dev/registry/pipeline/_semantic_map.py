@@ -13,18 +13,20 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
 from cadrumo.core import CasillaId, FilingProducerKey, FilingProjectionRef, hydrate_filing_projection_ref
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.ids import (
     BindingId,
-    CasillaFieldKindValue,
-    ExportComputedKey,
-    ExportDraftAttribute,
     ExportFieldId,
-    ExportSemanticPayloadAxis,
-    FilingEnvelopePrefixRole,
-    LegalRefs,
     ModeloId,
     RecordId,
     SourceRefId,
+)
+from cadrumo.domain.calculations.registry.schema import (
+    CasillaFieldKindValue,
+    ExportComputedKey,
+    ExportDraftAttribute,
+    ExportSemanticPayloadAxis,
+    FilingEnvelopePrefixRole,
+    LegalRefs,
     SourceRefs,
     export_semantic_payload_axis,
 )

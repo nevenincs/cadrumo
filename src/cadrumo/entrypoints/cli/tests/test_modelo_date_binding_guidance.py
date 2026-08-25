@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import revision_date_binding_ids
+from cadrumo.domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from .._modelo_behavior_support import _date_binding_profile_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

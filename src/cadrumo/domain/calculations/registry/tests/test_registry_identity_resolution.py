@@ -21,7 +21,7 @@ import pytest
 from ..... import __version__
 from .....tests.attribute_scope import scoped_attribute
 from .. import _loader_cache as loader_cache
-from .._identity import (
+from ..identity import (
     FingerprintTuples,
     RegistryIdentityOrigin,
     compute_installed_tree_digest,
@@ -31,7 +31,7 @@ from .._identity import (
     stamped_cache_key_tuples,
     write_registry_identity_stamp,
 )
-from .._loader import clear_fingerprint_cache
+from ..loader import clear_fingerprint_cache
 from .._loader_cache import _bundled_registry_root, _bundled_root_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

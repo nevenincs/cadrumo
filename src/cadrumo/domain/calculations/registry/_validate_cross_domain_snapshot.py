@@ -10,10 +10,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 from ....core import CasillaId, Modelo
-from ._ids import BindingId
+from .ids import BindingId
 
 if TYPE_CHECKING:
-    from ._snapshot import RegistrySnapshot
+    from .snapshot import RegistrySnapshot
 
 
 class CrossDomainSnapshotCheck(Protocol):

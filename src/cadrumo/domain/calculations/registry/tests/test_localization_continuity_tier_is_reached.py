@@ -39,7 +39,7 @@ import pytest
 
 from .....core.i18n import lookup_translation, lookup_translation_entry
 from .....core.resources import resources
-from .._modelo_localization import resolve_modelo_localization
+from ..modelo_localization import resolve_modelo_localization
 from .._schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

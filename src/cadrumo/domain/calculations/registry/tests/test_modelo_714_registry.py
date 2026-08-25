@@ -12,13 +12,13 @@ from .....core import (
     validated_casilla_id,
 )
 from .....core.resources import bundled_path
-from .._formula_runtime import calculate_registry_snapshot
-from .._legal import verify_legal_catalogue
-from .._relations import relation_source_requirements
-from .._schema import CasillaDefinition, ModeloDefinition, RegistryCatalogues
-from .._schema_input_kind import InputKind
-from .._snapshot import build_snapshot
-from .._validate import RegistryValidator
+from ..formula_runtime import calculate_registry_snapshot
+from ..legal import verify_legal_catalogue
+from ..relations import relation_source_requirements
+from ..schema import CasillaDefinition, ModeloDefinition, RegistryCatalogues
+from ..schema_input_kind import InputKind
+from ..snapshot import build_snapshot
+from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -15,7 +15,7 @@ from datetime import date
 
 import pytest
 
-from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
+from ..schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from .._validate_semantic_roles import (
     REQUIRED_ROLE_LABEL_PATTERNS,
     collect_casillas_by_semantic_role,

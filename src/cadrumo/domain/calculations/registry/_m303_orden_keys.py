@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ._m303_orden_raw_models import M303AnnualOrdenSourceCensus
-from ._m303_orden_source import annual_orden_raw_activity_identity
+from .m303_orden_raw_models import M303AnnualOrdenSourceCensus
+from .m303_orden_source import annual_orden_raw_activity_identity
 
 
 def annual_orden_legal_keys(census: M303AnnualOrdenSourceCensus) -> set[str]:

@@ -28,12 +28,10 @@ from decimal import Decimal
 from functools import cache
 
 from ....core.resources import bundled_path
-from ...calculations.registry import (
-    RegistryRevisionInspection,
-    load_registry_tree,
-    resolve_parameter,
-    select_revision,
-)
+from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.temporal import select_revision
 from .. import MinimoDescendientesThresholds
 
 __all__ = [

@@ -8,13 +8,13 @@ from shutil import copyfile
 import pytest
 
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import (
+from cadrumo.domain.calculations.registry.record_design import (
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
     extract_record_design,
-    load_catalogue_file,
-    resolve_record_design_binary,
 )
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
 
 from ..pipeline._record_design_ir import (
     RecordDesignIntermediate,

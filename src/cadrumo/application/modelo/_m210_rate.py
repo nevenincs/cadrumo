@@ -16,7 +16,7 @@ path in the registry runtime remains the calculation authority; the sweep keeps 
 runtime-computed effective rate for those.
 
 See Also:
-    :mod:`cadrumo.domain.calculations.registry._formula_runtime`
+    :mod:`cadrumo.domain.calculations.registry.formula_runtime`
         Formula-runtime implementation of ``irnr_resolve_tipo_gravamen`` and the
         typed M210 unresolved outcomes this application layer converts into findings.
     :func:`cadrumo.application.modelo._verification_actions.verify_modelo_revision`
@@ -193,7 +193,7 @@ def resolve_m210_rate(
     the actual base amount and are computed by the formula runtime.
 
     See Also:
-        :func:`cadrumo.domain.calculations.registry._formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen`
+        :func:`cadrumo.domain.calculations.registry.formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen`
         :class:`cadrumo.domain.calculations.registry.ConvenioAuthority`
         :class:`cadrumo.domain.deadlines.TaxpayerProfile`
     """

@@ -23,7 +23,8 @@ import pytest
 
 from ..application.aggregation import CalculationSourceDiagnostic
 from ..core.resources import resources
-from ..domain.calculations.registry import RegistryValidationError, assert_legal_ref_ids_resolve
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.legal import assert_legal_ref_ids_resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

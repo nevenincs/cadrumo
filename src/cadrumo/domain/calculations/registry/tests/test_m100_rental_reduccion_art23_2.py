@@ -10,8 +10,8 @@ import pytest
 
 from .....core import RegistryAuthorityGrade
 from ..errors import RegistryValidationError
-from .._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from .._schema import RegistrySnapshot
+from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..schema import RegistrySnapshot
 from ._modelo_100_registry_support import _m100_2024_deduccion_maternidad_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

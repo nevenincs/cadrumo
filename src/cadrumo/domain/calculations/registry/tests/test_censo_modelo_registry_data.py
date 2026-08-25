@@ -7,13 +7,13 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .. import build_snapshot, discover_modelo_sources
-from .._binding_selector_utils import selector_as_dict
-from .._corpus_catalogue import verify_source_file
-from .._coverage import build_model_law_coverage_ledger
+from ..binding_selector_utils import selector_as_dict
+from ..corpus_catalogue import verify_source_file
+from ..coverage import build_model_law_coverage_ledger
 from ..errors import RegistrySnapshotError
-from .._loader import load_modelo_directory
-from .._schema import InputKind, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
-from .._temporal import select_revision
+from ..loader import load_modelo_directory
+from ..schema import InputKind, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..temporal import select_revision
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

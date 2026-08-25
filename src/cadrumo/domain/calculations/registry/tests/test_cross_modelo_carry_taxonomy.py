@@ -29,7 +29,7 @@ direct-selector predicate, and no binding may be both relation-targeted and
 ``previous_filing``-sourced.
 
 See Also:
-    :mod:`cadrumo.domain.calculations.registry._validate_relation_sources`
+    :mod:`cadrumo.domain.calculations.registry.validate_relation_sources`
         The build-time slot-source hygiene gates this module asserts against
         the bundled corpus.
 """
@@ -42,10 +42,10 @@ from typing import TypedDict
 import pytest
 
 from .....core import BindingSourceKind
-from .._authority import bundled_authority
-from .._binding_selector_utils import selector_as_dict
+from ..authority import bundled_authority
+from ..binding_selector_utils import selector_as_dict
 from .._bindings_previous_filing import is_direct_previous_filing_binding
-from .._schema import DataBindingDefinition, ModeloRevision
+from ..schema import DataBindingDefinition, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

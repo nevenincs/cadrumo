@@ -32,7 +32,8 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.calculations.registry import LegalRefId, ModeloDescribeReport, SourceRefId
+from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
+from cadrumo.domain.calculations.registry.queries import ModeloDescribeReport
 from ._decimal_wire import NonNegativeDecimalWireText
 
 

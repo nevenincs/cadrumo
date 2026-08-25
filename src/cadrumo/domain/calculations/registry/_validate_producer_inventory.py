@@ -7,8 +7,8 @@ diagnostics before issuing its one refusal.
 
 from __future__ import annotations
 
-from ._schema import ModeloRevision
-from ._schema_input_kind import InputKind
+from .schema import ModeloRevision
+from .schema_input_kind import InputKind
 
 
 def validate_producer_inventory(prefix: str, revision: ModeloRevision) -> list[str]:

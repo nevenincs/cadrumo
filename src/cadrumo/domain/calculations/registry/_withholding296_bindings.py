@@ -19,14 +19,14 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import (
+from .binding_selector_utils import (
     BindingExportDataType,
 )
-from ._binding_selector_utils import (
+from .binding_selector_utils import (
     selector_as_dict as _selector_as_dict,
 )
 from .errors import RegistryValidationError
-from ._schema import DataBindingDefinition, ModeloRevision
+from .schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
     "Withholding296Observation",

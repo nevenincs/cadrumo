@@ -40,15 +40,15 @@ from pydantic import ValidationError
 from .....application.aggregation import DEFERRED_SOURCE_KINDS
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .._binding_selector_utils import selector_as_dict
-from .._bindings import (
+from ..binding_selector_utils import selector_as_dict
+from ..bindings import (
     _BINDING_SELECTOR_REGISTRY,
     binding_source_casilla_ids,
     binding_source_modelo,
     selector_model_for_source,
     validate_binding_selector_shape,
 )
-from .._schema import DataBindingDefinition
+from ..schema import DataBindingDefinition
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
