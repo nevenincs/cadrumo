@@ -89,10 +89,9 @@ msgstr ""
 
 #: ../../how-to/quickstart.md:32
 msgid "The passphrase and recovery phrase"
-msgstr ""
+msgstr "A jelszó és a helyreállítási kifejezés"
 
 #: ../../how-to/quickstart.md:34
-#, fuzzy
 msgid ""
 "`aeat` encrypts each profile under its own random key, wrapped by that "
 "profile's passphrase. Profile creation also shows a one-time recovery "
@@ -103,11 +102,15 @@ msgid ""
 "creation, see [Run without a passphrase prompt](protect-data-access.md"
 "#run-without-a-passphrase-prompt)."
 msgstr ""
-"Az `aeat` egy jelmondatból származtatott mesterkulccsal titkosítja a "
-"helyi adatait. A tárolóhoz nyúló első parancs bekéri a jelmondatot, és az"
-" eszköz a munkamenet hátralévő részében újra felhasználja. Felügyelet "
-"nélküli futtatásokhoz lásd: [Futtatás jelmondat-bekérés nélkül](protect-"
-"data-access.md#run-without-a-passphrase-prompt)."
+"Az `aeat` minden profilt saját véletlen kulccsal titkosít, amelyet az "
+"adott profil jelmondata burkol be. A profil létrehozása egyszer "
+"használatos helyreállítási kifejezést is megjelenít, és megköveteli "
+"annak újbóli megadását a profil közzététele előtt. Ezt a kifejezést "
+"külön tárold: később nem lehet bejegyezni. A tárolót érintő első "
+"parancs elkéri a jelmondatot, és az eszköz a munkamenet hátralévő "
+"részében újra használja. A profil létrehozása utáni felügyelet nélküli "
+"futtatáshoz lásd: [Futtatás jelszókérés "
+"nélkül](protect-data-access.md#run-without-a-passphrase-prompt)."
 
 #: ../../how-to/quickstart.md:43
 msgid ""
@@ -136,6 +139,11 @@ msgid ""
 "password-only profile: creation completes only after you copy and verify "
 "the recovery phrase."
 msgstr ""
+"A varázsló összegyűjti a benyújtáshoz szükséges vezeték- és utónevet, "
+"valamint a tevékenység kezdőnapját, amely kizárja a korábbi "
+"időszakokat. Nem tesz közzé csak jelszóval védett profilt: a létrehozás "
+"csak a helyreállítási kifejezés lemásolása és ellenőrzése után "
+"fejeződik be."
 
 #: ../../how-to/quickstart.md:59
 msgid "Confirm the active profile is configured and ready:"
@@ -347,19 +355,21 @@ msgid "5. Record the quarter as filed"
 msgstr "5. Exportálja a fájlt"
 
 #: ../../how-to/quickstart.md:173
-#, fuzzy
 msgid ""
 "Export the verified Modelo 130 fichero-BOE artefact, then record the "
 "quarter as filed locally:"
 msgstr ""
-"A Modelo 130-hoz nincs fichero-BOE elrendezés, ezért az exportálás "
-"elutasít. Rögzítsd helyben benyújtottként a negyedévet:"
+"Exportáld az ellenőrzött 130-as modelo fichero-BOE leletét, majd "
+"rögzítsd helyileg benyújtottként a negyedévet:"
 
 #: ../../how-to/quickstart.md:180
 msgid ""
 "The exported file is a local artefact, not evidence that AEAT accepted "
 "the return. Present it through the AEAT portal, as step 7 describes."
 msgstr ""
+"Az exportált fájl helyi lelet, nem annak bizonyítéka, hogy az AEAT "
+"elfogadta a bevallást. A 7. lépésnek megfelelően nyújtsd be az AEAT "
+"portálján."
 
 #: ../../how-to/quickstart.md:183
 msgid ""

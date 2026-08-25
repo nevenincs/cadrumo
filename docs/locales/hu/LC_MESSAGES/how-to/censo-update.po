@@ -195,15 +195,15 @@ msgid "Pull your census facts from AEAT"
 msgstr "Miért fontosak a censo-adatok"
 
 #: ../../how-to/censo-update.md:79
-#, fuzzy
 msgid ""
 "AEAT publishes your current census position at *Mis Datos Censales*. Pull"
 " it into the active profile. The first step previews; the second performs"
 " a new authenticated read and records that read's eligible facts:"
 msgstr ""
-"Az AEAT a *Mis Datos Censales* felületen teszi közzé az aktuális "
-"cenzushelyzetedet. Kérd le az aktív profilba. Az első lépés előnézetet "
-"mutat, a második rögzít:"
+"Az AEAT a *Mis Datos Censales* felületen teszi közzé aktuális "
+"nyilvántartási helyzetedet. Töltsd be az aktív profilba. Az első lépés "
+"előnézetet ad; a második új hitelesített olvasást végez, és annak "
+"felhasználható tényeit rögzíti:"
 
 #: ../../how-to/censo-update.md:86
 msgid "Nothing is written until you add `--apply`."
@@ -219,6 +219,13 @@ msgid ""
 "that lands, do not treat the earlier preview as the operand that was "
 "applied."
 msgstr ""
+"A jelenlegi CLI nem alakítja az első parancs előnézetét mentett "
+"jóváhagyássá. A `--apply` parancs újra lekérdezi az AEAT-t, és ezt az "
+"új megfigyelést alkalmazza. Mielőtt a frissített profilra támaszkodnál, "
+"ellenőrizd magát a `--apply` eredményét. Folyamatban van, hogy ezen a "
+"parancson elérhetővé váljon az alkalmazás által rögzített, pontos "
+"alapvonalú felülvizsgálat–alkalmazás életciklus; amíg ez nem készül el, "
+"ne tekintsd a korábbi előnézetet alkalmazott operandusnak."
 
 #: ../../how-to/censo-update.md:97
 msgid ""
@@ -245,6 +252,10 @@ msgid ""
 " censal read, so `--apply` writes AEAT's current value. A preview only "
 "reports what would be eligible."
 msgstr ""
+"**Átvéve**: a profilnak nem volt válasza, vagy az érték korábbi "
+"nyilvántartási lekérdezésből származott, ezért a `--apply` az AEAT "
+"aktuális értékét írja be. Az előnézet csak azt jelzi, mi lenne "
+"felhasználható."
 
 #: ../../how-to/censo-update.md:110
 msgid "**Unchanged**: you and AEAT already agree."

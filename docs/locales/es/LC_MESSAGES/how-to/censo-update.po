@@ -197,15 +197,15 @@ msgid "Pull your census facts from AEAT"
 msgstr "Por qué importan los datos censales"
 
 #: ../../how-to/censo-update.md:79
-#, fuzzy
 msgid ""
 "AEAT publishes your current census position at *Mis Datos Censales*. Pull"
 " it into the active profile. The first step previews; the second performs"
 " a new authenticated read and records that read's eligible facts:"
 msgstr ""
 "La AEAT publica tu situación censal actual en *Mis Datos Censales*. "
-"Obtenla en el perfil activo. El primer paso muestra una vista previa; el "
-"segundo la registra:"
+"Incorpórala al perfil activo. El primer paso ofrece una vista previa; "
+"el segundo realiza una nueva lectura autenticada y registra los hechos "
+"admisibles de esa lectura:"
 
 #: ../../how-to/censo-update.md:86
 msgid "Nothing is written until you add `--apply`."
@@ -221,6 +221,13 @@ msgid ""
 "that lands, do not treat the earlier preview as the operand that was "
 "applied."
 msgstr ""
+"La CLI actual no convierte la vista previa del primer comando en una "
+"aprobación guardada. El comando `--apply` vuelve a leer AEAT y aplica "
+"esa nueva observación. Revisa el resultado de `--apply` antes de "
+"basarte en el perfil actualizado. Se está trabajando para exponer en "
+"este comando el ciclo de revisión-aplicación de línea base exacta "
+"capturado por la aplicación; hasta que llegue, no trates la vista "
+"previa anterior como el operando aplicado."
 
 #: ../../how-to/censo-update.md:97
 msgid ""
@@ -247,6 +254,9 @@ msgid ""
 " censal read, so `--apply` writes AEAT's current value. A preview only "
 "reports what would be eligible."
 msgstr ""
+"**Adoptado**: el perfil no tenía respuesta, o el valor procedía de una "
+"lectura censal anterior, de modo que `--apply` escribe el valor actual "
+"de AEAT. Una vista previa solo informa de lo que sería admisible."
 
 #: ../../how-to/censo-update.md:110
 msgid "**Unchanged**: you and AEAT already agree."

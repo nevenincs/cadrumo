@@ -37,17 +37,16 @@ msgstr ""
 "benyújtást, amelyet az év egy önfoglalkoztató tanácsadótól kér."
 
 #: ../../how-to/irpf-lifecycle.md:9
-#, fuzzy
 msgid ""
 "Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. "
 "It does not submit them to the Agencia Estatal de Administración "
 "Tributaria (AEAT). For Modelo 130 it writes a local fichero-BOE artefact "
 "that you present through the AEAT portal."
 msgstr ""
-"A Cadrumo (az `aeat` parancs) helyi fájlokat készít elő a spanyol "
-"adónyomtatványokhoz. Nem nyújtja be őket az Agencia Estatal de "
-"Administración Tributariának (AEAT). Minden benyújtásnál Ön maga tölti "
-"fel az exportált fájlt az AEAT-portálon keresztül."
+"A Cadrumo (az `aeat` parancs) helyi fájlokat készít a spanyol "
+"adóűrlapokhoz. Nem nyújtja be őket az Agencia Estatal de Administración "
+"Tributaria (AEAT) részére. A 130-as modelóhoz helyi fichero-BOE leletet "
+"ír, amelyet az AEAT portálján te nyújtasz be."
 
 #: ../../how-to/irpf-lifecycle.md:14
 msgid ""
@@ -169,7 +168,6 @@ msgstr ""
 "sorozat összecsukott előkészítéseként jelenik meg."
 
 #: ../../how-to/irpf-lifecycle.md:69
-#, fuzzy
 msgid ""
 "Create and calculate the first instalment. Modelo 130 is cumulative, and "
 "a true first period has no history, so the three prior-period carries are"
@@ -178,14 +176,12 @@ msgid ""
 " draft, verifies it, and exports it; the file and reconcile commands that"
 " close the quarter are shown after it:"
 msgstr ""
-"Hozza létre és számítsa ki az első előleget. A Modelo 130 halmozott, és "
-"egy valódi első időszaknak nincs előzménye, ezért a három előző időszaki "
-"átvezetést nullaként adja át - ez az egyetlen negyedév, ahol ezt teszi. "
-"Az alábbi sorozat rögzíti a negyedév két sorát, létrehozza és kiszámítja "
-"a piszkozatot, és ellenőrzi; a negyedévet lezáró export-, file- és "
-"reconcile-parancsok az ellenőrzött eredmény után jelennek meg (ezek az Ön"
-" saját, bizonyítékokkal alátámasztott, benyújtott előzményein futnak, nem"
-" a sandboxban):"
+"Hozd létre és számítsd ki az első részletet. A 130-as modelo kumulatív, "
+"és a valódi első időszaknak nincs előzménye, ezért a három előző "
+"időszaki továbbvitt értéket nullaként kell megadni; csak ebben a "
+"negyedévben teszed ezt. Az alábbi sorozat rögzíti a negyedév két sorát, "
+"létrehozza és kiszámítja a tervezetet, ellenőrzi és exportálja; utána "
+"láthatók a negyedévet lezáró fájl- és egyeztetési parancsok:"
 
 #: ../../how-to/irpf-lifecycle.md:80
 msgid ""
@@ -204,17 +200,15 @@ msgstr ""
 "minoración felszívja a teljes előleget - a kimenet casilla 13-a mutatja.)"
 
 #: ../../how-to/irpf-lifecycle.md:92
-#, fuzzy
 msgid ""
 "Verify reports `completeness_status complete` and "
 "`granted_verificado_completo true` (the sequence above asserts this). "
 "`export` writes the fichero-BOE upload artefact and reports its checksum."
 msgstr ""
-"A verify `completeness_status complete`-et és "
-"`granted_verificado_completo true`-t jelent (a fenti sorozat ezt "
-"állítja). Az export kiírja a fichero-BOE fájlt, és kinyomtatja az "
-"útvonalát, méretét és SHA-256 ellenőrzőösszegét - jegyezze fel az "
-"ellenőrzőösszeget; ez pontosan azonosítja, melyik fájlt tölti fel."
+"Az ellenőrzés a `completeness_status complete` és a "
+"`granted_verificado_completo true` értéket jelzi (ezt a fenti sorozat "
+"ellenőrzi). Az `export` ezután kiírja a feltöltési fichero-BOE leletet, "
+"és közli annak ellenőrzőösszegét."
 
 #: ../../how-to/irpf-lifecycle.md:96
 msgid ""

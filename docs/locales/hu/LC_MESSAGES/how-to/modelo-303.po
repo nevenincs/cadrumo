@@ -42,7 +42,6 @@ msgstr ""
 "Autoliquidacion.”"
 
 #: ../../how-to/modelo-303.md:10
-#, fuzzy
 msgid ""
 "Cadrumo does not submit Modelo 303 to the Agencia Estatal de "
 "Administración Tributaria (AEAT). Its registry carries the filing layout,"
@@ -51,9 +50,13 @@ msgid ""
 "Read the calculated box values back and enter them through the official "
 "AEAT channel yourself."
 msgstr ""
-"A Cadrumo nem nyújtja be a Modelo 303-at az Agencia Estatal de "
-"Administración Tributaria (AEAT) felé. Az export egy helyi fájlt hoz "
-"létre, amelyet Ön maga tölt fel a hivatalos AEAT-csatornán keresztül."
+"A Cadrumo nem nyújtja be a 303-as modelót az Agencia Estatal de "
+"Administración Tributaria (AEAT) részére. A nyilvántartása tartalmazza "
+"a benyújtási elrendezést, de az `export` jelenleg visszautasítja a "
+"kérést, mert a terméknek nincs ellenőrzött "
+"AEAT-termék/szoftverazonossági hatásköre a boríték lepecsételéséhez. "
+"Olvasd vissza a kiszámított mezőértékeket, és add meg őket magad az "
+"AEAT hivatalos csatornáján."
 
 #: ../../how-to/modelo-303.md:16
 msgid "The tool needs a master-key passphrase and prompts for it."
@@ -94,17 +97,16 @@ msgstr ""
 " alatt magyarázunk el."
 
 #: ../../how-to/modelo-303.md:31
-#, fuzzy
 msgid ""
 "The Modelo 303 export step refuses until reviewed product/software "
 "identity authority is available. Enter the calculated box values at the "
 "AEAT portal, as [File your modelo at the AEAT portal](file-at-aeat.md) "
 "describes."
 msgstr ""
-"A Modelo 303-hoz nincs fichero-BOE elrendezés, ezért az exportálási lépés"
-" elutasít. Ehelyett add meg a kiszámított casilla-értékeket az AEAT "
-"portálján, ahogy a [Modelo bevallás benyújtása az AEAT portálján](file-"
-"at-aeat.md) leírja."
+"A 303-as modelo exportlépése addig visszautasítja a kérést, amíg nem "
+"áll rendelkezésre ellenőrzött termék/szoftverazonossági hatáskör. Add "
+"meg a kiszámított mezőértékeket az AEAT portálján, ahogy a [Modelód "
+"benyújtása az AEAT portálján](file-at-aeat.md) leírja."
 
 #: ../../how-to/modelo-303.md:39
 msgid "Load-bearing details:"
@@ -179,17 +181,16 @@ msgstr ""
 " sor nem fogad el kései csatolmányt."
 
 #: ../../how-to/modelo-303.md:61
-#, fuzzy
 msgid ""
 "`verify` reports `completeness complete` and `granted true`, and `work "
 "file` writes the local filed marker. `export` refuses because its "
 "envelope cannot be stamped without reviewed product/software identity "
 "authority."
 msgstr ""
-"A `verify` a `completeness complete` és `granted true` értékeket jelzi, a"
-" `work file` pedig kiírja a helyi beadási jelölőt. A `export` elutasít: a"
-" Modelo 303-hoz nincs fichero-BOE elrendezés, ezért nincs feltölthető "
-"fájl."
+"A `verify` a `completeness complete` és a `granted true` értéket jelzi, "
+"a `work file` pedig kiírja a helyi benyújtott jelölőt. Az `export` "
+"visszautasítja a kérést, mert a boríték ellenőrzött "
+"termék/szoftverazonossági hatáskör nélkül nem pecsételhető le."
 
 #: ../../how-to/modelo-303.md:64
 msgid ""
@@ -678,6 +679,12 @@ msgid ""
 "never guesses it from the active profile. No upload file is produced "
 "without that authority."
 msgstr ""
+"Az `aeat app modelo export` a 303-as modelo esetén addig visszautasítja "
+"a kérést, amíg a Cadrumo nem rendelkezik ellenőrzött "
+"AEAT-termék/szoftverazonossági hatáskörrel. Ez az azonosság a termék "
+"kiadásának ténye, nem az adózó vagy a benyújtó adata, ezért a parancs "
+"soha nem következteti ki az aktív profilból. E hatáskör nélkül nem "
+"készül feltöltési fájl."
 
 #: ../../how-to/modelo-303.md:259
 msgid ""

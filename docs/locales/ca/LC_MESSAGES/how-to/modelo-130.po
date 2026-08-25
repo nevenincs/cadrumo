@@ -48,6 +48,9 @@ msgid ""
 "backed fichero-BOE upload file locally; you still present that file "
 "through the official AEAT channel yourself."
 msgstr ""
+"`aeat` no presenta el Model 130 davant de l'AEAT. Pot produir localment "
+"el fitxer de pujada fichero-BOE basat en el registre; tot i així, "
+"presentes tu mateix aquest fitxer pel canal oficial de l'AEAT."
 
 #: ../../how-to/modelo-130.md:15
 msgid "The tool needs a master-key passphrase and prompts for it."
@@ -145,14 +148,13 @@ msgstr ""
 "fraccionado (casilla `04`) de `100.00`, el 20 per cent del net."
 
 #: ../../how-to/modelo-130.md:52
-#, fuzzy
 msgid ""
 "`verify` reports `completeness complete` and `granted true`. `export` "
 "then writes the local fichero-BOE artefact and reports its checksum."
 msgstr ""
-"`verify` informa de `completeness complete` i `granted true`. Després "
-"l'exportació escriu el `.boe` i n'informa el camí, la mida en bytes i la "
-"suma de verificació SHA-256."
+"`verify` informa de `completeness complete` i `granted true`. Després, "
+"`export` escriu l'artefacte fichero-BOE local i n'informa de la suma de "
+"comprovació."
 
 #: ../../how-to/modelo-130.md:55
 msgid "Before you create the draft"
@@ -368,13 +370,12 @@ msgstr ""
 "factura adjuntada després no arriba a la presentació."
 
 #: ../../how-to/modelo-130.md:149
-#, fuzzy
 msgid ""
 "The sequence below exports the verified draft, then records the filed "
 "marker."
 msgstr ""
-"La seqüència següent mostra el rebuig de `export` i després registra la "
-"marca local de presentació."
+"La seqüència següent exporta l'esborrany verificat i després registra "
+"el marcador de presentat."
 
 #: ../../how-to/modelo-130.md:155
 msgid ""

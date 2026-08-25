@@ -92,6 +92,12 @@ msgid ""
 "by exact name. The executable example checks the current active-profile "
 "composition without fabricating another taxpayer or recovery phrase:"
 msgstr ""
+"Enumera tus perfiles con `aeat config profile list` y mira cuál está "
+"activo. Crea cada contribuyente adicional de forma interactiva para que "
+"se inscriban y verifiquen su frase de contraseña y su frase de "
+"recuperación de un solo uso; después cambia por nombre exacto. El "
+"ejemplo ejecutable comprueba la composición actual del perfil activo "
+"sin fabricar otro contribuyente ni una frase de recuperación:"
 
 #: ../../how-to/profile-setup.md:38
 msgid ""
@@ -300,7 +306,6 @@ msgid "Save now, finish later"
 msgstr "Guardar ahora, terminar más tarde"
 
 #: ../../how-to/profile-setup.md:119
-#, fuzzy
 msgid ""
 "Stop a first-time setup at any point and keep what you answered. Choose "
 "*save and exit* on any page: every answer you gave is already stored, and"
@@ -308,11 +313,13 @@ msgid ""
 "config profile show` reports that setup state; `profile list` "
 "deliberately reports only the saved names and which profile is active."
 msgstr ""
-"Detén la primera configuración en cualquier momento y conserva lo que "
-"hayas respondido. Elige *guardar y salir* en cualquier página: cada "
-"respuesta que hayas dado ya está guardada y el perfil queda marcado como "
-"configuración incompleta. `aeat config profile list` marca el perfil "
-"incompleto para que puedas detectarlo más adelante."
+"Detén una configuración inicial en cualquier momento y conserva lo que "
+"respondiste. Elige *guardar y salir* en cualquier página: cada "
+"respuesta ya está almacenada y el perfil queda marcado como "
+"configuración incompleta. Después de desbloquearlo, `aeat config "
+"profile show` informa de ese estado; `profile list` informa "
+"deliberadamente solo de los nombres guardados y de cuál perfil está "
+"activo."
 
 #: ../../how-to/profile-setup.md:125
 msgid ""
@@ -1048,17 +1055,17 @@ msgstr ""
 "Consulta [Instala Cadrumo](../workstation-setup.md) para los extras."
 
 #: ../../how-to/profile-setup.md:406
-#, fuzzy
 msgid ""
 "Sign out without deleting the profile using `aeat config logout` after "
 "the login-gated maintenance and capability checks above. Logout closes "
 "the active storage session, discards its in-memory keys, disposes the "
 "bucket engines, and clears the local active-profile pointer:"
 msgstr ""
-"Cierra la sesión sin eliminar el perfil con `aeat config logout`. El "
-"cierre de sesión termina la sesión de almacenamiento activa, descarta sus"
-" claves en memoria, libera los motores de bucket y borra el puntero local"
-" del perfil activo:"
+"Cierra sesión sin borrar el perfil mediante `aeat config logout` "
+"después de las comprobaciones de mantenimiento y capacidades protegidas "
+"por inicio de sesión anteriores. El cierre de sesión cierra la sesión "
+"de almacenamiento activa, descarta sus claves en memoria, libera los "
+"motores de bucket y borra el puntero local del perfil activo:"
 
 #: ../../how-to/profile-setup.md:415
 msgid "See what changed"

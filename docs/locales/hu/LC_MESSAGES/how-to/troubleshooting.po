@@ -45,17 +45,16 @@ msgstr ""
 "oldalra."
 
 #: ../../how-to/troubleshooting.md:10
-#, fuzzy
 msgid ""
 "Profile-scoped commands need an active taxpayer profile and may ask for "
 "that profile's passphrase to unwrap its independent encryption key. See "
 "[Set up your taxpayer profile](profile-setup.md) if you have none. Output"
 " can be English, Spanish, Catalan, or Hungarian."
 msgstr ""
-"A profilra korlátozott parancsokhoz aktív adózói profil szükséges, és "
-"bekérhetik a mesterkulcs-jelmondatot. Lásd: [Állítsa be adózói profilját"
-"](profile-setup.md), ha nincs. A kimenet lehet magyar, spanyol, katalán "
-"vagy angol."
+"A profilhoz kötött parancsoknak aktív adózói profilra van szükségük, és "
+"kérhetik annak jelmondatát az önálló titkosítási kulcs kibontásához. Ha "
+"nincs ilyened, lásd: [Adózói profil beállítása](profile-setup.md). A "
+"kimenet angol, spanyol, katalán vagy magyar lehet."
 
 #: ../../how-to/troubleshooting.md:15
 msgid "\"This operation requires an active profile\""
@@ -90,6 +89,11 @@ msgid ""
 "that profile's passphrase; a headless caller must use an explicit machine"
 " secret channel instead of placing the passphrase on the command line."
 msgstr ""
+"A törlési parancs romboló javítás, és csak akkor megfelelő, ha az "
+"ellenőrzés olvashatatlan aktív mutatót jelent. A bejelentkezés ezután "
+"elkéri a profil jelmondatát; a felügyelet nélküli hívónak kifejezett "
+"géptitok-csatornát kell használnia ahelyett, hogy a jelmondatot a "
+"parancssorba írná."
 
 #: ../../how-to/troubleshooting.md:38
 msgid ""

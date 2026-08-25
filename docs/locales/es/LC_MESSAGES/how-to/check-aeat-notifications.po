@@ -100,14 +100,14 @@ msgid "You need:"
 msgstr "Necesitas:"
 
 #: ../../how-to/check-aeat-notifications.md:34
-#, fuzzy
 msgid ""
 "an [active profile](profile-setup.md#what-the-active-profile-means). "
 "Create one at a terminal so you can record and verify its one-time "
 "recovery phrase:"
 msgstr ""
-"un [perfil activo](profile-setup.md#what-the-active-profile-means). Crea "
-"uno de forma no interactiva:"
+"un [perfil activo](profile-setup.md#what-the-active-profile-means). "
+"Crea uno en una terminal para poder anotar y verificar su frase de "
+"recuperación de un solo uso:"
 
 #: ../../how-to/check-aeat-notifications.md:41
 msgid ""
@@ -118,13 +118,12 @@ msgstr ""
 "DNI, NIE o NII) guardado en ese perfil"
 
 #: ../../how-to/check-aeat-notifications.md:42
-#, fuzzy
 msgid ""
 "the profile passphrase that unwraps this profile's independent encryption"
 " key; the tool prompts for it."
 msgstr ""
-"la frase de contraseña de la clave maestra que protege tu almacén local; "
-"la herramienta te la pide."
+"la frase de contraseña del perfil que desenvuelve su clave de cifrado "
+"independiente; la herramienta la solicita."
 
 #: ../../how-to/check-aeat-notifications.md:44
 msgid ""

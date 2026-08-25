@@ -42,7 +42,6 @@ msgstr ""
 "el Valor Añadido. Autoliquidación.»"
 
 #: ../../how-to/modelo-303.md:10
-#, fuzzy
 msgid ""
 "Cadrumo does not submit Modelo 303 to the Agencia Estatal de "
 "Administración Tributaria (AEAT). Its registry carries the filing layout,"
@@ -51,9 +50,12 @@ msgid ""
 "Read the calculated box values back and enter them through the official "
 "AEAT channel yourself."
 msgstr ""
-"Cadrumo no presenta el Modelo 303 a l'Agencia Estatal de Administración "
-"Tributaria (AEAT). L'exportació crea un fitxer local que puges tu mateix "
-"pel canal oficial de l'AEAT."
+"Cadrumo no presenta el Model 303 davant de l'Agència Estatal "
+"d'Administració Tributària (AEAT). El seu registre conté el disseny de "
+"presentació, però `export` es nega actualment perquè el producte no té "
+"una autoritat revisada sobre la identitat de producte/programari de "
+"l'AEAT per segellar el sobre. Torna a llegir els valors calculats de "
+"les caselles i introdueix-los tu mateix pel canal oficial de l'AEAT."
 
 #: ../../how-to/modelo-303.md:16
 msgid "The tool needs a master-key passphrase and prompts for it."
@@ -93,17 +95,16 @@ msgstr ""
 " seqüència."
 
 #: ../../how-to/modelo-303.md:31
-#, fuzzy
 msgid ""
 "The Modelo 303 export step refuses until reviewed product/software "
 "identity authority is available. Enter the calculated box values at the "
 "AEAT portal, as [File your modelo at the AEAT portal](file-at-aeat.md) "
 "describes."
 msgstr ""
-"El Model 303 no té disseny fichero-BOE, per això es rebutja el pas "
-"d'exportació. Introdueix en lloc seu els valors calculats de les caselles"
-" al portal de l'AEAT, tal com descriu [Presenta el teu model al portal de"
-" l'AEAT](file-at-aeat.md)."
+"El pas d'exportació del Model 303 es nega fins que hi hagi una "
+"autoritat revisada d'identitat de producte/programari. Introdueix els "
+"valors calculats de les caselles al portal de l'AEAT, com descriu "
+"[Presenta el teu model al portal de l'AEAT](file-at-aeat.md)."
 
 #: ../../how-to/modelo-303.md:39
 msgid "Load-bearing details:"
@@ -176,7 +177,6 @@ msgstr ""
 "despesa. Una fila blocada no pot admetre un adjunt tardà."
 
 #: ../../how-to/modelo-303.md:61
-#, fuzzy
 msgid ""
 "`verify` reports `completeness complete` and `granted true`, and `work "
 "file` writes the local filed marker. `export` refuses because its "
@@ -184,9 +184,9 @@ msgid ""
 "authority."
 msgstr ""
 "`verify` informa de `completeness complete` i `granted true`, i `work "
-"file` escriu la marca local de presentació. `export` es rebutja: el Model"
-" 303 no té disseny fichero-BOE, per tant no es produeix cap fitxer per "
-"pujar."
+"file` escriu el marcador local de presentat. `export` es nega perquè el "
+"seu sobre no es pot segellar sense una autoritat revisada d'identitat "
+"de producte/programari."
 
 #: ../../how-to/modelo-303.md:64
 msgid ""
@@ -674,6 +674,12 @@ msgid ""
 "never guesses it from the active profile. No upload file is produced "
 "without that authority."
 msgstr ""
+"`aeat app modelo export` es nega per al Model 303 mentre Cadrumo no "
+"tingui una autoritat revisada sobre la identitat de producte/programari "
+"de l'AEAT. Aquesta identitat és un fet de la versió del producte, no "
+"dades del contribuent ni del presentador, de manera que l'ordre mai no "
+"la dedueix del perfil actiu. No es produeix cap fitxer de pujada sense "
+"aquesta autoritat."
 
 #: ../../how-to/modelo-303.md:259
 msgid ""

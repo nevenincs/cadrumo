@@ -73,7 +73,6 @@ msgid "You need:"
 msgstr "Szüksége lesz a következőkre:"
 
 #: ../../how-to/authenticate-with-aeat.md:23
-#, fuzzy
 msgid ""
 "an [active profile](profile-setup.md#what-the-active-profile-means). "
 "`aeat config auth configure` refuses with `No hay un perfil activo` until"
@@ -83,9 +82,12 @@ msgid ""
 "commits:"
 msgstr ""
 "egy [aktív profil](profile-setup.md#what-the-active-profile-means). Az "
-"`aeat config auth configure` a `No hay un perfil activo` üzenettel "
-"elutasítja a műveletet, amíg létre nem hoz egyet. Hozzon létre egyet nem "
-"interaktív módon (a NIF, CIF, DNI vagy NIE spanyol adóazonosító):"
+"`aeat config auth configure` a `No hay un perfil activo` hibával "
+"mindaddig visszautasítja a kérést, amíg nem hozol létre egyet. Indítsd "
+"el az interaktív varázslót (a NIF, CIF, DNI vagy NIE spanyol "
+"adóazonosító); ez bejegyzi a profil jelmondatát, és a létrehozás "
+"véglegesítése előtt megköveteli az egyszer használatos helyreállítási "
+"kifejezés ellenőrzését:"
 
 #: ../../how-to/authenticate-with-aeat.md:33
 msgid ""

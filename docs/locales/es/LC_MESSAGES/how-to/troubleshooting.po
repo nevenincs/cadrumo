@@ -44,18 +44,17 @@ msgstr ""
 "privacidad](#prepare-a-privacy-safe-support-request)."
 
 #: ../../how-to/troubleshooting.md:10
-#, fuzzy
 msgid ""
 "Profile-scoped commands need an active taxpayer profile and may ask for "
 "that profile's passphrase to unwrap its independent encryption key. See "
 "[Set up your taxpayer profile](profile-setup.md) if you have none. Output"
 " can be English, Spanish, Catalan, or Hungarian."
 msgstr ""
-"Los comandos delimitados por perfil necesitan un perfil de contribuyente "
-"activo y pueden pedir la frase de contraseña de la clave maestra. "
-"Consulta [Configura tu perfil de contribuyente](profile-setup.md) si no "
-"tiene ninguno. La salida puede estar en inglés, español, catalán o "
-"húngaro."
+"Los comandos delimitados por perfil necesitan un perfil activo de "
+"contribuyente y pueden pedir la frase de contraseña de ese perfil para "
+"desenvolver su clave de cifrado independiente. Consulta [Configura tu "
+"perfil de contribuyente](profile-setup.md) si no tienes ninguno. La "
+"salida puede estar en inglés, español, catalán o húngaro."
 
 #: ../../how-to/troubleshooting.md:15
 msgid "\"This operation requires an active profile\""
@@ -90,6 +89,12 @@ msgid ""
 "that profile's passphrase; a headless caller must use an explicit machine"
 " secret channel instead of placing the passphrase on the command line."
 msgstr ""
+"El comando de borrado es una reparación destructiva y solo es apropiado "
+"después de que la inspección informe de un puntero activo ilegible. "
+"Después, el inicio de sesión pide la frase de contraseña de ese perfil; "
+"quien llame sin interfaz debe usar un canal explícito de secreto de "
+"máquina en lugar de poner la frase de contraseña en la línea de "
+"comandos."
 
 #: ../../how-to/troubleshooting.md:38
 msgid ""

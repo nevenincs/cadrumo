@@ -92,6 +92,12 @@ msgid ""
 "by exact name. The executable example checks the current active-profile "
 "composition without fabricating another taxpayer or recovery phrase:"
 msgstr ""
+"Enumera els teus perfils amb `aeat config profile list` i mira quin és "
+"actiu. Crea cada contribuent addicional de manera interactiva perquè "
+"s'hi registrin i verifiquin tant la seva frase de contrasenya com la "
+"frase de recuperació d'un sol ús; després canvia per nom exacte. "
+"L'exemple executable comprova la composició actual del perfil actiu "
+"sense fabricar cap altre contribuent ni frase de recuperació:"
 
 #: ../../how-to/profile-setup.md:38
 msgid ""
@@ -296,7 +302,6 @@ msgid "Save now, finish later"
 msgstr "Desa ara i acaba més tard"
 
 #: ../../how-to/profile-setup.md:119
-#, fuzzy
 msgid ""
 "Stop a first-time setup at any point and keep what you answered. Choose "
 "*save and exit* on any page: every answer you gave is already stored, and"
@@ -304,11 +309,12 @@ msgid ""
 "config profile show` reports that setup state; `profile list` "
 "deliberately reports only the saved names and which profile is active."
 msgstr ""
-"Atura la configuració inicial en qualsevol moment i conserva el que has "
-"respost. Tria *desa i surt* a qualsevol pàgina: cada resposta que hagis "
-"donat ja s'ha desat i el perfil continua marcat com a configuració "
-"incompleta. `aeat config profile list` marca un perfil incomplet perquè "
-"el puguis detectar més endavant."
+"Atura una configuració inicial en qualsevol moment i conserva allò que "
+"has respost. Tria *desa i surt* en qualsevol pàgina: cada resposta ja "
+"està desada i el perfil queda marcat com a configuració incompleta. "
+"Després de desbloquejar-lo, `aeat config profile show` informa d'aquest "
+"estat; `profile list` informa deliberadament només dels noms desats i "
+"de quin perfil és actiu."
 
 #: ../../how-to/profile-setup.md:125
 msgid ""
@@ -1041,17 +1047,17 @@ msgstr ""
 "[Instal·la Cadrumo](../workstation-setup.md) per als extres."
 
 #: ../../how-to/profile-setup.md:406
-#, fuzzy
 msgid ""
 "Sign out without deleting the profile using `aeat config logout` after "
 "the login-gated maintenance and capability checks above. Logout closes "
 "the active storage session, discards its in-memory keys, disposes the "
 "bucket engines, and clears the local active-profile pointer:"
 msgstr ""
-"Tanca la sessió sense eliminar el perfil amb `aeat config logout`. El "
-"tancament de sessió tanca la sessió d'emmagatzematge activa, descarta les"
-" seves claus en memòria, elimina els motors de bucket i esborra el punter"
-" local del perfil actiu:"
+"Tanca la sessió sense esborrar el perfil amb `aeat config logout` "
+"després de les comprovacions de manteniment i capacitats protegides per "
+"inici de sessió anteriors. El tancament de sessió tanca la sessió "
+"d'emmagatzematge activa, descarta les seves claus en memòria, allibera "
+"els motors de bucket i esborra el punter local del perfil actiu:"
 
 #: ../../how-to/profile-setup.md:415
 msgid "See what changed"

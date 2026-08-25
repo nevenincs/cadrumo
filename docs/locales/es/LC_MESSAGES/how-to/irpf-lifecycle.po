@@ -38,17 +38,17 @@ msgstr ""
 "IRPF que el año pide a un consultor autónomo."
 
 #: ../../how-to/irpf-lifecycle.md:9
-#, fuzzy
 msgid ""
 "Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. "
 "It does not submit them to the Agencia Estatal de Administración "
 "Tributaria (AEAT). For Modelo 130 it writes a local fichero-BOE artefact "
 "that you present through the AEAT portal."
 msgstr ""
-"Cadrumo (la orden `aeat`) prepara archivos locales para los formularios "
-"tributarios españoles. No los presenta ante la Agencia Estatal de "
-"Administración Tributaria (AEAT). En cada presentación, tú mismo subes el"
-" archivo exportado a través del portal de la AEAT."
+"Cadrumo (el comando `aeat`) prepara archivos locales para los "
+"formularios tributarios españoles. No los presenta ante la Agencia "
+"Estatal de Administración Tributaria (AEAT). Para el Modelo 130 escribe "
+"un artefacto fichero-BOE local que presentas a través del portal de "
+"AEAT."
 
 #: ../../how-to/irpf-lifecycle.md:14
 msgid ""
@@ -170,7 +170,6 @@ msgstr ""
 "secuencia siguiente."
 
 #: ../../how-to/irpf-lifecycle.md:69
-#, fuzzy
 msgid ""
 "Create and calculate the first instalment. Modelo 130 is cumulative, and "
 "a true first period has no history, so the three prior-period carries are"
@@ -179,14 +178,13 @@ msgid ""
 " draft, verifies it, and exports it; the file and reconcile commands that"
 " close the quarter are shown after it:"
 msgstr ""
-"Crea y calcula el primer pago fraccionado. El Modelo 130 es acumulativo, "
-"y un verdadero primer periodo no tiene historial, así que los tres "
-"arrastres del periodo anterior se pasan como ceros: este es el único "
-"trimestre en el que haces esto. La secuencia de abajo registra las dos "
-"filas del trimestre, crea y calcula el borrador y lo verifica; las "
-"órdenes de exportar, presentar y conciliar que cierran el trimestre se "
-"muestran después del resultado verificado (se ejecutan contra tu propio "
-"historial presentado y con evidencia, no contra el entorno de pruebas):"
+"Crea y calcula el primer pago fraccionado. El Modelo 130 es acumulativo "
+"y un primer período verdadero no tiene historial, por lo que los tres "
+"arrastres del período anterior se pasan como ceros; este es el único "
+"trimestre en que lo haces. La secuencia de abajo registra las dos filas "
+"del trimestre, crea y calcula el borrador, lo verifica y lo exporta; "
+"después muestra los comandos de fichero y conciliación que cierran el "
+"trimestre:"
 
 #: ../../how-to/irpf-lifecycle.md:80
 msgid ""
@@ -206,17 +204,15 @@ msgstr ""
 " muestra.)"
 
 #: ../../how-to/irpf-lifecycle.md:92
-#, fuzzy
 msgid ""
 "Verify reports `completeness_status complete` and "
 "`granted_verificado_completo true` (the sequence above asserts this). "
 "`export` writes the fichero-BOE upload artefact and reports its checksum."
 msgstr ""
 "La verificación informa de `completeness_status complete` y "
-"`granted_verificado_completo true` (la secuencia de arriba lo comprueba)."
-" La exportación escribe el fichero-BOE e imprime tu ruta, su tamaño y su "
-"suma de comprobación SHA-256; anota la suma de comprobación, identifica "
-"exactamente qué archivo subes."
+"`granted_verificado_completo true` (la secuencia anterior lo "
+"comprueba). `export` escribe el artefacto de subida fichero-BOE e "
+"informa de su suma de comprobación."
 
 #: ../../how-to/irpf-lifecycle.md:96
 msgid ""

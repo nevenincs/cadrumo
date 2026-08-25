@@ -463,7 +463,6 @@ msgstr ""
 "completo:"
 
 #: ../../how-to/verification-reports.md:181
-#, fuzzy
 msgid ""
 "Verified-complete is necessary but not sufficient. Modelo 303 export "
 "refuses even after verification grants when no reviewed product/software "
@@ -471,12 +470,12 @@ msgid ""
 "the filing stands, then read the verified figures back and enter them at "
 "the AEAT portal:"
 msgstr ""
-"El estado verificado-completo es necesario, pero no suficiente. El Modelo"
-" 303 no tiene diseño fichero-BOE, por lo que la exportación se rechaza "
-"incluso después de conceder la verificación, con "
-"`REFUSED_MODELO_EXPORT_UNSUPPORTED`. Comprueba en qué estado está la "
-"presentación, vuelve a leer las cifras verificadas e introdúcelas en el "
-"portal de la AEAT:"
+"El estado verificado-completo es necesario, pero no suficiente. La "
+"exportación del Modelo 303 se niega incluso después de que la "
+"verificación conceda el permiso cuando no hay una autoridad revisada de "
+"identidad de producto/software, con `FAIL_MODELO_EXPORT`. Comprueba en "
+"qué punto está la presentación y luego vuelve a leer las cifras "
+"verificadas e introdúcelas en el portal de AEAT:"
 
 #: ../../how-to/verification-reports.md:190
 msgid "More than one filing matches"

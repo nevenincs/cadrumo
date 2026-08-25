@@ -39,16 +39,15 @@ msgstr ""
 "altra identitat de presentació que executa Cadrumo per primera vegada."
 
 #: ../../how-to/first-quarterly-filing.md:9
-#, fuzzy
 msgid ""
 "Cadrumo never submits a return to the Agencia Estatal de Administración "
 "Tributaria (AEAT). It produces the Modelo 130 fichero-BOE artefact "
 "locally; you present that file through the official AEAT channel."
 msgstr ""
-"Cadrumo mai no presenta cap declaració a l'Agencia Estatal de "
-"Administración Tributaria (AEAT). Cada ordre següent construeix i "
-"comprova un fitxer local. Puja el fitxer exportat tu mateix mitjançant el"
-" canal oficial de l'AEAT."
+"Cadrumo mai no presenta una declaració davant de l'Agència Estatal "
+"d'Administració Tributària (AEAT). Produeix localment l'artefacte "
+"fichero-BOE del Model 130; presentes aquest fitxer a través del canal "
+"oficial de l'AEAT."
 
 #: ../../how-to/first-quarterly-filing.md:13
 msgid ""
@@ -221,14 +220,12 @@ msgstr ""
 "presentació."
 
 #: ../../how-to/first-quarterly-filing.md:96
-#, fuzzy
 msgid ""
 "The sequence below exports the verified draft and then records the local "
 "filed marker."
 msgstr ""
-"La seqüència següent mostra el rebuig de `export`, perquè el Model 130 no"
-" té disseny fichero-BOE, i després registra la marca local de "
-"presentació."
+"La seqüència següent exporta l'esborrany verificat i després registra "
+"el marcador local de presentat."
 
 #: ../../how-to/first-quarterly-filing.md:103
 msgid ""

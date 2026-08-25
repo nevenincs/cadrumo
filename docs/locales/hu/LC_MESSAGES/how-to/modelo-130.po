@@ -48,6 +48,10 @@ msgid ""
 "backed fichero-BOE upload file locally; you still present that file "
 "through the official AEAT channel yourself."
 msgstr ""
+"Az `aeat` nem nyújtja be a 130-as modelót az AEAT részére. Helyben "
+"képes előállítani a nyilvántartással alátámasztott fichero-BOE "
+"feltöltési fájlt; ezt a fájlt azonban továbbra is neked kell "
+"benyújtanod az AEAT hivatalos csatornáján."
 
 #: ../../how-to/modelo-130.md:15
 msgid "The tool needs a master-key passphrase and prompts for it."
@@ -144,14 +148,13 @@ msgstr ""
 "casilla), a nettó 20 százalékát."
 
 #: ../../how-to/modelo-130.md:52
-#, fuzzy
 msgid ""
 "`verify` reports `completeness complete` and `granted true`. `export` "
 "then writes the local fichero-BOE artefact and reports its checksum."
 msgstr ""
-"A `verify` `completeness complete` és `granted true` értéket jelent. Az "
-"export ezután megírja a `.boe` fájlt, és jelenti annak útvonalát, "
-"bájtméretét és SHA-256 ellenőrzőösszegét."
+"A `verify` a `completeness complete` és a `granted true` értéket jelzi. "
+"Az `export` ezután kiírja a helyi fichero-BOE leletet, és közli annak "
+"ellenőrzőösszegét."
 
 #: ../../how-to/modelo-130.md:55
 msgid "Before you create the draft"
@@ -362,13 +365,12 @@ msgstr ""
 "később csatolt számla nem kerül a bevallásba."
 
 #: ../../how-to/modelo-130.md:149
-#, fuzzy
 msgid ""
 "The sequence below exports the verified draft, then records the filed "
 "marker."
 msgstr ""
-"Az alábbi sorozat a `export` elutasítását mutatja, majd rögzíti a helyi "
-"beadási jelölőt."
+"Az alábbi sorozat exportálja az ellenőrzött tervezetet, majd rögzíti a "
+"benyújtott jelölőt."
 
 #: ../../how-to/modelo-130.md:155
 msgid ""

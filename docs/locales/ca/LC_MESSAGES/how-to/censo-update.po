@@ -191,15 +191,15 @@ msgid "Pull your census facts from AEAT"
 msgstr "Per què són importants les dades censals"
 
 #: ../../how-to/censo-update.md:79
-#, fuzzy
 msgid ""
 "AEAT publishes your current census position at *Mis Datos Censales*. Pull"
 " it into the active profile. The first step previews; the second performs"
 " a new authenticated read and records that read's eligible facts:"
 msgstr ""
 "L'AEAT publica la teva situació censal actual a *Mis Datos Censales*. "
-"Obtén-la al perfil actiu. El primer pas mostra una previsualització; el "
-"segon la registra:"
+"Incorpora-la al perfil actiu. El primer pas en mostra una vista prèvia; "
+"el segon fa una nova lectura autenticada i registra els fets "
+"admissibles d'aquella lectura:"
 
 #: ../../how-to/censo-update.md:86
 msgid "Nothing is written until you add `--apply`."
@@ -215,6 +215,13 @@ msgid ""
 "that lands, do not treat the earlier preview as the operand that was "
 "applied."
 msgstr ""
+"La CLI actual no converteix la vista prèvia de la primera ordre en una "
+"aprovació desada. L'ordre `--apply` torna a llegir l'AEAT i aplica "
+"aquesta nova observació. Revisa el resultat de `--apply` abans de "
+"basar-te en el perfil actualitzat. S'està treballant per exposar en "
+"aquesta ordre el cicle de revisió i aplicació de línia base exacta "
+"capturat per l'aplicació; fins que arribi, no tractis la vista prèvia "
+"anterior com l'operand que s'ha aplicat."
 
 #: ../../how-to/censo-update.md:97
 msgid ""
@@ -241,6 +248,9 @@ msgid ""
 " censal read, so `--apply` writes AEAT's current value. A preview only "
 "reports what would be eligible."
 msgstr ""
+"**Adoptat**: el perfil no tenia cap resposta, o el valor procedia d'una "
+"lectura censal anterior, de manera que `--apply` escriu el valor actual "
+"de l'AEAT. Una vista prèvia només informa d'allò que seria admissible."
 
 #: ../../how-to/censo-update.md:110
 msgid "**Unchanged**: you and AEAT already agree."

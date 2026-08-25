@@ -196,6 +196,9 @@ msgid ""
 " cannot encode every applicable required casilla, so the command refuses "
 "rather than producing a partial file:"
 msgstr ""
+"Intenta exportar la declaració verificada. El disseny autoritatiu "
+"actual no pot codificar totes les caselles obligatòries aplicables, de "
+"manera que l'ordre es nega en lloc de produir un fitxer parcial:"
 
 #: ../../how-to/modelo-349.md:89
 msgid ""
@@ -216,6 +219,10 @@ msgid ""
 "values and present them through the AEAT portal; do not treat a partial "
 "export as a finish line."
 msgstr ""
+"El marcador és opcional i només s'aplica mentre la finestra de "
+"l'obligació és oberta. Fins que es completi el disseny de les caselles "
+"obligatòries, llegeix els valors verificats i presenta'ls a través del "
+"portal de l'AEAT; no prenguis una exportació parcial com una meta."
 
 #: ../../how-to/modelo-349.md:103
 msgid ""

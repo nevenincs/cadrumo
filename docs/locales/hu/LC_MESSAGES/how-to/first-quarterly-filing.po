@@ -40,16 +40,15 @@ msgstr ""
 "először használja a Cadrumót."
 
 #: ../../how-to/first-quarterly-filing.md:9
-#, fuzzy
 msgid ""
 "Cadrumo never submits a return to the Agencia Estatal de Administración "
 "Tributaria (AEAT). It produces the Modelo 130 fichero-BOE artefact "
 "locally; you present that file through the official AEAT channel."
 msgstr ""
 "A Cadrumo soha nem nyújt be bevallást az Agencia Estatal de "
-"Administración Tributariának (AEAT). Az alábbi minden parancs egy helyi "
-"fájlt épít fel és ellenőriz. Az exportált fájlt Ön maga tölti fel a "
-"hivatalos AEAT-csatornán keresztül."
+"Administración Tributaria (AEAT) részére. Helyben állítja elő a 130-as "
+"modelo fichero-BOE leletét; ezt a fájlt az AEAT hivatalos csatornáján "
+"te nyújtod be."
 
 #: ../../how-to/first-quarterly-filing.md:13
 msgid ""
@@ -221,13 +220,12 @@ msgstr ""
 "később csatolt számla nem kerül be a bevallásba."
 
 #: ../../how-to/first-quarterly-filing.md:96
-#, fuzzy
 msgid ""
 "The sequence below exports the verified draft and then records the local "
 "filed marker."
 msgstr ""
-"Az alábbi sorozat a `export` elutasítását mutatja, mert a Modelo 130-hoz "
-"nincs fichero-BOE elrendezés, majd rögzíti a helyi benyújtási jelölőt."
+"Az alábbi sorozat exportálja az ellenőrzött tervezetet, majd rögzíti a "
+"helyi benyújtott jelölőt."
 
 #: ../../how-to/first-quarterly-filing.md:103
 msgid ""

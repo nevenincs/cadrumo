@@ -197,6 +197,9 @@ msgid ""
 " cannot encode every applicable required casilla, so the command refuses "
 "rather than producing a partial file:"
 msgstr ""
+"Kíséreld meg az ellenőrzött bevallás exportját. A jelenlegi hiteles "
+"elrendezés nem képes minden alkalmazandó kötelező mezőt kódolni, ezért "
+"a parancs részleges fájl előállítása helyett visszautasítja a kérést:"
 
 #: ../../how-to/modelo-349.md:89
 msgid ""
@@ -217,6 +220,10 @@ msgid ""
 "values and present them through the AEAT portal; do not treat a partial "
 "export as a finish line."
 msgstr ""
+"A jelölő választható, és csak addig alkalmazható, amíg a kötelezettségi "
+"időablak nyitva van. Amíg a kötelező mezők elrendezése nem teljes, "
+"olvasd vissza az ellenőrzött értékeket és nyújtsd be őket az AEAT "
+"portálján; a részleges exportot ne tekintsd célvonalnak."
 
 #: ../../how-to/modelo-349.md:103
 msgid ""

@@ -101,14 +101,14 @@ msgid "You need:"
 msgstr "Necessita:"
 
 #: ../../how-to/check-aeat-notifications.md:34
-#, fuzzy
 msgid ""
 "an [active profile](profile-setup.md#what-the-active-profile-means). "
 "Create one at a terminal so you can record and verify its one-time "
 "recovery phrase:"
 msgstr ""
-"un [perfil actiu](profile-setup.md#what-the-active-profile-means). Crea'n"
-" un de manera no interactiva:"
+"un [perfil actiu](profile-setup.md#what-the-active-profile-means). "
+"Crea'n un en un terminal per poder anotar i verificar-ne la frase de "
+"recuperació d'un sol ús:"
 
 #: ../../how-to/check-aeat-notifications.md:41
 msgid ""
@@ -119,13 +119,12 @@ msgstr ""
 " NIE o NII) desat en aquest perfil"
 
 #: ../../how-to/check-aeat-notifications.md:42
-#, fuzzy
 msgid ""
 "the profile passphrase that unwraps this profile's independent encryption"
 " key; the tool prompts for it."
 msgstr ""
-"la contrasenya de la clau mestra que protegeix el teu magatzem local; "
-"l'eina te la demana."
+"la frase de contrasenya del perfil que desempaqueta la seva clau de "
+"xifratge independent; l'eina la demana."
 
 #: ../../how-to/check-aeat-notifications.md:44
 msgid ""

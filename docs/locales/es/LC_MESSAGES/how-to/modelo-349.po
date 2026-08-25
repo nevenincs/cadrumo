@@ -199,6 +199,9 @@ msgid ""
 " cannot encode every applicable required casilla, so the command refuses "
 "rather than producing a partial file:"
 msgstr ""
+"Intenta exportar la declaración verificada. El diseño autoritativo "
+"actual no puede codificar todas las casillas obligatorias aplicables, "
+"por lo que el comando se niega en vez de producir un fichero parcial:"
 
 #: ../../how-to/modelo-349.md:89
 msgid ""
@@ -219,6 +222,10 @@ msgid ""
 "values and present them through the AEAT portal; do not treat a partial "
 "export as a finish line."
 msgstr ""
+"El marcador es opcional y solo se aplica mientras la ventana de "
+"obligación esté abierta. Hasta que se complete el diseño de casillas "
+"obligatorias, lee los valores verificados y preséntalos a través del "
+"portal de AEAT; no tomes una exportación parcial como una meta."
 
 #: ../../how-to/modelo-349.md:103
 msgid ""

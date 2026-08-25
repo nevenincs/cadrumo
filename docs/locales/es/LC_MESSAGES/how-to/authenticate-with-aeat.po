@@ -73,7 +73,6 @@ msgid "You need:"
 msgstr "Necesitas:"
 
 #: ../../how-to/authenticate-with-aeat.md:23
-#, fuzzy
 msgid ""
 "an [active profile](profile-setup.md#what-the-active-profile-means). "
 "`aeat config auth configure` refuses with `No hay un perfil activo` until"
@@ -82,10 +81,12 @@ msgid ""
 "requires you to verify the one-time recovery phrase before creation "
 "commits:"
 msgstr ""
-"un [perfil activo](profile-setup.md#what-the-active-profile-means). `aeat"
-" config auth configure` se niega con `No hay un perfil activo` hasta que "
-"crees uno. Crea uno de forma no interactiva (un NIF, CIF, DNI o NIE es un"
-" identificador fiscal español):"
+"un [perfil activo](profile-setup.md#what-the-active-profile-means). "
+"`aeat config auth configure` se niega con `No hay un perfil activo` "
+"hasta que crees uno. Inicia el asistente interactivo (un NIF, CIF, DNI "
+"o NIE es un identificador fiscal español); inscribe la frase de "
+"contraseña del perfil y exige que verifiques la frase de recuperación "
+"de un solo uso antes de confirmar la creación:"
 
 #: ../../how-to/authenticate-with-aeat.md:33
 msgid ""

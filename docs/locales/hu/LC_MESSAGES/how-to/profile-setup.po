@@ -92,6 +92,12 @@ msgid ""
 "by exact name. The executable example checks the current active-profile "
 "composition without fabricating another taxpayer or recovery phrase:"
 msgstr ""
+"Sorold fel profiljaidat az `aeat config profile list` paranccsal, és "
+"nézd meg, melyik aktív. Minden további adózót interaktívan hozz létre, "
+"hogy a jelmondata és az egyszer használatos helyreállítási kifejezése "
+"is be legyen jegyezve és ellenőrizve; ezután pontos névvel válts. A "
+"végrehajtható példa az aktív profil jelenlegi összetételét ellenőrzi "
+"anélkül, hogy másik adózót vagy helyreállítási kifejezést gyártana:"
 
 #: ../../how-to/profile-setup.md:38
 msgid ""
@@ -297,7 +303,6 @@ msgid "Save now, finish later"
 msgstr "Mentés most, befejezés később"
 
 #: ../../how-to/profile-setup.md:119
-#, fuzzy
 msgid ""
 "Stop a first-time setup at any point and keep what you answered. Choose "
 "*save and exit* on any page: every answer you gave is already stored, and"
@@ -305,11 +310,12 @@ msgid ""
 "config profile show` reports that setup state; `profile list` "
 "deliberately reports only the saved names and which profile is active."
 msgstr ""
-"Az első beállítást bármikor leállíthatod, és megtarthatod a megadott "
-"válaszaidat. Bármely oldalon válaszd a *mentés és kilépés* lehetőséget: "
-"minden megadott válasz már mentve van, a profil pedig beállítás "
-"alattiként marad megjelölve. A `aeat config profile list` jelzi a hiányos"
-" profilt, hogy később észrevedd."
+"Az első beállítást bármikor megállíthatod, és megőrizheted, amit "
+"megválaszoltál. Bármely oldalon válaszd a *mentés és kilépés* "
+"lehetőséget: minden válaszod már tárolva van, a profil pedig "
+"beállítás-befejezetlenként marad megjelölve. Feloldás után az `aeat "
+"config profile show` jelzi ezt az állapotot; a `profile list` "
+"szándékosan csak a mentett neveket és azt jelzi, melyik profil aktív."
 
 #: ../../how-to/profile-setup.md:125
 msgid ""
@@ -1050,17 +1056,17 @@ msgstr ""
 "](../workstation-setup.md)."
 
 #: ../../how-to/profile-setup.md:406
-#, fuzzy
 msgid ""
 "Sign out without deleting the profile using `aeat config logout` after "
 "the login-gated maintenance and capability checks above. Logout closes "
 "the active storage session, discards its in-memory keys, disposes the "
 "bucket engines, and clears the local active-profile pointer:"
 msgstr ""
-"Jelentkezzen ki a profil törlése nélkül az `aeat config logout` "
-"paranccsal. A kijelentkezés lezárja az aktív tárolási munkamenetet, "
-"eldobja a memóriában lévő kulcsait, megszünteti a bucket-motorokat, és "
-"törli a helyi aktív-profil mutatót:"
+"A fenti bejelentkezéshez kötött karbantartási és képesség-ellenőrzések "
+"után az `aeat config logout` paranccsal törlés nélkül jelentkezhetsz ki "
+"a profilból. A kijelentkezés lezárja az aktív tárolási munkamenetet, "
+"eldobja a memóriában levő kulcsait, felszabadítja a bucket-motorokat, "
+"és törli a helyi aktívprofil-mutatót:"
 
 #: ../../how-to/profile-setup.md:415
 msgid "See what changed"

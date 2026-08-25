@@ -42,7 +42,6 @@ msgstr ""
 "sobre el Valor Añadido. Autoliquidación.»"
 
 #: ../../how-to/modelo-303.md:10
-#, fuzzy
 msgid ""
 "Cadrumo does not submit Modelo 303 to the Agencia Estatal de "
 "Administración Tributaria (AEAT). Its registry carries the filing layout,"
@@ -52,8 +51,11 @@ msgid ""
 "AEAT channel yourself."
 msgstr ""
 "Cadrumo no presenta el Modelo 303 ante la Agencia Estatal de "
-"Administración Tributaria (AEAT). La exportación crea un fichero local "
-"que tú mismo subes por el canal oficial de la AEAT."
+"Administración Tributaria (AEAT). Su registro contiene el diseño de "
+"presentación, pero `export` se niega actualmente porque el producto no "
+"tiene una autoridad revisada sobre la identidad de producto/software de "
+"AEAT con la que sellar el sobre. Vuelve a leer los valores calculados "
+"de las casillas e introdúcelos tú mismo por el canal oficial de AEAT."
 
 #: ../../how-to/modelo-303.md:16
 msgid "The tool needs a master-key passphrase and prompts for it."
@@ -95,17 +97,17 @@ msgstr ""
 " secuencia."
 
 #: ../../how-to/modelo-303.md:31
-#, fuzzy
 msgid ""
 "The Modelo 303 export step refuses until reviewed product/software "
 "identity authority is available. Enter the calculated box values at the "
 "AEAT portal, as [File your modelo at the AEAT portal](file-at-aeat.md) "
 "describes."
 msgstr ""
-"El Modelo 303 no tiene diseño fichero-BOE, por lo que se rechaza el paso "
-"de exportación. Introduce en su lugar los valores calculados de las "
-"casillas en el portal de la AEAT, como se describe en [Presentar tu "
-"modelo en el portal de la AEAT](file-at-aeat.md)."
+"El paso de exportación del Modelo 303 se niega hasta que exista una "
+"autoridad revisada de identidad de producto/software. Introduce los "
+"valores calculados de las casillas en el portal de AEAT, como se "
+"describe en [Presenta tu modelo en el portal de la "
+"AEAT](file-at-aeat.md)."
 
 #: ../../how-to/modelo-303.md:39
 msgid "Load-bearing details:"
@@ -179,7 +181,6 @@ msgstr ""
 "gasto. Una fila bloqueada no admite un adjunto tardío."
 
 #: ../../how-to/modelo-303.md:61
-#, fuzzy
 msgid ""
 "`verify` reports `completeness complete` and `granted true`, and `work "
 "file` writes the local filed marker. `export` refuses because its "
@@ -187,9 +188,9 @@ msgid ""
 "authority."
 msgstr ""
 "`verify` informa de `completeness complete` y `granted true`, y `work "
-"file` escribe la marca local de presentación. `export` se rechaza: el "
-"Modelo 303 no tiene diseño fichero-BOE, por lo que no se produce ningún "
-"archivo para subir."
+"file` escribe el marcador local de presentado. `export` se niega porque "
+"su sobre no puede sellarse sin una autoridad revisada de identidad de "
+"producto/software."
 
 #: ../../how-to/modelo-303.md:64
 msgid ""
@@ -680,6 +681,12 @@ msgid ""
 "never guesses it from the active profile. No upload file is produced "
 "without that authority."
 msgstr ""
+"`aeat app modelo export` se niega para el Modelo 303 mientras Cadrumo "
+"no tenga una autoridad revisada sobre la identidad de producto/software "
+"de AEAT. Esa identidad es un hecho de la versión del producto, no datos "
+"del contribuyente ni del presentador, por lo que el comando nunca la "
+"adivina a partir del perfil activo. No se produce ningún fichero de "
+"subida sin esa autoridad."
 
 #: ../../how-to/modelo-303.md:259
 msgid ""

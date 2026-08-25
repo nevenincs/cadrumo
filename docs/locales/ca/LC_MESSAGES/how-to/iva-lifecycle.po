@@ -38,7 +38,6 @@ msgstr ""
 " 390 que ha de reconciliar amb els quatre trimestres."
 
 #: ../../how-to/iva-lifecycle.md:9
-#, fuzzy
 msgid ""
 "Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. "
 "It does not submit them to the Agencia Estatal de Administración "
@@ -47,9 +46,11 @@ msgid ""
 "values through the portal."
 msgstr ""
 "Cadrumo (l'ordre `aeat`) prepara fitxers locals per als formularis "
-"tributaris espanyols. No els envia a l'Agencia Estatal de Administración "
-"Tributaria (AEAT). A cada presentació puja el fitxer exportat tu mateix "
-"mitjançant el portal de l'AEAT."
+"tributaris espanyols. No els presenta davant de l'Agència Estatal "
+"d'Administració Tributària (AEAT). Actualment l'exportació del Model "
+"303 es nega sense una autoritat revisada d'identitat de "
+"producte/programari, de manera que introdueixes els valors calculats de "
+"les caselles a través del portal."
 
 #: ../../how-to/iva-lifecycle.md:14
 msgid ""
@@ -167,7 +168,6 @@ msgid "Stage 2: the first quarterly return"
 msgstr "Etapa 2: la primera declaració trimestral"
 
 #: ../../how-to/iva-lifecycle.md:69
-#, fuzzy
 msgid ""
 "The first quarter's rows are already recorded and classified with their "
 "IVA detail (the sequence seeds them). Create, calculate, verify and file "
@@ -175,8 +175,10 @@ msgid ""
 "lacks reviewed product/software identity authority:"
 msgstr ""
 "Les files del primer trimestre ja estan registrades i classificades amb "
-"el seu detall d'IVA (la seqüència les sembra). Crea, calcula, verifica, "
-"presenta i exporta el Model 303 del trimestre:"
+"el detall d'IVA (la seqüència les inicialitza). Crea, calcula, verifica "
+"i presenta el Model 303 del trimestre; el pas d'exportació es nega "
+"perquè al sobre li manca una autoritat revisada d'identitat de "
+"producte/programari:"
 
 #: ../../how-to/iva-lifecycle.md:78
 msgid ""

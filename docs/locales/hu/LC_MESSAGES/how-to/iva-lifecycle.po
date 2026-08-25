@@ -37,7 +37,6 @@ msgstr ""
 "Modelo 390 összesítőt, amelynek egyeznie kell a négy negyedévvel."
 
 #: ../../how-to/iva-lifecycle.md:9
-#, fuzzy
 msgid ""
 "Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. "
 "It does not submit them to the Agencia Estatal de Administración "
@@ -45,10 +44,11 @@ msgid ""
 "product/software identity authority, so you enter the calculated box "
 "values through the portal."
 msgstr ""
-"A Cadrumo (az `aeat` parancs) helyi fájlokat készít elő a spanyol "
-"adónyomtatványokhoz. Nem nyújtja be őket az Agencia Estatal de "
-"Administración Tributariának (AEAT). Minden benyújtásnál Ön maga tölti "
-"fel az exportált fájlt az AEAT-portálon keresztül."
+"A Cadrumo (az `aeat` parancs) helyi fájlokat készít a spanyol "
+"adóűrlapokhoz. Nem nyújtja be őket az Agencia Estatal de Administración "
+"Tributaria (AEAT) részére. A 303-as modelo exportja jelenleg "
+"visszautasítja a kérést ellenőrzött termék/szoftverazonossági hatáskör "
+"nélkül, ezért a kiszámított mezőértékeket a portálon kell megadnod."
 
 #: ../../how-to/iva-lifecycle.md:14
 msgid ""
@@ -165,16 +165,17 @@ msgid "Stage 2: the first quarterly return"
 msgstr "2. szakasz: az első negyedéves bevallás"
 
 #: ../../how-to/iva-lifecycle.md:69
-#, fuzzy
 msgid ""
 "The first quarter's rows are already recorded and classified with their "
 "IVA detail (the sequence seeds them). Create, calculate, verify and file "
 "Modelo 303 for the quarter; the export step refuses because the envelope "
 "lacks reviewed product/software identity authority:"
 msgstr ""
-"Az első negyedév sorai már rögzítve és osztályozva vannak az IVA-"
-"részletükkel (a sorozat előkészíti őket). Hozza létre, számítsa ki, "
-"ellenőrizze, nyújtsa be és exportálja a Modelo 303-at a negyedévre:"
+"Az első negyedév sorai már rögzítve és az IVA-részletekkel besorolva "
+"vannak (a sorozat ezeket tölti be). Hozd létre, számítsd ki, ellenőrizd "
+"és nyújtsd be a negyedév 303-as modelóját; az exportlépés "
+"visszautasítja a kérést, mert a borítékból hiányzik az ellenőrzött "
+"termék/szoftverazonossági hatáskör:"
 
 #: ../../how-to/iva-lifecycle.md:78
 msgid ""

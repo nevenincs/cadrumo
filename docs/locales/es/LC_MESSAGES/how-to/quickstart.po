@@ -90,10 +90,9 @@ msgstr ""
 
 #: ../../how-to/quickstart.md:32
 msgid "The passphrase and recovery phrase"
-msgstr ""
+msgstr "La frase de contraseña y la frase de recuperación"
 
 #: ../../how-to/quickstart.md:34
-#, fuzzy
 msgid ""
 "`aeat` encrypts each profile under its own random key, wrapped by that "
 "profile's passphrase. Profile creation also shows a one-time recovery "
@@ -104,12 +103,15 @@ msgid ""
 "creation, see [Run without a passphrase prompt](protect-data-access.md"
 "#run-without-a-passphrase-prompt)."
 msgstr ""
-"`aeat` cifra tus datos locales con una clave maestra derivada de una "
-"frase de contraseña. El primer comando que toca el almacén pide la frase "
-"de contraseña y la herramienta la reutiliza durante el resto de la "
-"sesión. Para ejecuciones desatendidas, consulta [Ejecuta sin solicitud de"
-" frase de contraseña](protect-data-access.md#run-without-a-passphrase-"
-"prompt)."
+"`aeat` cifra cada perfil con su propia clave aleatoria, envuelta por la "
+"frase de contraseña de ese perfil. La creación del perfil también "
+"muestra una frase de recuperación de un solo uso y exige que la "
+"introduzcas de nuevo antes de publicar el perfil. Guarda esa frase por "
+"separado: no se puede inscribir más tarde. El primer comando que accede "
+"al almacén pide la frase de contraseña y la herramienta la reutiliza "
+"durante el resto de la sesión. Para ejecuciones desatendidas después de "
+"crear el perfil, consulta [Ejecuta sin solicitud de frase de "
+"contraseña](protect-data-access.md#run-without-a-passphrase-prompt)."
 
 #: ../../how-to/quickstart.md:43
 msgid ""
@@ -138,6 +140,11 @@ msgid ""
 "password-only profile: creation completes only after you copy and verify "
 "the recovery phrase."
 msgstr ""
+"El asistente recoge el nombre y los apellidos que exige la presentación "
+"y la fecha de inicio de actividad que deja fuera períodos anteriores. "
+"No publica un perfil protegido solo con contraseña: la creación "
+"concluye únicamente después de copiar y verificar la frase de "
+"recuperación."
 
 #: ../../how-to/quickstart.md:59
 msgid "Confirm the active profile is configured and ready:"
@@ -351,19 +358,21 @@ msgid "5. Record the quarter as filed"
 msgstr "5. Exporta el fichero"
 
 #: ../../how-to/quickstart.md:173
-#, fuzzy
 msgid ""
 "Export the verified Modelo 130 fichero-BOE artefact, then record the "
 "quarter as filed locally:"
 msgstr ""
-"El Modelo 130 no tiene diseño fichero-BOE, por lo que la exportación se "
-"rechaza. Registra localmente el trimestre como presentado:"
+"Exporta el artefacto fichero-BOE del Modelo 130 verificado y después "
+"registra el trimestre como presentado localmente:"
 
 #: ../../how-to/quickstart.md:180
 msgid ""
 "The exported file is a local artefact, not evidence that AEAT accepted "
 "the return. Present it through the AEAT portal, as step 7 describes."
 msgstr ""
+"El fichero exportado es un artefacto local, no una prueba de que AEAT "
+"aceptó la declaración. Preséntalo a través del portal de AEAT, como "
+"describe el paso 7."
 
 #: ../../how-to/quickstart.md:183
 msgid ""

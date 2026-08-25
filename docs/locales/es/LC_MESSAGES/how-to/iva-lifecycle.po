@@ -38,7 +38,6 @@ msgstr ""
 " cuadrar con los cuatro trimestres."
 
 #: ../../how-to/iva-lifecycle.md:9
-#, fuzzy
 msgid ""
 "Cadrumo (the `aeat` command) prepares local files for Spanish tax forms. "
 "It does not submit them to the Agencia Estatal de Administración "
@@ -46,10 +45,12 @@ msgid ""
 "product/software identity authority, so you enter the calculated box "
 "values through the portal."
 msgstr ""
-"Cadrumo (la orden `aeat`) prepara archivos locales para los formularios "
-"tributarios españoles. No los presenta ante la Agencia Estatal de "
-"Administración Tributaria (AEAT). En cada presentación, tú mismo subes el"
-" archivo exportado a través del portal de la AEAT."
+"Cadrumo (el comando `aeat`) prepara archivos locales para los "
+"formularios tributarios españoles. No los presenta ante la Agencia "
+"Estatal de Administración Tributaria (AEAT). La exportación del Modelo "
+"303 se niega actualmente sin autoridad revisada de identidad de "
+"producto/software, por lo que introduces los valores calculados de las "
+"casillas a través del portal."
 
 #: ../../how-to/iva-lifecycle.md:14
 msgid ""
@@ -169,16 +170,17 @@ msgid "Stage 2: the first quarterly return"
 msgstr "Etapa 2: la primera declaración trimestral"
 
 #: ../../how-to/iva-lifecycle.md:69
-#, fuzzy
 msgid ""
 "The first quarter's rows are already recorded and classified with their "
 "IVA detail (the sequence seeds them). Create, calculate, verify and file "
 "Modelo 303 for the quarter; the export step refuses because the envelope "
 "lacks reviewed product/software identity authority:"
 msgstr ""
-"Las filas del primer trimestre ya están registradas y clasificadas con su"
-" detalle de IVA (la secuencia las siembra). Crea, calcula, verifica, "
-"presenta y exporta el Modelo 303 del trimestre:"
+"Las filas del primer trimestre ya están registradas y clasificadas con "
+"su detalle de IVA (la secuencia las inicializa). Crea, calcula, "
+"verifica y presenta el Modelo 303 del trimestre; el paso de exportación "
+"se niega porque al sobre le falta una autoridad revisada de identidad "
+"de producto/software:"
 
 #: ../../how-to/iva-lifecycle.md:78
 msgid ""

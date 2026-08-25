@@ -44,17 +44,17 @@ msgstr ""
 "privadesa](#prepare-a-privacy-safe-support-request)."
 
 #: ../../how-to/troubleshooting.md:10
-#, fuzzy
 msgid ""
 "Profile-scoped commands need an active taxpayer profile and may ask for "
 "that profile's passphrase to unwrap its independent encryption key. See "
 "[Set up your taxpayer profile](profile-setup.md) if you have none. Output"
 " can be English, Spanish, Catalan, or Hungarian."
 msgstr ""
-"Les ordres limitades al perfil necessiten un perfil de contribuent actiu "
-"i poden demanar la contrasenya de clau mestra. Consulta [Configura el teu"
-" perfil de contribuent](profile-setup.md) si no en tens cap. La sortida "
-"pot ser en anglès, castellà, català o hongarès."
+"Les ordres delimitades per perfil necessiten un perfil actiu de "
+"contribuent i poden demanar la frase de contrasenya d'aquest perfil per "
+"desempaquetar la seva clau de xifratge independent. Consulta [Configura "
+"el teu perfil de contribuent](profile-setup.md) si no en tens cap. La "
+"sortida pot ser en anglès, espanyol, català o hongarès."
 
 #: ../../how-to/troubleshooting.md:15
 msgid "\"This operation requires an active profile\""
@@ -89,6 +89,11 @@ msgid ""
 "that profile's passphrase; a headless caller must use an explicit machine"
 " secret channel instead of placing the passphrase on the command line."
 msgstr ""
+"L'ordre de neteja és una reparació destructiva i només és adequada "
+"després que la inspecció informi d'un punter actiu il·legible. Després, "
+"l'inici de sessió demana la frase de contrasenya d'aquell perfil; qui "
+"la cridi sense interfície ha d'utilitzar un canal explícit de secret de "
+"màquina en lloc de posar la frase de contrasenya a la línia d'ordres."
 
 #: ../../how-to/troubleshooting.md:38
 msgid ""

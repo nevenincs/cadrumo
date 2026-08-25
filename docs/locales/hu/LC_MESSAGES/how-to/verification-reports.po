@@ -469,7 +469,6 @@ msgstr ""
 "az ellenőrzés ellenőrzött-teljes állapotot ad:"
 
 #: ../../how-to/verification-reports.md:181
-#, fuzzy
 msgid ""
 "Verified-complete is necessary but not sufficient. Modelo 303 export "
 "refuses even after verification grants when no reviewed product/software "
@@ -477,11 +476,12 @@ msgid ""
 "the filing stands, then read the verified figures back and enter them at "
 "the AEAT portal:"
 msgstr ""
-"A teljesen ellenőrzött állapot szükséges, de nem elégséges. A Modelo "
-"303-hoz nincs fichero-BOE elrendezés, ezért az exportálás az ellenőrzési "
-"engedély után is elutasít a `REFUSED_MODELO_EXPORT_UNSUPPORTED` kóddal. "
-"Ellenőrizd a bevallás állapotát, olvasd vissza az ellenőrzött értékeket, "
-"és add meg őket az AEAT portálján:"
+"Az ellenőrzött-teljes állapot szükséges, de nem elégséges. A 303-as "
+"modelo exportja akkor is visszautasítja a kérést, ha az ellenőrzés "
+"engedélyt ad, de nincs ellenőrzött termék/szoftverazonossági hatáskör; "
+"ennek kódja `FAIL_MODELO_EXPORT`. Ellenőrizd, hol tart a benyújtás, "
+"majd olvasd vissza az ellenőrzött számokat, és add meg őket az AEAT "
+"portálján:"
 
 #: ../../how-to/verification-reports.md:190
 msgid "More than one filing matches"

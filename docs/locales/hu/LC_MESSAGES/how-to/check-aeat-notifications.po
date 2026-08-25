@@ -99,14 +99,14 @@ msgid "You need:"
 msgstr "Szüksége lesz a következőkre:"
 
 #: ../../how-to/check-aeat-notifications.md:34
-#, fuzzy
 msgid ""
 "an [active profile](profile-setup.md#what-the-active-profile-means). "
 "Create one at a terminal so you can record and verify its one-time "
 "recovery phrase:"
 msgstr ""
 "egy [aktív profil](profile-setup.md#what-the-active-profile-means). "
-"Hozzon létre egyet nem interaktív módon:"
+"Hozz létre egyet terminálban, hogy fel tudd jegyezni és ellenőrizni "
+"tudd az egyszer használatos helyreállítási kifejezését:"
 
 #: ../../how-to/check-aeat-notifications.md:41
 msgid ""
@@ -117,13 +117,12 @@ msgstr ""
 "CIF, DNI, NIE vagy NII)"
 
 #: ../../how-to/check-aeat-notifications.md:42
-#, fuzzy
 msgid ""
 "the profile passphrase that unwraps this profile's independent encryption"
 " key; the tool prompts for it."
 msgstr ""
-"a mesterkulcs-jelmondat, amely a helyi tárolóját védi; az eszköz bekéri "
-"Öntől."
+"a profil jelmondata, amely kibontja a profil önálló titkosítási "
+"kulcsát; az eszköz ezt kéri."
 
 #: ../../how-to/check-aeat-notifications.md:44
 msgid ""

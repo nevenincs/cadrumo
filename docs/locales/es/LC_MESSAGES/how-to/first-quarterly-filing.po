@@ -39,16 +39,15 @@ msgstr ""
 "NIE u otra identidad de presentación que usa Cadrumo por primera vez."
 
 #: ../../how-to/first-quarterly-filing.md:9
-#, fuzzy
 msgid ""
 "Cadrumo never submits a return to the Agencia Estatal de Administración "
 "Tributaria (AEAT). It produces the Modelo 130 fichero-BOE artefact "
 "locally; you present that file through the official AEAT channel."
 msgstr ""
 "Cadrumo nunca presenta una declaración ante la Agencia Estatal de "
-"Administración Tributaria (AEAT). Todas las órdenes de abajo construyen y"
-" comprueban un archivo local. Tú mismo subes el archivo exportado a "
-"través del canal oficial de la AEAT."
+"Administración Tributaria (AEAT). Produce localmente el artefacto "
+"fichero-BOE del Modelo 130; presentas ese fichero a través del canal "
+"oficial de la AEAT."
 
 #: ../../how-to/first-quarterly-filing.md:13
 msgid ""
@@ -221,14 +220,12 @@ msgstr ""
 "que una factura adjuntada después no llega a la presentación."
 
 #: ../../how-to/first-quarterly-filing.md:96
-#, fuzzy
 msgid ""
 "The sequence below exports the verified draft and then records the local "
 "filed marker."
 msgstr ""
-"La secuencia siguiente muestra el rechazo de `export`, porque el Modelo "
-"130 no tiene diseño fichero-BOE, y después registra la marca local de "
-"presentación."
+"La secuencia siguiente exporta el borrador verificado y después "
+"registra el marcador local de presentado."
 
 #: ../../how-to/first-quarterly-filing.md:103
 msgid ""
