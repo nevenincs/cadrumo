@@ -52,6 +52,25 @@ _HAND_TYPED_INGRESOS_2025: dict[CasillaId, str] = {
     ),
 }
 
+#: Casilla 0181 (activity acquisition cost) is ``input_kind = "bound"`` in
+#: the 2025 M100 revision, through the inventory source binding
+#: ``renta-2025-inventory-activity-acquisition-cost-0181``.  These two
+#: formula-chain fixtures supply a literal acquisition cost instead of building
+#: inventory substrate and running that source resolver, so the value is
+#: deliberately hand-typed rather than chain-resolved.
+_ACTIVITY_ACQUISITION_COST_2025: CasillaId = validated_casilla_id(
+    "0181",
+    surface="_ACTIVITY_ACQUISITION_COST_2025",
+)
+_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025: dict[CasillaId, str] = {
+    **_HAND_TYPED_INGRESOS_2025,
+    _ACTIVITY_ACQUISITION_COST_2025: (
+        "archetype fixture exercises the estimacion-directa formula chain and its cuota path; "
+        "the inventory aggregation and binding resolver producing this acquisition cost are out of scope "
+        "and covered separately"
+    ),
+}
+
 
 @lru_cache(maxsize=1)
 def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]]:
@@ -162,7 +181,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 "0606": Decimal("13.00"),
             },
         ),
-        hand_typed_bound_casillas=_HAND_TYPED_INGRESOS_2025,
+        hand_typed_bound_casillas=_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025,
         binding_values={
             "renta-2025-profile-has-economic-activity": Decimal("1"),
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -356,7 +375,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
         filing_year=2025,
         period="0A",
         inputs=_inputs({"0171": Decimal("100.00"), "0181": Decimal("500.00")}),
-        hand_typed_bound_casillas=_HAND_TYPED_INGRESOS_2025,
+        hand_typed_bound_casillas=_HAND_TYPED_DIRECT_ESTIMATION_WITH_INVENTORY_2025,
         binding_values={
             "renta-2025-profile-has-economic-activity": Decimal("1"),
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
