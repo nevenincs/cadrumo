@@ -26,6 +26,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
+from .._corpus_catalogue import verify_source_file
 from .._schema_references import SourceReference
 from .._validate_evidence import EvidenceValidator
 from .._validate_official_source_guidance_content import (
@@ -52,6 +53,7 @@ _SUPPRESSION_ANCHOR_SOURCE_ID = "boe-modelo-037-historical-suppression"
 _DEADLINE_ANCHOR_MODELO_ID = "115"
 _DEADLINE_ANCHOR_REVISION_ID = "2019-y-siguientes"
 _DEADLINE_ANCHOR_WINDOW_ID = "modelo-115-2026-1t"
+_DEADLINE_ANCHOR_SOURCE_ID = "aeat-calendario-contribuyente-2026"
 
 #: A window whose own cited source genuinely states its filing deadline.
 _DEADLINE_HONEST_MODELO_ID = "180"
@@ -211,14 +213,47 @@ def test_every_suppression_acceptance_is_driven_by_content_the_file_actually_car
 # --------------------------------------------------------------------------
 
 
-def test_the_deadline_anchor_still_cites_only_ungrounded_sources() -> None:
-    """The named defect window still cites no source with deadline vocabulary."""
+def test_the_deadline_anchor_cites_the_reviewed_2026_calendar_pdf_with_its_deadline_content() -> None:
+    """The repaired anchor is a verified, in-scope AEAT calendar PDF.
+
+    The source verifier owns byte-size, SHA-256, and manual-PDF structure
+    validation; :class:`EvidenceValidator` owns its content-keyed sidecar
+    admission.  Keeping both in this anchor prevents a catalogue-only
+    replacement from turning the refusal proof below into a fabrication.
+    """
     window = _find_window(_DEADLINE_ANCHOR_MODELO_ID, _DEADLINE_ANCHOR_WINDOW_ID)
     sources = _bundled_sources()
     osg_refs = [ref for ref in window.source_refs if sources[ref].evidence_tier == "official_source_guidance"]
     assert osg_refs, "the anchor window no longer cites any official_source_guidance source"
-    for ref in osg_refs:
-        assert sources[ref].kind != "manual_pdf", "re-derive against the real file if this anchor moves to a PDF"
+    assert _DEADLINE_ANCHOR_SOURCE_ID in osg_refs
+
+    source = sources[_DEADLINE_ANCHOR_SOURCE_ID]
+    assert (source.authority, source.evidence_tier, source.kind, source.review_status) == (
+        "aeat",
+        "official_source_guidance",
+        "manual_pdf",
+        "reviewed",
+    )
+    assert source.applies_from is not None
+    assert source.applies_to is not None
+    assert source.applies_from <= window.opens_on <= window.closes_on <= source.applies_to
+    assert verify_source_file(bundled_path(), source) == bundled_path(*source.corpus_path.split("/"))
+
+    evidence = _evidence_validator(source_root=bundled_path())
+    text = evidence.source_text(source)
+    assert text is not None, "the verified calendar PDF must have readable evidence text"
+    assert "hasta el 20 de abril" in text
+    assert "primer trimestre 2026: 111, 115" in text
+    assert _carries_deadline_content(text)
+    assert (
+        deadline_window_content_failures(
+            f"modelo {_DEADLINE_ANCHOR_MODELO_ID} revision {_DEADLINE_ANCHOR_REVISION_ID}",
+            window,
+            source_refs=sources,
+            evidence=evidence,
+        )
+        == []
+    )
 
 
 def test_the_deadline_gate_still_refuses_a_window_citing_only_who_must_file_sources() -> None:
