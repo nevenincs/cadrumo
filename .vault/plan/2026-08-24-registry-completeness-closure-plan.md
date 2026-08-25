@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
+modified: '2026-08-25'
+body_hash: 'sha256:58d052309c022e04b25f9f775f9d80ad6582752750b5129eb91b148516544a20'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -10,8 +12,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
-modified: '2026-08-25'
-body_hash: 'sha256:da53465dfbac04965a3ad187f359930d9562ee074e92ea2926d1a77874358660'
 ---
 
 # `registry-completeness-closure` plan
@@ -116,7 +116,7 @@ Add or reconcile the adjudicated remedies in each existing owning plan and prove
 
 - [x] `W02.P04.S26` - Enroll every temporal-window and authority-grade remedy in registry-temporal-coverage without duplicating closed work; `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`.
 - [x] `W02.P04.S27` - Enroll every source and casilla remedy in source-casilla-integration without duplicating closed work; `.vault/plan/2026-08-22-source-casilla-integration-plan.md`.
-- [ ] `W02.P04.S28` - Enroll every official-layout and emitted-byte remedy in aeat-export-fragment-generator-authority without duplicating closed work; `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
+- [x] `W02.P04.S28` - Enroll every official-layout and emitted-byte remedy in aeat-export-fragment-generator-authority without duplicating closed work; `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`.
 - [x] `W02.P04.S29` - Prove every live filing gap has exactly one terminal refusal or one existing-plan owner and reconsideration condition; `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`.
 - [x] `W02.P04.S73` - Adjudicate real below-filing source-connectivity participation and evidence for candidate revisions starting with Modelo 036, route accepted evidence or an ADR-authorized disposition into source-casilla-integration, and return the canonical proof to S72 and S11 without treating an empty candidate set as satisfied; `.vault/reference/; .vault/adr/; .vault/plan/2026-08-22-source-casilla-integration-plan.md; src/cadrumo/_data/source_connectivity/census.toml`.
 - [x] `W02.P04.S74` - Correct Modelo 036 human-filing wording and route its source and export reconsideration paths exactly.; `.vault/reference/; .vault/exec/; .vault/plan/`.

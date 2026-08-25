@@ -51,7 +51,10 @@ scope-expansion ADR must precede any re-evaluation of its source, grade, map,
 profile, generated-tree, and emitted-byte prerequisites. Neither disposition is
 an authorable layout task, and neither permits remote AEAT submission.
 
-S28 remains open. Its enrollment work is complete, but each referenced predecessor row remains open and no selected revision has yet met the required layout, generated-tree, and emitted-byte acceptance evidence.
+S28's enrollment work is complete and may close. Each referenced predecessor
+row deliberately remains open until its own layout, generated-tree, and
+emitted-byte acceptance evidence lands; their implementation status is not an
+extra completion criterion for this ownership-enrollment step.
 
 ## Notes
 
