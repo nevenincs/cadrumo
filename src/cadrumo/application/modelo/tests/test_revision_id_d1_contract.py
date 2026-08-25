@@ -33,6 +33,8 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
+from ....core.config import override_settings
+from ....core.errors import resolve_error_message
 from ....domain.modelos import (
     ModeloCode,
     WorkUnit,
@@ -113,7 +115,11 @@ class TestS01CreationGate:
                 period=Period.from_year_and_code(2026, "1T"),
                 registry_revision_id="2022",
             )
-        msg = str(exc_info.value)
+        # The refusal's prose lives in the locale catalogue and reaches the
+        # operator through the renderer; str(exc) is only the message KEY, so
+        # rendering is what these guidance claims must be asserted against.
+        with override_settings(cadrumo_output_language="en"):
+            msg = resolve_error_message(exc_info.value)
         # Must name the requested revision
         assert "2022" in msg
         # Must name the law-determined revision
@@ -134,7 +140,11 @@ class TestS01CreationGate:
                 period=Period.from_year_and_code(2026, "1T"),
                 registry_revision_id="2022",
             )
-        msg = str(exc_info.value)
+        # The refusal's prose lives in the locale catalogue and reaches the
+        # operator through the renderer; str(exc) is only the message KEY, so
+        # rendering is what these guidance claims must be asserted against.
+        with override_settings(cadrumo_output_language="en"):
+            msg = resolve_error_message(exc_info.value)
         assert "2022" in msg, "message must name the requested revision"
         assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
         # Should direct operator to re-create without --revision
@@ -193,7 +203,11 @@ class TestS01CreationGate:
                 period=Period.from_year_and_code(2026, "1T"),
                 registry_revision_id="esquema-importacion",
             )
-        msg = str(exc_info.value)
+        # The refusal's prose lives in the locale catalogue and reaches the
+        # operator through the renderer; str(exc) is only the message KEY, so
+        # rendering is what these guidance claims must be asserted against.
+        with override_settings(cadrumo_output_language="en"):
+            msg = resolve_error_message(exc_info.value)
         assert "esquema-importacion" in msg, "message must name the requested (year-covering) revision"
         assert "esquema-union" in msg, "message must name the law-determined revision for the period"
         assert "law" in msg.lower() or "fixed by" in msg.lower()
@@ -266,7 +280,11 @@ class TestS02CalcTimeAssertion:
         with pytest.raises(WorkUnitRevisionDivergenceError) as exc_info:
             resolve_registry_snapshot_for_work_unit(stale_unit)
 
-        msg = str(exc_info.value)
+        # The refusal's prose lives in the locale catalogue and reaches the
+        # operator through the renderer; str(exc) is only the message KEY, so
+        # rendering is what these guidance claims must be asserted against.
+        with override_settings(cadrumo_output_language="en"):
+            msg = resolve_error_message(exc_info.value)
         # Must name the work unit's stale revision
         assert "2022" in msg, "message must name the stale (pinned) revision"
         # Must name the current law-determined revision
@@ -368,7 +386,11 @@ class TestS02RevisionForWorkUnitAssertion:
         with pytest.raises(WorkUnitRevisionDivergenceError) as exc_info:
             _revision_for_work_unit(work_unit_id)
 
-        msg = str(exc_info.value)
+        # The refusal's prose lives in the locale catalogue and reaches the
+        # operator through the renderer; str(exc) is only the message KEY, so
+        # rendering is what these guidance claims must be asserted against.
+        with override_settings(cadrumo_output_language="en"):
+            msg = resolve_error_message(exc_info.value)
         assert "2022" in msg, "message must name the stale (pinned) revision"
         assert "2026-y-siguientes" in msg, "message must name the law-determined revision"
         assert "re-create" in msg.lower()
@@ -492,7 +514,11 @@ class TestS03CreateWorkUnitDoorReconfirmation:
                 repository=repo,
                 clock=_T0,
             )
-        msg = str(exc_info.value)
+        # The refusal's prose lives in the locale catalogue and reaches the
+        # operator through the renderer; str(exc) is only the message KEY, so
+        # rendering is what these guidance claims must be asserted against.
+        with override_settings(cadrumo_output_language="en"):
+            msg = resolve_error_message(exc_info.value)
         assert "2022" in msg
         assert "2026-y-siguientes" in msg
 
