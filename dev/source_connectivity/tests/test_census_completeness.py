@@ -174,8 +174,8 @@ def test_inventory_repository_ownership_uses_its_live_discovery_locator() -> Non
     evidence = discovered_source_capability_evidence(REPO_ROOT)
     repository_locator = "src/cadrumo/adapters/persistence/profile/inventory.py:121"
     projection_locator = "src/cadrumo/domain/contribuyente/inventory/__init__.py:1367"
-    create_locator = "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:4866"
-    movement_locator = "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:7118"
+    create_locator = "src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py:28"
+    movement_locator = "src/cadrumo/entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py:26"
 
     assert repository_locator in entry.capability_locators
     assert projection_locator in entry.capability_locators

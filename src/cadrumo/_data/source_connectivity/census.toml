@@ -62,8 +62,8 @@ capability_locators = [
   "src/cadrumo/domain/contribuyente/inventory/__init__.py:1161",
   "src/cadrumo/domain/contribuyente/inventory/__init__.py:1367",
   "src/cadrumo/application/inventory/_service.py:413",
-  "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:4866",
-  "src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:7118",
+  "src/cadrumo/entrypoints/cli/_app_ledger_inventory_command_specs.py:28",
+  "src/cadrumo/entrypoints/cli/_app_ledger_inventory_analysis_command_specs.py:26",
 ]
 capability_ids = [
   "secure_repository:src/cadrumo/adapters/persistence/profile/inventory.py:InventoryLedgerRepository",
@@ -242,7 +242,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Reopen only when a secure owner retains the full official M360 request/document carrier: refund country/year/period, operation type, invoice/import document number/date, base, VAT quota, deductible proportion, requested amount, currency, nature (including Other description), and supplier VAT identity/name/address; every document has immutable durable identity/fingerprint; and S98 proves encrypted revision persistence/replay, diagnostics, review, and supported official repeated-record export."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/application/calculations/_row_set_assembly.py:174",
+  "src/cadrumo/application/calculations/_row_set_assembly.py:176",
 ]
 capability_ids = ["row_assembler:per_refund_operation"]
 advisory_destination_refs = ["modelo:360:rows:refund-operation"]
@@ -257,7 +257,7 @@ summary = "Validated Modelo 360 bindings already declare the refund-operation so
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/calculations/_row_set_assembly.py:174"
+reference = "src/cadrumo/application/calculations/_row_set_assembly.py:176"
 summary = "Worksheet rows dispatch to the typed refund-operation observation assembler."
 
 [entries.bounded_follow_up]
