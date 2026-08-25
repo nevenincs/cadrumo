@@ -430,7 +430,7 @@ class TransactionCatalogueRepository:
                 # key (shared with buckets.py at this same layer). It is
                 # deliberately NOT merged with
                 # application.user_profile.errors.repository_classification_mismatch
-                # (see application/user_profile/_repository.py) even though both
+                # (see application/user_profile/repository.py) even though both
                 # report the same abstract condition: that key belongs to a
                 # different architectural layer (the application-layer profile
                 # repository, not this raw secure-object storage adapter), and

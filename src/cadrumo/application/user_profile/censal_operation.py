@@ -10,11 +10,6 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, OperationCancellation, OperationClosePolicy, OperationDeadline, OperationDurability, OperationEffect, OperationInteractionKind, content_hash_hex
-from ...core.bucket_pointer import require_active_bucket_id
-from ...core.async_cleanup import AsyncCloseable
-from ...core.identity import ContentDigest, ContentDigestOrAbsent, ProfileId
-from ...domain.user_profile import UserProfileRecord
 from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -34,6 +29,21 @@ from cadrumo.application.operations.registry import (
     OperationSchemaBindingV1,
     operation_public_schema_reference,
 )
+
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+    content_hash_hex,
+)
+from ...core.async_cleanup import AsyncCloseable
+from ...core.bucket_pointer import require_active_bucket_id
+from ...core.identity import ContentDigest, ContentDigestOrAbsent, ProfileId
+from ...domain.user_profile import UserProfileRecord
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from .capsule_record import ProfileRecordConflictError
 from .censal_observation import CensalObservation

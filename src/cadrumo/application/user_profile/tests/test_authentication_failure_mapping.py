@@ -4,6 +4,13 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.user_profile.authentication import (
+    ProfileAuthenticationRefusedError,
+    ProfilePasswordProofOperation,
+)
+from cadrumo.application.user_profile.custody_ports import map_profile_authentication_proof_failure
+from cadrumo.application.user_profile.custody_transactions import ProfileCustodyTransactionConflictError
+
 from ....adapters.persistence.storage import KeyringUnavailableError
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyPasswordError,
@@ -12,9 +19,6 @@ from ....adapters.persistence.storage.custody import (
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
 )
-from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError, ProfilePasswordProofOperation
-from cadrumo.application.user_profile.custody_ports import map_profile_authentication_proof_failure
-from cadrumo.application.user_profile.custody_transactions import ProfileCustodyTransactionConflictError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

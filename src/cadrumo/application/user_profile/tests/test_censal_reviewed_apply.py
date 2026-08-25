@@ -12,19 +12,36 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.user_profile.capsule_record import (
+    ProfileRecordConflictError,
+    ProfileRecordSession,
+    ProfileRecordStore,
+)
+from cadrumo.application.user_profile.censal_observation import (
+    CensalObservation,
+    CensalObservationAddress,
+    CensalObservationIdentity,
+)
+from cadrumo.application.user_profile.censal_operation import (
+    CensalFieldIntent,
+    CensalProfileBaseline,
+    CensalReviewedFieldIntent,
+    CensalReviewedOperand,
+)
+from cadrumo.application.user_profile.cotejo_apply import apply_cotejo
+from cadrumo.application.user_profile.profile_record_repository import (
+    ProfileRecordRepository,
+    bound_profile_record_session,
+)
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.application.workflow.state_models import WorkflowState
+
 from ....adapters.persistence.storage.custody import load_committed_profile_password_material, unlock_profile_custody
 from ....core.config import override_settings
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.workflow.state_models import WorkflowState
-from cadrumo.application.user_profile.capsule_record import ProfileRecordConflictError, ProfileRecordSession, ProfileRecordStore
-from cadrumo.application.user_profile.censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
-from cadrumo.application.user_profile.censal_operation import CensalFieldIntent, CensalProfileBaseline, CensalReviewedFieldIntent, CensalReviewedOperand
-from cadrumo.application.user_profile.cotejo_apply import apply_cotejo
-from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository, bound_profile_record_session
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

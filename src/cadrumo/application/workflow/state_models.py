@@ -1,14 +1,13 @@
 """Persisted workflow state contracts and their state-scoped helpers.
 
 This module owns the encrypted :class:`WorkflowState` envelope, declaration
-pointers, active-profile resolution, and transaction-catalogue selection. Run
-stages, deadline observations, step details, and terminal results live in the
-separate ``_run_models`` owner so state-only commands do not construct them.
+pointers, and transaction-catalogue selection. Active-profile selection and
+record resolution live in :mod:`.active_profile`, while run stages, deadline
+observations, step details, and terminal results live in :mod:`.run_models`.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Annotated
 
@@ -20,18 +19,17 @@ from ...core import (
 from ...core import (
     Modelo,
     Period,
-    ProfileRecordUnavailability,
 )
-from ...core.bucket_pointer import require_active_bucket_id as _require_active_bucket_id
-from ...core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
-from ...core.config import override_settings
-from ...core.logging import get_logger
 from ...core.time import now as utc_now
 from ...domain.submission import ModeloDraftStatus
 from ..auth.models import AuthState
 from ._identity import period_identity_segment
-from .profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
-from .profile_bucket_scan import resolve_profile_bucket
+from .active_profile import (
+    ActiveProfileRecordResolution,
+    active_profile_selection,
+    require_active_profile_bucket_id,
+    resolve_active_profile_record,
+)
 from .review_models import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
@@ -42,9 +40,6 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...adapters.persistence.storage import SecureObjectRepository
     from ...domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
-
-_log = get_logger(__name__)
-
 
 def _parse_declaration_modelo(value: object) -> Modelo:
     """Resolve a persisted declaration pointer through the canonical Modelo enum."""
@@ -100,91 +95,6 @@ def declaration_key(modelo: str, period: Period) -> str:
     return f"{modelo.strip()}:{period_identity_segment(period)}"
 
 
-@dataclass(frozen=True, slots=True)
-class ActiveProfileRecordResolution:
-    """One active-profile record read, together with WHY it produced nothing.
-
-    The read has three outcomes an operator would act on differently -- a
-    record, a locked profile, and an absent one -- and a bare ``None`` for the
-    last two erases the difference at exactly the boundary that reports it.
-    :attr:`unavailability` carries the reason instead, so a projection can say
-    "log in" where logging in is the remedy and reserve the absent-record
-    finding for a record that is genuinely not there.
-
-    Exactly one of :attr:`record` and :attr:`unavailability` is populated.
-
-    This is a frozen dataclass rather than one of this module's strict pydantic
-    records because it never crosses a serialization boundary and because a
-    pydantic field annotated with :class:`UserProfileRecord` must resolve that
-    domain record when the class is built. The domain record pulls the modelo
-    registry eagerly, so annotating it here would drag the registry into every
-    consumer that imports the workflow package.
-
-    See Also:
-        :class:`~cadrumo.core.ProfileRecordUnavailability`
-            Closed set of reasons the record did not resolve.
-    """
-
-    record: UserProfileRecord | None = None
-    unavailability: ProfileRecordUnavailability | None = None
-
-    def __post_init__(self) -> None:
-        """Require exactly one of a resolved record or an unavailability reason."""
-        if (self.record is None) == (self.unavailability is None):
-            raise ValueError("an active-profile record resolution carries either a record or one reason, never both")
-
-
-def _active_profile_selection() -> tuple[str | None, str | None]:
-    """Return the raw active selector and its canonical live bucket UUID."""
-    identifier = _resolve_active_bucket_id()
-    if identifier is None:
-        return None, None
-    pointer = resolve_profile_bucket(identifier)
-    return identifier, pointer.bucket_id if pointer is not None else None
-
-
-def resolve_active_profile_record() -> ActiveProfileRecordResolution:
-    """Read the active profile's record and name the reason when there is none.
-
-    The active selector resolves via the precedence chain in
-    :func:`cadrumo.core.bucket_pointer.resolve_active_bucket_id` (env var > pointer file
-    fallback), then the committed-capsule projection resolves a display label
-    to its immutable bucket UUID before secure storage is addressed.
-
-    Session availability is asked STRUCTURALLY, through
-    :func:`~cadrumo.application.user_profile.profile_record_session_if_authenticated`,
-    ahead of the read rather than inferred afterwards from a refusal. A locked
-    profile is the ordinary logged-out state and its capsule is untouched, so
-    it must not be reported as an absent record; only a selector that resolves
-    to no committed capsule is that.
-    """
-    from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile.profile_record_repository import ProfileRecordRepository, profile_record_session_if_authenticated
-
-    identifier, bucket_id = _active_profile_selection()
-    if bucket_id is None:
-        if identifier is not None:
-            _log.debug("active profile record resolution found no live bucket for the selected profile")
-        return ActiveProfileRecordResolution(unavailability=ProfileRecordUnavailability.NO_LIVE_CAPSULE)
-
-    with override_settings(cadrumo_active_profile=bucket_id):
-        session = profile_record_session_if_authenticated(bucket_id)
-        if session is None:
-            _log.debug("active profile record resolution found no authenticated session for the committed capsule")
-            return ActiveProfileRecordResolution(unavailability=ProfileRecordUnavailability.SESSION_REQUIRED)
-        try:
-            record = ProfileRecordRepository(session=session).load(bucket_id)
-        except ProfileNotFoundError as exc:
-            # The only remaining refusal shape is a bound authority addressed to
-            # another identity: the capsule and its row are untouched, so this
-            # is a readability failure rather than an absent record.
-            _log.debug("active profile record resolution hit a mis-addressed session: %s", type(exc).__name__)
-            return ActiveProfileRecordResolution(
-                unavailability=ProfileRecordUnavailability.SESSION_IDENTITY_MISMATCH,
-            )
-    return ActiveProfileRecordResolution(record=record)
-
-
 class WorkflowState(BaseModel):
     """Encrypted operator state for the Cadrumo ``aeat`` CLI.
 
@@ -227,8 +137,8 @@ class WorkflowState(BaseModel):
         """Return the active :class:`UserProfileRecord` from its secure bucket.
 
         The active selector resolves via the precedence chain in
-        :func:`cadrumo.core.bucket_pointer.resolve_active_bucket_id` (env var > pointer file
-        fallback), then the committed-capsule projection resolves a display
+        :func:`cadrumo.application.workflow.active_profile.active_profile_selection`
+        resolves the canonical selector, then the committed-capsule projection resolves a display
         label to its immutable bucket UUID before secure storage is addressed.
 
         ``secure_objects`` (a :class:`SecureObjectRepository` override) and
@@ -263,7 +173,7 @@ class WorkflowState(BaseModel):
         UUID. A selector without a current capsule has no secure bucket and
         returns ``None``; health diagnostics retain the raw selector separately.
         """
-        return _active_profile_selection()[1]
+        return active_profile_selection()[1]
 
 
 def active_transaction_catalogue_repository(
@@ -284,7 +194,7 @@ def active_transaction_catalogue_repository(
     from ...domain.transactions import LedgerNoActiveBucketError
 
     try:
-        bucket_id = _require_active_bucket_id()
+        bucket_id = require_active_profile_bucket_id()
     except NoActiveProfileError as exc:
         raise LedgerNoActiveBucketError(
             translated_message="application.workflow.errors.no_active_profile_bucket",
@@ -343,3 +253,12 @@ def update_declaration_pointer(
             updated_at=now,
         )
     return state.model_copy(update={"declarations": declarations, "updated_at": utc_now()})
+
+
+__all__ = [
+    "DeclaracionPointer",
+    "WorkflowState",
+    "active_transaction_catalogue_repository",
+    "declaration_key",
+    "update_declaration_pointer",
+]

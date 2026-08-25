@@ -5,6 +5,10 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.user_profile.commands import ProfilePreflightRequirement
+from cadrumo.application.user_profile.preflight import ProfilePreflightService, build_profile_preflight_requirement
+from cadrumo.application.user_profile.validation import ProfileValidationService
+
 from ....core import Modelo, Period
 from ....core.errors import BaseSeverity
 from ....core.resources import resources
@@ -15,12 +19,6 @@ from ....domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,
     profile_field_label,
-)
-from .. import (
-    ProfilePreflightRequirement,
-    ProfilePreflightService,
-    ProfileValidationService,
-    build_profile_preflight_requirement,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

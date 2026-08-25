@@ -1,4 +1,4 @@
-"""Private helpers for workflow-engine formatting and deadline metadata."""
+"""Canonical workflow-engine deadline and certificate metadata contracts."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import Literal
 
 from ...core import Period
 
-CertificateSeverityValue = Literal["OK", "WARN", "CRITICAL", "EXPIRED"]
+type CertificateSeverityValue = Literal["OK", "WARN", "CRITICAL", "EXPIRED"]
 
 
 class DeadlineRole(StrEnum):
@@ -56,6 +56,7 @@ def classify_cert_expiry(
 
 
 __all__ = [
+    "CertificateSeverityValue",
     "DeadlineRole",
     "FilingWindowState",
     "classify_cert_expiry",

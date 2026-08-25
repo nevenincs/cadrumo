@@ -1,5 +1,5 @@
 cadrumo.application.workflow.abort module
-===================================================
+=========================================
 
 .. automodule:: cadrumo.application.workflow.abort
    :members:

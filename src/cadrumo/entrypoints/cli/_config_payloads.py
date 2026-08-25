@@ -31,7 +31,7 @@ from ...application.config_reset import (
     ConfigResetPauseReason,
     ConfigResetTargetPhase,
 )
-from ...application.user_profile.bundle_export import ProfileBundleExportPurpose, ProfileBundleExportTransport
+from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64, Period

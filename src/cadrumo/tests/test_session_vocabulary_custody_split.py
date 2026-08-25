@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 ACCELERATION_RECEIPT_PATHS: tuple[str, ...] = (
     "adapters/persistence/storage/custody/_acceleration_receipt.py",
-    "application/user_profile/_login_session.py",
+    "application/user_profile/login_session.py",
 )
 """Modules owning the keystore-resident acceleration receipt."""
 

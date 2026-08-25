@@ -51,7 +51,7 @@ from ...application.export import build_google_sheets_export_operation_definitio
 from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from ...application.user_profile.censal_operation import CensalFieldIntent, CensalOperationAcquisition, CensalProfileBaseline, CensalReviewedFieldIntent, build_censal_operation_definition
 from ...application.user_profile.censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
-from ...application.user_profile.bundle_export import ProfileBundleExportPurpose
+from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.login_session import login_profile
 from ...application.user_profile.custody_ports import profile_custody_secure_object_repository

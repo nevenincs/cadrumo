@@ -39,7 +39,8 @@ _PROFILE_COMPOSITION_CHILD = r"""
 from contextlib import ExitStack
 
 from cadrumo.adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
-from cadrumo.application.user_profile import bind_profile_custody_port, bind_profile_login_session_port
+from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
+from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 
 composition = ExitStack()
 composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
@@ -106,7 +107,7 @@ import sys
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.application.user_profile import ProfileCapsuleLifecycle
+from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.tests.profile_capsule import open_test_profile_session
 from cadrumo.tests.user_profile import register_minimal_profile
 

@@ -18,15 +18,16 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.profile_record_repository import (
+    ProfileRecordRepository,
+    profile_record_session_if_authenticated,
+)
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
 from ....adapters.persistence.storage import master_key
 from ....domain.user_profile import ProfileNotFoundError
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import (
-    ProfileRecordRepository,
-    login_profile,
-    profile_record_session_if_authenticated,
-    register_profile_with_credentials,
-)
 
 if TYPE_CHECKING:
     from pathlib import Path

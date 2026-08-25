@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.time import validate_utc_aware
-from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
 
 #: Current write version for :class:`ProfileCustodyHoldEvidence`. This format is
 #: REGENERABLE (see the campaign's nested-persisted-format-boundary ADR): its

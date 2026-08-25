@@ -28,6 +28,12 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.user_profile.bundle_encryption import (
+    EncryptedProfileBundleExport,
+    decrypt_profile_bundle_with_passphrase,
+    encrypt_profile_bundle_for_passphrase,
+)
+
 from ....adapters.persistence.storage import KDF_SALT_BYTES
 from ....adapters.persistence.storage.master_key import (
     MAX_PARALLELISM,
@@ -35,8 +41,13 @@ from ....adapters.persistence.storage.master_key import (
     MIN_TIME_COST,
     KdfParams,
 )
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfilePortableExport, UserProfileRecord
-from cadrumo.application.user_profile.bundle_encryption import EncryptedProfileBundleError, EncryptedProfileBundleExport, decrypt_profile_bundle_with_passphrase, encrypt_profile_bundle_for_passphrase
+from ....domain.user_profile import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfilePortableExport,
+    UserProfileRecord,
+    UserProfileValidationError,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -129,5 +140,5 @@ def test_an_unvalidated_envelope_still_meets_the_typed_refusal_at_the_decrypt_bo
         **(payload | {"memory_cost": 8, "salt_b64": base64.b64encode(b"x").decode("ascii")}),
     )
 
-    with pytest.raises(EncryptedProfileBundleError):
+    with pytest.raises(UserProfileValidationError):
         decrypt_profile_bundle_with_passphrase(bypassed, passphrase=_PASSPHRASE)

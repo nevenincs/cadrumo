@@ -7,11 +7,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
 from ....core.config import SecretStoreBackend
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

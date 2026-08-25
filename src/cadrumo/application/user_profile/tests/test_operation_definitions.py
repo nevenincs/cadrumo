@@ -18,31 +18,38 @@ from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
-from ....adapters.persistence.storage import current_active_bucket_session
-from ....adapters.persistence.storage.sql import SecureObjectRepository
 from cadrumo.application.operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import OperationReconciliationPolicy, OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.application.user_profile.bundle_export_contracts import (
+    ProfileBundleExportPurpose,
+    ProfileBundleExportResult,
+)
+from cadrumo.application.user_profile.bundle_export_operation import ProfileBundleExportJournalRepository
+from cadrumo.application.user_profile.custody_ports import (
+    ProfileCustodySecureObjectRepositoryPort,
+    profile_custody_secure_object_repository,
+)
+from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+
+from ....adapters.persistence.storage import current_active_bucket_session
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.bucket_pointer import read_pointer
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportResult
-from cadrumo.application.user_profile.bundle_export_operation import ProfileBundleExportJournalRepository
-from cadrumo.application.user_profile.custody_ports import ProfileCustodySecureObjectRepositoryPort, profile_custody_secure_object_repository
-from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
-from cadrumo.application.user_profile.projections import record_to_path_values
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from ..operations import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,

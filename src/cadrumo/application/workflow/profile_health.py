@@ -61,7 +61,7 @@ from .persistence import workflow_state_repository
 from .profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
 from .state_models import WorkflowState
 
-ProfileHealthStatus = Literal[
+type ProfileHealthStatus = Literal[
     "none",
     "dangling_pointer",
     "profile_locked",
@@ -81,7 +81,7 @@ record. Collapsing the three told an operator whose profile was merely locked
 that their financial records were gone.
 """
 
-ProfileSource = Literal["none", "env_override", "pointer"]
+type ProfileSource = Literal["none", "env_override", "pointer"]
 
 
 class ActiveProfileHealth(BaseModel):
@@ -559,6 +559,8 @@ def _compact_error(exc: Exception) -> str:
 __all__ = [
     "ActiveProfileHealth",
     "ActiveProfileRepairResult",
+    "ProfileHealthStatus",
+    "ProfileSource",
     "assess_active_profile_health",
     "repair_active_profile_pointer",
     "unavailable_profile_record_verdict",

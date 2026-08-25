@@ -42,11 +42,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.capabilities import CapabilitySource, resolve_capability
+
 from ....core import ServiceCapability, scan_directory
 from ....core.config import Settings, load_settings
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....llm import EvidenceConsentToken, LLMConsentError, cloud_evidence_read_permitted, mint_evidence_consent_token
-from cadrumo.application.user_profile.capabilities import CapabilitySource, resolve_capability
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

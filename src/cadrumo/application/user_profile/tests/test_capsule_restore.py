@@ -12,14 +12,20 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile.capsule_restore import (
+    ProfileCapsuleSourceError,
+    read_profile_capsule_source,
+    restore_profile_from_source_with_password,
+    restore_profile_from_source_with_recovery_artifact,
+)
+from cadrumo.application.user_profile.custody_ports import profile_custody_recovery_envelope_path
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
 from ....adapters.persistence.storage.custody import (
     load_committed_profile_password_material,
     parse_profile_custody_recovery_envelope,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.capsule_restore import ProfileCapsuleSourceError, read_profile_capsule_source, restore_profile_from_source_with_password, restore_profile_from_source_with_recovery_artifact
-from cadrumo.application.user_profile.custody_ports import profile_custody_recovery_envelope_path
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -112,8 +118,10 @@ def test_a_lost_password_is_recovered_through_the_artifact_and_the_source(tmp_pa
         artifact = tmp_path / "exports" / "recovery.artifact.json"
         artifact.parent.mkdir(parents=True, exist_ok=True)
 
-        from cadrumo.application.user_profile.recovery_custody import export_profile_recovery_artifact
-        from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryEnrollment
+        from cadrumo.application.user_profile.recovery_custody import (
+            ProfileRecoveryEnrollment,
+            export_profile_recovery_artifact,
+        )
 
         material = load_committed_profile_password_material(UUID(profile_id))
         recovery_envelope = parse_profile_custody_recovery_envelope(

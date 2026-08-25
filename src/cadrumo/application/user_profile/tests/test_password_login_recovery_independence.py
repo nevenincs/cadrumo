@@ -7,10 +7,12 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile.custody_ports import profile_custody_recovery_envelope_path
+from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
 from ....adapters.persistence.storage.custody import load_committed_profile_password_material
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import profile_custody_recovery_envelope_path, register_profile_with_credentials
-from .._login_session import login_profile, logout_active_profile
 
 if TYPE_CHECKING:
     from pathlib import Path

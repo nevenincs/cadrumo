@@ -85,7 +85,7 @@ def test_profile_registration_error_names_have_distinct_canonical_declarations()
             if isinstance(node, ast.ClassDef) and node.name in declarations:
                 declarations[node.name].add(path.relative_to(source_root))
 
-    assert declarations["ProfileRegistrationError"] == {Path("application/user_profile/_registration.py")}
+    assert declarations["ProfileRegistrationError"] == {Path("application/user_profile/registration.py")}
     assert declarations["ProjectAnswersRegistrationError"] == {Path("core/setup_answers.py")}
 
     from .. import setup_answers

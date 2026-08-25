@@ -41,11 +41,10 @@ from ...core import AuthProviderDescription, Period
 from ...core.errors import BaseSeverity
 from ...domain.deadlines import Schedule, TaxpayerProfile
 
-# ``ModeloInputs`` and its element aliases have a single canonical
-# definition in :mod:`domain.filing._protocols`. The workflow
-# engine re-exports them here so adapters can import the contract from
-# the workflow package without taking a second divergent definition.
-from ...domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
+# ``ModeloInputs`` and its element aliases are domain-owned input contracts.
+# This module consumes them for its protocol annotations; callers import them
+# directly from :mod:`cadrumo.domain.filing`.
+from ...domain.filing import ModeloInputs
 from ...domain.submission import ModeloDraftLike
 
 
@@ -260,7 +259,7 @@ class WorkflowNotificationsSnapshotProtocol(Protocol):
         ...
 
 
-ExpedientesSource = Callable[[object, str | None], Awaitable[tuple[WorkflowExpedienteProtocol, ...]]]
+type ExpedientesSource = Callable[[object, str | None], Awaitable[tuple[WorkflowExpedienteProtocol, ...]]]
 """Async callable that fetches open expedientes for a session.
 
 Args:
@@ -271,7 +270,7 @@ Returns:
     A tuple of :class:`WorkflowExpedienteProtocol` entries.
 """
 
-NotificationsSource = Callable[[object], Awaitable[WorkflowNotificationsSnapshotProtocol]]
+type NotificationsSource = Callable[[object], Awaitable[WorkflowNotificationsSnapshotProtocol]]
 """Async callable that fetches the AEAT inbox snapshot for a session.
 
 Args:
@@ -283,16 +282,11 @@ Returns:
 """
 
 
-# Re-exported for adapter convenience (tests use the fully-qualified
-# path directly, so this exists purely to keep `_adapters.py` tidy).
 __all__ = [
     "CertificateBundleProtocol",
     "DeadlineEngineProtocol",
     "ExpedientesSource",
     "ModeloDraftBuilderProtocol",
-    "ModeloInputScalar",
-    "ModeloInputValue",
-    "ModeloInputs",
     "ModeloInputsProviderProtocol",
     "NotificationsSource",
     "RegistryModeloDraftProtocol",

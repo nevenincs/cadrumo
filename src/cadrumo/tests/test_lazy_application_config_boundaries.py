@@ -19,7 +19,7 @@ _SRC = Path("src/cadrumo")
 _WORKFLOW = _SRC / "application" / "workflow"
 _WRITE_SIDE_MODULES = frozenset(
     {
-        "cadrumo.application._journal_repository",
+        "cadrumo.application.journal_repository",
         "cadrumo.application.operations.persistence.journal",
         "cadrumo.core.file_permissions",
         "cadrumo.core.logging",
@@ -249,8 +249,8 @@ def test_lazy_facade_and_read_only_config_forbid_materialization_imports() -> No
         "cadrumo.core.storage_materialization": real_config + "\nfrom . import storage_materialization\n",
         "cadrumo.core.file_permissions": real_config + "\nimport cadrumo.core.file_permissions as permissions\n",
         "cadrumo.core.logging": real_config + '\nimport_module("cadrumo.core.logging")\n',
-        "cadrumo.application._journal_repository": real_config
-        + '\n__import__("cadrumo.application._journal_repository")\n',
+        "cadrumo.application.journal_repository": real_config
+        + '\n__import__("cadrumo.application.journal_repository")\n',
     }
     for expected, source in planted.items():
         assert expected in _forbidden_write_imports(source)

@@ -68,7 +68,11 @@ def test_the_decision_function_refuses_a_legal_hold_regardless_of_authorisation(
     from datetime import UTC, datetime
     from uuid import UUID
 
-    from cadrumo.application.user_profile.custody_hold_models import ProfileCustodyHoldAssessment, ProfileCustodyRetentionOverride, hold_permits_local_deletion
+    from cadrumo.application.user_profile.custody_hold_models import (
+        ProfileCustodyHoldAssessment,
+        ProfileCustodyRetentionOverride,
+        hold_permits_local_deletion,
+    )
 
     def _assessment(*, legal: bool, filing: bool) -> ProfileCustodyHoldAssessment:
         return ProfileCustodyHoldAssessment(

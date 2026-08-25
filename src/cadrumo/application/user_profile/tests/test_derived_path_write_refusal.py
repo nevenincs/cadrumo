@@ -34,9 +34,14 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.validation import (
+    DERIVED_FIELD_ISSUE_CODE,
+    UNKNOWN_FIELD_ISSUE_CODE,
+    ProfileValidationService,
+)
+
 from ....core.errors import BaseSeverity
 from ....domain.user_profile import UserProfileFact, load_user_profile_schema
-from cadrumo.application.user_profile.validation import DERIVED_FIELD_ISSUE_CODE, UNKNOWN_FIELD_ISSUE_CODE, ProfileValidationService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

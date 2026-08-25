@@ -29,6 +29,14 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile.login_session import (
+    bind_resumed_profile_session,
+    login_profile,
+    logout_active_profile,
+)
+from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
 from ....adapters.persistence.storage import master_key
 from ....adapters.persistence.storage.custody import profile_session_path
 from ....adapters.persistence.storage.master_key import current_active_bucket_session, login_throttle_path
@@ -36,9 +44,6 @@ from ....core import ProfileSessionRefusalReason
 from ....core.bucket_pointer import read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.login_session import bind_resumed_profile_session, login_profile, logout_active_profile
-from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

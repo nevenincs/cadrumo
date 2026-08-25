@@ -18,10 +18,11 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.user_profile.completeness import missing_required_field_paths, profile_value_is_present
+from cadrumo.application.user_profile.keys_validation import validate_profile_values
+from cadrumo.application.user_profile.overview import build_profile_overview
+
 from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord, load_user_profile_schema
-from .._completeness import missing_required_field_paths, profile_value_is_present
-from .._keys_validation import validate_profile_values
-from .._overview import build_profile_overview
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

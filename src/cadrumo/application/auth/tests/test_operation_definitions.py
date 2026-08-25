@@ -27,8 +27,8 @@ from cadrumo.core.operations import (
 
 from ....core import AuthProviderKind
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
-from ...user_profile.login_session import login_profile, logout_active_profile
 from ...user_profile.custody_ports import profile_custody_secure_object_repository
+from ...user_profile.login_session import login_profile, logout_active_profile
 from ...user_profile.registration import register_profile_with_credentials
 from ..operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,

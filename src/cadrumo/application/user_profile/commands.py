@@ -1,20 +1,8 @@
 """Pydantic command and result contracts for the user-profile boundary.
 
-These classes were previously declared at the body of
-:mod:`cadrumo.application.user_profile`'s ``__init__.py``. Pydantic v2
-resolves field types at class-creation time, so declaring them at the
-package boundary forced an eager import of
-:mod:`cadrumo.domain.user_profile` (which pulls the full registry via its
-``_registry_contract`` companion) for every consumer that touched the
-boundary — including the state-free CLI surfaces that must never pay
-the registry cost.
-
-Relocating the classes here lets the boundary re-export them through
-its PEP 562 ``__getattr__`` block, deferring the domain-record import
-to first reference rather than boundary-import time. The public
-surface is unchanged: every name remains reachable via
-``cadrumo.application.user_profile.<name>`` because the boundary's
-``__getattr__`` resolves to this module on demand.
+Import these contracts directly from this defining module. Keeping the Pydantic
+records together makes their validation dependency explicit without making the
+``user_profile`` package namespace a second public API.
 """
 
 from __future__ import annotations
@@ -33,6 +21,16 @@ from ...domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,
 )
+
+__all__ = [
+    "ProfileImportResult",
+    "ProfilePreflightReport",
+    "ProfilePreflightRequirement",
+    "ProfileSnapshot",
+    "ProfileStaleCheckReport",
+    "ProfileValidationIssue",
+    "ProfileValidationReport",
+]
 
 # ---------------------------------------------------------------------------
 # Validation and preflight

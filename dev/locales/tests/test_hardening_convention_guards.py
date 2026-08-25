@@ -129,7 +129,7 @@ def test_named_bucket_settings_derivation_stays_in_core_settings_boundary() -> N
 
 # The profile-repository KDF-defaults guard was RETIRED here rather than
 # repaired. It asserted that `_default_kdf_params` in
-# `application/user_profile/_profile_repository.py` derived its Argon2 fields
+# `application/user_profile/profile_repository.py` derived its Argon2 fields
 # from `KdfParams.default().to_manifest_params()` instead of restating them.
 # Every noun in that sentence is gone: the shared-master `ManifestKdfParams`
 # model and `to_manifest_params` no longer exist in production anywhere, the

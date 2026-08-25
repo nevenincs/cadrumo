@@ -84,7 +84,7 @@ _NON_REGULATORY_EXEMPTIONS: Mapping[_SiteKey, str] = {
     ("application/flows/engine.py", "_instance_count"): ("A form-authoring instance bound is not a tax cap."),
     ("application/flows/engine.py", "_refresh_instance_counts"): ("A form-authoring instance bound is not a tax cap."),
     ("application/flows/resume.py", "_seed_counts"): ("A form-authoring instance bound is not a tax cap."),
-    ("application/user_profile/_section_rows.py", "next_section_row_index"): (
+    ("application/user_profile/section_rows.py", "next_section_row_index"): (
         "A non-negative row-index floor is not a tax cap."
     ),
 }

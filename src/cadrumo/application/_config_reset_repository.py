@@ -23,7 +23,7 @@ from ._config_reset_models import (
     ConfigResetTarget,
     ConfigResetTargetPhase,
 )
-from ._journal_repository import JournalRepositoryBase
+from .journal_repository import JournalRepositoryBase
 
 CONFIG_RESET_JOURNAL_DIRNAME = storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath
 

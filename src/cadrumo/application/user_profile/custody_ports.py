@@ -1141,12 +1141,10 @@ def create_profile_custody_registration_material(
     )
 
 
-"""The closed set of warnings every recovery-artifact export must surface.
+"""Recovery-artifact warnings remain a closed value set for exhaustive rendering.
 
-Re-exported at the boundary rather than flattened to plain strings on the
-way through. The warnings are a closed value set an operator surface has to
-render exhaustively, and a surface that receives them as bare strings cannot
-be checked for having handled all of them.
+Passing their defining type through the custody port prevents operator surfaces
+from flattening an exhaustively handled warning into an unchecked string.
 """
 
 
@@ -1247,9 +1245,8 @@ def verify_profile_custody_dek_against_sentinel(
     )
 
 
-#: Per-member ceilings for a capsule directory, re-exported so the restore path
-#: bounds each member with the SAME value the published capsule reader uses
-#: rather than forming a second opinion about the same record.
+#: Per-member capsule-directory ceilings are declared by the custody port so
+#: restore uses the same bounds as the published capsule reader.
 
 
 def profile_custody_recovery_envelope_path(capsule_path: Path) -> Path:

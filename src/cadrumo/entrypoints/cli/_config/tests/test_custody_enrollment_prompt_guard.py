@@ -93,7 +93,8 @@ try:
     try:
         # A real locked profile, so the login below has a capsule to unwrap
         # and must reach the passphrase channel to do it.
-        from cadrumo.application.user_profile import logout_active_profile, register_profile_with_credentials
+        from cadrumo.application.user_profile.login_session import logout_active_profile
+        from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
         register_profile_with_credentials(
             label=label,

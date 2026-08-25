@@ -22,8 +22,13 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.user_profile.validation import (
+    CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
+    CONDITIONALLY_FORBIDDEN_FIELD_CODE,
+    ProfileValidationService,
+)
+
 from ....domain.user_profile import UserProfileFact, load_user_profile_schema
-from cadrumo.application.user_profile.validation import CONDITIONAL_REQUIRED_FIELD_MISSING_CODE, CONDITIONALLY_FORBIDDEN_FIELD_CODE, ProfileValidationService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

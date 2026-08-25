@@ -46,13 +46,13 @@ _FACT = "UserProfileFact"
 #: Modules that BOTH read the projection AND construct profile facts, each with
 #: the reason its writes cannot silently re-populate a deliberately cleared path.
 _DECLARED_WRITERS: dict[str, str] = {
-    "application/user_profile/_censo_sync.py": (
+    "application/user_profile/censo_sync.py": (
         "Reads the EFFECTIVE-FACT projection for its adoption decision, not the value "
         "projection, so a cleared path is visible as value=None and is reported as a "
         "divergence instead of adopted. Its one value-projection read is the unrelated "
         "home-office afectacion ratio, which only reads."
     ),
-    "application/user_profile/_cotejo_apply.py": (
+    "application/user_profile/cotejo_apply.py": (
         "Writes clearing facts only for divergence paths PRESENT in the projection "
         "(namespace-replace on re-cotejo). An already-cleared row is absent, so it is "
         "not re-cleared, and no value is ever written at an absent path."
@@ -66,7 +66,7 @@ _DECLARED_WRITERS: dict[str, str] = {
         "Writes operator-supplied wizard answers, which are unconditional on what the "
         "projection holds. Its projection read is a descendant-list scan that only reads."
     ),
-    "application/user_profile/_section_rows.py": (
+    "application/user_profile/section_rows.py": (
         "Reads the projection only to choose the next repeatable-row index. Every fact "
         "comes from values the operator explicitly supplied for the new row, so absence "
         "never causes a cleared value to be re-adopted."
@@ -143,7 +143,7 @@ def test_the_gate_fails_on_a_planted_adopt_on_absence_writer(tmp_path: Path) -> 
     planted = tmp_path / "application" / "planted"
     planted.mkdir(parents=True)
     (planted / "_adopts_on_absence.py").write_text(
-        "from cadrumo.application.user_profile import record_to_path_values\n"
+        "from cadrumo.application.user_profile.projections import record_to_path_values\n"
         "from cadrumo.domain.user_profile import UserProfileFact\n"
         "\n"
         "def adopt(record, path, value):\n"
@@ -163,7 +163,7 @@ def test_the_detector_ignores_a_module_that_only_reads(tmp_path: Path) -> None:
     reader = tmp_path / "application" / "reader"
     reader.mkdir(parents=True)
     (reader / "_only_reads.py").write_text(
-        "from cadrumo.application.user_profile import record_to_path_values\n"
+        "from cadrumo.application.user_profile.projections import record_to_path_values\n"
         "\n"
         "def summarise(record):\n"
         "    return sorted(record_to_path_values(record))\n",

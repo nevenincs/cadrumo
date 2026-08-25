@@ -98,7 +98,34 @@ property of the modelo's published design and belongs beside the revision that
 describes it, not in a branch at the surface that happens to render it.
 """
 
+[[group]]
+id = "unbuilt-coordinate-refusal"
+classification = "orchestration_routing"
+justification = """
+The branch refuses a coordinate this codebase has not built, rather than one the
+law excludes. It is distinct from ``modelo-scope-guard``: that group requires the
+guarded function to be NAMED for the modelo it serves, and these sites sit in
+generically-named entry points that serve every modelo and decline the ones no
+implementation covers yet. The tell is the vocabulary of the refusal itself --
+"supported", "unsupported coordinate", "unhandled" -- which is a statement about
+what exists here, not about what the law requires. The citation names a token
+from the refusal the branch raises or returns, because that refusal IS the thing
+selected.
+
+A branch of this shape can still hide a separate defect: a coordinate narrowed by
+a bare literal (a hardcoded filing year) is registry-shaped data at a call site
+under ``aeat-registry-authority-flow``, and is recorded as its own finding rather
+than adjudicated away here.
+"""
+
 # -- Adjudicated branches ----------------------------------------------------
+
+[[branch]]
+path = "src/cadrumo/application/aggregation/_inventory.py"
+enclosing_symbol = "resolve"
+modelo_codes = "M100"
+group = "unbuilt-coordinate-refusal"
+selects = "unsupported_coordinate"
 
 [[branch]]
 path = "src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py"
@@ -348,22 +375,43 @@ selects = "_validate_snapshot_selection"
 path = "src/cadrumo/application/filing/_producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M111"
-group = "modelo-scope-guard"
-selects = "_validate_snapshot_model_profile"
+group = "modelo-path-routing"
+selects = "_validate_modelo_111_snapshot"
 
 [[branch]]
 path = "src/cadrumo/application/filing/_producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M202"
-group = "modelo-scope-guard"
-selects = "_validate_snapshot_model_profile"
+group = "modelo-path-routing"
+selects = "_validate_modelo_202_snapshot"
 
 [[branch]]
 path = "src/cadrumo/application/filing/_producer_snapshot.py"
 enclosing_symbol = "_validate_snapshot_model_profile"
 modelo_codes = "M303"
-group = "modelo-scope-guard"
-selects = "_validate_snapshot_model_profile"
+group = "modelo-path-routing"
+selects = "_validate_modelo_303_snapshot"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_producer_snapshot.py"
+enclosing_symbol = "_validate_snapshot_model_profile"
+modelo_codes = "M222"
+group = "modelo-path-routing"
+selects = "_validate_modelo_222_snapshot"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_producer_snapshot.py"
+enclosing_symbol = "_validate_snapshot_model_profile"
+modelo_codes = "M296"
+group = "modelo-path-routing"
+selects = "_validate_modelo_296_snapshot"
+
+[[branch]]
+path = "src/cadrumo/application/filing/_producer_snapshot.py"
+enclosing_symbol = "_validate_snapshot_model_profile"
+modelo_codes = "M353"
+group = "modelo-path-routing"
+selects = "_validate_modelo_353_snapshot"
 
 [[branch]]
 path = "src/cadrumo/application/invoices/_source_resolver.py"

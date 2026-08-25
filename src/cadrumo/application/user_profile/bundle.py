@@ -42,6 +42,15 @@ from ...core.errors import CadrumoError
 from ...core.time import now
 from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType, emit_bucket_event
 
+__all__ = [
+    "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
+    "UnsupportedBundleSchemaVersionError",
+    "deserialize_profile_bundle",
+    "register_imported_profile_bundle",
+    "serialize_profile_bundle",
+    "validate_bundle_payload",
+]
+
 if TYPE_CHECKING:
     from ...domain.user_profile import (
         CarriedSecureObject,
@@ -75,7 +84,6 @@ BUNDLE_PAYLOAD_UPGRADERS: Mapping[int, Callable[[dict[str, object]], dict[str, o
 SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset(
     range(BUNDLE_DURABILITY_FLOOR, BUNDLE_SCHEMA_VERSION + 1),
 )
-
 
 def _stamped_bundle_version(payload: dict[str, object], *, expected_written_version: int | None) -> int:
     """Read the payload's own stamped schema version, refusing a contradiction.

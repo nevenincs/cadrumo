@@ -18,6 +18,8 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
+from cadrumo.application.user_profile.custody_carry import restore_carried_objects, serialize_carried_objects
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....domain.attachments import AttachmentNotFoundError
@@ -30,7 +32,6 @@ from ....domain.buckets import (
 )
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_two_bucket_runtime
-from cadrumo.application.user_profile.custody_carry import restore_carried_objects, serialize_carried_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

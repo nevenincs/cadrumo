@@ -51,9 +51,10 @@ def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tu
     """Register the shared label from a separate process, reporting the outcome."""
     from pathlib import Path as _Path
 
+    from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
     from ....tests.profile_persistence import composed_profile_persistence_ports
     from ....tests.secure_sql import isolated_profile_storage_root
-    from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
     with isolated_profile_storage_root(tmp_path=_Path(tmp_path_text)), composed_profile_persistence_ports():
         barrier.wait()
@@ -76,8 +77,9 @@ def test_two_processes_registering_one_label_produce_one_capsule(tmp_path: Path)
     failure this guards against is the operator-visible one -- a label bound to
     two committed capsules, leaving every later selection ambiguous.
     """
-    from ....tests.secure_sql import isolated_profile_storage_root
     from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
+
+    from ....tests.secure_sql import isolated_profile_storage_root
 
     context = get_context("spawn")
     barrier = context.Barrier(2)

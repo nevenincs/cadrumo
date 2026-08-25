@@ -96,11 +96,6 @@ class EncryptedProfileBundleExport(BaseModel):
         return value
 
 
-# Encrypted envelopes are user-profile input, so preserve the registered
-# validation error rather than introducing a second unregistered error class.
-EncryptedProfileBundleError = UserProfileValidationError
-
-
 def encrypt_profile_bundle_for_passphrase(
     bundle: UserProfilePortableExport,
     *,
@@ -157,7 +152,7 @@ def decrypt_profile_bundle_with_passphrase(
     recovery behind it, so the transport gate is exact.
     """
     if envelope.encrypted_bundle_schema_version != _ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION:
-        raise EncryptedProfileBundleError(
+        raise UserProfileValidationError(
             translated_message="errors.refused.refused_user_profile_validation",
             context={
                 "envelope_schema_version": str(envelope.encrypted_bundle_schema_version),
@@ -165,17 +160,17 @@ def decrypt_profile_bundle_with_passphrase(
             },
         )
     if envelope.payload_model != _ENCRYPTED_BUNDLE_PAYLOAD_MODEL:
-        raise EncryptedProfileBundleError(
+        raise UserProfileValidationError(
             translated_message="errors.refused.refused_user_profile_validation",
             context={"payload_model_expected": False},
         )
     if envelope.payload_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
-        raise EncryptedProfileBundleError(
+        raise UserProfileValidationError(
             translated_message="errors.refused.refused_user_profile_validation",
             context={"payload_schema_supported": False},
         )
     if envelope.kdf != _ENCRYPTED_BUNDLE_KDF:
-        raise EncryptedProfileBundleError(
+        raise UserProfileValidationError(
             translated_message="errors.refused.refused_user_profile_validation",
             context={"kdf_supported": False},
         )
@@ -191,7 +186,7 @@ def decrypt_profile_bundle_with_passphrase(
     # against and the type the parameter record validates under cannot drift
     # apart.
     if envelope.kdf_version != ARGON2_VERSION:
-        raise EncryptedProfileBundleError(
+        raise UserProfileValidationError(
             translated_message="errors.refused.refused_user_profile_validation",
             context={
                 "envelope_kdf_version": str(envelope.kdf_version),
@@ -214,7 +209,7 @@ def decrypt_profile_bundle_with_passphrase(
             associated_data=_ENCRYPTED_BUNDLE_AAD,
         )
     except Exception as exc:
-        raise EncryptedProfileBundleError(
+        raise UserProfileValidationError(
             translated_message="errors.refused.refused_user_profile_validation",
             context={"payload_decrypted": False},
         ) from exc
@@ -226,14 +221,13 @@ def decrypt_profile_bundle_with_passphrase(
     except UnsupportedBundleSchemaVersionError:
         raise
     except Exception as exc:
-        raise EncryptedProfileBundleError(
+        raise UserProfileValidationError(
             translated_message="errors.refused.refused_user_profile_validation",
             context={"payload_valid": False},
         ) from exc
 
 
 __all__ = [
-    "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
     "decrypt_profile_bundle_with_passphrase",
     "encrypt_profile_bundle_for_passphrase",

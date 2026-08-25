@@ -7,19 +7,20 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.deadlines import (
-    IrpfEstimationRegime,
-    IVARegime,
-)
-from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ...wizard import _catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
-from .. import (
+from cadrumo.application.user_profile.projections import (
     facts_to_values,
     projection_for_taxpayer,
     record_to_effective_facts,
     record_to_path_values,
     record_to_values,
 )
+
+from ....domain.deadlines import (
+    IrpfEstimationRegime,
+    IVARegime,
+)
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ...wizard import _catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

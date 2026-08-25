@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-MASK_PROFILE_FIELD_MODULE = "application/user_profile/_overview.py"
+MASK_PROFILE_FIELD_MODULE = "application/user_profile/overview.py"
 """The single production module allowed to declare a masking-verdict function."""
 
 MASK_PROFILE_FIELD_NAME = "mask_profile_field"

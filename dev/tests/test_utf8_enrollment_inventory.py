@@ -95,7 +95,7 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "application/live/_verify.py",
         "application/modelo/_revision_persistence.py",
         "application/repair_integrity.py",
-        "application/user_profile/_repository.py",
+        "application/user_profile/repository.py",
         "application/wizard/_translations.py",
         "application/workflow/_persistence.py",
         "core/bucket_pointer.py",

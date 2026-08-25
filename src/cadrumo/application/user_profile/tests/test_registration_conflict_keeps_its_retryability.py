@@ -27,8 +27,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.registration import ProfileRegistrationConflictError, ProfileRegistrationError
+
 from ....core.errors import get_registered_error_code
-from .. import ProfileRegistrationConflictError, ProfileRegistrationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..user_profile.profile_repository import CommittedProfileRepository, ProfileNotFoundError
+from cadrumo.domain.user_profile import ProfileNotFoundError
+from ..user_profile.profile_repository import CommittedProfileRepository
 from .errors import ProfileLabelAmbiguousError
 from .profile_bucket_models import ProfileBucketPointer
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from importlib import import_module
 from multiprocessing import get_context
 from pathlib import Path
 from typing import Any
@@ -82,26 +83,14 @@ def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(
 
 
 def test_defining_modules_are_the_only_public_pointer_transition_surface() -> None:
-    """Only defining modules own pointer contracts; package namespaces are inert."""
-    import cadrumo.application.user_profile as user_profile
-    import cadrumo.core as core
-    import cadrumo.application.user_profile.profile_pointer as profile_pointer
-    from cadrumo.core import bucket_pointer
+    """Only canonical defining modules own pointer transition contracts."""
+    profile_pointer = import_module("cadrumo.application.user_profile.profile_pointer")
+    bucket_pointer = import_module("cadrumo.core.bucket_pointer")
 
     assert profile_pointer.active_profile_pointer_transaction.__module__.endswith("profile_pointer")
     assert profile_pointer.observe_active_profile_pointer.__module__.endswith("profile_pointer")
     assert profile_pointer.ActiveProfilePointerTransaction.__module__.endswith("profile_pointer")
     assert bucket_pointer.BucketPointer.__module__.endswith("bucket_pointer")
-    for forbidden_name in (
-        "active_profile_pointer_transaction",
-        "observe_active_profile_pointer",
-        "ActiveProfilePointerTransaction",
-        "BucketPointer",
-        "read_pointer",
-        "write_pointer",
-    ):
-        assert not hasattr(user_profile, forbidden_name)
-        assert not hasattr(core, forbidden_name)
     for retired_name in (
         "ProfileCustodyPointerSnapshot",
         "compare_and_swap_profile_pointer",
@@ -109,11 +98,9 @@ def test_defining_modules_are_the_only_public_pointer_transition_surface() -> No
         "restore_pointer",
         "clear_pointer",
     ):
-        assert retired_name not in user_profile.__all__
-        assert not hasattr(user_profile, retired_name)
+        assert not hasattr(profile_pointer, retired_name)
     for retired_name in ("capture_pointer", "restore_pointer", "clear_pointer"):
-        assert retired_name not in core.__all__
-        assert not hasattr(core, retired_name)
+        assert not hasattr(bucket_pointer, retired_name)
 
 
 def test_only_the_transaction_owner_calls_the_low_level_pointer_writer() -> None:

@@ -39,13 +39,13 @@ class UnlockedProfileFactSummary(BaseModel):
     content_digest: ContentDigest
 
 
-ProfileFactSummary = Annotated[
+type ProfileFactSummary = Annotated[
     LockedProfileFactSummary | UnlockedProfileFactSummary,
     Field(discriminator="availability"),
 ]
 
 
-ProfileRestoreAuthority = Literal["password", "recovery_artifact"]
+type ProfileRestoreAuthority = Literal["password", "recovery_artifact"]
 """Which door proved the key a restore republishes a capsule under.
 
 Declared beside ``publication_kind`` because it is the same class of axis and

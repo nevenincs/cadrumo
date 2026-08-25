@@ -30,7 +30,6 @@ from ...core.identity import PrefixedContentDigest, ProfileLabel
 from ...core.time import validate_utc_aware
 from .custody_hold_models import (
     ProfileCustodyHoldAssessment,
-    ProfileCustodyHoldEvidence,
     ProfileCustodyRetentionOverride,
 )
 from .custody_ports import ProfileCustodyInventoryPort, default_profile_custody_local_record_store
@@ -445,8 +444,6 @@ __all__ = [
     "CUSTODY_TRANSACTION_SCHEMA_VERSION",
     "CustodyDigestModel",
     "ProfileCustodyDeleteConfirmation",
-    "ProfileCustodyHoldAssessment",
-    "ProfileCustodyHoldEvidence",
     "ProfileCustodyInventoryWitness",
     "ProfileCustodyTransactionConflictError",
     "ProfileCustodyTransactionCorruptError",

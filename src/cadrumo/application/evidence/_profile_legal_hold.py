@@ -20,8 +20,16 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, model_v
 from ...core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
 from ...core.logging import get_logger
 from ...core.time import validate_utc_aware
-from .._profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
-from ..user_profile.custody_ports import ProfileCustodyLocalRecordStore, canonical_snapshot_bytes, canonical_snapshot_digest, canonical_snapshot_payload, default_profile_custody_local_record_store, ensure_profile_custody_owner_root, profile_custody_owner_root
+from ..profile_deletion_hold_contract import ProfileDeletionHoldOwnerProjection
+from ..user_profile.custody_ports import (
+    ProfileCustodyLocalRecordStore,
+    canonical_snapshot_bytes,
+    canonical_snapshot_digest,
+    canonical_snapshot_payload,
+    default_profile_custody_local_record_store,
+    ensure_profile_custody_owner_root,
+    profile_custody_owner_root,
+)
 
 _MAX_BYTES = 8 * 1024
 

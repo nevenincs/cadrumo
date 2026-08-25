@@ -22,12 +22,21 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.login_session import (
+    _clear_handover_journal,
+    _handover_journal_path,
+    _HandoverPhase,
+    _load_handover_journal,
+    _ProfileLoginHandoverJournal,
+    _save_handover_journal,
+    login_profile,
+)
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
 from ....core.bucket_pointer import BucketPointer, read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.login_session import _clear_handover_journal, _handover_journal_path, _HandoverPhase, _load_handover_journal, _ProfileLoginHandoverJournal, _save_handover_journal, login_profile
 from ..profile_pointer import ActiveProfilePointerTransactionError
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from .test_login_handover import (
     _assert_no_resumable_material,
     _close_live_login,

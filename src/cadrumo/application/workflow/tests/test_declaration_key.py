@@ -24,10 +24,11 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ....core import Modelo, Period
-from ....domain.submission import ModeloDraftStatus
 from cadrumo.application.workflow.run_models import WorkflowResult
 from cadrumo.application.workflow.state_models import WorkflowState, declaration_key, update_declaration_pointer
+
+from ....core import Modelo, Period
+from ....domain.submission import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

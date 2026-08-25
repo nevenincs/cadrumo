@@ -30,13 +30,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+
 from ....adapters.persistence.storage.custody import list_current_profile_custody_capsule_ids
 from ....core.bucket_pointer import read_pointer
 from ....core.config import load_settings
 from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
 from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
-from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
 
 __all__ = ["profile_storage_root_fixture"]
 

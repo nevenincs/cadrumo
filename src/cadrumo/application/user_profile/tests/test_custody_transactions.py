@@ -13,6 +13,20 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.application.user_profile.custody_hold_models import ProfileCustodyHoldEvidence
+from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
+from cadrumo.application.user_profile.custody_service import (
+    _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService,
+)
+from cadrumo.application.user_profile.custody_transactions import (
+    ProfileCustodyTransactionConflictError,
+    ProfileCustodyTransactionCorruptError,
+    ProfileCustodyTransactionJournal,
+    ProfileCustodyTransactionOperation,
+    ProfileCustodyTransactionRefusalError,
+    ProfileCustodyTransactionState,
+)
+
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyCapsuleLabel,
     ProfileCustodyEnvelope,
@@ -44,9 +58,6 @@ from ....domain.modelos import ModeloCode, ModeloRecord, derive_filing_record_id
 from ... import user_profile as user_profiles
 from ...evidence import LegalHoldCaseAuthority
 from ...filing import FilingRetentionAuthority
-from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
-from cadrumo.application.user_profile.custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
-from cadrumo.application.user_profile.custody_transactions import ProfileCustodyHoldEvidence, ProfileCustodyTransactionConflictError, ProfileCustodyTransactionCorruptError, ProfileCustodyTransactionJournal, ProfileCustodyTransactionOperation, ProfileCustodyTransactionRefusalError, ProfileCustodyTransactionState
 from ..profile_pointer import ActiveProfilePointerTransactionError, active_profile_pointer_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -214,8 +225,9 @@ def _hold_transaction_lock_in_sibling(
     is timing a Windows spawn plus a cadrumo import -- seconds of startup that
     swallow any window short enough to be a useful contention probe.
     """
-    from ....tests.profile_persistence import composed_profile_persistence_ports
     from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
+
+    from ....tests.profile_persistence import composed_profile_persistence_ports
 
     with composed_profile_persistence_ports():
         result_queue.put("ready")

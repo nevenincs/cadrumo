@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.workflow.state_models import WorkflowState, active_transaction_catalogue_repository
+
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.transactions import (
     LedgerNoActiveBucketError,
@@ -20,7 +22,6 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.workflow.state_models import WorkflowState, active_transaction_catalogue_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -41,12 +42,9 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _state(*, profile: str, bucket_id: str) -> WorkflowState:
     """Build a WorkflowState — the state is a passthrough here.
 
-    ``active_transaction_catalogue_repository`` resolves the active
-    bucket via the precedence chain (``Settings.cadrumo_active_profile``
-    override or pointer file), not via any field on the state record.
-    Callers set ``override_settings(cadrumo_active_profile=...)`` per
-    assertion. The ``profile`` and ``bucket_id`` arguments are kept
-    for call-site readability.
+    ``active_transaction_catalogue_repository`` resolves the authoritative
+    active bucket, not any field on the state record. The ``profile`` and
+    ``bucket_id`` arguments are kept for call-site readability.
     """
 
     del profile, bucket_id
@@ -79,20 +77,23 @@ def _transaction(provider_id: str) -> Transaction:
 
 def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket(
     secure_objects: SecureObjectRepository,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from ....core.config import override_settings
-
     first_state = _state(profile="alpha", bucket_id=_FIRST_BUCKET_ID)
     second_state = _state(profile="beta", bucket_id=_SECOND_BUCKET_ID)
     first_transaction = _transaction("same-provider-row")
+    selected_buckets = iter((_FIRST_BUCKET_ID, _FIRST_BUCKET_ID, _SECOND_BUCKET_ID))
+    monkeypatch.setitem(
+        active_transaction_catalogue_repository.__globals__,
+        "require_active_profile_bucket_id",
+        lambda: next(selected_buckets),
+    )
 
-    with override_settings(cadrumo_active_profile=_FIRST_BUCKET_ID):
-        active_transaction_catalogue_repository(first_state, objects=secure_objects).save(
-            TransactionCatalogue.from_transactions((first_transaction,)),
-        )
-        first_catalogue = active_transaction_catalogue_repository(first_state, objects=secure_objects).load()
-    with override_settings(cadrumo_active_profile=_SECOND_BUCKET_ID):
-        second_catalogue = active_transaction_catalogue_repository(second_state, objects=secure_objects).load()
+    active_transaction_catalogue_repository(first_state, objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((first_transaction,)),
+    )
+    first_catalogue = active_transaction_catalogue_repository(first_state, objects=secure_objects).load()
+    second_catalogue = active_transaction_catalogue_repository(second_state, objects=secure_objects).load()
 
     assert tuple(first_catalogue.transactions) == (first_transaction.transaction_id,)
     assert second_catalogue.transactions == {}

@@ -6,16 +6,16 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import NoReturn
 
+from ...adapters.outbound.aeat.browser import SiteHealthStatus
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors import SiteHealthError, build_error_envelope
 from ...core.logging import get_logger
 from ...core.time import now as _utcnow
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
+from .abort import WorkflowAbortReason
 from .errors import UnhandledWorkflowError, WorkflowAbortSignalError
 from .run_models import (
     SiteHealthAlert,
-    SiteHealthStatus,
-    WorkflowAbortReason,
     WorkflowFailureDetails,
     WorkflowSiteHealthFacts,
     WorkflowStage,

@@ -40,7 +40,7 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import ContentDigest, ProfileId
 from ...core.paths import effective_storage_root
 from ...core.time import validate_utc_aware
-from .._journal_repository import JournalRepositoryBase
+from ..journal_repository import JournalRepositoryBase
 from .bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 
 PROFILE_EXPORT_JOURNAL_DIRNAME = "profile-export-operations"

@@ -192,4 +192,4 @@ class CommittedProfileRepository:
         )
 
 
-__all__ = ["CommittedProfileRepository", "ProfileNotFoundError", "ProfileSummary"]
+__all__ = ["CommittedProfileRepository", "ProfileSummary"]

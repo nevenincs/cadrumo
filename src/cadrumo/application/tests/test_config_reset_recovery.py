@@ -83,10 +83,8 @@ _SETTINGS_PREAMBLE = dedent(
         build_profile_custody_port,
         build_profile_login_session_port,
     )
-    from cadrumo.application.user_profile import (
-        bind_profile_custody_port,
-        bind_profile_login_session_port,
-    )
+    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
+    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 
     composition = ExitStack()
     composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
@@ -156,7 +154,7 @@ _CRASH_HARNESS = _SETTINGS_PREAMBLE + dedent(
             return trace
         if frame.f_code.co_name not in {"create_exclusive", "save"}:
             return trace
-        if not frame.f_code.co_filename.endswith(("_config_reset_repository.py", "_journal_repository.py")):
+        if not frame.f_code.co_filename.endswith(("_config_reset_repository.py", "journal_repository.py")):
             return trace
         if durable_target_phase() == phase_by_boundary[boundary]:
             os._exit(91)

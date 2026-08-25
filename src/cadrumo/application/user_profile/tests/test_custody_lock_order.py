@@ -45,10 +45,11 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
+
 from ....adapters.persistence.storage import custody
 from ....core import StorageCategory, storage_location
 from ....core.paths import effective_storage_root
-from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
 
 if TYPE_CHECKING:
     from pathlib import Path

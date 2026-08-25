@@ -15,6 +15,10 @@ from datetime import date
 
 import pytest
 
+import cadrumo.application.workflow._deadline_stage as deadline_stage_module
+import cadrumo.application.workflow.engine as engine_module
+import cadrumo.application.workflow.engine_recording as engine_recording_module
+
 from ....application.state_projection import build_pending_obligations
 from ....core.errors import ErrorCategory, build_error_envelope
 from ....domain.calculations.registry import bundled_authority
@@ -25,9 +29,6 @@ from ....domain.deadlines import (
     TaxpayerProfile,
     compute_obligation_schedule,
 )
-import cadrumo.application.workflow._deadline_stage as deadline_stage_module
-import cadrumo.application.workflow._engine_recording as engine_recording_module
-import cadrumo.application.workflow.engine as engine_module
 from ..errors import UnhandledWorkflowError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -126,21 +127,21 @@ def test_workflow_failure_producers_are_locale_keyed_and_verdict_complete() -> N
     assert violations == []
     assert sorted(failure_producers) == sorted(
         (
-            ("_deadline_stage", "application.workflow.steps.deadline_missing", "PreconditionVerdict"),
-            ("_engine", "application.workflow.steps.already_filed", "_no_recovery_verdict"),
-            ("_engine", "application.workflow.steps.auth_certificate_invalid", "_no_recovery_verdict"),
-            ("_engine", "application.workflow.steps.auth_certificate_load_failed", "_no_recovery_verdict"),
-            ("_engine", "application.workflow.steps.auth_provider_unavailable", "_no_recovery_verdict"),
-            ("_engine", "application.workflow.steps.deadline_closed", "_no_recovery_verdict"),
-            ("_engine", "application.workflow.steps.deadline_future", "_no_recovery_verdict"),
-            ("_engine", "application.workflow.steps.draft_build_failed", "_conditional_action_verdict"),
-            ("_engine", "application.workflow.steps.draft_identity_mismatch", "_no_recovery_verdict"),
-            ("_engine", "application.workflow.steps.draft_not_ready", "_conditional_action_verdict"),
-            ("_engine", "application.workflow.steps.inbox_blocked", "_no_recovery_verdict"),
-            ("_engine", "application.workflow.steps.preflight_failed", "_no_recovery_verdict"),
-            ("_engine", "application.workflow.steps.validation_failed", "_conditional_action_verdict"),
-            ("_engine_recording", "application.workflow.steps.site_unavailable", "_execution_failure_verdict"),
-            ("_engine_recording", "application.workflow.steps.workflow_failure", "_execution_failure_verdict"),
+            ("_deadline_stage", "application.workflow.steps.deadline_missing", "no_action_precondition_verdict"),
+            ("engine", "application.workflow.steps.already_filed", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.auth_certificate_invalid", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.auth_certificate_load_failed", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.auth_provider_unavailable", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.deadline_closed", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.deadline_future", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.draft_build_failed", "_conditional_action_verdict"),
+            ("engine", "application.workflow.steps.draft_identity_mismatch", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.draft_not_ready", "_conditional_action_verdict"),
+            ("engine", "application.workflow.steps.inbox_blocked", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.preflight_failed", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.validation_failed", "_conditional_action_verdict"),
+            ("engine_recording", "application.workflow.steps.site_unavailable", "_execution_failure_verdict"),
+            ("engine_recording", "application.workflow.steps.workflow_failure", "_execution_failure_verdict"),
         )
     )
     assert sorted(conditional_actions) == sorted(

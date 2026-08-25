@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.user_profile.validation import ProfileValidationService
+
 from ....core.resources import resources
 from ....domain.user_profile import UserProfileFact
-from .. import ProfileValidationService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

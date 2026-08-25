@@ -41,6 +41,12 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.user_profile.repository import (
+    USER_PROFILE_SNAPSHOT_NAMESPACE,
+    UserProfileSnapshotRepository,
+    user_profile_snapshot_object_key,
+)
+
 from ....adapters.persistence.storage import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
 )
@@ -53,11 +59,6 @@ from ....domain.user_profile import (
     new_profile_snapshot_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._repository import (
-    USER_PROFILE_SNAPSHOT_NAMESPACE,
-    UserProfileSnapshotRepository,
-    user_profile_snapshot_object_key,
-)
 from ._profile_record_boundary_support import defaultable_fields_at_default, populated_facts
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

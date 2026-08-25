@@ -33,8 +33,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....adapters.persistence.storage.custody import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyRecordError
 from cadrumo.application.user_profile.capsule_restore import ProfileCapsuleSourceError, read_profile_capsule_source
+
+from ....adapters.persistence.storage.custody import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, ProfileCustodyRecordError
 
 if TYPE_CHECKING:
     from pathlib import Path

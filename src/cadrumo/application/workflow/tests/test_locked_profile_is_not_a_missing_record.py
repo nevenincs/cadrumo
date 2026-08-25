@@ -33,8 +33,8 @@ from ....adapters.persistence.storage import master_key
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import override_settings
 from ....tests.subprocess_cli import run_subprocess_cli_harness
-from ...user_profile.profile_record_repository import close_active_profile_record_session
 from ...user_profile.login_session_port import profile_bind_bucket_session
+from ...user_profile.profile_record_repository import close_active_profile_record_session
 from ..profile_health import assess_active_profile_health
 from ._locked_profile_support import DEK, PROFILE_ID, PROFILE_LABEL, RECORD_NAMESPACE
 
@@ -52,10 +52,8 @@ _PUBLISHER_SOURCE = dedent(
         build_profile_custody_port,
         build_profile_login_session_port,
     )
-    from cadrumo.application.user_profile import (
-        bind_profile_custody_port,
-        bind_profile_login_session_port,
-    )
+    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
+    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
     from cadrumo.application.workflow.tests._locked_profile_support import publish_capsule_and_pointer
 
     composition = ExitStack()

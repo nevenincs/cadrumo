@@ -30,10 +30,11 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
+
 from ....adapters.persistence.storage.custody import profile_session_path
 from ....core.bucket_pointer import read_pointer
 from ....tests.secure_sql import isolated_profile_storage_root
-from .._registration import ProfileRegistrationError, register_profile_with_credentials
 from .test_login_handover import (
     _assert_no_resumable_material,
     _child_settings,

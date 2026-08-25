@@ -48,7 +48,7 @@ from ...domain.deadlines import (
     TaxpayerProfile,
 )
 from ...domain.filing import CasillaSchemaProvider, ModeloDraft
-from ...domain.submission import SubmissionEngine, SubmissionPreflightError
+from ...domain.submission import SubmissionEngine
 from ..filing import build_draft
 from .engine import WorkflowEngine
 from .errors import WorkflowError
@@ -260,13 +260,9 @@ def default_engine(
     )
 
 
-# Re-exported so importing :mod:`application.workflow` surfaces the primary
-# preflight-exception type without callers having to dig into
-# :mod:`domain.submission` for an isinstance check.
 __all__ = [
     "DeadlineEngineAdapter",
     "ModeloDraftBuilderAdapter",
     "SubmissionEngineAdapter",
-    "SubmissionPreflightError",
     "default_engine",
 ]

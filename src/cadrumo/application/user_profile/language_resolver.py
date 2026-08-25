@@ -14,6 +14,13 @@ from __future__ import annotations
 from ...core.i18n import register_profile_language_resolver
 from ...core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
+__all__ = [
+    "register_language_resolver",
+    "resolve_active_profile_output_language",
+    "resolve_active_profile_output_language_hint",
+    "resolve_profile_output_language_hint",
+]
+
 
 def resolve_active_profile_output_language() -> str | None:
     """Return the active profile's ``preferences.output_language`` fact.
@@ -30,6 +37,7 @@ def resolve_active_profile_output_language() -> str | None:
         return resolve_active_profile_output_language_hint()
 
     from cadrumo.application.workflow.persistence import workflow_state_repository
+
     from .projections import record_to_path_values
 
     record = workflow_state_repository().load().active_profile_record()

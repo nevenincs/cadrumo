@@ -25,11 +25,13 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
+from cadrumo.application.user_profile.login_session import login_profile
+from cadrumo.application.user_profile.profile_record_repository import require_profile_record_session
+from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
 from ....domain.user_profile import ProfileSetupState, UserProfileRecord
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import login_profile, register_profile_with_credentials
-from .._capsule_record import ProfileRecordStore
-from .._profile_record_repository import require_profile_record_session
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -81,8 +83,9 @@ def test_a_record_loaded_from_disk_is_never_refused(tmp_path: Path) -> None:
 
         assert "setup_state" in replacement.model_fields_set
 
+        from cadrumo.application.user_profile.capsule_record import ProfileRecordCommandEvent
+
         from ....domain.buckets import BucketEventType
-        from .._capsule_record import ProfileRecordCommandEvent
 
         # The actual second SAVE, through the real writer. Asserting the field
         # set alone would only re-state what pydantic did; the claim is that

@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.overview import MASKED_PLACEHOLDER, build_profile_overview
+
 from ....core.config import override_settings
 from ....domain.user_profile import (
     ProfileFieldType,
@@ -31,7 +33,6 @@ from ....domain.user_profile import (
     load_user_profile_schema,
     profile_field_label_key,
 )
-from .. import MASKED_PLACEHOLDER, build_profile_overview
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

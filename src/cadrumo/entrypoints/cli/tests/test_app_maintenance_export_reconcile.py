@@ -19,7 +19,8 @@ from pathlib import Path
 import pytest
 
 from ....application.user_profile.bundle_export_operation import ProfileBundleExportJournalRepository
-from ....application.user_profile.bundle_export import ProfileBundleExportPurpose, ProfileBundleExportRequest, ProfileBundleExportTransport, prepare_profile_export
+from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportRequest, ProfileBundleExportTransport
+from ....application.user_profile.bundle_export import prepare_profile_export
 from ....application.user_profile.bundle_export_operation import PROFILE_EXPORT_STAGED_TEMP_SUFFIX
 from ....core import STR_KEYED_MAPPING_ADAPTER, scan_directory
 from ....domain.user_profile import UserProfilePortableExport
