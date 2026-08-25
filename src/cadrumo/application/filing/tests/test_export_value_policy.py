@@ -7,13 +7,19 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+
 from ....core import (
     M303Exonerado390ActivityField,
     M303Exonerado390ActivityProjectionRef,
     Period,
 )
-from cadrumo.domain.calculations.registry.schema import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition, RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from ....domain.filing import (
     FilingExportValidationError,
     ModeloDraft,

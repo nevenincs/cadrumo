@@ -27,7 +27,7 @@ from urllib.parse import urlsplit
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry.schema import LegalReference
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
 
 from .._paths import UTF_8
 from ._locale_chrome import docs_chrome

@@ -20,22 +20,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ....core import CasillaId
-from .binding_selector_utils import selector_as_dict
-from .bindings import (
-    is_layout_binding_selector,
-    validate_binding_selector_shape,
-    validate_m303_regimen_simplificado_annual_summary_revision,
-)
-from .ids import BindingId
-from .schema import (
-    CasillaDefinition,
-    DataBindingDefinition,
-    FormulaDefinition,
-    LegalReference,
-    ModeloRevision,
-    SourceReference,
-)
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
     validate_bbox_anchor_consistency,
@@ -47,6 +36,13 @@ from ._validate_extraction_profiles import (
 )
 from ._validate_helpers import missing_refs
 from ._validate_revision_rules import validate_dated_values
+from .binding_selector_utils import selector_as_dict
+from .bindings import (
+    is_layout_binding_selector,
+    validate_binding_selector_shape,
+    validate_m303_regimen_simplificado_annual_summary_revision,
+)
+from .ids import BindingId
 
 _CASILLA_METADATA_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 

@@ -8,13 +8,15 @@ from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
-from ..core import ForeignAssetObligationGroup, Modelo, RevisionReviewStatus
-from ..core.resources import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, ParameterDefinition
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
 from cadrumo.domain.calculations.registry.temporal import select_revision
+
+from ..core import ForeignAssetObligationGroup, Modelo, RevisionReviewStatus
+from ..core.resources import bundled_path
 
 _ANNUAL_PERIOD = "0A"
 _INITIAL_PARAMETER_IDS = {

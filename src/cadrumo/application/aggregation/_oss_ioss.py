@@ -31,15 +31,16 @@ from typing import Annotated, ClassVar
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CalculationSourceLineageRole, Period
-from ...core.money import CENT, round_to_cents
-from ...domain.calculations.registry.bindings import (
+from cadrumo.domain.calculations.registry.ledger_bindings import (
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
     unsupported_ledger_oss_observations,
 )
+
+from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CalculationSourceLineageRole, Period
+from ...core.money import CENT, round_to_cents
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceLine, iva_rate_kind
@@ -51,7 +52,6 @@ from ...domain.iva import (
     TransactionKind,
     lookup_rate,
 )
-from .errors import AggregationValidationError, t
 from ._invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
     invoice_devengo_in_period,
@@ -64,6 +64,7 @@ from ._source_mesh import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
+from .errors import AggregationValidationError, t
 
 _LedgerId = Annotated[
     str,

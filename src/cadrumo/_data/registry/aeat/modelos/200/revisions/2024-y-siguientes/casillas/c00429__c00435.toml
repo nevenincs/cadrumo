@@ -8,7 +8,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200011.f0027", "m200-2025.dp200032.f0060", "m200-2025.dp200042.f0016"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00430"
 number = "00430"
@@ -19,7 +18,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200011.f0028", "m200-2025.dp200018c.f0138", "m200-2025.dp200032.f0061", "m200-2025.dp200042.f0017"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00431"
 number = "00431"
@@ -30,7 +28,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200011.f0029", "m200-2025.dp200018c.f0139", "m200-2025.dp200033.f0051", "m200-2025.dp200042.f0018"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00432"
 number = "00432"
@@ -41,7 +38,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200011.f0030", "m200-2025.dp200018c.f0140", "m200-2025.dp200033.f0052", "m200-2025.dp200042.f0019"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00433"
 number = "00433"
@@ -52,7 +48,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200011.f0031", "m200-2025.dp200033.f0053", "m200-2025.dp200043.f0012"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00434"
 number = "00434"
@@ -63,7 +58,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200011.f0032", "m200-2025.dp200043.f0013"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00435"
 number = "00435"
@@ -74,4 +68,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200011.f0033", "m200-2025.dp200043.f0014"]

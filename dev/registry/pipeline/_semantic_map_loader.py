@@ -17,15 +17,12 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 
 from cadrumo.core import FilingProducerKey, compile_filing_projection_ref, freeze_toml, read_toml
 from cadrumo.core.directory_scan import iter_directory
-from cadrumo.domain.calculations.registry.schema import (
-    ExportComputedKey,
-    ExportDraftAttribute,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
     SourceRefId,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ._semantic_map import SemanticMap, SemanticMapEntry, SemanticMapRecord, VariableEnvelopeSemantic
 

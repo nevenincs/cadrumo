@@ -12,6 +12,7 @@ from pathlib import Path
 from pydantic import AnyHttpUrl
 
 from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
 
 from ....adapters.outbound.aeat.sede import (
     Declaracion,
@@ -32,7 +33,6 @@ from ....core import (
 )
 from ....core.external_constants import load_external_constants
 from ....core.resources import bundled_path
-from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.modelos import (
     ExternalEvidence,
     ModeloCode,

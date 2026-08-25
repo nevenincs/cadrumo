@@ -9,22 +9,25 @@ from pathlib import Path
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import CasillaFieldKind
-from cadrumo.domain.calculations.registry.record_design import RecordDesignSheet
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
-from ..binding_selector_utils import BindingFixedExportSelector, binding_export_selector
-from ..record_design import (
-    build_diseno_coverage_report,
-    calculation_closure_record_design_metadata,
-    derive_calculation_completeness_casillas,
-    derive_diseno_coverage_casillas,
+from cadrumo.domain.calculations.registry.record_design import (
     extract_record_design,
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
 )
+from cadrumo.domain.calculations.registry.record_design_coverage import (
+    build_diseno_coverage_report,
+    calculation_closure_record_design_metadata,
+    derive_calculation_completeness_casillas,
+    derive_diseno_coverage_casillas,
+)
+from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+
+from .....core.directory_scan import scan_directory
+from .....core.resources import bundled_path
+from ..binding_selector_utils import BindingFixedExportSelector, binding_export_selector
 from ..schema import DataBindingDefinition, ModeloRevision
 from ._registry_schema_support import _committed_registry_tree
 

@@ -12,7 +12,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from .schema import LegalReference, ModeloDefinition, SourceReference
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
 from ._source_evidence_fingerprint import SourceEvidenceFingerprint
 
 _CatalogueCacheKey = tuple[int, int, str | None, SourceEvidenceFingerprint]

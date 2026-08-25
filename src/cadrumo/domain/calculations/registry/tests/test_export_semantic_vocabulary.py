@@ -5,13 +5,20 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.export_semantics import (
+    ExportComputedKey,
+    ExportDraftAttribute,
+    ExportSemanticPayloadAxis,
+    export_semantic_payload_axis,
+)
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+
 from .....core import (
     FilingProducerKey,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
 )
-from ..._export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.schema import ExportComputedKey, ExportDraftAttribute, ExportFieldDefinition, ExportSemanticPayloadAxis, export_semantic_payload_axis
+from ...export_field_kind import CasillaFieldKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -18,7 +18,7 @@ from typing import Literal, TypedDict, Unpack
 import pytest
 from pydantic import ValidationError
 
-from ..schema import CasillaConstraints
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

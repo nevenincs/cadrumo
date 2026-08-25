@@ -14,6 +14,18 @@ from typing import Literal, NamedTuple
 
 from pydantic import BaseModel, Field, model_validator
 
+from cadrumo.domain.calculations.registry.schema import (
+    DependencyClassificationDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    RegistrySnapshot,
+    RelationPeriodAlignment,
+    RelationRevisionSelector,
+)
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+
 from ....core import (
     STRICT_FROZEN_CONFIG,
     CasillaId,
@@ -29,17 +41,6 @@ from .ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, Source
 from .relation_aggregation import relation_aggregation_op
 from .relations import RegistryFoldRequirement, relation_source_requirements
 from .runtime_graph import expression_binding_refs, expression_relation_refs
-from .schema import (
-    DependencyClassificationDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    PeriodSelector,
-    RegistryCatalogues,
-    RegistrySnapshot,
-    RelationDefinition,
-    RelationPeriodAlignment,
-    RelationRevisionSelector,
-)
 from .validate import RegistryValidator
 
 __all__ = [

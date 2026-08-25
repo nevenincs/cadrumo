@@ -7,8 +7,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+
 from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import FormulaExpression
 from .._layout import plan_layout
 from .._translator import TranslationError, translate_formula
 

@@ -24,9 +24,10 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema import ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+
 from ..export_parse import XmlDictionaryEntry
 from ..schema_exports import XmlDictionaryPathOverride
 from ._modelo_100_registry_support import _loaded_registry, _source_root

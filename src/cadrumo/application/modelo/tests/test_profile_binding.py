@@ -19,24 +19,26 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, FormulaExpression, RegistrySnapshot
+from ....domain.modelos import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceResolution
 from .._calculation_actions import calculate_modelo_revision
-from .._work_lifecycle import create_work_unit
-from ....domain.modelos import ModeloError
 from .._profile_binding import (
     ProfileBindingResolutionError,
     resolve_profile_sourced_bindings,
 )
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

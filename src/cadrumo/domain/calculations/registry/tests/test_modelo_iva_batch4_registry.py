@@ -16,7 +16,7 @@ See Also:
         Test loader for committed modelo registry definitions and catalogues.
     :class:`~domain.calculations.registry._validate.RegistryValidator`
         Registry validator that cross-checks legal/source catalogue references.
-    :func:`~domain.calculations.registry._authority.bundled_authority`
+    :func:`~domain.calculations.registry.authority.bundled_authority`
         Authority facade used to inspect generated deadline windows.
     :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
         Canonical fleet membership asserted once the foundations are registered.

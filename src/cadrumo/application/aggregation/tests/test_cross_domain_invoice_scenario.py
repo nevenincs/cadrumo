@@ -36,11 +36,12 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_renta_income_aggregation_binding_values
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from ....core import Modelo, Period
 from ....core.aggregation import LedgerIncomeGrounding
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.bindings import resolve_ledger_renta_income_aggregation_binding_values
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,

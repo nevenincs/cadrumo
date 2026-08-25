@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final
 
-from .._export_field_kind import CasillaFieldKind
+from ..export_field_kind import CasillaFieldKind
 
 __all__ = [
     "ExportComputedKey",

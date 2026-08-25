@@ -36,11 +36,12 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Modelo, Period
-from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from ....core import Modelo, Period
 from ....domain.iva import (
     EUMemberState,
     IvaCategory,

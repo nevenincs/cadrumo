@@ -16,12 +16,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
-from .....core.directory_scan import scan_directory
-from .....core.aggregation import BindingTypedEnumKind
-from .....core.resources import bundled_path, resources
-from ..._export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
+
+from .....core import CasillaId, validated_casilla_id
+from .....core.aggregation import BindingTypedEnumKind
+from .....core.directory_scan import scan_directory
+from .....core.resources import bundled_path, resources
+from ...export_field_kind import CasillaFieldKind
 from ..schema import DataBindingDefinition, ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

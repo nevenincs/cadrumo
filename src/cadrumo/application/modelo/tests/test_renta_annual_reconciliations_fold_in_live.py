@@ -59,6 +59,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -70,7 +73,6 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import AggregationCaptureKind, BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, WithholdingObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
@@ -88,10 +90,10 @@ from .._calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._verification_actions import verify_modelo_revision
-from .._work_lifecycle import create_work_unit
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from .._revision_persistence import persist_filed_revision
+from .._verification_actions import verify_modelo_revision
+from .._work_lifecycle import create_work_unit
 from ._fold_in_assertions_support import _assert_distinct_positive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -37,7 +37,8 @@ from ...domain.modelos import (
 )
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.schema import LegalParameter
+    from cadrumo.domain.calculations.registry.schema_references import LegalParameter
+
     from ...domain.calculations.registry.ids import SourceRefId
     from ...domain.modelos import WorkUnit
 

@@ -21,6 +21,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.calculations._export_field_kind
+   cadrumo.domain.calculations.export_field_kind
    cadrumo.domain.calculations._row_casilla
    cadrumo.domain.calculations._row_source_identity

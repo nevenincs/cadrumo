@@ -13,13 +13,11 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core import FilingProjectionRef
-from cadrumo.domain.calculations.registry.schema import (
-    CasillaFieldKind,
-    ProjectionEndpointDeclaration,
-)
-from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactInspection
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import SourceRefId
+from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
+from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactInspection
 
 from ._record_design_ir import RecordDesignIntermediate, RecordDesignIntermediateField
 from ._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry, SemanticMapRecord

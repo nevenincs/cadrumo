@@ -7,35 +7,32 @@ from datetime import date
 
 import pytest
 
-from .....core import BindingSourceKind, CasillaId, validated_casilla_id
-from ..binding_selector_utils import BindingFixedExportSelector
-from ..schema import (
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import (
     CasillaAlias,
-    CasillaConstraints,
-    DatedValue,
-    ModeloDefinition,
-    ProfilePredicateDefinition,
-)
-from ..schema_input_kind import InputKind
-from ..schema_verification import VerificationPredicateDefinition
-from ..validate import RegistryValidator
-from ._referential_integrity_support import (
-    REFERENCE_LEGAL_ID,
-    REFERENCE_SOURCE_ID,
     DataBindingDefinition,
-    Decimal,
+    DatedValue,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+)
+from cadrumo.domain.calculations.registry.schema_extraction import (
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
-    FormulaDefinition,
-    FormulaExpression,
+)
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, RelationDefinition
+from cadrumo.domain.calculations.registry.schema_verification import (
     LiveCrossReferenceDecision,
-    ModeloRevision,
-    ParameterDefinition,
-    RegistryCatalogues,
-    RegistryValidationError,
-    RelationDefinition,
-    ValidatedRegistryAuthority,
+    ProfilePredicateDefinition,
     VerificationExpectationDefinition,
+)
+from cadrumo.domain.calculations.registry.tests._referential_integrity_support import (
+    REFERENCE_LEGAL_ID,
+    REFERENCE_SOURCE_ID,
+    Decimal,
     build_minimal_snapshot,
     build_snapshot_with_missing_legal,
     build_snapshot_with_missing_source,
@@ -49,6 +46,12 @@ from ._referential_integrity_support import (
     minimal_workbook_ref,
     snapshot_for_revision,
 )
+
+from .....core import BindingSourceKind, CasillaId, validated_casilla_id
+from ..binding_selector_utils import BindingFixedExportSelector
+from ..schema_input_kind import InputKind
+from ..schema_verification import VerificationPredicateDefinition
+from ..validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")

@@ -5,6 +5,10 @@ from __future__ import annotations
 import pytest
 from pydantic import AnyUrl, ValidationError
 
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
@@ -19,8 +23,6 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
 from ..aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..groi_oracle import GROI_ORACLE_ID, GroiOracle
@@ -35,7 +37,6 @@ from ..remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from ..renta_web_open_oracle import RentaWebOpenOracle
-from ..schema import LiveCrossReferenceDecision
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

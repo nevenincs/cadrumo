@@ -19,11 +19,10 @@ from collections.abc import Callable, Mapping
 
 from pydantic import BaseModel, ConfigDict
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+
 from ...core import Modelo, Period
-from ...domain.calculations.registry.schema import (
-    ExportLayoutDefinition,
-    RegistrySnapshot,
-)
 from ._m303_export_applicability import validate_m303_export_applicability
 from ._producer_snapshot import FilingProducerSnapshot
 

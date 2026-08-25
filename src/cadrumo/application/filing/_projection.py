@@ -7,6 +7,10 @@ from typing import cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
+
 from ...core import (
     STRICT_FROZEN_CONFIG,
     FilingProjectionRef,
@@ -19,14 +23,10 @@ from ...core import (
     M303RegimenSimplificadoModuleProjectionRef,
     Modelo,
 )
-from ...domain.calculations.registry.schema import (
-    CasillaFieldKind,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    RegistrySnapshot,
-)
 from ...domain.calculations.registry.ids import RecordId
-from ...domain.calculations.registry.m303_differentiated_deduction_projection import project_m303_differentiated_deduction_rows
+from ...domain.calculations.registry.m303_differentiated_deduction_projection import (
+    project_m303_differentiated_deduction_rows,
+)
 from ...domain.calculations.registry.m303_prorrata_activity_projection import project_m303_prorrata_activity_rows
 from ...domain.calculations.registry.m303_regimen_simplificado_projection import (
     project_m303_regimen_simplificado_rows,

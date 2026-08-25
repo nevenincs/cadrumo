@@ -4,19 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import BindingSourceKind, CasillaId, validated_casilla_id
-from ..schema import SourceCitation
-from ..schema_input_kind import InputKind
-from ..validate import RegistryValidator
-from ._referential_integrity_support import (
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.schema_surfaces import CalculationCompletenessCasilla
+from cadrumo.domain.calculations.registry.tests._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
-    CalculationCompletenessCasilla,
-    DataBindingDefinition,
-    FormulaDefinition,
-    FormulaExpression,
-    ModeloRevision,
-    RegistryValidationError,
     build_minimal_snapshot,
     completeness_manifest,
     minimal_application_link,
@@ -25,6 +19,11 @@ from ._referential_integrity_support import (
     minimal_revision,
     segmented_casilla,
 )
+
+from .....core import BindingSourceKind, CasillaId, validated_casilla_id
+from ..schema import SourceCitation
+from ..schema_input_kind import InputKind
+from ..validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

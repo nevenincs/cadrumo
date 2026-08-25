@@ -21,7 +21,7 @@ from ....core import (
     filing_projection_ref_casilla_id,
     hydrate_filing_projection_ref,
 )
-from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
+from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from .errors import RegistryValidationError
 from .export_semantics import (
     ExportComputedKey,
@@ -405,6 +405,8 @@ class ProjectionEndpointDeclaration(RegistryModel):
 
 
 class ExportFieldDefinition(RegistryModel):
+    """Declare one field's position, value, and rendering constraints in an export."""
+
     id: ExportFieldId
     offset: OneBasedExportOffset | None = None
     length: int | None = Field(default=None, gt=0)
@@ -636,6 +638,8 @@ class RecordDiscriminator(RegistryModel):
 
 
 class ExportRecordDefinition(RegistryModel):
+    """Declare one record type and its ordered field authority in an export layout."""
+
     id: RecordId
     record_type: str
     order: int = Field(ge=0)
@@ -803,6 +807,8 @@ class XmlDictionaryPathOverride(RegistryModel):
 
 
 class ExportLayoutDefinition(RegistryModel):
+    """Declare the complete wire layout used to render an official export."""
+
     id: ExportLayoutId
     format: ExportLayoutFormatValue = ExportLayoutFormat.FIXED_WIDTH
     dictionary_source_ref: SourceRefId | None = None

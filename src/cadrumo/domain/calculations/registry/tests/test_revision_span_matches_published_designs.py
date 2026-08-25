@@ -143,13 +143,15 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from .....core import PeriodKind, RegistryAuthorityGrade, registry_period_kind
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from .....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, SourceReference
 from ..authority import ValidatedRegistryAuthority
 from ..record_design import (
     _clean_pdf_line,

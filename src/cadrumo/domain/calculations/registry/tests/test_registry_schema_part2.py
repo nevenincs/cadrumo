@@ -17,19 +17,20 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.schema import DeadlineWindowDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_extraction import (
+    ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_formula import KeyedBracketEntry, ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import (
+    CalculationCompletenessCasilla,
+    CalculationCompletenessManifest,
+)
+
 from .....core import Period
 from .....core.resources import bundled_path
 from ..errors import RegistryValidationError
-from ..schema import (
-    CalculationCompletenessCasilla,
-    CalculationCompletenessManifest,
-    DeadlineWindowDefinition,
-    ExtractionProfileDefinition,
-    ExtractionTargetDefinition,
-    KeyedBracketEntry,
-    ModeloRevision,
-    ParameterDefinition,
-)
 from ..validate import RegistryValidator
 from ._registry_schema_support import (
     _NUMERIC_CASILLA_01,
@@ -802,7 +803,7 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
     ambiguous lookup contract; the validator rejects it at
     construction time.
     """
-    from ..schema import BracketEntry as _BracketEntry
+    from cadrumo.domain.calculations.registry.schema_formula import BracketEntry as _BracketEntry
 
     numeric_bracket = _BracketEntry(
         lower_bound=Decimal("0"),

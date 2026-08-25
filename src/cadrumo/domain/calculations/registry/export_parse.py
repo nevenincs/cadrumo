@@ -12,6 +12,15 @@ from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.schema import RegistryModel
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ....core import CasillaId, ExportLayoutFormat, validated_casilla_id
 from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
@@ -20,14 +29,6 @@ from .errors import RegistryValidationError
 from .export_value_policy import ParsedExportPolicyValue
 from .fixed_width_codec import parse_fixed_width_export_field
 from .ids import BindingId, ExportFieldId, ExportLayoutId, RecordId
-from .schema import (
-    CasillaFieldKind,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    RegistryModel,
-    SourceReference,
-)
 
 # The dictionary's two boolean row types. ``LGC`` resolves to the XSD's
 # ``tipo_logico`` (``0``/``1``) and ``S_N`` to ``tipo_SINO_Exclusivo``

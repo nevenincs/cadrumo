@@ -68,12 +68,17 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.ledger_bindings import (
+    IvaLedgerObservation,
+    resolve_ledger_iva_aggregation_binding_values,
+)
+
 from .....core import CasillaId, IvaDeductionFactKind, validated_casilla_id
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
-from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_available_bound_inputs_by_casilla_id, resolve_ledger_iva_aggregation_binding_values
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

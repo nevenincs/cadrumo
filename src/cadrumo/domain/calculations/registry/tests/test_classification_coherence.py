@@ -30,6 +30,13 @@ from datetime import date
 import pytest
 from pydantic import BaseModel, Field, ValidationError
 
+from cadrumo.domain.calculations.registry.schema import (
+    DependencyClassificationDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+)
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from .....core import TaxDomain
 from .....tests.registry_tree import bundled_registry_tree
 from ..classification_coherence import (
@@ -42,12 +49,6 @@ from ..classification_coherence import (
     _field_max_length,
     audit_bundled_classification_coherence,
     build_classification_coherence_audit,
-)
-from ..schema import (
-    CasillaDefinition,
-    DependencyClassificationDefinition,
-    ModeloDefinition,
-    ModeloRevision,
 )
 from ..schema_base import CalculationClass
 from ..schema_input_kind import InputKind

@@ -22,7 +22,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ..schema import CasillaDefinition, InputKind
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

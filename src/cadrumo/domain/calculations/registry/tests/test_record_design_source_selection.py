@@ -7,12 +7,13 @@ import inspect
 
 import pytest
 
+import cadrumo.domain.calculations.registry.corpus_catalogue as _corpus_catalogue
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
-import cadrumo.domain.calculations.registry.corpus_catalogue as _corpus_catalogue
 from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
-from ..schema import SourceReference
 from ._catalogue_verification_support import _catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

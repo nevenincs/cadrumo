@@ -11,26 +11,25 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Protocol
 
-from ....core import CasillaId
-from .casilla_membership import casillas_by_id, declared_casilla_ids
-from .ids import BindingId, RelationId
-from .schema import (
+from cadrumo.domain.calculations.registry.schema import (
     ApplicationLinkDefinition,
-    CasillaDefinition,
     ConstructDefinition,
     DataBindingDefinition,
     DeadlineWindowDefinition,
     DependencyClassificationDefinition,
-    ExportLayoutDefinition,
-    ExtractionProfileDefinition,
     FormulaDefinition,
-    LiveCrossReferenceDecision,
     ModeloRevision,
     ModeloScheduleDefinition,
-    ParameterDefinition,
-    RelationDefinition,
-    WorkbookParityReference,
 )
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
+from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
+
+from ....core import CasillaId
+from .casilla_membership import casillas_by_id, declared_casilla_ids
+from .ids import BindingId, RelationId
 from .schema_verification import VerificationExpectationDefinition
 from .validate_revision_identity import collect_record_id_lists
 

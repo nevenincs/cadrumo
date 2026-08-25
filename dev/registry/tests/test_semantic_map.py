@@ -11,11 +11,8 @@ from cadrumo.core import (
     M303ProrrataActivityProjectionRef,
     validated_casilla_id,
 )
-from cadrumo.domain.calculations.registry.schema import (
-    CasillaFieldKind,
-    ExportComputedKey,
-    ExportDraftAttribute,
-)
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 
 from ..pipeline._semantic_map import SemanticMap, SemanticMapEntry
 

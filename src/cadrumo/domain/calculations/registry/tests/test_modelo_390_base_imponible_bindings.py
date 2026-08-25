@@ -32,13 +32,17 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.ledger_bindings import (
+    IvaLedgerObservation,
+    resolve_ledger_iva_aggregation_binding_values,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
 from .....core import IvaDeductionFactKind
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

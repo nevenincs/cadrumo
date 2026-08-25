@@ -21,14 +21,14 @@ from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER, read_toml
 from ...core.decimal import coerce_decimal
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
-from .errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 from ._grounding import legal_ref_failures, registry_catalogues
 from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
+from .errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 
 if TYPE_CHECKING:
     # Type-only: importing these at runtime would close the cycle the local
     # imports in the grounding helpers below exist to avoid.
-    from cadrumo.domain.calculations.registry.schema import SourceReference
+    from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 
 _RATE_REGISTRY_MEMBER_STATES: frozenset[EUMemberState] = frozenset(

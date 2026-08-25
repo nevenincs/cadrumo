@@ -12,7 +12,11 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable
 
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ....core import CasillaId
+from ._validate_cross_revision_evolution import strict_continuity_evolution_failures
 from .cross_revision_divergence import (
     CrossRevisionCasillaDivergence,
     iter_cross_revision_casilla_divergences,
@@ -20,16 +24,10 @@ from .cross_revision_divergence import (
 )
 from .errors import RegistryValidationError
 from .ids import RevisionId
-from .schema import (
-    CasillaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-)
 from .validate_cross_revision_advisory import (
     CrossRevisionCasillaDriftSummary,
     summarize_non_overlapping_cross_revision_casilla_drift,
 )
-from ._validate_cross_revision_evolution import strict_continuity_evolution_failures
 
 # D3 defines revision-level continuidad_validation = "strict" as
 # surface-scoped strictness: declared continuity surfaces hard-fail drift,

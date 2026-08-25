@@ -16,8 +16,12 @@ from graphlib import CycleError
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+
 from .....core import CasillaId, validated_casilla_id
 from .....tests.registry_tree import bundled_registry_tree
+from .._validate_formulas import validate_formula_dag
 from ..runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -26,8 +30,6 @@ from ..runtime_graph import (
     expression_relation_refs,
     formula_evaluation_order,
 )
-from ..schema import FormulaExpression, ModeloRevision
-from .._validate_formulas import validate_formula_dag
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

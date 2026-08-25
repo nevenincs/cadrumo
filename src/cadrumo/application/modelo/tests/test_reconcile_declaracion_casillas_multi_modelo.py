@@ -34,6 +34,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 
 from ....adapters.inbound.declaracion import InboundDeclaracionObservation, TemplateRevision
 from ....adapters.inbound.pdf import ExtractedCasilla
@@ -42,7 +43,6 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import Period, validated_casilla_id
 from ....core.resources import resources
 from ....core.time import now
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

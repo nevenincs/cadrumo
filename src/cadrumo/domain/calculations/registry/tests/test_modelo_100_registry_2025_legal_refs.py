@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.record_design_coverage import calculation_closure_legal_refs
+
 from .....core import validated_casilla_id
-from cadrumo.domain.calculations.registry.record_design import calculation_closure_legal_refs
 from ._modelo_100_registry_support import (
     _ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID,
     _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID,

@@ -31,15 +31,12 @@ from datetime import date
 from cadrumo.core import Modelo
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
-from cadrumo.domain.calculations.registry.schema import (
-    CasillaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-)
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
 )
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ._search_record import CasillaSearchRecord, SearchRecordKind
 

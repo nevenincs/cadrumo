@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
-from .schema import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 
 def _missing_refs(

@@ -11,7 +11,7 @@ See Also:
         Test loader for the committed registry definition and legal catalogue.
     :class:`~domain.calculations.registry._validate.RegistryValidator`
         Registry validator that checks the authored legal/source references.
-    :func:`~domain.calculations.registry._authority.bundled_authority`
+    :func:`~domain.calculations.registry.authority.bundled_authority`
         Authority facade used to resolve the trimestral deadline windows.
     :func:`~domain.calculations.registry._snapshot.build_snapshot`
         Snapshot builder feeding the Modelo 216 formula runtime proof.

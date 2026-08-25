@@ -30,11 +30,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
+
 from ...core import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
-from ...domain.calculations.registry.schema import LegalReference
 from ...domain.calculations.registry.authority import bundled_authority
-from .errors import CorpusSearchInputError
 from ._models import CitationResolution
+from .errors import CorpusSearchInputError
 
 
 class CitationLookup:

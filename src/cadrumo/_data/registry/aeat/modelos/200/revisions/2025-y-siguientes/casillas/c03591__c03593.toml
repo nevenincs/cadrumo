@@ -1,0 +1,30 @@
+[[revisions."2025-y-siguientes".casillas]]
+id = "03591"
+number = "03591"
+section = ["reserva_capitalizacion", "2025"]
+data_type = "money"
+semantic_role = "is_reserva_capitalizacion_derecho_generado"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "03592"
+number = "03592"
+section = ["reserva_capitalizacion", "2025"]
+data_type = "money"
+semantic_role = "is_reserva_capitalizacion_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "03593"
+number = "03593"
+section = ["reserva_capitalizacion", "2025"]
+data_type = "money"
+semantic_role = "is_reserva_capitalizacion_pendiente_futuros"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -12,4 +12,3 @@ input_kind = "computed"
 formula = "modelo-200-base-imponible-despues-reserva-nivelacion"
 legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200014.f0018", "m200-2025.dp200024.f0011"]

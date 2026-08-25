@@ -29,10 +29,11 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.detail_record_bindings import resolve_foreign_asset_binding_row_values
+from cadrumo.domain.calculations.registry.temporal import select_revision
+
 from ....core import BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import get_registered_error_code
-from cadrumo.domain.calculations.registry.bindings import resolve_foreign_asset_binding_row_values
-from cadrumo.domain.calculations.registry.temporal import select_revision
 from ....tests.registry_tree import bundled_registry_tree
 from .. import (
     ACCEPTED_SOURCE_KINDS,

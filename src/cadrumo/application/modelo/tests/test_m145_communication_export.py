@@ -21,12 +21,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+
 from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
 from ....core import RegistryAuthorityGrade
 from ....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import ExportFieldDefinition
-from cadrumo.domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
-from ....domain.calculations.registry.tests import build_snapshot
 from ....tests.registry_tree import bundled_registry_tree
 from ....tests.secure_sql import isolated_runtime_profile
 from .._m145_communication_records import (

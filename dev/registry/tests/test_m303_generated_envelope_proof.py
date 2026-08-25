@@ -8,12 +8,15 @@ export tree into a positive authority.
 from __future__ import annotations
 
 import shutil
+from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
 
 from cadrumo.application.aggregation import IvaDifferentiatedDeductionContribution
+from cadrumo.application.calculations import calculate_m303_regimen_simplificado_result
+from cadrumo.application.filing import FilingEnvelopeRenderRequest, render_filing_envelope
 from cadrumo.application.filing._projection import _project_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
 from cadrumo.application.filing.tests.test_producer_snapshot import _m303_exonerado_evidence
@@ -22,7 +25,9 @@ from cadrumo.core import (
     M303DifferentiatedDeductionProjectionRef,
     M303Exonerado390ActivityProjectionRef,
     M303ProrrataActivityProjectionRef,
+    M303RegimenSimplificadoFact,
     Period,
+    PriorDomiciliationElection,
     ProrrataActivityRowType,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
@@ -31,9 +36,26 @@ from cadrumo.core import (
 )
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory, load_registry_tree
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
 from cadrumo.domain.filing import FilingExportValidationError
-from cadrumo.domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
+from cadrumo.domain.filing_evidence import FilingEvidenceReference
+from cadrumo.domain.iva import (
+    ActividadNoAgricolaSimplificado,
+    EntradaModuloSimplificado,
+    HechoActividadSimplificado,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
+from cadrumo.domain.modelos import M303RegimenSimplificadoFilingEvidence
+from cadrumo.domain.prorrata_register import (
+    ProrrataActivityRow,
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    SectorDefinition,
+)
 
 from ..pipeline._export_tree import render_complete_export_tree
 from ..pipeline._provenance_manifest import (
@@ -53,7 +75,7 @@ from .test_generated_export_trees import (
     _supporting_modelos,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _m303_2026_tree():
@@ -100,11 +122,8 @@ def _committed_tree_hashes(tree) -> tuple[tuple[str, str], ...]:
     return tuple((item.relative_path, item.sha256) for item in collect_export_fragment_output_digests(tree.committed))
 
 
-def _m303_2026_prorrata_and_differentiated_producer():
+def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     """Return one source-owned live DP30305 value arrival, without a test layout."""
-    from decimal import Decimal
-
-    snapshot = m303_did._m303_2026_snapshot()
     filing_year = snapshot.filing_year
     register = ProrrataRegister(
         sector_definitions=(
@@ -151,23 +170,143 @@ def _m303_2026_prorrata_and_differentiated_producer():
         for sector_id in ("a", "b")
         for index, kind in enumerate(contribution_kinds, start=1)
     )
-    facts = m303_did._m303_filing_facts(
-        Period.from_year_and_code(filing_year, "1T"),
-        registry_snapshot=snapshot,
-        non_agricultural_activity_count=1,
-    ).model_copy(
-        update={
-            "exonerado_390": _m303_exonerado_evidence(applicable=True),
-            "prorrata_register": register,
-            "differentiated_contributions": contributions,
-        }
+    regimen_evidence = _m303_2026_6919_regimen_evidence(snapshot, catalogues=catalogues)
+    period = Period.from_year_and_code(filing_year, "1T")
+    facts = m303_did.M303FilingFacts(
+        joint_return_elected=False,
+        annual_volume_nonzero=False,
+        insolvency=None,
+        exonerado_390=_m303_exonerado_evidence(applicable=True),
+        regimen_simplificado=regimen_evidence,
+        regimen_simplificado_result=regimen_evidence.calculation_result,
+        period=period,
+        supplier_regime=m303_did.M303SupplierRegimeArrival(
+            period=period,
+            recipient_of_cash_accounting_operations=False,
+            source_ledger_ids=(),
+        ),
+        prorrata_transition=m303_did.M303ProrrataTransitionArrival(
+            period=period,
+            transition=None,
+            register_evidence=(),
+        ),
+        prorrata_register=register,
+        differentiated_contributions=contributions,
+        bienes_register=m303_did.BienesInversionIvaRegister(),
+        regularisation_result=m303_did.RegistroRegularizacionResult(
+            regularizacion_year=filing_year,
+            rows=(),
+            proposed_casilla_43=Decimal("0"),
+            computed_count=0,
+            pending_percentage_count=0,
+            sector_contributions=(),
+        ),
     )
-    producer = m303_did._m303_did_producer_snapshot(
-        ResultDisposition.DEVOLUCION,
-        registry_snapshot=snapshot,
-        non_agricultural_activity_count=1,
-    ).model_copy(update={"m303_filing_facts": facts})
+    taxpayer = m303_did._taxpayer_profile()
+    assert taxpayer.iva is not None
+    producer = m303_did.build_filing_producer_snapshot(
+        modelo=m303_did.Modelo.M303,
+        taxpayer_tax_id=taxpayer.tax_id,
+        taxpayer_identity=m303_did.TaxpayerIdentityFacts(
+            legal_name=None,
+            given_name="María",
+            surnames="García López",
+            full_name="María García López",
+        ),
+        presenter=m303_did.PresenterIdentity(tax_id="00000000T", full_name="Gestoría Ejemplo"),
+        model_profile=taxpayer.iva,
+        elections=m303_did._elections(ResultDisposition.DEVOLUCION),
+        amendment_evidence=None,
+        refund_account=taxpayer.iva.refund_account,
+        charge_account=taxpayer.iva.charge_account,
+        m303_filing_facts=facts,
+    )
     return snapshot, producer
+
+
+def _m303_2026_6919_regimen_evidence(snapshot, *, catalogues):
+    """Build two official 691.9 rows so the real f022 field carries their wire identity."""
+    period = Period.from_year_and_code(snapshot.filing_year, "1T")
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+    )
+    regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=snapshot,
+        scope_decision=scope,
+    )
+    annual_activities = tuple(
+        activity for activity in regimen_snapshot.orden.activities if activity.iae_epigrafe == "691.9"
+    )
+    assert tuple(activity.auxiliary_activity_indicator for activity in annual_activities) == ("1", "2")
+    evidence = FilingEvidenceReference(reference="test:s16:m303-2026:691.9")
+    rows = RegimenSimplificadoFilingRows(
+        ejercicio=period.filing_year,
+        activities=tuple(
+            ActividadNoAgricolaSimplificado(
+                orden_id=activity.orden_id,
+                ejercicio=period.filing_year,
+                activity_id=activity.orden_id,
+                iae_epigrafe="691.9",
+                auxiliary_activity_indicator=activity.auxiliary_activity_indicator,
+                modulos=tuple(
+                    EntradaModuloSimplificado(
+                        module_identity=module.identity,
+                        declared_quantity=Decimal("1"),
+                        evidence_reference=evidence,
+                    )
+                    for module in activity.modulos
+                ),
+                facts=tuple(
+                    HechoActividadSimplificado(
+                        fact=M303RegimenSimplificadoFact.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
+                        value=Decimal("1"),
+                        evidence_reference=evidence,
+                    )
+                    for _identity in activity.applicable_fact_identities
+                ),
+                evidence_reference=evidence,
+            )
+            for activity in annual_activities
+        ),
+    )
+    calculation_result = calculate_m303_regimen_simplificado_result(
+        period=period,
+        scope_decision=scope,
+        rows=rows,
+        regimen_snapshot=regimen_snapshot,
+        dana_2024_eligibility=None,
+        catalogues=catalogues,
+    )
+    return M303RegimenSimplificadoFilingEvidence(
+        scope_decision=scope,
+        rows=rows,
+        regimen_snapshot=regimen_snapshot,
+        dana_2024_eligibility=None,
+        calculation_result=calculation_result,
+    )
+
+
+def _m303_2026_committed_snapshot(tmp_path: Path):
+    """Build a filing snapshot from the committed M303 target, not the mutable whole tree."""
+    tree = _m303_2026_tree()
+    registry_root = _isolated_authority(tree, tmp_path / "m303-authority")
+    isolated_modelo = load_modelo_directory(registry_root / "modelos" / tree.modelo)
+    (isolated_modelo_revision,) = isolated_modelo.revisions.values()
+    committed_modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", tree.modelo))
+    committed_revision = committed_modelo.revisions[tree.revision]
+    assert isolated_modelo_revision.id == committed_revision.id == tree.revision
+    assert isolated_modelo_revision.source_refs == committed_revision.source_refs
+    _modelos, catalogues = load_registry_tree(registry_root)
+    snapshot = build_snapshot(
+        committed_modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=tree.filing_year,
+        period="1T",
+    )
+    assert snapshot.revision.id == tree.revision
+    assert snapshot.revision.export_layouts == committed_revision.export_layouts
+    return snapshot, catalogues
 
 
 def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutating() -> None:
@@ -244,14 +383,15 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
         assert transport.encoding is ExportEncoding.LATIN_1
 
 
-def test_m303_dp30305_composes_its_two_declared_projection_families_once() -> None:
+def test_m303_dp30305_composes_its_two_declared_projection_families_once(tmp_path: Path) -> None:
     """The committed mixed-family record is composed by its two canonical projectors.
 
     DP30305 interleaves prorrata activity slots and differentiated deduction
     facts.  The layout, rather than this proof, owns the complete reference
     order.  A third real M303 family remains closed out at the dispatcher.
     """
-    snapshot, producer = _m303_2026_prorrata_and_differentiated_producer()
+    snapshot, catalogues = _m303_2026_committed_snapshot(tmp_path)
+    snapshot, producer = _m303_2026_prorrata_and_differentiated_producer(snapshot=snapshot, catalogues=catalogues)
     (layout,) = snapshot.revision.export_layouts
     record = next(item for item in layout.records if item.id == "m303-prorrata-deducciones")
     refs = tuple(field.projection_ref for field in record.fields if field.projection_ref is not None)
@@ -288,3 +428,31 @@ def test_m303_dp30305_composes_its_two_declared_projection_families_once() -> No
             refs=(*refs, unsupported_ref),
             producer_snapshot=producer,
         )
+
+
+def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(tmp_path: Path) -> None:
+    """The committed generated layout receives the official 691.9 IAE wire value untruncated."""
+    snapshot, catalogues = _m303_2026_committed_snapshot(tmp_path)
+    snapshot, producer = _m303_2026_prorrata_and_differentiated_producer(snapshot=snapshot, catalogues=catalogues)
+    (layout,) = snapshot.revision.export_layouts
+
+    rendered = render_filing_envelope(
+        FilingEnvelopeRenderRequest(
+            registry_snapshot=snapshot,
+            layout=layout,
+            draft=m303_did._draft(),
+            producer_snapshot=producer,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            product_software_identity=m303_did._product_software_identity(),
+        ),
+    )
+
+    regimen_record = next(record for record in layout.records if record.id == "m303-regimen-simplificado")
+    f022 = next(field for field in regimen_record.fields if field.id.endswith(".f022"))
+    regimen_occurrences = tuple(item for item in rendered.occurrences if item.record_id == regimen_record.id)
+    assert tuple(item.occurrence for item in regimen_occurrences) == (1,)
+    assert all(item.payload[f022.offset - 1 : f022.offset - 1 + f022.length] == b"6919" for item in regimen_occurrences)
+    assert (
+        rendered.payload == rendered.prefix + b"".join(item.payload for item in rendered.occurrences) + rendered.closer
+    )
+    assert rendered.total_length == len(rendered.payload)

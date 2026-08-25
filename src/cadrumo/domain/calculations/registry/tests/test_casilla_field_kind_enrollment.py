@@ -4,14 +4,20 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import BindingSourceKind, CasillaId, validated_casilla_id
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from ..._export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from ..schema import PeriodSelector
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+
+from .....core import BindingSourceKind, CasillaId, validated_casilla_id
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from ...export_field_kind import CasillaFieldKind
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -21,7 +27,7 @@ _SOURCE_REF = "aeat-test-source-001"
 _CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
 
 
-def test_bundled_export_field_kinds_are_hydrated_enum_members() -> None:
+def test_bundledexport_field_kinds_are_hydrated_enum_members() -> None:
     """Every committed export field reaches consumers as a CasillaFieldKind."""
 
     modelos, _catalogues = _committed_registry_tree()

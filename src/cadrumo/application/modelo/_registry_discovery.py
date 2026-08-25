@@ -14,14 +14,13 @@ from __future__ import annotations
 
 from datetime import date
 
+from cadrumo.domain.calculations.registry.queries import RegistryQueryService
+from cadrumo.domain.calculations.registry.query_reports import ModeloSupportMatrixReport
+
 from ...core import Period, TaxDomain
 from ...core.resources import resources
-from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.calculations.registry.queries import (
-    ModeloSupportMatrixReport,
-    RegistryQueryService,
-)
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.schema_input_kind import InputKind
 
 
 def _service() -> RegistryQueryService:

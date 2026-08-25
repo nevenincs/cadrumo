@@ -13,6 +13,9 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from .....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
@@ -61,8 +64,6 @@ from .....domain.buckets import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
 from .....domain.categories import SpendingCategory
 from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod

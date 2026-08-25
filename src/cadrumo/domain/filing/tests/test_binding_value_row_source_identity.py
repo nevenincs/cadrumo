@@ -10,13 +10,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage import FILING_DRAFTS_NAMESPACE
 from ....core import BindingSourceKind, Period
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...calculations import RowSourceIdentity
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
-from ..errors import FilingValidationError
 from .._schema import (
     ModeloBindingValue,
     ModeloDraft,
@@ -25,6 +25,7 @@ from .._schema import (
     compute_modelo_draft_id,
     registry_schema_version,
 )
+from ..errors import FilingValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

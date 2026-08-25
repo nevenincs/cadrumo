@@ -9,9 +9,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
+from ._validate_reference_checker import IdReferenceChecker as _IdReferenceChecker
+from ._validate_reference_sections import (
+    check_binding_selector_shapes,
+    check_construct_refs,
+    check_dependency_classification_refs,
+    check_export_layout_refs,
+)
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .schema import InputKind, ModeloRevision
 from .validate_cross_domain_snapshot import (
     CROSS_DOMAIN_SNAPSHOT_CHECKS,
     check_cross_domain_snapshot_routing,
@@ -22,19 +31,12 @@ from .validate_cross_domain_snapshot import (
 from .validate_cross_domain_snapshot import (
     register_cross_domain_snapshot_check as register_cross_domain_snapshot_check,
 )
-from ._validate_reference_checker import IdReferenceChecker as _IdReferenceChecker
-from ._validate_reference_sections import (
-    check_binding_selector_shapes,
-    check_construct_refs,
-    check_dependency_classification_refs,
-    check_export_layout_refs,
-)
 
 _CROSS_DOMAIN_SNAPSHOT_CHECKS = CROSS_DOMAIN_SNAPSHOT_CHECKS
 
 if TYPE_CHECKING:
-    from .schema import ExtractionProfileDefinition
-    from .snapshot import RegistrySnapshot
+    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+    from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
 
 
 def _check_all_id_references(snapshot: RegistrySnapshot) -> None:

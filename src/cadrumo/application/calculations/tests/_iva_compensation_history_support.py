@@ -9,6 +9,9 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+
 from ....adapters.outbound.aeat.sede import (
     IVA_COMPENSATION_WALLET_URL,
     FiledDeclaracionArtefact,
@@ -26,8 +29,6 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.tests import build_snapshot
 from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....tests.registry_tree import bundled_registry_tree
 

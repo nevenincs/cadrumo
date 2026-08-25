@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     # Type-only: importing these at runtime would close the cycle the local
     # imports below exist to avoid. The registry's binding modules consume the
     # public IVA facade, and these loaders are part of that facade.
-    from cadrumo.domain.calculations.registry.schema import LegalReference, SourceReference
+    from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 
 def registry_catalogues() -> tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], Path]:

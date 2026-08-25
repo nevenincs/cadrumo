@@ -18,13 +18,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from .....core.resources import bundled_path
 from ..corpus_catalogue import (
     verify_source_catalogue,
     verify_source_file,
 )
 from ..errors import RegistryValidationError
-from ..schema import SourceReference
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

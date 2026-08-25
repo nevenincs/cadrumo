@@ -44,16 +44,17 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, NamedTuple, Never, override
 
+from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
+
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core import Period as _Period
 from ...core.identity import same_tax_identifier
+from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.calculations.registry.errors import RegistrySnapshotError
-from ...domain.calculations.registry.bindings import previous_filing_observation_requirements
 from ...domain.iva_compensation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
 from ...domain.modelos import (
     CalculationRevision,

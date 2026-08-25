@@ -18,9 +18,10 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, parse_fixed_width_export_field
-from cadrumo.domain.calculations.registry.schema import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, parse_fixed_width_export_field
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+
 from ..errors import RegistryValidationError
 from ..export_parse import (
     _local_name,
@@ -287,14 +288,15 @@ def test_payload_with_auxiliary_header_prefix_skips_the_header_before_records() 
     that follow must still match their own literals, and a payload shorter than
     the declared prefix cannot satisfy them.
     """
-    from ..export_parse import parse_export_payload
-    from ..schema import (
+    from cadrumo.domain.calculations.registry.schema_exports import (
         AuxiliaryEnvelopeHeaderDefinition,
         ExportLayoutDefinition,
         ExportRecordDefinition,
         FilingEnvelopePrefixFieldDeclaration,
         FilingEnvelopePrefixRole,
     )
+
+    from ..export_parse import parse_export_payload
 
     roles = tuple(
         role for role in FilingEnvelopePrefixRole if role is not FilingEnvelopePrefixRole.COMPOSED_OPENING_TAG

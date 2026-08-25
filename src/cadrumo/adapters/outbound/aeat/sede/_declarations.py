@@ -32,6 +32,8 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
+from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
+
 from .....core import CasillaId, ObservedHeaderFact, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
@@ -39,20 +41,19 @@ from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
+from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.relations import (
+    relation_source_requirements,
+    source_presence_gaps,
+)
+from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check with the registry validator. build_snapshot
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this declarations path.
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .....domain.calculations.registry.errors import RegistryValidationError
-from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
-from .....domain.calculations.registry.bindings import previous_filing_observation_requirements
 from .....domain.calculations.registry.snapshot_coordinate import registry_snapshot_id
-from .....domain.calculations.registry.relations import (
-    relation_source_requirements,
-    source_presence_gaps,
-)
 from .._html import parse_html
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime

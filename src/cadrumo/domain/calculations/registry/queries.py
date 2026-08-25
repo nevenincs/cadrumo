@@ -17,6 +17,9 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, filing_period_from_scope
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
+
 from ....core import (
     OBJECT_TUPLE_ADAPTER,
     BindingSourceKind,
@@ -58,7 +61,6 @@ from .runtime_graph import (
     expression_parameter_refs,
     expression_relation_refs,
 )
-from .schema import CasillaDefinition, ModeloDefinition, ModeloRevision, RelationDefinition, filing_period_from_scope
 from .schema_input_kind import InputKind
 from .support_matrix import build_support_matrix
 from .temporal import select_revision_for_year
@@ -109,6 +111,7 @@ class RegistryQueryService:
     """Stable Python facade over the validated modelo registry authority."""
 
     def __init__(self, authority: ValidatedRegistryAuthority) -> None:
+        """Bind this read-only query service to one validated authority."""
         self._authority = authority
 
     def list_modelos(

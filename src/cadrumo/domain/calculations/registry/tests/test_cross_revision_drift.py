@@ -19,26 +19,24 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import CasillaConstraints
 from cadrumo.domain.calculations.registry.ids import LegalRefId
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
+from cadrumo.domain.calculations.registry.validate_cross_revision import (
+    declared_cross_revision_continuity_semantic_linkage_failures,
+    validate_cross_revision_casilla_consistency,
+)
+from cadrumo.domain.calculations.registry.validate_cross_revision_advisory import (
+    summarize_non_overlapping_cross_revision_casilla_drift,
+)
+
+from .....core.resources import bundled_path
 from ..errors import RegistryValidationError
 from ..modelo_localization import casilla_occurrence_locale_key
-from ..schema import (
-    CasillaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    PeriodSelector,
-    RegistryCatalogues,
-)
 from ..validate import (
     RegistryValidator,
-)
-from ..validate_cross_revision import (
-    declared_cross_revision_continuity_semantic_linkage_failures,
-    summarize_non_overlapping_cross_revision_casilla_drift,
-    validate_cross_revision_casilla_consistency,
 )
 from ..validate_registry_scope import validate_registry_scope
 from ._registry_schema_support import _committed_registry_tree

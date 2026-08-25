@@ -19,31 +19,31 @@ from datetime import date
 from pathlib import Path
 from typing import Protocol
 
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    RegistrySnapshot,
+    filing_period_from_scope,
+)
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ....core import (
     REVIEWED_REVISION_REVIEW_STATUSES,
     LegalReviewStatus,
     RegistryAuthorityGrade,
     RevisionReviewStatus,
 )
+from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
 from .legal import verify_legal_reference
 from .period_selector_match import registry_period_for_request
-from .schema import (
-    CasillaDefinition,
-    LegalReference,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistrySnapshot,
-    SourceReference,
-    filing_period_from_scope,
-)
 from .schema_references import governed_period_span
 from .temporal import select_revision
 from .validate import RegistryValidator
-from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
 from .validate_references import check_all_id_references
 from .validate_revision_identity import revision_reference_identity_failures
 

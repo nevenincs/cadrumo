@@ -24,28 +24,26 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ...core import CasillaId, Modelo
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.resources import resources
-from ...domain.identifiers import canonical_decimal_string
 from ...domain import filing as filing_domain
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
+from ...domain.calculations.registry.bindings import bound_casilla_binding_ids
+from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.schema import (
-    CasillaDefinition,
-    DataBindingDefinition,
-    RegistrySnapshot,
-)
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from ...domain.calculations.registry.errors import RegistrySnapshotError
-from ...domain.calculations.registry.bindings import bound_casilla_binding_ids
 from ...domain.deadlines import TaxpayerProfile
+from ...domain.identifiers import canonical_decimal_string
 from ...domain.modelos import (
     CalculationRevision,
     Modelo232VinculadaRow,

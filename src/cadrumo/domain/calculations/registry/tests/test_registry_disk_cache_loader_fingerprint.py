@@ -30,9 +30,16 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.domain.calculations.registry.loader import (
+    _collect_registry_tree_fingerprints,
+    _load_registry_tree_cached,
+    load_registry_tree,
+)
+from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+
 from .....core import AuthProviderKind, Modelo
-from .....core.directory_scan import scan_directory
 from .....core.config import override_settings
+from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
 from .._compiled_cache import (
     _CADRUMO_PACKAGE_DIR,
@@ -44,12 +51,6 @@ from .._compiled_cache import (
     _encode_frame,
     _registry_disk_cache_key,
     loader_code_fingerprint,
-)
-from ..loader import (
-    _collect_registry_tree_fingerprints,
-    _load_registry_tree_cached,
-    clear_fingerprint_cache,
-    load_registry_tree,
 )
 from ..schema import ModeloDefinition, RegistryCatalogues
 

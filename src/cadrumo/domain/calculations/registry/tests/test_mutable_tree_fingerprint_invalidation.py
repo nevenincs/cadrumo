@@ -29,20 +29,21 @@ from pathlib import Path
 
 import pytest
 
-from .....core.config import override_settings
-from .....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
-from ..loader import (
+from cadrumo.domain.calculations.registry.loader import (
     _collect_registry_directory_fingerprints,
     _collect_registry_tree_fingerprints,
     _collect_registry_tree_fingerprints_uncached,
     _load_registry_tree_cached,
     _registry_fingerprint_cache,
-    clear_fingerprint_cache,
     is_bundled_registry_root,
     load_registry_tree,
 )
+from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+
+from .....core.config import override_settings
+from .....core.resources import bundled_path
+from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 from ..loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 from ..verdict_cache import (
     certify_registry_validation,

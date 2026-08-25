@@ -34,6 +34,9 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
@@ -50,27 +53,22 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.json_contract import Notice
 from ...core.resources import bundled_path, resources
-from ...domain.calculations.registry.ids import (
-    BindingId,
-    RelationId,
-)
-from ...domain.calculations.registry.schema import (
-    CasillaDefinition,
-    DataBindingDefinition,
-    ModeloRevision,
-)
-from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     declared_casilla_ids,
 )
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.ids import (
+    BindingId,
+    RelationId,
+)
+from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema_scalars import (
     registry_scalar_value_type,
     validate_registry_text_scalar,
@@ -1097,8 +1095,8 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
         return None
 
     from cadrumo.application.workflow.persistence import workflow_state_repository
+    from cadrumo.domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 
-    from ...domain.calculations.registry.applicability import derive_modelo_202_modality
     from ..user_profile.projections import projection_for_taxpayer
 
     state = workflow_state_repository().load()

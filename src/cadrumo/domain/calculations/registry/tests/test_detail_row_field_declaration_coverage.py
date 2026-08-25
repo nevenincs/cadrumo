@@ -44,9 +44,18 @@ from typing import Final, cast, get_args
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.domain.calculations.registry.detail_record_bindings import (
+    AtributionMemberObservation,
+    Modelo720RowObservation,
+    RefundOperationObservation,
+    RelatedPartyOperationObservation,
+)
+from cadrumo.domain.calculations.registry.donativo_bindings import DonativoDonorObservation
+from cadrumo.domain.calculations.registry.invoice_bindings import InvoiceObservation
+from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+
 from .....core import Modelo
 from .....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import AtributionMemberObservation, DonativoDonorObservation, InvoiceObservation, Modelo720RowObservation, RefundOperationObservation, RelatedPartyOperationObservation, WithholdingObservation
 from ..detail_record_bindings import (
     _AtributionRowField,
     _ForeignAssetRowField,

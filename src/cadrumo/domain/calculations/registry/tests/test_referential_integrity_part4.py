@@ -6,30 +6,28 @@ from pathlib import Path
 
 import pytest
 
-from .....core import CasillaId, Period, validated_casilla_id
-from ..._export_field_kind import CasillaFieldKind
-from ..schema import (
-    FormulaDefinition,
-    FormulaExpression,
-    ModeloDefinition,
-    ModeloScheduleDefinition,
-)
-from ..schema_input_kind import InputKind
-from ..validate import RegistryValidator
-from ._referential_integrity_support import (
-    REFERENCE_LEGAL_ID,
-    REFERENCE_SOURCE_ID,
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import (
     ApplicationLinkDefinition,
     ConstructDefinition,
     DeadlineWindowDefinition,
     DependencyClassificationDefinition,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    ModeloScheduleDefinition,
+    RegistryCatalogues,
+)
+from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistryValidationError,
-    RelationDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+from cadrumo.domain.calculations.registry.tests._referential_integrity_support import (
+    REFERENCE_LEGAL_ID,
+    REFERENCE_SOURCE_ID,
     build_minimal_snapshot,
     build_snapshot_with_missing_legal,
     check_all_id_references,
@@ -42,6 +40,11 @@ from ._referential_integrity_support import (
     minimal_source_ref,
     snapshot_for_revision,
 )
+
+from .....core import CasillaId, Period, validated_casilla_id
+from ...export_field_kind import CasillaFieldKind
+from ..schema_input_kind import InputKind
+from ..validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

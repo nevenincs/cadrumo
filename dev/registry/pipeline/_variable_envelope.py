@@ -25,7 +25,14 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core import content_hash_hex
-from cadrumo.domain.calculations.registry.schema import (
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import (
+    ExportLayoutId,
+    RecordId,
+    RevisionId,
+)
+from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignAuxiliaryEnvelopeHeaderRole
+from cadrumo.domain.calculations.registry.schema_exports import (
     AuxiliaryEnvelopeHeaderDefinition,
     FilingEnvelopeCloserDerivation,
     FilingEnvelopeDefinition,
@@ -33,13 +40,6 @@ from cadrumo.domain.calculations.registry.schema import (
     FilingEnvelopePrefixRole,
     FilingEnvelopeTotalDerivation,
 )
-from cadrumo.domain.calculations.registry.ids import (
-    ExportLayoutId,
-    RecordId,
-    RevisionId,
-)
-from cadrumo.domain.calculations.registry.record_design import RecordDesignAuxiliaryEnvelopeHeaderRole
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ._record_design_ir import (
     RecordDesignIntermediateAuxiliaryEnvelopeHeader,

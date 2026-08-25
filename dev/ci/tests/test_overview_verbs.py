@@ -30,7 +30,7 @@ from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftReposi
 from cadrumo.application.operator_actions import ActionReference
 from cadrumo.core import CasillaId, Period, validated_casilla_id
 from cadrumo.core.json_contract import ResolvedNoticeAction
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing import (
     ModeloDraft,
     ModeloValue,

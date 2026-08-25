@@ -41,6 +41,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
+from cadrumo.application.workflow.engine import WorkflowEngine
+from cadrumo.application.workflow.persistence import WorkflowRunRepository
+from cadrumo.domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
+from cadrumo.domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
+
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -56,10 +61,6 @@ from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry.applicability import (
-    derive_modelo_202_modality,
-    derive_taxpayer_files_economic_activity,
-)
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevision,
@@ -75,14 +76,12 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..calculations import (
     CalculationObservationRepository,
     CrossPeriodExpectedMemberSet,
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
-from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from cadrumo.application.workflow.engine import WorkflowEngine
-from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,

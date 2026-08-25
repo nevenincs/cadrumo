@@ -23,6 +23,11 @@ from typing import ClassVar
 
 from pydantic import BaseModel, Field, InstanceOf, TypeAdapter, ValidationError, field_validator, model_validator
 
+from cadrumo.domain.calculations.registry.detail_record_bindings import (
+    Modelo720RowObservation,
+    resolve_foreign_asset_binding_row_values,
+)
+
 from ...core import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
     STRICT_FROZEN_CONFIG,
@@ -39,10 +44,6 @@ from ...core.identity import TransactionId
 from ...core.parsing import IsoDateString, require_iso8601_date
 from ...domain.calculations import RowSourceIdentity
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
-from ...domain.calculations.registry.bindings import (
-    Modelo720RowObservation,
-    resolve_foreign_asset_binding_row_values,
-)
 from .._foreign_asset_thresholds import (
     ForeignAssetDeclarationThreshold,
     foreign_asset_declaration_thresholds,

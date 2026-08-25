@@ -31,9 +31,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core.resources import resources
+from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement, relation_source_requirements
-from cadrumo.domain.calculations.registry.bindings import previous_filing_observation_requirements
+
+from ....core.resources import resources
 from .._binding_prefill import PrefilledBinding, _prefilled_bindings
 from .._relation_prefill import _relation_value_grounding
 

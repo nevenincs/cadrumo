@@ -6,11 +6,13 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import FormulaDefinition, FormulaExpression, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from ..errors import CalcSheetsEngineError
+
+from .....core.resources import resources
 from .._layout import plan_layout
+from ..errors import CalcSheetsEngineError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

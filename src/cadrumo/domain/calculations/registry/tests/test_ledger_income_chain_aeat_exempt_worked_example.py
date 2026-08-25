@@ -79,6 +79,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ledger_bindings import (
+    resolve_ledger_renta_income_aggregation_binding_values,
+    ungrounded_ledger_renta_income_observations,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.snapshot import build_snapshot
+
 from .....application.aggregation import aggregate_renta_m100_income_ledger
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.aggregation import LedgerIncomeGrounding
@@ -94,9 +101,6 @@ from ....transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-from cadrumo.domain.calculations.registry.bindings import resolve_ledger_renta_income_aggregation_binding_values, ungrounded_ledger_renta_income_observations
 from ..schema_input_kind import InputKind
 from ._registry_schema_support import _committed_modelo
 from ._scenarios import (

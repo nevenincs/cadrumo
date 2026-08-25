@@ -13,14 +13,15 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core import ExportLayoutFormat
-from ..._export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from ..schema import (
+from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
+
+from .....core import ExportLayoutFormat
+from ...export_field_kind import CasillaFieldKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

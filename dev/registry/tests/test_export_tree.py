@@ -19,17 +19,15 @@ from cadrumo.core.directory_scan import (
     scan_directory,
 )
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry.schema import (
-    CasillaFieldKind,
-    ProjectionEndpointDeclaration,
-)
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import (
     RegistryError,
     RegistryValidationError,
 )
+from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
 
 from ..pipeline import _export_tree
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree

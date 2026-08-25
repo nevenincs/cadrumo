@@ -8,7 +8,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200020b.f0092"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01159"
 number = "01159"
@@ -19,7 +18,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200020b.f0093"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01160"
 number = "01160"
@@ -30,7 +28,6 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200020b.f0094"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01161"
 number = "01161"
@@ -41,4 +38,3 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-export_refs = ["m200-2025.dp200020b.f0095"]

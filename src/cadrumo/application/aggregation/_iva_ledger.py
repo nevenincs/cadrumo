@@ -45,6 +45,12 @@ from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
+from cadrumo.domain.calculations.registry.ledger_bindings import (
+    IvaLedgerObservation,
+    resolve_ledger_iva_aggregation_binding_values,
+    unsupported_ledger_iva_observations,
+)
+
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
@@ -61,11 +67,6 @@ from ...core.identity import TransactionId
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
     validate_investment_asset_reciprocity,
-)
-from ...domain.calculations.registry.bindings import (
-    IvaLedgerObservation,
-    resolve_ledger_iva_aggregation_binding_values,
-    unsupported_ledger_iva_observations,
 )
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -103,8 +104,8 @@ from ...domain.transactions import (
 )
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
-from .errors import AggregationValidationError, t
 from ._invoice_kind import invoice_kind_for_direction
+from .errors import AggregationValidationError, t
 
 _LedgerId = Annotated[
     str,

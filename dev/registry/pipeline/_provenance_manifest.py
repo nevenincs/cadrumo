@@ -15,19 +15,16 @@ from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.atomic_write import atomic_write_publish_once_bytes
+from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
-from cadrumo.domain.calculations.registry.schema import (
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
     RevisionId,
     SourceRefId,
 )
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
 from ._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,

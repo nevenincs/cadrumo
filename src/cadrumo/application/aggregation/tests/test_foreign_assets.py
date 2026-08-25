@@ -8,11 +8,13 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.detail_record_bindings import resolve_foreign_asset_binding_row_values
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+
 from ....core import BindingSourceKind, ForeignAssetObligationGroup, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
-from cadrumo.domain.calculations.registry.bindings import resolve_foreign_asset_binding_row_values
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from .._foreign_assets import (
     ForeignAssetClass,

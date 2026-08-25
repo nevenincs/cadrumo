@@ -19,13 +19,14 @@ from types import SimpleNamespace
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_verification import ProfilePredicateDefinition
+
 from ..errors import RegistryValidationError
 from ..schedules import (
     _resolve_profile_fact,
     evaluate_profile_conditions,
     profile_condition_matches,
 )
-from ..schema import ProfilePredicateDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -10,6 +10,20 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.schema import (
+    DataBindingDefinition,
+    ModeloRevision,
+    RegistryModel,
+    RegistrySnapshot,
+)
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ....core import (
     CasillaId,
     EstadoCasillaOficial,
@@ -32,17 +46,6 @@ from .errors import RegistryValidationError
 from .export_parse import xml_dictionary_entries
 from .fixed_width_codec import ExportJustification, ExportPadding
 from .ids import ExportFieldId
-from .schema import (
-    CasillaFieldKind,
-    DataBindingDefinition,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    ModeloRevision,
-    RegistryModel,
-    RegistrySnapshot,
-    SourceReference,
-)
 
 _BindingExportMember = tuple[DataBindingDefinition, BindingExportSelector]
 

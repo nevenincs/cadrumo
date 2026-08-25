@@ -19,8 +19,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
+
 from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ExtractionProfileDefinition
 from .....tests import FIXTURES_DIR
 from .....tests.fixtures.external_layout_candidates import (
     external_layout_source_class_is_non_authoritative,

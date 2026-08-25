@@ -19,9 +19,11 @@ from __future__ import annotations
 
 from graphlib import TopologicalSorter
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+
 from ....core import CasillaId
 from .ids import BindingId, ParameterId, RelationId
-from .schema import FormulaExpression, ModeloRevision
 
 # These walkers are pure O(expression-node) traversals and intentionally
 # carry NO memoization. A prior implementation keyed a module-global cache

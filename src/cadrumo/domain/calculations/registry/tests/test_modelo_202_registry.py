@@ -8,11 +8,13 @@ from functools import lru_cache
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+
 from .....core import CasillaId
 from .....core.resources import bundled_path
 from ..formula_runtime import _evaluate_expression
 from ..legal import verify_legal_catalogue
-from ..schema import FormulaExpression, ModeloDefinition, RegistryCatalogues
 from ..snapshot import build_snapshot
 from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo

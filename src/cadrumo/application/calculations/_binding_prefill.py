@@ -45,33 +45,32 @@ from typing import Final
 
 from pydantic import BaseModel, TypeAdapter
 
+from cadrumo.domain.calculations.registry.bindings import (
+    CasillaObservation,
+    RegistryModeloObservation,
+    binding_source_casilla_ids,
+)
+from cadrumo.domain.calculations.registry.bindings_previous_filing import (
+    previous_filing_observation_requirements,
+    resolve_previous_filing_binding_values,
+)
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ...core import STR_KEYED_MAPPING_ADAPTER, BindingSourceKind, CasillaId, Modelo, Period
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.resources import bundled_path
 from ...core.time import now
-from ...domain.calculations.registry.iva_wallet_relation_targets import MODELO_303_IVA_COMPENSATION_BINDING_ID
 from ...domain.calculations.registry.ids import (
     BindingId,
     RevisionId,
 )
-from ...domain.calculations.registry.schema import (
-    CasillaDefinition,
-    FormulaDefinition,
-    RegistrySnapshot,
-)
-from ...domain.calculations.registry.bindings import (
-    CasillaObservation,
-    RegistryModeloObservation,
-    binding_source_casilla_ids,
-    previous_filing_observation_requirements,
-    resolve_previous_filing_binding_values,
-)
+from ...domain.calculations.registry.iva_wallet_relation_targets import MODELO_303_IVA_COMPENSATION_BINDING_ID
+from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.relations import RegistryFoldRequirement
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
-from .errors import BindingPrefillTypeError
 from ._iva_compensation_casillas import (
     M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
 )
@@ -97,6 +96,7 @@ from ._iva_compensation_history import IvaCompensationHistoryRepository
 from ._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from ._revision_carry_gate import revision_carry_outcome
+from .errors import BindingPrefillTypeError
 
 _STRING_SEQUENCE = TypeAdapter(tuple[str, ...])
 

@@ -21,11 +21,12 @@ from datetime import date
 from pathlib import Path
 from typing import Final
 
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ....core.hashing import hash_file
 from ....core.resources import resolve_companion_binary
 from .errors import RegistryValidationError
 from .legal import _PROVISION_SUFFIXED_FILENAME
-from .schema import SourceReference
 from .static_inspection import GeneratedArtifactSource
 
 #: The one corpus tree carrying the excerpt/full-text duality

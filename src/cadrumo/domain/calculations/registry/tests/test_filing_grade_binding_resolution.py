@@ -18,6 +18,10 @@ from dataclasses import dataclass
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import selector_model_for_source
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+
 from .....application.aggregation import BindingSourceDisposition
 from .....application.filing import _binding_provenance
 from .....application.modelo._calculation_actions import assert_no_novel_source_kinds
@@ -32,8 +36,6 @@ from .....application.registry import (
 )
 from .....core import BindingSourceKind, RegistryAuthorityGrade
 from .....domain.filing import ModeloBuilderError
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision, PeriodSelector
-from cadrumo.domain.calculations.registry.bindings import selector_model_for_source
 from ..authority import bundled_authority
 from ..bindings import validate_binding_selector_shape
 

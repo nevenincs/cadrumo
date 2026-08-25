@@ -40,11 +40,15 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_extraction import (
+    ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
+)
+
 from .....core import validated_casilla_id
 from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ExtractionProfileDefinition, ExtractionTargetDefinition
-from ..errors import DeclaracionParseError
 from .._parser import _numeric_casilla_anchors
+from ..errors import DeclaracionParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

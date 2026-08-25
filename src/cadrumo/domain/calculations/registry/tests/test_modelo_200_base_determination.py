@@ -35,9 +35,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
-from ..schema import InputKind
 from ._registry_schema_support import _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

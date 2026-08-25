@@ -45,8 +45,9 @@ from ...domain.modelos import (
 )
 
 if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
+
     from ...core import CasillaId
-    from ...domain.calculations.registry.schema import ParameterDefinition
 
 _ZERO = Decimal("0")
 

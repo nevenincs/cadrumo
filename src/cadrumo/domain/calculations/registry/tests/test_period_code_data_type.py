@@ -15,8 +15,10 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from cadrumo.domain.calculations.registry.schema import PeriodCode, _validate_period_code
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ..errors import RegistryValidationError
-from ..schema import CasillaDefinition, PeriodCode, _validate_period_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

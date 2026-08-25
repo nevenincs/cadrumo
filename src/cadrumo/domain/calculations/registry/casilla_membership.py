@@ -20,9 +20,11 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ....core import CasillaId
 from .errors import RegistryValidationError
-from .schema import CasillaDefinition, ModeloRevision
 
 
 def duplicate_casilla_ids(casilla_ids: Iterable[CasillaId]) -> tuple[CasillaId, ...]:

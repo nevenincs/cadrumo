@@ -6,14 +6,15 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.deadline_coordinate import deadline_semantic_coordinate
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+
 from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.deadline_coordinate import deadline_semantic_coordinate
-from cadrumo.domain.calculations.registry.temporal import select_revision
 from ..snapshot import build_snapshot
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
@@ -311,12 +312,16 @@ def test_modelo_322_declares_iva_aggregation_bindings_for_all_three_flow_directi
 def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
     from decimal import Decimal
 
+    from cadrumo.domain.calculations.registry.ledger_bindings import (
+        IvaLedgerObservation,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
+
     from ....iva import (
         IvaCategory,
         IvaFlowDirection,
         IvaRateKind,
     )
-    from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 
     modelo, _ = _load_modelo_322()
     revision = modelo.revisions["2008-2022"]

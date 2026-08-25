@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+
 from ...core import Modelo, Period
-from ...domain.calculations.registry.schema import (
-    ExportLayoutDefinition,
-    RegistrySnapshot,
-)
 from ._producer_snapshot import (
     FilingProducerSnapshot,
     M303FilingFacts,

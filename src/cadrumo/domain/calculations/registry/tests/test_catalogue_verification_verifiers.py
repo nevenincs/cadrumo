@@ -11,14 +11,16 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues, SourceCitation
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
 from .....core.config import Settings
 from .._citation_blocklist import KnownBadCitation, _fold_diacritics, find_known_bad, known_bad_citations
+from .._validate_evidence import EvidenceValidator
 from ..corpus_catalogue import verify_source_catalogue, verify_source_file
 from ..errors import RegistryValidationError
 from ..legal import assert_legal_ref_ids_resolve, verify_legal_catalogue
-from ..schema import LegalReference, RegistryCatalogues, SourceCitation, SourceReference
 from ..validate import RegistryValidator
-from .._validate_evidence import EvidenceValidator
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

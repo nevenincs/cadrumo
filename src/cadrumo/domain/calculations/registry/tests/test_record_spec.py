@@ -9,9 +9,14 @@ from __future__ import annotations
 
 import pytest
 
-from ..._export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+)
+
+from ...export_field_kind import CasillaFieldKind
 from ..record_spec import ENCODING_ALIAS_MAP
-from ..schema import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

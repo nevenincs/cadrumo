@@ -20,8 +20,16 @@ from typing import Annotated
 
 from pydantic import Field
 
+from cadrumo.application.workflow.run_models import (
+    SiteHealthAlert,
+    WorkflowObligationFacts,
+    WorkflowStage,
+    WorkflowStepDetails,
+)
+from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
+from cadrumo.domain.calculations.registry.query_reports import ModeloDescribeReport
+
 from ...application.evidence import BundleVerificationState
-from cadrumo.application.workflow.run_models import SiteHealthAlert, WorkflowObligationFacts, WorkflowStage, WorkflowStepDetails
 from ...core import Hex64Str, Period
 from ...core.aggregation import RetencionClave
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, FilingRecordId, WorkUnitId
@@ -32,8 +40,6 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
-from cadrumo.domain.calculations.registry.queries import ModeloDescribeReport
 from ._decimal_wire import NonNegativeDecimalWireText
 
 

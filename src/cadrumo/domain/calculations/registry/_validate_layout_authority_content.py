@@ -70,9 +70,10 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import resolve_companion_binary
-from .schema import SourceReference
 
 #: The norm-text tree whose files are prose an author can under-transcribe. A
 #: layout artefact outside it is the layout itself and is not scanned.

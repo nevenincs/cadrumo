@@ -13,7 +13,7 @@ See Also:
         Test loader for the committed registry definitions and legal catalogues.
     :class:`~domain.calculations.registry._validate.RegistryValidator`
         Registry validator that checks the authored legal/source references.
-    :func:`~domain.calculations.registry._authority.bundled_authority`
+    :func:`~domain.calculations.registry.authority.bundled_authority`
         Authority facade used to resolve the annual windows and windowless cases.
     :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
         Canonical fleet membership these five informativas extend.

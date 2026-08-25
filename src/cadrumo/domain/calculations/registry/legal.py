@@ -8,6 +8,8 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Final
 
+from cadrumo.domain.calculations.registry.schema_references import LegalReference
+
 from ....core import (
     REVIEWED_LEGAL_STATUSES,
     CorpusAnchorResolutionError,
@@ -18,7 +20,6 @@ from ....core import (
 )
 from ._citation_blocklist import CitationSource, find_known_bad
 from .errors import RegistryValidationError
-from .schema import LegalReference
 
 _SOURCE_BY_KIND: dict[str, CitationSource] = {
     "ley": "ley",

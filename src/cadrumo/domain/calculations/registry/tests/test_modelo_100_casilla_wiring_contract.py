@@ -5,7 +5,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from ..schema import RelationDefinition
+from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
+
 from ..schema_input_kind import InputKind
 from ._modelo_100_registry_support import _loaded_registry, _registry_validator
 

@@ -56,6 +56,8 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
+from cadrumo.domain.calculations.registry.schema_scalars import WorkbookCellRefStr
+
 from ....core import CasillaId
 from .aeat_hosts import first_aeat_host
 from .errors import RegistryValidationError
@@ -69,7 +71,7 @@ from .ids import (
     WorkbookParityRefId,
 )
 from .schema_base import EvidenceTier, LegalRefs, RegistryModel, SourceRefs
-from .schema_scalars import DecimalValue, WorkbookCellRefStr
+from .schema_scalars import DecimalValue
 
 __all__ = [
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
@@ -141,6 +143,8 @@ def _validate_authenticated_simulator_authentication(
 
 
 class ProfilePredicateDefinition(RegistryModel):
+    """Declare one profile condition that controls verification applicability."""
+
     field: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_.-]*$")
     op: Literal["equals", "not_equals"]
     value: ProfileFactValue
@@ -150,6 +154,8 @@ class ProfilePredicateDefinition(RegistryModel):
 
 
 class LiveCrossReferenceDecision(RegistryModel):
+    """Declare a resolved live cross-reference and its supporting evidence."""
+
     id: CrossReferenceId
     evidence_tier: EvidenceTier
     surface: Literal[
@@ -324,6 +330,8 @@ class LiveCrossReferenceDecision(RegistryModel):
 
 
 class WorkbookParityReference(RegistryModel):
+    """Declare the workbook evidence used for an executable parity check."""
+
     id: WorkbookParityRefId
     workbook_source: SourceRefId
     fixture_id: WorkbookFixtureId
@@ -409,6 +417,8 @@ DiscrepancyCauseValue = Annotated[
 
 
 class VerificationExpectationDefinition(RegistryModel):
+    """Declare one expected relationship between calculated and filed casillas."""
+
     id: VerificationExpectationId
     computed_casilla_ids: tuple[CasillaId, ...]
     reconcile_when_present_casilla_ids: tuple[CasillaId, ...] = ()

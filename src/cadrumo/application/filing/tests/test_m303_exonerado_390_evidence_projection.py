@@ -6,6 +6,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ....core import (
     M303Exonerado390ActivityField,
     M303Exonerado390ActivityProjectionRef,
@@ -14,8 +18,6 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot, SourceReference
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing import FilingExportError
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision

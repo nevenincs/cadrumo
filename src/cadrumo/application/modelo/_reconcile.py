@@ -89,9 +89,10 @@ _MAX_PAYLOAD_VALUE_LENGTH = 500
 _REFERENCE_ELISION = "..."
 
 if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
     from ...adapters.inbound.declaracion import InboundDeclaracionObservation
     from ...core import Period
-    from ...domain.calculations.registry.schema import CasillaDefinition
     from ...domain.justificante import Justificante
     from ...domain.modelos import CalculationRevision, WorkUnit, WorkUnitCatalogue
 

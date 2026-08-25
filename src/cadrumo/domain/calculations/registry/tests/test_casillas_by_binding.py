@@ -23,11 +23,14 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.bindings import bound_casilla_binding_ids, casillas_by_binding
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from .....core import validated_casilla_id
 from .....core.aggregation import BindingSourceKind
-from cadrumo.domain.calculations.registry.schema import CasillaDefinition, ModeloRevision, PeriodSelector
-from cadrumo.domain.calculations.registry.bindings import bound_casilla_binding_ids, casillas_by_binding
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

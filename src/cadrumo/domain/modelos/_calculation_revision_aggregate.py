@@ -6,9 +6,11 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_references import SourceReference
+
 from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.identity import SubjectTaxId
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot, SourceReference
 from ..justificante import Justificante
 from ._calculation_revision import CalculationRevision
 from ._calculation_revision_amendment import (
@@ -18,9 +20,9 @@ from ._calculation_revision_amendment import (
     m303_rectificativa_motive_is_applicable,
 )
 from ._calculation_revision_m303_handoff import M303FilingInstanceEvidence
-from .errors import ModeloValidationError
 from ._filing_record import ModeloRecordCatalogue, is_justificante_backed_external_evidence
 from ._work_unit import WorkUnit, WorkUnitCatalogue
+from .errors import ModeloValidationError
 
 CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY = "calculation_revision_aggregate_context"
 

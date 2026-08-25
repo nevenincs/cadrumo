@@ -44,6 +44,8 @@ from typing import ClassVar, Final
 
 from pydantic import BaseModel
 
+from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import (
     STRICT_FROZEN_CONFIG,
@@ -63,12 +65,11 @@ from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
 )
-from ...domain.calculations.registry.bindings import IvaLedgerObservation
+from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva import (
     IvaCategory,

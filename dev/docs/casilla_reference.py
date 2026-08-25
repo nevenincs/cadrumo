@@ -71,7 +71,8 @@ from .terminology._casilla_anchor import CASILLA_REFERENCE_DIR, casilla_page_anc
 if TYPE_CHECKING:
     from cadrumo.core.external_constants import OutputLanguage
     from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-    from cadrumo.domain.calculations.registry.schema import CasillaConstraints, CasillaDefinition, FormulaDefinition, ModeloDefinition
+    from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloDefinition
+    from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
 
     from .legal_reference import LegalProvisionRecord
 
@@ -297,8 +298,9 @@ def display_locale_keys() -> tuple[str, ...]:
     from typing import get_args
 
     from cadrumo.core import BindingSourceKind
-    from cadrumo.domain.calculations.registry.schema import CasillaConstraints, CasillaDefinition, ModeloDefinition
+    from cadrumo.domain.calculations.registry.schema import ModeloDefinition
     from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+    from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
 
     from .legal_reference import load_legal_provisions
 

@@ -31,11 +31,13 @@ from ._m210_snapshot_fixture import m210_snapshot
 
 __all__ = ["m210_snapshot"]
 
-from ....core import ConvenioOverrideKind, TipoRentaIrnr
 from cadrumo.domain.calculations.registry.convenio import ConvenioAuthority
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome, RegistryUnresolvedOutcomeReason
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
+from cadrumo.domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
+from ....core import ConvenioOverrideKind, TipoRentaIrnr
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import ModeloVerificationFindingKind
 from .._action_errors import ModeloApplicabilityFilterError

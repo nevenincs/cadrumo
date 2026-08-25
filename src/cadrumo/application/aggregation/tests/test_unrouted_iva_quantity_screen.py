@@ -24,13 +24,18 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ledger_bindings import (
+    IvaLedgerObservation,
+    unrouted_ledger_iva_quantities,
+    unsupported_ledger_iva_observations,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation, unrouted_ledger_iva_quantities, unsupported_ledger_iva_observations
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva import (
     InvoiceKind,
     IvaCashAccountingTreatment,

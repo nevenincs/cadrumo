@@ -8,9 +8,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+
 from ....core import Period, ProrrataEspecialTransitionKind, ProrrataRegisterRegime, SectorDiferenciadoLetra
 from ....core.resources import bundled_path
-from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
 from ....domain.iva import (
     IvaCashAccountingTreatment,
     IvaCategory,

@@ -14,12 +14,13 @@ from itertools import pairwise
 
 import pytest
 
+from cadrumo.core.aggregation import BindingAggregationOp
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregation
 from .....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import BindingAggregationOp
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from .. import collect_row_sets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

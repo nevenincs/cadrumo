@@ -61,7 +61,8 @@ from ._flow import (
 from ._schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
+    from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+
     from ..invoices import IvaRate
 else:
     IvaRate = object
@@ -275,7 +276,8 @@ def invoice_line_to_iva_observation(
             statute did not offer that day, so it is refused rather than
             recorded at whatever the tier happened to mean.
     """
-    from cadrumo.domain.calculations.registry.bindings import IvaLedgerObservation
+    from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
+
     from ..invoices import iva_rate_percentage
 
     classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=invoice_kind)
