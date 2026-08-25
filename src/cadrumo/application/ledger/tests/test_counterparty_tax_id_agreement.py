@@ -22,6 +22,7 @@ import pytest
 
 from ..evidence import PurchaseInvoiceEvidenceInputError
 from ..evidence_draft import _agreed_counterparty_tax_id
+from ..preconditions import LedgerPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -53,8 +54,8 @@ def test_a_disagreement_refuses() -> None:
         _agreed_counterparty_tax_id(supplied=_OTHER_VALID, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
 
 
-def test_the_refusal_names_the_field_and_prints_neither_value() -> None:
-    """A tax identity must not reach a pasteable artefact to say "mismatch".
+def test_the_refusal_carries_the_tax_id_fact_without_printing_either_value() -> None:
+    """A mismatch remains typed and never puts either tax id into output.
 
     The operator already knows the value they typed, so printing either side
     buys nothing and puts an identity into output that may be pasted into an
@@ -63,8 +64,13 @@ def test_the_refusal_names_the_field_and_prints_neither_value() -> None:
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as refusal:
         _agreed_counterparty_tax_id(supplied=_OTHER_VALID, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
 
+    verdict = refusal.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_COUNTERPARTY_VALID.value
+    fact_values = [evidence.values for evidence in verdict.evidence]
+    assert any(values.get("counterparty_tax_id_matches_document") is False for values in fact_values)
+
     message = str(refusal.value)
-    assert "counterparty_tax_id" in message
     assert _EXTRACTED not in message
     assert _OTHER_VALID not in message
 

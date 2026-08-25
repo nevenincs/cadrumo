@@ -35,7 +35,11 @@ def test_neither_side_stating_a_name_refuses() -> None:
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as refusal:
         _confirmed_counterparty_name(None, None)
 
-    assert "counterparty" in str(refusal.value).lower()
+    verdict = refusal.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE.value
+    fact_values = [evidence.values for evidence in verdict.evidence]
+    assert any(values.get("counterparty_name_available") is False for values in fact_values)
 
 
 def test_the_refusal_carries_the_typed_precondition_rather_than_prose_alone() -> None:
