@@ -72,4 +72,3 @@ real position gap from 102 to 103, so attaching it to the sole open-ended
 layout would overstate coverage. Modelo 270's 2013 BOE annex establishes the
 historical era, but the corpus currently has no canonical generic BOE-PDF
 acquisition route; the current 2023 AEAT design must not be backdated.
-
