@@ -34,66 +34,15 @@
           "before": {
             "active_profile": "docs-sequence-sandbox",
             "missing_required": [],
-            "precondition_action": {
-              "action": {
-                "action_id": "operator.profile.repair_active_pointer",
-                "cli_path": [
-                  "config",
-                  "repair",
-                  "profile"
-                ],
-                "target_command_key": "config.repair.profile"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "clear_active",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "clear_active",
-                  "status": "resolved",
-                  "value": true
-                },
-                {
-                  "argument_name": "yes",
-                  "source": null,
-                  "source_evidence_id": null,
-                  "source_key": null,
-                  "status": "missing",
-                  "value": null
-                }
-              ],
-              "conditionality": "requires_arguments",
-              "evidence": [
-                {
-                  "condition_id": "profile.active.record_readable",
-                  "evidence_id": "profile.active.record.readability",
-                  "provenance": "application_state",
-                  "values": {
-                    "health_status": "profile_record_unreadable",
-                    "profile_present_keys": 0,
-                    "profile_record_present": false,
-                    "profile_source": "pointer",
-                    "profile_total_keys": 0,
-                    "registered_bucket": true,
-                    "repairable_by_clearing_pointer": true,
-                    "required_fields_missing_count": 0
-                  }
-                }
-              ],
-              "failed_condition_id": "profile.active.record_readable",
-              "missing_argument_names": [
-                "yes"
-              ],
-              "no_recovery_outcome": null
-            },
-            "profile_present_keys": 0,
-            "profile_record_error": "StorageValidationError: errors.storage.runtime.not_ready",
-            "profile_record_present": false,
+            "precondition_action": null,
+            "profile_present_keys": 12,
+            "profile_record_error": "",
+            "profile_record_present": true,
             "profile_total_keys": 80,
             "registered_bucket": true,
-            "repairable_by_clearing_pointer": true,
-            "source": "pointer",
-            "status": "profile_record_unreadable"
+            "repairable_by_clearing_pointer": false,
+            "source": "env_override",
+            "status": "ready"
           },
           "bucket_id": null,
           "cleared_pointer": false,
@@ -104,6 +53,7 @@
           "profile_id": null,
           "profile_record_present": null,
           "registered_bucket": null,
+          "setup_state": null,
           "status": null
         },
         "schema_version": "2",

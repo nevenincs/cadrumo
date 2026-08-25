@@ -1,3 +1,4 @@
+:seed: iva-year-2025
 @setup aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
 @step Supply reviewed 303-derived values explicitly when the calculation lacks them.
 @result aeat --format json app modelo work calculate --modelo 390 --year 2025 --period 0A --binding modelo-390-prev-303-cuota-devengada-total=1470.00 --binding modelo-390-prev-303-cuota-deducible-total=105.00 --binding modelo-390-prev-303-resultado-regimen-general=1365.00

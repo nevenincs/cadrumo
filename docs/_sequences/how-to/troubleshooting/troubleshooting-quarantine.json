@@ -14,7 +14,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "dry_run\ttrue\nwould_quarantine\t0\nwould_retain\t3\n"
+      "text": "dry_run\ttrue\nwould_quarantine\t0\nwould_retain\t2\n"
     },
     {
       "argv": [
@@ -43,15 +43,10 @@
               "namespace": "cadrumo.domain.buckets.event_history",
               "readable": 1,
               "unreadable": 0
-            },
-            {
-              "namespace": "cadrumo.workflow",
-              "readable": 1,
-              "unreadable": 0
             }
           ],
           "quarantined": null,
-          "readable_total": 3,
+          "readable_total": 2,
           "reason": null,
           "retained": null,
           "unreadable_total": 0

@@ -1,3 +1,4 @@
+:seed: iva-year-2025
 @setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2025-01-01
 @setup aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
 @setup aeat --format json app modelo work calculate --modelo 390 --year 2025 --period 0A
