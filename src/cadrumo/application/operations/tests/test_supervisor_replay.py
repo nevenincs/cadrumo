@@ -9,10 +9,19 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from cadrumo.application.operations.capabilities import (
+from ....adapters.persistence.operations.journal import OperationJournalRepository
+from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.operations import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+)
+from ....tests.secure_sql import isolated_runtime_profile
+from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
@@ -20,10 +29,11 @@ from cadrumo.application.operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.persistence.journal import OperationSecureReferenceStore
-from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
+from ..models import OperationRequest
+from ..owner import OperationExecutorContext
+from ..persistence.journal import OperationSecureReferenceStore
+from ..persistence.replay import OperationReplayStatus
+from ..registry import (
     OperationDefinition,
     OperationExecutorFactory,
     OperationFrontendProjection,
@@ -32,17 +42,6 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
-from cadrumo.core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-)
-
-from ....core import STRICT_FROZEN_CONFIG
-from ....tests.secure_sql import isolated_runtime_profile
-from ..owner import OperationExecutorContext
 from ..supervisor import OperationSupervisor
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
