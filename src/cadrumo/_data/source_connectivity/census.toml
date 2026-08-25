@@ -301,7 +301,7 @@ completion_criterion = "Keep ingress_blocked until the review condition is satis
 candidate_id = "rows.gasto193-contributor"
 disposition = "ingress_blocked"
 owner = "source-connectivity-campaign"
-review_condition = "Modelo 193 declares contributor row bindings and the worksheet pull has a typed assembler, but assembled observations have no durable source repository and calculation-revision handoff owned by a live resolver."
+review_condition = "Modelo 193 contributor bindings declare gasto193_contributor and direct manual gasto casillas remain available, but the worksheet assembler is only a partial carrier with synthetic identity. Reopen only when a secure owner retains non-synthetic durable contributor and representative identity/fingerprint and capture provenance, a resolver aligns exactly to gasto193_contributor, and diagnostics, provenance, encrypted revision persistence/replay, review, and supported repeated-record export are proven across both scoped revisions. The separate withholding repository is not a contributor-expense owner."
 expires_on = 2026-12-31
 capability_locators = [
   "src/cadrumo/application/calculations/_row_set_assembly.py:178",
@@ -326,7 +326,7 @@ summary = "Worksheet rows dispatch to the typed gasto-contributor observation as
 [entries.bounded_follow_up]
 action_id = "source-casilla.rows-gasto193-ingress"
 deadline = 2026-11-30
-completion_criterion = "A bounded slice persists assembled contributor observations securely and proves resolver ownership, diagnostics, provenance, encrypted revision round trip, and operator reachability."
+completion_criterion = "Keep ingress_blocked until a secure non-lossy contributor carrier has durable contributor and representative identity/fingerprint and capture provenance, resolves exactly gasto193_contributor, and proves resolver ownership, diagnostics, provenance, encrypted revision replay, review, and supported repeated-record export across both scoped revisions."
 
 [[entries]]
 candidate_id = "rows.withholding296"
