@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:74cf71ebec52fa609b9a96cdb8d16954947229a78ccfc4e3724f1c45a06df56a'
+body_hash: 'sha256:e743e9846f8d8183f082d10c34bcc0e77689039ca5890f2e8cb70c10470529d1'
 related:
   - '[[2026-08-13-profile-password-custody-W01-P01-S01]]'
   - '[[2026-08-13-profile-password-custody-W01-P01-S02]]'
@@ -253,6 +253,7 @@ related:
   - '[[2026-08-13-profile-password-custody-W06-P12-S249]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S250]]'
   - '[[2026-08-13-profile-password-custody-W06-P12-S251]]'
+  - '[[2026-08-13-profile-password-custody-W06-P12-S252]]'
   - '[[2026-08-13-profile-password-custody-plan]]'
   - '[[2026-08-13-profile-password-custody-research]]'
   - '[[2026-08-13-profile-password-custody-rollup-adr]]'
@@ -311,6 +312,7 @@ related:
   - '[[2026-08-24-profile-password-custody-s249-provisioning-sequence-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s250-operation-composition-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s251-filing-spine-cumulative-state-audit]]'
+  - '[[2026-08-25-profile-password-custody-s252-registry-documentation-authority-review-audit]]'
 ---
 
 # `profile-password-custody` feature index
@@ -380,6 +382,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-24-profile-password-custody-s249-provisioning-sequence-review-audit` - `profile-password-custody` audit: `S249 provisioning sequence review`
 - `2026-08-25-profile-password-custody-s250-operation-composition-review-audit` - `profile-password-custody` audit: `S250 operation composition review`
 - `2026-08-25-profile-password-custody-s251-filing-spine-cumulative-state-audit` - `profile-password-custody` audit: `S251 filing-spine cumulative-state formal review`
+- `2026-08-25-profile-password-custody-s252-registry-documentation-authority-review-audit` - `profile-password-custody` audit: `s252 registry documentation authority review`
 
 ### exec
 
@@ -628,6 +631,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-13-profile-password-custody-W06-P12-S249` - Reconcile profile and recovery provisioning sequences on check-aeat-notifications, quickstart, profile-setup, and troubleshooting with mandatory creation channels and current status/list composition
 - `2026-08-13-profile-password-custody-W06-P12-S250` - Restore or truthfully re-document operation composition projections on classify-with-llm, import-bank-statements, Modelo 390, and troubleshooting before regenerating their sequences
 - `2026-08-13-profile-password-custody-W06-P12-S251` - Repair filing-spine cumulative state so reused seed identity resolves the latest draft target and its documentation sequence proves the intended state transition
+- `2026-08-13-profile-password-custody-W06-P12-S252` - Adjudicate registry, revision, readiness, lifecycle, and modelo page contracts across the twelve residual registry-backed documentation pages against current authority
 
 ### plan
 

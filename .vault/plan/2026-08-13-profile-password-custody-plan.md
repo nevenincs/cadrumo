@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-25'
-body_hash: 'sha256:50a9eaa3b8a5f2af69b7900f76338d7a183b528cd7fa215f4a18e1e245fda4f5'
+body_hash: 'sha256:3d03e9a911dd41fe5314fb98396b2b05bb12e193adcd096d103938b1df5f0975'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -360,7 +360,7 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [x] `W06.P12.S249` - Reconcile profile and recovery provisioning sequences on check-aeat-notifications, quickstart, profile-setup, and troubleshooting with mandatory creation channels and current status/list composition; `docs/_sequences/contracts/ and docs/quickstart.md and docs/how-to/profile-setup.md and docs/troubleshooting.md`.
 - [x] `W06.P12.S250` - Restore or truthfully re-document operation composition projections on classify-with-llm, import-bank-statements, Modelo 390, and troubleshooting before regenerating their sequences; `docs/_sequences/contracts/ and src/cadrumo/application/operations/`.
 - [x] `W06.P12.S251` - Repair filing-spine cumulative state so reused seed identity resolves the latest draft target and its documentation sequence proves the intended state transition; `docs/_sequences/contracts/filing-spine/ and src/cadrumo/application/`.
-- [ ] `W06.P12.S252` - Adjudicate registry, revision, readiness, lifecycle, and modelo page contracts across the twelve residual registry-backed documentation pages against current authority; `docs/_sequences/contracts/ and docs/how-to/ and docs/reference/`.
+- [x] `W06.P12.S252` - Adjudicate registry, revision, readiness, lifecycle, and modelo page contracts across the twelve residual registry-backed documentation pages against current authority; `docs/_sequences/contracts/ and docs/how-to/ and docs/reference/`.
 - [ ] `W06.P12.S253` - Replace stale ledger-evidence and invoice output assumptions with stable authority-backed dynamic witnesses on ledger-evidence and manage-invoices; `docs/_sequences/contracts/ledger-evidence/ and docs/_sequences/contracts/manage-invoices/`.
 - [ ] `W06.P12.S254` - Reconcile verification-report history and provenance sequences with current Modelo 303 identifiers and authoritative frame structure; `docs/_sequences/contracts/verification-reports/ and src/cadrumo/application/verification/`.
 - [ ] `W06.P12.S255` - Reconcile the censo-update sequence with the current censal projection and reviewed-apply authority; `docs/_sequences/contracts/censo-update/ and src/cadrumo/application/user_profile/`.
