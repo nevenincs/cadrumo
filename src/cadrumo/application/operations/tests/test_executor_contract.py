@@ -46,7 +46,7 @@ from .. import (
     OperationTerminalCondition,
     OperationTerminalReceipt,
 )
-from .._supervisor import OperationSupervisor
+from .._supervisor import OperationSupervisor, _SupervisorExecutorContext
 from ..owner import OperationExecutorContext
 from ..persistence import OperationNoticeEvent, OperationPersistedSnapshot
 
@@ -87,6 +87,7 @@ class UndeclaredPhaseExecutor:
         context: OperationExecutorContext,
     ) -> None:
         del request
+        assert isinstance(context, _SupervisorExecutorContext)
         self.snapshot_before_attempt = context.snapshot
         await context.events.phase("operation.phase.undeclared")
 
@@ -103,6 +104,7 @@ class UndeclaredEffectExecutor:
         context: OperationExecutorContext,
     ) -> None:
         del request
+        assert isinstance(context, _SupervisorExecutorContext)
         self.snapshot_before_attempt = context.snapshot
         await context.events.effect(OperationEffect.UPDATED)
 
@@ -130,6 +132,7 @@ class UndeclaredResourceExecutor:
         context: OperationExecutorContext,
     ) -> None:
         del request
+        assert isinstance(context, _SupervisorExecutorContext)
         self.snapshot_before_attempt = context.snapshot
         self.resource = CloseProbe()
         context.cleanup.own(self.resource, family=OperationOwnedResource.ASYNC_TASK)
