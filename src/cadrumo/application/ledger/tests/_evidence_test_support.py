@@ -31,26 +31,31 @@ def _event_repo(objects: SecureObjectRepository) -> BucketEventHistoryRepository
     return BucketEventHistoryRepository(objects=objects)
 
 
-@pytest.fixture(autouse=True)
-def seeded_filer_profile(secure_objects: SecureObjectRepository) -> None:
+def seed_filer_profile(*, tax_id: str | None = "12345678Z") -> None:
     """Seed the filer profile the evidence draft path reads its territory from.
 
     Resolving a purchase invoice needs the taxpayer's own IVA territory, which
     comes from the fiscal-address postcode and never from the invoice, so an
     evidence test without a profile refuses before reaching what it asserts.
-    A test that needs different facts simply seeds its own record afterwards;
-    the later write wins.
+    A caller that must leave the identity guards inert passes ``tax_id=None``;
+    the current profile record then establishes the filer's territory without
+    claiming a taxpayer identity.
     """
     clock = datetime(2026, 1, 1, tzinfo=UTC)
+    facts = [UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28001")]
+    if tax_id is not None:
+        facts.insert(0, UserProfileFact(path="identity.tax_id", value=tax_id))
     seed_test_profile_record(
         UserProfileRecord(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28001"),
-            ),
+            facts=tuple(facts),
             created_at=clock,
             updated_at=clock,
         ),
     )
+
+
+@pytest.fixture(autouse=True)
+def seeded_filer_profile(secure_objects: SecureObjectRepository) -> None:
+    seed_filer_profile()

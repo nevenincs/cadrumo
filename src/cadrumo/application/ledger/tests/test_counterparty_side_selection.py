@@ -11,11 +11,11 @@ IS the filer. That value is checksum-valid, so every identity check downstream
 passes it, and it is bound for the Modelo 347 / 349 totals AEAT reconciles
 against the other party's own declaration.
 
-**Why these cases run on a bucket with no taxpayer profile.** Two guards in the
-confirm path already refuse a counterparty that names the filer, and they are
-good guards. Both load the taxpayer profile, and both return without refusing
-when it is absent or carries no tax id -- deliberately, because a guard that
-cannot run must not block a path it cannot judge. That means a gate written on a
+**Why these cases run on a bucket with no taxpayer identity.** The confirm path
+must resolve the filer's territory from its profile, while its two
+self-counterparty guards need a taxpayer tax id. Both guards return without
+refusing when that id is absent -- deliberately, because a guard that cannot
+run must not block a path it cannot judge. That means a gate written on a
 normally-configured bucket would pass whether or not the selection is correct,
 and would be measuring the guards rather than the selection. Green from a
 neighbouring guard is indistinguishable from green from the code under test, and
@@ -47,14 +47,14 @@ from ....domain.iva import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ..evidence import PurchaseInvoiceEvidenceInputError
 from ..evidence_draft import confirm_invoice_draft_from_evidence
-from ._evidence_test_support import _BUCKET_ID, _make_svc
+from ..preconditions import LedgerPreconditionCondition
+from ._evidence_test_support import _BUCKET_ID, _make_svc, seed_filer_profile
 from ._evidence_test_support import runtime_profile as runtime_profile
-from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile
 from ._ledger_value_fixtures import isolated_settings, secure_objects
 from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-__all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
+__all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
 
 # Two DIFFERENT checksum-valid identifiers. A fixture reusing one for both
 # parties cannot fail when the sides are confused, which is the only failure
@@ -131,6 +131,12 @@ def _loopback_reader() -> Iterator[None]:
         ),
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def _filer_territory_without_taxpayer_identity(secure_objects: SecureObjectRepository) -> None:
+    """Seed only the filing territory so the self-counterparty guards stay inert."""
+    seed_filer_profile(tax_id=None)
 
 
 def _stored_evidence(
@@ -262,7 +268,10 @@ def test_an_issued_document_with_no_billed_party_read_refuses_rather_than_substi
             invoice_repository=repository,
         )
 
-    assert "counterparty_tax_id" in str(raised.value)
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE.value
+    assert any(evidence.values.get("required_field_available") is False for evidence in verdict.evidence)
     # Nothing was written: a refused confirm must not leave a record naming the
     # filer, which is the outcome the fallback produced.
     assert len(InvoiceCatalogueRepository(objects=secure_objects).load()) == 0
