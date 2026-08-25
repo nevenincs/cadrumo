@@ -167,6 +167,8 @@ class _AuthorityLoadBarrier:
     def reset(self) -> Generator[None]:
         """Exclude and drain readers while every registry cache is cleared."""
         with self._condition:
+            while self._reset_pending:
+                self._condition.wait()
             self._reset_pending = True
             while self._active_readers:
                 self._condition.wait()

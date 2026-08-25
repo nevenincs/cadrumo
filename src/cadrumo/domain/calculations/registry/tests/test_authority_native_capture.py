@@ -11,7 +11,6 @@ import pytest
 
 from .....core import RegistryAuthorityGrade, scan_directory
 from .....tests import REPO_ROOT
-from .. import _authority as authority_module
 from .. import (
     RegistryAuthorityCapture,
     RegistryRevisionInspection,
@@ -21,6 +20,7 @@ from .. import (
     bundled_authority,
     reset_registry_caches,
 )
+from .. import _authority as authority_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -313,6 +313,44 @@ def test_reset_drains_an_inflight_load_before_clearing_authority_publication(
     )
     assert construct_count == 2
     assert current.read_current_generation() > returned[0]._capture_generation
+
+
+def test_concurrent_resets_are_exclusive_owner_transitions(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A second reset cannot clear caches until the first writer has completed."""
+    original_invalidate = authority_module._invalidate_authority_generations
+    first_invalidation = Event()
+    release_first = Event()
+    second_invalidation = Event()
+    invalidation_count = 0
+    count_lock = Lock()
+
+    def block_first_invalidation() -> None:
+        nonlocal invalidation_count
+        with count_lock:
+            invalidation_count += 1
+            ordinal = invalidation_count
+        if ordinal == 1:
+            first_invalidation.set()
+            assert release_first.wait(timeout=10)
+        else:
+            second_invalidation.set()
+        original_invalidate()
+
+    monkeypatch.setattr(authority_module, "_invalidate_authority_generations", block_first_invalidation)
+    first = Thread(target=reset_registry_caches)
+    second = Thread(target=reset_registry_caches)
+    first.start()
+    assert first_invalidation.wait(timeout=10)
+    second.start()
+    assert not second_invalidation.wait(timeout=0.5)
+
+    release_first.set()
+    first.join(timeout=10)
+    second.join(timeout=10)
+
+    assert not first.is_alive()
+    assert not second.is_alive()
+    assert invalidation_count == 2
 
 
 def test_native_capture_has_one_public_registry_home_without_workspace_coupling() -> None:
