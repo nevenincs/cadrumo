@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-25'
-body_hash: 'sha256:c657fb48c8f0c398624539f9e90623b7df6b94e7f4f67281c24f6ea293e2bb9c'
+body_hash: 'sha256:8bca4d19a45cd1834398cfd1aefe93d9ff36ef1fcb93a83b6f22f4efd6bc88f6'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -271,7 +271,7 @@ rows, revalidates each final typed-producer resolver or terminal proof, proves
 retired absence and reference-only status, and preserves the complete immutable
 612-row history.
 
-- [ ] `W06.P12.S46` - Require a complete semantic and mechanical pass with no newly discovered action site or alias; `dev/quality/cli_action_census.py; dev/quality/cli_action_census_dispositions.py; dev/tests/test_cli_action_census.py; dev/tests/test_cli_action_census_dispositions.py`.
+- [ ] `W06.P12.S46` - Require a complete semantic and mechanical pass with no newly discovered action site or alias; `dev/quality/cli_action_census.py; dev/quality/cli_action_census_dispositions.py; dev/quality/cli_action_census_dispositions.toml; dev/tests/test_cli_action_census.py; dev/tests/test_cli_action_census_dispositions.py`.
 - [ ] `W06.P12.S47` - Add a code-only closure gate that rejects unclassified sites, unresolved actions, insufficient bindings, missing proofs, or ungrounded exclusions against the live census and operator surface, without reading plans, execution records, audits, or retired rehoming ledgers; `dev/tests/test_action_coverage_closure.py [new]; dev/quality/cli_action_census_dispositions.toml; src/cadrumo/application/operator_surface/_manifest.py; src/cadrumo/application/operator_actions`.
 - [ ] `W06.P12.S48` - Publish the final reconciliation and fresh-context honesty findings; `.vault/audit/2026-08-09-cli-action-envelope-hardening-audit.md`.
 - [x] `W06.P12.S95` - Teach autonomous operators the explicit actionable-versus-no-recovery refusal algorithm and pin the rule to the live envelope schema; `src/cadrumo-harness/src/cadrumo_harness/_data/agent/rules/cadrumo-operator-envelope-reading.md; src/cadrumo-harness/src/cadrumo_harness/tests; src/cadrumo/core/tests; src/cadrumo/application/operator_actions/tests`.

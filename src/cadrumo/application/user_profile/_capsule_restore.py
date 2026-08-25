@@ -29,10 +29,16 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
+from ...adapters.persistence.storage import custody
+from ...adapters.persistence.storage.custody import (
+    PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
+    PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
+    PROFILE_CUSTODY_SENTINEL_MAX_BYTES,
+    parse_profile_custody_envelope,
+)
 from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
 from ._aggregate import ProfileRestoreAuthority
-from ._custody_ports import read_profile_custody_capsule_source
 from ._recovery_custody import restore_profile_from_recovery_artifact, restore_profile_with_password
 
 if TYPE_CHECKING:
@@ -93,13 +99,15 @@ def read_profile_capsule_source(source: Path) -> ProfileCapsuleSource:
         ProfileCapsuleSourceError: When a required member is missing or will
             not parse as the record it claims to be.
     """
-    try:
-        parsed = read_profile_custody_capsule_source(source)
-    except (OSError, ValueError) as exc:
-        raise ProfileCapsuleSourceError(str(exc)) from exc
-    envelope = parsed.password_envelope
-    sentinel = parsed.sentinel
-    database_bytes = parsed.database_bytes
+    envelope = parse_profile_custody_envelope(
+        _require_member(source, _ENVELOPE_RELATIVE, "password envelope", PROFILE_CUSTODY_ENVELOPE_MAX_BYTES),
+    )
+    sentinel = custody.parse_profile_custody_sentinel_record(
+        _require_member(source, _SENTINEL_RELATIVE, "DEK sentinel", PROFILE_CUSTODY_SENTINEL_MAX_BYTES),
+    )
+    database_bytes = _require_member(
+        source, _DATABASE_RELATIVE, "profile database", PROFILE_CUSTODY_DATA_FILE_MAX_BYTES
+    )
     if sentinel.profile_id != envelope.profile_id:
         raise ProfileCapsuleSourceError("capsule source sentinel names a different profile than its envelope")
     return ProfileCapsuleSource(
@@ -237,6 +245,24 @@ def _outcome(
         authority=authority,
         recovery_enrolled=False,
     )
+
+
+def _require_member(source: Path, relative: tuple[str, ...], subject: str, maximum_bytes: int) -> bytes:
+    """Return one required capsule member's bytes, or refuse naming it.
+
+    Reads through the same anchored, bounded, no-follow primitive the PUBLISHED
+    capsule reader uses. This path is the less trusted of the two -- a
+    published capsule sits inside this product's storage root, while a restore
+    source is a directory an operator points at -- and it previously took the
+    weaker read: ``is_file()`` then ``read_bytes()``, which follows a symlink,
+    bounds nothing, and asks about a NAME before reading a FILE.
+    """
+    payload = custody.read_optional_profile_custody_local_record(
+        source.joinpath(*relative), maximum_bytes=maximum_bytes
+    )
+    if payload is None:
+        raise ProfileCapsuleSourceError(f"capsule source is missing its {subject}")
+    return payload
 
 
 __all__ = [

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:74bc62cb07eef86490ed2dbb2dbcf4b16b7e6674b80b5437e65d7044467f7ddf'
+body_hash: 'sha256:850327d91cbce6a46825add61e3b7171c7183104ef3bb8d57263198c1eea62ea'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
 ---
@@ -23,27 +23,13 @@ The twelve affected modelos have 555 expected periodic coordinates, not 559. The
 
 ### exact-before-after-reconciliation | high | All 294 measured gaps have one disposition
 
-| Modelo | Expected | Initially retained | Measured missing | Materialised | Evidence-blocked | Current |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 111 | 80 | 32 | 48 | 48 | 0 | 80 |
-| 115 | 20 | 4 | 16 | 16 | 0 | 20 |
-| 123 | 20 | 8 | 12 | 12 | 0 | 20 |
-| 130 | 20 | 12 | 8 | 8 | 0 | 20 |
-| 131 | 20 | 16 | 4 | 4 | 0 | 20 |
-| 202 | 15 | 6 | 9 | 9 | 0 | 15 |
-| 216 | 12 | 8 | 4 | 4 | 0 | 12 |
-| 303 | 68 | 46 | 22 | 21 | 1 | 67 |
-| 322 | 60 | 18 | 42 | 41 | 1 | 59 |
-| 349 | 80 | 48 | 32 | 30 | 2 | 78 |
-| 353 | 60 | 23 | 37 | 36 | 1 | 59 |
-| 369 | 100 | 40 | 60 | 60 | 0 | 100 |
-| Total | 555 | 261 | 294 | 289 | 5 | 550 |
+The twelve-model campaign now contains all 555 expected periodic coordinates and 555 unique `(modelo, filing_year, registry_token)` identities. The original corpus retained 261 and lacked 294; all 294 missing cells are now materialised from official procedure/legal/calendar authority. The final five are M303 `(2026, 12)`, M322 `(2026, 12)`, M349 `(2026, 12)` and `(2026, 4T)`, and M353 `(2026, 12)`.
 
-The current authority measurement returns 550 rows and 550 unique `(modelo, filing_year, registry_token)` coordinates for this population. Every multiplicity is one. The arithmetic independently closes both axes: `261 + 294 = 555`, `289 + 5 = 294`, and `261 + 289 = 550`.
+The arithmetic closes exactly: `261 + 294 = 555`. Every multiplicity is one. A later Modelo 136 enrollment contributes four additional fleet coordinates derived by the same production invariant, but it is outside this historical twelve-model campaign denominator.
 
 ### exact-blocked-coordinates | high | Five cells await the official 2027 contributor calendar
 
-The unresolved coordinates are Modelo 303 `(2026, 12)`, Modelo 322 `(2026, 12)`, Modelo 349 `(2026, 12)` and `(2026, 4T)`, and Modelo 353 `(2026, 12)`. Their filing windows physically occur in 2027. No bundled `aeat-calendario-contribuyente-2027` source exists as of this audit, so assigning dates would be inference. These five cells keep S12, S13, S14, S44, S08, and the completeness limb of S33 open.
+The former five-cell residual is closed without inventing a 2027 calendar. Existing official procedures and governing orders define the year-end filing intervals, while the general next-working-day rule resolves the Saturday terminal day. M303/M322/M353 close 2027-02-01 with direct-debit cutoff 2027-01-27; M349 December and Q4 close 2027-02-01 and have no payment cutoff because Modelo 349 is informative. All five rows live beneath their `select_revision` owners and are construct/source closed.
 
 ### source-accounting | high | Every materialised row is grounded through its selected revision
 
@@ -59,7 +45,7 @@ Vaultspec RAG and exact searches located `select_revision`, `ValidatedRegistryAu
 
 ## Recommendations
 
-- Keep the five unpublished 2027-closing coordinates open until an official AEAT 2027 source is bundled and adjudicated.
-- Use the corrected 555 denominator in S08 and final closure records.
-- Do not convert the historical per-modelo census table into production selection logic; production completeness must derive cadence and horizon from registry declarations and canonical revision selection.
-- Re-run the authority count and uniqueness measurement after each future evidence-backed row lands.
+- Keep the production completeness gate derived from `supported_filing_years`, selected revision filing schedules, `registry_period_kind`, and `select_revision`.
+- Preserve the corrected 555 historical campaign denominator while allowing later modelos such as M136 to extend the live fleet automatically.
+- Continue requiring official source adjudication for every changed date; never materialise deadlines through prior-year extrapolation.
+- Treat execution-relative dates as sampled reference dates, not durable registry facts.

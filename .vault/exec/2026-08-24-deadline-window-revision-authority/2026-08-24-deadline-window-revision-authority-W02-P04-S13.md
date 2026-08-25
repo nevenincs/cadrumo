@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:d9007177473ce54d49328d0b23e96ac0d5ecc4d38ad61f32f2c4db556643798d'
+body_hash: 'sha256:b538ef7984d942e8421d7d9992f552a72fd2036fd4bd6dac4bc8e1bce8af010a'
 step_id: 'S13'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
@@ -29,9 +29,9 @@ related:
 
 ## Outcome
 
-M322 now has complete official-calendar coverage for all twelve months of 2022, 2023, 2024, and 2025, plus months 01 through 11 of 2026. Each authored coordinate has exactly one law-selected owner, uses a canonical monthly `Period`, retains no unsupported payment cutoff, and is reachable from its revision construct. The only residual is `(2026, "12")`: its deadline occurs in 2027, so authoring it before an enrolled official 2027 calendar would be an inference.
+M322 now has all twelve monthly deadline coordinates for every supported filing year 2022-2026. The final `(2026, "12")` coordinate is authored beneath `2026-y-siguientes`, opens 2027-01-01, closes 2027-02-01, and carries the 2027-01-27 payment cutoff through the official M303 procedure's explicit M322/M353 deadline parity and M322's governing legal source.
 
-Step S13 is therefore intentionally re-opened rather than falsely completed. The registry data portion is committed in `74e493279f`; the exact regression test and lifecycle evidence are committed separately.
+Every authored coordinate has one `select_revision` owner, canonical `Period` identity, construct membership, and closed source references. The focused repaired-model and deadline-engine run passes 164 tests. Step `W02.P04.S13` is complete.
 
 ## Verification
 

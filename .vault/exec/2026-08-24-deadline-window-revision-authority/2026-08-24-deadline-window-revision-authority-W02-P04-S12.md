@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:17162d75dada5a39abf312eae0870d905e483a11b92c459d077788feddd3f6ef'
+body_hash: 'sha256:a5db17a08327a7c656098e6d3bbde8761887c2ac529030d50438aba1f4a706b1'
 step_id: 'S12'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
@@ -26,11 +26,9 @@ related:
 
 ## Outcome
 
-The canonical M303 historical schedule is now complete for every officially evidenced coordinate in filing years 2022, 2024, and 2025. Exactly 21 formerly missing rows were added: 2022 quarters `1T`-`3T`; 2024 months `02`-`05` and `07`-`11`; and 2025 months `02`-`05` and `07`-`11`. Existing retained rows for those years were re-adjudicated and now carry their exact AEAT calendar presentation dates, direct-debit cutoffs, and applicable calendar source refs.
+The canonical M303 deadline corpus is complete for all selected periodic coordinates in supported filing years 2022-2026. The final `(2026, "12")` monthly row is owned by revision `2026-y-siguientes`, opens 2027-01-01, closes 2027-02-01 after the statutory terminal day falls on Saturday, and carries the officially published 2027-01-27 direct-debit cutoff. Its source closure reuses the bundled M303 procedure and governing IVA deadline authority; no future-calendar inference helper was added.
 
-The 2024 form-layout cutover remains canonical. Revision `2024-hasta-08-y-2t` owns `1T`, `2T`, and months `01`-`08`; revision `2024-desde-09-y-3t` owns `3T`, `4T`, and months `09`-`12`. Ownership is proved through the existing `select_revision` authority, not a local map. Construct membership and source closure now enumerate every new deadline row and calendar source.
-
-The only selector coordinate without an authored filing-year-2026 row is month `12`. It remains deliberately unauthored because its physical filing window and payment cutoff belong to the unpublished 2027 calendar cycle; no date was inferred. Therefore Step `W02.P04.S12` remains unchecked.
+The 2024 period-sensitive cutover remains unchanged and canonical. Every coordinate resolves through `select_revision`, every construct includes its authored row, and the focused M303/M322/M349/M353 plus engine suite passes as part of the 164-test feature run. Step `W02.P04.S12` is complete.
 
 ## Verification
 
@@ -42,4 +40,4 @@ The only selector coordinate without an authored filing-year-2026 row is month `
 
 ## Review
 
-The focused review found no critical, high, medium, or low implementation issue. It confirmed official-source provenance, exact canonical owner placement, construct/source closure, the 21-row census, and the explicit 2026/12 residual. The review is recorded in the related S12 audit.
+Final review confirms official-source provenance, canonical owner placement, construct/source closure, and the complete 68-coordinate M303 supported-year census. Vaultspec RAG plus exact-symbol confirmation found no redeclared selector, resolver, parser, cadence authority, horizon, or deadline catalogue.

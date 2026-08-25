@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:23f098bf9d399f548688a66b109e10911cfb9327cf6ee028bf55ce6c0da7ba84'
+body_hash: 'sha256:d2cd0ec193dc349653170e43b31cfcb1b3afb1c0a9e88ef5e79ebebf0acdb709'
 step_id: 'S14'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
@@ -29,12 +29,10 @@ related:
 
 ## Outcome
 
-The canonical 2008-2025 owner now contains exactly twelve deadlines for each supported filing year 2022 through 2025. The 36 added historical rows preserve the taxpayer calendars' shifted presentation dates and include payment cutoffs only because AEAT's domiciliation tables explicitly group monthly Modelos 303 and 353. Following-January rows cite the calendar publishing their physical dates. The 2026 owner retains exactly periods 01 through 11.
+Modelo 353 now has all twelve monthly deadline coordinates for every supported filing year 2022-2026. The final `(2026, "12")` coordinate is authored beneath `2026-y-siguientes`, opens 2027-01-01, closes 2027-02-01, and carries the 2027-01-27 payment cutoff through the official M303 procedure's explicit M322/M353 deadline parity and M353's governing legal source.
 
-This Step remains open. Period 12 of filing year 2026 cannot be authored from the available 2026 calendar because its physical filing window and domiciliation cutoff occur in 2027; no official 2027 taxpayer calendar is bundled or published in the adjudicated authority. The plan checkbox remains unchecked rather than weakening the no-inference rule.
+All 60 supported coordinates have one canonical owner, exact source/construct closure, and authority projection parity. The focused repaired-model and deadline-engine run passes 164 tests. Step `W02.P04.S14` is complete.
 
 ## Notes
 
-Vaultspec RAG semantic discovery returned the nearest exact ownership/projection analogue in `test_modelo_322_registry.py`, the validator authority in `test_deadline_window_ownership.py`, and the accepted deadline ADR, research, and plan. The TOML-specific query returned no production-code result because registry data files are not indexed as source-code chunks; whole-file reads and exact `rg` confirmation then pinned both M353 deadline fragments and `select_revision`. No resolver, selector, cadence authority, period parser, deadline catalogue, or code map was introduced.
-
-Ruff and diff hygiene pass for the owned files. Direct canonical-loader evidence proves 48 rows in 2008-2025 and 11 rows in 2026-y-siguientes. The focused fleet-backed module is currently blocked before any M353 assertion by unrelated concurrent invalid M303 and M390 revisions; those failures are recorded without being misreported as M353 failures.
+Vaultspec RAG and exact searches confirm reuse of `select_revision`, `registry_period_kind`, `ValidatedRegistryAuthority.deadline_windows`, and the existing filing schedules. No M353-specific resolver, selector, period parser, cadence authority, horizon, or deadline catalogue was introduced. Ruff and the 164-test focused feature fleet are green.
