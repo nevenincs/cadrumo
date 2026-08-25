@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:5adf5b1033d8f8c925b36c127856c612c1c3f4f4b08721d9f0876ab645e5967c'
+body_hash: 'sha256:4a6eeabaf2c40ec8f304a7f8ce74ed733b24606e420e3fdddf7356b3bc2caf48'
 step_id: 'S122'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -29,6 +29,7 @@ related:
 - Registered every shipped auth, profile-maintenance, censal REVIEW, and filed-history definition in one deterministic production registry.
 - Added the import-light `OperationProductionDependencies` composition with real journal, lease, secure-reference, provenance, supervisor, observation, REVIEW, refresh, cancellation, detach, response-authority, and shutdown wiring.
 - Narrowed `cadrumo.application.operations` so frontend consumers cannot import raw events, interactions, snapshots, journals, leases, replay records, response tokens, or bound bearers.
+- Added `cadrumo.application.operations.owner` as the narrow application-owner contributor facade; it identity-re-exports the canonical executor protocols without redefining them, and entrypoints are prohibited from importing it.
 - Replaced the secret-capable nested bundle-export operation request with a credential-free public request and kept the passphrase solely in one-shot custody.
 - Removed the duplicate default-registration construction shape through `compose_request_only`.
 - Retargeted persistence and application implementation imports to their canonical owning modules after the facade cut.
@@ -47,9 +48,10 @@ No compatibility shim, re-export alias, fake adapter, patch, skip, or xfail was 
 
 ## Verification
 
-- `pytest -q -m "unit or integration"` over the full application-operation, operation-persistence, auth-definition, user-profile-definition/censal, filed-history, and composition matrix passed: 438 tests.
+- `pytest -q -m "unit or integration"` over the application-operation, operation-persistence, auth-definition, user-profile-definition/censal, filed-history, and composition matrix passed 440 S122 tests. Five separately staged S123 receipt-validator cases errored only because their subprocess could not find a running Vaultspec RAG service; S123 remains open and those cases are not counted as S122 evidence.
 - Focused current composition and filed-history integration verification passed after the safe `OperationLogSeverity` facade cutover; the owner lane separately records its 17 filed-history integration passes.
-- Targeted facade/composition Ruff lint and formatting, `ty check`, and BasedPyright all passed.
-- Vaultspec RAG followed by exact construction census found one production `OperationRegistry(...)` and one `OperationSupervisor(...)`, both in `_operation_composition.py`; all seven composed public-service constructor calls and the response binding occur there. The only other hits are the canonical class declarations and tests.
+- Targeted facade/composition Ruff lint and formatting and `ty check` passed. Focused BasedPyright retains LOW owner-private diagnostics in `_composition.py`; the independent review found no HIGH or CRITICAL boundary issue.
+- Vaultspec RAG followed by exact construction census found one production `OperationRegistry(...)` in `entrypoints/_operation_composition.py` and one production `OperationSupervisor(...)` in `application/operations/_composition.py`. The only other hits are the canonical class declarations and tests.
+- Post-cut RAG lands first on `application/operations/owner.py`; identity assertions and exact searches prove that it re-exports the sole `_executor.py` definitions rather than redeclaring executor authority.
 - Exact import census returned no private operation imports from entrypoints or inbound frontends. Safe cross-package imports are constrained to `OperationLogSeverity`, `OperationResponseIntent`, and `OperationEventCursor`; raw events, interaction checkpoints/tokens, journal/snapshot/lease records, replay pages, and response bearers remain outside the public facade.
 - Independent review is recorded in `2026-08-24-tui-architecture-s122-operation-composition-review-audit`; any HIGH or CRITICAL finding must be remediated before this step is closed.

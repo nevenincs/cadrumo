@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:2703c0e55059435b353646bb2b63a213468251524d510fbce943e083730fcc40'
+body_hash: 'sha256:040d7b7c5c21e1721196895c07e3d997fb00dafdd85df9839ab1b376b6a19655'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
@@ -49,3 +49,22 @@ Resolution (2026-08-24): resolved during review. Runtime-private supervisor and 
 - Expose narrow public contributor and composition protocols sufficient for the production root and domain-owned executors, or relocate the composition authority so no cross-package caller imports `application.operations._*`; keep bearer construction and raw response intent private.
 
 All recommendations were implemented and independently rechecked in the final review snapshot. No open finding remains. Verdict: approve S122 for closure by the owning executor.
+## Re-review at `dad420acca1` (2026-08-25)
+
+### Final disposition â€” PASS
+
+The prior HIGH facade-authority finding is resolved at exact commit `dad420acca18f1cc3cd2eb68e5c8d0b87681999d`. Vaultspec RAG semantic discovery was followed by exact commit-scoped searches and source reads.
+
+- `cadrumo.application.operations` no longer exports supervisor, executor/context, interaction-access, response-capability/authority, secure-operand, secret-submission, or persistence primitives. Its negative export test explicitly rejects those symbols.
+- `cadrumo.application.operations.owner` is a narrow owner-only re-export of the canonical `_executor` objects: identity assertions prove no redeclaration. Production auth, live, and user-profile owners import those contributor contracts from `operations.owner`; exact search finds no non-test entrypoint import of it.
+- The entrypoint imports only `OperationComposedServices`, `OperationRegistry`, and `compose_operation_services` from the inbound-safe facade. `OperationComposedServices` exposes only submission, observation, REVIEW, refresh, cancellation, and detach as public fields; registry and supervisor remain internal.
+- The former static definition-ID list is replaced by a live owner-facade fixed point: current auth, user-profile, censal, and filed-history definition and registration builders are recomposed as the independently derived denominator and compared with production registry and contract-set composition.
+- The opaque response capability remains separately held: it is issuer-gated, actor- and operation-bound, non-serializable, consumed on successful bind, zeroized on close, and unavailable after process restart. Public apply/reject V1 requests bind through the composed service without exposing the token or concrete authority.
+
+Focused faÃ§ade, composition, fixed-point, opaque-capability, and entrypoint-owner-boundary tests passed in the repository test runner; Ruff passed on all changed surfaces. Exact source searches also found no non-test duplicate production `OperationRegistry(` or `OperationSupervisor(` construction outside the composition path.
+
+### LOW â€” Focused basedpyright remains red inside owner-private composition
+
+`basedpyright` reports five diagnostics in `application/operations/_composition.py`: three private cross-module references (`_read_snapshot`, `_UnavailableOperationSecureResponseAuthority`, `_UnavailableSnapshot`) and two unknown-type diagnostics around `TypeAdapter(OperationActorReference).validate_python`. These are owner-private implementation/type-quality issues, not a public authority exposure or redeclaration, and do not alter the D0/D8 disposition. They should be cleaned up before a broader quality-gate milestone.
+
+No HIGH or CRITICAL finding remains. S122 may close.

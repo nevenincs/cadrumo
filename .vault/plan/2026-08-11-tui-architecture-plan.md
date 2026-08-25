@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-25'
-body_hash: 'sha256:b72f75171e01962ed4b6a53f895749abaebbeefac3852669343660e01db059b6'
+body_hash: 'sha256:b7fbdc6c1336536eb2b771c050d1b157a04e081f040551cc02435a5f9a73b0a1'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -115,7 +115,7 @@ Publish the frontend-safe operation definition, atomic observation, REVIEW, and 
 - [x] `W02.P19.S119` - Implement the public observation service and deterministic progress fold with phase reset, independent lifecycle-terminal-effect projection, bounded cursor replay, cursor-ahead refusal, expiry or compaction resynchronization, detach, and reconnect semantics; `src/cadrumo/application/operations/_observation.py`.
 - [x] `W02.P19.S120` - Implement registered safe REVIEW resolution and typed Workspace-refresh-target resolution with exact version, definition-digest, schema, expiry, terminal-state, and output validation while preserving separate response authority and rejecting caller-supplied result references; `src/cadrumo/application/operations/_projection_services.py`.
 - [x] `W02.P19.S121` - Perform the PRE_RELEASE current-only cutover by proving zero affected nonterminal operations, refusing every superseded journal and lease shape, and deleting the v1 lease reader, acquisition migrator, retired schema dispatchers, fixtures, and migration tests without a compatibility path; `src/cadrumo/application/operations and src/cadrumo/adapters/persistence/operations`.
-- [ ] `W02.P19.S122` - Export the sole public operation contract family and compose the immutable production registry, observation, REVIEW, refresh, response, cancel, and detach services with real adapters through one import-light entrypoint seam consumed by CLI, MCP, and the later TUI launcher; `src/cadrumo/application/operations/__init__.py and src/cadrumo/entrypoints/_operation_composition.py`.
+- [x] `W02.P19.S122` - Export the sole public operation contract family and compose the immutable production registry, observation, REVIEW, refresh, response, cancel, and detach services with real adapters through one import-light entrypoint seam consumed by CLI, MCP, and the later TUI launcher; `src/cadrumo/application/operations/__init__.py and src/cadrumo/entrypoints/_operation_composition.py`.
 - [ ] `W02.P19.S123` - Implement TuiOperationObservationDependencyReceiptV1 and its sole live-tree validator, proving strict round trips, atomic interleaving, progress and replay, registered REVIEW non-authority, restart refresh, digest drift refusal, production DI, sentinel non-retention, current-only deletion, and a semantic-plus-exact producer census that fails duplicate operation state or projection authorities; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py`.
 - [ ] `W02.P19.S124` - Produce the exact clean-commit C0 observation dependency receipt with accepted-parent and rejected-staging provenance, source ancestry, schema and capability inventories, contract digests, validator evidence, and the sole cohort-open disposition; `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`.
 
