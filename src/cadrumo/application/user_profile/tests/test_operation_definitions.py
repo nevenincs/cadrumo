@@ -10,6 +10,7 @@ from pathlib import Path
 from uuid import UUID
 
 import pytest
+from pydantic import BaseModel
 
 from ....adapters.persistence.operations import (
     OperationJournalRepository,
@@ -18,6 +19,7 @@ from ....adapters.persistence.operations import (
     operation_secure_reference_repository,
 )
 from ....adapters.persistence.storage import current_active_bucket_session
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -29,6 +31,7 @@ from ....application.operations import (
     OperationTerminalCondition,
 )
 from ....application.operations._supervisor import OperationSupervisor
+from ....application.operations.persistence import OperationPersistedSnapshot
 from ....core import read_pointer
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._bundle_export_contracts import (
@@ -36,7 +39,7 @@ from .._bundle_export_contracts import (
     ProfileBundleExportResult,
 )
 from .._bundle_export_operation import ProfileBundleExportJournalRepository
-from .._custody_ports import profile_custody_secure_object_repository
+from .._custody_ports import ProfileCustodySecureObjectRepositoryPort, profile_custody_secure_object_repository
 from .._login_session import login_profile
 from .._operation_definitions import (
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
@@ -65,12 +68,14 @@ _PROFILE_PASSPHRASE = "s40-profile-operation-passphrase"  # noqa: S105 - synthet
 def _supervisor(
     root: Path,
     *,
-    profile_objects: object,
+    profile_objects: ProfileCustodySecureObjectRepositoryPort,
     owner_id: str,
     lease_token: str,
 ) -> tuple[OperationSupervisor, OperationSecureReferenceRepository]:
     """Build the real encrypted supervisor stack used by each family proof."""
-    operands = operation_secure_reference_repository(objects=profile_objects)  # type: ignore[arg-type]
+    if not isinstance(profile_objects, SecureObjectRepository):
+        raise TypeError("profile operation tests require the concrete secure-object repository")
+    operands = operation_secure_reference_repository(objects=profile_objects)
     journal = OperationJournalRepository(storage_root=root)
     return (
         OperationSupervisor(
@@ -105,10 +110,10 @@ def _register_profile() -> UUID:
 def _start_operation(
     root: Path,
     *,
-    profile_objects: object,
-    request: OperationRequest,
+    profile_objects: ProfileCustodySecureObjectRepositoryPort,
+    request: OperationRequest[BaseModel],
     operation_id: str,
-) -> tuple[object, OperationSecureReferenceRepository]:
+) -> tuple[OperationPersistedSnapshot, OperationSecureReferenceRepository]:
     """Persist and execute one request through its real lease-owning supervisor."""
     supervisor, operands = _supervisor(
         root,
@@ -123,11 +128,11 @@ def _start_operation(
 def _start_secret_operation(
     root: Path,
     *,
-    profile_objects: object,
-    request: OperationRequest,
+    profile_objects: ProfileCustodySecureObjectRepositoryPort,
+    request: OperationRequest[BaseModel],
     operation_id: str,
     secret: bytes,
-) -> tuple[object, OperationSecureReferenceRepository]:
+) -> tuple[OperationPersistedSnapshot, OperationSecureReferenceRepository]:
     """Submit one bound ephemeral secret, then run the real export executor."""
     supervisor, operands = _supervisor(
         root,
@@ -212,6 +217,7 @@ def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_s
             assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert terminal.effect is OperationEffect.UPDATED
             assert terminal.terminal_receipt is not None
+            assert terminal.terminal_receipt.result_ref is not None
             result = asyncio.run(operands.resolve(terminal.terminal_receipt.result_ref, ProfileMutationOperationResult))
             stored = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
 
@@ -243,6 +249,7 @@ def test_repeatable_row_mutation_allocates_and_persists_one_real_schema_row(tmp_
             assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert terminal.effect is OperationEffect.UPDATED
             assert terminal.terminal_receipt is not None
+            assert terminal.terminal_receipt.result_ref is not None
             result = asyncio.run(
                 operands.resolve(terminal.terminal_receipt.result_ref, ProfileRepeatableRowMutationOperationResult)
             )
@@ -279,6 +286,7 @@ def test_bundle_export_reuses_the_real_durable_publication_and_journal(tmp_path:
             assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
             assert terminal.effect is OperationEffect.UPDATED
             assert terminal.terminal_receipt is not None
+            assert terminal.terminal_receipt.result_ref is not None
             result = asyncio.run(operands.resolve(terminal.terminal_receipt.result_ref, ProfileBundleExportResult))
 
         assert destination.is_file()
@@ -297,7 +305,7 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
         assert read_pointer(root) is not None
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
 
-            async def _run_strong_close() -> object:
+            async def _run_strong_close() -> OperationPersistedSnapshot:
                 supervisor, _operands = _supervisor(
                     root,
                     profile_objects=profile_objects,
