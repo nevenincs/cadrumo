@@ -12,21 +12,20 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationRegistry
-from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.core.operations import (
+from ....adapters.persistence.operations.journal import OperationJournalRepository
+from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ....core import AuthProviderKind
+from ....core.operations import (
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
-
-from ....core import AuthProviderKind
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from ...operations.capabilities import OperationRequestStoragePolicy
+from ...operations.models import OperationRequest
+from ...operations.registry import OperationRegistry
+from ...operations.supervisor import OperationSupervisor
 from ...user_profile.custody_ports import profile_custody_secure_object_repository
 from ...user_profile.login_session import login_profile, logout_active_profile
 from ...user_profile.registration import register_profile_with_credentials
