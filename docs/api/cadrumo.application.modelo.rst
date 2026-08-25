@@ -33,7 +33,6 @@ Submodules
    cadrumo.application.modelo._calculation_modelo_adjustments
    cadrumo.application.modelo._calculation_preparation
    cadrumo.application.modelo._calculation_resolution
-   cadrumo.application.modelo._calculation_route
    cadrumo.application.modelo._calculation_source_policy
    cadrumo.application.modelo._calculation_source_staging
    cadrumo.application.modelo._data_inventory
@@ -98,7 +97,6 @@ Submodules
    cadrumo.application.modelo._review_package_keypair
    cadrumo.application.modelo._review_package_recipient_encryption
    cadrumo.application.modelo._review_package_recipient_registry
-   cadrumo.application.modelo._review_package_recipient_replay_guard
    cadrumo.application.modelo._review_package_review_only_workspace
    cadrumo.application.modelo._review_package_signing
    cadrumo.application.modelo._revision_persistence
@@ -113,13 +111,15 @@ Submodules
    cadrumo.application.modelo._verification_cross_period
    cadrumo.application.modelo._verification_preconditions
    cadrumo.application.modelo._verification_predicates
-   cadrumo.application.modelo._work_addressing
    cadrumo.application.modelo._work_create_policy
    cadrumo.application.modelo._work_lifecycle
    cadrumo.application.modelo._work_plazo
    cadrumo.application.modelo._workflow_gate
    cadrumo.application.modelo._workspace_manifest
-   cadrumo.application.modelo._workspace_producers
+   cadrumo.application.modelo.calculation_route
+   cadrumo.application.modelo.work_addressing
    cadrumo.application.modelo.work_review_projection
+   cadrumo.application.modelo.work_unit_repository
    cadrumo.application.modelo.work_wizard
    cadrumo.application.modelo.workspace_models
+   cadrumo.application.modelo.workspace_producers

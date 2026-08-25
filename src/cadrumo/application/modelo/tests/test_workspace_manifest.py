@@ -22,8 +22,8 @@ from .._workspace_manifest import (
     generate_modelo_workspace_field_manifest,
     validate_modelo_workspace_field_manifest,
 )
-from .._workspace_producers import ModeloWorkspaceContributorKindV1
 from ..workspace_models import ModeloWorkspaceSchemaClassification, ModeloWorkspaceSchemaReferenceV1
+from ..workspace_producers import ModeloWorkspaceContributorKindV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

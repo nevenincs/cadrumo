@@ -12,7 +12,7 @@ from ...core.identity import ContentDigest
 from .workspace_models import ModeloWorkspaceContributorIdentityV1
 
 _PRODUCER_CONTRACT_VERSION = 1
-_EPOCH_SCHEMA_VERSION = 1
+_EPOCH_SCHEMA_VERSION = 2
 
 type _ProducerCode = Annotated[
     str,
@@ -51,7 +51,7 @@ class _ProducerContractValues(TypedDict):
     projection_discriminator: _ProducerCode
     projection_contract_version: int
     projection_schema_fingerprint: ContentDigest
-    epoch_schema_version: int
+    epoch_schema_version: Literal[2]
 
 
 def modelo_workspace_projection_schema_fingerprint(projection_type: type[BaseModel]) -> ContentDigest:
@@ -73,7 +73,7 @@ class ModeloWorkspaceProducerContractV1(_WorkspaceProducerModel):
     projection_contract_version: Annotated[int, Field(ge=1)]
     projection_schema_fingerprint: ContentDigest
     epoch_kind: ModeloWorkspaceEpochKindV1 = ModeloWorkspaceEpochKindV1.MONOTONIC_GENERATION
-    epoch_schema_version: Annotated[int, Field(ge=1)] = _EPOCH_SCHEMA_VERSION
+    epoch_schema_version: Literal[2] = _EPOCH_SCHEMA_VERSION
     atomic_read_operation: Literal["capture_projection_with_epoch"] = "capture_projection_with_epoch"
     contract_digest: ContentDigest
 
@@ -92,7 +92,7 @@ class ModeloWorkspaceProducerContractV1(_WorkspaceProducerModel):
         projection_discriminator: _ProducerCode,
         projection_contract_version: int,
         projection_type: type[BaseModel],
-        epoch_schema_version: int = _EPOCH_SCHEMA_VERSION,
+        epoch_schema_version: Literal[2] = _EPOCH_SCHEMA_VERSION,
     ) -> Self:
         """Declare a contract from the exact public projection schema it returns."""
         values: _ProducerContractValues = {
@@ -142,18 +142,31 @@ class ModeloWorkspaceEpochV1(_WorkspaceProducerModel):
 
     owner: _ProducerCode
     kind: ModeloWorkspaceEpochKindV1 = ModeloWorkspaceEpochKindV1.MONOTONIC_GENERATION
-    schema_version: Annotated[int, Field(ge=1)] = _EPOCH_SCHEMA_VERSION
+    schema_version: Literal[2] = _EPOCH_SCHEMA_VERSION
+    comparison_domain: ContentDigest
     generation: Annotated[int, Field(ge=1)]
 
     def require_successor_of(self, predecessor: ModeloWorkspaceEpochV1) -> Self:
         """Require a later same-owner generation within one process incarnation."""
-        if self.owner != predecessor.owner:
-            raise ValueError("workspace epochs can compare only within one owner")
-        if self.kind is not predecessor.kind or self.schema_version != predecessor.schema_version:
-            raise ValueError("workspace epoch kind and schema version must remain stable for one owner")
+        self._require_same_comparison_domain(predecessor)
         if self.generation <= predecessor.generation:
             raise ValueError("workspace epoch generation must advance for the same owner")
         return self
+
+    def require_current(self, current: ModeloWorkspaceEpochV1) -> Self:
+        """Require this epoch to remain current within its exact comparison domain."""
+        self._require_same_comparison_domain(current)
+        if self.generation != current.generation:
+            raise ValueError("workspace epoch generation is no longer current")
+        return self
+
+    def _require_same_comparison_domain(self, other: ModeloWorkspaceEpochV1) -> None:
+        if self.owner != other.owner:
+            raise ValueError("workspace epochs can compare only within one owner")
+        if self.kind is not other.kind or self.schema_version != other.schema_version:
+            raise ValueError("workspace epoch kind and schema version must remain stable for one owner")
+        if self.comparison_domain != other.comparison_domain:
+            raise ValueError("workspace epochs can compare only within one comparison domain")
 
 
 class ModeloWorkspaceContributingProjectionV1[ProjectionT: BaseModel](_WorkspaceProducerModel):

@@ -113,6 +113,11 @@ CONSTANTS_OUTSIDE_THE_INVENTORY: Final[Mapping[str, str]] = {
     ),
     "SIDECAR_SCHEMA_VERSION": "Bundled registry source sidecar; ships with the code, same grounds as the corpus.",
     "ENVELOPE_SCHEMA_VERSION": "The CLI JSON wire envelope. A transport contract, never written to disk as a record.",
+    "EPOCH_SCHEMA_VERSION": (
+        "Workspace producer's current-only in-memory capture-comparison protocol. Its frozen declaration is "
+        "constructed at import, and no persistence adapter writes or reads a payload carrying this number; "
+        "the transient contract digest does not make it an operator-owned persisted format."
+    ),
     "SCHEMA_VERSION": "Telemetry wire schema; its rows persist under their own enrolled keys, the wire shape does not.",
     "CACHE_SCHEMA_VERSION": "Locale catalogue cache, rebuilt from the shipped catalogues on any mismatch.",
     "COMPILED_CACHE_SCHEMA_VERSION": "Compiled registry cache, rebuilt from the bundled registry tree on any mismatch.",
@@ -143,16 +148,6 @@ container, or a token naming an enrolled format's version.
 """
 
 CONSTANTS_AWAITING_CLASSIFICATION: Final[Mapping[str, str]] = {
-    "EPOCH_SCHEMA_VERSION": (
-        "Modelo Workspace V1 producer-contract epoch shape. Genuinely open, and the two "
-        "signals disagree: the declaring module holds no repository, secure-object or "
-        "persist reference at all and the contract is a frozen declaration computed at "
-        "import, which reads as not-persisted; but the module documents itself as "
-        "STAMPED producer contracts and the contract carries a digest, so whether a "
-        "stamped contract lands inside a captured projection decides the class. That "
-        "belongs with the workspace producer work rather than being read off a "
-        "neighbour."
-    ),
     "CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION": (
         "Censal reviewed-operand record: the encrypted exact preimage an operator approved or "
         "rejected. It is operator-produced persisted data, so it is NOT outside this inventory, "
@@ -354,9 +349,9 @@ def test_the_unclassified_gap_is_a_number_a_reader_can_see() -> None:
     version as a bare literal, so like the five above they were invisible to
     this gate until named, and they were named and classed in one move.
     """
-    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 20, (
+    assert len(CONSTANTS_AWAITING_CLASSIFICATION) == 19, (
         f"{len(CONSTANTS_AWAITING_CLASSIFICATION)} persisted formats await a durability class, not "
-        "the 18 recorded here. If one has been argued, remove it from "
+        "the 19 recorded here. If one has been argued, remove it from "
         "CONSTANTS_AWAITING_CLASSIFICATION and lower this number in the same change; if a new "
         "format arrived unclassified, raise it deliberately rather than to restore green."
     )
