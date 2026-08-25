@@ -411,7 +411,7 @@ carries.
 # surrounding code is Decimal-typed, not because the law fixes it.
 
 [[decision]]
-path = "src/cadrumo/application/ledger/_invoice_extraction_authority.py"
+path = "src/cadrumo/application/ledger/invoice_extraction_authority.py"
 enclosing_symbol = "<module>"
 disposition = "not_regulatory"
 rationale = "The percent scale divisor 100, used to render a fraction as a percentage. A pure mathematical constant, which the authority-flow rule names as an acceptable exception."
@@ -797,17 +797,17 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/ledger/_llm_diagnostics.py"
+path = "src/cadrumo/application/ledger/llm_diagnostics.py"
 kind = "decimal_literal"
 group = "decimal-regulatory-literals"
 
 [[decision]]
-path = "src/cadrumo/application/ledger/_models.py"
+path = "src/cadrumo/application/ledger/models.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/ledger/_ratios.py"
+path = "src/cadrumo/application/ledger/ratios.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
