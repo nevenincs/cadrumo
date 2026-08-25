@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import ast
-from decimal import Decimal
 import inspect
+from decimal import Decimal
 
 import pytest
 

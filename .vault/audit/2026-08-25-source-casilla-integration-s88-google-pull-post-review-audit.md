@@ -5,30 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:c2f7a59a0b91eb2fdf02a13444385230ae9573890fb99b8b526462ed309dc201'
+body_hash: 'sha256:b2fd65e73724860b4be41dafc39a8e967f7dded1a3c09c6be6d73e69abbc58d5'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-source-casilla-integration-W05-P14-S88]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace source-casilla-integration with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `source-casilla-integration` audit: `s88 google pull post review`
 
