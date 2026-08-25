@@ -7,8 +7,7 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from dev._paths import REPO_ROOT
-
+from ...._paths import REPO_ROOT
 from ..cli import _default_manager, app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

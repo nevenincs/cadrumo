@@ -13,8 +13,8 @@ from cadrumo.domain.calculations.registry import (
     RegistryValidationError,
     bundled_authority,
 )
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..analysis import _dp30302_field_matrix
 from ..analysis._dp30302_field_matrix import (
     DP30302_EPOCH_COORDINATES,

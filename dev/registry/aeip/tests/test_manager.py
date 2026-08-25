@@ -25,8 +25,8 @@ from cadrumo.domain.calculations.registry import (
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )
-from dev._paths import REPO_ROOT as _REPO_ROOT
 
+from ...._paths import REPO_ROOT as _REPO_ROOT
 from ..adjudications import (
     AdjudicationError,
     AdjudicationSet,
