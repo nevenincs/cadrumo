@@ -26,7 +26,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import scan_directory
-from dev._paths import UTF_8
+
+from .._paths import UTF_8
 
 #: Sourced from ``dev._paths`` so the dev harness has one owner for it, not
 #: because ``cadrumo.core`` is off limits: the sanctioned direction is that

@@ -26,8 +26,8 @@ from pydantic import BaseModel, ConfigDict, Field, PositiveInt, StringConstraint
 
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT, UTF_8
 
+from ..._paths import REPO_ROOT, UTF_8
 from ..terminology_handbook import TerminologyHandbook
 from ..terminology_handbook._errors import TerminologyLoadError
 

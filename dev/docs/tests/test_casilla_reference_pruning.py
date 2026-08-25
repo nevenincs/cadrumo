@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import iter_directory, scan_directory
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..casilla_reference import generate_casilla_reference
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]

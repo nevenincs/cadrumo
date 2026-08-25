@@ -52,8 +52,8 @@ import pytest
 
 from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ...deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
     DEFAULT_SOURCE_LANGUAGE,

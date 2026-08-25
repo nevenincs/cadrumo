@@ -47,8 +47,8 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 
+from ..._paths import REPO_ROOT, UTF_8
 from ._compare import check_transcript, evaluate_expectations
 from ._contracts import read_sequence_contract
 from ._errors import SequenceEngineError, SequenceParseError

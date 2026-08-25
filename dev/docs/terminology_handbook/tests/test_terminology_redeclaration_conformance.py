@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from ...._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.docs, pytest.mark.hex_entrypoint]
 

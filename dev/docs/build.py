@@ -24,8 +24,8 @@ if not __package__:
 
 from cadrumo.core import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
 
+from .._paths import REPO_ROOT
 from .apidocs import ApiStubManager
 from .cli_reference import generate_cli_reference
 from .download_matrix import descriptor_path as _download_descriptor_path

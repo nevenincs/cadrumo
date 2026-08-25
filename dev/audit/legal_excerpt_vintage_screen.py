@@ -182,8 +182,8 @@ from cadrumo.core import (
     resolve_anchored_extracted_unit,
     scan_directory,
 )
-from dev._paths import REPO_ROOT, UTF_8
 
+from .._paths import REPO_ROOT, UTF_8
 from ..corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
     article_block_title,

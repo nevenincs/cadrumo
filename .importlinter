@@ -718,7 +718,6 @@ ignore_imports =
     cadrumo.application.user_profile._bundle -> cadrumo.adapters.persistence.**
     cadrumo.application.user_profile._bundle_encryption -> cadrumo.adapters.persistence.**
     cadrumo.application.user_profile._capabilities -> cadrumo.adapters.persistence.**
-    cadrumo.application.user_profile._custody_transactions -> cadrumo.adapters.persistence.storage.custody
     cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.persistence.**
     cadrumo.application.user_profile._language_resolver -> cadrumo.adapters.persistence.**

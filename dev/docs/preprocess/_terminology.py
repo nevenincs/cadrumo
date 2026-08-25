@@ -13,8 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
-
+from ..._paths import UTF_8
 from ._parts import split_units_by_budget
 from ._schema import ExtractionStatus, PreprocessOutput, PreprocessUnit, SourceDocumentKind
 from ._sidecar import sha256_of

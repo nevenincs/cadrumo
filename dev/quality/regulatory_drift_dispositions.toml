@@ -416,12 +416,6 @@ identifiers. An identifier format fact the sanitizer needs, not a value a filing
 carries.
 """
 
-[[decision]]
-path = "dev/tui/_modelo_work_fixture.py"
-enclosing_symbol = "<module>"
-disposition = "not_regulatory"
-rationale = "The filing year of the terminal-UI development fixture. A fixture constant."
-
 # -- Allowlist: zero defaults, scales and mathematical bounds ----------------
 #
 # Surfaced only after the named-constant detector was taught to see a value

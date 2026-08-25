@@ -15,8 +15,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ...packaging.cohort_manifest import ArtifactKind
 from ..download_matrix import (
     _ZONE_BEGIN,

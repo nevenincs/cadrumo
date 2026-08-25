@@ -49,7 +49,7 @@ _FAMILY_PAGE = re.compile(r"^cli/(?!index|automation|schemas)[a-z0-9_-]+\.rst$")
 @pytest.fixture(scope="module")
 def rendered_pages() -> dict[str, str]:
     """Every page the real generator produces, rendered once for this module."""
-    from dev.docs.cli_reference import generate_cli_reference
+    from ..cli_reference import generate_cli_reference
 
     root = Path(tempfile.mkdtemp())
     (root / "index.rst").write_text("placeholder\n", encoding="utf-8")

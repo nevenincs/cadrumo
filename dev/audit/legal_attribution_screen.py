@@ -72,8 +72,7 @@ import sys
 from pathlib import Path
 from typing import Final, NamedTuple
 
-from dev._paths import REPO_ROOT
-
+from .._paths import REPO_ROOT
 from .legal_catalogue import load_legal_entries, required_text_by_entry
 
 #: Registry authoring tree, relative to the repository root, matching the

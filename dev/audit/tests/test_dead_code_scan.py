@@ -11,8 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ..._paths import REPO_ROOT
 from ..dead_code import DeadCodeOutcome, run_dead_code_scan
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]

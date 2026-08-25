@@ -63,7 +63,7 @@ def _attempt(session: Session, *, refusal_note: str) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     """Parse one command, apply it to the session, and print the frame."""
-    parser = argparse.ArgumentParser(prog="python -m dev.tui", description=__doc__)
+    parser = argparse.ArgumentParser(prog="python -m cadrumo.entrypoints.tui.devtools", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_open = sub.add_parser("open", help="start a fresh session on a surface")

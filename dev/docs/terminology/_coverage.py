@@ -50,8 +50,8 @@ from cadrumo.domain.calculations.registry import (
     ValidatedRegistryAuthority,
     bundled_authority,
 )
-from dev._paths import UTF_8
 
+from ..._paths import UTF_8
 from ._casilla_projection import project_casilla_search_records
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord, project_cli_search_records
 from ._concept_cards import ConceptCardRecord, project_concept_cards

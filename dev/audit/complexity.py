@@ -62,8 +62,8 @@ from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core import scan_directory
-from dev._paths import UTF_8
 
+from .._paths import UTF_8
 from .complexity_allowlist import load_allowlist
 
 file_complexity: Callable[[str], Any] | None

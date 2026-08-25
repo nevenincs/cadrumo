@@ -36,7 +36,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
+from .._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _TARGETS: Final[tuple[str, ...]] = ("src/cadrumo", "dev/audit/vulture_whitelist.py")

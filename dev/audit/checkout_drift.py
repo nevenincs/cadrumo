@@ -71,7 +71,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
+from .._paths import REPO_ROOT, UTF_8
 
 #: Declared locally rather than imported from ``cadrumo.core``: ``dev/`` is
 #: unshipped tooling and must not reach into the shipped package's internals,

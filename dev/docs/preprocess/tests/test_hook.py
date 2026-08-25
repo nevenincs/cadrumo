@@ -26,8 +26,8 @@ from typing import cast
 import pytest
 
 from cadrumo.core import iter_directory, scan_directory
-from dev._paths import REPO_ROOT
 
+from ...._paths import REPO_ROOT
 from ..hook import (
     UPSTREAM_SCHEMA_VERSION,
     adapt_outputs,

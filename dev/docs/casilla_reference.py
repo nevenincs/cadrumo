@@ -61,8 +61,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 
+from .._paths import REPO_ROOT, UTF_8
 from ._locale_chrome import docs_chrome
 from .legal_reference import legal_reference_target, load_legal_provisions
 from .terminology import CasillaSearchRecord, project_casilla_search_records

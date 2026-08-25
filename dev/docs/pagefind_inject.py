@@ -45,8 +45,8 @@ from typing import TYPE_CHECKING, Final
 from pydantic import ValidationError
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT, UTF_8
 
+from .._paths import REPO_ROOT, UTF_8
 from .terminology._sweep import SweepResult
 from .terminology._unified_record import SearchRecord, derive_display_class, to_search_record
 

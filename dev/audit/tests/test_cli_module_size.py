@@ -30,7 +30,8 @@ from cadrumo.tests import (
     ast_for_path,
     package_python_files,
 )
-from dev.audit.size_budget import load_size_budget_baseline
+
+from ..size_budget import load_size_budget_baseline
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

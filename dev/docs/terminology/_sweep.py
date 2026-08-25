@@ -41,8 +41,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
 from ..terminology_handbook._enums import TermStatus
 from ._query_aliases import QueryAliasAuthority, load_query_alias_authority, validate_query_alias_authority

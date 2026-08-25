@@ -5,10 +5,11 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
-from dev.audit import dead_code, report, semantic
-from dev.audit.complexity import collect_cc, load_baseline
-from dev.corpus import build_evidence_corpus
+
+from ..._paths import REPO_ROOT
+from ...corpus import build_evidence_corpus
+from .. import dead_code, report, semantic
+from ..complexity import collect_cc, load_baseline
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

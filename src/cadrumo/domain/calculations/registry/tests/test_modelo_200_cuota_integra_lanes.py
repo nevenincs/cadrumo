@@ -29,7 +29,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from ....deadlines import (
     EntityType,
     IVARegime,
@@ -84,7 +84,7 @@ _M200_CUOTA_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _snapshot():
-    return _committed_snapshot("200", 2025, "0A")
+    return _committed_snapshot("200", 2025, "0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 def _cuota_for(

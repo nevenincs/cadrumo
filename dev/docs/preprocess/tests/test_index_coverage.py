@@ -19,8 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev._paths import REPO_ROOT
-
+from ...._paths import REPO_ROOT
 from .._reindex import (
     expected_data_files,
     load_index_meta,

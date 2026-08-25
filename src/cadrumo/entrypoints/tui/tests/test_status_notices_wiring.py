@@ -9,7 +9,7 @@ was structurally invisible to a full-screen one.
 These tests drive the real production chain end to end: a real profile, a
 real (or absent) persisted calculation observation, the real
 :func:`~cadrumo.application.overview.no_aeat_history_notice` producer, the
-real :func:`~cadrumo.entrypoints.cli._config._status_frontend.build_status_page_data`
+real :func:`~cadrumo.entrypoints.cli.build_status_page_data`
 builder, and the real :class:`~cadrumo.entrypoints.tui.profile.status.StatusApp`
 surface. No mock, stub, or reimplementation of what the wiring should do.
 """
@@ -19,14 +19,12 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Static
 
-from .....application.calculations import CalculationObservationRepository
-from .....application.overview import NO_AEAT_HISTORY_NOTICE_CODE
-from .....application.user_profile import login_profile, register_profile_with_credentials
-from .....core.json_contract import NoticeSeverity, ResolvedNoticeAction
-from .....domain.calculations.registry import RegistryModeloObservation
-from .....entrypoints.tui.profile.status import StatusApp
-from .....tests.secure_sql import isolated_profile_storage_root
-from .._status_frontend import build_status_page_data
+from ....application.calculations import CalculationObservationRepository
+from ....application.user_profile import login_profile, register_profile_with_credentials
+from ....domain.calculations.registry import RegistryModeloObservation
+from ....tests.secure_sql import isolated_profile_storage_root
+from ...cli import build_status_page_data
+from ..profile.status import StatusApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -69,13 +67,9 @@ def test_a_fresh_profile_with_no_aeat_history_raises_a_real_info_notice(tmp_path
 
         assert len(data.notices) == 1
         notice = data.notices[0]
-        assert notice.code == NO_AEAT_HISTORY_NOTICE_CODE
-        assert notice.severity is NoticeSeverity.INFO
-        assert isinstance(notice.action, ResolvedNoticeAction)
-        assert notice.action.action.action_id == "operator.live.filed.pull_all"
-        assert notice.action.action.target_command_key == "app.live.filed.pull_all"
-        assert notice.action.action.cli_path == ("app", "live", "filed", "pull-all")
-        assert notice.action.argument_bindings == ()
+        assert notice.severity == "info"
+        assert notice.message
+        assert notice.action_target == "aeat app live filed pull-all"
 
 
 def test_one_official_observation_silences_the_notice(tmp_path) -> None:
@@ -112,11 +106,8 @@ async def test_the_real_notice_actually_paints_on_the_running_status_surface(tmp
         data = build_status_page_data()
         assert data.notices, "fixture premise: this profile must carry the real advisory"
         expected_message = data.notices[0].message
-        notice_action = data.notices[0].action
-        assert isinstance(notice_action, ResolvedNoticeAction)
-        cli_path = notice_action.action.cli_path
-        assert cli_path is not None
-        expected_action_target = "aeat " + " ".join(cli_path)
+        expected_action_target = data.notices[0].action_target
+        assert expected_action_target is not None
 
         app = StatusApp(data)
         async with app.run_test(size=_TERMINAL_SIZE):

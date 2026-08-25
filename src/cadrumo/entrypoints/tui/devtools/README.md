@@ -4,18 +4,18 @@ Render any full-screen surface headlessly, drive it with real keystrokes, and
 read the result as text. Built for **evaluation** — judging the operator
 experience, the correctness of the projection, and the cost of a keystroke —
 not for gating. It asserts nothing. The pass/fail authority stays with
-`src/cadrumo/adapters/inbound/tui/tests/`.
+`src/cadrumo/entrypoints/tui/tests/`.
 
 Discardable: the whole harness is this directory plus a gitignored `.state/`.
 
 ## Use
 
 ```sh
-uv run --no-sync python -m dev.tui surfaces
-uv run --no-sync python -m dev.tui open manager
-uv run --no-sync python -m dev.tui press down enter
-uv run --no-sync python -m dev.tui type "12345678Z"
-uv run --no-sync python -m dev.tui undo
+uv run --no-sync python -m cadrumo.entrypoints.tui.devtools surfaces
+uv run --no-sync python -m cadrumo.entrypoints.tui.devtools open manager
+uv run --no-sync python -m cadrumo.entrypoints.tui.devtools press down enter
+uv run --no-sync python -m cadrumo.entrypoints.tui.devtools type "12345678Z"
+uv run --no-sync python -m cadrumo.entrypoints.tui.devtools undo
 ```
 
 Every command that changes the walk prints the resulting frame, so the loop is
@@ -66,12 +66,12 @@ the same bucket and active-profile pointer. Without it everyone shares
 
 ## Surfaces
 
-`registration`, `login`, `manager`, `status`, `form`, `modelo-work-wizard`.
+`registration`, `login`, `manager`, `status`, `form`.
 
-Each is built through the same doors the CLI uses — the real registration and
-login doors, the real overview and status projections, and the live modelo work
-wizard. Nothing is a stand-in, because a reading over a stand-in is a reading
-about the stand-in.
+Each uses the canonical public profile and presentation contracts. The manager
+surface exercises authenticated profile editing and logout; effectful manager
+operations and the Modelo wizard stay behind their application-owned public
+contracts until their dedicated operation and flow migrations land.
 
 ## The frame
 

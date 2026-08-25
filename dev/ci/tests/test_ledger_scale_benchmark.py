@@ -111,7 +111,8 @@ from cadrumo.domain.user_profile import ProfileSetupState, UserProfileFact, User
 from cadrumo.tests.profile_capsule import seed_test_profile_record
 from cadrumo.tests.registry_observations import registry_grounded_observations
 from cadrumo.tests.secure_sql import isolated_runtime_profile
-from dev.ci.perf_measurement import wall_advisory_message
+
+from ..perf_measurement import wall_advisory_message
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

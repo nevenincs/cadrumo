@@ -91,7 +91,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Final
 
-from dev._paths import UTF_8
+from .._paths import UTF_8
 
 _API_HOST: Final = "api.github.com"
 _API_VERSION: Final = "2022-11-28"

@@ -25,8 +25,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..pagefind_index import build_search_index
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]

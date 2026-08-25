@@ -18,8 +18,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core import resolve_anchored_extracted_unit, scan_directory
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ...corpus.fetch_boe_normative import (
     ArticleRedaction,
     NormativeAcquisitionError,

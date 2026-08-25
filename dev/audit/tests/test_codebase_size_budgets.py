@@ -55,8 +55,8 @@ from cadrumo.tests._size_budget import (
     scan_callable_lines,
     scan_module_lines,
 )
-from dev._paths import REPO_ROOT
 
+from ..._paths import REPO_ROOT
 from ..size_budget import (
     SIZE_BUDGET_BASELINE_PATH,
     load_size_budget_baseline,
