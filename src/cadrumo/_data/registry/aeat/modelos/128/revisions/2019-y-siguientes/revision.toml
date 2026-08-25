@@ -7,7 +7,7 @@ valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-3435-2007:anexo-v"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
-source_refs = ["aeat-modelo-128-procedure", "boe-modelo-128-form-text", "boe-modelo-128-form-layout", "aeat-dr-128-2020"]
+source_refs = ["aeat-modelo-128-procedure", "boe-modelo-128-form-text", "boe-modelo-128-form-layout", "aeat-dr-128-2015-2019", "aeat-dr-128-2020"]
 review_status = "agent_reviewed"
 reviewed_by = "agent calculation-grade attestation against cited AEAT form arithmetic"
 reviewed_at = 2026-08-24

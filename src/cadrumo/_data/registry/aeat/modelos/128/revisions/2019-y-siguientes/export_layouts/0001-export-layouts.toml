@@ -4,13 +4,6 @@
 # Transcribed position by position from the bundled AEAT Diseno de Registros
 # cited in source_refs. Every offset and length below is read from that file;
 # none is derived, inferred or rounded.
-#
-# NOTE ON ERA COVERAGE: this revision claims filing years from 2019, but the only
-# record design AEAT publishes for this modelo -- and the only one this revision
-# cites -- applies from 2020 ('ejercicio 2020 y siguientes'). Filing year 2019 is
-# therefore not backed by a bundled design. That gap predates this layout and is
-# not resolved by it; it is recorded here rather than papered over.
-#
 # Two positions of the file envelope are deliberately left unwritten: AEAT's
 # 'Version del Programa' and 'NIF Empresa Desarrollo' are its entidad-
 # desarrolladora slots, to be filled by the developer of the filing software.
@@ -20,7 +13,7 @@
 [[revisions."2019-y-siguientes".export_layouts]]
 id = "modelo-128-fichero-boe"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
-source_refs = ["aeat-dr-128-2020"]
+source_refs = ["aeat-dr-128-2015-2019", "aeat-dr-128-2020"]
 
 # The file envelope, positions 1-328.
 [[revisions."2019-y-siguientes".export_layouts.records]]
