@@ -41,7 +41,10 @@ def _assert_manifest_verdict(verdict, condition_id: str, facts: dict[str, object
     assert len(verdict.evidence) == 1
     evidence = verdict.evidence[0]
     assert evidence.evidence_id == f"{condition_id}.observation"
-    assert evidence.provenance in (ActionEvidenceProvenance.RUNTIME_OBSERVATION, ActionEvidenceProvenance.APPLICATION_STATE)
+    assert evidence.provenance in (
+        ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+        ActionEvidenceProvenance.APPLICATION_STATE,
+    )
     assert dict(evidence.values) == facts
 
 
