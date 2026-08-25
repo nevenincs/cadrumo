@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-25'
-body_hash: 'sha256:b3ed7bd5e65759920bb9636910e7bd97c7a78429bd01dd1b34c45497a4ca86cf'
+body_hash: 'sha256:099723270e0780f9e7d0c1b005f68230c085dd75153cd75675929cc9e8251bdb'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -259,7 +259,7 @@ Generate the runtime matrix from production declarations, prove negative-recover
 Replace scenario-authored expectations with production-derived condition and action coverage.
 
 - [x] `W06.P11.S42` - Generate the leaf-condition-scenario matrix from live surface and production verdict declarations; `dev/agent_eval/_action_coverage.py [new]; src/cadrumo/application/operator_surface/_manifest.py; src/cadrumo/application/operator_surface/_models.py; src/cadrumo/application/operator_actions`.
-- [ ] `W06.P11.S43` - Replace scenario-owned expected actions with observed production condition and action assertions; `dev/agent_eval/_models.py`.
+- [x] `W06.P11.S43` - Replace scenario-owned expected actions with observed production condition and action assertions; `dev/agent_eval/_models.py`.
 - [ ] `W06.P11.S44` - Dispatch negative cases validate bindings execute safe recovery and retry original leaves; `dev/agent_eval/_runner.py`.
 - [ ] `W06.P11.S45` - Enforce the bidirectional declaration and observation join, removing retired error-registry-suggestion test references so only the live canonical citation gate remains.; `dev/tests/test_suggestion_command_conformance.py`.
 
