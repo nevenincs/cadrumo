@@ -76,9 +76,8 @@ EVENT_SEMANTIC_ROLE = "irpf_anexo_a_aeip_aplicado"
 CATEGORY_SEMANTIC_ROLE = "irpf_anexo_a_aeip_aplicado_flag"
 ANEXO_A_SECTION_LEAF = "deducciones_inversion_empresarial_res"
 
-# Chain-id shape. Mirrors `ContinuidadId` in
-# `cadrumo.domain.calculations.registry._schema_base`: max 128 characters and
-# the pattern below.
+# Chain-id shape. Mirrors `ContinuidadId` in `cadrumo.core.identity`: max 128
+# characters and the pattern below.
 #
 # The separator is a hyphen, not a dot, because the chain id is embedded whole
 # into a locale key. `encode_modelo_locale_segment` passes `[A-Za-z0-9_-]+`
