@@ -1,4 +1,4 @@
-"""The session journal: the only state this harness keeps.
+"""The session journal: the only state this canonical devtool keeps.
 
 A session is a header plus an ordered list of operator gestures. Nothing
 else persists, and no process stays alive between commands: every command
@@ -12,14 +12,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated, Final, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from dev._paths import UTF_8
+from cadrumo.core.external_constants import UTF_8_ENCODING
 
 _STRICT = ConfigDict(frozen=True, extra="forbid")
-_UTF_8: Final[str] = UTF_8
 
 
 class Press(BaseModel):
@@ -102,7 +101,7 @@ def read_session(path: Path) -> Session:
     if not path.exists():
         message = f"no open session at {path}: run `open <surface>` first"
         raise FileNotFoundError(message)
-    lines = [line for line in path.read_text(encoding=_UTF_8).splitlines() if line.strip()]
+    lines = [line for line in path.read_text(encoding=UTF_8_ENCODING).splitlines() if line.strip()]
     header = json.loads(lines[0])
     gestures = [json.loads(line) for line in lines[1:]]
     return Session.model_validate({**header, "gestures": gestures})
@@ -114,7 +113,7 @@ def write_session(path: Path, session: Session) -> None:
     header = session.model_dump(mode="json", exclude={"gestures"})
     lines = [json.dumps(header, ensure_ascii=False)]
     lines.extend(json.dumps(g.model_dump(mode="json"), ensure_ascii=False) for g in session.gestures)
-    path.write_text("\n".join(lines) + "\n", encoding=_UTF_8, newline="\n")
+    path.write_text("\n".join(lines) + "\n", encoding=UTF_8_ENCODING, newline="\n")
 
 
 def describe(gesture: Gesture) -> str:

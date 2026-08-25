@@ -1,4 +1,4 @@
-"""Replay a journal from birth and read the resulting frame.
+"""Replay a canonical devtool journal from birth and read the resulting frame.
 
 Nothing is cached and no process survives a command. The app is
 constructed, mounted under Textual's headless Pilot, driven through the

@@ -1,4 +1,4 @@
-"""One frame: what is painted, what is reachable, and what the engine believes.
+"""One devtool frame: what is painted, what is reachable, and what the engine believes.
 
 The five bands answer five different questions, and no one of them
 substitutes for another:
