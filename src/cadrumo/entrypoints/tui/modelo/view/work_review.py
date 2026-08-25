@@ -1,8 +1,8 @@
 """Read-only Textual projection of the canonical modelo work review.
 
 The application layer owns every join represented here.  This entrypoint projection accepts
-one already-built :class:`ModeloWorkReview` through the public
-``application.modelo`` facade and renders it without consulting repositories,
+one already-built :class:`ModeloWorkReview` from the defining public
+``application.modelo.work_review_projection`` module and renders it without consulting repositories,
 the registry, CLI payloads, or private application modules.  Consequently the
 screen cannot derive a competing readiness verdict or mutate modelo work.
 
@@ -25,7 +25,7 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Collapsible, Footer, Label, Select, Static
 
-from .....application.modelo import (
+from .....application.modelo.work_review_projection import (
     BlockerRef,
     ModeloWorkOriginAnomaly,
     ModeloWorkProgressDenominator,

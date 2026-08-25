@@ -19,7 +19,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectRow
-from ....application.modelo import ModeloWorkReview, build_modelo_work_review
+from ....application.modelo.work_review_projection import ModeloWorkReview, build_modelo_work_review
 from ....core import BindingSourceKind, OperatorActionAxis, Period
 from ....core.json_contract import (
     EnvelopeStatus,

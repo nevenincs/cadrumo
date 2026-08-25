@@ -183,7 +183,8 @@ class DeadlineEngine:
             profile: The :class:`TaxpayerProfile` to compute obligations for.
             year: The fiscal year to compute for.
             today: Reference date for status classification. Defaults
-                to ``date.today()``.
+                to the canonical Europe/Madrid civil date returned by
+                :func:`cadrumo.core.time.today_madrid`.
 
         Returns:
             The :class:`Schedule` containing every obligation that
@@ -488,7 +489,8 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
 
     Args:
         schedule: The :class:`Schedule` to scan for upcoming obligations.
-        today: Reference date. Defaults to ``date.today()``.
+        today: Reference date. Defaults to the canonical Europe/Madrid civil
+            date returned by :func:`cadrumo.core.time.today_madrid`.
 
     Returns:
         The earliest non-overdue :class:`ModeloDeadline`, or ``None``

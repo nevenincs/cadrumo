@@ -22,8 +22,7 @@ from textual.widgets import (
     Static,
 )
 
-from ......application.modelo import ModeloWorkOriginAnomaly
-from ......application.modelo.tests._work_review_integration_fixture import build_real_modelo_work_review
+from ......application.modelo.work_review_projection import ModeloWorkOriginAnomaly
 from ......core import BindingSourceKind, EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
 from ......core.config import override_settings
 from ......core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
@@ -31,6 +30,7 @@ from ......domain.calculations.registry import InputKind, RelationConsumptionCha
 from ......domain.filing import ModeloValueKind
 from ......domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ......tests.locales_root_fixture import locales_root_scope
+from ......tests.modelo_work_review import build_real_modelo_work_review
 from ....components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,

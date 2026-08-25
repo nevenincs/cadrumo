@@ -9,32 +9,32 @@ claim. An in-time period carries neither an overdue notice nor a preview.
 These tests drive a real Modelo 130 calculate through the CLI over an
 isolated profile and a real ledger income row; the expected overdue /
 in-time posture is derived from the registry deadline window the engine
-itself resolves (``resolve_filing_closes_on``) against the real
-``date.today()``, never hand-asserted, so the test tracks the registry
-rather than a frozen calendar literal.
+itself resolves (``resolve_filing_closes_on``) against an explicit reference
+date frozen through the canonical ``today_madrid()`` seam, so the test tracks
+the registry rather than the host wall clock or a frozen legal-date literal.
 
 Period selection is deterministic and self-calibrating: rather than
-hardcode a quarter and skip when the calendar makes its branch
-unreachable, each test enumerates the M130 quarterly periods the
-registry actually defines deadline windows for and picks the period
-whose ``closes_on`` guarantees the wanted posture relative to today
-(the most recent already-past close for the overdue test, the nearest
-still-future close for the in-time test). Both branches are therefore
-always reachable and no calendar-edge skip is needed.
+hardcode a filing year, quarter, or reference date, each test derives the
+supported horizon from the registry catalogue, enumerates the M130 quarterly
+windows, and chooses a reference date strictly between two consecutive closes.
+Both postures are therefore always reachable and independent of execution day.
 """
 
 from __future__ import annotations
 
 import json
-from datetime import date
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
+from itertools import pairwise
 from typing import Any
 
 import pytest
 
 from ....application.modelo import ModeloWorkDeadlinePosture
-from ....core import Period
+from ....core import Period, PeriodKind, registry_period_kind
 from ....core.resources import resources
+from ....core.time import MADRID_TZ, frozen_clock
+from ....domain.calculations.registry import select_revision
 from ....domain.deadlines import resolve_filing_closes_on
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _result
@@ -49,13 +49,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _UNASSESSED_PREVIEW_NOTICE_CODE = "modelo.work.calculate.plazo_vencido_unassessed_preview"
 _RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
-_M130_REVISION = "2019-y-siguientes"
-_M130_FILING_YEAR = 2026
-
-# The quarterly periods the M130 2019-y-siguientes revision declares, in
-# chronological close order. Each test resolves their real registry close
-# dates and selects deterministically against ``date.today()``.
-_M130_QUARTERLY_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 
 
 def _create_natural_person_profile() -> None:
@@ -99,58 +92,56 @@ def _calculate_m130(work_unit_id: str) -> Any:
     return result
 
 
-def _closes_on(period_token: str) -> date:
+def _closes_on(filing_year: int, period_token: str) -> date:
     closes_on = resolve_filing_closes_on(
         "130",
-        _M130_FILING_YEAR,
-        Period.from_year_and_code(_M130_FILING_YEAR, period_token),
+        filing_year,
+        Period.from_year_and_code(filing_year, period_token),
     )
-    assert closes_on is not None, f"registry must register an M130 {period_token} {_M130_FILING_YEAR} deadline window"
+    assert closes_on is not None, f"registry must register an M130 {period_token} {filing_year} deadline window"
     return closes_on
 
 
-def _registered_quarterly_closes() -> list[tuple[str, date]]:
+def _registered_quarterly_closes(filing_year: int) -> list[tuple[str, date]]:
     """(period_token, closes_on) for every M130 quarter with a registry window.
 
-    Sorted by close date so callers can pick the most-recent-past or the
-    nearest-future deadline deterministically against the run date.
+    Sorted by close date so callers can derive both postures relationally.
     """
-    pairs = [(token, _closes_on(token)) for token in _M130_QUARTERLY_PERIODS]
+    authority = resources().modelos.authority
+    tokens = {
+        window.period.registry_token
+        for modelo, _revision, window in authority.deadline_windows(filing_year)
+        if modelo == "130" and registry_period_kind(window.period.registry_token) is PeriodKind.QUARTERLY
+    }
+    pairs = [(token, _closes_on(filing_year, token)) for token in tokens]
     return sorted(pairs, key=lambda pair: pair[1])
 
 
-def _select_overdue_period() -> tuple[str, date]:
-    """Pick the M130 quarter whose plazo voluntario is guaranteed already past.
-
-    Returns the most recent quarter whose ``closes_on`` is strictly before
-    today, so the calculate path always resolves an overdue posture and the
-    recargo branch is always exercised — no calendar-edge skip.
-    """
-    today = date.today()
-    past = [pair for pair in _registered_quarterly_closes() if pair[1] < today]
-    assert past, (
-        "no M130 quarterly deadline window in the registry closes before "
-        f"{today.isoformat()}; the overdue recargo branch cannot be exercised "
-        "deterministically. Extend the M130 registry deadline windows."
-    )
-    return past[-1]
+def _deadline_case() -> tuple[int, date, tuple[str, date], tuple[str, date]]:
+    """Derive one overdue/in-time pair from the canonical supported horizon."""
+    authority = resources().modelos.authority
+    supported_years = authority.catalogues.supported_filing_years
+    assert supported_years is not None
+    for filing_year in reversed(supported_years.years):
+        closes = _registered_quarterly_closes(filing_year)
+        for overdue, in_time in pairwise(closes):
+            reference_on = overdue[1] + timedelta(days=1)
+            if reference_on < in_time[1]:
+                return filing_year, reference_on, overdue, in_time
+    raise AssertionError("supported M130 windows contain no two consecutive closes for deterministic posture coverage")
 
 
-def _select_in_time_period() -> tuple[str, date]:
-    """Pick the M130 quarter whose plazo voluntario is guaranteed still open.
+def _revision_id(filing_year: int, period_token: str) -> str:
+    """Return the canonical law-selected M130 revision for one test coordinate."""
+    authority = resources().modelos.authority
+    revision = select_revision(authority.modelo("130"), filing_year=filing_year, period=period_token)
+    return str(revision.id)
 
-    Returns the nearest quarter whose ``closes_on`` is strictly after today,
-    so the calculate path always resolves an in-time posture and the
-    no-recargo branch is always exercised — no calendar-edge skip.
-    """
-    today = date.today()
-    future = [pair for pair in _registered_quarterly_closes() if pair[1] > today]
-    assert future, (
-        "no M130 quarterly deadline window in the registry closes after "
-        f"{today.isoformat()}; the in-time no-recargo branch cannot be "
-        "exercised deterministically. Extend the M130 registry deadline windows."
-    )
-    return future[0]
+
+def _frozen_madrid_instant(reference_on: date) -> datetime:
+    """Represent a Madrid civil reference date as a stable UTC instant."""
+    madrid_noon = datetime.combine(reference_on, time(hour=12), tzinfo=MADRID_TZ)
+    return madrid_noon.astimezone(UTC)
 
 
 def test_overdue_posture_fallback_emits_null_preview_without_rate_wording() -> None:
@@ -187,22 +178,23 @@ def test_calculate_overdue_period_surfaces_unassessed_preview_with_legal_context
     reference, and a non-null ``result.deadline`` overdue posture. Text and
     JSON must expose a conditional preview rather than a liability claim.
     """
-    period, closes_on = _select_overdue_period()
+    filing_year, reference_on, (period, closes_on), _ = _deadline_case()
 
-    _create_natural_person_profile()
-    work_unit_id = create_modelo_work_unit_via_cli(
-        modelo="130",
-        filing_year=_M130_FILING_YEAR,
-        period=period,
-        revision=_M130_REVISION,
-    )
-    seed_m130_income_transaction(
-        amount=Decimal("12000.00"),
-        filing_year=_M130_FILING_YEAR,
-        source_key="recargo-overdue",
-    )
+    with frozen_clock(_frozen_madrid_instant(reference_on)):
+        _create_natural_person_profile()
+        work_unit_id = create_modelo_work_unit_via_cli(
+            modelo="130",
+            filing_year=filing_year,
+            period=period,
+            revision=_revision_id(filing_year, period),
+        )
+        seed_m130_income_transaction(
+            amount=Decimal("12000.00"),
+            filing_year=filing_year,
+            source_key="recargo-overdue",
+        )
 
-    result = _calculate_m130(work_unit_id)
+        result = _calculate_m130(work_unit_id)
     envelope = json.loads(result.output)
     inner = _result(result.output)
     notices = unwrap_envelope_notices(result.output)
@@ -231,27 +223,28 @@ def test_calculate_overdue_period_surfaces_unassessed_preview_with_legal_context
     assert preview is not None, "an overdue posture must resolve a rate preview"
     assert preview["legal_ref"] == _RECARGO_LEGAL_REF
     assert preview["assessment_status"] == "unassessed"
-    assert preview["rate_reference_on"] == date.today().isoformat()
+    assert preview["rate_reference_on"] == reference_on.isoformat()
     assert "presentation_date" not in preview
 
     # Text mode exposes the same posture and explicitly unassessed preview.
-    text_result = invoke_cached_cli(
-        [
-            "app",
-            "modelo",
-            "work",
-            "calculate",
-            work_unit_id,
-            "--casilla",
-            "05=0.00",
-            "--casilla",
-            "06=0.00",
-            "--binding",
-            "irpf.previous_year_economic_activity_net_income=13000",
-            "--binding",
-            "modelo-130-resultados-negativos-anteriores=0",
-        ],
-    )
+    with frozen_clock(_frozen_madrid_instant(reference_on)):
+        text_result = invoke_cached_cli(
+            [
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                work_unit_id,
+                "--casilla",
+                "05=0.00",
+                "--casilla",
+                "06=0.00",
+                "--binding",
+                "irpf.previous_year_economic_activity_net_income=13000",
+                "--binding",
+                "modelo-130-resultados-negativos-anteriores=0",
+            ],
+        )
     assert text_result.exit_code == 0, text_result.output
     assert "Art. 27" in text_result.output
     assert "days_overdue\t" in text_result.output
@@ -267,22 +260,23 @@ def test_calculate_in_time_period_carries_no_unassessed_preview_notice() -> None
     status stays ``success``, and ``result.deadline`` reports
     ``days_remaining`` with no overdue posture and no rate preview.
     """
-    period, closes_on = _select_in_time_period()
+    filing_year, reference_on, _, (period, closes_on) = _deadline_case()
 
-    _create_natural_person_profile()
-    work_unit_id = create_modelo_work_unit_via_cli(
-        modelo="130",
-        filing_year=_M130_FILING_YEAR,
-        period=period,
-        revision=_M130_REVISION,
-    )
-    seed_m130_income_transaction(
-        amount=Decimal("12000.00"),
-        filing_year=_M130_FILING_YEAR,
-        source_key="recargo-in-time",
-    )
+    with frozen_clock(_frozen_madrid_instant(reference_on)):
+        _create_natural_person_profile()
+        work_unit_id = create_modelo_work_unit_via_cli(
+            modelo="130",
+            filing_year=filing_year,
+            period=period,
+            revision=_revision_id(filing_year, period),
+        )
+        seed_m130_income_transaction(
+            amount=Decimal("12000.00"),
+            filing_year=filing_year,
+            source_key="recargo-in-time",
+        )
 
-    result = _calculate_m130(work_unit_id)
+        result = _calculate_m130(work_unit_id)
     envelope = json.loads(result.output)
     inner = _result(result.output)
     notices = unwrap_envelope_notices(result.output)

@@ -10,7 +10,7 @@ import typer
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...application.modelo import build_modelo_work_review
+from ...application.modelo.work_review_projection import build_modelo_work_review
 from ...core.external_constants import OutputLanguage
 from ._common import _emit_envelope, activate_subcommand_output_language
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
