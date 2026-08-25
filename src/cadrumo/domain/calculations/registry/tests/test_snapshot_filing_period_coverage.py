@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
@@ -48,7 +49,9 @@ def test_an_administrative_coordinate_carries_no_filing_period(
     period: str,
 ) -> None:
     """An administrative token builds a snapshot with no filing period."""
-    snapshot = registry_authority.snapshot(modelo, filing_year=filing_year, period=period)
+    snapshot = registry_authority.snapshot(
+        modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
+    )
 
     assert snapshot.filing_period is None, (
         f"M{modelo} {period!r} produced a filing period; an administrative token addresses a "
@@ -65,7 +68,9 @@ def test_a_filing_coordinate_carries_a_consistent_filing_period(
     period: str,
 ) -> None:
     """A real filing period is present and agrees with its own coordinates."""
-    snapshot = registry_authority.snapshot(modelo, filing_year=filing_year, period=period)
+    snapshot = registry_authority.snapshot(
+        modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
+    )
 
     assert snapshot.filing_period is not None, (
         f"M{modelo} {period!r} lost its filing period; the cross-check silently stops applying "
@@ -82,12 +87,18 @@ def test_the_two_classes_are_both_represented(
     absent = [
         (modelo, period)
         for modelo, filing_year, period in _ADMINISTRATIVE_COORDINATES
-        if registry_authority.snapshot(modelo, filing_year=filing_year, period=period).filing_period is None
+        if registry_authority.snapshot(
+            modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
+        ).filing_period
+        is None
     ]
     present = [
         (modelo, period)
         for modelo, filing_year, period in _FILING_COORDINATES
-        if registry_authority.snapshot(modelo, filing_year=filing_year, period=period).filing_period is not None
+        if registry_authority.snapshot(
+            modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
+        ).filing_period
+        is not None
     ]
 
     assert len(absent) == len(_ADMINISTRATIVE_COORDINATES), "an administrative coordinate gained a filing period"
