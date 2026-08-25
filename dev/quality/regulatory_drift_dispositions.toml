@@ -244,18 +244,6 @@ percentages the law fixes, written as Decimal literals at the resolver.
 """
 
 [[decision]]
-path = "src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py"
-disposition = "deferred"
-reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
-rationale = """
-The Madrid autonomic deduccion filing year, held as a module constant. Its twin
-in the profile-binding module holds the same value independently, so the two can
-disagree -- which is the concrete harm the authority-flow rule's
-one-canonical-home requirement exists to prevent, and the clearest single defect
-this census found.
-"""
-
-[[decision]]
 path = "src/cadrumo/application/modelo/_profile_binding.py"
 disposition = "deferred"
 reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
@@ -635,11 +623,6 @@ group = "modelo-conditional-behaviour"
 
 [[decision]]
 path = "src/cadrumo/adapters/persistence/profile/usage_ratios.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/adapters/persistence/storage/master_key/_recovery.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
@@ -1104,17 +1087,12 @@ kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/application/storage_write_policy.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
 path = "src/cadrumo/application/transactions/_import.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/application/user_profile/_commands.py"
+path = "src/cadrumo/application/user_profile/commands.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
@@ -1142,11 +1120,6 @@ group = "named-regulatory-constants"
 path = "src/cadrumo/domain/bienes_inversion/__init__.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/_authority.py"
-kind = "modelo_conditional_branch"
-group = "registry-modelo-specific"
 
 [[decision]]
 path = "src/cadrumo/domain/calculations/registry/_bindings.py"
@@ -1520,36 +1493,11 @@ group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/entrypoints/cli/_app_live.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_app_live.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/entrypoints/cli/_app_live_borrador_cli.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_app_live_expedientes_cli.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_app_live_justificante_cli.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
 path = "src/cadrumo/entrypoints/cli/_common.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
@@ -1582,11 +1530,6 @@ group = "modelo-conditional-behaviour"
 path = "src/cadrumo/entrypoints/cli/_modelo_cli_support.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_modelo_iva_wallet_cli.py"
-kind = "filing_year_literal"
-group = "python-resident-filing-years"
 
 [[decision]]
 path = "src/cadrumo/entrypoints/cli/_modelo_iva_wallet_payloads.py"
