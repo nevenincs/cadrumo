@@ -28,15 +28,35 @@ The exit-code table is meaningful, and the load-bearing distinction is:
   recoverable condition; read the `error.code` and the `error.message`.
 - `6` INTERNAL is reserved for a genuine crash. Only a `6` is an abort-and-report.
 
-## Recover from a mis-call using the instructive surface
+## Follow the refusal action algorithm exactly
 
-The CLI never fails as a silent black hole. A bad `--year`/`--period` enumerates the
-accepted period tokens; a bad enum value lists the accepted set; the "did you mean"
-table suggests the nearest verb; and every error envelope carries a resolved
-`action`. When a call is refused, read that action and the accepted set and
-re-issue the corrected command yourself — you rarely need to ask the human to fix a
-syntax error. An action that resolves to a no-recovery outcome is telling you the
-refusal has no automatic fix; do not invent one.
+An error document carries its recovery verdict at `error.action`. It can be `null`;
+an error does not imply that a command is safe to run. Read the nested action record
+before acting:
+
+1. When `error.action.action` is non-null, use `conditionality`,
+   `missing_argument_names`, and `argument_bindings` before invoking anything.
+   - `immediate` requires no missing arguments and only `resolved` bindings. Execute
+     the canonical `cli_path` with those resolved values. Treat
+     `target_command_key` as the stable identity check; do not construct an alias or
+     a command from error prose.
+   - `requires_arguments` means do not issue a partial command. Obtain exactly the
+     names in `missing_argument_names`, retain the already resolved bindings, then
+     invoke the canonical target only after all required values are available. A
+     `missing` binding is never a value to invent or pass through.
+   - `not_applicable` cannot accompany an action in a valid envelope. Stop and
+     report the malformed contract instead of guessing a recovery.
+2. When `error.action.action` is null, require `no_recovery_outcome` and never infer
+   a command from the error code, message, context, evidence, or condition id.
+   - `terminal`: stop; this refusal has no recovery action.
+   - `safety`: do not bypass the safety condition; surface the evidence and seek a
+     safe human decision.
+   - `operator_decision`: surface the facts and ask the operator to choose the next
+     step; do not manufacture one.
+
+If the record lacks the fields required by either branch, treat it as a contract
+failure and report it. Never downgrade a no-recovery outcome into a retry or a
+hand-written CLI invocation.
 
 ## Diagnostics ride on `notices`, nowhere else
 
