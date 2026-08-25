@@ -67,6 +67,44 @@ def test_assemble_row_sets_refuses_an_unknown_field_in_a_declared_grouping() -> 
     }
 
 
+def test_assemble_row_sets_refuses_an_undeclared_grouping_before_s87() -> None:
+    snapshot = _snapshot("720", filing_year=2025, period="0A")
+
+    with pytest.raises(RegistryValidationError) as exc_info:
+        assemble_row_sets_for_snapshot(
+            (RowSetEdit(grouping="not-a-registry-grouping", cells=_foreign_asset_cells()),),
+            snapshot,
+        )
+
+    assert str(exc_info.value) == "application.calculations.row_set.errors.row_assembly_failed"
+    assert exc_info.value.context == {
+        "row_index": 1,
+        "validation_error_type": "row_set_ingress",
+        "validation_error_detail": "undeclared_grouping",
+        "grouping": "not-a-registry-grouping",
+    }
+
+
+def test_assemble_row_sets_refuses_duplicate_cell_coordinate_before_s87() -> None:
+    snapshot = _snapshot("720", filing_year=2025, period="0A")
+    duplicate = RowSetCellEdit(binding="modelo-720-asset-row-class", row_index=1, value="C")
+
+    with pytest.raises(RegistryValidationError) as exc_info:
+        assemble_row_sets_for_snapshot(
+            (RowSetEdit(grouping="per_foreign_asset", cells=(duplicate, duplicate)),),
+            snapshot,
+        )
+
+    assert str(exc_info.value) == "application.calculations.row_set.errors.row_assembly_failed"
+    assert exc_info.value.context == {
+        "row_index": 1,
+        "validation_error_type": "row_set_ingress",
+        "validation_error_detail": "duplicate_cell_coordinate",
+        "grouping": "per_foreign_asset",
+        "binding_id": "modelo-720-asset-row-class",
+    }
+
+
 def test_assemble_row_sets_refuses_a_binding_substituted_from_another_grouping() -> None:
     snapshot = _snapshot("349", filing_year=2025, period="1T")
     first_grouping, second_grouping = collect_row_sets(snapshot.revision)
