@@ -60,7 +60,7 @@ if TYPE_CHECKING:
     from textual.widgets.data_table import ColumnKey
 
     from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
-    from ._form_screen import FormPage
+    from ....entrypoints.tui.components.forms import FormPage
 
 
 type ManagerProgressSinkBinder = Callable[[Callable[[OperatorProgress], None]], AbstractContextManager[None]]

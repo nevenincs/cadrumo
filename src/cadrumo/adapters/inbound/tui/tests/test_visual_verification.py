@@ -30,6 +30,7 @@ from textual.containers import ScrollableContainer
 from textual.css.query import NoMatches
 from textual.widgets import Button, DataTable, Input, Static
 
+from cadrumo.entrypoints.tui.components.forms import FormField, FormPage
 from cadrumo.entrypoints.tui.components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
@@ -50,8 +51,6 @@ from .....tests.secure_sql import isolated_profile_storage_root
 from .. import (
     FlowTuiApp,
     FormApp,
-    FormField,
-    FormPage,
     FormScreen,
     LoginApp,
     ProfileManagerApp,
