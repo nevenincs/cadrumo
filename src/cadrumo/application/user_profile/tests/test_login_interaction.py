@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
+
 import pytest
 
 from ....domain.user_profile import ProfileNotFoundError
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import login_interaction, logout_active_profile, register_profile_with_credentials
-from .._registration import ProfileRegistrationError
+from .. import logout_active_profile, register_profile_with_credentials
 from ..login_interaction import (
     ProfileLoginAttempt,
     ProfileLoginChoice,
@@ -77,14 +79,16 @@ def test_attempt_returns_the_real_login_outcome_after_unlocking(tmp_path) -> Non
         assert attempt.outcome.bucket_id == profile_id
 
 
-def test_attempt_propagates_an_unrelated_application_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Only the enrolled authentication refusal family becomes interaction data."""
-    unexpected = ProfileRegistrationError("unrelated defect")
-
-    def _refuse(**_kwargs: object) -> None:
-        raise unexpected
-
-    monkeypatch.setattr(login_interaction, "login_profile", _refuse)
-
-    with pytest.raises(ProfileRegistrationError, match="unrelated defect"):
-        attempt_profile_login("profile-id", _PASSWORD)
+def test_attempt_catches_only_the_enrolled_authentication_refusal_family() -> None:
+    """Unrelated application errors remain outside the interaction-data boundary."""
+    function = ast.parse(inspect.getsource(attempt_profile_login)).body[0]
+    assert isinstance(function, ast.FunctionDef)
+    handlers = [node for node in ast.walk(function) if isinstance(node, ast.ExceptHandler)]
+    assert len(handlers) == 1
+    caught = handlers[0].type
+    assert isinstance(caught, ast.Tuple)
+    assert {node.id for node in caught.elts if isinstance(node, ast.Name)} == {
+        "ProfileAuthenticationRefusedError",
+        "ProfileLoginThrottledError",
+        "ProfileNotFoundError",
+    }
