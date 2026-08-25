@@ -11,9 +11,6 @@ related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
 
-
-
-
 # Replace scenario-owned expected actions with observed production condition and action assertions
 
 ## Scope

@@ -62,4 +62,3 @@ No compatibility alias, re-export bridge, fallback traversal, duplicate enum, pa
 ### Current blockers and next actions
 
 There is no design blocker to implement S127. The operational prerequisite is only that the implementer first scaffold the missing S127 Step Record, then use the public registry facade, `RegistrySnapshot`, and its exported `selector_model_for_source` accessor iterated over `BindingSourceKind`. S127 must retain that production boundary even if a test helper can see private schema modules.
-

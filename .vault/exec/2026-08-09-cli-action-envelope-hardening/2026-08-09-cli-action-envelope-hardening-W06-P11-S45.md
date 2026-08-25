@@ -11,9 +11,6 @@ related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
 
-
-
-
 # Enforce the bidirectional declaration and observation join, removing retired error-registry-suggestion test references so only the live canonical citation gate remains.
 
 ## Scope

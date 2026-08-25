@@ -11,9 +11,6 @@ related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
 
-
-
-
 # Dispatch negative cases validate bindings execute safe recovery and retry original leaves
 
 ## Scope
