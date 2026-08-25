@@ -10,27 +10,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, SecretStr
 
-from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from cadrumo.application.operations.models import (
-    CredentialFreeOperationRequest,
-    OperationRequest,
-)
-from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
-from cadrumo.application.operations.secret_submission import OperationEphemeralSecretDeclaration
-
 from ...core import (
     STRICT_FROZEN_CONFIG,
     AuthProviderKind,
@@ -43,7 +22,27 @@ from ...core import (
 )
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.time import now
+from ..operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from ..operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+)
 from ..operations.owner import OperationExecutorContext
+from ..operations.registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+)
+from ..operations.secret_submission import OperationEphemeralSecretDeclaration
 from ..user_profile.login_session import ProfileLoginOutcome, login_profile
 from ..user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome, rotate_profile_passphrase
 from .operator import configure_operator_auth, login_operator_auth, logout_operator_auth, reset_operator_auth
