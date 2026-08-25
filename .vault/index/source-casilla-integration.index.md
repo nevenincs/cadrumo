@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1ff3706019f964ad3be0af1b5802976cfa549d6689ca27f7ad172f9f258334a'
+body_hash: 'sha256:f34b6168a967e0aaf989d3c7d64555662cd18e67f82ce9a1da0e9b2786361beb'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -198,6 +198,8 @@ related:
   - '[[2026-08-25-source-casilla-integration-w05-p17-m182-terminal-closure-final-audit]]'
   - '[[2026-08-25-source-casilla-integration-w05-p18-s104-m193-grounding-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-w05-p18-s105-m193-terminal-deferral-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-w05-p18-s106-m193-refusal-lifecycle-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-w05-p19-s108-m296-grounding-review-audit]]'
 ---
 
 # `source-casilla-integration` feature index
@@ -274,6 +276,8 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-w05-p17-m182-terminal-closure-final-audit` - `source-casilla-integration` audit: `W05 P17 Modelo 182 terminal closure final review`
 - `2026-08-25-source-casilla-integration-w05-p18-s104-m193-grounding-review-audit` - `source-casilla-integration` audit: `W05 P18 S104 Modelo 193 grounding review`
 - `2026-08-25-source-casilla-integration-w05-p18-s105-m193-terminal-deferral-review-audit` - `source-casilla-integration` audit: `W05 P18 S105 Modelo 193 terminal deferral review`
+- `2026-08-25-source-casilla-integration-w05-p18-s106-m193-refusal-lifecycle-review-audit` - `source-casilla-integration` audit: `W05 P18 S106 Modelo 193 refusal lifecycle review`
+- `2026-08-25-source-casilla-integration-w05-p19-s108-m296-grounding-review-audit` - `source-casilla-integration` audit: `w05 p19 s108 m296 grounding review`
 
 ### exec
 
