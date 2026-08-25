@@ -31,12 +31,14 @@ related:
 - Require an explicit nullable asserted revision identifier, refusing omitted values rather than synthesising absence.
 - Bind the contributor epoch digest across baseline, bounded facet, and typed cursor coordinates with fail-closed equality checks.
 - Regenerate the two affected API-reference stubs, update the regulatory-drift path, and prove the inert package plus active-tree fixed point.
+- Close the independent remediation review after the cursor-coordinate proof passes.
 
 ## Outcome
 
 - Focused integration suites passed: Workspace models 28, producer contracts 6, and field manifest 8.
 - Scoped compilation, Ruff, whitespace, exact AST import, exact private-path, and semantic discovery checks passed. The AST census found five direct public-module consumers and no private import edge.
-- The record remains open for independent code review; this execution does not close the plan row.
+- Independent remediation review passed in audit `5a6538df6a`; its cursor-coordinate finding is closed.
+- Final scoped Ruff and exact AST/private-path census passed with five direct public-module consumers and zero private import edges.
 
 ## Notes
 
