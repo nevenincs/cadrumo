@@ -15,6 +15,7 @@ from .._workflow_auth_models import (
     AuthState,
     CertificateSourceRecord,
 )
+from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from .acquisition_lock import (
     AuthAcquisitionLockState,
     clear_auth_acquisition_lock,
@@ -22,7 +23,6 @@ from .acquisition_lock import (
 )
 from .catalogue import get_auth_provider
 from .certificate_secret_backend import SecureStorageCertificateSecretBackend
-from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from .operator_results import AuthOperationScopeConflictError
 from .sessions import delete_persisted_session, persisted_session_exists
 

@@ -43,7 +43,7 @@ from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
 from ...domain.user_profile import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
-from .providers import AuthProvider, select_provider
+from ._workflow_repository import workflow_state_repository as _workflow_state_repository
 from .acquisition_lock import (
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockStatus,
@@ -58,7 +58,7 @@ from .operator_scope import (
     auth_mutation_span,
 )
 from .protocols import SessionStoreProtocol
-from ._workflow_repository import workflow_state_repository as _workflow_state_repository
+from .providers import AuthProvider, select_provider
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import (

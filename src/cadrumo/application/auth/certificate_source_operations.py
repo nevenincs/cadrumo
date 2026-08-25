@@ -51,23 +51,17 @@ from .._workflow_auth_models import (
 from ..auth_credentials import (
     ActiveCertificateCredentials,
 )
-from .certificate_secret_backend import (
-    SecureStorageCertificateSecretBackend,
-)
+from ._mutation import AuthBucketEventSpec, build_auth_bucket_events
+from .certificate_secret_backend import SecureStorageCertificateSecretBackend
 from .certificate_sources import (
-    active_certificate_source as _active_certificate_source,
-)
-from .certificate_sources import (
+    active_certificate_source,
     auth_state,
     list_certificate_sources,
     register_certificate_source,
     remove_certificate_source,
     select_certificate_source,
 )
-from .credentials import (
-    resolve_certificate_source_secret,
-)
-from ._mutation import AuthBucketEventSpec, build_auth_bucket_events
+from .credentials import resolve_certificate_source_secret
 from .operator_probes import ProviderProbeResult, probe_certificate_bundle
 from .operator_results import (
     AuthConfigureDanglingActiveProfileError,
@@ -240,7 +234,7 @@ def list_operator_certificate_sources() -> CertificateSourceListResult:
     from ..workflow import workflow_state_repository
 
     state = workflow_state_repository().load()
-    active_record = _active_certificate_source(state)
+    active_record = active_certificate_source(state)
     active_name = active_record.name if active_record is not None else None
     sources = list_certificate_sources(state)
     return CertificateSourceListResult(
@@ -376,7 +370,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
         if active_bucket_id is None:
             return CertificateSourceCheckReport(entries=(), has_warnings=False)
         state = workflow_state_repository().load()
-        active_record = _active_certificate_source(state)
+        active_record = active_certificate_source(state)
         active_name = active_record.name if active_record is not None else None
         sources = list_certificate_sources(state)
         entries: list[CertificateSourceCheckEntry] = []
@@ -514,7 +508,7 @@ def _selected_certificate_record(state: WorkflowState, *, name: str) -> Certific
     "nothing to suggest" instead of refusing.
     """
     if not name:
-        return _active_certificate_source(state)
+        return active_certificate_source(state)
     for record in list_certificate_sources(state):
         if record.name == name:
             return record

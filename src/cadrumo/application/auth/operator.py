@@ -49,14 +49,14 @@ from ..operator_actions import (
     PreconditionVerdict,
     no_action_precondition_verdict,
 )
+from ._mutation import AuthBucketEventSpec as _BucketEventSpec
+from ._mutation import build_auth_bucket_events as _build_bucket_events
 from .actions import update_auth
 from .catalogue import AuthProviderListing, get_auth_provider, list_auth_providers
 from .credentials import (
     ActiveAuthProjectionSnapshot,
     active_auth_projection_span,
 )
-from ._mutation import AuthBucketEventSpec as _BucketEventSpec
-from ._mutation import build_auth_bucket_events as _build_bucket_events
 from .operator_cleanup import (
     apply_auth_cleanup_intent,
     assert_logout_request_matches,
@@ -102,9 +102,7 @@ from .operator_results import (
     AuthTestResult,
     LiveAuthPreflightReport,
 )
-from .operator_scope import (
-    active_profile_storage_span as _active_profile_storage_span,
-)
+from .operator_scope import active_profile_storage_span as _active_profile_storage_span
 from .operator_scope import (
     assert_auth_recovery_not_in_progress as _assert_auth_recovery_not_in_progress,
 )

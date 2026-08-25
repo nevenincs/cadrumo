@@ -20,7 +20,10 @@ from cadrumo.application.operations.registry import (
 from ..adapters.outbound.google import apply_export_plan, preview_export_plan
 from ..adapters.outbound.storage import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.profile import SyncRunRecordRepository
-from ..application.auth.operation_definitions import build_auth_operation_definitions, build_auth_operation_registrations
+from ..application.auth.operation_definitions import (
+    build_auth_operation_definitions,
+    build_auth_operation_registrations,
+)
 from ..application.export import (
     GoogleSheetsExportRemoteResult,
     GoogleSheetsExportRootFolderRequiredError,

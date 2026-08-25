@@ -55,6 +55,7 @@ class CertificateSourceNoActiveBucketError(Exception):
 
 
 def auth_state(state: WorkflowState) -> AuthState:
+    """Return ``state``'s typed authentication state."""
     auth = state.auth
     if isinstance(auth, dict):
         return AuthState.model_validate(auth)

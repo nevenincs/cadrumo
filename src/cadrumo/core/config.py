@@ -75,6 +75,7 @@ from .resources import bundled_path
 from .telemetry import TelemetryTier
 
 if TYPE_CHECKING:
+    from .bucket_pointer import BucketPointer
     from .external_constants import ExternalConstants
 
 

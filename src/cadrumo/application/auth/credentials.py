@@ -17,10 +17,10 @@ from ..auth_credentials import (
     ActiveCertificateCredentials,
     unnamed_certificate_credentials,
 )
+from ._workflow_repository import workflow_state_repository as _workflow_state_repository
 from .certificate_secret_backend import SecureStorageCertificateSecretBackend
 from .certificate_sources import active_certificate_source
 from .operator_scope import active_profile_storage_span
-from ._workflow_repository import workflow_state_repository as _workflow_state_repository
 
 if TYPE_CHECKING:
     from ..workflow import WorkflowState

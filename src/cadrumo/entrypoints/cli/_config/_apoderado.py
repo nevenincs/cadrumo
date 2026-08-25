@@ -96,8 +96,8 @@ def apoderado_configure(
     profile fact.
     """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth.apoderado_service import ApoderadoRepresentedNifInvalidError, ApoderadoService
     from ....application.auth.apoderado_flow import run_apoderado_flow
+    from ....application.auth.apoderado_service import ApoderadoRepresentedNifInvalidError, ApoderadoService
     from ....application.workflow import workflow_state_repository
 
     workflow_state_repository().load()
