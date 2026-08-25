@@ -4,7 +4,7 @@ tags:
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
 modified: '2026-08-25'
-body_hash: 'sha256:6649679669582086bfc1664a3ecdf538ffb725c2f74ab50b957bd46e7933bd57'
+body_hash: 'sha256:f594444e069168ccc0843bf53847c76aaf4fcff6daa6d2551beba28021619db8'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -86,6 +86,7 @@ Complete M210 using canonical periods, ResultDisposition, and official tipo-rent
 - [x] `W02.P05.S18` - Replace invalid M210 quarter identities with canonical EVENT-N or 0A identities and author ResultDisposition plus official-code-qualified variants; `src/cadrumo/_data/registry/aeat/modelos/210/revisions/`.
 - [x] `W02.P05.S19` - Keep M210 tipo 28 event-shaped without a numeric offset until RD 1776/2004 article 14 is bundled and verified; `src/cadrumo/_data/registry/aeat/modelos/210/; src/cadrumo/_data/registry/aeat/legal/`.
 - [x] `W02.P05.S20` - Prove M210 qualifiers accept canonical ResultDisposition and official codes while rejecting lossy conceptual tipo authoring; `src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W02.P05.S46` - Adjudicate why Modelo 210 ejercicio 2025 projects presentation through 2030 while its declared design authority ends in 2025, then correct the deadline horizon, design scope, or axis selection from official evidence and prove the whole-tree claimed-year layout-design gate no longer reports Modelo 210; `src/cadrumo/_data/registry/aeat/modelos/210, src/cadrumo/domain/calculations/registry/tests/test_layout_design_applies_to_claimed_years.py`.
 
 ### Phase `W02.P14` - remaining periodic fleet corpus repair
 

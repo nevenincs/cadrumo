@@ -79,9 +79,13 @@ verdict-cache behavior.
 
 The stale Modelo 390 diagnosis is independently resolved, but that does not make the
 campaign complete. `P03.S22` owns the exact fourteen-revision layout-design gate and
-routes its changes to existing authorities. `P03.S23` owns draining the remaining
-isolated clusters without duplicating those authorities. Campaign closure still
-requires the isolated nodes and a fresh sequential whole-tree run to pass.
+routes its changes to existing authorities. Temporal source/design remediation and
+the Modelo 180 axis ruling are enrolled once under registry-temporal-coverage
+`W02.P05.S51`; Modelo 210's deadline/design-horizon ruling is enrolled once under
+deadline-window-revision-authority `W02.P05.S46`; Modelo 200 reuses export authority
+`W04.P08.S22` and `W04.P08.S34`. `P03.S23` owns draining the remaining isolated
+clusters without duplicating those authorities. Campaign closure still requires the
+isolated nodes and a fresh sequential whole-tree run to pass.
 
 ### non-executable-rows | medium | Two checked findings were not plan work
 
