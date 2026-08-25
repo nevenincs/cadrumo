@@ -116,6 +116,34 @@ def test_workspace_manifest_walks_existing_tagged_union_and_collection_coordinat
     assert len(nodes) == len(set(nodes))
 
 
+def test_workspace_manifest_projects_only_representable_live_formula_operands() -> None:
+    """M303 proves compiler grammar cannot masquerade as a Workspace operand DTO."""
+    entries_by_suffix = {
+        entry.path.removeprefix("registry_snapshot.revision.formulas.collection_item.expression."): entry
+        for entry in _manifest().entries
+        if entry.path.startswith("registry_snapshot.revision.formulas.collection_item.expression.")
+    }
+
+    projected = entries_by_suffix["binding.variant=union=BindingId"]
+    assert projected.classification is ModeloWorkspaceSchemaClassification.PROJECTED
+    assert projected.destination == "ModeloWorkspaceFormulaOperandReferenceV1"
+
+    literal = entries_by_suffix["literal.variant=union=Decimal"]
+    assert literal.classification is ModeloWorkspaceSchemaClassification.PROJECTED
+    assert literal.destination == "ModeloWorkspaceFormulaOperandReferenceV1"
+
+    for suffix in (
+        "binding.variant=union=NoneType",
+        "op.variant=union=Literal",
+        "dispatch_table.variant=union=Mapping",
+    ):
+        entry = entries_by_suffix[suffix]
+        assert entry.classification is ModeloWorkspaceSchemaClassification.BACKEND_ONLY
+        assert entry.destination is None
+        assert entry.owner == "domain.calculations.registry"
+        assert entry.reason == "registry_declaration"
+
+
 def test_workspace_manifest_refuses_duplicate_stale_and_unclassified_fixed_points() -> None:
     manifest = _manifest()
     payload = manifest.model_dump()

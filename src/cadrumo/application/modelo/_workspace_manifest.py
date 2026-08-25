@@ -413,7 +413,7 @@ def _projected_destination(
 ) -> _Destination | None:
     if path.startswith(("selector.", "derived.export_layout.")):
         return None
-    if node_kind == "union_branch" and ".expression." in path:
+    if node_kind == "union_branch" and _is_workspace_formula_operand(path, schema_type):
         return "ModeloWorkspaceFormulaOperandReferenceV1"
     if schema_type == "ApplicabilityRuleId":
         return "ModeloWorkspaceApplicabilityReferenceV1"
@@ -436,6 +436,30 @@ def _projected_destination(
         "RelationId": "ModeloWorkspaceRelationReferenceV1",
     }
     return destinations.get(schema_type)
+
+
+def _is_workspace_formula_operand(path: _Path, schema_type: _SchemaType) -> bool:
+    """Return whether one formula-expression branch has a Workspace operand DTO.
+
+    Formula expressions are permissive compiler nodes.  Only their canonical
+    identity leaves and literal leaf become Workspace operand references;
+    optional absence, operators, and dispatch containers remain registry-owned
+    implementation grammar rather than being mislabelled as a DTO projection.
+    """
+    if ".expression." not in path:
+        return False
+    operand_fields: dict[str, frozenset[_SchemaType]] = {
+        "casilla_id": frozenset({"CasillaId"}),
+        "binding": frozenset({"BindingId"}),
+        "date_binding": frozenset({"BindingId"}),
+        "parameter": frozenset({"ParameterId"}),
+        "relation": frozenset({"RelationId"}),
+        "literal": frozenset({"Decimal"}),
+    }
+    return any(
+        f".expression.{field_name}." in path and schema_type in schema_types
+        for field_name, schema_types in operand_fields.items()
+    )
 
 
 def _owned_entry(
