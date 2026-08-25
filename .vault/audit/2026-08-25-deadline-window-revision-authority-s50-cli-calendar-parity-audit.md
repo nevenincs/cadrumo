@@ -42,6 +42,10 @@ The repair deletes the competing compact calendar DTOs, validates application-bu
 
 The first review found that a resolved Pydantic action had been inserted directly into a mapping passed to standard-library JSON encoding. The implementation now serializes that already-resolved action with `model_dump(mode="json")`; the finding is resolved.
 
+### warning-action-envelope | high | Resolved warning action was one wire level too shallow
+
+Clean detached verification showed that raw `ResolvedNoticeAction` JSON did not preserve the established declared-action envelope. The follow-up uses typed transport composition over canonical `ActionReference` and `ResolvedActionArgument` primitives, resolves once through the existing catalogue path, and emits the required nested identity plus sibling live CLI path. Both affected real-CLI cases pass and formal re-review accepted the repair; the finding is resolved.
+
 ## Recommendations
 
-Accept S50. Rerun the six focused real-CLI tests when the unrelated persistence export is restored.
+Accept S50. The two clean-verification regressions now pass; retain the seven-case targeted CLI set as the parity gate.
