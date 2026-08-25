@@ -759,3 +759,38 @@ separate gap.
 
 Not fixable test-side without either fabricating a justificante chain or weakening the
 validator. Both are refused. Blocked on the same decision as the parent cluster.
+
+### modelo 210: the general a-ingresar quarterly plazo is not declared
+
+`src/cadrumo/domain/deadlines/tests/test_extemporaneidad.py` — 5 failures, one cause:
+`resolve_filing_closes_on("210", 2025, <1T|3T|4T>)` returns `None`.
+
+**The tests are legally correct.** The bundled corpus
+(`_data/corpus/normatives/html/orden-eha-3316-2010.html.extracted.md`, art. 5.1)
+states: "Autoliquidaciones con resultado a ingresar: el plazo de presentación e
+ingreso será los veinte primeros días naturales de los meses de abril, julio,
+octubre y enero, en relación con las rentas cuya fecha de devengo esté
+comprendida en el trimestre natural anterior." That yields exactly the asserted
+2025-04-20, 2025-10-20 and 2026-01-20.
+
+**The registry declares only the exception, not the rule.** `210/revisions/2025/
+deadline_windows/0001-deadline-windows.toml` declares annual `0A` windows only —
+including the arrendamiento a-ingresar carve-out that art. 5.1 sends to April of
+the following year (`modelo-210-2025-0a-arrendamiento-ingreso`, closes
+2026-04-20, correct). The general quarterly a-ingresar window is absent, and the
+file's header comment records that as deliberate: "No quarter or resultado-shaped
+period token is fabricated."
+
+**Why this is not a test fix.** `resolve_filing_closes_on` is documented as the
+resultado-blind pre-calculation convenience; the quarterly close is
+resultado-dependent ("a ingresar"), so the resultado-aware
+`resolve_filing_window(..., resultado=...)` is the right API. But repointing the
+tests would still return `None`, because no quarterly window exists to match.
+
+**Owner decision required**, because it changes regulated filing deadlines: either
+author the four general a-ingresar quarterly windows for 210 grounded in
+`orden-eha-3316-2010:art-5`, and extend the revision `period_selector` (currently
+`periods = ["EVENT-N", "0A"]`) to carry 1T-4T; or record why the quarterly rule is
+intentionally out of scope and correct the tests to match. Not actioned here:
+fabricating deadline windows would invent filing dates, and the standing rule
+forbids inventing legal behaviour.
