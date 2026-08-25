@@ -153,5 +153,5 @@ def make_minimal_test_python_cohort(
             directory, artifacts, source_commit=source_commit
         ),
     }
-    (directory / "python-cohort.json").write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8")
+    (directory / "python-cohort.json").write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8", newline="\n")
     return digests
