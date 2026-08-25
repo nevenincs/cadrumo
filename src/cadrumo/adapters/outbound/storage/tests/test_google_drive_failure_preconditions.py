@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import inspect
 from dataclasses import dataclass
+from typing import override
 
 import pytest
 
@@ -400,15 +401,21 @@ def _external_failure_carriers() -> dict[str, ast.Call]:
     class Visitor(ast.NodeVisitor):
         owner = "<module>"
 
+        @override
         def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
             prior_owner = self.owner
             self.owner = node.name
             self.generic_visit(node)
             self.owner = prior_owner
 
+        @override
         def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-            self.visit_FunctionDef(node)
+            prior_owner = self.owner
+            self.owner = node.name
+            self.generic_visit(node)
+            self.owner = prior_owner
 
+        @override
         def visit_Call(self, node: ast.Call) -> None:
             error_type = _call_name(node.func)
             if error_type in _EXTERNAL_ERROR_TYPES:
