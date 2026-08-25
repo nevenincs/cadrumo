@@ -23,7 +23,8 @@ from textual.widgets import (
 )
 
 from ......application.modelo.work_review_projection import ModeloWorkOriginAnomaly
-from ......core import BindingSourceKind, EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
+from ......core import EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
+from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ......domain.calculations.registry import InputKind, RelationConsumptionChannel

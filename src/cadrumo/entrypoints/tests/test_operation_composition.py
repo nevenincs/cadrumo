@@ -118,15 +118,16 @@ def test_production_composition_imports_only_public_operation_defining_modules()
         node
         for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom)
-        and (node.module or "").startswith("cadrumo.application.operations")
+        and (node.module or "").startswith(
+            ("application.operations", "cadrumo.application.operations")
+        )
     )
 
     assert operation_imports
-    assert not any(node.module == "application.operations" for node in operation_imports)
-    assert all(node.level == 0 for node in operation_imports)
+    assert all(node.level == 2 for node in operation_imports)
     assert {node.module for node in operation_imports} == {
-        "cadrumo.application.operations.composition",
-        "cadrumo.application.operations.registry",
+        "application.operations.composition",
+        "application.operations.registry",
     }
 
 

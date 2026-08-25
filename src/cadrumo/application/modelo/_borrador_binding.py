@@ -52,7 +52,7 @@ from ._decimal_parsing import decimal_from_string
 from ._preconditions import build_modelo_precondition_failure
 
 if TYPE_CHECKING:
-    from ..live import Borrador100Snapshot, Borrador100SnapshotRepository
+    from ..live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 

@@ -15,7 +15,7 @@ from ....domain.deadlines import (
     IVARegime,
     TaxpayerProfile,
 )
-from ...live import PersistedExpedientesSnapshot
+from ...live.expedientes import PersistedExpedientesSnapshot
 from .. import (
     OverviewCalendar,
     OverviewCalendarRange,

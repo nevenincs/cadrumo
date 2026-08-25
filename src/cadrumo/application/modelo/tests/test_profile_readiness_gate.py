@@ -34,11 +34,11 @@ from .. import (
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
-    ensure_modelo_work_unit_for_active_target,
     mark_revision_verificado_completo,
     modelo_applicability_refusal,
     pre_activity_period_refusal,
 )
+from ..work_addressing import ensure_modelo_work_unit_for_active_target
 from .._profile_readiness_gate import _profile_activity_start_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

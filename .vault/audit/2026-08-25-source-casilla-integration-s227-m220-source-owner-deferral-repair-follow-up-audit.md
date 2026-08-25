@@ -61,4 +61,3 @@ PASS. The HIGH finding in `3878275b05` is resolved. Reopen only if a later
 accepted owner satisfies every M220 predicate limb; do not infer a connection
 from layouts, manual/direct entry, Modelo 200, Modelo 222, or export
 coordinates.
-

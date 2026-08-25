@@ -86,21 +86,13 @@ from ..ledger.evidence import PurchaseInvoiceEvidenceRepository
 from ..ledger.extracted_document_cache import ExtractedDocumentCacheRepository
 from ..ledger.extraction_draft_store import ExtractionDraftRepository
 from ..ledger.rule_repository import LedgerClassificationRuleRepository
-from ..live import (
-    Borrador100Snapshot,
-    IvaRemoteStateAcquisitionManifestRepository,
-    JustificanteCaptureSnapshot,
-    PersistedDeudasSnapshot,
-    PersistedExpedientesSnapshot,
-    PersistedNotificationsSnapshot,
-    VerifyObservation,
-    borrador_100_snapshot_object_key,
-    deudas_snapshot_object_key,
-    expedientes_snapshot_object_key,
-    justificante_capture_snapshot_object_key,
-    notifications_snapshot_object_key,
-    verify_observation_object_key,
-)
+from ..live.borrador_100 import Borrador100Snapshot, borrador_100_snapshot_object_key
+from ..live.deudas import PersistedDeudasSnapshot, deudas_snapshot_object_key
+from ..live.expedientes import PersistedExpedientesSnapshot, expedientes_snapshot_object_key
+from ..live.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
+from ..live.justificante import JustificanteCaptureSnapshot, justificante_capture_snapshot_object_key
+from ..live.notifications import PersistedNotificationsSnapshot, notifications_snapshot_object_key
+from ..live.verify import VerifyObservation, verify_observation_object_key
 from ..modelo import (
     M036DeclarationResult,
     M145CommunicationRecord,

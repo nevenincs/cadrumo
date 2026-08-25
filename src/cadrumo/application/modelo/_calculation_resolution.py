@@ -48,7 +48,7 @@ from ._binding_resolution import (
 )
 
 if TYPE_CHECKING:
-    from ..live import Borrador100SnapshotRepository
+    from ..live.borrador_100 import Borrador100SnapshotRepository
 
 
 @dataclass(frozen=True, slots=True)

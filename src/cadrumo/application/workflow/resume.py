@@ -79,7 +79,7 @@ if TYPE_CHECKING:
     #: symbol at model-build time and could not be deferred this way.
     from ...domain.calculations.registry import RevisionId
     from ...domain.modelos import WorkUnit
-    from ..modelo import ModeloResolvedRevisionProjection, ModeloWorkTarget
+    from ..modelo.work_addressing import ModeloResolvedRevisionProjection, ModeloWorkTarget
 
 
 class WorkflowResumeRefusedError(WorkflowError):
@@ -345,7 +345,7 @@ def _resolve_resume_from_calculation_revision(
 
 
 def _resolve_resume_from_work_unit_id(work_unit_id: str, *, selector: object | None) -> WorkflowResumeTargetResolution:
-    from ..modelo import ModeloExactWorkUnitTarget, resolve_modelo_work_address_unit
+    from ..modelo.work_addressing import ModeloExactWorkUnitTarget, resolve_modelo_work_address_unit
 
     target = ModeloExactWorkUnitTarget(work_unit_id=work_unit_id)
     if selector is not None:
@@ -366,7 +366,11 @@ def _resolve_resume_from_visible_target(
     bucket_id: str | None,
     selector: object | None,
 ) -> WorkflowResumeTargetResolution:
-    from ..modelo import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget, resolve_modelo_work_address_unit
+    from ..modelo.work_addressing import (
+        ModeloExactWorkUnitTarget,
+        ModeloVisibleFilingTarget,
+        resolve_modelo_work_address_unit,
+    )
 
     filing_period = _resolve_visible_period(modelo=modelo, year=year, period=period)
     target = ModeloVisibleFilingTarget(
@@ -401,7 +405,8 @@ def _resolve_revision_for_resume_target(
     target: ModeloWorkTarget,
     selector: object,
 ) -> ModeloResolvedRevisionProjection:
-    from ..modelo import ModeloCalculationRevisionSelector, ModeloRevisionPick, resolve_modelo_revision_pick
+    from ..modelo import ModeloCalculationRevisionSelector
+    from ..modelo.work_addressing import ModeloRevisionPick, resolve_modelo_revision_pick
 
     try:
         revision_selector = (
@@ -514,7 +519,7 @@ def resolve_modelo_workflow_run_for_resume(
         A :class:`application.workflow.WorkflowResumeTargetResolution`
         suitable for passing to :func:`application.workflow.resume_modelo_workflow`.
     """
-    from ..modelo import ModeloExactWorkUnitTarget, ModeloWorkAddress, resolve_modelo_work_target
+    from ..modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloWorkAddress, resolve_modelo_work_target
 
     resolution = resolve_modelo_work_target(target)
     assert resolution.work_unit is not None
@@ -545,7 +550,7 @@ def resolve_modelo_visible_workflow_run_for_resume(
     Returns:
         A :class:`WorkflowResumeTargetResolution` for the visible filing target.
     """
-    from ..modelo import ModeloVisibleFilingTarget
+    from ..modelo.work_addressing import ModeloVisibleFilingTarget
 
     return resolve_modelo_workflow_run_for_resume(
         ModeloVisibleFilingTarget(
@@ -572,7 +577,7 @@ def resolve_modelo_exact_workflow_run_for_resume(
     Returns:
         A :class:`WorkflowResumeTargetResolution` for the exact work-unit id.
     """
-    from ..modelo import ModeloExactWorkUnitTarget
+    from ..modelo.work_addressing import ModeloExactWorkUnitTarget
 
     return resolve_modelo_workflow_run_for_resume(
         ModeloExactWorkUnitTarget(work_unit_id=work_unit_id, bucket_id=bucket_id),
@@ -586,7 +591,8 @@ def _resolve_resume_from_work_unit(
     latest: bool = False,
     calculation_revision_id: CalculationRevisionId | None = None,
 ) -> WorkflowResumeTargetResolution:
-    from ..modelo import project_modelo_work_unit, workflow_period_for_work_unit
+    from ..modelo import workflow_period_for_work_unit
+    from ..modelo.work_addressing import project_modelo_work_unit
 
     projection = project_modelo_work_unit(work_unit)
     workflow_period = workflow_period_for_work_unit(work_unit)

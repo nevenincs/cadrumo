@@ -55,11 +55,10 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (
     ModeloCalculationRevisionSelector,
-    ModeloExactWorkUnitTarget,
-    ModeloVisibleFilingTarget,
     create_work_unit,
     workflow_period_for_work_unit,
 )
+from ...modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from ...operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,

@@ -5,30 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:2d9a02bd38a5152e6b9f477d31375858aa317e87931893863e5b5ea8cc72bb68'
+body_hash: 'sha256:7b8a0ed0753433a6829521af12c844760df9209dbd2e6482977540e9c4572725'
 related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S49]]'
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-temporal-coverage with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `registry-temporal-coverage` audit: `S49 Modelo 721 package review`
 

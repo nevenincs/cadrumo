@@ -67,7 +67,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...live import persist_filed_calculation_observation
+from ...live.filed_observation_persistence import persist_filed_calculation_observation
 from ...modelo import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
 from .._observations_repository import CalculationObservationRepository, ObservationSourceKind
 

@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.application.modelo.work_unit_selection.ModeloWorkNoActiveBucketError",
+        "cadrumo.application.modelo.work_addressing.ModeloWorkNoActiveBucketError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -18,7 +18,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_unit_selection.ModeloWorkUnitNotFoundError",
+        "cadrumo.application.modelo.work_addressing.ModeloWorkUnitNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_SELECTOR_UNIT_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -28,7 +28,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_unit_selection.ModeloWorkSelectorContradictionError",
+        "cadrumo.application.modelo.work_addressing.ModeloWorkSelectorContradictionError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_CONTRADICTION",
             category=ErrorCategory.REFUSED,
@@ -38,7 +38,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_unit_selection.ModeloWorkVisibleTargetAmbiguousError",
+        "cadrumo.application.modelo.work_addressing.ModeloWorkVisibleTargetAmbiguousError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_AMBIGUOUS",
             category=ErrorCategory.REFUSED,
@@ -48,7 +48,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.work_unit_selection.ModeloWorkRevisionConflictError",
+        "cadrumo.application.modelo.work_addressing.ModeloWorkRevisionConflictError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_SELECTOR_REVISION_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -98,7 +98,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._work_addressing.ModeloWorkAddressNotFoundError",
+        "cadrumo.application.modelo.work_addressing.ModeloWorkAddressNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_ADDRESS_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -108,7 +108,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._work_addressing.ModeloWorkRegistryYearMismatchError",
+        "cadrumo.application.modelo.work_addressing.ModeloWorkRegistryYearMismatchError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_REGISTRY_YEAR_MISMATCH",
             category=ErrorCategory.REFUSED,
@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._work_addressing.ModeloWorkPeriodTokenError",
+        "cadrumo.application.modelo.work_addressing.ModeloWorkPeriodTokenError",
         ErrorCode(
             code="REFUSED_MODELO_WORK_PERIOD_TOKEN",
             category=ErrorCategory.REFUSED,
@@ -128,7 +128,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._work_addressing.ModeloRevisionPickError",
+        "cadrumo.application.modelo.work_addressing.ModeloRevisionPickError",
         ErrorCode(
             code="REFUSED_MODELO_REVISION_PICK",
             category=ErrorCategory.REFUSED,

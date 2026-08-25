@@ -40,8 +40,8 @@ before recording a :class:`domain.modelos.CalculationRevisionAmendmentKind`.
 See Also:
     :mod:`application.modelo._work_lifecycle`:
         Work-unit creation, listing, rename, discard, and lookup services.
-    :mod:`application.modelo._work_addressing`:
-        Visible modelo/year/period addressing and exact-id resolution.
+    :mod:`application.modelo.work_addressing`:
+        Public Modelo work-addressing and captured-catalogue selection.
     :mod:`application.modelo._calculation_actions`:
         Calculation revision creation, lookup, and completion services.
     :mod:`application.modelo._verification_actions`:
@@ -495,37 +495,6 @@ from ._verification_preconditions import (
     build_verification_precondition_failure,
     project_verification_findings,
 )
-from ._work_addressing import (
-    ModeloExactWorkUnitTarget,
-    ModeloResolvedRevisionProjection,
-    ModeloResolvedWorkProjection,
-    ModeloRevisionPick,
-    ModeloVisibleFilingTarget,
-    ModeloWorkAddress,
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkEnsureResult,
-    ModeloWorkPeriodTokenError,
-    ModeloWorkRegistryYearMismatchError,
-    ModeloWorkTarget,
-    ensure_modelo_work_unit_for_active_target,
-    modelo_work_address_from_operator_target,
-    project_modelo_work_target,
-    project_modelo_work_unit,
-    resolve_exportable_modelo_calculation_revision_address,
-    resolve_fileable_modelo_calculation_revision_address,
-    resolve_modelo_calculation_revision_address,
-    resolve_modelo_revision_for_operator_target,
-    resolve_modelo_revision_pick,
-    resolve_modelo_work_address,
-    resolve_modelo_work_address_unit,
-    resolve_modelo_work_target,
-    resolve_modelo_work_unit_for_operator_target,
-    resolve_modelo_work_unit_id,
-    resolve_optional_modelo_work_address,
-    resolve_registry_revision_for_work_target,
-    resolve_verifiable_modelo_calculation_revision_address,
-    work_address_for_modelo_target,
-)
 from ._work_create_policy import (
     CEDED_AUTONOMIC_MODELO_LOCALE_KEYS,
     CEDED_AUTONOMIC_MODELOS,
@@ -556,6 +525,7 @@ from ._work_plazo import (
     validate_modelo_work_deadline_posture,
 )
 from ._workflow_gate import build_revision_deadline_window_checker, workflow_period_for_work_unit
+
 __all__ = [
     "APP_FILING_SOURCE_KIND",
     "BUCKET_AGGREGATION_LOCK_SOURCES",
@@ -655,7 +625,6 @@ __all__ = [
     "ModeloCrossPeriodCleanStateError",
     "ModeloDetailRow",
     "ModeloError",
-    "ModeloExactWorkUnitTarget",
     "ModeloExportCommand",
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportNoActiveBucketError",
@@ -702,25 +671,15 @@ __all__ = [
     "ModeloRecordStatus",
     "ModeloRefundElectionNotEligibleError",
     "ModeloRequiredBindingsMissingError",
-    "ModeloResolvedRevisionProjection",
-    "ModeloResolvedWorkProjection",
-    "ModeloRevisionPick",
     "ModeloVerificationFindingKind",
     "ModeloVerificationFindingSeverity",
     "ModeloVerificationResult",
     "ModeloVerifySelector",
-    "ModeloVisibleFilingTarget",
-    "ModeloWorkAddress",
-    "ModeloWorkAddressNotFoundError",
     "ModeloWorkCalculationServiceResult",
     "ModeloWorkConditionalRecargoPreview",
     "ModeloWorkCreateApplicabilityRefusal",
     "ModeloWorkDeadlinePosture",
-    "ModeloWorkEnsureResult",
     "ModeloWorkLifecycleContinuation",
-    "ModeloWorkPeriodTokenError",
-    "ModeloWorkRegistryYearMismatchError",
-    "ModeloWorkTarget",
     "ModeloWorkflowGateError",
     "ParticipationRebuildStats",
     "ProfileBindingResolutionError",
@@ -828,7 +787,6 @@ __all__ = [
     "emit_collab_review_only_workspace_opened_event",
     "encrypt_feedback_package_for_originator",
     "encrypt_review_package_for_recipient",
-    "ensure_modelo_work_unit_for_active_target",
     "ensure_recipient_encryption_keypair",
     "ensure_review_package_signing_keypair",
     "export_m145_communication_record",
@@ -866,7 +824,6 @@ __all__ = [
     "modelo_export_readiness_refusal",
     "modelo_reconcile",
     "modelo_reconcile_bytes",
-    "modelo_work_address_from_operator_target",
     "modelo_work_create_applicability_refusal",
     "modelo_work_create_refusal_locale_key",
     "modelo_work_deadline_posture",
@@ -885,8 +842,6 @@ __all__ = [
     "profile_resolvable_binding_ids",
     "profile_resolved_binding_ids",
     "project_modelo_100_from_m130",
-    "project_modelo_work_target",
-    "project_modelo_work_unit",
     "project_verification_findings",
     "public_key_hex_from_raw_bytes",
     "pulled_filing_divergence_findings",
@@ -924,24 +879,11 @@ __all__ = [
     "resolve_casilla_population_scope",
     "resolve_declaration_period_inputs",
     "resolve_export_identity",
-    "resolve_exportable_modelo_calculation_revision_address",
-    "resolve_fileable_modelo_calculation_revision_address",
     "resolve_maternidad_meses",
     "resolve_modelo_100_borrador_bindings",
-    "resolve_modelo_calculation_revision_address",
     "resolve_modelo_calculation_revision_pick",
-    "resolve_modelo_revision_for_operator_target",
-    "resolve_modelo_revision_pick",
-    "resolve_modelo_work_address",
-    "resolve_modelo_work_address_unit",
-    "resolve_modelo_work_target",
-    "resolve_modelo_work_unit_for_operator_target",
-    "resolve_modelo_work_unit_id",
-    "resolve_optional_modelo_work_address",
     "resolve_profile_export_values",
     "resolve_profile_sourced_bindings",
-    "resolve_registry_revision_for_work_target",
-    "resolve_verifiable_modelo_calculation_revision_address",
     "review_package_signing_public_key",
     "run_modelo_quickfile",
     "seed_iva_compensation_period_for_bucket",
@@ -959,6 +901,5 @@ __all__ = [
     "verify_modelo_revision_with_preconditions",
     "verify_review_package",
     "verify_review_package_signature",
-    "work_address_for_modelo_target",
     "workflow_period_for_work_unit",
 ]

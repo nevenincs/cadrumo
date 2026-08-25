@@ -61,4 +61,3 @@ A future exact-era candidate must establish authoritative source fact and grain,
 identity, semantics, encrypted owner/provenance, and reviewed destination before
 the framework permits a source slice. Rerun the 16-test gate and Ruff in an
 unrestricted runner.
-

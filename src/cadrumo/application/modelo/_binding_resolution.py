@@ -49,7 +49,7 @@ from ._borrador_binding import Modelo100BorradorSourceResolver
 from ._calculation_route import require_calculation_route_resolver
 
 if TYPE_CHECKING:
-    from ..live import Borrador100SnapshotRepository
+    from ..live.borrador_100 import Borrador100SnapshotRepository
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,

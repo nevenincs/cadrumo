@@ -43,7 +43,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...domain.modelos import WorkUnitCatalogue
 from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ..modelo.work_unit_selection import (
+from ..modelo.work_addressing import (
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,

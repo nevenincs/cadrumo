@@ -87,8 +87,6 @@ from ...application.modelo import (
     ModeloPaymentElectionIncompatibleError,
     ModeloPriorDomiciliationElectionRefusedError,
     ModeloRefundElectionNotEligibleError,
-    ModeloWorkAddressNotFoundError,
-    ModeloWorkPeriodTokenError,
     RecipientDecryptionError,
     RecipientEncryptedPackage,
     RecipientEncryptionError,
@@ -114,12 +112,16 @@ from ...application.modelo import (
     export_modelo_revision,
     get_work_unit,
     import_feedback_package,
-    resolve_modelo_revision_for_operator_target,
     review_package_signing_public_key,
     sign_review_package,
     verify_counter_signed_receipt,
     verify_review_package,
     verify_review_package_signature,
+)
+from ...application.modelo.work_addressing import (
+    ModeloWorkAddressNotFoundError,
+    ModeloWorkPeriodTokenError,
+    resolve_modelo_revision_for_operator_target,
 )
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import UTF_8_ENCODING

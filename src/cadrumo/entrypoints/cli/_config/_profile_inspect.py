@@ -24,12 +24,12 @@ from ....domain.calculations.registry import RevisionId
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope, no_active_profile_refusal
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from .errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._profile_readiness import (
     _emit_profile_record_missing,
     _emit_profile_record_unreadable,
     _read_profile_record,
 )
+from .errors import ConfigBoundaryError as _ConfigBoundaryError
 
 _log = _get_logger(__name__)
 
@@ -183,10 +183,10 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
     ambiguous: the refusal names the candidate revisions or points at
     ``aeat app modelo describe <modelo>`` rather than emitting a bare error.
     """
-    from ....application.modelo import (
+    from ....application.modelo.work_addressing import (
         ModeloWorkRegistryYearMismatchError as _ModeloWorkRegistryYearMismatchError,
     )
-    from ....application.modelo import resolve_registry_revision_for_work_target
+    from ....application.modelo.work_addressing import resolve_registry_revision_for_work_target
     from ....domain.calculations.registry import (
         AmbiguousRevisionSelectionError,
         NoRevisionForPeriodError,

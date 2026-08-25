@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
+from sqlalchemy import event
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -25,7 +26,9 @@ from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     WorkUnit,
+    WorkUnitCatalogue,
     derive_calculation_revision_id,
+    derive_work_unit_id,
     upsert_calculation_revision,
     upsert_work_unit,
 )
@@ -36,15 +39,20 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     CalculationRevisionNotFoundError,
     ModeloCalculationRevisionSelector,
+    create_work_unit,
+    discard_work_unit,
+)
+from ..work_addressing import (
     ModeloExactWorkUnitTarget,
     ModeloRevisionPick,
     ModeloVisibleFilingTarget,
-    create_work_unit,
-    discard_work_unit,
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
     project_modelo_work_target,
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_revision_pick,
     resolve_modelo_work_unit_id,
+    select_modelo_work_resolution,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -157,6 +165,65 @@ def _seed_revision(
     )
     repository.save(upsert_calculation_revision(repository.load(), revision))
     return revision
+
+
+def test_captured_catalogue_selector_uses_no_second_encrypted_sql_read_after_mutation(tmp_path: Path) -> None:
+    """Selection stays on one encrypted-SQL capture after the persisted singleton changes."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ADDRESSING_PROFILE_ID) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        first = _seed_work_unit(repository, bucket_id=profile.bucket_id)
+        captured, _revision_id = repository.load_revisioned()
+        second_revision_id = "2019-y-siguientes-post-capture"
+        second_payload = first.model_dump()
+        second_payload.update(
+            work_unit_id=derive_work_unit_id(
+                bucket_id=first.bucket_id,
+                modelo=first.modelo,
+                filing_year=first.filing_year,
+                period=first.period,
+                revision_id=second_revision_id,
+            ),
+            revision_id=second_revision_id,
+            name="130-2026-1T-post-capture",
+            created_at=_T0 + timedelta(seconds=1),
+            updated_at=_T0 + timedelta(seconds=1),
+        )
+        second = WorkUnit(**second_payload)
+        repository.save(WorkUnitCatalogue.from_work_units((first, second)))
+
+        selects: list[str] = []
+
+        def _record_secure_object_select(
+            _connection: object,
+            _cursor: object,
+            statement: str,
+            _parameters: object,
+            _context: object,
+            _executemany: bool,
+        ) -> None:
+            normalized = " ".join(statement.split()).upper()
+            if normalized.startswith("SELECT") and " FROM SECURE_OBJECTS " in f" {normalized} ":
+                selects.append(statement)
+
+        event.listen(profile.repository.engine, "after_cursor_execute", _record_secure_object_select)
+        try:
+            resolution = select_modelo_work_resolution(
+                ModeloWorkSelectorRequest(
+                    bucket_id=profile.bucket_id,
+                    modelo="130",
+                    filing_year=2026,
+                    period=Period.from_year_and_code(2026, "1T"),
+                ),
+                catalogue=captured,
+                bucket_id=profile.bucket_id,
+            )
+        finally:
+            event.remove(profile.repository.engine, "after_cursor_execute", _record_secure_object_select)
+
+    assert selects == []
+    assert resolution.state is ModeloWorkSelectorState.RESOLVED
+    assert resolution.work_unit == first
 
 
 def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(

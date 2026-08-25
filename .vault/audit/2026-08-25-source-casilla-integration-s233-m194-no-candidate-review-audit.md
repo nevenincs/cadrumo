@@ -49,4 +49,3 @@ M194 registry coverage passed 15 tests and Ruff passed.
 PASS. Preserve the finite eras and direct manual path. Reopen only with an
 official source fact and holder, exact type-1/type-2 destination map, lossless
 encrypted lifecycle, and separate export proof.
-

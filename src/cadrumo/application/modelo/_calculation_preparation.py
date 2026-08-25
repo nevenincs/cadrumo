@@ -61,7 +61,7 @@ from ._required_binding_gate import (
 )
 
 if TYPE_CHECKING:
-    from ..live import Borrador100SnapshotRepository
+    from ..live.borrador_100 import Borrador100SnapshotRepository
 
 _apply_iva_compensation_decision_binding = apply_iva_compensation_decision_binding
 _taxpayer_nif_for_bucket = taxpayer_nif_for_bucket

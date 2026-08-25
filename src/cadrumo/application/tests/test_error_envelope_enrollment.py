@@ -104,7 +104,7 @@ def test_repair_decision_not_found_is_subtype_of_repair_integrity() -> None:
 
 
 def test_snapshot_not_found_error_enrolled() -> None:
-    from ..live import SnapshotNotFoundError
+    from ..live.snapshot_base import SnapshotNotFoundError
 
     assert issubclass(SnapshotNotFoundError, CadrumoError), "SnapshotNotFoundError must inherit CadrumoError"
     assert issubclass(SnapshotNotFoundError, KeyError), "SnapshotNotFoundError must still inherit KeyError"
@@ -114,7 +114,8 @@ def test_snapshot_not_found_error_enrolled() -> None:
 
 def test_snapshot_not_found_subclasses_still_work() -> None:
     """Per-service subclasses remain catchable as both CadrumoError and KeyError."""
-    from ..live import BorradorSnapshotNotFoundError, SnapshotNotFoundError
+    from ..live.borrador_100 import BorradorSnapshotNotFoundError
+    from ..live.snapshot_base import SnapshotNotFoundError
 
     assert issubclass(BorradorSnapshotNotFoundError, SnapshotNotFoundError)
     assert issubclass(BorradorSnapshotNotFoundError, CadrumoError)

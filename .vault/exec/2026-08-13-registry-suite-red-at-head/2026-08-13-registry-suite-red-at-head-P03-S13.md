@@ -5,44 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:c76edaedeb7b663cf80a02c6bc8a34a8a5e93405ae38aa48ea5a28501b5d051c'
+body_hash: 'sha256:e778d3ce4c53ff48093c4d84de7af2f21f1388dd363615974f3d4021429e5512'
 step_id: 'S13'
 related:
   - "[[2026-08-13-registry-suite-red-at-head-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace registry-suite-red-at-head with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S13 and 2026-08-13-registry-suite-red-at-head-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Diagnose the absent Modelo 390 page-02 field at official record position 1628 before re-anchoring the disclosure-split gate, per that gate's own instruction and ## Scope
-
-- `src/cadrumo/_data/registry/aeat/modelos/390/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Diagnose the absent Modelo 390 page-02 field at official record position 1628 before re-anchoring the disclosure-split gate, per that gate's own instruction
 

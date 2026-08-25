@@ -63,4 +63,3 @@ PASS. Preserve the two exact `ingress_blocked` domains and the distinct manual
 and threshold-observation paths. Reopen only after an accepted source owner
 meets every era-specific ADR predicate; do not treat BOE grammar, SOAP/XML, or
 serializer evidence as a source route.
-

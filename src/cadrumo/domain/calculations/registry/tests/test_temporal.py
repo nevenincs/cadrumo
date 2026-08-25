@@ -244,14 +244,14 @@ _CADRUMO_ROOT = Path(__file__).resolve().parents[4]
 #: Production modules sanctioned to pass ``revision_id`` INTO ``select_revision``.
 #: Both do so as a narrowing assertion alongside the law-determined
 #: ``filing_year``/``period`` axes, never as the sole selector: ``_snapshot`` is
-#: the resolver internal that funnels every snapshot, and ``_work_addressing``
+#: the resolver internal that funnels every snapshot, and ``work_addressing``
 #: is the creation-time assertion path that accepts an explicit ``--revision``
 #: only when it equals the law-determined pick (per the
 #: aeat-registry-authority-flow discipline).
 _SANCTIONED_REVISION_ID_SITES = frozenset(
     {
         "domain/calculations/registry/_snapshot.py",
-        "application/modelo/_work_addressing.py",
+        "application/modelo/work_addressing.py",
     },
 )
 

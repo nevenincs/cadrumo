@@ -464,7 +464,7 @@ class CensalOperationExecutor:
 
 async def _pull_censal_datos() -> CensalObservation:
     """Acquire through the sole public live application door."""
-    from ..live import pull_censal_datos
+    from ..live.censo import pull_censal_datos
 
     observation = await pull_censal_datos()
     if not isinstance(observation, CensalObservation):

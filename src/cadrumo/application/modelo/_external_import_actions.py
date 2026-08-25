@@ -89,13 +89,13 @@ from ._calculation_helpers import external_filing_observations as _external_fili
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
-from ._work_addressing import resolve_registry_revision_for_work_target
 from ._work_lifecycle import ActiveWorkUnitUse, create_work_unit, require_active_work_unit
-from .work_unit_selection import (
+from .work_addressing import (
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
     ModeloWorkVisibleTargetAmbiguousError,
+    resolve_registry_revision_for_work_target,
     select_modelo_work_resolution,
 )
 

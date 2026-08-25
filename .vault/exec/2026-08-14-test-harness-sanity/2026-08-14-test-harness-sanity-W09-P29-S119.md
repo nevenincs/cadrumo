@@ -11,9 +11,6 @@ related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
 ---
 
-
-
-
 # Consolidate duplicate secure-object ephemeral repository test helpers behind the canonical shared support owner while preserving each caller's database-path and key-lifecycle contract
 
 ## Scope

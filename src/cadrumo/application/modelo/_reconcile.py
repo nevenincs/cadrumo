@@ -54,6 +54,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo
 from ...core.errors import CadrumoError
@@ -69,6 +70,12 @@ from ._reconciliation_records import (
     ModeloReconciliationRecord,
     ModeloReconciliationRecordRepository,
     ModeloReconciliationVerdict,
+)
+from .work_addressing import (
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    resolve_modelo_work_bucket,
+    select_modelo_work_resolution,
 )
 
 #: Width of a bucket-event payload value. Mirrors the constraint declared on the
@@ -130,6 +137,20 @@ the registry and the fixture provenance rather than this paragraph.
 Real-PDF ``bbox_anchored`` extraction quality for the enrolled modelos remains
 Tier-R and is tracked separately, blocked on #332-337.
 """
+
+
+def _captured_work_unit_for_reconciliation(*, work_unit_id: WorkUnitId, bucket_id: str | None = None) -> WorkUnit:
+    """Capture one catalogue and preserve reconcile's typed absence policy."""
+    request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
+    resolved_bucket_id = bucket_id or resolve_modelo_work_bucket(request)
+    catalogue = WorkUnitCatalogueRepository(bucket_id=resolved_bucket_id).load()
+    resolution = select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=resolved_bucket_id)
+    if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit_id},
+        )
+    return resolution.work_unit
 
 
 class ModeloReconciliationCommand(BaseModel):
@@ -266,15 +287,7 @@ def _require_declaration_enrolled_modelo(work_unit_id: WorkUnitId) -> WorkUnit:
     :func:`adapters.inbound.declaracion.parse_declaracion` overrides,
     rather than reloading the catalogue a second time.
     """
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-
-    catalogue = WorkUnitCatalogueRepository().load()
-    work_unit = catalogue.work_units.get(work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
+    work_unit = _captured_work_unit_for_reconciliation(work_unit_id=work_unit_id)
     if str(work_unit.modelo) not in _DECLARATION_CASILLA_RECONCILE_MODELOS:
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
@@ -408,7 +421,6 @@ def _reconcile_parsed_justificante(
     actor: str,
     justificante: Justificante,
 ) -> ModeloReconciliationReport:
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from cadrumo.application.workflow.persistence import workflow_state_repository
 
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
@@ -417,13 +429,7 @@ def _reconcile_parsed_justificante(
             translated_message="application.modelo.errors.reconcile_no_active_bucket",
         )
 
-    catalogue = WorkUnitCatalogueRepository().load()
-    work_unit = catalogue.work_units.get(work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
+    work_unit = _captured_work_unit_for_reconciliation(work_unit_id=work_unit_id, bucket_id=active_bucket_id)
     if work_unit.bucket_id != active_bucket_id:
         raise ReconciliationCrossBucketRefusedError(
             translated_message="errors.refused.reconciliation_cross_bucket",
@@ -471,7 +477,6 @@ def _reconcile_parsed_declaracion(
     actor: str,
     declaracion: InboundDeclaracionObservation,
 ) -> ModeloReconciliationReport:
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from cadrumo.application.workflow.persistence import workflow_state_repository
 
     active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
@@ -480,13 +485,7 @@ def _reconcile_parsed_declaracion(
             translated_message="application.modelo.errors.reconcile_no_active_bucket",
         )
 
-    catalogue = WorkUnitCatalogueRepository().load()
-    work_unit = catalogue.work_units.get(work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
+    work_unit = _captured_work_unit_for_reconciliation(work_unit_id=work_unit_id, bucket_id=active_bucket_id)
     if work_unit.bucket_id != active_bucket_id:
         raise ReconciliationCrossBucketRefusedError(
             translated_message="errors.refused.reconciliation_cross_bucket",

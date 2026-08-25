@@ -12,6 +12,9 @@ related:
   - "[[2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
+  - '[[2026-08-22-source-casilla-integration-m232-row-source-grounding-research]]'
+  - '[[2026-08-22-source-casilla-integration-m360-row-source-grounding-research]]'
+  - '[[2026-08-25-source-casilla-integration-modelo-763-non-header-source-lifecycle-research]]'
 ---
 # `source-casilla-integration` adr: `ratcheted source-domain-to-casilla connectivity` | (**status:** `accepted`)
 

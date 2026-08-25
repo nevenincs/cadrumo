@@ -50,4 +50,3 @@ passed 10 tests and Ruff passed.
 
 PASS. Retain the two-family grounding-blocked refusal and correct the legacy
 continuity fixture separately to request the declared authority grade.
-

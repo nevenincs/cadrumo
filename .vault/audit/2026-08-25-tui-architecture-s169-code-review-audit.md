@@ -134,4 +134,3 @@ low finding remains.
 the one-record singleton contract with real SQL instrumentation while preserving
 the previously accepted direct-import, ownership, exception-context, encryption,
 CAS, and lineage behavior.
-

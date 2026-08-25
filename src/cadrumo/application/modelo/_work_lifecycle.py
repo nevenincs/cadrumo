@@ -9,7 +9,7 @@ Each mutating action emits a typed event through
 timeline from creation through discard.
 
 The lifecycle layer mutates the work-unit catalogue only. It does not choose
-visible filing targets (see :mod:`cadrumo.application.modelo._work_addressing`),
+visible filing targets (see :mod:`cadrumo.application.modelo.work_addressing`),
 does not decide unsupported-modelo or applicability policy (see
 :mod:`cadrumo.application.modelo._work_create_policy`), and does not persist
 calculation revisions or filing records. Creation still performs the profile
@@ -17,7 +17,7 @@ readiness and registry revision/period gates before inserting the work unit, so
 programmatic callers observe the same safety boundary as the CLI.
 
 See Also:
-    :mod:`cadrumo.application.modelo._work_addressing`:
+    :mod:`cadrumo.application.modelo.work_addressing`:
         Resolves natural or exact operator targets before lifecycle mutation.
     :func:`cadrumo.application.modelo.assemble_work_unit_history`:
         Reads the emitted bucket events into a chronological work-unit timeline.
@@ -352,7 +352,7 @@ def create_work_unit(
     ``revision_id``. The revision id must be known to the bundled registry, the
     period must be declared for that revision, and the revision id must be the
     law-determined revision that
-    :func:`~cadrumo.application.modelo._work_addressing.resolve_registry_revision_for_work_target`
+    :func:`~cadrumo.application.modelo.work_addressing.resolve_registry_revision_for_work_target`
     would select for ``(modelo, filing_year, period)`` alone -- this door
     re-confirms that pairing itself rather than trusting a caller to have
     resolved it, since a caller holding a stale or hand-picked revision id for
@@ -407,7 +407,7 @@ def create_work_unit(
     )
     reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
-    from ._work_addressing import resolve_registry_revision_for_work_target
+    from .work_addressing import resolve_registry_revision_for_work_target
 
     resolve_registry_revision_for_work_target(
         modelo=modelo,

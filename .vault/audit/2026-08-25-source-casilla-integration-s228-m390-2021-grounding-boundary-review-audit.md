@@ -60,4 +60,3 @@ PASS. Retain the bounded `grounding_blocked` disposition. Reopen only through
 an accepted 2021 vertical slice satisfying every ADR predicate limb; neither
 parser coordinates, a filed declaration, manual entry, nor later M390 routes
 are substitutes.
-

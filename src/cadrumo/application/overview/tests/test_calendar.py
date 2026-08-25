@@ -21,7 +21,8 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
-from ...live import PersistedExpedientesSnapshot, PersistedNotificationsSnapshot
+from ...live.expedientes import PersistedExpedientesSnapshot
+from ...live.notifications import PersistedNotificationsSnapshot
 from .. import (
     OverviewCalendar,
     OverviewCalendarEntry,

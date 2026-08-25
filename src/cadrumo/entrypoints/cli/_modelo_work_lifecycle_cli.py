@@ -8,12 +8,10 @@ from dataclasses import dataclass
 import typer
 
 from ...application.modelo import (
-    ModeloWorkRegistryYearMismatchError,
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     discard_work_unit,
-    ensure_modelo_work_unit_for_active_target,
     guard_active_profile_foral_ccaa,
     lifecycle_continuation_for_work_list,
     lifecycle_continuation_for_work_status,
@@ -23,13 +21,15 @@ from ...application.modelo import (
     rename_work_unit,
     require_existing_profile_baseline_ready_for_modelo_work,
     require_profile_ready_for_modelo_work,
-    resolve_registry_revision_for_work_target,
 )
-from ...application.modelo.work_unit_selection import (
+from ...application.modelo.work_addressing import (
+    ModeloWorkRegistryYearMismatchError,
     ModeloWorkRevisionConflictError,
     ModeloWorkSelectorContradictionError,
     ModeloWorkUnitNotFoundError,
     ModeloWorkVisibleTargetAmbiguousError,
+    ensure_modelo_work_unit_for_active_target,
+    resolve_registry_revision_for_work_target,
 )
 from ...core import Modelo, Period
 from ...core.external_constants import OutputLanguage

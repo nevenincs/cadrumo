@@ -75,7 +75,7 @@ from ._action_errors import (
     WorkUnitNotFoundError,
 )
 from ._row_source_identity_replay import ModeloRowSourceFingerprint, revision_row_source_fingerprints_for_review
-from .work_unit_selection import (
+from .work_addressing import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     select_modelo_work_resolution,

@@ -31,7 +31,8 @@ from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
-from ...live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
+from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
+from ...live.snapshot_base import SnapshotLifecycleState
 from .. import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,

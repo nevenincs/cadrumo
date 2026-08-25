@@ -179,7 +179,7 @@ if TYPE_CHECKING:
         ForeignAssetIngestObservation,
     )
     from ..calculations import IvaWalletDecisionRepository
-    from ..live import Borrador100SnapshotRepository
+    from ..live.borrador_100 import Borrador100SnapshotRepository
 
 
 @dataclass(frozen=True, slots=True)

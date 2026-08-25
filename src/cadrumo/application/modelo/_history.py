@@ -58,6 +58,12 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ._action_errors import WorkUnitNotFoundError
+from .work_addressing import (
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    resolve_modelo_work_bucket,
+    select_modelo_work_resolution,
+)
 
 
 class WorkUnitHistoryEvent(BaseModel):
@@ -119,13 +125,19 @@ def assemble_work_unit_history(
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
-    work_units = wu_repo.load()
-    work_unit = work_units.get(work_unit_id)
-    if work_unit is None:
+    request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
+    bucket_id = wu_repo.bucket_id or resolve_modelo_work_bucket(request)
+    resolution = select_modelo_work_resolution(
+        request,
+        catalogue=wu_repo.load(),
+        bucket_id=bucket_id,
+    )
+    if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
         raise WorkUnitNotFoundError(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": work_unit_id},
         )
+    work_unit = resolution.work_unit
 
     catalogue = bv_repo.load()
 

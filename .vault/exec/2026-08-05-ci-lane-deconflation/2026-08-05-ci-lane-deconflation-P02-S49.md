@@ -5,44 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:cefb0c3ee88219797794c0c7b786d6f4c848288de6d4dd083c35b531722c4d5e'
+body_hash: 'sha256:7c321c5d024d2d2dc2b3c72b8b22c7a1e9c66e9c0845b7ffde8145038e1fa4f4'
 step_id: 'S49'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S49 and 2026-08-05-ci-lane-deconflation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Flip continue-on-error off the per-push integration conformance step after the action-envelope campaign is audited complete and the unchanged authoritative four-module recipe is green. Closure evidence: the historical 2026-08-13 baseline was 6 failures among 48 then-collected tests, current suite evolution legitimately collects 46, all 46 pass, and the workflow remains pinned to the exact recipe with eight workers. The denominator is an observation, not a permanent release condition and ## Scope
-
-- `.github/workflows/ci.yml and dev/ci/tests/test_ci_workflow.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Flip continue-on-error off the per-push integration conformance step after the action-envelope campaign is audited complete and the unchanged authoritative four-module recipe is green. Closure evidence: the historical 2026-08-13 baseline was 6 failures among 48 then-collected tests, current suite evolution legitimately collects 46, all 46 pass, and the workflow remains pinned to the exact recipe with eight workers. The denominator is an observation, not a permanent release condition
 

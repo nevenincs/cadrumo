@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-localization'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:2e0c1ef9cdcdc349b1043204607306db8f3fadef8284f14f3e4792898801dbd6'
+body_hash: 'sha256:e6ea26e45d87350c3d7b3a750a22dcf01813f2b14299b23b082614dbc44cb5ca'
 step_id: 'S23'
 related:
   - "[[2026-07-18-user-docs-localization-plan]]"

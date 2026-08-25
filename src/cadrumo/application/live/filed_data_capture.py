@@ -2143,7 +2143,7 @@ async def _capture_filed_history_notifications(
 ) -> _FiledHistoryNotificationsStage:
     """Capture notifications without allowing an independent failure to erase filed history."""
     try:
-        from . import capture_notifications
+        from .live.notifications import capture_notifications
 
         snapshot = await capture_notifications(bucket_id=require_active_bucket_id())
     except Exception as exc:

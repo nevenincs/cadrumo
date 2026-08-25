@@ -61,7 +61,7 @@ from ...domain.modelos import (
 from ._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from ._export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from ._verification_actions import verify_modelo_revision
-from ._work_addressing import (
+from .work_addressing import (
     ensure_modelo_work_unit_for_active_target,
     resolve_registry_revision_for_work_target,
 )

@@ -97,7 +97,7 @@ from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,
 )
-from .work_unit_selection import (
+from .work_addressing import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     resolve_modelo_work_bucket,
@@ -751,6 +751,7 @@ def _resolved_maternidad_meses(work_unit: WorkUnit) -> MaternidadMesesResolution
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
     from ._profile_binding import resolve_maternidad_meses
+
     snapshot = resolve_registry_snapshot_for_work_unit(
         work_unit,
         grade=RegistryAuthorityGrade.CALCULATION,
@@ -772,6 +773,7 @@ def _maternidad_casilla_id(work_unit: WorkUnit) -> CasillaId | None:
     would otherwise run on every calculation of every modelo.
     """
     from ._semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
+
     return casilla_id_for_unambiguous_revision_semantic_role(
         _revision_for_work_unit(work_unit),
         _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE,
@@ -881,6 +883,7 @@ def _ambiguous_relacion_hijo_ids(work_unit: WorkUnit, contributing_hijo_ids: fro
         return frozenset[str]()
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
+
     try:
         record = ProfileRecordRepository.for_current_session(work_unit.bucket_id).load(work_unit.bucket_id)
     except ProfileNotFoundError:

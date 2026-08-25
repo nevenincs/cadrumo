@@ -55,4 +55,3 @@ PASS. Keep the active no-candidate result and preserve direct manual summaries.
 Reopen only after exact historic or active era evidence proves an authoritative
 source fact, native row grain, secure non-lossy owner, destination mapping, and
 separate lifecycle/export proof.
-

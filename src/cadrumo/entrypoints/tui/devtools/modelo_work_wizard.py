@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING
 
-from ....application.modelo import ensure_modelo_work_unit_for_active_target
+from ....application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
 from ....application.modelo.work_wizard import ModeloWorkWizardRun, open_modelo_work_wizard
 from ....core import Modelo, Period
 from ....core.flows import FlowMode
