@@ -3,14 +3,14 @@ tags:
   - '#plan'
   - '#dehu-notification-legal-effect'
 date: '2026-08-07'
-modified: '2026-08-25'
-body_hash: 'sha256:f0fe919a0362b916f38d78e5a86e04b4ec32b4c22860b94d2b57509aee0c51d6'
 tier: L2
 related:
   - '[[2026-08-07-dehu-notification-legal-effect-adr]]'
+modified: '2026-08-25'
+body_hash: 'sha256:19ad0ad881c576711fe7b5d7c66e9434191e8c449bc4f9a7ebbe77dc068f3ba4'
 ---
 
-<!-- RETIRED: S20, S21, S22 -->
+<!-- RETIRED: S13, S14, S15, S16, S18, S20, S21, S22 -->
 
 # `dehu-notification-legal-effect` plan
 
@@ -58,32 +58,17 @@ live BOE independently of the bundled corpus, and the constant's doc comment
 cites only the provision, never a catalogue entry that does not yet exist.
 It is a mitigation, not a substitute for the review.
 
-**Live-evidence amendment (2026-08-13).** Phase P05 makes one authenticated
-AEAT **read** expressly allowed and required: the existing canonical
-`aeat app live notifications pull` route must reach DEHu through its
-read-only guard, parse the remote response, and persist its typed snapshot.
-Every remote write is permanently forbidden. In particular, P05 must never
-acknowledge, mark a notification read, comparecer, submit, present, pay,
-sign, dismiss, alter credentials, or otherwise mutate AEAT state.
-
-This is an acceptance requirement, not an implementation rewrite. Offline
-tests, mocks, synthetic fixtures, parser samples, and local-only replays may
-support diagnosis but can never close the live-fetch row. A real-payload
-replay through the production overview projection is allowed only as the
-supplementary branch in P05.S16 when the captured account has no unread item
-at least ten calendar days old; it does not substitute for proving the live
-fetch, parser, persistence, or typed snapshot inspection in P05.S14 and
-P05.S15. The feature and this plan cannot claim completion without the
-sanitized real live evidence defined in P05.
-
-**Critical custody dependency (reconciled 2026-08-25).** P05.S19 recorded the
-custody regression that blocked the live read. The accepted
-`2026-08-13-profile-password-custody-rollup-adr` and its implementation plan now
-own the incident's architecture, migration, proof, and close audit. Retired
-P05.S20 through P05.S22 duplicated that successor authority and must not be
-implemented or checked here. P05.S13 may begin only after the custody campaign
-closes honestly; the original profile remains immutable evidence, and neither a
-friendlier refusal nor a replacement profile satisfies that dependency.
+**Lifecycle reconciliation (2026-08-25).** The authenticated-read amendment
+mixed implementation closure with a one-time operator observation. The guarded
+route, typed persistence, parser, legal-state projection, and Notice behavior
+are already implemented and locally gated. Optional live acceptance remains
+owned by the opt-in live-notifications route test and the operator deferred-
+actions runbook, while historical successful captures remain preserved in the
+live-pull sweep records. Retired P05.S13 through P05.S16 and P05.S18 therefore
+must not be implemented or checked here. The profile-password-custody corpus
+owns custody and authentication correctness; this plan neither repeats that
+work nor waits forever on external account state. P05 retains only the finite
+independent security and semantic-ownership review.
 
 ## Steps
 
@@ -118,18 +103,16 @@ Run every targeted suite plus the tree-wide vault and locale gates and triage an
 
 - [x] `P04.S09` - Run the targeted suites sequentially, core tests, the registry legal and catalogue tests, application overview tests and entrypoints cli tests, plus vaultspec-core vault check all and the locales scaffold --check gate, capture full output to a log file per aeat-local-execution, and triage any red signature as owner-surface or unrelated peer churn before closing this Step; `no production files, verification only`.
 
-### Phase `P05` - required authenticated DEHu legal-effect evidence
+### Phase `P05` - guarded-route review and operational handoff
 
-Run a strictly serial, authenticated, read-only acceptance program proving the real DEHu notification route, typed persistence, legal-effect projection, and operator Notice without any remote mutation; no local-only proof can close this phase.
+Preserve the implemented read-only guard and custody diagnosis, then complete
+one finite independent security and semantic-ownership review. Optional live
+observation belongs to the canonical opt-in test and operator runbook rather
+than to permanent implementation-plan rows.
 
 - [x] `P05.S12` - Prove the canonical DEHu route and remote-operation guard permit only authenticated read-only notification fetches and refuse acknowledge, mark-read, comparecer, submit, present, and every other AEAT mutation before transport.; `src/cadrumo/application/live src/cadrumo/adapters/outbound/aeat/sede src/cadrumo/domain/calculations/registry src/cadrumo/entrypoints/cli`.
 - [x] `P05.S19` - Reproduce the production custody regression through a real isolated create setup-interruption process-restart and login lifecycle using the file backend and original passphrase, then identify the first commit and invariant that permits encrypted bucket state to outlive its only master-key route.; `src/cadrumo/application/user_profile src/cadrumo/adapters/persistence/storage/master_key src/cadrumo/entrypoints/cli/_config`.
-- [ ] `P05.S13` - Verify active-profile and authenticated-session preconditions with sanctioned read-only diagnostics, record only presence and readiness facts, and stop for the operator if login, certificate, or Cl@ve interaction is required.; `src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py src/cadrumo/entrypoints/cli/_app_live.py src/cadrumo/entrypoints/cli/_config`.
-- [ ] `P05.S14` - Execute one real authenticated aeat app live notifications pull through DEHu, prove traffic reached the canonical guarded service, and record sanitized typed evidence of the persisted snapshot id, capture time, row count, and source host without remote mutation.; `src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py src/cadrumo/application/live/__init__.py src/cadrumo/application/live/_notifications.py src/cadrumo/adapters/outbound/aeat/sede/_notifications.py`.
-- [ ] `P05.S15` - Inspect the just-captured snapshot only through typed latest and show commands, correlate its sanitized id and count with the pull envelope, and prove the remote parser supplied fecha_notificacion and leida inputs consumed by service-state computation; `src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py src/cadrumo/entrypoints/cli/_app_live_payloads.py src/cadrumo/application/live/_notifications.py src/cadrumo/adapters/outbound/aeat/sede/_notifications.py src/cadrumo/application/overview/_calendar.py`.
-- [ ] `P05.S16` - Run aeat app overview calendar over the captured snapshot and prove its real event service state. If the live payload contains an unread item at least ten days old, demonstrate overview.notificacion.rechazo_tacito with its legal reference. Otherwise run a supplementary real-payload replay through the same production projection.; `src/cadrumo/entrypoints/cli/_overview.py src/cadrumo/entrypoints/cli/_overview_rendering.py src/cadrumo/application/overview/_calendar.py src/cadrumo/core/_notificacion_estado_servicio.py`.
-- [ ] `P05.S17` - Conduct an independent security and semantic-duplication review of the canonical guarded route parser persistence and overview projection and record every owner-surface finding without compatibility shims.; `src/cadrumo/application/live src/cadrumo/adapters/outbound/aeat/sede src/cadrumo/application/overview src/cadrumo/entrypoints/cli .vault/audit`.
-- [ ] `P05.S18` - Create a sanitized live-evidence execution record and phase summary that correlates guarded traffic snapshot persistence parser inputs overview state Notice outcome and every blocker without exposing taxpayer content or credentials.; `.vault/exec/2026-08-07-dehu-notification-legal-effect .vault/audit .vault/plan/2026-08-07-dehu-notification-legal-effect-plan.md`.
+- [x] `P05.S17` - Conduct an independent security and semantic-duplication review of the canonical guarded route parser persistence and overview projection and record every owner-surface finding without compatibility shims.; `src/cadrumo/application/live src/cadrumo/adapters/outbound/aeat/sede src/cadrumo/application/overview src/cadrumo/entrypoints/cli .vault/audit`.
 
 ## Parallelization
 
@@ -153,22 +136,16 @@ reads the same field); P03.S07 and P03.S08 touch disjoint files
 (`_calendar.py` versus `_overview_rendering.py` and the locale catalogues)
 and may run in parallel with each other once P03.S06 is closed.
 
-P04.S09 was the terminal implementation verification for P01 through P03;
-P05 supersedes it as the plan's final acceptance program. P05 is strictly
-serial: P05.S12 and the completed P05.S19 diagnosis precede the successor
-profile-password-custody campaign's honest close; only then may P05.S13 retry authentication and precede the one live read in
-P05.S14; P05.S15 must inspect that exact capture; P05.S16 must project that
-same capture; P05.S17 independently reviews the completed route; and P05.S18
-records the sanitized evidence and summary last. A session/authentication
-precondition failure stops at P05.S13, and a missing qualifying live row
-changes only P05.S16 to its supplementary real-payload replay branch.
+P04.S09 remains the terminal implementation verification for P01 through P03.
+P05.S12 and P05.S19 preserve the guard and custody findings; P05.S17 is their
+finite independent close review. Optional authenticated observation is
+operational work outside this plan and does not gate implementation closure.
 
 ## Verification
 
-The plan is complete only when every Step is closed (`- [x]`), P04.S09's
-full-tree run remains green or explicitly triaged, and every P05 acceptance
-gate has real, sanitized live evidence. The plan remains open after this
-amendment because P05.S12 through P05.S18 are unchecked. Per-Step gates
+The plan is complete only when every retained Step is closed (`- [x]`),
+P04.S09's full-tree run remains green or explicitly triaged, and P05.S17's
+independent review has no unresolved blocking finding. Per-Step gates
 (restated from Steps above, not re-argued):
 
 - P01.S01: `resolve_anchored_extracted_unit` resolves the committed anchor
@@ -208,39 +185,8 @@ amendment because P05.S12 through P05.S18 are unchecked. Per-Step gates
   interrupted or refused setup, process restart, and login with the original
   passphrase, and Git history plus code evidence identifies the first broken
   invariant. A prose-only diagnosis cannot close the row.
-- Custody successor dependency: the profile-password-custody campaign's final
-  audit closes without an open high or critical finding before P05.S13 begins.
-  This plan neither repeats its proof nor redefines its architecture.
-- P05.S13: sanctioned read-only profile/auth diagnostics report only
-  readiness and presence facts. The record contains no NIF, certificate path,
-  session material, notification content, or credential detail. Missing
-  configuration or an interactive certificate/Cl@ve requirement is an open
-  precondition, never permission to create or bypass credentials.
-- P05.S14: one real authenticated `aeat app live notifications pull` reaches
-  the canonical DEHu read service and produces a sanitized JSON envelope with
-  a persisted snapshot identifier, capture/persistence times, row count, and
-  approved source-host evidence. No offline test, fixture, mock, synthetic
-  payload, or local-only replay can close this row.
-- P05.S15: typed `latest` and `view` outputs resolve the P05.S14 snapshot and
-  safely correlate its identifier and count. Sanitized evidence shows that
-  the remote payload supplied the `fecha_notificacion` and `leida` inputs used
-  by the legal service-state computation, without recording row content or
-  taxpayer identifiers.
-- P05.S16: `aeat app overview calendar` runs over the P05.S14 capture and
-  surfaces the computed real event service state. If the capture contains an
-  unread notification available for at least ten calendar days, the output
-  also contains warning code `overview.notificacion.rechazo_tacito` and its
-  Ley 39/2015 art. 43.2 legal reference. If no such row exists, retain that
-  absence as a real-account fact and run the supplementary real-payload
-  production-projection replay; the replay cannot stand in for P05.S14 or
-  P05.S15.
 - P05.S17: an independent reviewer checks the remote-operation policy,
   authentication boundary, parser, secure snapshot persistence, overview
   projection, Notice rendering, and semantic ownership. It records any
   duplicate implementation or unsafe route as a blocking owner-surface
   finding rather than adding a compatibility shim.
-- P05.S18: an execution record and P05 summary correlate the guarded remote
-  traffic, snapshot persistence, parser inputs, overview state, Notice result,
-  and every blocker using only approved redacted facts. They explicitly state
-  that no AEAT mutation occurred and do not claim feature completion until all
-  preceding P05 gates are closed.
