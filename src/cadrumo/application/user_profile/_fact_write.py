@@ -50,7 +50,6 @@ class ProfileFactWriteDoor(StrEnum):
     PATCH = "wizard.patch"
     DESCENDANTS = "wizard.descendants"
     MANAGER_FIELD = "manager.field"
-    MANAGER_AUTH = "manager.auth"
     MANAGER_ROW = "manager.row"
     CLI_CAPACIDAD = "cli.capacidad"
     CLI_DESCENDIENTE = "cli.descendiente"

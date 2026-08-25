@@ -614,6 +614,7 @@ def test_isolated_m303_did_wire_uses_only_the_snapshot_selected_account(
         headers=_filing_producer_values(snapshot),
         producer_snapshot=snapshot,
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        product_software_identity=_product_software_identity(),
     )
 
     assert len(wire) == 823
@@ -652,6 +653,7 @@ def test_filing_envelope_facade_derives_ordered_bytes_from_the_canonical_resolve
         headers=_filing_producer_values(producer_snapshot),
         producer_snapshot=producer_snapshot,
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        product_software_identity=_product_software_identity(),
     )
     assert result.prefix.startswith(b"<T303020261T0000><AUX>")
     assert result.payload == result.prefix + result.occurrences[0].payload + result.closer

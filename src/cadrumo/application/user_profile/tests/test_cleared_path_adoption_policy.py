@@ -66,11 +66,10 @@ _DECLARED_WRITERS: dict[str, str] = {
         "Writes operator-supplied wizard answers, which are unconditional on what the "
         "projection holds. Its projection read is a descendant-list scan that only reads."
     ),
-    "entrypoints/cli/_config/_manager_frontend.py": (
-        "Its single projection read feeds the next-step routing hint, which only renders a "
-        "notice and writes nothing. Every fact it constructs carries an operator-typed "
-        "value from the manager field or language screen, or is a throwaway coercion probe, "
-        "so no write is ever conditioned on a path being absent from the projection."
+    "application/user_profile/_section_rows.py": (
+        "Reads the projection only to choose the next repeatable-row index. Every fact "
+        "comes from values the operator explicitly supplied for the new row, so absence "
+        "never causes a cleared value to be re-adopted."
     ),
     "application/wizard/_commands.py": (
         "The command reads the projection only to preserve the filing baseline before "
