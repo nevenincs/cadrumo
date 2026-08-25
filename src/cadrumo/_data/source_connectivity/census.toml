@@ -277,12 +277,12 @@ capability_locators = [
 capability_ids = ["row_assembler:per_donativo_donor"]
 advisory_destination_refs = ["modelo:182:rows:donativo-donor"]
 registry_destination_candidates = [
-  { kind = "binding_source", modelo_id = "182", revision_id = "2007-y-siguientes", filing_year = 2007, period = "2007 0A", source_kind = "donativo_donor" },
+  { kind = "binding_source", modelo_id = "182", revision_id = "2025", filing_year = 2025, period = "2025 0A", source_kind = "donativo_donor" },
 ]
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/_data/registry/aeat/modelos/182/revisions/2007-y-siguientes/bindings/0001-bindings.toml:3"
+reference = "src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/bindings/0001-bindings.toml:3"
 summary = "Validated Modelo 182 bindings already declare the donor source family."
 
 [[entries.grounding]]
