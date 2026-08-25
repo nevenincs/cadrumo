@@ -10,6 +10,7 @@ import pytest
 from ..quality.cli_action_census import (
     COMMAND_LITERAL_ALIAS,
     CandidateRecord,
+    CurrentTreeCensusError,
     DiscoveryKind,
     DiscoveryTrigger,
     DiscoveryTriggerKind,
@@ -20,8 +21,9 @@ from ..quality.cli_action_census import (
     admit_alias,
     admit_discoveries,
     authored_error_message_join,
-    census,
     close_fixed_point,
+    current_action_alias_discoveries,
+    current_census,
     dump_fixed_point_state,
     fixed_point_pass_from_sources,
     initial_fixed_point_state,
@@ -34,8 +36,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 @pytest.fixture(scope="module")
 def records() -> tuple[CandidateRecord, ...]:
-    """Read the real pinned source tree once for this module's assertions."""
-    return census("HEAD")
+    """Read the live production tree once for the S46 closure assertions."""
+    return current_census()
 
 
 def test_census_records_are_stably_ordered_and_keyed_to_source_symbols(
@@ -43,7 +45,7 @@ def test_census_records_are_stably_ordered_and_keyed_to_source_symbols(
 ) -> None:
     """The current production tree produces reproducible, disposition-safe keys."""
     first = records
-    second = census("HEAD")
+    second = current_census()
 
     first_keys = tuple(record.key for record in first)
     second_keys = tuple(record.key for record in second)
@@ -80,56 +82,91 @@ def test_census_observes_real_definition_producer_and_command_literal_sites(
     keys = {record.key for record in records}
 
     assert (
-        "src/cadrumo/core/json_contract.py",
-        "Notice",
+        "src/cadrumo/application/filing/_calculate.py",
+        "DeclaracionCalculateSummary",
         "definition",
-        "suggestion",
-        "<none>",
+        "next_action",
+        "<declaration>",
+    ) in keys
+    assert (
+        "src/cadrumo/application/overview/_data_prep.py",
+        "_work_unit_step",
+        "producer",
+        "next_action",
+        (
+            "declare_next_action('operator.modelo.work.create', modelo=modelo, "
+            "year=filing_year, period=period.registry_token)"
+        ),
     ) in keys
     assert any(
-        record.role == "producer"
-        and record.alias == "suggestion"
-        and record.action_identity == "aeat config profile create NAME"
-        and record.path == "src/cadrumo/application/workflow/_models.py"
+        record.role == "command_literal"
+        and record.action_identity == "aeat app modelo work create"
+        and record.path == "src/cadrumo/application/wizard/_commands.py"
         for record in records
     )
 
 
-def test_census_observes_workflow_detail_map_next_action_producers(
+def test_census_observes_current_action_producers_and_command_literals(
     records: tuple[CandidateRecord, ...],
 ) -> None:
-    """Workflow detail dictionaries remain first-class action producers."""
-    workflow_path = "src/cadrumo/application/workflow/_engine.py"
+    """Live overview and wizard action shapes remain first-class observations."""
+    overview_path = "src/cadrumo/application/overview/_pipeline_health.py"
 
     assert {
         (
-            workflow_path,
-            "WorkflowEngine._load_and_build_draft",
+            overview_path,
+            "_modelo_health_row_for_revision",
             "producer",
             "next_action",
-            "_DRAFT_BUILD_REFUSED_NEXT_ACTION",
+            "declare_next_action('operator.modelo.work.file', work_unit_id=work_unit.work_unit_id)",
         ),
         (
-            workflow_path,
-            "WorkflowEngine._abort_if_draft_not_ready",
+            overview_path,
+            "_modelo_health_row_for_revision",
             "producer",
             "next_action",
-            "_VERIFICATION_REPORT_NEXT_ACTION",
-        ),
-        (
-            workflow_path,
-            "WorkflowEngine._stage_validating_draft",
-            "producer",
-            "next_action",
-            "_VERIFICATION_REPORT_NEXT_ACTION",
+            "declare_next_action('operator.modelo.work.revisions', work_unit_id=work_unit.work_unit_id)",
         ),
     }.issubset({record.key for record in records})
     assert any(
         record.role == "command_literal"
         and record.alias == COMMAND_LITERAL_ALIAS
-        and record.action_identity == "aeat config profile create NAME"
+        and record.action_identity == "aeat config login NAME"
         for record in records
     )
+
+
+def test_current_tree_census_fails_closed_on_absent_or_invalid_production_source(tmp_path) -> None:
+    """A filesystem error cannot silently reduce the current-tree action denominator."""
+    with pytest.raises(CurrentTreeCensusError, match="source root is absent"):
+        current_census(root=tmp_path)
+
+    source = tmp_path / "src/cadrumo/demo.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("def invalid(:\n", encoding="utf-8")
+    with pytest.raises(CurrentTreeCensusError, match=r"cannot parse src/cadrumo/demo\.py: SyntaxError"):
+        current_census(root=tmp_path)
+
+
+def test_current_tree_action_alias_pass_has_no_unadjudicated_live_aliases_and_detects_mutation(tmp_path) -> None:
+    """The S46 live pass catches a new field fed directly from a typed action."""
+    assert current_action_alias_discoveries(aliases=frozenset({"next_action"})) == ()
+
+    source = tmp_path / "src/cadrumo/demo.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "def relay(next_action: str) -> dict[str, str]:\n    return {'unreviewed_action': next_action}\n",
+        encoding="utf-8",
+    )
+
+    discoveries = current_action_alias_discoveries(
+        aliases=frozenset({"next_action"}),
+        root=tmp_path,
+    )
+
+    assert [(record.kind, record.token, record.enclosing_symbol) for record in discoveries] == [
+        (DiscoveryKind.ACTION_ALIAS, "unreviewed_action", "relay"),
+    ]
 
 
 def _fixed_point_sources() -> FixedPointSources:

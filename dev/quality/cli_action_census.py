@@ -270,6 +270,10 @@ class AuthoredErrorMessageCensusError(ValueError):
     """Raised when the live source tree cannot be scanned as one whole input."""
 
 
+class CurrentTreeCensusError(ValueError):
+    """Raised when the current production tree cannot be scanned as one whole input."""
+
+
 @dataclass(frozen=True, slots=True)
 class CandidateRecord:
     """One mechanically observed action-guidance candidate.
@@ -329,6 +333,63 @@ def production_sources(revision: str) -> tuple[tuple[str, str], ...]:
         for path, source in repository_sources(revision)
         if path.endswith(".py") and "/tests/" not in path and not Path(path).name.startswith("test_")
     )
+
+
+def _current_tree_sources(
+    *,
+    root: Path,
+    suffixes: frozenset[str],
+) -> tuple[tuple[str, str], ...]:
+    """Read one complete production source scope from the current worktree.
+
+    This is intentionally distinct from :func:`repository_sources`: a pinned
+    revision remains the reproducible campaign baseline, while S46 needs a
+    fail-closed mechanical reading of concurrent work before it can claim that
+    no action site or direct alias has appeared.
+    """
+    source_root = root / SOURCE_ROOT
+    if not source_root.is_dir():
+        raise CurrentTreeCensusError(f"current-tree census source root is absent: {source_root}")
+
+    sources: list[tuple[str, str]] = []
+    for source_path in scan_directory(
+        source_root,
+        pattern="*",
+        recursive=True,
+        prune_directories=("__pycache__",),
+    ):
+        if source_path.suffix not in suffixes:
+            continue
+        relative = source_path.relative_to(root)
+        if "tests" in relative.parts or source_path.name.startswith("test_"):
+            continue
+        path = relative.as_posix()
+        try:
+            source = source_path.read_text(encoding=_UTF_8)
+        except OSError as error:
+            raise CurrentTreeCensusError(
+                f"current-tree census cannot read {path}: {type(error).__name__}",
+            ) from error
+        except UnicodeDecodeError as error:
+            raise CurrentTreeCensusError(
+                f"current-tree census cannot decode {path}: {type(error).__name__}",
+            ) from error
+        if source_path.suffix == ".py":
+            try:
+                ast.parse(source, filename=path)
+            except SyntaxError as error:
+                raise CurrentTreeCensusError(
+                    f"current-tree census cannot parse {path}: {type(error).__name__}",
+                ) from error
+        sources.append((path, source))
+    if not sources:
+        raise CurrentTreeCensusError(f"current-tree census found no production sources: {source_root}")
+    return tuple(sorted(sources))
+
+
+def current_production_sources(*, root: Path = REPO_ROOT) -> tuple[tuple[str, str], ...]:
+    """Return the complete non-test production Python tree at its live filesystem state."""
+    return _current_tree_sources(root=root, suffixes=frozenset({".py"}))
 
 
 def fixed_point_production_sources(revision: str) -> tuple[tuple[str, str], ...]:
@@ -490,6 +551,44 @@ def census(revision: str) -> tuple[CandidateRecord, ...]:
     return _census_sources(production_sources(revision), INITIAL_ACTION_ALIASES)
 
 
+def current_census(*, root: Path = REPO_ROOT) -> tuple[CandidateRecord, ...]:
+    """Return the mechanically complete action-candidate census for the current tree."""
+    return _census_sources(current_production_sources(root=root), INITIAL_ACTION_ALIASES)
+
+
+def action_alias_discoveries_from_sources(
+    sources: Iterable[SourceEntry],
+    *,
+    aliases: frozenset[str],
+) -> tuple[DiscoveryRecord, ...]:
+    """Find only direct, newly named fields to which an admitted action flows.
+
+    This intentionally keeps a distinct result from the broader fixed-point
+    report: S46 needs a cheap fail-closed alias check over current Python, not
+    catalogue/YAML discovery or a second claim about source authority.
+    """
+    source_snapshot = tuple(sources)
+    candidates = _census_sources(source_snapshot, aliases)
+    discoveries: list[DiscoveryRecord] = []
+    for path, source in source_snapshot:
+        if not path.endswith(".py"):
+            continue
+        tree = ast.parse(source, filename=path)
+        visitor = _DiscoveryVisitor(path, aliases, candidates)
+        visitor.visit(tree)
+        discoveries.extend(record for record in visitor.records if record.kind is DiscoveryKind.ACTION_ALIAS)
+    return _stable_records(discoveries)
+
+
+def current_action_alias_discoveries(
+    *,
+    aliases: frozenset[str],
+    root: Path = REPO_ROOT,
+) -> tuple[DiscoveryRecord, ...]:
+    """Find direct action-field aliases across the complete current production tree."""
+    return action_alias_discoveries_from_sources(current_production_sources(root=root), aliases=aliases)
+
+
 type SourceEntry = tuple[str, str]
 type ClusterKey = tuple[object, ...]
 
@@ -533,6 +632,18 @@ def _is_fixed_point_production_path(path: str) -> bool:
 def fixed_point_sources(revision: str) -> FixedPointSources:
     """Read the complete, production-only S02 source scope at one revision."""
     return FixedPointSources.from_entries(fixed_point_production_sources(revision))
+
+
+def current_fixed_point_sources(*, root: Path = REPO_ROOT) -> FixedPointSources:
+    """Read the complete fixed-point scope from the live production tree.
+
+    The returned snapshot is intentionally ephemeral: callers use it to prove
+    that the checked-in ledger covers the tree they are about to change, not to
+    replace a revision-pinned campaign record.
+    """
+    return FixedPointSources.from_entries(
+        _current_tree_sources(root=root, suffixes=_FIXED_POINT_SOURCE_SUFFIXES),
+    )
 
 
 def initial_fixed_point_state(revision: str) -> FixedPointState:
@@ -1010,6 +1121,20 @@ def fixed_point_pass(
     return fixed_point_pass_from_sources(
         state,
         fixed_point_sources(revision),
+        semantic_observations=semantic_observations,
+    )
+
+
+def current_fixed_point_pass(
+    state: FixedPointState,
+    *,
+    root: Path = REPO_ROOT,
+    semantic_observations: Iterable[DiscoveryRecord | UnknownCluster] = (),
+) -> FixedPointPass:
+    """Run one fail-closed fixed-point pass against the live production tree."""
+    return fixed_point_pass_from_sources(
+        state,
+        current_fixed_point_sources(root=root),
         semantic_observations=semantic_observations,
     )
 

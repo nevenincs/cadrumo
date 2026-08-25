@@ -552,6 +552,7 @@ def probe_registry_referential_integrity() -> PreflightCheck:
                     filing_year=filing_year,
                     period=period,
                     revision_id=revision.id,
+                    grade=revision.effective_authority_grade,
                 )
             except (RegistryValidationError, RegistrySnapshotError):
                 failure_count += 1

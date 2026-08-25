@@ -4,7 +4,7 @@ surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["ley-27-2014:art-124"]
-source_refs = ["boe-modelo-220-2026-form", "aeat-modelo-200-manual-2025"]
+source_refs = ["boe-modelo-220-2025-form", "aeat-modelo-200-manual-2025"]
 
 [[revisions."2025".application_links]]
 id = "modelo-220-filing"
@@ -12,7 +12,7 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hac-529-2026:art-6-3"]
-source_refs = ["aeat-modelo-200-manual-2025", "boe-modelo-220-2026-form"]
+source_refs = ["aeat-modelo-200-manual-2025", "boe-modelo-220-2025-form"]
 
 [[revisions."2025".application_links]]
 id = "modelo-220-workflow"
@@ -20,7 +20,7 @@ surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["orden-hac-529-2026:art-6-3"]
-source_refs = ["aeat-modelo-200-manual-2025", "boe-modelo-220-2026-form"]
+source_refs = ["aeat-modelo-200-manual-2025", "boe-modelo-220-2025-form"]
 
 [[revisions."2025".application_links]]
 id = "modelo-220-export"

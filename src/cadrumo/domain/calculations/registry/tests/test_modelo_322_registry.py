@@ -13,11 +13,11 @@ from .. import (
     ModeloDefinition,
     RegistryCatalogues,
     RegistryValidator,
-    build_snapshot,
     bundled_authority,
     deadline_semantic_coordinate,
     select_revision,
 )
+from .._snapshot import build_snapshot
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 
@@ -242,9 +242,7 @@ def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned
             expected_payment,
         )
         expected_source = (
-            "aeat-modelo-303-procedure"
-            if source_year == 2027
-            else f"aeat-calendario-contribuyente-{source_year}"
+            "aeat-modelo-303-procedure" if source_year == 2027 else f"aeat-calendario-contribuyente-{source_year}"
         )
         assert expected_source in window.source_refs
         assert select_revision(modelo, filing_year=year, period=period) is revision

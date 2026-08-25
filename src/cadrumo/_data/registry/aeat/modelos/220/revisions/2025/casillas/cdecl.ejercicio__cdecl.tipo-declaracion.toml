@@ -23,7 +23,7 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
-source_refs = ["boe-modelo-220-2026-form", "aeat-dr-220-2025"]
+source_refs = ["boe-modelo-220-2025-form", "aeat-dr-220-2025"]
 
 [[revisions."2025".casillas]]
 id = "decl.tipo-declaracion"
@@ -34,4 +34,4 @@ semantic_role = "tipo_declaracion"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hac-529-2026:art-6-3", "ley-27-2014:art-124"]
-source_refs = ["boe-modelo-220-2026-form", "aeat-dr-220-2025"]
+source_refs = ["boe-modelo-220-2025-form", "aeat-dr-220-2025"]

@@ -43,16 +43,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
-from ...adapters.persistence.storage import custody
-from ...adapters.persistence.storage.bucket import (
-    ARCHIVE_SCHEMA_VERSION,
-    ExportArchiveHeader,
-    read_sealed_archive,
-    write_sealed_archive,
-)
-from ...adapters.persistence.storage.custody import (
-    parse_profile_custody_envelope,
-)
 from ...core import PRODUCT_IDENTITY
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
@@ -60,7 +50,15 @@ from ...core.hashing import bounded_canonical_json_bytes, sha256_hex
 from ...core.identity import BucketId
 from ...core.time import now as _now
 from ._capsule_restore import ProfileCapsuleSource, read_profile_capsule_source
-from ._custody_ports import profile_custody_recovery_envelope_path
+from ._custody_ports import (
+    ProfileCapsuleArchiveHeaderMaterial,
+    load_profile_custody_password_material,
+    parse_profile_custody_capsule_members,
+    profile_capsule_archive_schema_version,
+    profile_custody_recovery_envelope_path,
+    read_profile_capsule_archive_container,
+    write_profile_capsule_archive_container,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -150,23 +148,24 @@ def export_profile_capsule_archive(
         ProfileCapsuleArchiveError: When the capsule is not published, or a
             member does not fit the archive's invariant layout.
     """
-    material = custody.load_committed_profile_password_material(profile_id, root=root)
+    material = load_profile_custody_password_material(profile_id, root=root)
     source = read_profile_capsule_source(material.capsule_path)
     if source.password_envelope.profile_id != profile_id:
         raise ProfileCapsuleArchiveError("published capsule names a different profile than the export target")
     payload = _encode_payload(source)
-    header = ExportArchiveHeader(
+    archive_schema_version = profile_capsule_archive_schema_version()
+    header = ProfileCapsuleArchiveHeaderMaterial(
         product=PRODUCT_IDENTITY.python_package,
         bucket_id=str(profile_id),
         manifest_digest=sha256_hex(payload),
-        archive_schema_version=ARCHIVE_SCHEMA_VERSION,
+        archive_schema_version=archive_schema_version,
         created_at=(now or _now()).astimezone(UTC),
     )
-    write_sealed_archive(target, header=header, payload_bytes=payload)
+    write_profile_capsule_archive_container(target, header=header, payload_bytes=payload)
     return ProfileCapsuleArchiveReceipt(
         bucket_id=str(profile_id),
         target=str(target),
-        archive_schema_version=ARCHIVE_SCHEMA_VERSION,
+        archive_schema_version=archive_schema_version,
         recovery_enrolled=profile_custody_recovery_envelope_path(material.capsule_path).exists(),
     )
 
@@ -178,7 +177,7 @@ def inspect_profile_capsule_archive(source: Path) -> ProfileCapsuleArchiveInspec
     an archive they are unsure of, and equally what anyone else can learn from
     a copy of it.
     """
-    contents = read_sealed_archive(source)
+    contents = read_profile_capsule_archive_container(source)
     return ProfileCapsuleArchiveInspection(
         product=contents.header.product,
         bucket_id=contents.header.bucket_id,
@@ -207,7 +206,7 @@ def read_profile_capsule_archive(source: Path) -> ProfileCapsuleSource:
         ProfileCapsuleArchiveError: When the archive's digest does not match
             its payload, or a member is missing or will not parse.
     """
-    contents = read_sealed_archive(source)
+    contents = read_profile_capsule_archive_container(source)
     payload = contents.payload_bytes
     if sha256_hex(payload) != contents.header.manifest_digest:
         raise ProfileCapsuleArchiveError("archive payload does not match the digest its header declares")
@@ -259,16 +258,21 @@ def _decode_payload(payload_bytes: bytes, *, expected_bucket_id: str) -> Profile
         raise ProfileCapsuleArchiveError("archive payload does not declare the current layout")
     if payload.get("profile_id") != expected_bucket_id:
         raise ProfileCapsuleArchiveError("archive payload names a different profile than its header")
-    envelope = parse_profile_custody_envelope(_member(payload, "password_envelope"))
-    sentinel = custody.parse_profile_custody_sentinel_record(_member(payload, "sentinel"))
-    database_bytes = _member(payload, "database")
+    source = parse_profile_custody_capsule_members(
+        envelope_bytes=_member(payload, "password_envelope"),
+        sentinel_bytes=_member(payload, "sentinel"),
+        database_bytes=_member(payload, "database"),
+    )
     _decode_recovery_slot(_member(payload, "recovery_slot"))
-    if str(envelope.profile_id) != expected_bucket_id or sentinel.profile_id != envelope.profile_id:
+    if (
+        str(source.password_envelope.profile_id) != expected_bucket_id
+        or source.sentinel.profile_id != source.password_envelope.profile_id
+    ):
         raise ProfileCapsuleArchiveError("archive members do not agree on one profile identity")
     return ProfileCapsuleSource(
-        password_envelope=envelope,
-        sentinel=sentinel,
-        database_bytes=database_bytes,
+        password_envelope=source.password_envelope,
+        sentinel=source.sentinel,
+        database_bytes=source.database_bytes,
     )
 
 

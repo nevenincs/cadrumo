@@ -417,6 +417,31 @@ applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/calendario-anual/marzo/hasta-2-marzo.html"
 review_status = "reviewed"
 
+[sources."aeat-calendario-contribuyente-2026-hasta-1-febrero-2027"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2026-hasta-1-febrero-2027.html"
+sha256 = "d0455c13450b74e2fdc6d4460b77ffabf4a5084cf2849bd06bb9d60ce8511fa1"
+bytes = 8261
+retrieved_at = 2026-08-25
+applies_from = 2026-01-01
+applies_to = 2027-02-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/contenidos-lectura-facil/calendario-contribuyente-2026-simplificado-personas-fisicas/calendario-anual/febrero-2027/hasta-1-febrero-2027.html"
+review_status = "reviewed"
+
+[sources."aeat-modelo-349-plazos-presentacion"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_349/files/modelo-349-plazos-presentacion.html"
+sha256 = "dd8b78e97a307d83c34dd8261a35cc195142baeb60ada450af1b5840888b1a2c"
+bytes = 6470
+retrieved_at = 2026-08-25
+applies_from = 2020-03-19
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/declaraciones-informativas/modelo-349-decla_____n-recapitulativa-operaciones-intracomunitarias_/plazos-presentacion.html"
+review_status = "reviewed"
+
 [sources."aeat-calendario-contribuyente-2026-domiciliacion"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

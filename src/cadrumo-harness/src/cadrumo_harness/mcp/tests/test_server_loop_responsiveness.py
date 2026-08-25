@@ -49,7 +49,14 @@ from pathlib import Path
 import pytest
 from mcp.server import Server
 
+from cadrumo.application.user_profile import (
+    ProfileRecoveryEnrollment,
+    login_profile,
+    register_profile_with_credentials,
+)
+from cadrumo.application.wizard import scripted_profile_facts
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
+from cadrumo.core.wizard_catalogue import get_setup_flow
 from cadrumo.tests import temporary_env
 
 from .._call_runtime import tier_for
@@ -150,6 +157,11 @@ def test_direct_verb_tool_leaves_the_loop_serving_requests_mid_call() -> None:
 _SESSION_READ_KEY = "app.review.queue"
 
 
+def _verify_recovery_handover(enrollment: ProfileRecoveryEnrollment) -> str:
+    """Acknowledge exact possession of the generated test recovery phrase."""
+    return enrollment.recovery_key.mnemonic
+
+
 async def _warm_call_with_concurrent_list(tool_name: str, arguments: dict[str, object]) -> tuple[bool, bool]:
     """Drive a warm in-process call while a concurrent tools/list is served.
 
@@ -184,8 +196,9 @@ def _provisioned_profile_env(tmp_path: Path) -> Iterator[None]:
 
     The warm runtime runs the CLI in a raw worker thread that inherits
     ``os.environ`` (not context-var overrides), so isolation is env-based. The
-    profile is created through the in-process runtime itself, so the create and
-    every later read resolve the same file-backend master key.
+    The profile is created through the canonical application registration door;
+    the warm runtime then starts against that real encrypted state. Both resolve
+    the same environment-backed storage and secret-store configuration.
     """
     with temporary_env(
         CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
@@ -193,22 +206,27 @@ def _provisioned_profile_env(tmp_path: Path) -> Iterator[None]:
         CADRUMO_SECRET_STORE_DIR=str(tmp_path / "fallback-store"),
         CADRUMO_SECRET_PASSPHRASE=DEV_TEST_DATABASE_PASSWORD,
     ):
-        created = run_cli_in_process(
-            [
-                "--format", "json", "config", "profile", "create", "operator",
-                "--quiet", "--accept-defaults",
-                "--entity-type", "natural_person",
-                "--irpf-income-categories", "actividad_economica",
-                "--tax-id", "12345678Z",
-                "--name", "Operator",
-                "--surnames", "Custody",
-                "--activity", "design",
-            ],
-            acquire_timeout_s=30.0,
-        )  # fmt: skip
-        assert created is not None
-        envelope, is_error = parse_cli_envelope(created)
-        assert not is_error, envelope
+        facts = scripted_profile_facts(
+            get_setup_flow(),
+            {
+                "accept_defaults": True,
+                "entity_type": "natural_person",
+                "irpf_income_categories": "actividad_economica",
+                "tax_id": "12345678Z",
+                "name": "Operator",
+                "surnames": "Custody",
+                "activity": "design",
+            },
+        )
+        created = register_profile_with_credentials(
+            label="operator",
+            passphrase=DEV_TEST_DATABASE_PASSWORD,
+            facts=facts,
+            recovery_handover=_verify_recovery_handover,
+        )
+        assert created.recovery_enrolled is True
+        logged_in = login_profile(name="operator", passphrase_callback=lambda: DEV_TEST_DATABASE_PASSWORD)
+        assert logged_in.label == "operator"
         yield
 
 
@@ -242,9 +260,9 @@ def test_warm_runtime_holds_no_bucket_session_between_calls(tmp_path: Path) -> N
         # session lives only in the ephemeral worker context, so the server's own
         # long-lived context never holds one - the design guarantee behind the
         # idle-lock custody the finally relock enforces.
-        assert first["status"] == "success"
+        assert first["status"] == "success", first.get("raw", first)
         assert first["active_profile"] == "operator"
-        assert second["status"] == "success"
+        assert second["status"] == "success", second
         assert second["active_profile"] == "operator"
 
 
@@ -254,7 +272,7 @@ def test_a_rebuilt_warm_runtime_serves_encrypted_state_cleanly(tmp_path: Path) -
         # A first warm runtime instance serves the encrypted state.
         first_server = build_server(build_tool_descriptors())
         first = _warm_read(first_server, tool_name, {})
-        assert first["status"] == "success"
+        assert first["status"] == "success", first
         # Simulate a crash by discarding the instance; a fresh instance re-warms
         # its caches and serves the SAME persisted encrypted state cleanly, with no
         # torn state and no custody carried over from the discarded runtime. That
@@ -263,5 +281,5 @@ def test_a_rebuilt_warm_runtime_serves_encrypted_state_cleanly(tmp_path: Path) -
         del first_server
         second_server = build_server(build_tool_descriptors())
         second = _warm_read(second_server, tool_name, {})
-        assert second["status"] == "success"
+        assert second["status"] == "success", second
         assert second["active_profile"] == "operator"

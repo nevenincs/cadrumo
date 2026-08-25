@@ -172,7 +172,7 @@ from ._revision_persistence import persist_calculation_revision, require_filing_
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry import RegistrySnapshot
+    from ...domain.calculations.registry import Modelo720RowObservation, RegistrySnapshot
     from ..aggregation import (
         CalculationSourceDiagnostic,
         CalculationSourceDiagnosticReason,
@@ -639,6 +639,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = (),
+    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...] = (),
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     filing_instance_evidence: FilingInstanceEvidence | None = None,
@@ -692,6 +693,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
         foreign_asset_observations=foreign_asset_observations,
+        foreign_asset_row_observations=foreign_asset_row_observations,
         borrador_snapshot_repository=borrador_snapshot_repository,
         detail_rows=detail_rows,
         filing_instance_evidence=filing_instance_evidence,
@@ -710,6 +712,7 @@ def _resolve_bucket_source_mesh(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
+    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
     m210_official_tipo_renta_code: str | None = None,
@@ -896,6 +899,7 @@ def _resolve_bucket_source_mesh(
             resolve_declared(
                 ForeignAssetsAggregationSourceResolver(
                     observations=foreign_asset_observations,
+                    row_observations=foreign_asset_row_observations,
                 )
             ),
             # Modelo 184 attribution members are declared on the attribution-entity
@@ -1225,6 +1229,7 @@ def _resolve_bucket_aggregation_source_resolution(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None,
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
+    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
     text_casilla_inputs: Mapping[CasillaId, str] | None,
     m210_official_tipo_renta_code: str | None,
     enum_binding_values: Mapping[BindingId, str] | None,
@@ -1241,6 +1246,7 @@ def _resolve_bucket_aggregation_source_resolution(
         calculation_repository=calculation_repository,
         filing_repository=filing_repository,
         foreign_asset_observations=foreign_asset_observations,
+        foreign_asset_row_observations=foreign_asset_row_observations,
         casilla_inputs=preparation.source_casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
@@ -1349,6 +1355,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = (),
+    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...] = (),
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     filing_instance_evidence: FilingInstanceEvidence | None = None,
@@ -1400,6 +1407,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         foreign_asset_observations=foreign_asset_observations,
+        foreign_asset_row_observations=foreign_asset_row_observations,
         text_casilla_inputs=text_casilla_inputs,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         enum_binding_values=enum_binding_values,

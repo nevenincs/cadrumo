@@ -28,7 +28,6 @@ from .. import (
     RegistryCatalogues,
     RegistryValidator,
     binding_aggregation_op,
-    build_snapshot,
     bundled_authority,
     expression_casilla_refs,
     resolve_available_bound_inputs_by_casilla_id,
@@ -36,6 +35,7 @@ from .. import (
     selector_as_dict,
 )
 from .._bindings import binding_source_casilla_ids, binding_source_modelo
+from .._snapshot import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -393,7 +393,7 @@ def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> Non
         "modelo-303-2026-1t": (date(2026, 4, 1), date(2026, 4, 20)),
         "modelo-303-2026-2t": (date(2026, 7, 1), date(2026, 7, 20)),
         "modelo-303-2026-3t": (date(2026, 10, 1), date(2026, 10, 20)),
-        "modelo-303-2026-4t": (date(2027, 1, 1), date(2027, 1, 30)),
+        "modelo-303-2026-4t": (date(2027, 1, 1), date(2027, 2, 1)),
     }
 
     for window_id, (opens, closes) in prior_expected.items():
