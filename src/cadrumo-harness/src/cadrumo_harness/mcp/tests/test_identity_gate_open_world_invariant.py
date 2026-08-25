@@ -64,9 +64,7 @@ def test_every_aeat_reaching_command_is_still_gated() -> None:
 
 def test_an_unidentified_open_world_call_is_refused() -> None:
     """End to end through the real decision function, not the predicate alone."""
-    open_world = [
-        key for key in _exposed_keys() if command_policy(key).open_world and key.startswith("app.live.")
-    ]
+    open_world = [key for key in _exposed_keys() if command_policy(key).open_world and key.startswith("app.live.")]
     assert open_world, "no app.live command found to exercise the gate"
 
     for key in open_world[:5]:
@@ -80,9 +78,7 @@ def test_a_local_read_is_still_allowed_unidentified() -> None:
     Without this, refusing everything would satisfy every assertion above.
     """
     local_reads = [
-        key
-        for key in _exposed_keys()
-        if command_policy(key).read_only and not command_policy(key).open_world
+        key for key in _exposed_keys() if command_policy(key).read_only and not command_policy(key).open_world
     ]
     assert local_reads, "no local read-only command found"
 

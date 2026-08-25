@@ -132,7 +132,7 @@ class TuiOperationObservationDependencyReceiptV1(BaseModel):
 
     receipt_schema_version: Literal[1] = 1
     cohort: Literal["c0.operation-projection"] = "c0.operation-projection"
-    producing_commit: _COMMIT
+    implementation_commit: _COMMIT
     source_tree_digest: _DIGEST
     governing_adr: TuiOperationReceiptDocumentProvenanceV1
     staging_adr: TuiOperationReceiptDocumentProvenanceV1
@@ -389,6 +389,22 @@ def _git_is_ancestor(workspace_root: Path, ancestor: str, descendant: str) -> bo
     return completed.returncode == 0
 
 
+def _run_git_bytes(workspace_root: Path, *arguments: str) -> bytes:
+    if _GIT_EXECUTABLE is None:
+        raise ValueError("C0 receipt validation requires the resolved local git executable")
+    completed = subprocess.run(  # noqa: S603 - resolved local Git with test-owned fixed command families.
+        [_GIT_EXECUTABLE, *arguments],
+        cwd=workspace_root,
+        check=False,
+        capture_output=True,
+    )
+    if completed.returncode != 0:
+        raise ValueError(
+            f"git {' '.join(arguments)} failed: {completed.stderr.decode('utf-8', errors='replace').strip()}"
+        )
+    return completed.stdout
+
+
 def _file_digest(path: Path) -> str:
     return content_hash_hex(path.read_bytes().hex())
 
@@ -405,6 +421,30 @@ def _source_tree_digest(workspace_root: Path) -> str:
     if not source_paths:
         raise ValueError("C0 receipt source tree is not a tracked Cadrumo worktree")
     return content_hash_hex(tuple((relative, _file_digest(workspace_root / relative)) for relative in source_paths))
+
+
+def _source_tree_digest_at_commit(workspace_root: Path, commit: str) -> str:
+    tracked = {
+        item
+        for item in _run_git_bytes(workspace_root, "ls-tree", "-r", "-z", "--name-only", commit, "--", "src/cadrumo")
+        .decode("utf-8")
+        .split("\0")
+        if item and (item.startswith(_C0_OWNER_PREFIXES) or item in _C0_OWNER_FILES)
+    }
+    tracked.update(source_path for source_path, _function in _REQUIRED_PROOFS.values())
+    tracked.update(_C0_OWNER_FILES)
+    source_paths = tuple(sorted(tracked))
+    if not source_paths:
+        raise ValueError("C0 receipt source tree is not a tracked Cadrumo commit")
+    return content_hash_hex(
+        tuple(
+            (
+                relative,
+                content_hash_hex(_run_git_bytes(workspace_root, "show", f"{commit}:{relative}").hex()),
+            )
+            for relative in source_paths
+        )
+    )
 
 
 def _document_provenance(workspace_root: Path, *, stem: str, status: Literal["accepted", "rejected"]):
@@ -465,7 +505,40 @@ def build_tui_operation_observation_dependency_receipt(
     semantic_producer_census: TuiOperationSemanticProducerCensusV1,
     workspace_root: Path = _ROOT,
 ) -> TuiOperationObservationDependencyReceiptV1:
-    """Materialize the V1 receipt from the sole production composition and current tree."""
+    """Capture C0 evidence from one clean implementation commit A."""
+    if not _working_tree_is_clean(workspace_root):
+        raise ValueError("C0 receipt implementation capture requires a clean worktree")
+    implementation_commit = _run_git(workspace_root, "rev-parse", "HEAD")
+    return _build_tui_operation_observation_dependency_receipt(
+        semantic_producer_census=semantic_producer_census,
+        workspace_root=workspace_root,
+        implementation_commit=implementation_commit,
+        source_tree_digest=_source_tree_digest_at_commit(workspace_root, implementation_commit),
+    )
+
+
+def _build_tui_operation_observation_dependency_receipt_in_memory_for_test(
+    *,
+    semantic_producer_census: TuiOperationSemanticProducerCensusV1,
+    workspace_root: Path = _ROOT,
+) -> TuiOperationObservationDependencyReceiptV1:
+    """Build uncommitted test evidence only; this private path cannot attest or open C0."""
+    return _build_tui_operation_observation_dependency_receipt(
+        semantic_producer_census=semantic_producer_census,
+        workspace_root=workspace_root,
+        implementation_commit=_run_git(workspace_root, "rev-parse", "HEAD"),
+        source_tree_digest=_source_tree_digest(workspace_root),
+    )
+
+
+def _build_tui_operation_observation_dependency_receipt(
+    *,
+    semantic_producer_census: TuiOperationSemanticProducerCensusV1,
+    workspace_root: Path,
+    implementation_commit: str,
+    source_tree_digest: str,
+) -> TuiOperationObservationDependencyReceiptV1:
+    """Materialize the receipt data after its evidence boundary has been selected."""
     dependencies = compose_operation_dependencies()
     try:
         contract_set = dependencies.observation.registry.public_contract_set
@@ -474,8 +547,8 @@ def build_tui_operation_observation_dependency_receipt(
     schemas = _schema_identities(contract_set.definitions)
     capabilities = _capability_inventory(contract_set.definitions)
     return TuiOperationObservationDependencyReceiptV1(
-        producing_commit=_run_git(workspace_root, "rev-parse", "HEAD"),
-        source_tree_digest=_source_tree_digest(workspace_root),
+        implementation_commit=implementation_commit,
+        source_tree_digest=source_tree_digest,
         governing_adr=_document_provenance(
             workspace_root,
             stem=_GOVERNING_ADR_STEM,
@@ -643,19 +716,13 @@ def _validate_proofs(receipt: TuiOperationObservationDependencyReceiptV1, worksp
             raise ValueError(f"C0 proof {proof.proof_id!r} no longer has its named real-behavior test")
 
 
-def validate_tui_operation_observation_dependency_receipt(
+def _validate_receipt_evidence(
     receipt: TuiOperationObservationDependencyReceiptV1,
     *,
-    workspace_root: Path = _ROOT,
-    require_clean_tree: bool = True,
+    workspace_root: Path,
+    source_tree_digest: str,
 ) -> None:
-    """Refuse every stale, dirty, non-canonical, or duplicate-authority C0 receipt."""
-    if require_clean_tree and _run_git(workspace_root, "status", "--porcelain"):
-        raise ValueError("C0 receipt requires a clean implementation worktree")
-    current_commit = _run_git(workspace_root, "rev-parse", "HEAD")
-    if receipt.producing_commit != current_commit:
-        raise ValueError("C0 receipt was not produced by the current commit")
-    if receipt.source_tree_digest != _source_tree_digest(workspace_root):
+    if receipt.source_tree_digest != source_tree_digest:
         raise ValueError("C0 receipt source-tree digest drifted")
     for expected in (
         _document_provenance(workspace_root, stem=_GOVERNING_ADR_STEM, status="accepted"),
@@ -664,9 +731,9 @@ def validate_tui_operation_observation_dependency_receipt(
         actual = receipt.governing_adr if expected.stem == _GOVERNING_ADR_STEM else receipt.staging_adr
         if actual != expected:
             raise ValueError(f"C0 receipt decision provenance drifted for {expected.stem}")
-        if _git_is_ancestor(workspace_root, expected.producing_commit, receipt.producing_commit):
+        if _git_is_ancestor(workspace_root, expected.producing_commit, receipt.implementation_commit):
             continue
-        raise ValueError(f"C0 receipt commit does not descend from {expected.stem}")
+        raise ValueError(f"C0 receipt implementation commit does not descend from {expected.stem}")
     dependencies = compose_operation_dependencies()
     try:
         live_contract_set = dependencies.observation.registry.public_contract_set
@@ -682,6 +749,81 @@ def validate_tui_operation_observation_dependency_receipt(
         receipt.semantic_producer_census,
         workspace_root=workspace_root,
         source_tree_digest=receipt.source_tree_digest,
+    )
+
+
+def _attest_committed_receipt_artifact_bytes(
+    *,
+    artifact_bytes: bytes,
+    workspace_root: Path,
+) -> tuple[str, bytes]:
+    """Return B and its receipt bytes only when the clean worktree matches them exactly."""
+    if not _working_tree_is_clean(workspace_root):
+        raise ValueError("C0 receipt durable validation requires a clean current worktree")
+    current_commit = _run_git(workspace_root, "rev-parse", "HEAD")
+    committed_artifact = _run_git_bytes(workspace_root, "show", f"{current_commit}:{_RECEIPT_PATH}")
+    if artifact_bytes != committed_artifact:
+        raise ValueError("C0 receipt artifact bytes do not equal the clean current commit")
+    return current_commit, committed_artifact
+
+
+def _validate_implementation_attestation(
+    *,
+    implementation_commit: str,
+    source_tree_digest: str,
+    attestation_commit: str,
+    workspace_root: Path,
+) -> None:
+    """Bind covered implementation evidence A to its derived clean artifact commit B."""
+    if not _git_is_ancestor(workspace_root, implementation_commit, attestation_commit):
+        raise ValueError("C0 receipt implementation commit is not an ancestor of the current attestation commit")
+    if source_tree_digest != _source_tree_digest_at_commit(workspace_root, attestation_commit):
+        raise ValueError("C0 receipt source-tree digest drifted from the current attestation commit")
+
+
+def validate_tui_operation_observation_dependency_receipt(
+    *,
+    workspace_root: Path = _ROOT,
+) -> TuiOperationObservationDependencyReceiptV1:
+    """Validate the sole committed C0 artifact at clean current HEAD B and return its parsed receipt."""
+    if not _working_tree_is_clean(workspace_root):
+        raise ValueError("C0 receipt durable validation requires a clean current worktree")
+    artifact_path = workspace_root / _RECEIPT_PATH
+    try:
+        artifact_bytes = artifact_path.read_bytes()
+    except OSError as exc:
+        raise ValueError("C0 receipt artifact is unavailable at the clean current worktree") from exc
+    current_commit, committed_artifact = _attest_committed_receipt_artifact_bytes(
+        artifact_bytes=artifact_bytes,
+        workspace_root=workspace_root,
+    )
+    receipt = TuiOperationObservationDependencyReceiptV1.model_validate_json(committed_artifact)
+    _validate_implementation_attestation(
+        implementation_commit=receipt.implementation_commit,
+        source_tree_digest=receipt.source_tree_digest,
+        attestation_commit=current_commit,
+        workspace_root=workspace_root,
+    )
+    _validate_receipt_evidence(
+        receipt,
+        workspace_root=workspace_root,
+        source_tree_digest=_source_tree_digest_at_commit(workspace_root, current_commit),
+    )
+    return receipt
+
+
+def _validate_tui_operation_observation_dependency_receipt_in_memory_for_test(
+    receipt: TuiOperationObservationDependencyReceiptV1,
+    *,
+    workspace_root: Path = _ROOT,
+) -> None:
+    """Exercise receipt mechanics without an artifact attestation; this private helper cannot open C0."""
+    if receipt.implementation_commit != _run_git(workspace_root, "rev-parse", "HEAD"):
+        raise ValueError("in-memory C0 receipt must name the current implementation commit")
+    _validate_receipt_evidence(
+        receipt,
+        workspace_root=workspace_root,
+        source_tree_digest=_source_tree_digest(workspace_root),
     )
 
 
@@ -701,11 +843,13 @@ def test_c0_receipt_round_trips_strictly_and_validates_current_production_di(
     semantic_producer_census: TuiOperationSemanticProducerCensusV1,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        receipt = build_tui_operation_observation_dependency_receipt(semantic_producer_census=semantic_producer_census)
+        receipt = _build_tui_operation_observation_dependency_receipt_in_memory_for_test(
+            semantic_producer_census=semantic_producer_census
+        )
         restored = TuiOperationObservationDependencyReceiptV1.model_validate_json(receipt.model_dump_json())
 
         assert restored == receipt
-        validate_tui_operation_observation_dependency_receipt(restored, require_clean_tree=False)
+        _validate_tui_operation_observation_dependency_receipt_in_memory_for_test(restored)
 
 
 @pytest.mark.resident_service
@@ -714,16 +858,18 @@ def test_c0_receipt_refuses_digest_and_provenance_drift(
     semantic_producer_census: TuiOperationSemanticProducerCensusV1,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        receipt = build_tui_operation_observation_dependency_receipt(semantic_producer_census=semantic_producer_census)
+        receipt = _build_tui_operation_observation_dependency_receipt_in_memory_for_test(
+            semantic_producer_census=semantic_producer_census
+        )
         changed_digest = receipt.model_copy(update={"source_tree_digest": "f" * 64})
         changed_provenance = receipt.model_copy(
             update={"governing_adr": receipt.governing_adr.model_copy(update={"body_hash": "sha256:" + "f" * 64})}
         )
 
         with pytest.raises(ValueError, match="source-tree digest"):
-            validate_tui_operation_observation_dependency_receipt(changed_digest, require_clean_tree=False)
+            _validate_tui_operation_observation_dependency_receipt_in_memory_for_test(changed_digest)
         with pytest.raises(ValueError, match="decision provenance"):
-            validate_tui_operation_observation_dependency_receipt(changed_provenance, require_clean_tree=False)
+            _validate_tui_operation_observation_dependency_receipt_in_memory_for_test(changed_provenance)
 
 
 @pytest.mark.resident_service
@@ -732,12 +878,19 @@ def test_c0_receipt_model_is_closed_and_proof_inventory_is_complete(
     semantic_producer_census: TuiOperationSemanticProducerCensusV1,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        receipt = build_tui_operation_observation_dependency_receipt(semantic_producer_census=semantic_producer_census)
+        receipt = _build_tui_operation_observation_dependency_receipt_in_memory_for_test(
+            semantic_producer_census=semantic_producer_census
+        )
         raw = receipt.model_dump(mode="json")
         raw["undeclared"] = "forbidden"
 
         with pytest.raises(ValueError):
             TuiOperationObservationDependencyReceiptV1.model_validate(raw)
+
+        legacy = receipt.model_dump(mode="json")
+        legacy["producing_commit"] = legacy.pop("implementation_commit")
+        with pytest.raises(ValueError):
+            TuiOperationObservationDependencyReceiptV1.model_validate(legacy)
 
     assert tuple(item.proof_id for item in receipt.proofs) == tuple(sorted(_REQUIRED_PROOFS))
 
@@ -792,3 +945,110 @@ def test_c0_receipt_dirty_tree_guard_uses_a_real_git_worktree(tmp_path: Path) ->
     (workspace / "untracked.txt").write_text("receipt staging is not clean\n", encoding="utf-8")
 
     assert not _working_tree_is_clean(workspace)
+
+
+def _receipt_attestation_worktree(tmp_path: Path) -> tuple[Path, str, str, str, bytes]:
+    """Create a minimal clean A/B repository with every source path the C0 digest covers."""
+    workspace = tmp_path / "receipt-attestation"
+    workspace.mkdir()
+    _run_git(workspace, "init")
+    _run_git(workspace, "config", "user.email", "receipt@example.test")
+    _run_git(workspace, "config", "user.name", "C0 receipt test")
+    source_paths = {
+        *_C0_OWNER_FILES,
+        *(path for path, _function in _REQUIRED_PROOFS.values()),
+        "src/cadrumo/application/operations/_attestation_authority.py",
+        "src/cadrumo/adapters/persistence/operations/_attestation_authority.py",
+    }
+    for relative in source_paths:
+        path = workspace / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"# {relative}\n", encoding="utf-8")
+    _run_git(workspace, "add", "--", "src/cadrumo")
+    _run_git(workspace, "commit", "-m", "implementation A")
+    implementation_commit = _run_git(workspace, "rev-parse", "HEAD")
+
+    artifact_path = workspace / _RECEIPT_PATH
+    artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    artifact_bytes = b'{"receipt":"B"}\n'
+    artifact_path.write_bytes(artifact_bytes)
+    _run_git(workspace, "add", "--", _RECEIPT_PATH)
+    _run_git(workspace, "commit", "-m", "receipt B")
+    attestation_commit = _run_git(workspace, "rev-parse", "HEAD")
+    return (
+        workspace,
+        implementation_commit,
+        attestation_commit,
+        _source_tree_digest_at_commit(workspace, attestation_commit),
+        artifact_bytes,
+    )
+
+
+def test_c0_receipt_durable_attestation_refuses_a_nonancestor_implementation_commit(tmp_path: Path) -> None:
+    workspace, implementation_commit, attestation_commit, source_tree_digest, _artifact_bytes = (
+        _receipt_attestation_worktree(tmp_path)
+    )
+    sibling_commit = _run_git(
+        workspace,
+        "commit-tree",
+        f"{implementation_commit}^{{tree}}",
+        "-p",
+        implementation_commit,
+        "-m",
+        "nonancestor implementation",
+    )
+
+    with pytest.raises(ValueError, match="not an ancestor"):
+        _validate_implementation_attestation(
+            implementation_commit=sibling_commit,
+            source_tree_digest=source_tree_digest,
+            attestation_commit=attestation_commit,
+            workspace_root=workspace,
+        )
+
+
+def test_c0_receipt_durable_attestation_refuses_source_digest_drift(tmp_path: Path) -> None:
+    workspace, implementation_commit, attestation_commit, _source_tree_digest_value, _artifact_bytes = (
+        _receipt_attestation_worktree(tmp_path)
+    )
+
+    with pytest.raises(ValueError, match="source-tree digest"):
+        _validate_implementation_attestation(
+            implementation_commit=implementation_commit,
+            source_tree_digest="f" * 64,
+            attestation_commit=attestation_commit,
+            workspace_root=workspace,
+        )
+
+
+def test_c0_receipt_durable_attestation_refuses_byte_mismatch(tmp_path: Path) -> None:
+    workspace, _implementation_commit, _attestation_commit, _source_tree_digest_value, artifact_bytes = (
+        _receipt_attestation_worktree(tmp_path)
+    )
+
+    with pytest.raises(ValueError, match="artifact bytes"):
+        _attest_committed_receipt_artifact_bytes(
+            artifact_bytes=artifact_bytes + b"tampered",
+            workspace_root=workspace,
+        )
+
+
+@pytest.mark.parametrize("stage_artifact", [False, True], ids=["uncommitted", "staged"])
+def test_c0_receipt_durable_attestation_refuses_uncommitted_or_staged_artifact(
+    tmp_path: Path,
+    *,
+    stage_artifact: bool,
+) -> None:
+    workspace, _implementation_commit, _attestation_commit, _source_tree_digest_value, _artifact_bytes = (
+        _receipt_attestation_worktree(tmp_path)
+    )
+    artifact_path = workspace / _RECEIPT_PATH
+    artifact_path.write_bytes(b'{"receipt":"tampered"}\n')
+    if stage_artifact:
+        _run_git(workspace, "add", "--", _RECEIPT_PATH)
+
+    with pytest.raises(ValueError, match="clean current worktree"):
+        _attest_committed_receipt_artifact_bytes(
+            artifact_bytes=artifact_path.read_bytes(),
+            workspace_root=workspace,
+        )

@@ -68,33 +68,158 @@ def _assert_local_verdict(
 
 
 _LOCAL_FAILURE_CONTRACTS: tuple[tuple[str, str, dict[str, str | int | bool], NoRecoveryOutcome], ...] = (
-    ("namespace-blank", "storage.local.namespace.valid", {"backend": "local", "field": "namespace", "valid": False}, NoRecoveryOutcome.OPERATOR_DECISION),
-    ("namespace-forbidden", "storage.local.namespace.valid", {"backend": "local", "field": "namespace", "valid": False}, NoRecoveryOutcome.OPERATOR_DECISION),
-    ("content-hash-blank", "storage.local.content_hash.present", {"backend": "local", "field": "content_hash", "valid": False}, NoRecoveryOutcome.OPERATOR_DECISION),
-    ("byte-length-type", "storage.local.sidecar.byte_length_valid", {"field": "byte_length", "valid": False}, NoRecoveryOutcome.SAFETY),
-    ("byte-length-format", "storage.local.sidecar.byte_length_valid", {"field": "byte_length", "valid": False}, NoRecoveryOutcome.SAFETY),
-    ("byte-length-negative", "storage.local.sidecar.byte_length_valid", {"field": "byte_length", "valid": False}, NoRecoveryOutcome.SAFETY),
-    ("written-at-type", "storage.local.sidecar.written_at_valid", {"field": "written_at", "valid": False}, NoRecoveryOutcome.SAFETY),
-    ("written-at-format", "storage.local.sidecar.written_at_valid", {"field": "written_at", "valid": False}, NoRecoveryOutcome.SAFETY),
-    ("written-at-timezone", "storage.local.sidecar.written_at_valid", {"field": "written_at", "valid": False}, NoRecoveryOutcome.SAFETY),
-    ("namespace-create-permission", "storage.local.namespace.writable", {"operation": "create_namespace"}, NoRecoveryOutcome.SAFETY),
-    ("namespace-create-path", "storage.local.path.within_limit", {"operation": "create_namespace"}, NoRecoveryOutcome.SAFETY),
-    ("hmac-prefix-collision", "storage.local.sidecar.identity_matches", {"operation": "resolve_object", "prefix_collision": True}, NoRecoveryOutcome.SAFETY),
+    (
+        "namespace-blank",
+        "storage.local.namespace.valid",
+        {"backend": "local", "field": "namespace", "valid": False},
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    (
+        "namespace-forbidden",
+        "storage.local.namespace.valid",
+        {"backend": "local", "field": "namespace", "valid": False},
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    (
+        "content-hash-blank",
+        "storage.local.content_hash.present",
+        {"backend": "local", "field": "content_hash", "valid": False},
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    (
+        "byte-length-type",
+        "storage.local.sidecar.byte_length_valid",
+        {"field": "byte_length", "valid": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "byte-length-format",
+        "storage.local.sidecar.byte_length_valid",
+        {"field": "byte_length", "valid": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "byte-length-negative",
+        "storage.local.sidecar.byte_length_valid",
+        {"field": "byte_length", "valid": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "written-at-type",
+        "storage.local.sidecar.written_at_valid",
+        {"field": "written_at", "valid": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "written-at-format",
+        "storage.local.sidecar.written_at_valid",
+        {"field": "written_at", "valid": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "written-at-timezone",
+        "storage.local.sidecar.written_at_valid",
+        {"field": "written_at", "valid": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "namespace-create-permission",
+        "storage.local.namespace.writable",
+        {"operation": "create_namespace"},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "namespace-create-path",
+        "storage.local.path.within_limit",
+        {"operation": "create_namespace"},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "hmac-prefix-collision",
+        "storage.local.sidecar.identity_matches",
+        {"operation": "resolve_object", "prefix_collision": True},
+        NoRecoveryOutcome.SAFETY,
+    ),
     ("sidecar-malformed", "storage.local.sidecar.schema_valid", {"sidecar_valid": False}, NoRecoveryOutcome.SAFETY),
     ("sidecar-not-object", "storage.local.sidecar.schema_valid", {"sidecar_valid": False}, NoRecoveryOutcome.SAFETY),
-    ("payload-write-permission", "storage.local.payload.writable", {"operation": "put", "writable": False}, NoRecoveryOutcome.SAFETY),
-    ("payload-write-path", "storage.local.path.within_limit", {"operation": "put_payload", "within_limit": False}, NoRecoveryOutcome.SAFETY),
-    ("payload-write-conflict", "storage.local.payload.commit_succeeded", {"operation": "put", "committed": False}, NoRecoveryOutcome.OPERATOR_DECISION),
-    ("sidecar-write-path", "storage.local.path.within_limit", {"operation": "put_sidecar", "within_limit": False}, NoRecoveryOutcome.SAFETY),
-    ("sidecar-write-permission", "storage.local.sidecar.writable", {"operation": "put_sidecar", "writable": False}, NoRecoveryOutcome.SAFETY),
-    ("object-not-found", "storage.local.object.present", {"operation": "get", "object_present": False}, NoRecoveryOutcome.OPERATOR_DECISION),
-    ("sidecar-missing", "storage.local.sidecar.present", {"operation": "get", "sidecar_present": False}, NoRecoveryOutcome.SAFETY),
-    ("payload-read-permission", "storage.local.payload.readable", {"operation": "get", "readable": False}, NoRecoveryOutcome.SAFETY),
-    ("sidecar-hash-missing", "storage.local.sidecar.digest_present", {"operation": "get", "content_hash_present": False}, NoRecoveryOutcome.SAFETY),
-    ("delete-sidecar-read", "storage.local.sidecar.readable", {"operation": "delete", "readable": False}, NoRecoveryOutcome.SAFETY),
-    ("delete-sidecar", "storage.local.sidecar.deletable", {"operation": "delete", "deletable": False}, NoRecoveryOutcome.SAFETY),
-    ("delete-payload", "storage.local.payload.deletable", {"operation": "delete", "deletable": False}, NoRecoveryOutcome.SAFETY),
-    ("namespace-not-found", "storage.local.namespace.present", {"operation": "iter_objects", "namespace_present": False}, NoRecoveryOutcome.OPERATOR_DECISION),
+    (
+        "payload-write-permission",
+        "storage.local.payload.writable",
+        {"operation": "put", "writable": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "payload-write-path",
+        "storage.local.path.within_limit",
+        {"operation": "put_payload", "within_limit": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "payload-write-conflict",
+        "storage.local.payload.commit_succeeded",
+        {"operation": "put", "committed": False},
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    (
+        "sidecar-write-path",
+        "storage.local.path.within_limit",
+        {"operation": "put_sidecar", "within_limit": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "sidecar-write-permission",
+        "storage.local.sidecar.writable",
+        {"operation": "put_sidecar", "writable": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "object-not-found",
+        "storage.local.object.present",
+        {"operation": "get", "object_present": False},
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
+    (
+        "sidecar-missing",
+        "storage.local.sidecar.present",
+        {"operation": "get", "sidecar_present": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "payload-read-permission",
+        "storage.local.payload.readable",
+        {"operation": "get", "readable": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "sidecar-hash-missing",
+        "storage.local.sidecar.digest_present",
+        {"operation": "get", "content_hash_present": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "delete-sidecar-read",
+        "storage.local.sidecar.readable",
+        {"operation": "delete", "readable": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "delete-sidecar",
+        "storage.local.sidecar.deletable",
+        {"operation": "delete", "deletable": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "delete-payload",
+        "storage.local.payload.deletable",
+        {"operation": "delete", "deletable": False},
+        NoRecoveryOutcome.SAFETY,
+    ),
+    (
+        "namespace-not-found",
+        "storage.local.namespace.present",
+        {"operation": "iter_objects", "namespace_present": False},
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
 )
 
 
@@ -132,7 +257,11 @@ def test_local_failure_verdict_contracts_cover_every_local_provider_failure_site
     observed: Counter[tuple[str, tuple[tuple[str, str | int | bool], ...], NoRecoveryOutcome]] = Counter()
 
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name) or node.func.id != "_local_failure_verdict":
+        if (
+            not isinstance(node, ast.Call)
+            or not isinstance(node.func, ast.Name)
+            or node.func.id != "_local_failure_verdict"
+        ):
             continue
         assert node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)
         keywords = {keyword.arg: keyword.value for keyword in node.keywords}
@@ -547,7 +676,10 @@ def test_put_rejects_invalid_storage_keys(
     ("sidecar_contents", "translated_message"),
     (
         (b"{malformed", "adapters.outbound.storage.local.errors.sidecar_malformed"),
-        (json.dumps(["not", "an", "object"]).encode("utf-8"), "adapters.outbound.storage.local.errors.sidecar_not_object"),
+        (
+            json.dumps(["not", "an", "object"]).encode("utf-8"),
+            "adapters.outbound.storage.local.errors.sidecar_not_object",
+        ),
     ),
     ids=("malformed", "not-object"),
 )

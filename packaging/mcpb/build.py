@@ -427,9 +427,7 @@ def load_manifest() -> dict[str, object]:
         "PYTHONNOUSERSITE",
         "PYTHONPATH",
     }:
-        raise ManifestError(
-            "the committed manifest env must contain user-config passthrough and Python isolation"
-        )
+        raise ManifestError("the committed manifest env must contain user-config passthrough and Python isolation")
     if env.get("PYTHONNOUSERSITE") != "1" or env.get("PYTHONPATH") != "":
         raise ManifestError("the committed manifest must neutralize ambient Python imports")
     compatibility = data.get("compatibility")

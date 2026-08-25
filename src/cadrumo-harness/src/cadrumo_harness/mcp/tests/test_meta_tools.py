@@ -67,9 +67,7 @@ def _blocked_descriptor() -> McpToolDescriptor:
             # are policy, so a fixture copy would be a second declaration of a
             # product invariant, free to drift from the one that governs.
             profile_authentication="not-applicable",
-            profile_authentication_contract=(
-                command_registration_projection().profile_authentication_contract
-            ),
+            profile_authentication_contract=(command_registration_projection().profile_authentication_contract),
         ),
     )
 
