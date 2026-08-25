@@ -9,7 +9,7 @@ operator-facing summary values.
 
 The ``modelo.compare`` adapter calls :func:`compare_modelo_years`, converts
 :class:`ModeloCompareDeltaRow` rows into :class:`DeltaRowPayload`, and emits the
-typed envelope through :func:`_emit_envelope`.
+typed envelope through :func:`emit_envelope`.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ from ...application.modelo import (
 from ...core import CasillaId, Modelo
 from ...core.output_rendering import jsonable_output_payload
 from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
-from ._common import _emit_envelope
+from ._common import emit_envelope
 from ._modelo_behavior_support import require_active_profile
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -96,7 +96,7 @@ def modelo_project(
     The application service returns typed projection observations; this CLI
     command maps each one to :class:`CasillaObservationPayload` so
     ``formula_id``, ``legal_refs``, and ``source_refs`` remain attached
-    before :func:`_emit_envelope` renders JSON or table output.
+    before :func:`emit_envelope` renders JSON or table output.
     """
     require_active_profile()
     casilla_pairs = dict(parse_casilla_override(spec) for spec in casilla or ())
@@ -167,7 +167,7 @@ def modelo_project(
         f"m100_cuota_liquida_autonomica\t{service_result.m100_projection.cuota_liquida_autonomica_0596}",
         f"m100_cuota_resultante\t{service_result.m100_projection.cuota_resultante_0597}",
     ]
-    _emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
+    emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
 
 
 def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: str = Modelo.M100.value) -> None:
@@ -222,4 +222,4 @@ def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: st
         lines.append(
             f"{row.casilla_id}\t{row.label}\t{row.section}\t{row.year_a_value}\t{row.year_b_value}\t{row.delta}\t{pct}"
         )
-    _emit_envelope(ctx, command="modelo.compare", result=compare_result, lines=lines)
+    emit_envelope(ctx, command="modelo.compare", result=compare_result, lines=lines)

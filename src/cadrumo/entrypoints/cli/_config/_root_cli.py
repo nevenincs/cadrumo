@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from .._common import _emit_envelope
+from .._common import emit_envelope
 
 
 def config_root(
@@ -38,7 +38,7 @@ def config_root(
         ],
         footer=document.footer,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="root.config",
         result=result,

@@ -23,7 +23,6 @@ from ...domain.contribuyente.inventory import (
     MovementKind,
 )
 from ._common import (
-    _emit_envelope,
     _parse_iso_date,
     parse_decimal_amount,
     parse_optional_decimal_amount,
@@ -110,7 +109,7 @@ def inventory_list(ctx: typer.Context) -> None:
             f"{row.actividad_id}\t{row.year}\t{row.valuation_method.value}\t"
             f"opening={row.opening_stock}\tmovements={row.movement_count}",
         )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.inventory.list",
         result=InventoryListResult.model_validate(payload),
@@ -137,7 +136,7 @@ def inventory_create(
     ledger = result.ledger
     payload = _safe_inventory_ledger_payload(ledger)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.inventory.create",
         result=InventoryCreateResult.model_validate_json(json.dumps(payload)),
@@ -184,7 +183,7 @@ def inventory_movement_add(
     ledger = result.ledger
     payload = _safe_inventory_ledger_payload(ledger)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.inventory.movement.add",
         result=InventoryMovementAddResult.model_validate_json(json.dumps(payload)),
@@ -207,7 +206,7 @@ def inventory_valuation_preview(
     bucket_id = _inventory_bucket_id()
     result = _inventory_service().valuation_preview(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
     preview = result.preview
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.inventory.valuation.preview",
         result=InventoryValuationPreviewPayload.from_result(result),
@@ -255,7 +254,7 @@ def inventory_closing_authority_record(
         ),
         prior_closing_link_fingerprint=persisted.prior_closing_link.fingerprint,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.inventory.closing-authority.record",
         result=payload,

@@ -17,7 +17,7 @@ from ...application.live import VerifySurface, VerifyVerdict
 from ...core.i18n import tr
 from ...core.identity import tax_id_identity_token
 from ...core.time import now
-from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._common import active_bucket_id_or_refuse, emit_envelope
 
 
 class _VerifyRow(TypedDict):
@@ -81,7 +81,7 @@ def verify_list(
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(f"{r.observation_id}\t{r.surface.value}\t{r.nif}\t{r.verdict}\t{r.checked_at.isoformat()}")
-    _emit_envelope(ctx, command="app.live.verify.list", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.verify.list", result=result, lines=lines)
 
 
 def verify_show(
@@ -101,7 +101,7 @@ def verify_show(
     record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
     result = VerifyViewResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.verify.view", result=result, lines=lines)
 
 
 def verify_latest(
@@ -132,7 +132,7 @@ def verify_latest(
             nif=nif,
             observation_id=None,
         )
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="app.live.verify.latest",
             result=empty,
@@ -146,7 +146,7 @@ def verify_latest(
         return
     result = VerifyLatestResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.verify.latest", result=result, lines=lines)
 
 
 def verify_nif_iva(
@@ -187,7 +187,7 @@ def verify_nif_iva(
     )
     result = VerifyNifIvaResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit_envelope(ctx, command="app.live.verify.nif_iva", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.verify.nif_iva", result=result, lines=lines)
 
 
 def verify_tgvi(
@@ -228,7 +228,7 @@ def verify_tgvi(
     )
     result = VerifyTgviResult(bucket_id=bucket_id, **_verify_row(record))
     lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
-    _emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.verify.tgvi", result=result, lines=lines)
 
 
 __all__ = ["verify_latest", "verify_list", "verify_nif_iva", "verify_show", "verify_tgvi"]

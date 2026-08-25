@@ -63,7 +63,7 @@ from ._app_live_notifications_payloads import (
     NotificationsViewResult,
     SancionReadingPayload,
 )
-from ._common import _emit_envelope, active_bucket_id_or_refuse, notice_lines
+from ._common import active_bucket_id_or_refuse, emit_envelope, notice_lines
 
 if TYPE_CHECKING:
     from ...domain.notifications import SancionLiquidacion
@@ -130,7 +130,7 @@ def notifications_pull(ctx: typer.Context) -> None:
         f"row_count\t{len(persisted.rows)}",
         f"source_url\t{persisted.source_url}",
     ]
-    _emit_envelope(ctx, command="app.live.notifications.pull", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.notifications.pull", result=result, lines=lines)
 
 
 def notifications_list(ctx: typer.Context) -> None:
@@ -157,7 +157,7 @@ def notifications_list(ctx: typer.Context) -> None:
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(f"{r.snapshot_id}\t{r.captured_at.isoformat()}\trows={len(r.rows)}")
-    _emit_envelope(ctx, command="app.live.notifications.list", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.notifications.list", result=result, lines=lines)
 
 
 def notifications_show(
@@ -206,7 +206,7 @@ def notifications_show(
     ]
     for r in record.rows:
         lines.append("\t".join(f"{k}={v}" for k, v in r.model_dump(mode="json").items()))
-    _emit_envelope(ctx, command="app.live.notifications.view", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.notifications.view", result=result, lines=lines)
 
 
 def notifications_latest(ctx: typer.Context) -> None:
@@ -220,7 +220,7 @@ def notifications_latest(ctx: typer.Context) -> None:
     record = NotificationsService().latest(bucket_id=bucket_id)
     if record is None:
         empty = NotificationsLatestResult(bucket_id=bucket_id, snapshot_id=None)
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="app.live.notifications.latest",
             result=empty,
@@ -240,7 +240,7 @@ def notifications_latest(ctx: typer.Context) -> None:
         f"captured_at\t{record.captured_at.isoformat()}",
         f"row_count\t{len(record.rows)}",
     ]
-    _emit_envelope(ctx, command="app.live.notifications.latest", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.notifications.latest", result=result, lines=lines)
 
 
 def _sancion_payload(sancion: SancionLiquidacion) -> SancionReadingPayload:
@@ -443,7 +443,7 @@ def notifications_document_pull(
         f"already_in_custody\t{custody.already_in_custody}",
         *notice_lines(notices),
     ]
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.live.notifications.document.pull",
         result=result,
@@ -470,7 +470,7 @@ def notifications_document_view(
     result = NotificationDocumentViewResult(**_document_payload_fields(bucket_id, record))
     notices = _document_notices(record, notices=())
     lines = [*_document_lines(bucket_id, record), *notice_lines(notices)]
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.live.notifications.document.view",
         result=result,
@@ -535,7 +535,7 @@ def notifications_document_history(ctx: typer.Context) -> None:
             ),
         )
     lines.extend(notice_lines(notices))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.live.notifications.document.history",
         result=result,

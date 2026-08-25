@@ -28,7 +28,6 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ._app_quickfile_payloads import QuickfileResultPayload
 from ._common import (
-    _emit_envelope,
     _filing_taxpayer_or_refuse,
     _no_active_profile_refusal,
     activate_subcommand_output_language,
@@ -134,7 +133,7 @@ def quickfile(
     )
 
     payload = QuickfileResultPayload.from_result(result)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="quickfile",
         result=payload,

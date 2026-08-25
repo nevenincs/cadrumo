@@ -28,7 +28,6 @@ from uuid import UUID
 import typer
 
 from ....core.i18n import OutputLanguage
-from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 
 if TYPE_CHECKING:
@@ -87,7 +86,7 @@ def archive_export(
         target=output,
     )
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.archive.export",
         result=ConfigProfileArchiveExportResult(
@@ -112,7 +111,7 @@ def archive_inspect(
 
     inspection = inspect_profile_capsule_archive(file)
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.archive.inspect",
         result=ConfigProfileArchiveInspectResult(

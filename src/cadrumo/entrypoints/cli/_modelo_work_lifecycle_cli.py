@@ -37,7 +37,6 @@ from ...domain.calculations.registry import RegistrySnapshotError, RevisionId
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
 from ._common import (
-    _emit_envelope,
     activate_subcommand_output_language,
     active_profile_label,
     resolve_lifecycle_continuation_notice,
@@ -153,7 +152,7 @@ def _emit_work_create_result(
             status_message,
             *obligation_lines,
         ]
-    _emit_envelope(ctx, command="modelo.work.create", result=result, lines=lines, notices=obligation_notices)
+    emit_envelope(ctx, command="modelo.work.create", result=result, lines=lines, notices=obligation_notices)
 
 
 def _reused_work_status_message(*, name: str | None, name_applied: str | None) -> tuple[str, str]:
@@ -294,7 +293,7 @@ def work_list(
         *work_unit_list_lines(units, include_discarded=include_discarded),
     ]
     follow_up = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_list(units))
-    _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[follow_up])
+    emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines, notices=[follow_up])
 
 
 def work_status(
@@ -320,7 +319,7 @@ def work_status(
         *work_unit_lines(unit, include_bucket_id=False),
     ]
     next_step = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_status(unit))
-    _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_step])
+    emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines, notices=[next_step])
 
 
 def work_rename(
@@ -349,7 +348,7 @@ def work_rename(
         raise bad_parameter_from_error(exc) from exc
     result = WorkRenameResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.rename", *work_unit_lines(unit)]
-    _emit_envelope(ctx, command="modelo.work.rename", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.rename", result=result, lines=lines)
 
 
 def work_discard(
@@ -380,4 +379,4 @@ def work_discard(
         raise bad_parameter_from_error(exc) from exc
     result = WorkDiscardResult.model_validate(work_unit_payload(unit).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.discard", *work_unit_lines(unit)]
-    _emit_envelope(ctx, command="modelo.work.discard", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.discard", result=result, lines=lines)

@@ -17,7 +17,7 @@ emits a typed payload such as :class:`OverviewStatusResult`,
 :class:`OverviewCalendarResult`, :class:`OverviewAgendaResult`,
 :class:`OverviewBacklogResult`, :class:`OverviewExplainResult`,
 :class:`OverviewPrepareResult`, or :class:`OverviewPipelineResult` through
-:func:`_emit_envelope`. The ``pipeline`` verb resolves each period work
+:func:`emit_envelope`. The ``pipeline`` verb resolves each period work
 unit's current :class:`~cadrumo.domain.modelos.CalculationRevision` to derive its
 readiness row.
 """
@@ -48,7 +48,6 @@ from ._common import (
     _bad,
     _canonical_period,
     _declared_tax_id,
-    _emit_envelope,
     _load_drafts,
     _load_invoices,
     _no_active_profile_refusal,
@@ -274,7 +273,7 @@ def _emit_period_overview_status(
         f"{tr('cli.overview.drafts')}\t{len(per_modelo_drafts)}",
         *(f"{d.modelo}\t{d.draft_id}\t{d.status.value}" for d in per_modelo_drafts),
     ]
-    _emit_envelope(ctx, command="overview.status", result=typed_period, lines=period_lines)
+    emit_envelope(ctx, command="overview.status", result=typed_period, lines=period_lines)
 
 
 def _overview_status_coverage(
@@ -345,7 +344,7 @@ def overview_status(
     # default advisory the calendar does, so status never reads as complete while
     # obligations go unscoped. The coverage report rides the Notice channel.
     coverage_lines, coverage_notices = _overview_status_coverage(current, raw_values=raw_values)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="overview.status",
         result=typed_status,
@@ -451,7 +450,7 @@ def overview_calendar(
         rng,
         evidence_notices=evidence_notices,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="overview.calendar",
         result=typed_cal,
@@ -649,7 +648,7 @@ def _overview_calendar_all_profiles(
         all_calendars.append(profile_payload)
 
     typed_all = OverviewCalendarResult.model_validate({"profiles": all_calendars})
-    _emit_envelope(ctx, command="overview.calendar", result=typed_all, lines=all_lines, notices=all_coverage_notices)
+    emit_envelope(ctx, command="overview.calendar", result=typed_all, lines=all_lines, notices=all_coverage_notices)
 
 
 def overview_agenda(
@@ -690,7 +689,7 @@ def overview_agenda(
         raise _incomplete_profile_refusal(agenda.warnings)
 
     typed_agenda, lines, coverage_notices = overview_agenda_output(agenda)
-    _emit_envelope(ctx, command="overview.agenda", result=typed_agenda, lines=lines, notices=coverage_notices)
+    emit_envelope(ctx, command="overview.agenda", result=typed_agenda, lines=lines, notices=coverage_notices)
 
 
 def overview_backlog(
@@ -733,7 +732,7 @@ def overview_backlog(
         backlog,
         work_units_notice=work_units_notice,
     )
-    _emit_envelope(ctx, command="overview.backlog", result=typed_backlog, lines=lines, notices=backlog_notices)
+    emit_envelope(ctx, command="overview.backlog", result=typed_backlog, lines=lines, notices=backlog_notices)
 
 
 def overview_explain(
@@ -758,7 +757,7 @@ def overview_explain(
     except OverviewExplainError as exc:
         raise _bad(str(exc)) from exc
     typed_explain, lines = overview_explain_output(result)
-    _emit_envelope(ctx, command="overview.explain", result=typed_explain, lines=lines)
+    emit_envelope(ctx, command="overview.explain", result=typed_explain, lines=lines)
 
 
 def overview_prepare(
@@ -824,7 +823,7 @@ def overview_prepare(
     )
 
     typed_result, lines, notices = overview_prepare_output(walkthrough)
-    _emit_envelope(ctx, command="overview.prepare", result=typed_result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="overview.prepare", result=typed_result, lines=lines, notices=notices)
 
 
 def overview_pipeline(
@@ -906,7 +905,7 @@ def overview_pipeline(
         report,
         ledger=strict_round_trip(LedgerStatusResult, report.ledger),
     )
-    _emit_envelope(ctx, command="overview.pipeline", result=typed_result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="overview.pipeline", result=typed_result, lines=lines, notices=notices)
 
 
 __all__ = [

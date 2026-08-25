@@ -5,7 +5,7 @@ See Also:
         Rendering boundary under test for text lines and JSON payloads.
     :mod:`~entrypoints.cli._modelo_payloads_m145`
         Typed payload schemas returned by the renderer.
-    :func:`~entrypoints.cli._common._emit_envelope`
+    :func:`~entrypoints.cli._common.emit_envelope`
         Central CLI envelope path used by the emitters.
     :class:`~application.modelo.M145CommunicationRecord`
         Backend record projected into mutation output.

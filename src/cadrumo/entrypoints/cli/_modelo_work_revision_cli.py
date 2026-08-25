@@ -9,7 +9,7 @@ transport module serializes results into
 and
 :class:`WorkObservationsResult`
 schemas before handing them to
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from ...application.modelo import (
 )
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos import CalculationRevision, WorkUnit
-from ._common import _emit_envelope, activate_subcommand_output_language
+from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli, resolve_work_unit_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, selector_bad_parameter
 from ._modelo_payloads import (
@@ -157,7 +157,7 @@ def work_revisions(
         )
         for rev in revisions
     )
-    _emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
 
 
 def work_revision(
@@ -209,7 +209,7 @@ def work_revision(
         *calculation_revision_lines(selected_revision, verbose=verbose),
         *modality_lines,
     ]
-    _emit_envelope(ctx, command="modelo.work.revision", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.revision", result=result, lines=lines)
 
 
 def work_observations(
@@ -254,4 +254,4 @@ def work_observations(
         }
     )
     lines = ["operation\tmodelo.work.observations", *calculation_observation_lines(selected_revision)]
-    _emit_envelope(ctx, command="modelo.work.observations", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.observations", result=result, lines=lines)

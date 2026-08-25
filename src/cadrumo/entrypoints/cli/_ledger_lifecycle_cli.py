@@ -3,7 +3,7 @@
 Lifecycle commands resolve transactions through the shared repository helpers
 and emit typed :class:`OutputSchema` mutation
 payloads inside :class:`SchemaEnvelope` through
-:func:`_emit_envelope` for every structural change.
+:func:`emit_envelope` for every structural change.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ from ...domain.transactions import (
     is_classified,
 )
 from ...llm import LLMSplitApplyResult
-from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
+from ._common import _bad, _state, _tx_repo, emit_envelope, parse_decimal_amount
 from ._ledger_support import (
     _emit_update_result,
     _ledger_transaction_validation_no_recovery,
@@ -415,7 +415,7 @@ def ledger_pull_folder(
                 context={"folder_id": folder_id, "refused_count": str(refused_count)},
             ),
         )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.pull_folder",
         result=result,
@@ -581,7 +581,7 @@ def ledger_remove(
     )
     from ._ledger_payloads import LedgerRemoveResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.remove",
         result=strict_round_trip(LedgerRemoveResult, report),
@@ -616,7 +616,7 @@ def ledger_reset(
     )
     from ._ledger_payloads import LedgerResetResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.reset",
         result=strict_round_trip(LedgerResetResult, report),
@@ -698,7 +698,7 @@ def ledger_split(
     lines.extend(f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows)
     lines.append(f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}")
     lines.extend(f"ADVISORY\t{notice.message}" for notice in notices)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.split",
         result=LedgerSplitResult.model_validate(
@@ -830,7 +830,7 @@ def _render_split_llm_preview(
     ]
     lines.extend(f"{child.description}\t{child.amount}\t{child.iva_category or ''}" for child in proposed_children)
     lines.append(tr("cli.ledger.classify.llm_review_hint"))
-    _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
+    emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
 
 
 def _render_split_llm_applied(
@@ -869,7 +869,7 @@ def _render_split_llm_applied(
     ]
     lines.extend(f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows)
     lines.append(f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{applied.provenance}")
-    _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
+    emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
 
 
 def _ledger_split_llm(
@@ -982,7 +982,7 @@ def ledger_merge(
     )
     from ._ledger_payloads import LedgerMergeResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.merge",
         result=LedgerMergeResult.model_validate(

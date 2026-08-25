@@ -50,7 +50,7 @@ from ...llm import (
     LLMSplitSuggestion,
     LLMSuggestionRejectionResult,
 )
-from ._common import _bad, _emit_envelope, _state, _tx_repo
+from ._common import _bad, _state, _tx_repo, emit_envelope
 from ._ledger_support import (
     _ledger_transaction_validation_no_recovery,
     _ledger_validation_bad,
@@ -133,7 +133,7 @@ def emit_llm_rejection(
         f"{tr('cli.ledger.classify.llm_rejected_label')}\t{result.suggestion_kind}",
         notice.message,
     ]
-    _emit_envelope(ctx, command="ledger.classify", result=payload, lines=lines, notices=[notice])
+    emit_envelope(ctx, command="ledger.classify", result=payload, lines=lines, notices=[notice])
 
 
 def transport_from_provenance(provenance: str) -> str:
@@ -311,7 +311,7 @@ def _emit_split(
             f"{tr('cli.ledger.labels.children')}\t{len(proposed_children)}",
             tr("cli.ledger.classify.llm_review_hint"),
         ]
-        _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
+        emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
         return
     try:
         applied = execute_reviewed_decision(
@@ -342,7 +342,7 @@ def _emit_split(
         f"{tr('cli.ledger.labels.children')}\t{len(applied.child_transaction_ids)}",
         f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{applied.provenance}",
     ]
-    _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
+    emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
 
 
 def _emit_single(
@@ -379,7 +379,7 @@ def _emit_single(
             tr("cli.ledger.classify.auto_split_single_line"),
             tr("cli.ledger.classify.llm_review_hint"),
         ]
-        _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines)
+        emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines)
         return
     try:
         result = apply_evidence_classification(
@@ -408,7 +408,7 @@ def _emit_single(
         f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
         f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
     ]
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+    emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
 
 
 def _emit_llm_single_classify(
@@ -443,7 +443,7 @@ def _emit_llm_single_classify(
         *extra_lines,
         f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
     ]
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+    emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
 
 
 def _validate_classify_llm_options(
@@ -518,7 +518,7 @@ def _render_classify_llm_preview(
         notice = split_recommendation_notice(suggestion.transaction_id)
         notices.append(notice)
         lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.message}")
-    _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines, notices=notices)
 
 
 def _saturate_derived_values(
@@ -576,7 +576,7 @@ def _render_saturate_llm_preview(
         notice = split_recommendation_notice(suggestion.transaction_id)
         notices.append(notice)
         lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.message}")
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
 
 
 def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturatedSuggestion)](
@@ -861,4 +861,4 @@ def ledger_operator_iva_derive(
         f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
         f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
     ]
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+    emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)

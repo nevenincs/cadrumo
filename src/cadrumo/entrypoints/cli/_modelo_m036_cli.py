@@ -15,7 +15,7 @@ from ...application.modelo import (
 from ...core.i18n import tr
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import CensoModeloEventKind
-from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._common import active_bucket_id_or_refuse, emit_envelope
 from ._modelo_behavior_support import require_active_profile
 from ._modelo_payloads_m036 import (
     M036DeclarationListResult,
@@ -90,7 +90,7 @@ def record_m036(
     ]
     if result.sede_justificante is not None:
         lines.append(f"sede_justificante\t{result.sede_justificante}")
-    _emit_envelope(ctx, command=f"modelo.m036.{result.event_kind.value}", result=payload, lines=lines)
+    emit_envelope(ctx, command=f"modelo.m036.{result.event_kind.value}", result=payload, lines=lines)
 
 
 def m036_alta(
@@ -165,7 +165,7 @@ def m036_list(ctx: typer.Context) -> None:
         )
     else:
         lines.append(tr("cli.app.modelo.m036.list_empty", default="No M036 declarations recorded yet."))
-    _emit_envelope(ctx, command="modelo.m036.list", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.m036.list", result=result, lines=lines)
 
 
 def m036_view(ctx: typer.Context, declaration_id: str) -> None:
@@ -203,4 +203,4 @@ def m036_view(ctx: typer.Context, declaration_id: str) -> None:
         lines.append(f"sede_justificante\t{declaration.sede_justificante}")
     if declaration.note is not None:
         lines.append(f"note\t{declaration.note}")
-    _emit_envelope(ctx, command="modelo.m036.view", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.m036.view", result=result, lines=lines)

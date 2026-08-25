@@ -2,7 +2,7 @@
 
 Each result is a strict :class:`OutputSchema` referenced through
 production-authored CommandSpec as deferred public schema targets and emitted inside :class:`SchemaEnvelope` via
-:func:`_emit_envelope`. The parent :mod:`_ledger_payloads` module re-exports
+:func:`emit_envelope`. The parent :mod:`_ledger_payloads` module re-exports
 these split schemas so ledger ratio handlers keep the existing payload import
 surface.
 

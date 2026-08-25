@@ -63,7 +63,7 @@ COMMAND_LITERAL_ALIAS: Final[str] = "<command-literal>"
 MODULE_SYMBOL: Final[str] = "<module>"
 _FIXED_POINT_SOURCE_SUFFIXES: Final[frozenset[str]] = frozenset({".json", ".py", ".yaml", ".yml"})
 _RENDERER_SINKS: Final[frozenset[str]] = frozenset(
-    {"_emit_envelope", "emit_json_success", "echo", "print", "tr"},
+    {"emit_envelope", "emit_json_success", "echo", "print", "tr"},
 )
 FIXED_POINT_STATE_VERSION: Final[int] = 1
 FIXED_POINT_PRODUCTION_SCOPE: Final[str] = "production-src-cadrumo-v1"

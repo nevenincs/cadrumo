@@ -44,7 +44,7 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
 )
 from ...domain.user_profile import ProfileNotFoundError
-from ._common import _emit_envelope, _parse_iso_date, resolve_notice_action
+from ._common import _parse_iso_date, emit_envelope, resolve_notice_action
 from ._modelo_behavior_support import bare_period_error, resolve_year_period
 from ._modelo_cli_support import bad_parameter_from_error, parse_binding_override
 from ._modelo_payloads import (
@@ -562,7 +562,7 @@ def list_modelos(ctx: typer.Context, year: int | None = None, domain: TaxDomain 
             for row in modelos
         ],
     ]
-    _emit_envelope(ctx, command="modelo.list", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.list", result=result, lines=lines)
 
 
 def describe_modelo(
@@ -596,7 +596,7 @@ def describe_modelo(
         f"{tr('cli.app.modelo.describe.label_bindings')}\t{report.binding_count}",
         f"{tr('cli.app.modelo.describe.label_formulas')}\t{report.formula_count}",
     ]
-    _emit_envelope(ctx, command="modelo.describe", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.describe", result=result, lines=lines)
 
 
 def casillas(
@@ -678,7 +678,7 @@ def casillas(
                 for row in report.rows
             ],
         ]
-    _emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.casillas", result=result, lines=lines)
 
 
 def casilla(
@@ -744,7 +744,7 @@ def casilla(
         lines.append(f"help\t{help_text}")
     if report.formula_expression is not None:
         lines.append(f"formula_expression\t{report.formula_expression}")
-    _emit_envelope(ctx, command="modelo.casilla", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.casilla", result=result, lines=lines)
 
 
 def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
@@ -801,7 +801,7 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
     ]
     notices = _requires_notices(checklist)
     lines.extend(_notice_text_lines(notices))
-    _emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
 
 
 def bindings_list(
@@ -859,7 +859,7 @@ def bindings_list(
     notices = _bindings_list_scope_notices(modelo=modelo, year=year, period=period)
     lines.extend(_notice_text_lines(notices))
     lines.extend(text_rows)
-    _emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines, notices=notices)
 
 
 def bindings_resolve(
@@ -939,7 +939,7 @@ def bindings_resolve(
             )
         )
         lines.extend(binding_encoded_option_lines(row.binding_id, binding_encoded_option_payloads(row.encoded_options)))
-    _emit_envelope(ctx, command="modelo.bindings.resolve", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.bindings.resolve", result=result, lines=lines)
 
 
 def formulas(
@@ -983,7 +983,7 @@ def formulas(
             for row in report.rows
         ),
     )
-    _emit_envelope(ctx, command="modelo.formulas", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.formulas", result=result, lines=lines)
 
 
 def support_matrix(ctx: typer.Context) -> None:
@@ -997,4 +997,4 @@ def support_matrix(ctx: typer.Context) -> None:
         lines.append(
             f"{entry.modelo_id:>6}  {entry.revision_count:>4}  {entry.latest_revision_id:<12}  {_mark(entry.calc_grade):>4}  {_mark(entry.has_completeness_manifest):>8}  {_mark(entry.has_fixed_width_export):>3}  {_mark(entry.has_xml_dictionary_export):>3}  {_mark(entry.has_extractor):>9}  {len(entry.renames):>7}"
         )
-    _emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.support_matrix", result=result, lines=lines)

@@ -48,7 +48,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import resources
 from ...domain.calculations.registry import RegistrySnapshotError, derive_taxpayer_files_economic_activity
 from ...domain.modelos import CalculationRevisionState
-from ._common import _emit_envelope, _filing_taxpayer_or_refuse, activate_subcommand_output_language
+from ._common import _filing_taxpayer_or_refuse, activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli
 from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
 from ._modelo_payloads import (
@@ -271,7 +271,7 @@ def work_verify(
         )
         lines.append(noop_message)
     notices.extend(m184_socio_handoff_notices(get_calculation_revision(selected_revision.calculation_revision_id)))
-    _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
     if not report.granted_verificado_completo:
         raise typer.Exit(code=1)
 
@@ -323,7 +323,7 @@ def work_dependencies(
         items=tuple(_dependency_inventory_item_payload(item) for item in inventory.items),
         clean_state=_clean_state_payload(clean_state) if clean_state is not None else None,
     )
-    _emit_envelope(ctx, command="modelo.work.dependencies", result=result, lines=_dependency_inventory_lines(result))
+    emit_envelope(ctx, command="modelo.work.dependencies", result=result, lines=_dependency_inventory_lines(result))
 
 
 def work_file(
@@ -390,4 +390,4 @@ def work_file(
         )
         lines.append(noop_message)
     notices.extend(m184_socio_handoff_notices(get_calculation_revision(record.calculation_revision_id)))
-    _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines, notices=notices or None)
+    emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines, notices=notices or None)

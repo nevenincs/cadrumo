@@ -13,7 +13,7 @@ because ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 The application layer remains authoritative for registry validation and
 filed-state comparison. These schemas document the CLI transport shape that enters
 :class:`SchemaEnvelope` through
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 """
 
 from __future__ import annotations

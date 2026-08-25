@@ -36,7 +36,6 @@ from ...domain.invoices import InvoiceValidationError
 from ...domain.transactions import Transaction, TransactionIdPrefixError, TransactionValidationError
 from ._common import (
     _bad,
-    _emit_envelope,
     attach_cli_policy_verdict,
     parse_decimal_amount,
     parse_optional_decimal_amount,
@@ -74,7 +73,7 @@ def _emit_update_result(
     idempotent-noop or prorrata note after them. They exist so a verb with
     something extra to say still emits the quintet from here: without them the
     only way to add a line was to rebuild the whole payload and call
-    :func:`_emit_envelope` directly, which is how two verbs ended up
+    :func:`emit_envelope` directly, which is how two verbs ended up
     hand-maintaining a copy of the shape this function owns. The same idiom as
     ``_emit_llm_single_classify``'s ``extra_lines``.
     """
@@ -89,7 +88,7 @@ def _emit_update_result(
             "transaction": transaction_payload.model_dump(mode="json"),
         },
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command=command,
         result=result,

@@ -6,7 +6,7 @@ target by production-authored CommandSpec so the
 JSON-contract test suite can enumerate every google-config command surface this
 module covers. Validated results enter
 :class:`SchemaEnvelope` through
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 
 Field sets match the production payload dicts constructed in ``_google.py``,
 ``_google_folder.py``, and ``_google_sync_calc.py`` at their emit sites. All

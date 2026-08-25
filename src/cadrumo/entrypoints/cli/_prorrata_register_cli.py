@@ -40,7 +40,7 @@ from ...domain.prorrata_register import (
     ProrrataRegisterValidationError,
     SectorDefinition,
 )
-from ._common import _bad, _emit_envelope, parse_decimal_amount
+from ._common import _bad, emit_envelope, parse_decimal_amount
 from ._common import active_bucket_id_or_refuse as _register_bucket_id
 from ._prorrata_register_payloads import (
     ProrrataDeclareSectorResult,
@@ -175,7 +175,7 @@ def _elect(
         entry=_entry_payload(entry),
         count=len(register.entries),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command=command,
         result=payload,
@@ -301,7 +301,7 @@ def prorrata_declare_sector(
         sector=_sector_payload(definition),
         count=len(register.sector_definitions),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.prorrata.declare_sector",
         result=payload,
@@ -338,7 +338,7 @@ def prorrata_list(ctx: typer.Context) -> None:
             f"sector\t{definition.sector_id}\tletra={definition.letra.value}\t"
             f"codes={','.join(definition.member_activity_codes)}",
         )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.prorrata.list",
         result=payload,

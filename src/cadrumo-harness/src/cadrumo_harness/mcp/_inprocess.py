@@ -12,7 +12,7 @@ only the calculation engine, storage, and envelope emit.
 The load-bearing guarantee is byte-identical envelope parity with the subprocess
 transport. :func:`run_cli_in_process` invokes the EXACT command the subprocess
 would - ``get_command(app).main(..., standalone_mode=True)`` - so the same
-command functions, the same ``_emit_envelope`` / ``emit_json_success`` builders,
+command functions, the same ``emit_envelope`` / ``emit_json_success`` builders,
 and the same per-callback error boundary produce the same stdout success
 document and the same stderr error document; the ONLY difference from the
 subprocess is that the terminating ``SystemExit`` is caught here rather than

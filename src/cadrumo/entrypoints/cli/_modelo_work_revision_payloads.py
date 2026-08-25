@@ -13,7 +13,7 @@ The application/modelo facade remains authoritative for revision lookup,
 selection, and Modelo 202 modality resolution; these classes only document the
 JSON transport shape that enters
 :class:`SchemaEnvelope` through
-:func:`_emit_envelope`. The parent :mod:`_modelo_payloads` module re-exports
+:func:`emit_envelope`. The parent :mod:`_modelo_payloads` module re-exports
 these split schemas so modelo work emitters keep one payload import surface.
 """
 

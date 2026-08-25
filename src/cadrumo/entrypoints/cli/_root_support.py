@@ -9,7 +9,6 @@ from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocati
 from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from ._common import (
-    _emit_envelope,
     active_profile_label,
     attach_cli_policy_verdict,
     requested_cli_leaf,
@@ -52,7 +51,7 @@ def _emit_root_help_and_exit(ctx: typer.Context) -> None:
     lines = render_help_text(document).splitlines()
     footer = lines.pop()
     lines.extend((*_root_profile_secret_help_lines(), "", *_root_tui_help_lines(), "", footer))
-    _emit_envelope(ctx, command="root.status", result=typed_help, lines=lines)
+    emit_envelope(ctx, command="root.status", result=typed_help, lines=lines)
     raise typer.Exit()
 
 
@@ -169,7 +168,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
         # encrypted bucket, breaking the cold-start /
         # session-closed-but-profile-exists path.
         typed_landing = _strict_round_trip(RootStatusResult, landing)
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="root.status",
             result=typed_landing,
@@ -186,7 +185,7 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     workflow_state = workflow_state_repository().load()
     overview_report = build_overview_status_report(state=workflow_state)
     typed_overview = _strict_round_trip(RootStatusResult, overview_report)
-    _emit_envelope(ctx, command="root.status", result=typed_overview, lines=render_cli_root_landing_lines(landing))
+    emit_envelope(ctx, command="root.status", result=typed_overview, lines=render_cli_root_landing_lines(landing))
     raise typer.Exit()
 
 

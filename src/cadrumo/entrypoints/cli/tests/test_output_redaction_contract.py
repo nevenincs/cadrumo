@@ -12,7 +12,7 @@ from ....core.redaction import (
     CLI_PROFILE_ID_PLACEHOLDER,
 )
 from ....tests.cli_runner import cadrumo_click_command
-from .._common import _emit_envelope
+from .._common import emit_envelope
 from .._root_payloads import RootStatusResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -49,7 +49,7 @@ def _lines() -> tuple[str, ...]:
 
 
 def test_emit_text_redacts_command_output_canary_matrix(capsys: pytest.CaptureFixture[str]) -> None:
-    _emit_envelope(
+    emit_envelope(
         _context("text"),
         command="root.status",
         result=RootStatusResult.model_validate(_payload()),
@@ -63,7 +63,7 @@ def test_emit_text_redacts_command_output_canary_matrix(capsys: pytest.CaptureFi
 
 
 def test_emit_json_redacts_command_output_canary_matrix(capsys: pytest.CaptureFixture[str]) -> None:
-    _emit_envelope(
+    emit_envelope(
         _context("json"),
         command="root.status",
         result=RootStatusResult.model_validate(_payload()),

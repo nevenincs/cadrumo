@@ -3,7 +3,7 @@
 Every declared payload is an :class:`OutputSchema` subclass referenced by
 production-authored CommandSpec as deferred public schema targets and carried on
 the shared :class:`SchemaEnvelope` spine
-through ``_emit_envelope``, so the answer an operator gives about a counterparty
+through ``emit_envelope``, so the answer an operator gives about a counterparty
 reaches a caller under the same contract every other ledger command uses.
 
 **Why the fact is emitted whole rather than as a confirmation flag.** The verb's

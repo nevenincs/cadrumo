@@ -10,7 +10,6 @@ from pydantic import SecretStr
 
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.i18n import OutputLanguage, tr
-from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError
 from ._secure_input import MachineSecretPayload
@@ -79,7 +78,7 @@ def passphrase_change(
         new_passphrase=secrets.new_passphrase.get_secret_value(),
         new_passphrase_confirmation=secrets.new_passphrase_confirmation.get_secret_value(),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.passphrase.change",
         result=ConfigPassphraseChangeResult(

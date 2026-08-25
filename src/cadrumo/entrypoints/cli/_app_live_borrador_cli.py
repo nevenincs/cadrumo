@@ -25,7 +25,7 @@ from ._app_live_borrador_payloads import (
     Borrador100SnapshotSummaryPayload,
     Borrador100ViewResult,
 )
-from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._common import active_bucket_id_or_refuse, emit_envelope
 
 
 class _BorradorRow(TypedDict):
@@ -53,7 +53,7 @@ def borrador_100_list(ctx: typer.Context, state: SnapshotStateFilter = SnapshotS
         f"bindings={len(row.binding_values)}\t{row.state.value}"
         for row in rows
     )
-    _emit_envelope(ctx, command="app.live.borrador.100.list", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.borrador.100.list", result=result, lines=lines)
 
 
 def borrador_100_show(ctx: typer.Context, snapshot_id: str) -> None:
@@ -79,7 +79,7 @@ def borrador_100_show(ctx: typer.Context, snapshot_id: str) -> None:
         f"binding_count\t{len(record.binding_values)}",
         f"state\t{record.state.value}",
     ]
-    _emit_envelope(ctx, command="app.live.borrador.100.view", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.borrador.100.view", result=result, lines=lines)
 
 
 def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
@@ -88,7 +88,7 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
     record = Borrador100SnapshotService(bucket_id=bucket_id).latest_for_year(filing_year=filing_year)
     if record is None:
         result = Borrador100LatestResult(bucket_id=bucket_id, filing_year=filing_year, snapshot_id=None)
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="app.live.borrador.100.latest",
             result=result,
@@ -105,7 +105,7 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
         binding_count=len(record.binding_values),
         state=_active_borrador_state(record.state),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="app.live.borrador.100.latest",
         result=result,

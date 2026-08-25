@@ -29,7 +29,6 @@ from ....application.storage_management import StorageCheckIssueKind, StorageTre
 from ....core import StorageArea
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope, resolve_notice_action
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._storage_payloads import (
     ConfigStorageCheckResult,
@@ -70,7 +69,7 @@ def config_storage_list(
     notices = (_relocation_notice(str(report.storage_root)),)
     lines = _inventory_lines(report)
     lines.extend(_notice_lines(notices))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.storage.list",
         result=result,
@@ -105,7 +104,7 @@ def config_storage_show(
             (_label("reclaimable", "Reclaimable"), _boolean_label(row.reclaimable)),
         ),
     )
-    _emit_envelope(ctx, command="config.storage.show", result=result, lines=tuple(lines))
+    emit_envelope(ctx, command="config.storage.show", result=result, lines=tuple(lines))
 
 
 def config_storage_check(
@@ -178,7 +177,7 @@ def config_storage_check(
             ),
         )
     lines.extend(_notice_lines(notices))
-    _emit_envelope(ctx, command="config.storage.check", result=result, lines=tuple(lines), notices=tuple(notices))
+    emit_envelope(ctx, command="config.storage.check", result=result, lines=tuple(lines), notices=tuple(notices))
     if not report.healthy:
         raise typer.Exit(code=2)
 
@@ -217,7 +216,7 @@ def config_storage_init(
             ),
         )
     lines.extend(_notice_lines(notices))
-    _emit_envelope(ctx, command="config.storage.init", result=result, lines=tuple(lines), notices=notices)
+    emit_envelope(ctx, command="config.storage.init", result=result, lines=tuple(lines), notices=notices)
 
 
 def config_storage_reclaim(
@@ -267,7 +266,7 @@ def config_storage_reclaim(
             ),
         )
     lines.extend(_notice_lines(notices))
-    _emit_envelope(ctx, command="config.storage.reclaim", result=result, lines=tuple(lines), notices=notices)
+    emit_envelope(ctx, command="config.storage.reclaim", result=result, lines=tuple(lines), notices=notices)
 
 
 def _relocation_notice(storage_root: str) -> Notice:

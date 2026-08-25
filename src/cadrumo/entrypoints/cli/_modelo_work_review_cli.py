@@ -12,7 +12,7 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...application.modelo.work_review_projection import build_modelo_work_review
 from ...core.external_constants import OutputLanguage
-from ._common import _emit_envelope, activate_subcommand_output_language
+from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from ._modelo_rendering import verification_findings_notices
@@ -84,7 +84,7 @@ def work_review(
         verification_repository=VerificationReportCatalogueRepository(),
     )
     result = WorkReviewResult(review=WorkReviewPayload.from_review(review))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="modelo.work.review",
         result=result,

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import typer
 
 from ....core.external_constants import OutputLanguage
-from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_output_language
 
 if TYPE_CHECKING:
@@ -53,7 +52,7 @@ def config_list(
             for pointer in rows
         ],
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.list",
         result=result,

@@ -17,7 +17,7 @@ from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions import BusinessClassification, is_classified
-from ._common import _bad, _emit_envelope
+from ._common import _bad, emit_envelope
 from ._ledger_support import _TransactionRepo
 
 
@@ -88,7 +88,7 @@ def ledger_classify_bulk_csv(
                 },
             ),
         )
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
     if notices:
         raise typer.Exit(code=1)
 

@@ -1,6 +1,6 @@
 """Inventory gate for production CLI output surfaces.
 
-The centralized-output-redaction contract makes ``_emit_envelope`` and
+The centralized-output-redaction contract makes ``emit_envelope`` and
 ``write_stderr`` the owned output boundaries. This test keeps direct output
 exceptions explicit so new ``typer.echo``, ``print``, or stream writes do not
 silently bypass the redacted renderer.
@@ -295,7 +295,7 @@ def test_production_direct_output_surfaces_are_owned() -> None:
 
     assert not unowned, (
         "New direct production CLI output call(s) bypass the centralized "
-        "redaction boundary; route through _emit_envelope/write_stderr/"
+        "redaction boundary; route through emit_envelope/write_stderr/"
         "emit_progress_line or add an audited exception keyed by "
         "(module, enclosing function, primitive):\n" + "\n".join(unowned)
     )
@@ -322,7 +322,7 @@ def test_emit_boundaries_are_present_for_success_output() -> None:
     common = (_CLI_ROOT / "_common.py").read_text(encoding="utf-8")
 
     assert "def _emit(" not in common
-    assert "def _emit_envelope(" in common
+    assert "def emit_envelope(" in common
     assert "render_command_output(" in common
     # The streamed text-mode progress channel is a choke point in its own right:
     # a command reporting per-item progress emits to stdout before the closing

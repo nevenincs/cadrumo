@@ -18,7 +18,7 @@ from ....core.redaction import (
     CLI_PROFILE_ID_PLACEHOLDER,
     redact_structured_for_cli_output,
 )
-from .._common import _emit_envelope, resolve_cli_precondition_action
+from .._common import emit_envelope, resolve_cli_precondition_action
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._status_rendering import precondition_action_lines
@@ -116,7 +116,7 @@ def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: b
     health_payload = repair_payload.after or repair_payload.before
     if health_payload is not None:
         lines.extend(precondition_action_lines(health_payload.precondition_action))
-    _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
+    emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
 
 
 def _profile_health_payload(health: ActiveProfileHealth) -> dict[str, object]:
@@ -191,7 +191,7 @@ def _emit_profile_record_status(
             ),
         }
         repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="config.repair.profile",
             result=repair_payload,
@@ -235,7 +235,7 @@ def _emit_profile_record_status(
         "setup_state": record.setup_state,
     }
     repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.repair.profile",
         result=repair_payload,
@@ -278,7 +278,7 @@ def _emit_profile_record_unreadable_repair(
         ),
     }
     repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.repair.profile",
         result=repair_payload,

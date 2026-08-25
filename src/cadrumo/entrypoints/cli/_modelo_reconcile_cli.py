@@ -23,7 +23,7 @@ import typer
 from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationReport
 from ...core.i18n import tr
 from ...domain.modelos import WorkUnit
-from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._common import active_bucket_id_or_refuse, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import resolve_default_actor
 
@@ -107,7 +107,7 @@ def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliati
         lines.append(f"diff\t{diff.field_name}\twork_unit={diff.work_unit_value}\tevidence={diff.evidence_value}")
     for advisory in report.advisories:
         lines.append(f"advisory\t{advisory.code}\t{advisory.message}")
-    _emit_envelope(ctx, command=command, result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command=command, result=result, lines=lines, notices=notices)
 
 
 def reconcile_pull_verb(
@@ -212,4 +212,4 @@ def reconcile_history_verb(ctx: typer.Context, work_unit_id: str | None = None) 
         )
     else:
         lines.append(tr("cli.app.modelo.reconcile.history_empty", default="No reconciliations recorded yet."))
-    _emit_envelope(ctx, command="modelo.reconcile.history", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.reconcile.history", result=result, lines=lines)

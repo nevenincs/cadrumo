@@ -14,7 +14,7 @@ lists to tuples on re-validation.
 
 The application registry facade remains the authority for legal-citation and
 manual-corpus semantics. These payload classes validate the CLI transport shape
-that enters :class:`SchemaEnvelope` through :func:`_emit_envelope`.
+that enters :class:`SchemaEnvelope` through :func:`emit_envelope`.
 """
 
 from __future__ import annotations

@@ -36,7 +36,6 @@ from pydantic import SecretStr
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._secure_input import MachineSecretPayload
@@ -81,7 +80,7 @@ def certificate_register(
     from .._config_payloads import CertificateSourceMutationPayload
 
     payload = CertificateSourceMutationPayload(name=result.name, certificate_path=result.certificate_path)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.certificate.register",
         result=payload,
@@ -123,7 +122,7 @@ def certificate_list(
             marker = "*" if source.active else " "
             label = f" ({source.friendly_name})" if source.friendly_name else ""
             lines.append(f"{marker}\t{source.name}{label}\t{source.certificate_path}")
-    _emit_envelope(ctx, command="config.auth.certificate.list", result=payload, lines=lines)
+    emit_envelope(ctx, command="config.auth.certificate.list", result=payload, lines=lines)
 
 
 def certificate_select(
@@ -152,7 +151,7 @@ def certificate_select(
         certificate_path=result.certificate_path,
         active=result.active,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.certificate.select",
         result=payload,
@@ -186,7 +185,7 @@ def certificate_remove(
     from .._config_payloads import CertificateSourceMutationPayload
 
     payload = CertificateSourceMutationPayload(name=result.name, removed=result.removed)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.certificate.remove",
         result=payload,
@@ -257,7 +256,7 @@ def certificate_check(
         for notice in notices:
             lines.append(f"WARNING\t{notice.message}")
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.certificate.check",
         result=payload,
@@ -324,7 +323,7 @@ def certificate_secret_set(
         has_secret=result.has_secret,
         rotated=result.rotated,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.certificate.secret.set",
         result=payload,
@@ -361,7 +360,7 @@ def certificate_secret_remove(
         has_secret=result.has_secret,
         removed=result.removed,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.auth.certificate.secret.remove",
         result=payload,

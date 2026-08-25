@@ -39,7 +39,6 @@ from ...domain.invoices import Invoice, InvoiceClass, InvoiceValidationError
 from ...domain.iva import InvoiceKind, IvaCategory
 from ._common import (
     _bad,
-    _emit_envelope,
     _parse_iso_date,
     parse_decimal_amount,
     parse_optional_decimal_amount,
@@ -333,7 +332,7 @@ def invoice_add(
             raise refusal from None
         raise
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.invoice.add",
         result=CatalogueInvoiceCreatePayload.model_validate(_catalogue_invoice_payload(result.invoice)),
@@ -428,7 +427,7 @@ def invoice_wizard(
         )
         lines.append(noop_message)
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.invoice.wizard",
         result=CatalogueInvoiceWizardResult.model_validate(payload),
@@ -543,7 +542,7 @@ def invoice_import(
         "refused": [f.model_dump(mode="json") for f in result.refused],
         "created_invoice_ids": list(result.created_invoice_ids),
     }
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.invoice.import",
         result=CatalogueInvoiceImportResult.model_validate(payload),
@@ -628,7 +627,7 @@ def invoice_list(
             f"{invoice.invoice_number}\t{invoice.issued_at.isoformat()}\t{format(invoice.grand_total, 'f')}",
         )
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.invoice.list",
         result=CatalogueInvoiceListResult.model_validate(payload),
@@ -650,7 +649,7 @@ def invoice_view(
     """
     bucket_id = _business_invoice_bucket_id()
     invoice = resolve_catalogue_invoice_from_repository(bucket_id=bucket_id, invoice_id=invoice_id)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.invoice.view",
         result=CatalogueInvoiceViewResult.model_validate(_catalogue_invoice_payload(invoice)),
@@ -676,7 +675,7 @@ def invoice_remove(
         )
     bucket_id = _business_invoice_bucket_id()
     result = remove_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.invoice.remove",
         result=CatalogueInvoiceRemovePayload.model_validate(_catalogue_invoice_payload(result.invoice)),
@@ -733,7 +732,7 @@ def invoice_update(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _catalogue_invoice_lines(result.invoice)
     lines.append(f"bucket_event_ids	{','.join(result.bucket_event_ids)}")
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.invoice.update",
         result=CatalogueInvoiceUpdatePayload.model_validate(payload),

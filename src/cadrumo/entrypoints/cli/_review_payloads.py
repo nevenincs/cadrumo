@@ -5,7 +5,7 @@ Each class declared here is a strict
 a deferred public schema target so the JSON-contract
 test suite can enumerate every review-command surface. The typed result enters
 the shared :class:`SchemaEnvelope` through
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 
 The application review facade remains authoritative for
 :class:`ReviewQueueRow`,

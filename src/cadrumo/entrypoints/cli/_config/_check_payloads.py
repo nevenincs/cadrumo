@@ -7,7 +7,7 @@ These strict :class:`OutputSchema` subclasses
 document only the transport shape referenced by production-authored CommandSpec
 as deferred public schema targets and emitted through
 :class:`SchemaEnvelope` by
-:func:`_emit_envelope`. Capability semantics live
+:func:`emit_envelope`. Capability semantics live
 in :mod:`user_profile`, and provisioning semantics live in
 :mod:`provisioning`.
 """

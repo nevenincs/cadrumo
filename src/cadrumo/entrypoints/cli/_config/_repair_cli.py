@@ -31,7 +31,7 @@ from ....application.diagnostics import (
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.json_contract import strict_round_trip
 from ....core.logging import default_log_file_path as _default_log_file_path
-from .._common import _emit_envelope, resolve_cli_precondition_action
+from .._common import emit_envelope, resolve_cli_precondition_action
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
@@ -140,7 +140,7 @@ def repair(ctx: typer.Context) -> None:
 
     report = _build_config_repair_report()
     result = strict_round_trip(ConfigRepairResult, _config_repair_result(report))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.repair",
         result=result,
@@ -158,7 +158,7 @@ def repair_logs(
     path = _default_log_file_path()
     tail = _tail_lines(path, lines) if path.exists() and lines > 0 else ()
     result = RepairLogsResult(path=str(path), lines=list(tail))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.repair.logs",
         result=result,
@@ -180,7 +180,7 @@ def repair_quarantine(
         )
     if _resolve_active_bucket_id() is None:
         result = RepairQuarantineResult(dry_run=dry_run, quarantined=0, retained=0, reason="no-active-profile")
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="config.repair.quarantine",
             result=result,
@@ -207,7 +207,7 @@ def repair_quarantine(
                 for item in report.namespaces
             ],
         )
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="config.repair.quarantine",
             result=result,
@@ -233,7 +233,7 @@ def repair_quarantine(
             for item in report.namespaces
         ],
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.repair.quarantine",
         result=result,
@@ -258,7 +258,7 @@ def repair_reset_progress(
         raise _CliRefusedBoundaryError(translated_message="cli.config.repair.reset_progress_requires_yes")
     if _resolve_active_bucket_id() is None:
         result = RepairResetProgressResult(reset=False, reason="nothing to reset")
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="config.repair.reset_progress",
             result=result,
@@ -281,7 +281,7 @@ def repair_reset_progress(
             f"stored_bytes\t{stored_bytes}",
             f"read_status\t{fingerprint.reason_class}",
         )
-        _emit_envelope(ctx, command="config.repair.reset_progress", result=result, lines=lines)
+        emit_envelope(ctx, command="config.repair.reset_progress", result=result, lines=lines)
         return
     fingerprint = reset_workflow_state()
     progress_schema_version = fingerprint.schema_version if fingerprint.schema_version is not None else "<none>"
@@ -297,7 +297,7 @@ def repair_reset_progress(
         f"stored_bytes\t{stored_bytes}",
         f"read_status\t{fingerprint.reason_class}",
     )
-    _emit_envelope(ctx, command="config.repair.reset_progress", result=result, lines=lines)
+    emit_envelope(ctx, command="config.repair.reset_progress", result=result, lines=lines)
 
 
 def repair_integrity_objects(
@@ -326,7 +326,7 @@ def repair_integrity_objects(
             },
         },
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.repair.integrity.objects",
         result=result,
@@ -348,7 +348,7 @@ def repair_integrity_registry(ctx: typer.Context) -> None:
     report = _build_registry_integrity_report()
     result = strict_round_trip(RepairIntegrityRegistryResult, report)
     issue_lines = tuple(f"issue\t{finding.summary}" for finding in report.check.findings)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.repair.integrity.registry",
         result=result,
@@ -367,7 +367,7 @@ def repair_connectivity(ctx: typer.Context, headless: bool = True) -> None:
     _ = headless
     report = _probe_browser_connectivity()
     result = RepairConnectivityResult(target="aeat_sede", status=report.model_dump(mode="json"))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.repair.connectivity",
         result=result,

@@ -62,7 +62,6 @@ from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
 from ._common import (
     _bad,
     _canonical_period,
-    _emit_envelope,
     _optional_canonical_period,
     _state,
     _tx_repo,
@@ -161,7 +160,7 @@ def ledger_llm_diagnostics(
     report = build_llm_diagnostics_report(since=since_date, until=until_date, low_confidence_threshold=threshold)
     result = _llm_diagnostics_result(report, since=since_date, until=until_date)
     lines, notices = _llm_diagnostics_lines_and_notices(report)
-    _emit_envelope(ctx, command="ledger.llm_diagnostics", result=result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="ledger.llm_diagnostics", result=result, lines=lines, notices=notices)
 
 
 def _llm_diagnostics_result(
@@ -315,7 +314,7 @@ def ledger_categories(ctx: typer.Context) -> None:
     )
     from ._ledger_payloads import LedgerCategoriesResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.categories",
         result=LedgerCategoriesResult.model_validate(
@@ -484,7 +483,7 @@ def _emit_ledger_check_period(
     ]
     lines.extend(_ledger_check_issue_lines(report))
     lines.extend(link_lines)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.check",
         result=LedgerCheckResult.model_validate(payload),
@@ -521,7 +520,7 @@ def _emit_ledger_check_empty(
         f"ready\t{str(ready).lower()}",
         *link_lines,
     ]
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.check",
         result=LedgerCheckResult.model_validate(payload),
@@ -575,7 +574,7 @@ def _emit_ledger_check_all_periods(
         *(_ledger_check_issue_lines_from_items(aggregated_issues)),
         *link_lines,
     ]
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.check",
         result=LedgerCheckResult.model_validate(payload),
@@ -625,7 +624,7 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
         lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
     from ._ledger_payloads import LedgerPreflightResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.preflight",
         result=LedgerPreflightResult.model_validate(payload),
@@ -650,7 +649,7 @@ def ledger_history(ctx: typer.Context, transaction_id: str, include_split_siblin
     lines.extend(f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches)
     from ._ledger_payloads import LedgerHistoryResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.history",
         result=LedgerHistoryResult.model_validate(
@@ -690,7 +689,7 @@ def ledger_export(
     )
     from ._ledger_payloads import LedgerExportPayload
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.export",
         result=LedgerExportPayload.from_result(result, output_path=str(output)),
@@ -747,7 +746,7 @@ def ledger_list(
     )
     from ._ledger_payloads import LedgerListResult
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.list",
         result=LedgerListResult.model_validate(
@@ -823,7 +822,7 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
         reason = (rejection_notice.context or {}).get("operator_reason", "")
         label = tr("cli.ledger.view.llm_rejected_label")
         lines.append(f"{label}\t{tr('cli.ledger.classify.llm_rejected_label')}" + (f": {reason}" if reason else ""))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.view",
         result=strict_round_trip(LedgerViewResult, result_payload),
@@ -902,7 +901,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
         )
     from ._ledger_payloads import LedgerStatusResult
 
-    _emit_envelope(ctx, command="ledger.status", result=strict_round_trip(LedgerStatusResult, report), lines=lines)
+    emit_envelope(ctx, command="ledger.status", result=strict_round_trip(LedgerStatusResult, report), lines=lines)
 
 
 def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
@@ -922,7 +921,7 @@ def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
     participated_in = _ledger_track_participated_in(
         transaction_id=result.ref.transaction_id, bucket_id=transaction_repository.bucket_id
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.track",
         result=LedgerTrackResult.model_validate(

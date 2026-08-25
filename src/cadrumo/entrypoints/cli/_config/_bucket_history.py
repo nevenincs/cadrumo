@@ -15,7 +15,6 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.time import coerce_utc_aware
 from ....domain.buckets import BucketEvent, BucketEventType
-from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 
 if TYPE_CHECKING:
@@ -76,7 +75,7 @@ def profile_history(
         f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_type.value}\t{e.object_id}\t{e.actor}"
         for e in events
     ]
-    _emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
+    emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
 
 
 def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context | None = None) -> tuple[str, str]:

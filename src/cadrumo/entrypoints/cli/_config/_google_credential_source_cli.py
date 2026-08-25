@@ -67,7 +67,7 @@ from ....adapters.outbound.google import (
     save_credential_source_selection,
 )
 from ....core import GoogleCredentialSourceKind
-from .._common import _emit_envelope
+from .._common import emit_envelope
 from ._google_credential_source_payloads import (
     GoogleCredentialSourceSetResult,
     GoogleCredentialSourceShowResult,
@@ -189,7 +189,7 @@ def google_credential_source_set(
         if impersonation.subject is not None:
             lines.append(f"subject\t{impersonation.subject}")
         lines.append(f"lifetime_s\t{impersonation.lifetime_s}")
-    _emit_envelope(ctx, command="config.google.credential_source.set", result=typed, lines=tuple(lines))
+    emit_envelope(ctx, command="config.google.credential_source.set", result=typed, lines=tuple(lines))
 
 
 def google_credential_source_show(
@@ -235,7 +235,7 @@ def google_credential_source_show(
         if impersonation.subject is not None:
             lines.append(f"subject\t{impersonation.subject}")
         lines.append(f"lifetime_s\t{impersonation.lifetime_s}")
-    _emit_envelope(ctx, command="config.google.credential_source.show", result=typed, lines=tuple(lines))
+    emit_envelope(ctx, command="config.google.credential_source.show", result=typed, lines=tuple(lines))
 
 
 __all__ = ["google_credential_source_set", "google_credential_source_show"]

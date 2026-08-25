@@ -5,7 +5,7 @@ Each command result is a strict
 production-authored CommandSpec as deferred public schema targets for a stable command path
 and wrapped at emit time in
 :class:`SchemaEnvelope` through
-:func:`_emit_envelope`. This file is the CLI-side
+:func:`emit_envelope`. This file is the CLI-side
 projection boundary for :mod:`modelo`: application and domain
 results stay authoritative while these classes expose JSON-safe
 :class:`WorkUnit`,

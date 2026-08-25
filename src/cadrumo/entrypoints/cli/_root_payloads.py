@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for root CLI group callbacks.
 
 The root callbacks are not ordinary leaf commands, but they still emit
-:class:`SchemaEnvelope` documents through :func:`_emit_envelope`. Each class is
+:class:`SchemaEnvelope` documents through :func:`emit_envelope`. Each class is
 a strict :class:`OutputSchema` subclass. Production-authored CommandSpec references it as a deferred public target
 so the JSON-contract and CLI-reference conformance gates can enumerate these
 group-callback surfaces alongside normal command leaves.

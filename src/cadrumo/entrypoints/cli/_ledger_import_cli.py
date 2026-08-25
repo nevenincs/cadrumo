@@ -22,7 +22,7 @@ from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions import TransactionValidationError
-from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _tx_repo
+from ._common import _bad, _optional_canonical_period, _state, _tx_repo, emit_envelope
 from ._ledger_support import _ledger_transaction_validation_no_recovery
 
 if TYPE_CHECKING:
@@ -214,7 +214,7 @@ def ledger_import(
     report = _import_report(result, verbose=verbose, verify=verify)
     from ._ledger_payloads import LedgerImportPayload
 
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.import",
         result=LedgerImportPayload.from_result(result),

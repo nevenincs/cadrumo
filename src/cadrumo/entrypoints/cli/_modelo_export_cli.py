@@ -33,7 +33,7 @@ from ...application.workflow import workflow_state_repository
 from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._common import _emit_envelope, _filing_taxpayer_or_refuse
+from ._common import _filing_taxpayer_or_refuse, emit_envelope
 from ._modelo_behavior_support import resolve_optional_cli_period
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -185,7 +185,7 @@ def modelo_export_verb(
     ) as exc:
         raise bad_parameter_from_error(exc) from exc
     export_result = ModeloExportPayload.from_result(result)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="modelo.export",
         result=export_result,

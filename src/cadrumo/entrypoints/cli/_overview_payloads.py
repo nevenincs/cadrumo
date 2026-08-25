@@ -19,7 +19,7 @@ The nested calendar payloads mirror the JSON form of
 those fragments, plus read models returned by
 :func:`build_overview_status_report`, :func:`build_overview_agenda`,
 :func:`build_overview_backlog`, and :func:`build_overview_explain`, for the
-:class:`SchemaEnvelope` surface through :func:`_emit_envelope`. The application
+:class:`SchemaEnvelope` surface through :func:`emit_envelope`. The application
 overview package remains the source of business semantics; this module only
 documents and validates the transport shape emitted by :mod:`_overview`.
 """

@@ -112,7 +112,7 @@ def work_compare_taxation(
 
     This is an ephemeral operation: no revision is persisted.
     """
-    from ._common import _emit_envelope, activate_subcommand_output_language
+    from ._common import activate_subcommand_output_language, emit_envelope
 
     activate_subcommand_output_language(ctx, output_language)
 
@@ -208,7 +208,7 @@ def work_compare_taxation(
     ]
     if caveat_notice is not None:
         lines.append(f"WARNING\t{comparison.individual_branch_caveat}")
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="modelo.work.compare_taxation",
         result=result,
@@ -246,7 +246,7 @@ def work_history(
         bucket_id=bucket_id,
     )
     history = assemble_work_unit_history(unit.work_unit_id)
-    from ._common import _emit_envelope, resolve_lifecycle_continuation_notice
+    from ._common import emit_envelope, resolve_lifecycle_continuation_notice
     from ._modelo_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
 
     result = WorkHistoryResult(
@@ -286,7 +286,7 @@ def work_history(
         for event in history.events
     )
     next_step = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_history(unit))
-    _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines, notices=[next_step])
+    emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines, notices=[next_step])
 
 
 def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
@@ -416,7 +416,7 @@ def work_amend(
     ) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    from ._common import _emit_envelope
+    from ._common import emit_envelope
     from ._modelo_payloads import WorkAmendResult
 
     result = WorkAmendResult.model_validate(
@@ -435,7 +435,7 @@ def work_amend(
         *_filing_record_lines(record),
     ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
-    _emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -484,7 +484,7 @@ def modelo_history(
             continue
         matches.append(event)
     matches.sort(key=lambda e: e.occurred_at)
-    from ._common import _emit_envelope
+    from ._common import emit_envelope
     from ._modelo_payloads import ModeloHistoryResult, ModeloLifecycleEventPayload
 
     history_result = ModeloHistoryResult(
@@ -508,7 +508,7 @@ def modelo_history(
     lines = [f"modelo\t{modelo}", f"count\t{len(matches)}"]
     for e in matches:
         lines.append(f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_id}\t{e.actor}")
-    _emit_envelope(ctx, command="modelo.history", result=history_result, lines=lines)
+    emit_envelope(ctx, command="modelo.history", result=history_result, lines=lines)
 
 
 __all__ = [

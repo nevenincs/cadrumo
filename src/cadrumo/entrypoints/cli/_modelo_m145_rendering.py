@@ -9,7 +9,7 @@ See Also:
         Typer command group that calls these emitters.
     :mod:`~entrypoints.cli._modelo_payloads_m145`
         Typed payload classes returned by the JSON envelope.
-    :func:`~entrypoints.cli._common._emit_envelope`
+    :func:`~entrypoints.cli._common.emit_envelope`
         Shared CLI output path used by each emitter in this module.
     :class:`~application.modelo.M145CommunicationRecord`
         Application record rendered by record mutation emitters.
@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Literal
 
 import typer
 
-from ._common import _emit_envelope
+from ._common import emit_envelope
 from ._modelo_payloads_m145 import (
     M145CommunicationExportResultPayload,
     M145CommunicationRecordPayload,
@@ -92,7 +92,7 @@ def emit_m145_record_result(
     record: M145CommunicationRecord,
 ) -> None:
     """Emit one communication record mutation through the central envelope."""
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command=operation,
         result=m145_record_result_payload(operation=operation, record=record),
@@ -126,7 +126,7 @@ def emit_m145_validation_result(
     result: M145CommunicationValidationResult,
 ) -> None:
     """Emit one validation result through the central envelope."""
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="modelo.m145.validate",
         result=m145_validation_result_payload(result),
@@ -165,7 +165,7 @@ def emit_m145_export_result(
 ) -> None:
     """Emit one export result through the central envelope."""
     payload = m145_export_result_payload(result)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="modelo.m145.export",
         result=payload,

@@ -11,7 +11,7 @@ ledger access, :class:`InvoiceCatalogue` and
 :class:`TaxpayerProfile` for deadline and period
 calculations.
 
-The output boundary is :func:`_emit_envelope`. It routes every JSON result
+The output boundary is :func:`emit_envelope`. It routes every JSON result
 through :class:`SchemaEnvelope`, requires a graph-declared result schema, and
 carries typed :class:`Notice` diagnostics while preserving the text line
 iterator unchanged.
@@ -121,7 +121,7 @@ def case_insensitive_choice(enum_class: type[StrEnum]) -> typer_click_types.Para
 # inside the helpers that use them at runtime. A module-level import
 # would pull the application layer — and transitively the registry
 # parse — into every consumer of this transport module, including the
-# ``aeat --version`` / ``aeat --help`` fast paths that import ``_emit_envelope``
+# ``aeat --version`` / ``aeat --help`` fast paths that import ``emit_envelope``
 # but never reach a registry-backed helper. ``from __future__ import
 # annotations`` keeps the type annotations valid as strings without a
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
@@ -562,7 +562,7 @@ def emit_progress_line(line: str) -> None:
     working, so those lines reach stdout before the closing envelope exists.
     They are operator-facing success output all the same, and they are rendered
     here by :func:`~cadrumo.core.output_rendering.render_command_output` — the
-    very renderer :func:`_emit_envelope` uses for its text arm. The streamed
+    very renderer :func:`emit_envelope` uses for its text arm. The streamed
     channel therefore applies the same line-oriented CLI redaction and consults
     the same
     :func:`~cadrumo.core.output_rendering.reveal_cli_identifiers_opt_in`
@@ -674,7 +674,7 @@ def notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     """Render envelope notices as the matching machine-parsable text lines.
 
     Text mode receives no ``notices`` channel of its own, so a command that
-    passes notices to :func:`_emit_envelope` and does not fold the same values
+    passes notices to :func:`emit_envelope` and does not fold the same values
     into its ``lines`` emits a diagnostic in JSON that is simply absent from the
     terminal. Rebuilding the line from the notice itself is what stops the two
     surfaces drifting: the code and the message are the notice's, never a second
@@ -688,7 +688,7 @@ def notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     return tuple(f"notice\t{notice.code}\t{notice.message}" for notice in notices)
 
 
-def _emit_envelope(
+def emit_envelope(
     ctx: typer.Context,
     *,
     command: str,
@@ -782,9 +782,6 @@ def _emit_envelope(
         if sandbox_notice is not None:
             rendered_lines = (sandbox_banner_line(sandbox_notice), *rendered_lines)
     _render_and_echo(format_name=output_format.value, payload=result, lines=rendered_lines)
-
-
-emit_envelope = _emit_envelope
 
 
 def resolve_notice_action(

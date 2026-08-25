@@ -6,7 +6,6 @@ import typer
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from .._common import _emit_envelope, resolve_cli_precondition_action
 from .._common import activate_subcommand_output_language as _activate_output_language
 
 
@@ -50,7 +49,7 @@ def config_status(
             configured=False,
             precondition_action=health_action,
         )
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="config.profile.status",
             result=result,
@@ -64,7 +63,7 @@ def config_status(
             configured=False,
             precondition_action=health_action,
         )
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="config.profile.status",
             result=result,
@@ -83,7 +82,7 @@ def config_status(
             profile_record_error=profile_health.profile_record_error,
             precondition_action=health_action,
         )
-        _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
+        emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         raise typer.Exit(code=2)
     record = workflow_state_repository().load().active_profile_record()
     if record is None:
@@ -93,7 +92,7 @@ def config_status(
             profile_record_error=None,
             precondition_action=health_action,
         )
-        _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
+        emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         raise typer.Exit(code=2)
     values = record_to_path_values(record)
     if profile_health.status == "incomplete":
@@ -104,7 +103,7 @@ def config_status(
             precondition_action=health_action,
             missing_required=profile_health.missing_required,
         )
-        _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
+        emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         return
     from ....application.modelo import modelo_work_profile_baseline_missing_paths
 
@@ -116,7 +115,7 @@ def config_status(
             precondition_action=None,
         )
         lines = (tr("cli.config.status.empty_profile"),) if active_profile is None else blocked_lines
-        _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
+        emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         return
     try:
         projection = project_answers(get_setup_flow(), values)
@@ -129,7 +128,7 @@ def config_status(
             activity_present=bool(values.get("activities.description")),
             configured=False,
         )
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="config.profile.status",
             result=result,
@@ -145,7 +144,7 @@ def config_status(
         iva_regime=values.get("iva.regime", ""),
         tax_residence_ccaa=values.get("tax_residence.ccaa", ""),
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.profile.status",
         result=result,

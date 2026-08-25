@@ -314,7 +314,7 @@ def test_a_divergence_whose_values_are_masked_says_so() -> None:
 def test_every_notice_reaches_the_plain_text_output() -> None:
     """A diagnostic the envelope carries must also render for an operator not using JSON.
 
-    ``_emit_envelope`` renders ``notices`` only in JSON mode, so a notice
+    ``emit_envelope`` renders ``notices`` only in JSON mode, so a notice
     left off ``lines`` is visible to automation and invisible to the
     person running the verb. The warning that AEAT disagrees with them is
     the last thing that should be machine-only. Both renderings are built

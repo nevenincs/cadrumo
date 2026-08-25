@@ -14,7 +14,7 @@ from ...core import Period, PeriodError
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import ProfileNotFoundError
-from ._common import _emit_envelope, _no_active_profile_refusal, resolve_cli_precondition_action
+from ._common import _no_active_profile_refusal, emit_envelope, resolve_cli_precondition_action
 from ._errors import CliRefusedBoundaryError
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
@@ -46,7 +46,7 @@ def modelo_readiness(
         revision_id=revision_id,
         filing_year=filing_year,
     )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="modelo.readiness",
         result=readiness_result,

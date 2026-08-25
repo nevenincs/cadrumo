@@ -29,7 +29,7 @@ from ...core.external_constants import RETENCIONES_MODELOS
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import WithholdingClaveBreakdown, aggregate_withholding_by_clave
-from ._common import _emit_envelope, _load_invoices
+from ._common import _load_invoices, emit_envelope
 from ._modelo_behavior_support import resolve_year_period
 from ._modelo_payloads import ModeloAggregateResult
 
@@ -195,4 +195,4 @@ def aggregate_modelo(
     aggregate_result = ModeloAggregateResult.from_aggregation_result(result, clave_breakdown=clave_breakdown)
     notices = [_invoice_retencion_excluded_notice(projection) for projection in excluded_invoice_retencions]
     lines = _aggregate_output_lines(result, clave_breakdown=clave_breakdown, notices=notices)
-    _emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines, notices=notices)
+    emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines, notices=notices)

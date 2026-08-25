@@ -4,7 +4,7 @@ The pull/list/view/latest verbs route AEAT declaration-register captures through
 :func:`capture_expedientes`, :func:`capture_expedientes_bulk`, and
 :class:`ExpedientesService`, then emit :class:`ExpedientesCaptureResult`,
 :class:`ExpedientesListResult`, :class:`ExpedientesViewResult`, or
-:class:`ExpedientesLatestResult` through :func:`_emit_envelope`.
+:class:`ExpedientesLatestResult` through :func:`emit_envelope`.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import typer
 
 from ...application.live import capture_expedientes_bulk
 from ._app_live_auth_preflight import _emit_live_auth_preflight, _metric_line
-from ._common import _emit_envelope, active_bucket_id_or_refuse, resolve_pull_year_range
+from ._common import active_bucket_id_or_refuse, emit_envelope, resolve_pull_year_range
 
 
 def _bucket_id() -> str:
@@ -86,7 +86,7 @@ def expedientes_pull(
             f"declaration_count\t{len(persisted.declarations)}",
             f"source_url\t{persisted.source_url}",
         ]
-        _emit_envelope(ctx, command="app.live.expedientes.pull", result=result, lines=lines)
+        emit_envelope(ctx, command="app.live.expedientes.pull", result=result, lines=lines)
         return
 
     resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
@@ -135,7 +135,7 @@ def expedientes_pull(
             for failure in report.failures
         ],
     )
-    _emit_envelope(ctx, command="app.live.expedientes.pull", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.expedientes.pull", result=result, lines=lines)
 
 
 def expedientes_list(ctx: typer.Context) -> None:
@@ -158,7 +158,7 @@ def expedientes_list(ctx: typer.Context) -> None:
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for row in rows:
         lines.append(f"{row.snapshot_id}\t{row.captured_at.isoformat()}\tdeclarations={len(row.declarations)}")
-    _emit_envelope(ctx, command="app.live.expedientes.list", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.expedientes.list", result=result, lines=lines)
 
 
 def expedientes_show(
@@ -216,7 +216,7 @@ def expedientes_show(
             f"{declaration.expediente_id}\t{declaration.modelo}\t{declaration.ejercicio}\t"
             f"{declaration.period}\t{declaration.estado}\t{declaration.presented_at.isoformat()}",
         )
-    _emit_envelope(ctx, command="app.live.expedientes.view", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.expedientes.view", result=result, lines=lines)
 
 
 def expedientes_latest(ctx: typer.Context) -> None:
@@ -233,7 +233,7 @@ def expedientes_latest(ctx: typer.Context) -> None:
     record = ExpedientesService().latest(bucket_id=bucket_id)
     if record is None:
         empty = ExpedientesLatestResult(bucket_id=bucket_id, snapshot_id=None)
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="app.live.expedientes.latest",
             result=empty,
@@ -253,7 +253,7 @@ def expedientes_latest(ctx: typer.Context) -> None:
         f"captured_at\t{record.captured_at.isoformat()}",
         f"declaration_count\t{len(record.declarations)}",
     ]
-    _emit_envelope(ctx, command="app.live.expedientes.latest", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.expedientes.latest", result=result, lines=lines)
 
 
 __all__ = ["expedientes_latest", "expedientes_list", "expedientes_pull", "expedientes_show"]

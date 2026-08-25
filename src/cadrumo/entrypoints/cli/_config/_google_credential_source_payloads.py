@@ -3,7 +3,7 @@
 Each class declared here is a strict :class:`OutputSchema` subclass and a
 deferred public schema target referenced by production-authored CommandSpec so the JSON-contract test suite can
 enumerate the credential-source command surface. Validated results enter
-:class:`SchemaEnvelope` through :func:`_emit_envelope`.
+:class:`SchemaEnvelope` through :func:`emit_envelope`.
 
 See Also:
     :mod:`_google_credential_source_cli`

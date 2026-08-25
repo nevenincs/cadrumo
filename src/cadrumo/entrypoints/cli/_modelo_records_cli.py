@@ -38,7 +38,7 @@ from ...core import CasillaId, Period, PeriodError, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr
 from ...domain.modelos import ExternalEvidenceKind, ModeloCode, ModeloValidationError
-from ._common import _declared_tax_id, _emit_envelope
+from ._common import _declared_tax_id, emit_envelope
 from ._modelo_cli_support import (
     bad_parameter_from_error,
     parse_casilla_override,
@@ -142,7 +142,7 @@ def filing_record_list(
         )
         for record in records
     )
-    _emit_envelope(ctx, command="modelo.filing_record.list", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.filing_record.list", result=result, lines=lines)
 
 
 def filing_record_show(ctx: typer.Context, filing_record_id: str) -> None:
@@ -153,7 +153,7 @@ def filing_record_show(ctx: typer.Context, filing_record_id: str) -> None:
         raise _bad_from_error(exc) from exc
     result = ModeloRecordShowResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
     lines = ["operation\tmodelo.filing_record.show", *filing_record_lines(record)]
-    _emit_envelope(ctx, command="modelo.filing_record.view", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.filing_record.view", result=result, lines=lines)
 
 
 def filing_record_import(
@@ -231,7 +231,7 @@ def filing_record_import(
         *filing_record_lines(record),
     ]
     lines.append("filing_disambiguation\t(imported AEAT-attested baseline)")
-    _emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines)
 
 
 def filing_record_observe_local(
@@ -329,7 +329,7 @@ def filing_record_observe_local(
     ]
     lines.extend((f"{casilla_id}\t{value}" for casilla_id, value in sorted(local_observation.casilla_values.items())))
     lines.append(f"WARNING\t{notice_message}")
-    _emit_envelope(ctx, command="modelo.filing_record.observe_local", result=result, lines=lines, notices=[notice])
+    emit_envelope(ctx, command="modelo.filing_record.observe_local", result=result, lines=lines, notices=[notice])
 
 
 def verification_report_list(ctx: typer.Context, calculation_revision_id: str | None = None) -> None:
@@ -365,7 +365,7 @@ def verification_report_list(ctx: typer.Context, calculation_revision_id: str | 
         )
         for r in reports
     )
-    _emit_envelope(ctx, command="modelo.verification_report.list", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.verification_report.list", result=result, lines=lines)
 
 
 def verification_report_show(ctx: typer.Context, verification_report_id: str) -> None:
@@ -385,4 +385,4 @@ def verification_report_show(ctx: typer.Context, verification_report_id: str) ->
         raise _bad_from_error(exc) from exc
     result = VerificationReportShowResult.model_validate(verification_report_payload(report).model_dump(mode="python"))
     lines = ["operation\tmodelo.verification_report.show", *verification_report_lines(report)]
-    _emit_envelope(ctx, command="modelo.verification_report.view", result=result, lines=lines)
+    emit_envelope(ctx, command="modelo.verification_report.view", result=result, lines=lines)

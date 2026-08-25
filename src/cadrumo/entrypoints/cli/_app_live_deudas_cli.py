@@ -3,7 +3,7 @@
 The list/view/latest verbs read persisted AEAT debts snapshots through
 :class:`DeudasService` and emit :class:`DeudasListResult`,
 :class:`DeudasViewResult` or :class:`DeudasLatestResult` through
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 
 There is deliberately NO ``pull`` verb here. Fetching the debts consulta needs
 an operator-authorised specimen of that AEAT page, and the adapter's
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import typer
 
-from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._common import active_bucket_id_or_refuse, emit_envelope
 
 
 def _bucket_id() -> str:
@@ -54,7 +54,7 @@ def deudas_list(ctx: typer.Context) -> None:
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     lines.extend(f"{row.snapshot_id}\t{row.captured_at.isoformat()}\tdeudas={len(row.deudas)}" for row in rows)
-    _emit_envelope(ctx, command="app.live.deudas.list", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.deudas.list", result=result, lines=lines)
 
 
 def deudas_view(
@@ -107,7 +107,7 @@ def deudas_view(
         f"{deuda.situacion}"
         for deuda in record.deudas
     )
-    _emit_envelope(ctx, command="app.live.deudas.view", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.deudas.view", result=result, lines=lines)
 
 
 def deudas_latest(ctx: typer.Context) -> None:
@@ -124,7 +124,7 @@ def deudas_latest(ctx: typer.Context) -> None:
     record = DeudasService().latest(bucket_id=bucket_id)
     if record is None:
         empty = DeudasLatestResult(bucket_id=bucket_id, snapshot_id=None)
-        _emit_envelope(
+        emit_envelope(
             ctx,
             command="app.live.deudas.latest",
             result=empty,
@@ -144,7 +144,7 @@ def deudas_latest(ctx: typer.Context) -> None:
         f"captured_at\t{record.captured_at.isoformat()}",
         f"deuda_count\t{len(record.deudas)}",
     ]
-    _emit_envelope(ctx, command="app.live.deudas.latest", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.deudas.latest", result=result, lines=lines)
 
 
 __all__ = ["deudas_latest", "deudas_list", "deudas_view"]

@@ -7,7 +7,7 @@ size budget. These nested branch payloads share the graph-declared
 :class:`LedgerClassifySingleResult`
 ``ledger.classify`` command key, and validated instances enter
 :class:`SchemaEnvelope` through
-:func:`_emit_envelope`. They are imported directly
+:func:`emit_envelope`. They are imported directly
 by :mod:`._ledger_llm_cli` rather than re-exported from the
 parent payload module.
 

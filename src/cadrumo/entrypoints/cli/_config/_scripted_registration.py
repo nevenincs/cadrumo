@@ -36,7 +36,7 @@ from pydantic import SecretStr
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope
+from .._common import emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._secure_input import MachineSecretPayload
 
@@ -300,10 +300,10 @@ def register_profile_from_scripted_invocation(
             message=tr("cli.config.profile.create_recovery_enrolled"),
         ),
     )
-    _emit_envelope(
+    emit_envelope(
         # CAST-RATIONALE-TYPER-CLICK-CONTEXT: ctx is the vendored
         # typer._click.core.Context this package accepts at its boundary;
-        # _emit_envelope's signature names the public typer.Context alias
+        # emit_envelope's signature names the public typer.Context alias
         # for the same runtime object.
         cast(typer.Context, ctx),
         command="config.profile.create",

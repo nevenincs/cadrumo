@@ -12,7 +12,7 @@ and CommandSpec-declared JSON payload fragments. The payload side feeds
 :class:`~cadrumo.entrypoints.cli._modelo_payloads.ModeloRecordPayload`,
 :class:`~cadrumo.entrypoints.cli._modelo_payloads.VerificationReportPayload`,
 and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
-:func:`~cadrumo.entrypoints.cli._common._emit_envelope`.
+:func:`~cadrumo.entrypoints.cli._common.emit_envelope`.
 """
 
 from __future__ import annotations

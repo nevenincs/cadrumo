@@ -14,7 +14,7 @@ import typer
 
 from ...core.i18n import tr
 from ...domain.portals import PortalCategory, PortalRegistryError
-from ._common import _emit_envelope
+from ._common import emit_envelope
 
 
 class _PortalRow(TypedDict):
@@ -101,7 +101,7 @@ def portals_list(
     lines = [f"count\t{len(rows)}"]
     for row in rows:
         lines.append(f"{row['portal']}\t{row['category']}\t{row['url_stability']}\t{row['label']}")
-    _emit_envelope(ctx, command="app.live.portals.list", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.portals.list", result=result, lines=lines)
 
 
 def portals_show(
@@ -124,7 +124,7 @@ def portals_show(
 
     result = PortalsViewResult(**payload)
     lines = [f"{key}\t{value}" for key, value in payload.items() if value != ""]
-    _emit_envelope(ctx, command="app.live.portals.view", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.portals.view", result=result, lines=lines)
 
 
 __all__ = ["portals_list", "portals_show"]

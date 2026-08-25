@@ -14,7 +14,7 @@ import typer
 
 from ...core import Modelo, Period, PeriodError
 from ._app_live_auth_preflight import _emit_live_auth_preflight
-from ._common import _emit_envelope, active_bucket_id_or_refuse
+from ._common import active_bucket_id_or_refuse, emit_envelope
 
 
 def _bucket_id() -> str:
@@ -96,7 +96,7 @@ def justificante_pull(
             f"aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_live_capture "
             f"--evidence-id {persisted.csv} --set CASILLA=VALUE",
         )
-    _emit_envelope(ctx, command="app.live.justificante.pull", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.justificante.pull", result=result, lines=lines)
 
 
 def justificante_list(ctx: typer.Context) -> None:
@@ -132,7 +132,7 @@ def justificante_list(ctx: typer.Context) -> None:
             f"{row.snapshot_id}\t{row.modelo}\t{row.filing_year}\t{row.period.registry_token}"
             f"\t{row.captured_at.isoformat()}"
         )
-    _emit_envelope(ctx, command="app.live.justificante.list", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.justificante.list", result=result, lines=lines)
 
 
 def justificante_view(
@@ -174,7 +174,7 @@ def justificante_view(
         f"state\t{record.state.value}",
         f"captured_at\t{record.captured_at.isoformat()}",
     ]
-    _emit_envelope(ctx, command="app.live.justificante.view", result=result, lines=lines)
+    emit_envelope(ctx, command="app.live.justificante.view", result=result, lines=lines)
 
 
 __all__ = ["justificante_list", "justificante_pull", "justificante_view"]

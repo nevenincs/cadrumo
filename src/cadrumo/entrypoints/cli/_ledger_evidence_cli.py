@@ -29,7 +29,6 @@ from ...domain.iva import InvoiceKind, SupplyNature
 from ...llm import EvidenceConsentToken, LLMProvider, mint_evidence_consent_token
 from ._common import (
     _bad,
-    _emit_envelope,
     _parse_iso_date,
     _parse_optional_iso_date_str,
     _state,
@@ -95,7 +94,7 @@ def attachment_queue(ctx: typer.Context) -> None:
     bucket_id = _tx_repo(_state()).bucket_id
     rows = list_attachment_review_queue(_attachment_store(bucket_id))
     payloads = [_attachment_review_payload(row) for row in rows]
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.evidence.attachment_queue",
         result=AttachmentReviewQueueResult.model_validate(
@@ -110,7 +109,7 @@ def attachment_view(ctx: typer.Context, attachment_id: str) -> None:
     bucket_id = _tx_repo(_state()).bucket_id
     item = get_attachment_review_item(_attachment_store(bucket_id), attachment_id)
     payload = {"bucket_id": bucket_id, **_attachment_review_payload(item)}
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.evidence.attachment_view",
         result=AttachmentReviewViewResult.model_validate(payload),
@@ -146,14 +145,14 @@ def evidence_add(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _evidence_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit_envelope(ctx, command="ledger.evidence.add", result=EvidenceAddResult.model_validate(payload), lines=lines)
+    emit_envelope(ctx, command="ledger.evidence.add", result=EvidenceAddResult.model_validate(payload), lines=lines)
 
 
 def evidence_view(ctx: typer.Context, evidence_id: str) -> None:
     """Show one purchase invoice evidence record by id."""
     transaction_repository = _tx_repo(_state())
     record = _evidence_service().view(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.evidence.view",
         result=EvidenceViewResult.model_validate(_evidence_payload(record)),
@@ -179,7 +178,7 @@ def evidence_list(ctx: typer.Context) -> None:
             f"{data.get('invoice_date') or '-'}\t{data.get('taxable_base') or '-'}\t"
             f"{data.get('notes') or '-'}"
         )
-    _emit_envelope(ctx, command="ledger.evidence.list", result=EvidenceListResult.model_validate(payload), lines=lines)
+    emit_envelope(ctx, command="ledger.evidence.list", result=EvidenceListResult.model_validate(payload), lines=lines)
 
 
 def evidence_update(
@@ -211,7 +210,7 @@ def evidence_update(
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _evidence_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit_envelope(
+    emit_envelope(
         ctx, command="ledger.evidence.update", result=EvidenceUpdateResult.model_validate(payload), lines=lines
     )
 
@@ -226,7 +225,7 @@ def evidence_remove(ctx: typer.Context, evidence_id: str, yes: bool = False) -> 
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     lines = _evidence_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
-    _emit_envelope(
+    emit_envelope(
         ctx, command="ledger.evidence.remove", result=EvidenceRemoveResult.model_validate(payload), lines=lines
     )
 
@@ -391,7 +390,7 @@ def evidence_extract(
         )
     ]
     notices.extend(field_degradation_notices(draft.provenance))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.evidence.extract",
         result=EvidenceExtractResult.model_validate(payload),
@@ -607,7 +606,7 @@ def _run_evidence_confirm(
     # by nobody before this line.
     notices.extend(confirm_resolution_notices(result.establishment))
     lines.extend(confirm_resolution_lines(result.establishment))
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="ledger.evidence.confirm",
         result=EvidenceConfirmResult.model_validate(payload),

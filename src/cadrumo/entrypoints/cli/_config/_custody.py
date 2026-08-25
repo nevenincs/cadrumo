@@ -10,7 +10,6 @@ from pydantic import SecretStr
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
-from .._common import _emit_envelope, active_profile_label
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 
 if TYPE_CHECKING:
@@ -245,7 +244,7 @@ def config_login(
         closed_previous_profile=outcome.closed_previous_bucket_id,
     )
     notices = _login_notices(outcome)
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.login",
         result=result,
@@ -287,7 +286,7 @@ def config_logout(
                 message=tr("cli.config.logout.notices.already_logged_out"),
             ),
         )
-    _emit_envelope(
+    emit_envelope(
         ctx,
         command="config.logout",
         result=result,

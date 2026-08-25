@@ -6,7 +6,7 @@ target by production-authored CommandSpec so the
 JSON-contract test suite can enumerate every ledger-command surface this module
 covers.  Emission wraps the validated result in
 :class:`SchemaEnvelope` through
-:func:`_emit_envelope`.
+:func:`emit_envelope`.
 
 Field sets match the production payload dicts constructed in ``_ledger.py``
 at their emit sites. Optional fields cover multi-branch payload shapes
