@@ -47,11 +47,13 @@ class ProfileCapsuleLifecycle:
     """
 
     def __init__(self, *, root: Path | None = None) -> None:
+        """Initialize lifecycle actions rooted at the optional storage path."""
         self._profiles = CommittedProfileRepository(root=root)
         self._transactions = _ProfileCustodyTransactionCapability(root=self._profiles.root)
 
     @property
     def root(self) -> Path:
+        """Return the committed profile storage root."""
         return self._profiles.root
 
     def create(
@@ -66,6 +68,7 @@ class ProfileCapsuleLifecycle:
         recovery_envelope: ProfileCustodyRecoveryEnvelopePort,
         profile_id: UUID | None = None,
     ) -> CommittedProfileView:
+        """Create and publish a new profile capsule."""
         identity = profile_id or uuid4()
         if recovery_envelope is None:
             raise ValueError("profile lifecycle create requires creation recovery material")
@@ -201,6 +204,7 @@ class ProfileCapsuleLifecycle:
             ) from exc
 
     def select(self, value: str) -> CommittedProfileView:
+        """Select an existing profile as active."""
         aggregate = self._profiles.resolve(value)
         with active_profile_pointer_transaction(self.root) as pointer:
             pointer.select(aggregate.profile_id)
@@ -227,12 +231,15 @@ class ProfileCapsuleLifecycle:
         )
 
     def confirm_delete(self, journal: ProfileCustodyTransactionJournal) -> ProfileCustodyDeleteConfirmation:
+        """Bind a deletion confirmation to a prepared journal."""
         return self._transactions.confirmation_for(journal)
 
     def delete(self, confirmation: ProfileCustodyDeleteConfirmation) -> ProfileCustodyTransactionReceipt:
+        """Execute a confirmed profile deletion."""
         return self._transactions.execute_delete(confirmation)
 
     def recover_create(self, transaction_id: UUID) -> ProfileCustodyTransactionReceipt | None:
+        """Recover a previously interrupted profile creation."""
         return self._transactions.recover_create(transaction_id)
 
 
