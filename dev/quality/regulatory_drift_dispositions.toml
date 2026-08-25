@@ -411,7 +411,7 @@ carries.
 # surrounding code is Decimal-typed, not because the law fixes it.
 
 [[decision]]
-path = "src/cadrumo/application/ledger/invoice_extraction_authority.py"
+path = "src/cadrumo/application/ledger/_invoice_extraction_authority.py"
 enclosing_symbol = "<module>"
 disposition = "not_regulatory"
 rationale = "The percent scale divisor 100, used to render a fraction as a percentage. A pure mathematical constant, which the authority-flow rule names as an acceptable exception."
@@ -542,17 +542,17 @@ kind = "design_prose_grammar"
 group = "production-aeat-text-parsers"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/auth/authenticator_persistence.py"
+path = "src/cadrumo/adapters/outbound/aeat/auth/_authenticator_persistence.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/auth/clave_movil_metadata.py"
+path = "src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_metadata.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
 [[decision]]
-path = "src/cadrumo/adapters/outbound/aeat/auth/clave_permanente_metadata.py"
+path = "src/cadrumo/adapters/outbound/aeat/auth/_clave_permanente_metadata.py"
 kind = "regulatory_named_constant"
 group = "named-regulatory-constants"
 
@@ -797,17 +797,17 @@ kind = "modelo_conditional_branch"
 group = "modelo-conditional-behaviour"
 
 [[decision]]
-path = "src/cadrumo/application/ledger/llm_diagnostics.py"
+path = "src/cadrumo/application/ledger/_llm_diagnostics.py"
 kind = "decimal_literal"
 group = "decimal-regulatory-literals"
 
 [[decision]]
-path = "src/cadrumo/application/ledger/models.py"
+path = "src/cadrumo/application/ledger/_models.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
 [[decision]]
-path = "src/cadrumo/application/ledger/ratios.py"
+path = "src/cadrumo/application/ledger/_ratios.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
 
@@ -1575,62 +1575,50 @@ group = "decimal-regulatory-literals"
 
 [[decision]]
 path = "dev/packaging/desktop_capture.py"
-enclosing_symbol = "_await_assistant_reply"
 kind = "filing_year_literal"
 disposition = "not_regulatory"
 rationale = """
-A Playwright wait_for_timeout(2000) in MILLISECONDS. The detector reads any
-1900-2100 integer as a candidate filing year; this one is a duration.
+A Playwright wait_for_timeout(2000) in MILLISECONDS. The detector reads any 1900-2100 integer as a candidate filing year; this one is a duration.
 """
 
 [[decision]]
 path = "dev/packaging/smoke_desktop_client.py"
-enclosing_symbol = "_perform"
 kind = "filing_year_literal"
 disposition = "not_regulatory"
 rationale = """
-A reply[:2000] slice bound on a captured transcript excerpt: a string length.
+A reply[:2000] slice bound on a captured transcript excerpt. A string length, not a year.
 """
 
 [[decision]]
 path = "dev/packaging/runtime_wheelhouse.py"
-enclosing_symbol = "<module>"
 kind = "filing_year_literal"
 disposition = "not_regulatory"
 rationale = """
-_ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0), the DOS epoch every deterministic zip
-writer pins so archive bytes are reproducible. A file-format constant.
+_ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0), the DOS epoch every deterministic zip writer pins so archive bytes are reproducible. 1980 is a file-format constant.
 """
 
 [[decision]]
 path = "src/cadrumo/adapters/persistence/storage/_recovery_key.py"
-enclosing_symbol = "encode_mnemonic"
 kind = "filing_year_literal"
 disposition = "not_regulatory"
 rationale = """
-0x7FF -- 2047 -- is the eleven-bit mask that extracts each BIP-39 word index
-from the packed entropy, beside its (shift * 11) companion. A bit mask.
+The BIP-39 wordlist length, 2048, asserted so a truncated wordlist cannot silently weaken recovery-phrase entropy. A cardinality, not a year.
 """
 
 [[decision]]
 path = "dev/source_connectivity/live_proof.py"
-enclosing_symbol = "_execute_fixture"
 kind = "filing_year_literal"
 disposition = "not_regulatory"
 rationale = """
-Fixed datetime(2026, 8, 23, ...) instants pinned so a proof is deterministic.
-A clock coordinate in a fixture, not a filing year.
+Fixed datetime(2026, 8, 23, ...) instants pinned so a proof is deterministic. The year is a clock coordinate in a fixture, not a filing year.
 """
 
 [[decision]]
 path = "src/cadrumo/entrypoints/cli/_app_live_payloads_support.py"
-enclosing_symbol = "_is_a_registry_period_token"
 kind = "filing_year_literal"
 disposition = "not_regulatory"
 rationale = """
-Period.from_year_and_code(2000, value) validates a bare period TOKEN through the
-canonical grammar. The year argument is a sentinel; any valid year would serve,
-and nothing regulatory is pinned by it.
+Period.from_year_and_code(2000, value) validates a bare period TOKEN through the canonical grammar; the year argument is a sentinel and any valid year would serve. Nothing regulatory is pinned by it.
 """
 
 [[decision]]
@@ -1732,115 +1720,3 @@ group = "python-resident-filing-years"
 path = "src/cadrumo/entrypoints/tui/devtools/modelo_work_wizard.py"
 kind = "filing_year_literal"
 group = "python-resident-filing-years"
-
-# -- remaining census backlog adjudicated 2026-08-25 -----------------------
-
-[[decision]]
-path = "dev/registry/analysis/transcribe_structural_family_dispositions.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/aggregation/_inventory.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/filing/_envelope_modelo_policy.py"
-kind = "modelo_keyed_mapping_entry"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/filing/_export_parity.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/filing/_projection.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/filing/_record_field_renderer.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/modelo/_work_plazo.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/registry/source_connectivity.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/application/user_profile/preflight.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/_deadline_coordinate.py"
-kind = "modelo_conditional_branch"
-group = "registry-modelo-specific"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/_gasto193_bindings.py"
-kind = "regulatory_named_constant"
-group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/_record_design.py"
-kind = "design_prose_grammar"
-group = "production-aeat-text-parsers"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/_record_design_schema.py"
-kind = "design_prose_grammar"
-group = "production-aeat-text-parsers"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/_record_design_schema.py"
-kind = "modelo_conditional_branch"
-group = "registry-modelo-specific"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/_supplementary_orden.py"
-kind = "modelo_keyed_mapping_entry"
-group = "registry-modelo-specific"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py"
-kind = "design_prose_grammar"
-group = "production-aeat-text-parsers"
-
-[[decision]]
-path = "src/cadrumo/domain/calculations/registry/_withholding296_bindings.py"
-kind = "regulatory_named_constant"
-group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/domain/deadlines/_plazo.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_app_live_iva_wallet_command_specs.py"
-kind = "regulatory_named_constant"
-group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py"
-kind = "modelo_conditional_branch"
-group = "modelo-conditional-behaviour"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/cli/_modelo_nonwork_iva_wallet_command_specs.py"
-kind = "regulatory_named_constant"
-group = "named-regulatory-constants"
-
-[[decision]]
-path = "src/cadrumo/entrypoints/tui/devtools/modelo_work_wizard.py"
-kind = "regulatory_named_constant"
-group = "named-regulatory-constants"
