@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from .....core import scan_directory
-from .._errors import RegistryLoadError, RegistryValidationError
+from .._errors import RegistryFailureCondition, RegistryLoadError, RegistryValidationError
 from .._loader import (
     ModeloSource,
     clear_fingerprint_cache,
@@ -631,7 +631,13 @@ def test_registry_tree_cache_invalidates_when_single_file_becomes_directory_insi
 
     registry_root = tmp_path / "registry" / "aeat"
     modelos_dir = registry_root / "modelos"
-    (registry_root / "legal").mkdir(parents=True)
+    legal_dir = registry_root / "legal"
+    legal_dir.mkdir(parents=True)
+    (legal_dir / "supported-filing-years.toml").write_text(
+        "[supported_filing_years]\nyears = [2025]\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     modelos_dir.mkdir()
 
     single_file = modelos_dir / "999.toml"
@@ -643,9 +649,11 @@ def test_registry_tree_cache_invalidates_when_single_file_becomes_directory_insi
     )
 
     clear_fingerprint_cache()
-    first_modelos, _first_catalogues = load_registry_tree(registry_root)
+    first_modelos, first_catalogues = load_registry_tree(registry_root)
     first_by_id = {modelo.id: modelo for modelo in first_modelos}
     assert first_by_id["999"].revisions["2025"].source_refs == ("cache-before",)
+    assert first_catalogues.supported_filing_years is not None
+    assert first_catalogues.supported_filing_years.years == (2025,)
 
     single_file.unlink()
     fragmented = modelos_dir / "999"
@@ -686,7 +694,15 @@ def test_stale_discovered_single_file_reports_typed_disappearance(tmp_path: Path
 
     message = str(exc_info.value)
     assert str(source_path) in message
-    assert "retry after concurrent registry writes settle" in message
+    failure = exc_info.value.registry_failure
+    assert failure is not None
+    assert failure.condition is RegistryFailureCondition.TREE_QUIESCENT
+    assert failure.facts == {
+        "path": str(source_path),
+        "registry_tree_quiescent": False,
+        "operation": "toml_stat",
+    }
+    assert "retry after concurrent registry writes settle" not in message
 
 
 def test_stable_malformed_modelo_toml_remains_invalid_registry_data(tmp_path: Path) -> None:

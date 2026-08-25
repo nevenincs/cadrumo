@@ -361,7 +361,6 @@ __all__ = [
     "assert_schema_coverage",
     "attempt_registration",
     "build_active_profile_overview",
-    "build_active_profile_overview",
     "build_verb_input_schemas",
     "calculation_revision_lines",
     "calculation_revision_payload",

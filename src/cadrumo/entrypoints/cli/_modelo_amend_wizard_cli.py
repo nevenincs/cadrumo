@@ -93,7 +93,7 @@ from ...domain.modelos import (
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
 )
-from ...entrypoints.tui.flows.select import select_flow_frontend
+from ...entrypoints.tui.flows.app import select_flow_frontend
 from ._common import activate_subcommand_output_language
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli

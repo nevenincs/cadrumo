@@ -9,10 +9,12 @@ produces :class:`RegistrySnapshot` instances on demand for each filing context.
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from contextlib import AbstractContextManager
+from dataclasses import dataclass, field
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
+from threading import RLock
 
 from .... import __version__
 from ....core import RegistryAuthorityGrade
@@ -77,6 +79,36 @@ _RegistryFingerprints = tuple[tuple[str, int, int, str], ...]
 _SourceEvidenceFingerprints = tuple[tuple[str, int, int], ...]
 
 
+_AUTHORITY_CAPTURE_LOCK = RLock()
+_authority_generation = 0
+_authority_reset_epoch = 0
+
+
+def _allocate_authority_generation() -> tuple[int, int]:
+    """Allocate one non-reusable process-local generation for a new authority."""
+    global _authority_generation
+    _authority_generation += 1
+    return _authority_generation, _authority_reset_epoch
+
+
+def _invalidate_authority_generations() -> None:
+    """Invalidate every extant capture coordinate after a registry-cache reset."""
+    global _authority_generation, _authority_reset_epoch
+    _authority_generation += 1
+    _authority_reset_epoch += 1
+
+
+type RegistryAuthorityProjection = RegistryRevisionInspection | RegistrySnapshot
+
+
+@dataclass(frozen=True, slots=True)
+class RegistryAuthorityCapture:
+    """One isolated law-selected registry projection with its native generation."""
+
+    projection: RegistryAuthorityProjection
+    generation: int
+
+
 @dataclass(frozen=True, slots=True, eq=False)
 class _FingerprintKey[T]:
     """Cache key that hashes on a digest while still carrying its fingerprints.
@@ -102,8 +134,8 @@ def _fingerprint_key[T: tuple[tuple[object, ...], ...]](fingerprints: T) -> _Fin
     """Digest one fingerprint tuple set into an O(1)-hashable cache key."""
     digest = hashlib.sha256()
     for entry in fingerprints:
-        for field in entry:
-            digest.update(str(field).encode("utf-8"))
+        for fingerprint_field in entry:
+            digest.update(str(fingerprint_field).encode("utf-8"))
             digest.update(b"\x1f")
         digest.update(b"\x1e")
     return _FingerprintKey(digest=digest.hexdigest(), fingerprints=fingerprints)
@@ -124,6 +156,14 @@ class ValidatedRegistryAuthority:
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
     _authorization_manifest: AuthorizationManifest
     _supported_filing_year_gaps: tuple[SupportedFilingYearGap, ...]
+    _capture_generation: int = field(init=False, repr=False)
+    _capture_reset_epoch: int = field(init=False, repr=False)
+    _state_lock: AbstractContextManager[object] = field(default_factory=RLock, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        """Bind this authority incarnation to one process-local capture generation."""
+        with _AUTHORITY_CAPTURE_LOCK:
+            self._capture_generation, self._capture_reset_epoch = _allocate_authority_generation()
 
     @classmethod
     def load(cls, root: Path, *, source_root: Path) -> ValidatedRegistryAuthority:
@@ -157,14 +197,15 @@ class ValidatedRegistryAuthority:
         Returns:
             The validated :class:`ModeloDefinition` for ``modelo_id``.
         """
-        modelo = self.modelo(modelo_id)
-        if not self._registry_validated and modelo_id not in self._validated_modelos:
-            try:
-                self._validator.validate_modelo(modelo)
-            finally:
-                flush_corpus_text_cache()
-            self._validated_modelos.add(modelo_id)
-        return modelo
+        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+            modelo = self.modelo(modelo_id)
+            if not self._registry_validated and modelo_id not in self._validated_modelos:
+                try:
+                    self._validator.validate_modelo(modelo)
+                finally:
+                    flush_corpus_text_cache()
+                self._validated_modelos.add(modelo_id)
+            return modelo
 
     def inspect_revision(
         self,
@@ -182,29 +223,31 @@ class ValidatedRegistryAuthority:
         a :class:`RegistrySnapshot`; callers that need filing eligibility must
         use :meth:`snapshot` instead.
         """
-        self.validate_registry()
-        modelo = self.modelo(modelo_id)
-        revision = select_revision(modelo, filing_year=filing_year, period=period, on=on)
-        return RegistryRevisionInspection.from_revision(
-            modelo=modelo,
-            revision=revision,
-            source_root=self.source_root,
-            sources=self.catalogues.sources,
-            legal_ref_ids=frozenset(self.catalogues.legal),
-        )
+        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+            self.validate_registry()
+            modelo = self.modelo(modelo_id)
+            revision = select_revision(modelo, filing_year=filing_year, period=period, on=on)
+            return RegistryRevisionInspection.from_revision(
+                modelo=modelo,
+                revision=revision,
+                source_root=self.source_root,
+                sources=self.catalogues.sources,
+                legal_ref_ids=frozenset(self.catalogues.legal),
+            )
 
     def validate_registry(self) -> None:
         """Validate the full registry tree once."""
-        if self._registry_validated:
-            return
-        try:
-            # Corpus-text extraction batches its disk-cache write behind a
-            # dirty flag; one flush per validation run replaces the per-miss
-            # full-file rewrite that was accidentally quadratic.
-            self._validator.validate_registry(self.modelos)
-        finally:
-            flush_corpus_text_cache()
-        self._mark_registry_validated()
+        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+            if self._registry_validated:
+                return
+            try:
+                # Corpus-text extraction batches its disk-cache write behind a
+                # dirty flag; one flush per validation run replaces the per-miss
+                # full-file rewrite that was accidentally quadratic.
+                self._validator.validate_registry(self.modelos)
+            finally:
+                flush_corpus_text_cache()
+            self._mark_registry_validated()
 
     def _mark_registry_validated(self) -> None:
         """Record that the full registry is validated for this instance.
@@ -218,7 +261,8 @@ class ValidatedRegistryAuthority:
 
     def mark_registry_validated(self) -> None:
         """Mark this authority as validated after a certified verdict."""
-        self._mark_registry_validated()
+        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+            self._mark_registry_validated()
 
     @property
     def authorization_manifest(self) -> AuthorizationManifest:
@@ -305,22 +349,79 @@ class ValidatedRegistryAuthority:
         would be served to a caller asking for another, which is precisely the silent
         capability claim the grade exists to prevent.
         """
-        key = (modelo_id, filing_year, period, on, revision_id, grade)
-        cached = self._snapshots.get(key)
-        if cached is not None:
-            return cached
-        modelo = self.validate_modelo(modelo_id)
-        snapshot = _build_validated_snapshot(
-            modelo,
-            self.catalogues,
-            filing_year=filing_year,
-            period=period,
-            on=on,
-            revision_id=revision_id,
-            grade=grade,
-        )
-        self._snapshots[key] = snapshot
-        return snapshot
+        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+            key = (modelo_id, filing_year, period, on, revision_id, grade)
+            cached = self._snapshots.get(key)
+            if cached is not None:
+                return cached
+            modelo = self.validate_modelo(modelo_id)
+            snapshot = _build_validated_snapshot(
+                modelo,
+                self.catalogues,
+                filing_year=filing_year,
+                period=period,
+                on=on,
+                revision_id=revision_id,
+                grade=grade,
+            )
+            self._snapshots[key] = snapshot
+            return snapshot
+
+    def capture_law_selected_projection(
+        self,
+        modelo_id: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        grade: RegistryAuthorityGrade | None = None,
+    ) -> RegistryAuthorityCapture:
+        """Atomically capture a law-selected inspection or grade-admitted snapshot.
+
+        ``grade=None`` deliberately selects the static-inspection authority;
+        supplying a grade selects the existing snapshot admission path.  The
+        returned value is deep-copied so a consumer cannot mutate a cached
+        registry projection after the capture has completed.
+        """
+        with _AUTHORITY_CAPTURE_LOCK, self._state_lock:
+            self._require_current_capture_incarnation()
+            projection = (
+                self.inspect_revision(
+                    modelo_id,
+                    filing_year=filing_year,
+                    period=period,
+                    on=on,
+                )
+                if grade is None
+                else self.snapshot(
+                    modelo_id,
+                    filing_year=filing_year,
+                    period=period,
+                    on=on,
+                    grade=grade,
+                )
+            )
+            return RegistryAuthorityCapture(
+                projection=projection.model_copy(deep=True),
+                generation=self._capture_generation,
+            )
+
+    def read_current_generation(self) -> int:
+        """Return this authority's still-current native capture generation.
+
+        A registry-cache reset invalidates the instance rather than letting an
+        old projection claim the next authority incarnation's generation.
+        """
+        with _AUTHORITY_CAPTURE_LOCK:
+            self._require_current_capture_incarnation()
+            return self._capture_generation
+
+    def _require_current_capture_incarnation(self) -> None:
+        """Refuse native capture after this authority's cache epoch was reset."""
+        if self._capture_reset_epoch != _authority_reset_epoch:
+            raise RegistrySnapshotError(
+                "registry authority capture was invalidated by cache reset; load a current authority"
+            )
 
     def deadline_windows(
         self,
@@ -470,8 +571,10 @@ def _clear_authority_load_caches() -> None:
     state answering for a tree that has since been repaired, which is the exact
     staleness a cache clear exists to remove.
     """
-    _load_validated_authority.cache_clear()
-    _AUTHORITY_LOAD_FAILURES.clear()
+    with _AUTHORITY_CAPTURE_LOCK:
+        _invalidate_authority_generations()
+        _load_validated_authority.cache_clear()
+        _AUTHORITY_LOAD_FAILURES.clear()
 
 
 _load_authority.cache_clear = _clear_authority_load_caches  # type: ignore[attr-defined]
