@@ -318,6 +318,41 @@ class ValidatedRegistryAuthority:
             lifecycle_observer=lifecycle_observer,
         )
 
+    @classmethod
+    def load_for_diagnostic_classification(
+        cls,
+        root: Path,
+        *,
+        source_root: Path,
+    ) -> ValidatedRegistryAuthority:
+        """Compile one current tree for isolated, read-only diagnostic classification.
+
+        This deliberately does *not* certify the registry as a whole.  Each
+        later ``snapshot`` still passes the canonical per-modelo validator, so
+        diagnostic callers can report independent model failures after a
+        different modelo prevents the normal all-or-nothing load.  It is not a
+        runtime authority and cannot stand in for :meth:`load` at a filing,
+        export, or calculation boundary.
+        """
+        resolved_root = root.expanduser().resolve()
+        resolved_source_root = source_root.expanduser().resolve()
+        identity = resolve_registry_identity(
+            resolved_root,
+            collect_fingerprints=collect_registry_identity_fingerprints,
+        )
+        source_evidence_key = _fingerprint_key(collect_source_evidence_fingerprints(resolved_source_root))
+        return _construct_authority(
+            resolved_root,
+            resolved_source_root,
+            source_evidence_key.fingerprints,
+            identity=identity,
+        )
+
+    @property
+    def is_registry_validated(self) -> bool:
+        """Whether this authority has passed whole-registry validation."""
+        return self._registry_validated
+
     def _bind_capture_incarnation(
         self,
         *,
