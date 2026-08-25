@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e10903312c5e1f7a25b0a914d58351a1e5536bce03a188268543c2cb6ad7390d'
+body_hash: 'sha256:7e350a3a0e617f1adaf2af8ecfb376618e517006fc4df7928b8c316f0bed169c'
 related:
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S01]]'
   - '[[2026-08-24-deadline-window-revision-authority-W01-P01-S02]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S18]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S19]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S20]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W02-P05-S46]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P14-S37]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P14-S38]]'
   - '[[2026-08-24-deadline-window-revision-authority-W02-P14-S39]]'
@@ -49,8 +50,13 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-W04-P12-S32]]'
   - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S33]]'
   - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S34]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S35]]'
   - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S36]]'
   - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S45]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S47]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S48]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S49]]'
+  - '[[2026-08-24-deadline-window-revision-authority-W04-P13-S50]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-24-deadline-window-revision-authority-audit]]'
   - '[[2026-08-24-deadline-window-revision-authority-engine-projection-audit]]'
@@ -82,12 +88,15 @@ related:
   - '[[2026-08-24-deadline-window-revision-authority-s41-m131-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-all-modelo-surface-parity-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-audit]]'
+  - '[[2026-08-25-deadline-window-revision-authority-completion-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-consumer-canonical-api-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-exec]]'
   - '[[2026-08-25-deadline-window-revision-authority-final-architecture-review-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-historical-engine-cli-scenarios-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-ordered-consumer-multiplicity-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-real-cli-json-deadline-parity-audit]]'
+  - '[[2026-08-25-deadline-window-revision-authority-s46-m210-design-axis-audit]]'
+  - '[[2026-08-25-deadline-window-revision-authority-s50-cli-calendar-parity-audit]]'
   - '[[2026-08-25-deadline-window-revision-authority-supported-year-deadline-census-audit]]'
 ---
 
@@ -130,11 +139,14 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-s41-m131-audit` - `deadline-window-revision-authority` audit: `s41 m131`
 - `2026-08-25-deadline-window-revision-authority-all-modelo-surface-parity-audit` - `deadline-window-revision-authority` audit: `all modelo surface parity`
 - `2026-08-25-deadline-window-revision-authority-audit` - `deadline-window-revision-authority` audit: `architecture corpus and lifecycle reconciliation`
+- `2026-08-25-deadline-window-revision-authority-completion-audit` - `deadline-window-revision-authority` audit: `completion`
 - `2026-08-25-deadline-window-revision-authority-consumer-canonical-api-audit` - `deadline-window-revision-authority` audit: `consumer canonical API`
 - `2026-08-25-deadline-window-revision-authority-final-architecture-review-audit` - `deadline-window-revision-authority` audit: `final architecture review`
 - `2026-08-25-deadline-window-revision-authority-historical-engine-cli-scenarios-audit` - `deadline-window-revision-authority` audit: `historical engine CLI scenarios`
 - `2026-08-25-deadline-window-revision-authority-ordered-consumer-multiplicity-audit` - `deadline-window-revision-authority` audit: `ordered consumer multiplicity`
 - `2026-08-25-deadline-window-revision-authority-real-cli-json-deadline-parity-audit` - `deadline-window-revision-authority` audit: `real cli json deadline parity`
+- `2026-08-25-deadline-window-revision-authority-s46-m210-design-axis-audit` - `deadline-window-revision-authority` audit: `s46 m210 design axis`
+- `2026-08-25-deadline-window-revision-authority-s50-cli-calendar-parity-audit` - `deadline-window-revision-authority` audit: `s50 cli calendar parity`
 - `2026-08-25-deadline-window-revision-authority-supported-year-deadline-census-audit` - `deadline-window-revision-authority` audit: `supported year deadline census`
 
 ### exec
@@ -174,14 +186,20 @@ Auto-generated index of all documents tagged with `#deadline-window-revision-aut
 - `2026-08-24-deadline-window-revision-authority-W03-P11-S27` - Route calculated M210 ResultDisposition and official tipo code into canonical deadline resolution and the existing typed Notice channel
 - `2026-08-24-deadline-window-revision-authority-W03-P11-S28` - Prove M210 calculate and verify envelopes emit grounded qualified plazo notices and never claim an ungrounded tipo-28 offset
 - `2026-08-24-deadline-window-revision-authority-W02-P04-S16` - Generate an auditable 555-cell before-and-after census for supported filing years 2022-2026 that accounts for all 294 measured missing cells and every removed, corrected, retained, materialised, or still-blocked deadline coordinate with its official source, reconciling M369 60, M111 48, M322 42, M353 37, M349 32, M303 22, M115 16, M123 12, M202 9, M130 8, M131 4, and M216 4 exactly
+- `2026-08-24-deadline-window-revision-authority-W02-P05-S46` - Adjudicate why Modelo 210 ejercicio 2025 projects presentation through 2030 while its declared design authority ends in 2025, then correct the deadline horizon, design scope, or axis selection from official evidence and prove the whole-tree claimed-year layout-design gate no longer reports Modelo 210
 - `2026-08-24-deadline-window-revision-authority-W04-P12-S29` - Audit overview, workflow, and filing-window consumers for exclusive canonical deadline API use
 - `2026-08-24-deadline-window-revision-authority-W04-P12-S30` - Add overview and workflow regressions comparing ordered semantic coordinates without multiplicity-erasing assertions
 - `2026-08-24-deadline-window-revision-authority-W04-P12-S31` - Add real CLI JSON regressions for calendar, agenda, backlog, workflow, and explain including exactly four M303 quarterly obligations for 2025
 - `2026-08-24-deadline-window-revision-authority-W04-P12-S32` - Add all-modelo parity coverage across registry, DeadlineEngine, overview, workflow, and real CLI for every supported filing year
 - `2026-08-24-deadline-window-revision-authority-W04-P13-S33` - Run the bundled-registry invariant proving zero ownership, identity, uniqueness, qualifier, period, and completeness violations
 - `2026-08-24-deadline-window-revision-authority-W04-P13-S34` - Run exact historical engine and CLI scenarios for every repaired modelo against the adjudicated registry census
+- `2026-08-24-deadline-window-revision-authority-W04-P13-S35` - Run feature-scoped Ruff, formatting, focused tests, Vaultspec, cold and warm registry validation, generated-reference drift, locale, and real CLI smoke gates, then run the applicable repository-wide gates, attribute every failure to the current revision and owning paths, block feature closure on failures caused by or overlapping this feature, and record unrelated shared-worktree failures separately
 - `2026-08-24-deadline-window-revision-authority-W04-P13-S36` - Perform formal code and architecture review
 - `2026-08-24-deadline-window-revision-authority-W04-P13-S45` - Make deadline reference-date semantics canonical and deterministic. Correct stale date.today() documentation, replace direct wall-clock reads in deadline-path tests with explicit or frozen today_madrid() input, and derive exercised filing years from the supported-filing-year catalogue while preserving literal official dates only in source-fidelity tests
+- `2026-08-24-deadline-window-revision-authority-W04-P13-S47` - Restore canonical formatting on the shared registry authority after concurrent capture work introduced mixed line endings, then rerun focused authority Ruff, format, and deadline ownership tests without changing behavior
+- `2026-08-24-deadline-window-revision-authority-W04-P13-S48` - Restore canonical formatting on the M210 claimed-year design-axis proof introduced by S46, preserving its generalized mutation-bite semantics
+- `2026-08-24-deadline-window-revision-authority-W04-P13-S49` - Restore canonical formatting after the concurrent authority-reset fix landed unformatted on the registry authority and its native-capture proof, preserving reset linearization behavior
+- `2026-08-24-deadline-window-revision-authority-W04-P13-S50` - Restore real CLI calendar parity for canonical filing evidence and locked-profile rendering after concurrent projection changes, keeping the CLI a thin consumer of overview and registry deadline authority
 - `2026-08-25-deadline-window-revision-authority-exec` - Fleet periodic deadline completeness hard gate
 
 ### plan
