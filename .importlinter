@@ -720,15 +720,9 @@ ignore_imports =
     cadrumo.application.user_profile._profile_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.user_profile._repository -> cadrumo.adapters.persistence.**
     # Reaches NO persistence: the second pin in this sweep whose storage-shaped
-    cadrumo.application.workflow._adapters -> cadrumo.adapters.outbound.aeat.auth
-    cadrumo.application.workflow._adapters -> cadrumo.adapters.outbound.aeat.sede
     # The workflow run-contract surface reports whether a browser session can be
     # established, so it names the outbound browser adapter alongside its
     # persistence reach.
-    cadrumo.application.workflow._run_models -> cadrumo.adapters.outbound.aeat.browser
-    cadrumo.application.workflow._state_models -> cadrumo.adapters.persistence.**
-    cadrumo.application.workflow._persistence -> cadrumo.adapters.persistence.**
-    cadrumo.application.workflow._profile_health -> cadrumo.adapters.persistence.**
     # The shared secure-SQL test helper wraps the real persistence adapter for
     # roundtrip-discipline tests; ignoring its adapter edge breaks the layer
     # path for every application/domain test that routes fixtures through it.
@@ -850,7 +844,6 @@ ignore_imports =
     cadrumo.application.modelo._reconcile -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._verification_actions -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.modelo._work_lifecycle -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.workflow._events -> cadrumo.adapters.persistence.profile.buckets
     # ── transactions catalogue repository ports-inversion (W02.P07.S09):
     #    the concrete TransactionCatalogueRepository moved to the persistence
     #    adapter behind TransactionCatalogueRepositoryProtocol ──
