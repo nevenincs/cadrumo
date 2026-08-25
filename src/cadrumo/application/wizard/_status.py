@@ -9,6 +9,8 @@ to obtain an ``TaxpayerProfile`` from the active profile bucket.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, NoRecoveryOutcome, resolve_active_bucket_id
@@ -202,23 +204,44 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
         )
     values: dict[str, str] = dict(record_to_path_values(record))
     if not values.get(_TAX_ID_PATH):
-        raise WizardStatusError(
-            translated_message="application.wizard.status.errors.missing_tax_id",
-            context={
-                "active_profile": resolve_active_bucket_id(),
-                "requirements": _grounded_tax_id_requirement(),
-            },
-            precondition_verdict=wizard_no_action_verdict(
-                condition=WizardPreconditionCondition.ACTIVE_PROFILE_TAX_ID_DECLARED,
-                facts={"active_profile_tax_id_declared": False},
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-            ),
+        _require_active_profile_tax_id(
+            values,
+            active_profile=resolve_active_bucket_id(),
+            requirement=_grounded_tax_id_requirement(),
         )
     return projection_for_taxpayer(record)
 
 
 _TAX_ID_PATH = "identity.tax_id"
+
+
+def _require_active_profile_tax_id(
+    values: Mapping[str, str],
+    *,
+    active_profile: str | None,
+    requirement: str,
+) -> None:
+    """Refuse an active-profile projection that declares no tax identifier.
+
+    Profile resolution and requirement rendering remain with their canonical
+    owners; this deterministic precondition owns the terminal refusal they
+    feed and can be exercised from resolved facts alone.
+    """
+    if values.get(_TAX_ID_PATH):
+        return
+    raise WizardStatusError(
+        translated_message="application.wizard.status.errors.missing_tax_id",
+        context={
+            "active_profile": active_profile,
+            "requirements": requirement,
+        },
+        precondition_verdict=wizard_no_action_verdict(
+            condition=WizardPreconditionCondition.ACTIVE_PROFILE_TAX_ID_DECLARED,
+            facts={"active_profile_tax_id_declared": False},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
+    )
 
 
 def _grounded_tax_id_requirement() -> str:

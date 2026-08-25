@@ -667,6 +667,35 @@ def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tupl
     return _missing_profile_filing_baseline_flags(serialise_answers(flow, answers))
 
 
+def _require_filing_baseline(flow: WizardFlow, answers: BaseModel) -> None:
+    """Refuse a wizard write whose projected answers lack the filing baseline.
+
+    Both the non-interactive patch and full-flow persistence paths reach this
+    single terminal-precondition owner after composing their candidate answer
+    set and before publishing any profile facts.
+    """
+    missing = _missing_filing_baseline_flags(flow, answers)
+    if not missing:
+        return
+    raise WizardMissingFlagError(
+        translated_message="application.wizard.errors.edit_missing_filing_baseline",
+        context={
+            "flow_id": flow.id,
+            "missing": missing,
+            "missing_flags": _format_missing_flags(missing),
+        },
+        precondition_verdict=wizard_no_action_verdict(
+            condition=WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
+            facts={
+                "filing_baseline_complete": False,
+                "missing_flag_count": len(missing),
+            },
+            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
+    )
+
+
 def setup_flow_definition(
     flow: WizardFlow,
     *,
@@ -1061,25 +1090,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
     merged_values = record_to_path_values(record)
     merged_values.update(patched_values)
-    missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, merged_values))
-    if missing_baseline:
-        raise WizardMissingFlagError(
-            translated_message="application.wizard.errors.edit_missing_filing_baseline",
-            context={
-                "flow_id": flow.id,
-                "missing": missing_baseline,
-                "missing_flags": _format_missing_flags(missing_baseline),
-            },
-            precondition_verdict=wizard_no_action_verdict(
-                condition=WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
-                facts={
-                    "filing_baseline_complete": False,
-                    "missing_flag_count": len(missing_baseline),
-                },
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-            ),
-        )
+    _require_filing_baseline(flow, project_answers(flow, merged_values))
     apply_profile_fact_changes(
         profile_id=profile_id,
         changes=tuple(UserProfileFact(path=path, value=value) for path, value in patched_values.items()),
@@ -1210,25 +1221,7 @@ def _run_full_flow(
     record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
     values = record_to_path_values(record)
     values.update({path: value for path, value in profile_values.items() if value})
-    missing_baseline = _missing_filing_baseline_flags(flow, project_answers(flow, values))
-    if missing_baseline:
-        raise WizardMissingFlagError(
-            translated_message="application.wizard.errors.edit_missing_filing_baseline",
-            context={
-                "flow_id": flow.id,
-                "missing": missing_baseline,
-                "missing_flags": _format_missing_flags(missing_baseline),
-            },
-            precondition_verdict=wizard_no_action_verdict(
-                condition=WizardPreconditionCondition.FILING_BASELINE_COMPLETE,
-                facts={
-                    "filing_baseline_complete": False,
-                    "missing_flag_count": len(missing_baseline),
-                },
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-            ),
-        )
+    _require_filing_baseline(flow, project_answers(flow, values))
     from ...domain.deadlines import taxpayer_profile_from_mapping
 
     taxpayer_profile_from_mapping(values, tax_id_default=values.get("identity.tax_id", ""))
@@ -1295,17 +1288,11 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     from ..workflow import read_profile_bucket
 
     if mode == "create":
-        if read_profile_bucket(profile_name) is not None:
-            raise WizardValidationError(
-                translated_message="application.wizard.errors.profile_label_taken",
-                context={"flow_id": flow.id, "label": profile_name},
-                precondition_verdict=wizard_no_action_verdict(
-                    condition=WizardPreconditionCondition.PROFILE_LABEL_AVAILABLE,
-                    facts={"profile_registration_available": False},
-                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-                ),
-            )
+        _require_profile_label_available(
+            flow,
+            profile_name,
+            label_is_registered=read_profile_bucket(profile_name) is not None,
+        )
         return new_profile_id()
 
     pointer = read_profile_bucket(profile_name)
@@ -1318,6 +1305,31 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
             condition=WizardPreconditionCondition.PROFILE_NAME_SUPPLIED,
             facts={"profile_name_supplied": False},
             provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
+    )
+
+
+def _require_profile_label_available(
+    flow: WizardFlow,
+    profile_name: str,
+    *,
+    label_is_registered: bool,
+) -> None:
+    """Refuse create when the committed-label projection already owns a label.
+
+    The caller resolves the persistence fact; this deterministic policy owns
+    the operator-facing precondition and remains independent of bucket access.
+    """
+    if not label_is_registered:
+        return
+    raise WizardValidationError(
+        translated_message="application.wizard.errors.profile_label_taken",
+        context={"flow_id": flow.id, "label": profile_name},
+        precondition_verdict=wizard_no_action_verdict(
+            condition=WizardPreconditionCondition.PROFILE_LABEL_AVAILABLE,
+            facts={"profile_registration_available": False},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             outcome=NoRecoveryOutcome.OPERATOR_DECISION,
         ),
     )
