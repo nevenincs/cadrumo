@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#tui-architecture'
 date: '2026-08-11'
+modified: '2026-08-25'
+body_hash: 'sha256:e058d8d5868c4d5ebc022477e118e8fba9a298b3f558a49a4a31ac1a6c8a333d'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -11,8 +13,6 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
-modified: '2026-08-25'
-body_hash: 'sha256:358251239647b959b7cfbd03efd697ddfaf89cf1738b4bcf5e3e9308305ae1ca'
 ---
 
 # `tui-architecture` plan
@@ -161,7 +161,7 @@ Move every current manager and credential action behind registered application e
 
 Implement the read-only Workspace V1 contract, stamped contributing ports, generated schema-field denominator, canonical owner projections, and live conformance without exposing registry grammar or duplicating ModeloWorkReview.
 
-- [ ] `W03.P20.S125` - Define strict Workspace V1 version headers, visible and exact target admission, inspection and graded result arms, projection, bounded facets, schema and provenance records, capability and refusal families, locale summary, and safe read baseline without mutation authority; `src/cadrumo/application/modelo/_workspace_models.py`.
+- [x] `W03.P20.S125` - Define strict Workspace V1 version headers, visible and exact target admission, inspection and graded result arms, projection, bounded facets, schema and provenance records, capability and refusal families, locale summary, and safe read baseline without mutation authority; `src/cadrumo/application/modelo/_workspace_models.py`.
 - [ ] `W03.P20.S126` - Define ModeloWorkspaceProducerContractV1, stamped contributing projections, owner-scoped ABA-safe epochs, atomic projection-plus-epoch ports, and the generated producer-contract inventory that rejects missing, duplicate, or stale contributors; `src/cadrumo/application/modelo/_workspace_producers.py`.
 - [ ] `W03.P20.S127` - Generate the exhaustive registry model-and-field classification manifest from validated public schema types, classifying every reachable leaf and discriminator branch exactly once as projected, canonically derived, or backend-only with destination, owner, and bounded reason; `src/cadrumo/application/modelo/_workspace_manifest.py`.
 - [ ] `W03.P20.S128` - Assemble Workspace projections only from stamped producer captures and canonical validated-registry, ModeloWorkReview, operator-state readiness, closure, calculation-revision, and source-graph owners, enforcing exact target admission, bounded materialization, two-pass epoch validation, locale selection, and stable safe-read baselines without parsing registry grammar; `src/cadrumo/application/modelo/_workspace_projection.py`.
