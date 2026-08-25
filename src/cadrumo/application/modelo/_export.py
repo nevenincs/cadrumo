@@ -47,7 +47,6 @@ from typing import Annotated, NamedTuple, NoReturn
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -1542,7 +1541,7 @@ def _prepare_modelo_export(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     calculation_observation_repository: CalculationObservationRepository,
-    justificante_repository: JustificanteRepositoryProtocol,
+    justificante_repository: JustificanteRepositoryProtocol | None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
 ) -> _PreparedModeloExport:
@@ -1690,8 +1689,6 @@ def export_modelo_revision(
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     obs_repo = calculation_observation_repository or CalculationObservationRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    justificante_repo = justificante_repository or JustificanteRepository()
-
     prepared = _prepare_modelo_export(
         command,
         active_bucket_id=active_bucket_id,
@@ -1701,7 +1698,7 @@ def export_modelo_revision(
         filing_repository=fr_repo,
         verification_repository=vr_repo,
         calculation_observation_repository=obs_repo,
-        justificante_repository=justificante_repo,
+        justificante_repository=justificante_repository,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
     )
