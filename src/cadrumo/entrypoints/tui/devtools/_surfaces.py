@@ -19,6 +19,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
+from typing import Any
 
 from textual.app import App
 
@@ -31,7 +32,7 @@ class Surface:
 
     name: str
     summary: str
-    build: Callable[[], App]
+    build: Callable[[], App[Any]]
     needs_profile: bool = False
     needs_session: bool = False
     """Whether the surface reads through the ACTIVE-profile pointer.
@@ -46,14 +47,14 @@ class Surface:
     other, never both."""
 
 
-def _registration() -> App:
+def _registration() -> App[Any]:
     from cadrumo.core import assess_profile_password
     from cadrumo.entrypoints.tui.secret.registration import RegistrationApp
 
     return RegistrationApp(assess=assess_profile_password, register=registration_attempt)
 
 
-def _login() -> App:
+def _login() -> App[Any]:
     from cadrumo.application.user_profile import (
         ProfileAuthenticationRefusedError,
         ProfileLoginThrottledError,
@@ -84,7 +85,7 @@ def _login() -> App:
     )
 
 
-def _manager() -> App:
+def _manager() -> App[Any]:
     from cadrumo.application.operations import ManagerAction, ManagerActionOutcome
     from cadrumo.application.user_profile import (
         CommittedProfileRepository,
@@ -126,7 +127,7 @@ def _manager() -> App:
     )
 
 
-def _status() -> App:
+def _status() -> App[Any]:
     from cadrumo.application.user_profile import StatusPageData, StatusProfileRow
     from cadrumo.application.workflow import list_profile_buckets
     from cadrumo.core import resolve_active_bucket_id
@@ -146,7 +147,7 @@ def _status() -> App:
     )
 
 
-def _form() -> App:
+def _form() -> App[Any]:
     # UNLIKE every other builder here, this one is LEGITIMATELY SYNTHETIC and
     # not a stand-in for a missed real door. ``FormApp``/``FormPage`` are a
     # generic substrate a dozen unrelated callers each configure for

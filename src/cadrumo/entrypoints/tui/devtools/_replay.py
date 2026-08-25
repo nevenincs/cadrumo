@@ -13,6 +13,7 @@ import asyncio
 import time
 from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
+from typing import Any, Protocol, cast
 
 from textual.app import App
 from textual.pilot import Pilot
@@ -21,6 +22,12 @@ from ._fixture import ensure_profile, ensure_session, harness_storage
 from ._frame import Frame, capture
 from ._journal import Click, Fill, Press, Session, Type
 from ._surfaces import resolve
+
+
+class _ValueWidget(Protocol):
+    """Structural value seam shared by fillable Textual controls."""
+
+    value: object
 
 
 def _theme_name(appearance: str) -> str:
@@ -69,7 +76,7 @@ def _activate_locale(locale: str | None) -> None:
     clear_output_language_cache()
 
 
-async def _apply(pilot: Pilot, session: Session) -> None:
+async def _apply(pilot: Pilot[Any], session: Session) -> None:
     """Deliver every recorded gesture, in order, through the real pipeline."""
     for gesture in session.gestures:
         match gesture:
@@ -88,7 +95,7 @@ async def _apply(pilot: Pilot, session: Session) -> None:
                 # a few lines below never had this problem because
                 # ``Pilot`` already resolves a selector against the current
                 # screen.
-                pilot.app.screen.query_one(gesture.selector).value = gesture.value
+                cast(_ValueWidget, pilot.app.screen.query_one(gesture.selector)).value = gesture.value
             case Click():
                 await pilot.click(gesture.selector)
         await pilot.pause()
@@ -104,7 +111,7 @@ async def _apply(pilot: Pilot, session: Session) -> None:
         await pilot.pause()
 
 
-def _run[T](session: Session, read: Callable[[App, float], Awaitable[T] | T]) -> T:
+def _run[T](session: Session, read: Callable[[App[Any], float], Awaitable[T] | T]) -> T:
     """Build, drive and hand the settled app to ``read``.
 
     The one place a surface is constructed and walked. Both the frame
@@ -133,7 +140,7 @@ def _run[T](session: Session, read: Callable[[App, float], Awaitable[T] | T]) ->
             if isinstance(result, Awaitable):
                 result = await result
             app.exit(None)
-        return result
+        return cast(T, result)
 
     with ExitStack() as stack:
         if surface.provision is not None:

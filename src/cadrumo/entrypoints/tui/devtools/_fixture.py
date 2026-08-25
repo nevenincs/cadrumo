@@ -20,10 +20,11 @@ from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 from cadrumo.application.user_profile import logout_active_profile
+from cadrumo.core.config import load_settings
 
 WORKSPACE_ENV_VAR = "CADRUMO_TUI_WORKSPACE"
 
-_STATE_ROOT = Path(__file__).resolve().parent / ".state"
+_STATE_ROOT = load_settings().cadrumo_local_storage_root / "devtools" / "tui"
 
 
 def workspace() -> Path:
