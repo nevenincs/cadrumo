@@ -257,8 +257,7 @@ def test_row_source_identity_roundtrips_only_through_encrypted_revision(
 def _calculation_row_statement():
     return select(SecureObjectRow).where(
         SecureObjectRow.namespace == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        SecureObjectRow.object_key
-        == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
+        SecureObjectRow.object_key == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
     )
 
 

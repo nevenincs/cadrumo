@@ -244,9 +244,7 @@ def test_independent_expectation_rejects_census_owned_workflow_and_destination_m
         command_id=proof.operator_reachability.command_id,
         route_id=proof.operator_reachability.route_id,
         canonical_cli_path=proof.operator_reachability.canonical_cli_path,
-        destination_identities=(
-            ("casilla_semantic_role", "100", "2025", "2025", "0A", "inventory.increase"),
-        ),
+        destination_identities=(("casilla_semantic_role", "100", "2025", "2025", "0A", "inventory.increase"),),
     )
     constrained = replace(authority, independent_expectations=(expectation,))
 
