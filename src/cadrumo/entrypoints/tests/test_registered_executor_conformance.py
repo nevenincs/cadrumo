@@ -14,37 +14,15 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from ....adapters.persistence.operations import (
+from ...adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
     operation_secure_reference_repository,
 )
-from ....adapters.persistence.storage import SecureObjectRepository
-from ....core import AuthProviderKind, OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ....core.time import now
-from ....domain.user_profile import UserProfileFact
-from ....entrypoints import build_production_operation_registry
-from ....tests.aeat_literal_fixtures import aeat_url
-from ....tests.secure_sql import isolated_profile_storage_root
-from ...auth import build_auth_operation_definitions
-from ...export import build_google_sheets_export_operation_definition
-from ...user_profile import (
-    CENSAL_ADOPTABLE_PATHS,
-    CensalFieldIntent,
-    CensalObservation,
-    CensalObservationAddress,
-    CensalObservationIdentity,
-    CensalOperationAcquisition,
-    CensalProfileBaseline,
-    CensalReviewedFieldIntent,
-    ProfileBundleExportPurpose,
-    ProfileRecordRepository,
-    build_censal_operation_definition,
-    login_profile,
-    profile_custody_secure_object_repository,
-    register_profile_with_credentials,
-)
-from .. import (
+from ...adapters.persistence.storage import SecureObjectRepository
+from ...application.auth import build_auth_operation_definitions
+from ...application.export import build_google_sheets_export_operation_definition
+from ...application.operations import (
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
     OperationCancellationSuccessV1,
@@ -67,8 +45,30 @@ from .. import (
     OperationSubmission,
     compose_operation_services,
 )
+from ...application.user_profile import (
+    CENSAL_ADOPTABLE_PATHS,
+    CensalFieldIntent,
+    CensalObservation,
+    CensalObservationAddress,
+    CensalObservationIdentity,
+    CensalOperationAcquisition,
+    CensalProfileBaseline,
+    CensalReviewedFieldIntent,
+    ProfileBundleExportPurpose,
+    ProfileRecordRepository,
+    build_censal_operation_definition,
+    login_profile,
+    profile_custody_secure_object_repository,
+    register_profile_with_credentials,
+)
+from ...core import AuthProviderKind, OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ...core.time import now
+from ...domain.user_profile import UserProfileFact
+from ...tests.aeat_literal_fixtures import aeat_url
+from ...tests.secure_sql import isolated_profile_storage_root
+from .. import build_production_operation_registry
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PASSPHRASE = "s45-registered-executor-passphrase"  # noqa: S105 - isolated integration fixture
 _ROTATED_PASSPHRASE = "s45-registered-executor-rotated-passphrase"  # noqa: S105

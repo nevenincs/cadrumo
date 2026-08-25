@@ -11,12 +11,24 @@ from uuid import UUID
 
 import pytest
 
-from ....adapters.persistence.operations import (
+from ...adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
     operation_secure_reference_repository,
 )
-from ....application.operations import (
+from ...application.export import (
+    GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
+    GoogleSheetsExportOperationRequest,
+    build_google_sheets_export_operation_definition,
+    build_google_sheets_export_operation_registration,
+    build_google_sheets_export_service,
+)
+from ...application.export._google_operation import (
+    GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
+    GOOGLE_SHEETS_EXPORT_PHASE_PLAN,
+    GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT,
+)
+from ...application.operations import (
     OperationEffect,
     OperationEventKind,
     OperationRegistry,
@@ -25,22 +37,10 @@ from ....application.operations import (
     OperationTerminalCondition,
     compose_operation_services,
 )
-from ....entrypoints import compose_operation_dependencies
-from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
-    GoogleSheetsExportOperationRequest,
-    build_google_sheets_export_operation_definition,
-    build_google_sheets_export_operation_registration,
-    build_google_sheets_export_service,
-)
-from .._google_operation import (
-    GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
-    GOOGLE_SHEETS_EXPORT_PHASE_PLAN,
-    GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT,
-)
+from ...tests.secure_sql import isolated_runtime_profile
+from .. import compose_operation_dependencies
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _services(root: Path):
@@ -155,14 +155,14 @@ def test_production_composition_registers_the_facade_owned_definition_and_real_t
 
 def test_google_export_owner_and_composition_keep_one_hexagonal_apply_plus_provenance_route() -> None:
     """The application owner has no adapter dependency; the outer port always calls the provenance service."""
-    owner_source = (Path(__file__).parents[1] / "_google_operation.py").read_text(encoding="utf-8")
+    owner_source = (Path(__file__).parents[2] / "application" / "export" / "_google_operation.py").read_text(
+        encoding="utf-8"
+    )
     owner_tree = ast.parse(owner_source)
     owner_imports = tuple(node.module or "" for node in ast.walk(owner_tree) if isinstance(node, ast.ImportFrom))
     assert not any(module.startswith("adapters") or module.startswith("entrypoints") for module in owner_imports)
 
-    composition_source = (Path(__file__).parents[3] / "entrypoints" / "_operation_composition.py").read_text(
-        encoding="utf-8"
-    )
+    composition_source = (Path(__file__).parents[1] / "_operation_composition.py").read_text(encoding="utf-8")
     composition_tree = ast.parse(composition_source)
     direct_calls = {
         node.func.id

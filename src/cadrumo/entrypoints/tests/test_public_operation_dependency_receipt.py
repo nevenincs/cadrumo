@@ -15,19 +15,19 @@ from typing import Annotated, Literal
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core import content_hash_hex
-from ....entrypoints import compose_operation_dependencies
-from ....tests.secure_sql import isolated_runtime_profile
-from .. import OperationPublicContractSetV1, OperationSchemaIdentityV1
-from .. import __all__ as operation_public_exports
+from ...application.operations import OperationPublicContractSetV1, OperationSchemaIdentityV1
+from ...application.operations import __all__ as operation_public_exports
+from ...core import content_hash_hex
+from ...tests.secure_sql import isolated_runtime_profile
+from .. import compose_operation_dependencies
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _STRICT_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 _DIGEST = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 _COMMIT = Annotated[str, Field(pattern=r"^[a-f0-9]{40}$")]
 _BODY_HASH = Annotated[str, Field(pattern=r"^sha256:[a-f0-9]{64}$")]
-_ROOT = Path(__file__).resolve().parents[5]
+_ROOT = Path(__file__).resolve().parents[4]
 _GOVERNING_ADR_STEM = "2026-08-11-tui-architecture-adr"
 _STAGING_ADR_STEM = "2026-08-24-tui-operation-observation-adr"
 _RECEIPT_PATH = ".vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md"
@@ -312,7 +312,7 @@ _C0_OWNER_FILES = frozenset(
         "src/cadrumo/application/user_profile/_operation_definitions.py",
         "src/cadrumo/entrypoints/_operation_composition.py",
         "src/cadrumo/entrypoints/tests/test_operation_composition.py",
-        "src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py",
+        "src/cadrumo/entrypoints/tests/test_public_operation_dependency_receipt.py",
     }
 )
 
