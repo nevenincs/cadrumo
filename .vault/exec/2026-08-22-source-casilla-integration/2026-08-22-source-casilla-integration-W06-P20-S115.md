@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:1164f97acdb270138f368cecee07c1d142a57435bf07f6b73e477299717f2a85'
+body_hash: 'sha256:f7622d2a4b2e387a0191d1598d4c873f0f0621ad1d25dc085b20f2f2427e0cd0'
 step_id: 'S115'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -18,6 +18,8 @@ related:
 - `src/cadrumo/application/registry/source_connectivity.py`
 - `dev/source_connectivity/discovery.py`
 - `dev/source_connectivity/tests/test_census_completeness.py`
+- `dev/source_connectivity/tests/test_m232_deferral.py`
+- `.vault/audit/2026-08-25-source-casilla-integration-s115-related-party-locator-followup-audit.md`
 - `.vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S115.md`
 - `.vault/plan/2026-08-22-source-casilla-integration-plan.md`
 - `.vault/index/source-casilla-integration.index.md`
@@ -36,6 +38,9 @@ related:
 - Correct only the mutation-backed inventory helper/projection source
   locators. Retain the service anchor at `413` because it still anchors the
   existing closing-authority persistence evidence.
+- Correct the related-party capability and grounding locators from the adjacent
+  withholding branch to the live `per_related_party_operation` dispatch, with a
+  mutation gate; retain all row disposition and deferral governance.
 
 ## Outcome
 
@@ -48,6 +53,10 @@ The inventory row keeps its established encrypted owner, candidate status,
 and dispositions; only its stale function-line locators now point to the live
 definitions. No source, binding, resolver, lifecycle, export, or census-owned
 fact was introduced.
+
+The related-party row keeps its established ingress-blocked governance. Its
+two locator references now name the actual RELATED_PARTY dispatch and the
+focused mutation gate refuses the prior adjacent line.
 
 ## Notes
 

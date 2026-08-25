@@ -211,7 +211,7 @@ owner = "source-connectivity-campaign"
 review_condition = "Retain deferral until the M232 carrier preserves official direction and relationship type, one secure worksheet/source owner supplies durable identities, and S94 proves the real encrypted revision route."
 expires_on = 2026-12-31
 capability_locators = [
-  "src/cadrumo/application/calculations/_row_set_assembly.py:168",
+  "src/cadrumo/application/calculations/_row_set_assembly.py:170",
 ]
 capability_ids = ["row_assembler:per_related_party_operation"]
 advisory_destination_refs = ["modelo:232:rows:related-party-operation"]
@@ -226,7 +226,7 @@ summary = "Validated Modelo 232 bindings already declare the related-party sourc
 
 [[entries.grounding]]
 locator_kind = "repository"
-reference = "src/cadrumo/application/calculations/_row_set_assembly.py:168"
+reference = "src/cadrumo/application/calculations/_row_set_assembly.py:170"
 summary = "Worksheet rows dispatch to the typed related-party observation assembler."
 
 [entries.bounded_follow_up]

@@ -1,4 +1,5 @@
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -10,10 +11,13 @@ from cadrumo.core import BindingSourceKind
 from cadrumo.core.resources import resources
 from cadrumo.domain.calculations.registry import CasillaFieldKind
 
-from ..check import SourceConnectivityCheckError, check_census_governance
+from ..check import SourceConnectivityCheckError, check_capability_locators, check_census_governance
+from ..discovery import discovered_source_capability_evidence
 from ..live_proof import CONNECTED_PROOF_FIXTURES, connected_candidate_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_m232_remains_measurably_ingress_blocked_until_its_missing_authority_exists() -> None:
@@ -34,6 +38,32 @@ def test_m232_remains_measurably_ingress_blocked_until_its_missing_authority_exi
     assert "direction, relationship type, stable identity, and secure ingress" in (
         entry.bounded_follow_up.completion_criterion
     )
+
+
+def test_m232_related_party_dispatch_locator_bites_on_the_pre_dispatch_line() -> None:
+    """The census must name the related-party dispatch, not a neighboring branch."""
+    entry = next(
+        item
+        for item in load_source_connectivity_census().entries
+        if item.candidate_id == "rows.related-party-operation"
+    )
+    focused = load_source_connectivity_census().model_copy(update={"entries": (entry,)})
+    evidence = discovered_source_capability_evidence(REPO_ROOT)
+    canonical = "src/cadrumo/application/calculations/_row_set_assembly.py:170"
+
+    assert canonical in entry.capability_locators
+    assert any(item.reference == canonical for item in entry.grounding)
+    check_capability_locators(REPO_ROOT, focused, capability_evidence=evidence)
+
+    stale = entry.model_copy(
+        update={"capability_locators": ("src/cadrumo/application/calculations/_row_set_assembly.py:168",)},
+    )
+    with pytest.raises(SourceConnectivityCheckError, match="census capability locator drift"):
+        check_capability_locators(
+            REPO_ROOT,
+            focused.model_copy(update={"entries": (stale,)}),
+            capability_evidence=evidence,
+        )
 
 
 def test_m232_deferred_source_has_no_connected_downstream_lifecycle() -> None:
