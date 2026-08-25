@@ -119,6 +119,38 @@ _PRE_EXIT_HOOK_TIMEOUT_S = 3.0
 
 _pre_exit_hooks: list[Callable[[], None]] = []
 _pre_exit_lock = threading.Lock()
+_watchdog_lock = threading.Lock()
+_active_watchdog: threading.Event | None = None
+
+
+def disarm_stdio_lifetime_watchdog() -> bool:
+    """Disarm the currently active watchdog, if any.
+
+    Normal stdio completion and startup failure both end the lifetime the
+    watchdog protects.  Cancelling that generation prevents its daemon thread
+    from observing an ancestor death later and terminating unrelated work in a
+    host process that invoked the server in-process.
+    """
+    global _active_watchdog
+    with _watchdog_lock:
+        stop = _active_watchdog
+        _active_watchdog = None
+    if stop is None:
+        return False
+    stop.set()
+    return True
+
+
+def _new_watchdog_control() -> threading.Event:
+    """Install and return the sole active watchdog generation."""
+    global _active_watchdog
+    stop = threading.Event()
+    with _watchdog_lock:
+        previous = _active_watchdog
+        _active_watchdog = stop
+    if previous is not None:
+        previous.set()
+    return stop
 
 
 def register_pre_exit_hook(hook: Callable[[], None]) -> None:
@@ -250,6 +282,24 @@ def _exit_on_watched_death(pid: int, exe: str, reason: str = "watched_process_ex
         reason=reason,
     )
     os._exit(0)
+
+
+def _exit_if_current(
+    stop: threading.Event,
+    pid: int,
+    exe: str,
+    reason: str = "watched_process_exit",
+) -> None:
+    """Hard-exit only while *stop* still owns the active generation.
+
+    The lock is intentionally held through :func:`os._exit`, which never
+    returns. Thus either disarm wins the lock and makes this a no-op, or the
+    genuine death decision wins and shutdown cannot be revoked halfway through.
+    """
+    with _watchdog_lock:
+        if _active_watchdog is not stop or stop.is_set():
+            return
+        _exit_on_watched_death(pid, exe, reason)
 
 
 def _walk_ancestor_pids(
@@ -512,10 +562,12 @@ if sys.platform == "win32":
                 )
         return survivors
 
-    def _wait_any(targets: list[_WatchedProcess]) -> _WatchedProcess | None:
-        """Block until one target exits; ``None`` when the wait itself failed."""
+    def _wait_any(targets: list[_WatchedProcess], timeout_ms: int) -> tuple[_WatchedProcess | None, bool]:
+        """Wait boundedly for one target; return ``(dead, failed)``."""
         handles = (wintypes.HANDLE * len(targets))(*[target.handle for target in targets])
-        result = int(_kernel32.WaitForMultipleObjects(len(targets), handles, False, _INFINITE))
+        result = int(_kernel32.WaitForMultipleObjects(len(targets), handles, False, timeout_ms))
+        if result == _WAIT_TIMEOUT:
+            return None, False
         index = result - _WAIT_OBJECT_0
         if not 0 <= index < len(targets):
             logger.warning(
@@ -523,8 +575,8 @@ if sys.platform == "win32":
                 result,
                 ctypes.get_last_error(),
             )
-            return None
-        return targets[index]
+            return None, True
+        return targets[index], False
 
     def _reacquire_targets() -> list[_WatchedProcess] | None:
         """Anchors visible right now; ``None`` when the observation is ambiguous.
@@ -590,6 +642,7 @@ if sys.platform == "win32":
         grace_seconds: float,
         rearm_seconds: float = _REARM_POLL_SECONDS,
         orphan_confirmations: int = _ORPHAN_CONFIRMATIONS,
+        stop: threading.Event | None = None,
     ) -> None:
         """Wait on the anchors, re-acquiring rather than disarming for good.
 
@@ -603,15 +656,27 @@ if sys.platform == "win32":
         pipe creator nor one live ancestor exists. That state is the orphan stdin
         EOF cannot recover from on Windows.
         """
+        stop = stop or threading.Event()
         targets = _grace_prune(watched, grace_seconds)
+        if stop.is_set():
+            _close_targets(targets)
+            return
         if not targets:
             _emit_event("stdio_watchdog_disarmed", reason="no_anchor_after_grace")
         unanchored_polls = 0
         while True:
+            if stop.is_set():
+                _close_targets(targets)
+                return
             if targets:
-                dead = _wait_any(targets)
+                dead, failed = _wait_any(targets, 250)
                 if dead is not None:
-                    _exit_on_watched_death(dead.pid, dead.exe)
+                    if stop.is_set():
+                        _close_targets(targets)
+                        return
+                    _exit_if_current(stop, dead.pid, dead.exe)
+                if not failed:
+                    continue
                 # The wait failed on live targets: release the handles and
                 # rebuild from discovery instead of leaving the process
                 # unanchored for the rest of its life.
@@ -619,7 +684,8 @@ if sys.platform == "win32":
                 targets = []
                 unanchored_polls = 0
                 _emit_event("stdio_watchdog_disarmed", reason="wait_failed")
-            time.sleep(rearm_seconds)
+            if stop.wait(rearm_seconds):
+                return
             reacquired = _reacquire_targets()
             if reacquired is None:
                 # Ambiguous observation: reset rather than accumulate, so a race
@@ -641,7 +707,7 @@ if sys.platform == "win32":
                 orphan_confirmations,
             )
             if unanchored_polls >= orphan_confirmations:
-                _exit_on_watched_death(0, "<unanchored>", reason="unanchored_orphan")
+                _exit_if_current(stop, 0, "<unanchored>", reason="unanchored_orphan")
 
     def _anchor_on_client(watched: list[_WatchedProcess], resolved: int | None) -> bool:
         """Add the client anchor to ``watched``; report whether one is held.
@@ -707,6 +773,7 @@ if sys.platform == "win32":
         grace_seconds: float,
         rearm_seconds: float,
         orphan_confirmations: int,
+        stop: threading.Event,
     ) -> bool:
         """Start the Windows watchdog thread over the resolved anchor set."""
         watched = _windows_watch_targets(client_pid, parent_pid)
@@ -717,7 +784,7 @@ if sys.platform == "win32":
             logger.debug("watchdog: no watchable targets; arming the unanchored re-acquisition poll")
         thread = threading.Thread(
             target=_windows_wait,
-            args=(watched, grace_seconds, rearm_seconds, orphan_confirmations),
+            args=(watched, grace_seconds, rearm_seconds, orphan_confirmations, stop),
             name="cadrumo-mcp-client-watchdog",
             daemon=True,
         )
@@ -879,6 +946,7 @@ def _posix_watchdog(
     extra_pids: tuple[int, ...],
     poll_seconds: float = _POSIX_POLL_SECONDS,
     orphan_confirmations: int = _ORPHAN_CONFIRMATIONS,
+    stop: threading.Event | None = None,
 ) -> None:
     """Ancestor-chain poll mirroring the Windows anchors on POSIX.
 
@@ -895,14 +963,16 @@ def _posix_watchdog(
     unresolvable snapshot resets the counter rather than counting toward
     orphanhood.
     """
+    stop = stop or threading.Event()
     unanchored_polls = 0
     while True:
-        time.sleep(poll_seconds)
+        if stop.wait(poll_seconds):
+            return
         if os.getppid() != initial_ppid:
-            _exit_on_watched_death(initial_ppid, "parent")
+            _exit_if_current(stop, initial_ppid, "parent")
         for pid in extra_pids:
             if not _pid_alive(pid):
-                _exit_on_watched_death(pid, "explicit-client")
+                _exit_if_current(stop, pid, "explicit-client")
         anchored = _posix_round_is_anchored()
         if anchored is None or anchored:
             # Either an ancestor is alive, or the snapshot failed and the answer
@@ -919,7 +989,7 @@ def _posix_watchdog(
         if unanchored_polls == 1:
             _emit_event("stdio_watchdog_disarmed", reason="no_live_ancestor")
         if unanchored_polls >= orphan_confirmations:
-            _exit_on_watched_death(0, "<unanchored>", reason="unanchored_orphan")
+            _exit_if_current(stop, 0, "<unanchored>", reason="unanchored_orphan")
 
 
 def _arm_posix_watchdog(
@@ -927,6 +997,7 @@ def _arm_posix_watchdog(
     parent_pid: int | None,
     rearm_seconds: float,
     orphan_confirmations: int,
+    stop: threading.Event,
 ) -> bool:
     """Start the POSIX reparent-plus-ancestor poll thread."""
     extra = (parent_pid,) if parent_pid is not None else ()
@@ -935,7 +1006,7 @@ def _arm_posix_watchdog(
     # parameters instead of patching either.
     thread = threading.Thread(
         target=_posix_watchdog,
-        args=(os.getppid(), extra, min(_POSIX_POLL_SECONDS, rearm_seconds), orphan_confirmations),
+        args=(os.getppid(), extra, min(_POSIX_POLL_SECONDS, rearm_seconds), orphan_confirmations, stop),
         name="cadrumo-mcp-client-watchdog",
         daemon=True,
     )
@@ -993,6 +1064,8 @@ def arm_stdio_lifetime_watchdog(
         )
         return False
 
+    stop = _new_watchdog_control()
+
     if parent_pid is None:
         parent_pid = _resolved_parent_pid_override()
 
@@ -1004,13 +1077,16 @@ def arm_stdio_lifetime_watchdog(
                 grace_seconds=grace_seconds,
                 rearm_seconds=rearm_seconds,
                 orphan_confirmations=orphan_confirmations,
+                stop=stop,
             )
         return _arm_posix_watchdog(
             parent_pid=parent_pid,
             rearm_seconds=rearm_seconds,
             orphan_confirmations=orphan_confirmations,
+            stop=stop,
         )
     except Exception:
+        disarm_stdio_lifetime_watchdog()
         logger.debug("watchdog: arming failed; not arming", exc_info=True)
         return False
 
@@ -1019,6 +1095,7 @@ __all__ = [
     "PARENT_PID_ENV",
     "STDIO_WATCHDOG_ENV",
     "arm_stdio_lifetime_watchdog",
+    "disarm_stdio_lifetime_watchdog",
     "register_pre_exit_hook",
     "resolve_stdin_client_pid",
     "watchdog_disabled",

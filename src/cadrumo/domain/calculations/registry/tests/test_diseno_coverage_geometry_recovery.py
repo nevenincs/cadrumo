@@ -35,7 +35,7 @@ from .._record_design_coverage import build_diseno_coverage_report
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
-_GEOMETRY_ONLY = ("038", "2002-y-siguientes", "modelo_038/files/01-038-diseno-de-registro-actualizado-28-06-2024.pdf")
+_GEOMETRY_ONLY = ("038", "2024-desde-06", "modelo_038/files/01-038-diseno-de-registro-actualizado-28-06-2024.pdf")
 _DESCRIBED = ("185", "2025-y-siguientes", "modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf")
 
 

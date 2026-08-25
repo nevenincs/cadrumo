@@ -61,7 +61,7 @@ def test_source_connectivity_coverage_refuses_an_expired_blocking_row(
         as_of=date(2027, 1, 1),
     )
 
-    limb = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("182", "2007-y-siguientes"))
+    limb = next(limb for limb in report.limbs if (limb.modelo, limb.revision) == ("182", "2025"))
 
     assert (limb.outcome, limb.refusal.reason) == ("refused", "stale_evidence")
     assert limb.refusal.disposition.work_item == "source-casilla.rows-donativo-ingress"

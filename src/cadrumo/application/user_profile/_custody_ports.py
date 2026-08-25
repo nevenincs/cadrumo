@@ -901,6 +901,11 @@ class ProfileCustodyInventoryPort(Protocol):
     def digest_entries(self) -> tuple[ProfileCustodyInventoryEntryPort, ...]: ...
 
 
+def inventory_committed_profile_custody(profile_id: UUID, *, root: Path | None = None) -> ProfileCustodyInventoryPort:
+    """Observe one committed capsule through the custody persistence boundary."""
+    return custody.inventory_committed_profile_custody_capsule(profile_id, root=root)
+
+
 class _PersistenceProfileBucketStorage:
     """Adapt canonical bucket layout and locking to the application port."""
 

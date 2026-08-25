@@ -128,6 +128,12 @@ _REQUIRED = (
     _RequiredArtifact(
         "038", "038 - Diseño de registro actualizado 28/06/2024", "DR_01_99/archivos/dr038_2024.pdf", "01"
     ),
+    _RequiredArtifact(
+        "038",
+        "038 - Orden HAC/66/2002, de 15 de enero (actualizado a 18/01/2012)",
+        "DR_01_99/archivos/dr038_2005.pdf",
+        "h01",
+    ),
     _RequiredArtifact("117", "117 - Ejercicio 2019 y siguientes", "DR_100_199/archivos_17/DR117e17v14.xls", "100"),
     _RequiredArtifact("122", "122 - Ejercicio 2016 y siguientes", "DR_100_199/archivos_18/dr122e18v13.xlsx", "100"),
     _RequiredArtifact(
@@ -370,8 +376,18 @@ def _pull() -> None:
     ) as client:
         for index, required in enumerate(_REQUIRED, 1):
             manifest = manifests.get(required.modelo)
-            if manifest and any(required.url in _artifact_urls(artifact) for artifact in manifest["artefacts"]):
-                continue
+            if manifest:
+                existing = next(
+                    (artifact for artifact in manifest["artefacts"] if required.url in _artifact_urls(artifact)),
+                    None,
+                )
+                if existing is not None:
+                    source_pages = manifest["source_pages"]
+                    assert isinstance(source_pages, list)
+                    if required.source_page not in source_pages:
+                        source_pages.append(required.source_page)
+                    existing["source_page"] = required.source_page
+                    continue
 
             response = client.get(required.url)
             response.raise_for_status()

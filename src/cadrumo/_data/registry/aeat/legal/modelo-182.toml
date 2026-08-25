@@ -36,6 +36,23 @@ required_text = [
     "se realizará en el mes de enero de cada año",
 ]
 
+[legal."orden-hac-1430-2025:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1430-2025.html#a2"
+document_id = "BOE-A-2025-25389"
+article = "2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389#a2"
+published_at = 2025-12-16
+effective_from = 2025-12-17
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "agent: S44 exact 2025 Modelo 182 design amendment grounding"
+notes = "Orden HAC/1430/2025 articulo 2 modifies the Modelo 182 type-2 RECURRENCIA DONATIVOS field at position 132."
+required_text = ["Modelo 182", "RECURRENCIA DONATIVOS", "posición 132"]
+
+
 [sources."enrolled-modelo-182-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "boe"

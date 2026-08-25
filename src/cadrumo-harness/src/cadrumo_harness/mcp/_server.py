@@ -121,7 +121,11 @@ from ._resources import (
     resource_mime_type,
 )
 from ._result_thinning import BULK_RESOLUTION, ResourceLinkRef, thin_envelope
-from ._stdio_lifetime import arm_stdio_lifetime_watchdog, register_pre_exit_hook
+from ._stdio_lifetime import (
+    arm_stdio_lifetime_watchdog,
+    disarm_stdio_lifetime_watchdog,
+    register_pre_exit_hook,
+)
 from ._surface import (
     SURFACE_ENV_VAR,
     SurfaceMode,
@@ -1297,4 +1301,7 @@ def _run_server(
         async with stdio_server() as (read_stream, write_stream):
             await server.run(read_stream, write_stream, server_initialization_options(server))
 
-    anyio.run(_amain)
+    try:
+        anyio.run(_amain)
+    finally:
+        disarm_stdio_lifetime_watchdog()

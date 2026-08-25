@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: ``ODOIREP``, ``SUBCLAVE`` reads ``EVALCBUS`` -- and the same pass misplaces
 #: field bounds. Nothing cites it for a layout, which is the state this module
 #: exists to keep true.
-_KNOWN_SELF_CONTRADICTING_DESIGN = "enrolled-modelo-038-layout"
+_KNOWN_SELF_CONTRADICTING_DESIGN = "aeat-dr-038-2024"
 
 
 @dataclass(frozen=True)

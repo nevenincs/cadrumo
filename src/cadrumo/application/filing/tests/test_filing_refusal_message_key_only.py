@@ -16,15 +16,18 @@ key-and-context assertion therefore cannot detect it; only an absence check can.
 
 The runtime proof drives each migrated refusal through real behaviour -- real
 values, real registry-free helpers, no mock, stub, patch or skip -- and asserts
-the *absence* directly: ``str(exc)`` equals the locale key exactly.
+the *absence* directly: ``str(exc)`` equals the locale key exactly. It also
+proves that every operator-reachable family transports an explicit terminal
+precondition outcome; layout renderers and invariant-only constructors are
+listed as structural exclusions, not silently omitted.
 
-Scope is declared rather than inferred. Three modules are deliberately NOT in
+Scope is declared rather than inferred. Six modules are deliberately NOT in
 the swept set, because their producers are registry-layout and renderer
 structural invariants addressed to whoever authored the export layout rather
-than continuation refusals addressed to the operator, and they are not migrated:
-``_export.py`` field and digest declarations, ``_projection.py``, and
-``_export_xml_dictionary.py``. Naming them here keeps the exclusion visible
-instead of hiding it behind a matcher that would silently pass.
+than continuation refusals addressed to the operator.  Each exclusion records
+the downstream export owner that catches or projects the invariant; naming
+them here keeps the exclusion visible instead of hiding it behind a matcher
+that would silently pass.
 
 See Also:
     :class:`~cadrumo.application.filing.errors.ModeloCalculateError`
@@ -34,18 +37,15 @@ See Also:
 from __future__ import annotations
 
 import ast
-import datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 
-from ....core import Period, scan_directory
-from ....domain.filing import ModeloBuilderError, ModeloImportError
-from ....domain.submission import ModeloDraftStatus
-from .._calculate import DeclaracionCalculateNextAction, DeclaracionCalculateSummary
-from ..errors import ModeloCalculateError
+from ....core import ActionConditionality, NoRecoveryOutcome, scan_directory
+from ....core.errors import TerminalPreconditionErrorMixin
+from ....domain.filing import FilingExportError, ModeloBuilderError, ModeloImportError
+from ..errors import FilingPreconditionCondition, ModeloApplicationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -84,12 +84,48 @@ _SWEPT_MODULES: tuple[str, ...] = (
 )
 
 #: Modules carrying registry-layout and renderer structural invariants that are
-#: NOT migrated. Listed so the exclusion is auditable rather than implicit.
-_UNSWEPT_MODULES: tuple[str, ...] = (
-    "_export.py",
-    "_export_xml_dictionary.py",
-    "_projection.py",
-)
+#: NOT migrated.  The value records the downstream export boundary that catches
+#: or projects the invariant, keeping every structural exclusion auditable.
+_UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
+    "_export.py": (
+        "The public export/verify boundary owns field and digest declaration "
+        "failures and projects them at the filed-artifact boundary."
+    ),
+    "_export_producer.py": (
+        "Producer-snapshot completeness is consumed by _export.py, whose "
+        "public export boundary owns the resulting validation/catch path."
+    ),
+    "_export_xml_dictionary.py": (
+        "XML-dictionary layout invariants are consumed by _export.py, whose "
+        "export/verification boundary owns their projection."
+    ),
+    "_projection.py": (
+        "Projection-plan and value-address invariants are consumed by _export.py's render-request boundary."
+    ),
+    "_record_field_renderer.py": (
+        "Field offset, length, and role invariants are consumed by "
+        "_record_renderer.py/_export.py at the artifact boundary."
+    ),
+    "_record_renderer.py": (
+        "Record ordering and occurrence invariants are consumed by _export.py at the artifact boundary."
+    ),
+}
+
+_UNSWEPT_MODULES: tuple[str, ...] = tuple(_UNSWEPT_MODULE_RATIONALES)
+
+#: The complete adjudicated population whose key-only failures can reach an
+#: operator through a filing application surface.  These aliases deliberately
+#: resolve to the one existing registered application terminal carrier; adding
+#: an undeclared exception type would bypass the registered error taxonomy.
+_OPERATOR_REACHABLE_REFUSAL_ALIASES: dict[str, str] = {
+    "__init__.py": "_ModeloBuilderError",
+    "_complementaria.py": "ModeloBuilderError",
+    "_export_parity.py": "FilingExportError",
+    "_import.py": "ModeloImportError",
+    "_m303_exonerado_390.py": "FilingExportError",
+    "_m303_export_applicability.py": "FilingExportError",
+    "runtime.py": "ModeloBuilderError",
+}
 
 
 def _authored_message_sites(path: Path) -> list[tuple[str, int]]:
@@ -109,6 +145,25 @@ def _authored_message_sites(path: Path) -> list[tuple[str, int]]:
     return offenders
 
 
+def _filing_owned_authored_error_modules(root: Path = _FILING_PACKAGE) -> set[str]:
+    """Return every filing module that still authors a registered-error message."""
+    return {path.name for path in scan_directory(root, pattern="*.py") if _authored_message_sites(path)}
+
+
+def _assert_authored_error_module_partition(
+    *, root: Path, swept_modules: tuple[str, ...], unswept_modules: tuple[str, ...]
+) -> None:
+    """Require every authored filing-error module to have one explicit role."""
+    overlap = sorted(set(swept_modules) & set(unswept_modules))
+    assert overlap == [], f"a module cannot be both swept and structurally excluded: {overlap}"
+
+    authored_modules = _filing_owned_authored_error_modules(root)
+    assert authored_modules == set(unswept_modules), (
+        "every filing-owned authored-error module must be explicitly unswept "
+        f"with a downstream owner/catch rationale: found {sorted(authored_modules)}"
+    )
+
+
 def test_the_declared_module_rosters_still_name_real_modules() -> None:
     """Keep both rosters honest against a rename, deletion or split.
 
@@ -121,6 +176,51 @@ def test_the_declared_module_rosters_still_name_real_modules() -> None:
 
     assert missing_swept == [], f"the swept roster names modules that no longer exist: {missing_swept}"
     assert missing_unswept == [], f"the unswept roster names modules that no longer exist: {missing_unswept}"
+    assert set(_UNSWEPT_MODULE_RATIONALES) == set(_UNSWEPT_MODULES)
+    assert all(_UNSWEPT_MODULE_RATIONALES.values())
+
+
+def _imported_application_refusal_aliases(path: Path) -> set[str]:
+    """Return local names imported from the filing application error owner."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    aliases: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom) or node.module != "errors" or node.level != 1:
+            continue
+        for imported in node.names:
+            if imported.name == "ModeloApplicationError":
+                aliases.add(imported.asname or imported.name)
+    return aliases
+
+
+def _assert_operator_reachable_refusal_census(census: dict[str, tuple[Path, str]]) -> None:
+    """Reject any reachable family that bypasses the registered terminal carrier."""
+    resolved = {
+        module: alias in _imported_application_refusal_aliases(path) for module, (path, alias) in census.items()
+    }
+    assert resolved == {module: True for module in census}
+
+
+def test_each_operator_reachable_refusal_family_uses_the_registered_terminal_carrier() -> None:
+    """Census every reachable family; renderer/invariant modules are excluded above."""
+    _assert_operator_reachable_refusal_census(
+        {module: (_FILING_PACKAGE / module, alias) for module, alias in _OPERATOR_REACHABLE_REFUSAL_ALIASES.items()}
+    )
+
+
+def test_operator_reachable_refusal_census_rejects_a_missing_terminal_import(tmp_path: Path) -> None:
+    """Mutation proof: a legacy domain-only producer cannot slip through the census."""
+    legacy = tmp_path / "legacy_refusal.py"
+    legacy.write_text(
+        "from cadrumo.domain.filing import ModeloBuilderError\n"
+        "\n"
+        "def refuse():\n"
+        "    raise ModeloBuilderError(translated_message='application.filing.test.error')\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssertionError):
+        _assert_operator_reachable_refusal_census({"legacy_refusal.py": (legacy, "ModeloBuilderError")})
 
 
 def test_the_filing_owned_error_roster_still_names_reachable_errors() -> None:
@@ -147,6 +247,27 @@ def test_the_filing_owned_error_roster_still_names_reachable_errors() -> None:
 def test_no_swept_filing_module_authors_its_own_refusal_message() -> None:
     offenders = {name: sites for name in _SWEPT_MODULES if (sites := _authored_message_sites(_FILING_PACKAGE / name))}
     assert offenders == {}, f"migrated filing refusals must carry a locale key, never authored text: {offenders}"
+
+
+def test_every_filing_owned_authored_error_module_is_explicitly_unswept() -> None:
+    """The complete AST census cannot silently omit a new renderer/error module."""
+    _assert_authored_error_module_partition(
+        root=_FILING_PACKAGE,
+        swept_modules=_SWEPT_MODULES,
+        unswept_modules=_UNSWEPT_MODULES,
+    )
+
+
+def test_authored_error_module_partition_rejects_an_unclassified_module(tmp_path: Path) -> None:
+    """Mutation proof: a newly authored error module cannot evade the roster."""
+    renderer = tmp_path / "new_renderer.py"
+    renderer.write_text(
+        'raise FilingExportValidationError("layout field offset is invalid")\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssertionError, match="explicitly unswept"):
+        _assert_authored_error_module_partition(root=tmp_path, swept_modules=(), unswept_modules=())
 
 
 def test_the_authored_message_scan_detects_both_shapes_of_the_defect(tmp_path: Path) -> None:
@@ -181,98 +302,63 @@ def test_the_authored_message_scan_detects_both_shapes_of_the_defect(tmp_path: P
     assert _authored_message_sites(clean) == []
 
 
-def _nested_calculate_error(excinfo: pytest.ExceptionInfo[ValidationError]) -> ModeloCalculateError:
-    """Return the model-validator refusal pydantic retained inside the wrapper."""
-    for detail in excinfo.value.errors(include_url=False):
-        context = detail.get("ctx")
-        nested = context.get("error") if isinstance(context, dict) else None
-        if isinstance(nested, ModeloCalculateError):
-            return nested
-    pytest.fail("the calculate summary refusal did not surface a ModeloCalculateError")
+def _assert_terminal_application_refusal(error: ModeloApplicationError) -> None:
+    assert isinstance(error, TerminalPreconditionErrorMixin)
+    verdict = error.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == FilingPreconditionCondition.OPERATION_ADMISSIBLE.value
+    assert verdict.action is None
+    assert verdict.argument_bindings == ()
+    assert verdict.conditionality is ActionConditionality.NOT_APPLICABLE
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.evidence[0].values == {"error_type": "ModeloApplicationError"}
 
 
-def _summary(
-    *,
-    next_action: DeclaracionCalculateNextAction,
-    repair_hints: tuple[str, ...],
-    blocker_count: int,
-) -> DeclaracionCalculateSummary:
-    return DeclaracionCalculateSummary(
-        draft_id="draft-key-absence",
-        modelo="303",
-        period=Period.from_year_and_code(2024, "1T"),
-        status=ModeloDraftStatus.BORRADOR,
-        blocker_count=blocker_count,
-        warning_count=0,
-        info_count=0,
-        next_action=next_action,
-        repair_hints=repair_hints,
-        narrative="filing.calculate.default_narrative",
-        calculated_at=datetime.datetime.now(datetime.UTC),
-    )
+def test_terminal_application_refusal_preserves_the_established_domain_catch_families() -> None:
+    """Transport must not make direct filing callers lose their existing catches."""
+    error = ModeloApplicationError(translated_message="application.filing.test.errors.refusal")
+
+    assert isinstance(error, ModeloBuilderError)
+    assert isinstance(error, ModeloImportError)
+    assert isinstance(error, FilingExportError)
+    _assert_terminal_application_refusal(error)
 
 
-def test_missing_repair_hints_refusal_renders_as_its_key() -> None:
-    with pytest.raises(ValidationError) as excinfo:
-        _summary(
-            next_action=DeclaracionCalculateNextAction.RESOLVE_BLOCKERS,
-            repair_hints=(),
-            blocker_count=1,
-        )
-
-    error = _nested_calculate_error(excinfo)
-    assert str(error) == "application.filing.calculate.errors.repair_hints_required"
-    assert error.context == {
-        "next_action": "resolve-blockers",
-        "repair_hint_count": 0,
-        "blocker_count": 1,
-    }
-
-
-def test_unexpected_repair_hints_refusal_renders_as_its_key() -> None:
-    with pytest.raises(ValidationError) as excinfo:
-        _summary(
-            next_action=DeclaracionCalculateNextAction.REVIEW,
-            repair_hints=("filing.repair.some_hint",),
-            blocker_count=0,
-        )
-
-    error = _nested_calculate_error(excinfo)
-    assert str(error) == "application.filing.calculate.errors.repair_hints_forbidden"
-
-
-def test_decimal_input_refusal_renders_as_its_key() -> None:
+def test_decimal_input_refusal_renders_as_its_key_and_terminal_condition() -> None:
     from .. import _decimal_input
 
-    with pytest.raises(ModeloBuilderError) as excinfo:
+    with pytest.raises(ModeloApplicationError) as excinfo:
         _decimal_input("iva.base", object())
 
     assert str(excinfo.value) == "application.filing.build_draft.errors.input_not_decimal"
     assert excinfo.value.context == {"input_id": "iva.base", "observed_type": "object"}
+    _assert_terminal_application_refusal(excinfo.value)
 
 
 def test_binding_row_key_refusal_renders_as_its_key() -> None:
     from .. import _binding_row_index
 
-    with pytest.raises(ModeloBuilderError) as excinfo:
+    with pytest.raises(ModeloApplicationError) as excinfo:
         _binding_row_index("iva.rows", 0)
 
     assert str(excinfo.value) == "application.filing.build_draft.errors.binding_row_key_not_positive_integer"
+    _assert_terminal_application_refusal(excinfo.value)
 
 
 def test_boolean_input_refusal_renders_as_its_key() -> None:
     from .. import _boolean_input
 
-    with pytest.raises(ModeloBuilderError) as excinfo:
+    with pytest.raises(ModeloApplicationError) as excinfo:
         _boolean_input("iva.flag", Decimal("1"))
 
     assert str(excinfo.value) == "application.filing.build_draft.errors.binding_value_not_boolean"
+    _assert_terminal_application_refusal(excinfo.value)
 
 
 def test_import_period_token_refusal_renders_as_its_key() -> None:
     from .._import import _require_supported_period_token
 
-    with pytest.raises(ModeloImportError) as excinfo:
+    with pytest.raises(ModeloApplicationError) as excinfo:
         _require_supported_period_token(
             modelo="303",
             filing_year=2024,
@@ -281,6 +367,7 @@ def test_import_period_token_refusal_renders_as_its_key() -> None:
         )
 
     assert str(excinfo.value) == "application.filing.import.errors.period_token_undeclared"
+    _assert_terminal_application_refusal(excinfo.value)
 
 
 def test_export_layout_not_renderable_refusal_renders_as_its_key() -> None:

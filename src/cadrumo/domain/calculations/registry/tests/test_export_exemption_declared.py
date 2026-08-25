@@ -483,7 +483,7 @@ def test_modelo_182_is_applicability_grade_and_is_not_asked_for_a_layout() -> No
     excuses it.
     """
     modelo, catalogues = _committed_modelo("182")
-    revision = modelo.revisions["2007-y-siguientes"]
+    revision = modelo.revisions["2025"]
 
     assert revision.effective_authority_grade is RegistryAuthorityGrade.APPLICABILITY
     assert modelo_publishes_a_record_design(modelo, catalogues.sources)

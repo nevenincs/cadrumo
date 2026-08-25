@@ -30,6 +30,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     OperationBaselinePolicy,
     OperationCancellationRefusalCode,
+    OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
     OperationCancellationService,
     OperationCancellationSuccessV1,
@@ -58,6 +59,7 @@ from .. import (
     OperationResponseRejectRequestV1,
     OperationReviewProjectionReferenceV1,
     OperationReviewProjectionRefusalCode,
+    OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
     OperationReviewProjectionService,
     OperationReviewProjectionSuccessV1,
@@ -66,6 +68,7 @@ from .. import (
     OperationSensitiveInputPolicy,
     OperationTerminalReceipt,
     OperationWorkspaceRefreshTargetRefusalCode,
+    OperationWorkspaceRefreshTargetRefusalV1,
     OperationWorkspaceRefreshTargetRequestV1,
     OperationWorkspaceRefreshTargetService,
     OperationWorkspaceRefreshTargetSuccessV1,
@@ -450,6 +453,11 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
 
         assert isinstance(result, OperationReviewProjectionSuccessV1)
         assert result.projection == SafeReviewProjection(summary_code="safe.review")
+        assert isinstance(stale, OperationReviewProjectionRefusalV1)
+        assert isinstance(expired, OperationReviewProjectionRefusalV1)
+        assert isinstance(digest_mismatch, OperationReviewProjectionRefusalV1)
+        assert isinstance(schema_mismatch, OperationReviewProjectionRefusalV1)
+        assert isinstance(unsafe_output, OperationReviewProjectionRefusalV1)
         assert stale.code is OperationReviewProjectionRefusalCode.STALE_REVIEW_REFERENCE
         assert expired.code is OperationReviewProjectionRefusalCode.REVIEW_EXPIRED
         assert digest_mismatch.code is OperationReviewProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH
@@ -495,6 +503,10 @@ def test_refresh_target_resolves_only_authoritative_successful_terminal_receipt(
 
     assert isinstance(result, OperationWorkspaceRefreshTargetSuccessV1)
     assert result.target == WorkspaceRefreshTarget(workspace_coordinate="profile:active")
+    assert isinstance(stale, OperationWorkspaceRefreshTargetRefusalV1)
+    assert isinstance(digest_mismatch, OperationWorkspaceRefreshTargetRefusalV1)
+    assert isinstance(schema_mismatch, OperationWorkspaceRefreshTargetRefusalV1)
+    assert isinstance(unsafe_output, OperationWorkspaceRefreshTargetRefusalV1)
     assert stale.code is OperationWorkspaceRefreshTargetRefusalCode.UNSAFE_REFRESH_TARGET
     assert digest_mismatch.code is OperationWorkspaceRefreshTargetRefusalCode.DEFINITION_CONTRACT_MISMATCH
     assert schema_mismatch.code is OperationWorkspaceRefreshTargetRefusalCode.REFRESH_SCHEMA_MISMATCH
@@ -549,6 +561,9 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
             review_service.resolve(OperationReviewProjectionVersionHeader(review_projection_version=2))
         )
 
+        assert isinstance(not_pending, OperationReviewProjectionRefusalV1)
+        assert isinstance(unknown, OperationReviewProjectionRefusalV1)
+        assert isinstance(unsupported, OperationReviewProjectionRefusalV1)
         assert not_pending.code is OperationReviewProjectionRefusalCode.REVIEW_NOT_PENDING
         assert unknown.code is OperationReviewProjectionRefusalCode.UNKNOWN_OPERATION
         assert unsupported.code is OperationReviewProjectionRefusalCode.UNSUPPORTED_VERSION
@@ -588,6 +603,9 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
             )
         )
 
+        assert isinstance(not_terminal, OperationWorkspaceRefreshTargetRefusalV1)
+        assert isinstance(refresh_unsupported, OperationWorkspaceRefreshTargetRefusalV1)
+        assert isinstance(unavailable, OperationWorkspaceRefreshTargetRefusalV1)
         assert not_terminal.code is OperationWorkspaceRefreshTargetRefusalCode.OPERATION_NOT_TERMINAL
         assert refresh_unsupported.code is OperationWorkspaceRefreshTargetRefusalCode.UNSUPPORTED_VERSION
         assert unavailable.code is OperationWorkspaceRefreshTargetRefusalCode.REFRESH_ADAPTER_UNAVAILABLE
@@ -789,5 +807,6 @@ def test_cancellation_and_detach_delegate_to_real_supervisor_ports(tmp_path: Pat
 
         assert isinstance(detach, OperationDetachSuccessV1)
         assert isinstance(cancelled, OperationCancellationSuccessV1)
+        assert isinstance(stale, OperationCancellationRefusalV1)
         assert stale.code is OperationCancellationRefusalCode.STALE_OPERATION_REVISION
         assert journal_path.read_bytes() == settled_bytes

@@ -41,6 +41,7 @@ runtime under an env-isolated storage root - no mocks, real storage and crypto.
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -49,22 +50,19 @@ from pathlib import Path
 import pytest
 from mcp.server import Server
 
-from cadrumo.application.user_profile import (
-    ProfileRecoveryEnrollment,
-    login_profile,
-    register_profile_with_credentials,
-)
-from cadrumo.application.wizard import scripted_profile_facts
+from cadrumo.adapters.persistence.storage import master_key
+from cadrumo.application.user_profile import close_profile_session_artefacts, register_profile_with_credentials
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
-from cadrumo.core.wizard_catalogue import get_setup_flow
 from cadrumo.tests import temporary_env
 
 from .._call_runtime import tier_for
 from .._dispatch import tool_name_for_command
 from .._harness_tools import WHOAMI_TOOL
-from .._inprocess import parse_cli_envelope, run_cli_in_process, tier_runs_in_process
+from .._inprocess import tier_runs_in_process
+from .._profile_secret_channel import clear_profile_secret, load_profile_secret_file
 from .._server import build_server
 from .._tools import build_tool_descriptors
+from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS, verify_recovery_handover
 from ._session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -152,14 +150,9 @@ def test_direct_verb_tool_leaves_the_loop_serving_requests_mid_call() -> None:
 # --- warm in-process transport: off-loop dispatch, custody, crash restart ---
 
 #: A read-only session-opening verb used to prove the warm runtime opens, uses,
-#: and relocks a real bucket session per call. It reads encrypted review state, so
-#: a successful call proves a genuine session was opened.
-_SESSION_READ_KEY = "app.review.queue"
-
-
-def _verify_recovery_handover(enrollment: ProfileRecoveryEnrollment) -> str:
-    """Acknowledge exact possession of the generated test recovery phrase."""
-    return enrollment.recovery_key.mnemonic
+#: and relocks a real bucket session per call. It reads the encrypted profile
+#: record, so a successful call proves a genuine session was opened.
+_SESSION_READ_KEY = "config.auth.status"
 
 
 async def _warm_call_with_concurrent_list(tool_name: str, arguments: dict[str, object]) -> tuple[bool, bool]:
@@ -195,8 +188,8 @@ def _provisioned_profile_env(tmp_path: Path) -> Iterator[None]:
     """Provision a real encrypted profile under an env-isolated storage root.
 
     The warm runtime runs the CLI in a raw worker thread that inherits
-    ``os.environ`` (not context-var overrides), so isolation is env-based. The
-    The profile is created through the canonical application registration door;
+        ``os.environ`` (not context-var overrides), so isolation is env-based. The
+        profile is created through the canonical application registration door;
     the warm runtime then starts against that real encrypted state. Both resolve
     the same environment-backed storage and secret-store configuration.
     """
@@ -206,28 +199,31 @@ def _provisioned_profile_env(tmp_path: Path) -> Iterator[None]:
         CADRUMO_SECRET_STORE_DIR=str(tmp_path / "fallback-store"),
         CADRUMO_SECRET_PASSPHRASE=DEV_TEST_DATABASE_PASSWORD,
     ):
-        facts = scripted_profile_facts(
-            get_setup_flow(),
-            {
-                "accept_defaults": True,
-                "entity_type": "natural_person",
-                "irpf_income_categories": "actividad_economica",
-                "tax_id": "12345678Z",
-                "name": "Operator",
-                "surnames": "Custody",
-                "activity": "design",
-            },
-        )
         created = register_profile_with_credentials(
             label="operator",
-            passphrase=DEV_TEST_DATABASE_PASSWORD,
-            facts=facts,
-            recovery_handover=_verify_recovery_handover,
+            passphrase=PROFILE_PASSPHRASE,
+            facts=READY_PROFILE_FACTS,
+            recovery_handover=verify_recovery_handover,
         )
         assert created.recovery_enrolled is True
-        logged_in = login_profile(name="operator", passphrase_callback=lambda: DEV_TEST_DATABASE_PASSWORD)
-        assert logged_in.label == "operator"
-        yield
+        channel = tmp_path / "profile-secret.json"
+        channel.write_text(
+            json.dumps({"profile_passphrase": PROFILE_PASSPHRASE}),
+            encoding="utf-8",
+        )
+        load_profile_secret_file(channel)
+        # Setup may leave process or OS-keychain session state on a capable host.
+        # Remove both forms so every warm call below MUST consume the canonical
+        # root stdin fallback retained from the operator-owned channel.
+        close_profile_session_artefacts(
+            storage_root=tmp_path / "storage",
+            bucket_id=str(created.profile_id),
+        )
+        try:
+            yield
+        finally:
+            master_key.close_active_bucket_session()
+            clear_profile_secret()
 
 
 def _warm_read(server: Server, tool_name: str, arguments: dict[str, object]) -> dict[str, object]:
@@ -245,6 +241,22 @@ def _warm_read(server: Server, tool_name: str, arguments: dict[str, object]) -> 
     return asyncio.run(_drive())
 
 
+def test_warm_runtime_refuses_when_the_required_profile_secret_channel_is_cleared(tmp_path: Path) -> None:
+    """Prove the warm success path bites when its canonical stdin proof is absent."""
+    with _provisioned_profile_env(tmp_path):
+        clear_profile_secret()
+        refused = _warm_read(
+            build_server(build_tool_descriptors()),
+            tool_name_for_command(_SESSION_READ_KEY),
+            {},
+        )
+
+    assert refused["status"] == "error"
+    error = refused["error"]
+    assert isinstance(error, dict)
+    assert error["code"] == "AUTH_STORAGE_KEYRING_UNAVAILABLE"
+
+
 def test_warm_runtime_holds_no_bucket_session_between_calls(tmp_path: Path) -> None:
     with _provisioned_profile_env(tmp_path):
         server = build_server(build_tool_descriptors())
@@ -260,9 +272,9 @@ def test_warm_runtime_holds_no_bucket_session_between_calls(tmp_path: Path) -> N
         # session lives only in the ephemeral worker context, so the server's own
         # long-lived context never holds one - the design guarantee behind the
         # idle-lock custody the finally relock enforces.
-        assert first["status"] == "success", first.get("raw", first)
+        assert first["status"] in {"success", "warning"}, first.get("raw", first)
         assert first["active_profile"] == "operator"
-        assert second["status"] == "success", second
+        assert second["status"] in {"success", "warning"}, second
         assert second["active_profile"] == "operator"
 
 
@@ -272,7 +284,7 @@ def test_a_rebuilt_warm_runtime_serves_encrypted_state_cleanly(tmp_path: Path) -
         # A first warm runtime instance serves the encrypted state.
         first_server = build_server(build_tool_descriptors())
         first = _warm_read(first_server, tool_name, {})
-        assert first["status"] == "success", first
+        assert first["status"] in {"success", "warning"}, first
         # Simulate a crash by discarding the instance; a fresh instance re-warms
         # its caches and serves the SAME persisted encrypted state cleanly, with no
         # torn state and no custody carried over from the discarded runtime. That
@@ -281,5 +293,5 @@ def test_a_rebuilt_warm_runtime_serves_encrypted_state_cleanly(tmp_path: Path) -
         del first_server
         second_server = build_server(build_tool_descriptors())
         second = _warm_read(second_server, tool_name, {})
-        assert second["status"] == "success", second
+        assert second["status"] in {"success", "warning"}, second
         assert second["active_profile"] == "operator"

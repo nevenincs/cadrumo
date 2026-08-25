@@ -33,7 +33,6 @@ from cadrumo.application.user_profile import (
     profile_bind_bucket_session,
     register_profile_with_credentials,
 )
-from cadrumo.domain.user_profile import UserProfileFact
 
 from ... import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from .._harness_tools import (
@@ -55,29 +54,13 @@ from .._resources import (
     resource_uri,
 )
 from .._tools import build_tool_descriptors
+from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS, verify_recovery_handover
 from ._session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _UTF_8 = "utf-8"
 _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
-_PROFILE_PASSPHRASE = "harness-current-profile-credential"  # noqa: S105 - synthetic integration credential
-_READY_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Harness Operator"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
 
 
 @contextmanager
@@ -300,14 +283,14 @@ def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> Non
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            recovery_handover=verify_recovery_handover,
             label="Erika",
-            passphrase=_PROFILE_PASSPHRASE,
-            facts=_READY_FACTS,
+            passphrase=PROFILE_PASSPHRASE,
+            facts=READY_PROFILE_FACTS,
         )
         with _authenticated_current_profile(
             profile_id=outcome.profile_id,
-            passphrase=_PROFILE_PASSPHRASE,
+            passphrase=PROFILE_PASSPHRASE,
             storage_root=storage_root,
         ):
             identity = build_whoami_identity()
@@ -387,14 +370,14 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            recovery_handover=verify_recovery_handover,
             label="Erika",
-            passphrase=_PROFILE_PASSPHRASE,
-            facts=_READY_FACTS,
+            passphrase=PROFILE_PASSPHRASE,
+            facts=READY_PROFILE_FACTS,
         )
         with _authenticated_current_profile(
             profile_id=outcome.profile_id,
-            passphrase=_PROFILE_PASSPHRASE,
+            passphrase=PROFILE_PASSPHRASE,
             storage_root=storage_root,
         ):
             server = cast("Any", build_server(descriptors, persona=None))
@@ -428,14 +411,14 @@ def test_floor_response_carries_the_active_identity_block(tmp_path: Any) -> None
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            recovery_handover=verify_recovery_handover,
             label="Erika",
-            passphrase=_PROFILE_PASSPHRASE,
-            facts=_READY_FACTS,
+            passphrase=PROFILE_PASSPHRASE,
+            facts=READY_PROFILE_FACTS,
         )
         with _authenticated_current_profile(
             profile_id=outcome.profile_id,
-            passphrase=_PROFILE_PASSPHRASE,
+            passphrase=PROFILE_PASSPHRASE,
             storage_root=storage_root,
         ):
             server = cast("Any", build_server(descriptors, persona=None))

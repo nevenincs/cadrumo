@@ -1,26 +1,25 @@
-[revisions."2007-y-siguientes"]
+[revisions."2025"]
 # Applicability grade: the donativos declaration is filed by the entity RECEIVING the
 # donation, not by the donor claiming the deduction, so this application's taxpayer is
 # the subject of the declaration rather than its filer.
 authority_grade = "applicability"
-# valid_from is canonicalised to the ejercicio-start convention (January 1 of
-# period_selector.year_from), not the orden's own effective date -- that fact
-# already has its home on orden-eha-3021-2007:art-1's legal.effective_from.
-valid_from = 2007-01-01
-period_selector = { year_from = 2007, periods = ["0A"] }
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+period_selector = { years = [2025], periods = ["0A"] }
 legal_refs = [
     "orden-eha-3021-2007:art-1",
     "orden-eha-3021-2007:art-5",
     "ley-35-2006:art-68.3",
     "ley-58-2003:art-93",
+    "orden-hac-1430-2025:art-2",
+    "orden-hac-1430-2025:df-unica",
 ]
 orden_aplicabilidad = [
-    "orden-eha-3021-2007:art-1",
+    "orden-hac-1430-2025:df-unica",
 ]
 source_refs = [
     "enrolled-modelo-182-procedure",
     "enrolled-modelo-182-layout",
-    "aeat-dr-182-2024",
     "aeat-dr-182-2025",
 ]
 review_status = "agent_reviewed"
@@ -37,30 +36,30 @@ manifest equals the calculation closure, with the optional free-text donor name 
 excluded and the reasoning recorded in the manifest itself; one verification expectation covering \
 the 6 required casillas at min_coverage 1.0. NOT CLAIMED -- independent_check_coverage is 0.0000 \
 meaning NO CLAIM, not zero: no value here was checked against an independent AEAT oracle. NOT \
-CLAIMED -- SPAN: test_every_modelo_revision_span_is_corpus_proven reports 0 comparable bundled \
-design years inside this 2007-onward span; the bundled 2024 and 2025 disenos do not evidence the \
-2007-2023 record layouts, and that gap is a standing failure requiring AEAT acquisition, not \
-something this review closes. This limit is stated because 60 of the 80 already-stamped revisions \
-carry the same unstated flag. NOT CLAIMED -- the 5 donativo_donor bindings are members of \
+CLAIMED -- SPAN: this revision selects only exercise 2025, whose exact AEAT design and the \
+Orden HAC/1430/2025 amendment/application provisions are cited. The catalogue-only 2024 design \
+does not establish a legal era, and 2007-2023 and 2026 onward remain refused pending exact \
+authority. NOT CLAIMED -- the 5 donativo_donor bindings are members of \
 DEFERRED_SOURCE_KINDS: no resolver routes them today, so they emit a standing advisory rather than a \
 silent blank, and they resolve no value. NOT CLAIMED -- no export layout is declared and the tipo-2 \
 per-donor detail rows are not modelled. NOT CLAIMED -- all 3 locales are complete for the 7 labels, \
 but the translated strings were not audited for accuracy."""
 reviewed_at = 2026-08-21
 
-[revisions."2007-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+[revisions."2025".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2007-y-siguientes' of modelo 182 has no strictly-earlier sibling revision of this modelo (valid_from 2007-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
+CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2025' of modelo 182 has no strictly-earlier sibling revision of this modelo (valid_from 2007-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
 transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
 legal_refs = [
     "orden-eha-3021-2007:art-1",
     "orden-eha-3021-2007:art-5",
     "ley-35-2006:art-68.3",
     "ley-58-2003:art-93",
+    "orden-hac-1430-2025:art-2",
+    "orden-hac-1430-2025:df-unica",
 ]
 source_refs = [
     "enrolled-modelo-182-procedure",
     "enrolled-modelo-182-layout",
-    "aeat-dr-182-2024",
     "aeat-dr-182-2025",
 ]

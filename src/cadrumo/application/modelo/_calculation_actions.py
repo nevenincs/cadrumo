@@ -47,12 +47,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...adapters.persistence.storage import secure_object_repository_for_bucket
 from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
     ActionEvidenceProvenance,
@@ -105,6 +103,7 @@ from ...domain.transactions import TransactionCatalogueRepositoryProtocol
 from ..calculations import CalculationObservationRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
 from ..filing import modelo_record_repository_for_application
+from ..inventory import inventory_ledger_repository_for_bucket
 from ..prorrata_register import ProrrataRegisterRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,
@@ -815,9 +814,7 @@ def _resolve_bucket_source_mesh(
         inventory_resolutions = (
             resolve_declared(
                 InventorySourceResolver(
-                    inventory_repository=InventoryLedgerRepository(
-                        objects=secure_object_repository_for_bucket(work_unit.bucket_id),
-                    ),
+                    inventory_repository=inventory_ledger_repository_for_bucket(work_unit.bucket_id),
                 ),
             ),
         )

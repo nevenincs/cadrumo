@@ -5,19 +5,35 @@ from __future__ import annotations
 import ast
 import inspect
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
-from types import ModuleType, SimpleNamespace
+from pathlib import Path
+from types import ModuleType
+from typing import override
 
 import pytest
 
-from ....core import ActionConditionality, ActionEvidenceProvenance, BindingSourceKind, NoRecoveryOutcome
+from ....core import ActionConditionality, ActionEvidenceProvenance, BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import TerminalPreconditionErrorMixin
+from ....domain.calculations.registry import DataBindingDefinition, IvaLedgerObservation, ModeloRevision, PeriodSelector
+from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
+from ....domain.iva import (
+    InvoiceKind,
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+    derive_flow_for_classification,
+)
+from ....tests.secure_sql import isolated_runtime_profile
 from .. import _modelo_bindings as modelo_bindings_module
 from .. import _service as service_module
 from .._errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver, _raise_if_invoice_iva_would_be_silent
 from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
+from .._retencion_observations_repository import RetencionObservationRepository
 from .._service import _SUPPORTED_PER_MODELO_MODELOS, provider_for_modelo
+from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -109,21 +125,28 @@ def _aggregation_carriers() -> dict[str, ast.Call]:
                 self.owner = "<module>"
                 self.occurrence: dict[str, int] = {}
 
+            @override
             def visit_ClassDef(self, node: ast.ClassDef) -> None:
                 prior_owner = self.owner
                 self.owner = node.name if prior_owner == "<module>" else f"{prior_owner}.{node.name}"
                 self.generic_visit(node)
                 self.owner = prior_owner
 
+            @override
             def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
                 prior_owner = self.owner
                 self.owner = node.name if prior_owner == "<module>" else f"{prior_owner}.{node.name}"
                 self.generic_visit(node)
                 self.owner = prior_owner
 
+            @override
             def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-                self.visit_FunctionDef(node)
+                prior_owner = self.owner
+                self.owner = node.name if prior_owner == "<module>" else f"{prior_owner}.{node.name}"
+                self.generic_visit(node)
+                self.owner = prior_owner
 
+            @override
             def visit_Call(self, node: ast.Call) -> None:
                 if _call_name(node.func) in {"AggregationUnsupportedModeloError", "AggregationValidationError"}:
                     verdict = next(
@@ -271,17 +294,46 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
     monkeypatch: pytest.MonkeyPatch,
     refusal: str,
 ) -> None:
-    context = SimpleNamespace(
+    context = CalculationSourceContext(
+        bucket_id="operator",
         modelo="303",
         filing_year=2025,
-        period=SimpleNamespace(**{"registry_token": "1T"}),
-        revision=object(),
+        period=Period.from_year_and_code(2025, "1T"),
+        revision=ModeloRevision(
+            id="test-303-terminal-preconditions",
+            localization_key="test.schema.revision.test-303-terminal-preconditions.label",
+            valid_from=date(2025, 1, 1),
+            period_selector=PeriodSelector(year_from=2025, periods=("1T",)),
+            legal_refs=("ley-37-1992:art-88",),
+            source_refs=("test-terminal-preconditions",),
+        ),
     )
     expected_facts: dict[str, str | int | bool | Decimal]
     if refusal == "uncovered_deduction":
-        invoice = SimpleNamespace(
-            invoice_id="invoice-unlinked",
-            lines=(SimpleNamespace(subtotal=Decimal("100.00"), iva_amount=Decimal("21.00")),),
+        invoice = Invoice.model_validate(
+            {
+                "kind": InvoiceKind.RECEIVED,
+                "invoice_number": "INV-UNLINKED",
+                "issued_at": date(2025, 4, 1),
+                "counterparty_name": "Proveedor SL",
+                "counterparty_tax_id": "B12345674",
+                "counterparty_country": "ES",
+                "base_total": Decimal("100.00"),
+                "iva_total": Decimal("21.00"),
+                "grand_total": Decimal("121.00"),
+                "currency": "EUR",
+                "lines": (
+                    InvoiceLine(
+                        description="Servicios profesionales",
+                        quantity=Decimal("1"),
+                        unit_price=Decimal("100.00"),
+                        subtotal=Decimal("100.00"),
+                        iva_rate=IvaRate.RATE_21,
+                        iva_amount=Decimal("21.00"),
+                    ),
+                ),
+                "payment_status": PaymentStatus.PAID,
+            },
         )
         screened = modelo_bindings_module._ScreenedInvoiceIva(deduction_authority_missing=(invoice,))
         expected_facts = {
@@ -294,7 +346,22 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
         }
     else:
         screened = modelo_bindings_module._ScreenedInvoiceIva(
-            observations=(object(),),
+            observations=(
+                IvaLedgerObservation(
+                    ledger_id="invoice-unmatched",
+                    transaction_date=date(2025, 4, 1),
+                    category=IvaCategory.DOMESTIC_GENERAL,
+                    rate_kind=IvaRateKind.GENERAL,
+                    flow_direction=derive_flow_for_classification(
+                        category=IvaCategory.DOMESTIC_GENERAL,
+                        invoice_direction=InvoiceKind.ISSUED,
+                    ),
+                    cash_accounting_treatment=IvaCashAccountingTreatment.NONE,
+                    base_amount=Decimal("100.00"),
+                    iva_amount=Decimal("21.00"),
+                    observation_role=IvaLedgerObservationRole.SETTLEMENT,
+                ),
+            ),
             invoice_ids=("invoice-unmatched",),
         )
         binding_id = modelo_bindings_module._INVOICE_LEDGER_SCREEN_BINDINGS["303"][0]
@@ -316,7 +383,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
     with pytest.raises(AggregationValidationError) as raised:
         _raise_if_invoice_iva_would_be_silent(
             context=context,
-            period=object(),
+            period=Period.from_year_and_code(2025, "1T"),
             transaction_binding_values={},
             invoice_repository=None,
             prorrata_apportionment=None,
@@ -329,17 +396,38 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
     )
 
 
-def test_missing_retenciones_observations_has_an_exact_application_state_operator_decision_verdict() -> None:
-    context = SimpleNamespace(
+def test_missing_retenciones_observations_has_an_exact_application_state_operator_decision_verdict(
+    tmp_path: Path,
+) -> None:
+    context = CalculationSourceContext(
+        bucket_id="operator",
         modelo="111",
         filing_year=2026,
-        period=SimpleNamespace(**{"registry_token": "1T"}),
-        revision=SimpleNamespace(bindings=(SimpleNamespace(source=BindingSourceKind.RETENCIONES_AGGREGATION),)),
+        period=Period.from_year_and_code(2026, "1T"),
+        revision=ModeloRevision(
+            id="test-111-terminal-preconditions",
+            localization_key="test.schema.revision.test-111-terminal-preconditions.label",
+            valid_from=date(2026, 1, 1),
+            period_selector=PeriodSelector(year_from=2026, periods=("1T",)),
+            legal_refs=("ley-35-2006:art-99",),
+            source_refs=("test-terminal-preconditions",),
+            bindings=(
+                DataBindingDefinition(
+                    id="test-111-retenciones-binding",
+                    source=BindingSourceKind.RETENCIONES_AGGREGATION,
+                    selector={
+                        "target_casilla_id": "decl.total-perceptores",
+                        "fact": "perceptor_count_distinct",
+                    },
+                    legal_refs=("ley-35-2006:art-99",),
+                    source_refs=("test-terminal-preconditions",),
+                ),
+            ),
+        ),
     )
-    repository = SimpleNamespace(load_observations=lambda _modelo, _period: ())
 
-    with pytest.raises(AggregationValidationError) as raised:
-        RetencionesAggregationSourceResolver(retencion_repository=repository).resolve(context)
+    with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(AggregationValidationError) as raised:
+        RetencionesAggregationSourceResolver(retencion_repository=RetencionObservationRepository()).resolve(context)
 
     _assert_terminal_contract(
         raised.value,

@@ -43,18 +43,16 @@ from textual.worker import Worker, WorkerState
 
 from ....core import OperatorProgress
 from ....core.i18n import tr
-from ._field_edit_screen import FieldEditScreen
-from ._form_screen import FormScreen, presenting_forms_through
-from ._status_bar import PinnedStatusBar
-from ._theme import (
+from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
-    ContentDataTable,
-    ContentScroll,
-    NoticeBand,
     install_cadrumo_themes,
     toggle_appearance,
 )
+from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
+from ._field_edit_screen import FieldEditScreen
+from ._form_screen import FormScreen, presenting_forms_through
+from ._status_bar import PinnedStatusBar
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -62,7 +60,7 @@ if TYPE_CHECKING:
     from textual.widgets.data_table import ColumnKey
 
     from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
-    from ._form_screen import FormPage
+    from ....entrypoints.tui.components.forms import FormPage
 
 
 type ManagerProgressSinkBinder = Callable[[Callable[[OperatorProgress], None]], AbstractContextManager[None]]

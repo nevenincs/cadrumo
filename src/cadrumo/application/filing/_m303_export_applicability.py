@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from ...core import Modelo, Period
 from ...domain.calculations.registry import ExportLayoutDefinition, RegistrySnapshot
-from ...domain.filing import FilingExportError
 from ._producer_snapshot import (
     FilingProducerSnapshot,
     M303FilingFacts,
     assert_m303_regularisation_result_matches_bienes_register,
 )
+from .errors import ModeloApplicationError as FilingExportError
 
 
 def validate_m303_export_applicability(

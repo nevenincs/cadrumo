@@ -102,6 +102,11 @@ def load_mcp_settings() -> McpServingSettings:
     return _constructed_settings()
 
 
+def reset_mcp_settings_cache() -> None:
+    """Forget environment-derived serving settings for controlled reloading."""
+    _constructed_settings.cache_clear()
+
+
 @contextmanager
 def override_mcp_settings(**overrides: object) -> Iterator[McpServingSettings]:
     """Override one or more serving fields for the with-block.
@@ -124,4 +129,5 @@ __all__ = [
     "McpServingSettings",
     "load_mcp_settings",
     "override_mcp_settings",
+    "reset_mcp_settings_cache",
 ]

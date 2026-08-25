@@ -20,11 +20,11 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry._modelo_localization import (
+from cadrumo.core.identity import ContinuidadId
+from cadrumo.domain.calculations.registry import (
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )
-from cadrumo.domain.calculations.registry._schema_base import ContinuidadId
 from dev._paths import REPO_ROOT as _REPO_ROOT
 
 from ..adjudications import (

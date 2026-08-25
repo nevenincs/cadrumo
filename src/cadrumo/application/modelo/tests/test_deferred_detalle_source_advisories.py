@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _DEFERRED_ADVISORY_CASES = [
     ("232", "2018-y-siguientes", "related_party_operation"),
     ("360", "2010-y-siguientes", "refund_operation"),
-    ("182", "2007-y-siguientes", "donativo_donor"),
+    ("182", "2025", "donativo_donor"),
 ]
 
 

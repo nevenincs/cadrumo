@@ -40,6 +40,10 @@ _PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS = {
     ("184", "2025-y-siguientes", 2026): "aeat-dr-184-2025",
     ("200", "2024-y-siguientes", 2026): "aeat-dr-200-2025",
 }
+_M038_SOURCE_ERA_LEGAL_REFS = {
+    "orden-hac-646-2024:art-1",
+    "orden-hac-646-2024:df-unica",
+}
 
 
 def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
@@ -271,6 +275,72 @@ def test_modelo_220_2025_scope_refuses_an_unevidenced_2026_successor() -> None:
     assert not _record_design_sources_cover(sources, date(2026, 12, 31))
 
 
+def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselected() -> None:
+    """M038's legal cutover and inspection receipt cannot select pre-June history."""
+    modelos, catalogues = _registry_tree()
+    modelo = next(candidate for candidate in modelos if candidate.id == "038")
+    june_2024 = modelo.revisions["2024-desde-06"]
+    current_source = catalogues.sources["aeat-dr-038-2024"]
+    historical_source = catalogues.sources["aeat-dr-038-2012-inspection"]
+
+    amendment_refs = {
+        ref_id: catalogues.legal[ref_id]
+        for ref_id in _M038_SOURCE_ERA_LEGAL_REFS
+    }
+    verify_legal_catalogue_grounding(amendment_refs, source_root=bundled_path())
+    assert amendment_refs["orden-hac-646-2024:art-1"].required_text == (
+        "Se introduce un nuevo campo, «Identificador registral único de la sociedad (IRUS)»",
+        "ocupará las posiciones 153-165 del registro de tipo 2",
+        "166-250",
+    )
+    assert amendment_refs["orden-hac-646-2024:df-unica"].required_text == (
+        "será aplicable, por primera vez, a la declaración informativa correspondiente al mes de junio de 2024",
+        "se presentará durante el mes de julio de 2024",
+    )
+    for revision in modelo.revisions.values():
+        assert set(revision.legal_refs) >= _M038_SOURCE_ERA_LEGAL_REFS
+        assert len(revision.constructs) == 1
+        assert set(revision.constructs[0].legal_refs) >= _M038_SOURCE_ERA_LEGAL_REFS
+
+    assert historical_source.applies_from is None
+    assert historical_source.applies_to is None
+    assert historical_source.record_design_epoch is None
+    assert historical_source.id not in modelo.source_refs
+    assert all(historical_source.id not in revision.source_refs for revision in modelo.revisions.values())
+    assert current_source.applies_from == date(2024, 6, 1)
+    assert current_source.applies_to is None
+
+    for filing_year, period in ((2023, "12"), (2024, "01"), (2024, "05")):
+        with pytest.raises(NoRevisionForPeriodError):
+            select_revision(modelo, filing_year=filing_year, period=period)
+    assert select_revision(modelo, filing_year=2024, period="06").id == "2024-desde-06"
+    assert select_revision(modelo, filing_year=2024, period="12").id == "2024-desde-06"
+    assert select_revision(modelo, filing_year=2025, period="01").id == "2025-y-siguientes"
+    assert select_revision(modelo, filing_year=2026, period="12").id == "2025-y-siguientes"
+
+    # A future author could accidentally widen both coordinates. Selection then
+    # succeeds, but the selected source still exposes the unsupported month.
+    widened_selector = june_2024.period_selector.model_copy(
+        update={"periods": ("05", *june_2024.period_selector.periods)}
+    )
+    widened_revision = june_2024.model_copy(
+        update={"valid_from": date(2024, 1, 1), "period_selector": widened_selector}
+    )
+    widened_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, "2024-desde-06": widened_revision}}
+    )
+    selected = select_revision(widened_modelo, filing_year=2024, period="05")
+    sources = [
+        catalogues.sources[source_ref]
+        for source_ref in selected.source_refs
+        if catalogues.sources[source_ref].kind == "record_design"
+    ]
+
+    assert selected.id == "2024-desde-06"
+    assert tuple(source.id for source in sources) == ("aeat-dr-038-2024",)
+    assert not _record_design_sources_cover(sources, date(2024, 5, 31))
+
+
 def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     authority = bundled_authority()
     audit = audit_registry_model_law_coverage(authority)
@@ -279,9 +349,9 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
         ledger
         for ledger in audit.ledgers
         if (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period)
-        == ("038", "2002-y-siguientes", 2002, "01")
+        == ("038", "2024-desde-06", 2024, "06")
     )
-    assert modelo_038.revision == "2002-y-siguientes"
+    assert modelo_038.revision == "2024-desde-06"
     assert modelo_038.authority_scope == "inspection_only"
     assert not modelo_038.filing_eligible
     gates = {gate.tier: gate for gate in modelo_038.gates}
@@ -289,10 +359,12 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
         "ley-58-2003:art-93",
         "orden-hac-66-2002:art-1",
         "orden-hac-66-2002:art-6",
+        "orden-hac-646-2024:art-1",
+        "orden-hac-646-2024:df-unica",
     )
     assert gates["official_source_guidance"].source_refs == ("enrolled-modelo-038-procedure",)
-    assert gates["layout_authority"].source_refs == ("enrolled-modelo-038-layout",)
-    assert gates["layout_authority"].workbook_refs == ("modelo-038-orden-static-layout",)
+    assert gates["layout_authority"].source_refs == ("aeat-dr-038-2024",)
+    assert gates["layout_authority"].workbook_refs == ("modelo-038-2024-static-layout",)
 
     # Keep the full selector-derived denominator and every mandatory tier
     # visible. M038's inspection projection is deliberately non-filing, but

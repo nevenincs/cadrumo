@@ -172,9 +172,15 @@ def _collect_apoderado_answers_interactively(
     hint naming ``--represented-nif`` / ``--scope``, which is the actual
     recovery for this verb, rather than generic no-console copy.
     """
-    from ....adapters.inbound.tui import FormField, FormFieldKind, FormPage, form_choices, multi_choice_tokens
     from ....core.i18n import tr as _tr
     from ....core.identity import IdentityError, validate_identity
+    from ....entrypoints.tui.components.forms import (
+        FormField,
+        FormFieldKind,
+        FormPage,
+        form_choices,
+        multi_choice_tokens,
+    )
     from ._manager_frontend import host_can_run_full_screen, present_form
 
     if not host_can_run_full_screen():

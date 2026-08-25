@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import NoReturn, Protocol
 
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...application.filing import AmendmentEvidence
 from ...core import Modelo
 from ...domain.calculations.registry import bundled_authority
@@ -21,6 +20,7 @@ from ...domain.modelos import (
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
     WorkUnit,
+    WorkUnitCatalogueRepositoryProtocol,
     is_justificante_backed_external_evidence,
     validate_calculation_revision_aggregate,
 )
@@ -37,7 +37,7 @@ def resolve_persisted_amendment_export_evidence(
     *,
     work_unit: WorkUnit,
     workflow_profile: TaxpayerProfile,
-    work_unit_repository: WorkUnitCatalogueRepository,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     justificante_repository: JustificanteRepositoryProtocol | None,
 ) -> AmendmentEvidence | None:
@@ -149,7 +149,7 @@ def _evidence(
     identity: CalculationRevisionAmendmentIdentity,
     work_unit: WorkUnit,
     workflow_profile: TaxpayerProfile,
-    work_unit_repository: WorkUnitCatalogueRepository,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     records: ModeloRecordCatalogue,
     justificantes: tuple[Justificante, ...],
     receipt: Justificante,
