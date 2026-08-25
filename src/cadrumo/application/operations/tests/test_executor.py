@@ -12,12 +12,11 @@ from types import SimpleNamespace
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.application.operations.capabilities import OperationOwnedResource
-from cadrumo.application.operations.models import OperationIdentity
-from cadrumo.core.operations import OperationEffect
-
 from ....core import STRICT_FROZEN_CONFIG
+from ....core.operations import OperationEffect
+from ..capabilities import OperationOwnedResource
 from ..events import OperationLogSeverity
+from ..models import OperationIdentity
 from ..owner import (
     OperationCancellationScope,
     OperationCleanupOwner,
