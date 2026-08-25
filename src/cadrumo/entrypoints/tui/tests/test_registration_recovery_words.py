@@ -15,25 +15,25 @@ import pytest
 from textual.widgets import Input
 from textual.worker import WorkerCancelled
 
-from .....application.user_profile import (
+from ....application.user_profile import (
     CommittedProfileRepository,
     ProfileRegistrationError,
     register_profile_with_credentials,
 )
-from .....core import assess_profile_password
-from .....domain.user_profile import UserProfileFact
-from .....entrypoints.tui.secret.registration import (
+from ....core import assess_profile_password
+from ....domain.user_profile import UserProfileFact
+from ....entrypoints.tui.secret.registration import (
     RecoveryHandoverCancelledError,
     RecoveryWordsScreen,
     RegistrationApp,
     RegistrationAttempt,
     RegistrationRefusal,
 )
-from .....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 _TERMINAL_SIZE = (140, 60)

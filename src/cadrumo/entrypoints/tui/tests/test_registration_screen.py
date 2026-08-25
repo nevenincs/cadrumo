@@ -24,22 +24,22 @@ import pytest
 from textual.css.query import NoMatches
 from textual.widgets import Input, Static
 
-from .....adapters.persistence.storage.custody import (
+from ....adapters.persistence.storage.custody import (
     ProfileCustodyPasswordError,
     load_committed_profile_password_material,
     unlock_profile_custody,
 )
-from .....core import ProfilePasswordRefusalReason, assess_profile_password
-from .....core.i18n import tr
-from .....entrypoints.cli import attempt_registration
-from .....entrypoints.tui.components.status import PinnedStatusBar
-from .....entrypoints.tui.secret.passphrase import assessment_refusal
-from .....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationApp
-from .....tests.secure_sql import isolated_profile_storage_root
+from ....core import ProfilePasswordRefusalReason, assess_profile_password
+from ....core.i18n import tr
+from ....entrypoints.cli import attempt_registration
+from ....entrypoints.tui.components.status import PinnedStatusBar
+from ....entrypoints.tui.secret.passphrase import assessment_refusal
+from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationApp
+from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 _TERMINAL_SIZE = (140, 60)

@@ -37,15 +37,15 @@ from cadrumo.entrypoints.tui.components.theme import (
     resolve_theme_name,
 )
 
-from .....application.user_profile.status_projection import StatusPageData
-from .....core import scan_directory
-from .....core.config import TuiAppearance
-from .....entrypoints.tui.profile.status import StatusApp
-from .....entrypoints.tui.secret.registration import RegistrationApp
+from ....application.user_profile.status_projection import StatusPageData
+from ....core import scan_directory
+from ....core.config import TuiAppearance
+from ....entrypoints.tui.profile.status import StatusApp
+from ....entrypoints.tui.secret.registration import RegistrationApp
 
 pytestmark = [
     pytest.mark.unit,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 if TYPE_CHECKING:
@@ -200,8 +200,8 @@ def _registration_screen() -> RegistrationApp:
     Geometry never calls them, but the screen takes them because it does
     not reach up into the application layer for itself.
     """
-    from .....core import assess_profile_password
-    from .....entrypoints.cli import attempt_registration
+    from ....core import assess_profile_password
+    from ....entrypoints.cli import attempt_registration
 
     return RegistrationApp(assess=assess_profile_password, register=attempt_registration)
 

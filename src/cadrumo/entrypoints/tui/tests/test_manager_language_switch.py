@@ -148,7 +148,7 @@ async def _drained_footer(app: ProfileManagerApp, pilot) -> dict[str, str]:
     included.
 
     Kept here rather than folded into the shared
-    :func:`~cadrumo.entrypoints.tui.tests.profile.manager_pilot.wait_until_settled`, which waits on the page
+    :func:`~cadrumo.entrypoints.tui.tests.manager_pilot.wait_until_settled`, which waits on the page
     holding no unfinished background work. That is a different question
     with a different answer: the footer carries no such flag, and a
     recompose is not work anything is waiting on, so there is nothing to

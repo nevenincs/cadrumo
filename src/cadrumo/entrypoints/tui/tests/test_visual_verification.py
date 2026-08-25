@@ -39,26 +39,26 @@ from cadrumo.entrypoints.tui.components.theme import (
 from cadrumo.entrypoints.tui.components.widgets import ContentScroll
 from cadrumo.entrypoints.tui.flows.app import FlowTuiApp
 
-from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
-from .....application.user_profile import (
+from ....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
+from ....application.user_profile import (
     build_profile_overview,
     login_profile,
     register_profile_with_credentials,
 )
-from .....application.user_profile.status_projection import StatusFactRow, StatusPageData
-from .....core import require_active_bucket_id
-from .....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from .....entrypoints.tui.profile.overview import ProfileManagerApp
-from .....entrypoints.tui.profile.status import StatusApp
-from .....entrypoints.tui.secret.login import LoginApp
-from .....entrypoints.tui.secret.registration import RegistrationApp
-from .....tests.manager_pilot import wait_until_settled
-from .....tests.profile_capsule import load_test_profile_record
-from .....tests.secure_sql import isolated_profile_storage_root
+from ....application.user_profile.status_projection import StatusFactRow, StatusPageData
+from ....core import require_active_bucket_id
+from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from ....entrypoints.tui.profile.overview import ProfileManagerApp
+from ....entrypoints.tui.profile.status import StatusApp
+from ....entrypoints.tui.secret.login import LoginApp
+from ....entrypoints.tui.secret.registration import RegistrationApp
+from .manager_pilot import wait_until_settled
+from ....tests.profile_capsule import load_test_profile_record
+from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 """``integration``, not ``unit``: a test carries EXACTLY ONE execution-lane
 marker (``test_marker_integrity.py``), so a per-``pytest.param`` override
@@ -92,8 +92,8 @@ _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 
 @contextmanager
 def _registration(tmp_path: Path) -> Iterator[RegistrationApp]:
-    from .....core import assess_profile_password
-    from .....entrypoints.cli import attempt_registration
+    from ....core import assess_profile_password
+    from ....entrypoints.cli import attempt_registration
 
     del tmp_path  # unused: this surface writes nothing until a real submit, which no gate here does
     yield RegistrationApp(assess=assess_profile_password, register=attempt_registration)
@@ -138,14 +138,14 @@ def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     stand-in storage.
 
     """
-    from .....application.user_profile import register_profile_with_credentials
-    from .....entrypoints.cli import (
+    from ....application.user_profile import register_profile_with_credentials
+    from ....entrypoints.cli import (
         build_active_profile_overview,
         manager_actions,
         persist_active_profile_field,
         profile_field_value_refusal,
     )
-    from .....tests.secure_sql import isolated_profile_storage_root
+    from ....tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -178,13 +178,13 @@ def _login(tmp_path: Path) -> Iterator[LoginApp]:
     choice list or a dropped preselection is the identical stand-in shape
     that bug was.
     """
-    from .....application.user_profile import logout_active_profile, register_profile_with_credentials
-    from .....application.user_profile.login_interaction import (
+    from ....application.user_profile import logout_active_profile, register_profile_with_credentials
+    from ....application.user_profile.login_interaction import (
         attempt_profile_login,
         preselected_profile_login_id,
         profile_login_choices,
     )
-    from .....tests.secure_sql import isolated_profile_storage_root
+    from ....tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -219,7 +219,7 @@ def _status_populated(tmp_path: Path) -> Iterator[StatusApp]:
     a widget that eliminates its siblings passes edge, scroll, theme, tab
     and masking checks identically whether the siblings are there or not.
     """
-    from .....application.user_profile.status_projection import build_status_page_data
+    from ....application.user_profile.status_projection import build_status_page_data
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
@@ -250,8 +250,8 @@ def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
     made a socio row require a ``clave`` this fixture would otherwise have
     to track.
     """
-    from .....application.user_profile import add_profile_repeatable_section_row
-    from .....entrypoints.cli import (
+    from ....application.user_profile import add_profile_repeatable_section_row
+    from ....entrypoints.cli import (
         build_active_profile_overview,
         manager_actions,
         persist_active_profile_field,
@@ -784,7 +784,7 @@ async def test_a_modal_secret_never_paints_its_value(tmp_path: Path) -> None:
             passphrase=_VISUAL_PASSWORD,
         )
         record = load_test_profile_record(require_active_bucket_id())
-        from .....entrypoints.cli import manager_actions, persist_active_profile_field
+        from ....entrypoints.cli import manager_actions, persist_active_profile_field
 
         app = ProfileManagerApp(
             build_profile_overview(record, label=_VISUAL_LABEL),

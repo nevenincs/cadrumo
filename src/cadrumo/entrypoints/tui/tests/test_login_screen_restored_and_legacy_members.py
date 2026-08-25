@@ -17,23 +17,23 @@ from pathlib import Path
 import pytest
 from textual.widgets import Input
 
-from .....adapters.persistence.storage.custody import ProfileCustodyRefusedError
-from .....application.user_profile import (
+from ....adapters.persistence.storage.custody import ProfileCustodyRefusedError
+from ....application.user_profile import (
     logout_active_profile,
     register_profile_with_credentials,
     restore_profile_from_source_with_password,
 )
-from .....application.user_profile.login_interaction import (
+from ....application.user_profile.login_interaction import (
     ProfileLoginChoice,
     attempt_profile_login,
     profile_login_choices,
 )
-from .....entrypoints.tui.secret.login import LoginApp
-from .....tests.secure_sql import isolated_profile_storage_root
+from ....entrypoints.tui.secret.login import LoginApp
+from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 _TERMINAL_SIZE = (140, 60)
@@ -71,7 +71,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
             root=tmp_path / "tui-root",
         )
 
-    from .....core.config import override_settings
+    from ....core.config import override_settings
 
     with override_settings(cadrumo_local_storage_root=str(tmp_path / "tui-root")):
         choices = list(profile_login_choices())

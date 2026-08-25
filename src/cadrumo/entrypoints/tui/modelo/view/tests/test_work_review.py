@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 from typing import cast, get_args
 
@@ -35,10 +36,11 @@ from ....components.theme import (
     CADRUMO_LIGHT_THEME_NAME,
 )
 from ....components.widgets import ContentScroll
-from .. import ModeloWorkReviewApp
 from ..work_review import (
     _ABSENT,
     _PRESENT,
+    ModeloWorkReviewApp,
+    ModeloWorkReviewScreen,
     _enum_options,
     _presence_options,
     _relation_channel_options,
@@ -46,6 +48,17 @@ from ..work_review import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def test_modelo_view_namespace_is_inert_and_review_types_have_one_defining_module() -> None:
+    """The view package cannot become a second public screen home."""
+    namespace = importlib.import_module("cadrumo.entrypoints.tui.modelo.view")
+
+    assert namespace.__all__ == ()
+    assert "ModeloWorkReviewApp" not in vars(namespace)
+    assert "ModeloWorkReviewScreen" not in vars(namespace)
+    assert ModeloWorkReviewApp.__module__ == "cadrumo.entrypoints.tui.modelo.view.work_review"
+    assert ModeloWorkReviewScreen.__module__ == "cadrumo.entrypoints.tui.modelo.view.work_review"
 
 
 def _cells(table: DataTable[str]) -> tuple[str, ...]:

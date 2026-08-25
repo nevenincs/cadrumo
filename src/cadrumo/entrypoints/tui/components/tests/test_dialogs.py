@@ -7,7 +7,7 @@ from textual.app import App
 from textual.widgets import Input, OptionList, SelectionList, Static
 
 from .....core.presentation import FormField, FormFieldKind, form_choices
-from ..dialogs import ChoiceEditScreen, OneChoiceEditScreen, TextEditScreen
+from ..dialogs import ChoiceEditScreen, ConfirmScreen, OneChoiceEditScreen, TextEditScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -16,6 +16,28 @@ _TERMINAL_SIZE = (140, 60)
 
 class _Host(App[None]):
     """A running application that supplies a screen stack to one dialog."""
+
+
+@pytest.mark.asyncio
+async def test_confirmation_dialog_defaults_to_decline_and_requires_explicit_acceptance() -> None:
+    app = _Host()
+    dismissed: list[bool | None] = []
+
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        app.push_screen(
+            ConfirmScreen(
+                title="Restart?", message="Answers will be cleared.", confirm_label="Restart", cancel_label="Keep"
+            ),
+            dismissed.append,
+        )
+        await pilot.pause()
+
+        assert app.focused is app.screen.query_one("#btn-confirm-cancel")
+        await pilot.press("y")
+        await pilot.pause()
+        assert dismissed == [True]
+        app.exit(None)
 
 
 @pytest.mark.asyncio

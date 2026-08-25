@@ -36,7 +36,7 @@ from cadrumo.entrypoints.tui.components.theme import (
 from cadrumo.entrypoints.tui.components.widgets import ContentScroll
 from cadrumo.entrypoints.tui.flows.app import FlowTuiApp, run_flow_tui
 
-from .....application.flows import (
+from ....application.flows import (
     CopyRef,
     FlowCheckpointError,
     FlowChoice,
@@ -49,24 +49,24 @@ from .....application.flows import (
     page_status,
     start_flow,
 )
-from .....core.config import TuiAppearance
-from .....core.flows import (
+from ....core.config import TuiAppearance
+from ....core.flows import (
     CheckpointAvailability,
     CopyRefKind,
     FlowMode,
     FlowWidgetKind,
     PageStatus,
 )
-from .....core.i18n import (
+from ....core.i18n import (
     SUPPORTED_OUTPUT_LANGUAGES,
     tr,
 )
-from .....tests.env_scope import activate_output_language, output_language_scope
-from .....tests.locales_root_fixture import locales_root_scope
+from ....tests.env_scope import activate_output_language, output_language_scope
+from ....tests.locales_root_fixture import locales_root_scope
 
 pytestmark = [
     pytest.mark.unit,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 if TYPE_CHECKING:

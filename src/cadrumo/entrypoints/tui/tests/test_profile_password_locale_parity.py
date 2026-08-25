@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.i18n import tr
+from ....core.i18n import tr
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _LOCALES = ("en", "es", "ca", "hu")
 _CASES = (

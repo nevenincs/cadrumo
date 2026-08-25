@@ -29,9 +29,9 @@ from pathlib import Path
 
 import pytest
 
-from .....core import scan_directory
+from ....core import scan_directory
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 #: The callables that MINT recovery words. Each returns only after the candidate
 #: mnemonic has been shown, so a TUI module reaching any of them is a module
@@ -56,7 +56,7 @@ _COLLECTING_CALLABLES: tuple[tuple[str, str], ...] = (
     ("cadrumo.application.user_profile", "restore_profile_from_recovery_artifact"),
 )
 
-_TUI_PACKAGE = Path(__file__).resolve().parents[4] / "entrypoints" / "tui"
+_TUI_PACKAGE = Path(__file__).resolve().parents[3] / "entrypoints" / "tui"
 
 
 def _tui_modules() -> tuple[Path, ...]:
