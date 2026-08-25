@@ -9,6 +9,7 @@ import subprocess
 import sys
 from collections.abc import Iterable
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -61,7 +62,7 @@ def _runtime_imports(tree: ast.Module) -> list[ast.Import | ast.ImportFrom]:
 
 def _module_level_workflow_graph(sources: dict[str, str]) -> dict[str, set[str]]:
     """Build the internal workflow import graph from source text."""
-    graph = {name: set() for name in sources}
+    graph: dict[str, set[str]] = {name: set() for name in sources}
     for name, source in sources.items():
         tree = ast.parse(source, filename=name)
         for node in _runtime_imports(tree):
@@ -77,7 +78,11 @@ def _module_level_workflow_graph(sources: dict[str, str]) -> dict[str, set[str]]
                     if node.module
                     else tuple(alias.name for alias in node.names)
                 )
-            elif isinstance(node, ast.ImportFrom) and (node.module or "").startswith("cadrumo.application.workflow."):
+            elif (
+                isinstance(node, ast.ImportFrom)
+                and node.module is not None
+                and node.module.startswith("cadrumo.application.workflow.")
+            ):
                 targets = (node.module.removeprefix("cadrumo.application.workflow.").split(".", maxsplit=1)[0],)
             else:
                 targets = ()
@@ -97,20 +102,25 @@ def _runtime_dynamic_import_targets(tree: ast.Module) -> set[str]:
     targets: set[str] = set()
 
     class Visitor(ast.NodeVisitor):
+        @override
         def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
             return
 
+        @override
         def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
             return
 
+        @override
         def visit_ClassDef(self, node: ast.ClassDef) -> None:
             return
 
+        @override
         def visit_If(self, node: ast.If) -> None:
             if isinstance(node.test, ast.Name) and node.test.id == "TYPE_CHECKING":
                 return
             self.generic_visit(node)
 
+        @override
         def visit_Call(self, node: ast.Call) -> None:
             called = (
                 node.func.id
