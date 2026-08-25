@@ -43,6 +43,7 @@ from textual.worker import Worker, WorkerState
 
 from ....application.operations import ManagerAction, ManagerActionDisposition, ManagerActionOutcome
 from ....application.user_profile import notice_presentation, profile_field_shape_hint
+from ....application.user_profile.profile_fields import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....core import OperatorProgress
 from ....core.i18n import tr
 from ....entrypoints.tui.components.form_screen import FormScreen, presenting_forms_through
@@ -110,8 +111,6 @@ _FORM_WAIT_POLL_SECONDS = 0.1
 Only a liveness poll: the dismissal wakes the wait immediately, and this
 bounds how long the thread survives an application that went away without
 answering."""
-
-_OUTPUT_LANGUAGE_PATH = "preferences.output_language"
 
 _EDIT_DIALOG_CSS = """
 #edit-dialog {
@@ -599,7 +598,7 @@ class ProfileManagerApp(App[None]):
         """
         for section in self.overview.sections:
             for field in section.fields:
-                if field.path == _OUTPUT_LANGUAGE_PATH:
+                if field.path == PROFILE_OUTPUT_LANGUAGE_PATH:
                     return field
         return None
 
@@ -803,7 +802,7 @@ class ProfileManagerApp(App[None]):
         written_path = self._pending_write_path
         self._pending_write_path = None
         if worker.state is WorkerState.SUCCESS and worker.result is not None:
-            if written_path == _OUTPUT_LANGUAGE_PATH:
+            if written_path == PROFILE_OUTPUT_LANGUAGE_PATH:
                 # The page is now written in a different language, and the
                 # incremental path cannot express that: it repaints the
                 # cells whose content moved, while a language switch also

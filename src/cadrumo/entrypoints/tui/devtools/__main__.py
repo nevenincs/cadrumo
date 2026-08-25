@@ -14,10 +14,10 @@ import sys
 from pathlib import Path
 
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from ._fixture import workspace
-from ._journal import Click, Fill, Press, Session, Type, describe, read_session, write_session
-from ._replay import replay, screenshot
-from ._surfaces import SURFACES, resolve
+from .fixture import workspace
+from .journal import Click, Fill, Press, Session, Type, describe, read_session, write_session
+from .replay import replay, screenshot
+from .surfaces import SURFACES, resolve
 
 SESSION_PATH = workspace() / "session.jsonl"
 

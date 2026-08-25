@@ -37,14 +37,8 @@ from ....components.theme import (
 )
 from ....components.widgets import ContentScroll
 from ..work_review import (
-    _ABSENT,
-    _PRESENT,
     ModeloWorkReviewApp,
     ModeloWorkReviewScreen,
-    _enum_options,
-    _presence_options,
-    _relation_channel_options,
-    _resolved_options,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -78,6 +72,25 @@ def _visible_in(widget: Widget, container: Widget) -> bool:
         and widget.region.bottom > container.region.y
         and widget.region.y < container.region.bottom
     )
+
+
+def _option_prompts(chooser: Select[object]) -> tuple[str, ...]:
+    """Return every prompt currently offered by one visible filter chooser."""
+    option_list = chooser.query_one(OptionList)
+    return tuple(str(option_list.get_option_at_index(index).prompt) for index in range(option_list.option_count))
+
+
+async def _choose_prompt(pilot, chooser: Select[object], prompt_key: str) -> None:
+    """Choose an option by the words the operator can see, not its private payload."""
+    chooser.action_show_overlay()
+    await pilot.pause()
+    prompts = _option_prompts(chooser)
+    expected_prompts = {tr(prompt_key, locale=language) for language in SUPPORTED_OUTPUT_LANGUAGES}
+    matches = [index for index, rendered in enumerate(prompts) if rendered in expected_prompts]
+    assert len(matches) == 1, f"expected one localized {prompt_key!r} option, got {prompts}"
+    chooser.query_one(OptionList).highlighted = matches[0]
+    await pilot.press("enter")
+    await pilot.pause()
 
 
 @pytest.mark.asyncio
@@ -133,23 +146,73 @@ async def test_blocked_review_renders_all_canonical_grains_without_mutation_cont
             assert len(screen.query("#modelo-review-filters Select")) == 16
 
 
-def test_facet_option_sets_are_exactly_the_canonical_closed_axes() -> None:
-    for enum_type, axis in (
-        (InputKind, "input_kind"),
-        (BindingSourceKind, "binding_source"),
-        (ModeloValueKind, "realised_kind"),
-        (ModeloWorkOriginAnomaly, "origin_anomaly"),
-        (EstadoCasillaOficial, "estado_casilla_oficial"),
-        (OperatorActionAxis, "operator_action"),
-        (ModeloVerificationFindingKind, "finding_kind"),
-        (ModeloVerificationFindingSeverity, "finding_severity"),
-    ):
-        assert tuple(value for _, value in _enum_options(enum_type, axis=axis)) == tuple(
-            member.value for member in enum_type
+@pytest.mark.asyncio
+async def test_facet_option_sets_render_every_canonical_closed_axis(tmp_path: Path) -> None:
+    """Each filter offers the complete closed axis in operator-facing words."""
+    review = build_real_modelo_work_review(tmp_path, modelo="130", filing_year=2026, period_code="1T", blocked=True)
+    app = ModeloWorkReviewApp(review)
+
+    enum_filters = (
+        ("#modelo-review-filter-input-kind", InputKind, "input_kind"),
+        ("#modelo-review-filter-binding-source", BindingSourceKind, "binding_source"),
+        ("#modelo-review-filter-realised-kind", ModeloValueKind, "realised_kind"),
+        ("#modelo-review-filter-origin-anomaly", ModeloWorkOriginAnomaly, "origin_anomaly"),
+        ("#modelo-review-filter-estado-casilla-oficial", EstadoCasillaOficial, "estado_casilla_oficial"),
+        ("#modelo-review-filter-casilla-blocker", OperatorActionAxis, "operator_action"),
+        ("#modelo-review-filter-finding-kind", ModeloVerificationFindingKind, "finding_kind"),
+        ("#modelo-review-filter-finding-severity", ModeloVerificationFindingSeverity, "finding_severity"),
+        ("#modelo-review-filter-record-blocker", OperatorActionAxis, "operator_action"),
+    )
+
+    async with app.run_test(size=(120, 36)) as pilot:
+        await pilot.pause()
+        screen = app.screen
+        for selector, enum_type, axis in enum_filters:
+            chooser = cast("Select[object]", screen.query_one(selector, Select))
+            assert _option_prompts(chooser) == (
+                tr("flows.modelo_review.filter.all"),
+                *(tr(f"flows.modelo_review.filter.option.{axis}.{member.value}") for member in enum_type),
+            )
+
+        relation_chooser = cast(
+            "Select[object]", screen.query_one("#modelo-review-filter-relation-channel", Select)
         )
-    assert tuple(value for _, value in _relation_channel_options()) == get_args(RelationConsumptionChannel)
-    assert tuple(value for _, value in _presence_options()) == (_PRESENT, _ABSENT)
-    assert tuple(value for _, value in _resolved_options()) == (True, False)
+        assert _option_prompts(relation_chooser) == (
+            tr("flows.modelo_review.filter.all"),
+            *(
+                tr(f"flows.modelo_review.filter.option.relation_channel.{channel}")
+                for channel in get_args(RelationConsumptionChannel)
+            ),
+        )
+
+        for selector, expected_prompts in (
+            (
+                "#modelo-review-filter-binding-presence",
+                (tr("flows.modelo_review.filter.present"), tr("flows.modelo_review.filter.absent")),
+            ),
+            (
+                "#modelo-review-filter-formula-presence",
+                (tr("flows.modelo_review.filter.present"), tr("flows.modelo_review.filter.absent")),
+            ),
+            (
+                "#modelo-review-filter-relation-presence",
+                (tr("flows.modelo_review.filter.present"), tr("flows.modelo_review.filter.absent")),
+            ),
+            (
+                "#modelo-review-filter-origin-anomaly-presence",
+                (tr("flows.modelo_review.filter.present"), tr("flows.modelo_review.filter.absent")),
+            ),
+            (
+                "#modelo-review-filter-casilla-blocker-presence",
+                (tr("flows.modelo_review.filter.present"), tr("flows.modelo_review.filter.absent")),
+            ),
+            (
+                "#modelo-review-filter-binding-resolved",
+                (tr("flows.modelo_review.filter.resolved"), tr("flows.modelo_review.filter.unresolved")),
+            ),
+        ):
+            chooser = cast("Select[object]", screen.query_one(selector, Select))
+            assert _option_prompts(chooser) == (tr("flows.modelo_review.filter.all"), *expected_prompts)
 
 
 @pytest.mark.asyncio
@@ -166,12 +229,12 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
         checks = (
             (
                 "#modelo-review-filter-input-kind",
-                InputKind.COMPUTED.value,
+                "flows.modelo_review.filter.option.input_kind.computed",
                 tuple(str(row.casilla_id) for row in review.casillas if row.declared_input_kind is InputKind.COMPUTED),
             ),
             (
                 "#modelo-review-filter-binding-source",
-                BindingSourceKind.PROFILE.value,
+                "flows.modelo_review.filter.option.binding_source.profile",
                 tuple(
                     str(row.casilla_id)
                     for row in review.casillas
@@ -180,37 +243,37 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
             ),
             (
                 "#modelo-review-filter-binding-presence",
-                _PRESENT,
+                "flows.modelo_review.filter.present",
                 tuple(str(row.casilla_id) for row in review.casillas if row.concrete_bindings),
             ),
             (
                 "#modelo-review-filter-binding-presence",
-                _ABSENT,
+                "flows.modelo_review.filter.absent",
                 tuple(str(row.casilla_id) for row in review.casillas if not row.concrete_bindings),
             ),
             (
                 "#modelo-review-filter-formula-presence",
-                _PRESENT,
+                "flows.modelo_review.filter.present",
                 tuple(str(row.casilla_id) for row in review.casillas if row.concrete_formula is not None),
             ),
             (
                 "#modelo-review-filter-formula-presence",
-                _ABSENT,
+                "flows.modelo_review.filter.absent",
                 tuple(str(row.casilla_id) for row in review.casillas if row.concrete_formula is None),
             ),
             (
                 "#modelo-review-filter-relation-presence",
-                _PRESENT,
+                "flows.modelo_review.filter.present",
                 tuple(str(row.casilla_id) for row in review.casillas if row.relation_consumption),
             ),
             (
                 "#modelo-review-filter-relation-presence",
-                _ABSENT,
+                "flows.modelo_review.filter.absent",
                 tuple(str(row.casilla_id) for row in review.casillas if not row.relation_consumption),
             ),
             (
                 "#modelo-review-filter-relation-channel",
-                "primary_binding",
+                "flows.modelo_review.filter.option.relation_channel.primary_binding",
                 tuple(
                     str(row.casilla_id)
                     for row in review.casillas
@@ -219,7 +282,7 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
             ),
             (
                 "#modelo-review-filter-origin-anomaly",
-                ModeloWorkOriginAnomaly.BROKEN_CALCULATION_CHAIN.value,
+                "flows.modelo_review.filter.option.origin_anomaly.broken_calculation_chain",
                 tuple(
                     str(row.casilla_id)
                     for row in review.casillas
@@ -228,12 +291,12 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
             ),
             (
                 "#modelo-review-filter-origin-anomaly-presence",
-                _ABSENT,
+                "flows.modelo_review.filter.absent",
                 tuple(str(row.casilla_id) for row in review.casillas if row.origin_anomaly is None),
             ),
             (
                 "#modelo-review-filter-estado-casilla-oficial",
-                EstadoCasillaOficial.ADDRESSED.value,
+                "flows.modelo_review.filter.option.estado_casilla_oficial.addressed",
                 tuple(
                     str(row.casilla_id)
                     for row in review.casillas
@@ -241,10 +304,9 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
                 ),
             ),
         )
-        for selector, value, expected_rows in checks:
-            chooser = cast("Select[str]", screen.query_one(selector, Select))
-            chooser.value = value
-            await pilot.pause()
+        for selector, prompt, expected_rows in checks:
+            chooser = cast("Select[object]", screen.query_one(selector, Select))
+            await _choose_prompt(pilot, chooser, prompt)
             assert expected_rows
             assert len(expected_rows) < len(original_rows)
             assert _row_keys(table) == expected_rows
@@ -252,12 +314,8 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
             await pilot.pause()
             assert _row_keys(table) == original_rows
 
-        resolved = cast(
-            "Select[bool]",
-            screen.query_one("#modelo-review-filter-binding-resolved", Select),
-        )
-        resolved.value = False
-        await pilot.pause()
+        resolved = cast("Select[object]", screen.query_one("#modelo-review-filter-binding-resolved", Select))
+        await _choose_prompt(pilot, resolved, "flows.modelo_review.filter.unresolved")
         expected_unresolved = tuple(
             str(row.casilla_id)
             for row in review.casillas
@@ -269,9 +327,9 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
         await pilot.pause()
         assert _row_keys(table) == original_rows
 
-        input_kind = cast("Select[str]", screen.query_one("#modelo-review-filter-input-kind", Select))
+        input_kind = cast("Select[object]", screen.query_one("#modelo-review-filter-input-kind", Select))
         estado_casilla_oficial = cast(
-            "Select[str]",
+            "Select[object]",
             screen.query_one("#modelo-review-filter-estado-casilla-oficial", Select),
         )
         expected_manual = tuple(
@@ -294,13 +352,15 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
         assert set(expected_intersection) < set(expected_manual)
         assert set(expected_intersection) < set(expected_addressed)
 
-        input_kind.value = InputKind.MANUAL.value
-        await pilot.pause()
+        await _choose_prompt(pilot, input_kind, "flows.modelo_review.filter.option.input_kind.manual")
         assert len(_row_keys(table)) == len(expected_manual)
         assert _row_keys(table) == expected_manual
 
-        estado_casilla_oficial.value = EstadoCasillaOficial.ADDRESSED.value
-        await pilot.pause()
+        await _choose_prompt(
+            pilot,
+            estado_casilla_oficial,
+            "flows.modelo_review.filter.option.estado_casilla_oficial.addressed",
+        )
         assert len(_row_keys(table)) == len(expected_intersection)
         assert _row_keys(table) == expected_intersection
 
@@ -342,12 +402,12 @@ async def test_m130_realised_anomaly_finding_and_blocker_facets_bite_and_empty_t
         casilla_checks = (
             (
                 "#modelo-review-filter-realised-kind",
-                ModeloValueKind.LITERAL.value,
+                "flows.modelo_review.filter.option.realised_kind.literal",
                 tuple(str(row.casilla_id) for row in review.casillas if row.realised_kind is ModeloValueKind.LITERAL),
             ),
             (
                 "#modelo-review-filter-origin-anomaly",
-                ModeloWorkOriginAnomaly.OPERATOR_OVERRIDE.value,
+                "flows.modelo_review.filter.option.origin_anomaly.operator_override",
                 tuple(
                     str(row.casilla_id)
                     for row in review.casillas
@@ -356,12 +416,12 @@ async def test_m130_realised_anomaly_finding_and_blocker_facets_bite_and_empty_t
             ),
             (
                 "#modelo-review-filter-origin-anomaly-presence",
-                _PRESENT,
+                "flows.modelo_review.filter.present",
                 tuple(str(row.casilla_id) for row in review.casillas if row.origin_anomaly is not None),
             ),
             (
                 "#modelo-review-filter-casilla-blocker",
-                OperatorActionAxis.SUPPLY_MANUAL_INPUT.value,
+                "flows.modelo_review.filter.option.operator_action.supply_manual_input",
                 tuple(
                     str(row.casilla_id)
                     for row in review.casillas
@@ -370,26 +430,21 @@ async def test_m130_realised_anomaly_finding_and_blocker_facets_bite_and_empty_t
             ),
             (
                 "#modelo-review-filter-casilla-blocker-presence",
-                _PRESENT,
+                "flows.modelo_review.filter.present",
                 tuple(str(row.casilla_id) for row in review.casillas if row.blocked_by),
             ),
         )
-        for selector, value, expected_rows in casilla_checks:
-            chooser = cast("Select[str]", screen.query_one(selector, Select))
-            chooser.value = value
-            await pilot.pause()
+        for selector, prompt, expected_rows in casilla_checks:
+            chooser = cast("Select[object]", screen.query_one(selector, Select))
+            await _choose_prompt(pilot, chooser, prompt)
             assert expected_rows
             assert len(expected_rows) < len(original_casillas)
             assert _row_keys(casillas) == expected_rows
             chooser.clear()
             await pilot.pause()
 
-        resolved = cast(
-            "Select[bool]",
-            screen.query_one("#modelo-review-filter-binding-resolved", Select),
-        )
-        resolved.value = True
-        await pilot.pause()
+        resolved = cast("Select[object]", screen.query_one("#modelo-review-filter-binding-resolved", Select))
+        await _choose_prompt(pilot, resolved, "flows.modelo_review.filter.resolved")
         expected_resolved = tuple(
             str(row.casilla_id) for row in review.casillas if any(binding.resolved for binding in row.concrete_bindings)
         )
@@ -397,44 +452,43 @@ async def test_m130_realised_anomaly_finding_and_blocker_facets_bite_and_empty_t
         assert _row_keys(casillas) == expected_resolved
         resolved.clear()
 
-        finding_kind = cast(
-            "Select[str]",
-            screen.query_one("#modelo-review-filter-finding-kind", Select),
-        )
-        finding_kind.value = ModeloVerificationFindingKind.BLOCKING_RULE.value
-        await pilot.pause()
+        finding_kind = cast("Select[object]", screen.query_one("#modelo-review-filter-finding-kind", Select))
+        await _choose_prompt(pilot, finding_kind, "flows.modelo_review.filter.option.finding_kind.blocking_rule")
         assert findings.row_count == 1 < len(original_findings)
         assert review.findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
         finding_kind.clear()
 
         finding_severity = cast(
-            "Select[str]",
-            screen.query_one("#modelo-review-filter-finding-severity", Select),
+            "Select[object]", screen.query_one("#modelo-review-filter-finding-severity", Select)
         )
-        finding_severity.value = ModeloVerificationFindingSeverity.WARNING.value
-        await pilot.pause()
+        await _choose_prompt(pilot, finding_severity, "flows.modelo_review.filter.option.finding_severity.warning")
         assert findings.row_count == 1 < len(original_findings)
         assert review.findings[1].severity is ModeloVerificationFindingSeverity.WARNING
         finding_severity.clear()
 
-        record_blocker = cast(
-            "Select[str]",
-            screen.query_one("#modelo-review-filter-record-blocker", Select),
+        record_blocker = cast("Select[object]", screen.query_one("#modelo-review-filter-record-blocker", Select))
+        await _choose_prompt(
+            pilot,
+            record_blocker,
+            "flows.modelo_review.filter.option.operator_action.supply_manual_input",
         )
-        record_blocker.value = OperatorActionAxis.SUPPLY_MANUAL_INPUT.value
-        await pilot.pause()
         assert _row_keys(blockers) == original_blockers
 
-        cast(
-            "Select[str]", screen.query_one("#modelo-review-filter-realised-kind", Select)
-        ).value = ModeloValueKind.DEFAULT.value
-        cast(
-            "Select[str]", screen.query_one("#modelo-review-filter-finding-kind", Select)
-        ).value = ModeloVerificationFindingKind.ADVISORY.value
-        cast(
-            "Select[str]", screen.query_one("#modelo-review-filter-record-blocker", Select)
-        ).value = OperatorActionAxis.RE_VERIFY.value
-        await pilot.pause()
+        await _choose_prompt(
+            pilot,
+            cast("Select[object]", screen.query_one("#modelo-review-filter-realised-kind", Select)),
+            "flows.modelo_review.filter.option.realised_kind.default",
+        )
+        await _choose_prompt(
+            pilot,
+            cast("Select[object]", screen.query_one("#modelo-review-filter-finding-kind", Select)),
+            "flows.modelo_review.filter.option.finding_kind.advisory",
+        )
+        await _choose_prompt(
+            pilot,
+            cast("Select[object]", screen.query_one("#modelo-review-filter-record-blocker", Select)),
+            "flows.modelo_review.filter.option.operator_action.re_verify",
+        )
         assert casillas.row_count == findings.row_count == blockers.row_count == 0
         assert screen.query_one("#modelo-review-casillas-empty", Static).display
         assert screen.query_one("#modelo-review-findings-empty", Static).display
@@ -579,12 +633,16 @@ async def test_representative_outlier_localizes_opened_filters_at_narrow_width_a
                 assert disclosure.region.right <= body.region.right
 
                 binding_source = cast(
-                    "Select[str]",
+                    "Select[object]",
                     screen.query_one("#modelo-review-filter-binding-source", Select),
                 )
-                binding_source.value = BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION.value
-                await pilot.pause()
                 expected_option = tr(
+                    "flows.modelo_review.filter.option.binding_source."
+                    "ledger_renta_gastos_estimacion_directa_aggregation",
+                )
+                await _choose_prompt(
+                    pilot,
+                    binding_source,
                     "flows.modelo_review.filter.option.binding_source."
                     "ledger_renta_gastos_estimacion_directa_aggregation",
                 )

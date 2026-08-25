@@ -30,9 +30,10 @@ from typing import Literal, Self
 
 from pydantic import Field, model_validator
 
+from ...application.operator_actions import ActionReference
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
 from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, ProfileId, SnapshotId, WorkUnitId
-from ...core.json_contract import OutputSchema, ResolvedNoticeAction
+from ...core.json_contract import OutputSchema, ResolvedActionArgument, ResolvedNoticeAction
 from ...core.parsing import require_iso8601_date
 from ...domain.calculations.registry import RevisionId
 from ._decimal_wire import NonNegativeDecimalWireText
@@ -218,6 +219,22 @@ class OverviewCalendarEventPayload(OutputSchema):
         return self
 
 
+class OverviewResolvedWarningActionReferencePayload(OutputSchema):
+    """Resolved command target retaining the producer's stable action identity."""
+
+    action: ActionReference
+    target_command_key: str
+    cli_path: list[str]
+    arguments: dict[str, str] | None = None
+
+
+class OverviewResolvedWarningActionPayload(OutputSchema):
+    """Calendar-warning action in the established declared-action wire envelope."""
+
+    action: OverviewResolvedWarningActionReferencePayload
+    argument_bindings: list[ResolvedActionArgument] = []
+
+
 class OverviewCalendarWarningPayload(OutputSchema):
     """One :class:`CalendarWarning` row.
 
@@ -234,7 +251,7 @@ class OverviewCalendarWarningPayload(OutputSchema):
     code: str
     message: str
     affected_modelos: list[str] = []
-    fix_action: ResolvedNoticeAction
+    fix_action: OverviewResolvedWarningActionPayload
 
 
 class OverviewCalendarRangePayload(OutputSchema):

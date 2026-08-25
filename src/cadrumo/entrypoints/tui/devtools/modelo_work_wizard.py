@@ -20,7 +20,7 @@ from ....core import Period
 from ....core.flows import FlowMode
 from ....domain.user_profile import UserProfileFact
 from ..flows.app import FlowTuiApp
-from ._fixture import harness_storage, passphrase
+from .fixture import harness_storage, passphrase
 
 if TYPE_CHECKING:
     from ....domain.modelos import WorkUnit

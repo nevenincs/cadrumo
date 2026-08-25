@@ -23,7 +23,7 @@ from typing import Any
 
 from textual.app import App
 
-from ._fixture import registration_attempt
+from .fixture import registration_attempt
 from .modelo_work_wizard import build_modelo_work_wizard, provision_modelo_work_wizard
 
 

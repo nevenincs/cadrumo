@@ -28,12 +28,13 @@ from ....application.user_profile import (
     login_profile,
     register_profile_with_credentials,
 )
+from ....application.user_profile.profile_fields import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....core import require_active_bucket_id
 from ....core.i18n import tr
 from ....entrypoints.cli import persist_active_profile_field
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
-from ..profile.overview import _LANGUAGE_KEY, _OUTPUT_LANGUAGE_PATH, ProfileManagerApp
+from ..profile.overview import ProfileManagerApp
 from .manager_pilot import wait_until_settled
 
 pytestmark = [
@@ -90,7 +91,7 @@ def _register_in(language: str) -> None:
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=_LABEL,
         passphrase=_PASSWORD,
-        facts=(UserProfileFact(path=_OUTPUT_LANGUAGE_PATH, value=language),),
+        facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=language),),
     )
 
 
@@ -120,6 +121,14 @@ def _footer_entries(app: ProfileManagerApp) -> dict[str, str]:
     which is how the key came to be invisible in the first place.
     """
     return {entry.key: entry.description for entry in app.query(FooterKey)}
+
+
+def _language_key(footer_entries: dict[str, str], *, locale: str) -> str:
+    """Return the visible footer key that names the language chooser."""
+    label = tr(_LANGUAGE_LABEL_KEY, locale=locale)
+    matches = [key for key, description in footer_entries.items() if description == label]
+    assert len(matches) == 1, f"the footer must expose one language chooser labelled {label!r}, got {footer_entries}"
+    return matches[0]
 
 
 def _column_headings(app: ProfileManagerApp) -> list[str]:
@@ -187,11 +196,12 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
             await pilot.pause()
 
             settled = await _drained_footer(app, pilot)
-            assert settled.get(_LANGUAGE_KEY) == tr(_LANGUAGE_LABEL_KEY, locale=_STARTING_LANGUAGE), (
+            language_key = _language_key(settled, locale=_STARTING_LANGUAGE)
+            assert settled.get(language_key) == tr(_LANGUAGE_LABEL_KEY, locale=_STARTING_LANGUAGE), (
                 f"the footer must name the language chooser in the page's own language, but showed {settled}"
             )
 
-            await pilot.press(_LANGUAGE_KEY)
+            await pilot.press(language_key)
             await pilot.pause()
 
             options = app.screen.query_one("#edit-options", OptionList)
@@ -235,7 +245,8 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
                 f"the page must start in {_STARTING_LANGUAGE}, but showed {_column_headings(app)}"
             )
 
-            await pilot.press(_LANGUAGE_KEY)
+            language_key = _language_key(await _drained_footer(app, pilot), locale=_STARTING_LANGUAGE)
+            await pilot.press(language_key)
             await pilot.pause()
             options = app.screen.query_one("#edit-options", OptionList)
             options.highlighted = _language_tokens(app).index(_TARGET_LANGUAGE)
@@ -248,7 +259,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
                 f"the column headings must be rewritten in {_TARGET_LANGUAGE}, but read {sorted(set(headings))}"
             )
             settled = await _drained_footer(app, pilot)
-            assert settled.get(_LANGUAGE_KEY) == tr(_LANGUAGE_LABEL_KEY, locale=_TARGET_LANGUAGE), (
+            assert settled.get(language_key) == tr(_LANGUAGE_LABEL_KEY, locale=_TARGET_LANGUAGE), (
                 f"the footer must be rewritten too, but showed {settled}"
             )
             app.exit(None)
@@ -257,7 +268,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
 
         record = load_test_profile_record(require_active_bucket_id())
         stored = {fact.path: fact.value for fact in record.facts}
-        assert stored.get(_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
+        assert stored.get(PROFILE_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
             "the choice must reach the encrypted record through the ordinary write door"
         )
 
@@ -266,6 +277,6 @@ def _language_tokens(app: ProfileManagerApp) -> tuple[str, ...]:
     """The stored tokens behind the chooser's rows, in the order shown."""
     for section in app.overview.sections:
         for field in section.fields:
-            if field.path == _OUTPUT_LANGUAGE_PATH:
+            if field.path == PROFILE_OUTPUT_LANGUAGE_PATH:
                 return tuple(choice.value for choice in field.choices)
     return ()

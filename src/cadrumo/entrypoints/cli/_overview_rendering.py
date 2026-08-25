@@ -187,6 +187,19 @@ def overview_calendar_warning_notices(warnings: Sequence[CalendarWarning]) -> li
     ]
 
 
+def _calendar_warning_action_payload(warning: CalendarWarning) -> dict[str, object]:
+    """Project the canonical resolved action into the calendar warning envelope."""
+    resolved = _resolved_action(warning.fix_action)
+    if resolved is None:
+        raise ValueError("calendar warning requires a resolved fix action")
+    action = resolved.action.model_dump(mode="json")
+    action_id = action.pop("action_id")
+    return {
+        "action": {"action": {"action_id": action_id}, **action},
+        "argument_bindings": [binding.model_dump(mode="json") for binding in resolved.argument_bindings],
+    }
+
+
 _COVERAGE_NOTICE_CODE = "overview.coverage.incomplete"
 
 
@@ -495,7 +508,7 @@ def overview_calendar_output(
                 "warnings": [
                     {
                         **warning.model_dump(mode="json"),
-                        "fix_action": _resolved_action(warning.fix_action).model_dump(mode="json"),
+                        "fix_action": _calendar_warning_action_payload(warning),
                     }
                     for warning in cal.warnings
                 ],
