@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:53d272baf729aaf147b43eee20c2a70b4d577abc66938fdb4c7ed61d425e704c'
+body_hash: 'sha256:36d25f203b8b3cf824e83b794ce96091f469b6d3b4768ec36a6f0e237e8176c3'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -118,9 +118,11 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P16-S98]]'
   - '[[2026-08-22-source-casilla-integration-W05-P16-S99]]'
   - '[[2026-08-22-source-casilla-integration-W05-P16-summary]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P17-S100]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
+  - '[[2026-08-22-source-casilla-integration-m182-row-source-grounding-research]]'
   - '[[2026-08-22-source-casilla-integration-m232-row-source-grounding-research]]'
   - '[[2026-08-22-source-casilla-integration-m360-row-source-grounding-research]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
@@ -361,6 +363,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P16-S98` - prove the M360 refund-operation source remains refused at calculation ingress and unavailable to a connected encrypted source lifecycle diagnostics/review and source-owned repeated-record export until the S97 reopening predicate is satisfied while separate manual M360 request bindings remain available
 - `2026-08-22-source-casilla-integration-W05-P16-S99` - formally close the reviewed terminal M360 ingress-blocked census deferral, retain its owner, expiry, reopening predicate, and no-connected-route boundary, and obtain final review
 - `2026-08-22-source-casilla-integration-W05-P16-summary` - `source-casilla-integration` `W05.P16` summary
+- `2026-08-22-source-casilla-integration-W05-P17-S100` - adjudicate Modelo 182 donor-detail and Article-3 declarant/header source semantics, including type-1 nature `3` and administrator-holder identity, from official evidence
 
 ### plan
 
@@ -369,6 +372,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 ### research
 
 - `2026-08-22-source-casilla-integration-composite-provenance-research` - `source-casilla-integration` research: `composite calculation-source provenance`
+- `2026-08-22-source-casilla-integration-m182-row-source-grounding-research` - `source-casilla-integration` research: `M182 row source grounding`
 - `2026-08-22-source-casilla-integration-m232-row-source-grounding-research` - `source-casilla-integration` research: `m232 row source grounding`
 - `2026-08-22-source-casilla-integration-m360-row-source-grounding-research` - `source-casilla-integration` research: `m360 row source grounding`
 - `2026-08-22-source-casilla-integration-research` - `source-casilla-integration` research: `recurring discovery and enrollment of disconnected calculation sources`

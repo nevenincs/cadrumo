@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:d21ea9ff02a49e757fc0e92f55659c1c1ff0086d96d01f20b838f5545fc05845'
+body_hash: 'sha256:ca3742e2606b07c7997c0c639f27ffe1ee772e4cf0281f3bdcc3ddb3493bb151'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -331,7 +331,7 @@ rows. Recipient entities, political-party cases, and protected-estate holders or
 administrators remain separate filing-population limbs until official evidence
 settles their source and record semantics.
 
-- [ ] `W05.P17.S100` - adjudicate Modelo 182 donor-detail and Article-3 declarant/header source semantics, including type-1 nature `3` and administrator-holder identity, from official evidence; `.vault/research/2026-08-22-m182-row-source-grounding-research.md`.
+- [x] `W05.P17.S100` - adjudicate Modelo 182 donor-detail and Article-3 declarant/header source semantics, including type-1 nature `3` and administrator-holder identity, from official evidence; `.vault/research/2026-08-22-source-casilla-integration-m182-row-source-grounding-research.md`.
 - [ ] `W05.P17.S101` - enroll only the resolver paths that preserve the non-substitutable type-1 declarant/header and type-2 donor-detail facts, then remove their deferrals; `src/cadrumo/application/aggregation/_source_mesh.py`.
 - [ ] `W05.P17.S102` - prove Modelo 182 declarant and donor-detail persistence, diagnostics, provenance, replay, review, and supported export without a lossy fold; `src/cadrumo/application/modelo/tests/test_m182_row_source.py`.
 - [ ] `W05.P17.S103` - close the Modelo 182 census disposition and obtain formal review only after every accepted declarant and donor source path has proof; `.vault/audit/2026-08-22-m182-row-source-code-review.md`.
