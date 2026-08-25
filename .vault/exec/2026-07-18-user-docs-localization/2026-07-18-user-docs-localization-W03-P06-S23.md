@@ -18,19 +18,35 @@ related:
 
 ## Description
 
-- Re-extract the current 57-page user-documentation POT set through the canonical docs i18n pipeline.
-- Synchronize the seven source-divergent catalogues in all three target languages.
-- Translate every untranslated or fuzzy entry in the current thirty-page completeness backlog with page context and preserved code, JSON, command, and link literals.
-- Run the complete per-language completeness and fresh-POT msgid-equality gates without exclusions or fuzzy fallback.
+- Re-extract the user-documentation POT set through the canonical docs i18n pipeline.
+- Reconcile the finite Modelo revision-locale parity prerequisites exposed by
+  Sphinx before POT comparison, using the canonical locale revision-move and
+  set verbs rather than parallel tables.
+- Complete the 35 current translations in each of Spanish, Catalan, and
+  Hungarian with page context and preserved code, command, link, anchor, and
+  interpolation literals.
+- Run the complete per-language completeness, fresh-POT equality, and Modelo
+  revision-locale parity gates without exclusions or fuzzy fallback.
 
 ## Outcome
 
-Open carry-forward. On 2026-08-23 the completeness gate completed with three failures, one per language. Each language has the same 30 of 57 pages incomplete; the reviewed `how-to/protect-data-access.md` catalogue is absent from all three inventories and independently reports zero untranslated, fuzzy, or obsolete entries.
+Closed. Later canonical catalogue synchronization had already retired the old
+30-page checkpoint. Fresh execution found 35 real incomplete messages in each
+language across 14 how-to catalogues. All 105 are now translated, non-fuzzy,
+and structurally faithful. The resulting delta is exactly 42 PO files.
 
-The fresh-POT drift gate also completed with three failures, one per language, each naming the same seven pages: `download.md`, `how-to/classify-transactions.md`, `how-to/index.md`, `index.md`, `reference/commands-and-configuration.md`, `reference/identity-and-naming.md`, and `workstation-setup.md`. The reviewed protect-data-access page is absent from this inventory as well.
-
-This is post-close drift in the user-documentation localization campaign, not a remaining machine-secret translation defect. The machine-secret S18 review therefore preserves the full standing criteria by delegating this exact finite backlog here rather than declaring the broad lane green or absorbing thirty unrelated pages.
+The fresh-POT build initially exposed committed Modelo revision-locale drift
+before reaching PO comparison. M038, M182, M187, M220, and M763 were reconciled
+through the canonical locale CLI with no registry or duplicate locale authority.
+The parity gate is now green and the POT comparison reaches and validates the
+translated catalogues.
 
 ## Notes
 
-Closure requires both commands to collect and pass all three language cases on one coherent HEAD: `uv run --no-sync pytest -q -n 0 dev/docs/tests/test_docs_localization.py::test_every_user_page_is_fully_translated` and `uv run --no-sync pytest -q -n 0 -m integration dev/docs/tests/test_docs_catalogue_drift.py::test_catalogue_msgids_match_current_source`. The result must contain no page exclusion, incomplete or fuzzy msgstr, stale catalogue msgid, or source msgid absent from a catalogue.
+- Completeness: 3 passed in 2.83 seconds.
+- Fresh-POT equality: 3 passed in 101.72 seconds.
+- Modelo revision-locale parity: 10 passed in 11.34 seconds.
+- Independent review parsed all 105 changed entries and found zero empty,
+  fuzzy, unchanged-source-copy, backtick/command, Markdown-link, anchor, or
+  interpolation mismatches. `git diff --check` was clean.
+- Translation commit: `02408fa4df`.

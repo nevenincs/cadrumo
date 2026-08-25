@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#user-docs-localization'
 date: '2026-07-18'
-modified: '2026-08-23'
-body_hash: 'sha256:14d1a6433677422523123d3d4ad140685d5e321ad82afad4b752fee836f62daf'
+modified: '2026-08-25'
+body_hash: 'sha256:453f65ba2aa16caa3738874a67b44367ea636d737f1fac01358c38a2e5a0f19c'
 tier: L3
 related:
   - '[[2026-07-18-user-docs-localization-adr]]'
@@ -80,7 +80,7 @@ Per-language site roots and switcher, full verification, reviews, close
 - [x] `W03.P06.S20` - Run the full docs-check lane and the complete language matrix at HEAD and record the green evidence; `dev/docs/tests, docs/locales`.
 - [x] `W03.P06.S21` - Dispatch an independent code review over the campaign commits and action every finding; `.vault/audit`.
 - [x] `W03.P06.S22` - Run the fresh-context honesty review against the closure summary and persist the audit before declaring the campaign complete; `.vault/audit`.
-- [ ] `W03.P06.S23` - Reconcile post-close user-documentation catalogue drift across Spanish, Catalan, and Hungarian by synchronizing the seven source-divergent pages, translating every incomplete entry across the current thirty-page backlog, and proving the full completeness and fresh-POT equality gates return zero without excluding a page or accepting fuzzy fallback; `docs/locales/{es,ca,hu}/LC_MESSAGES; dev/docs/tests/test_docs_localization.py; dev/docs/tests/test_docs_catalogue_drift.py`.
+- [x] `W03.P06.S23` - Reconcile post-close user-documentation catalogue drift across Spanish, Catalan, and Hungarian through the canonical POT and PO pipeline, complete every current translation without fuzzy fallback or source-copy placeholders, and prove full completeness, fresh-POT equality, and Modelo revision-locale parity; `docs/locales/{es,ca,hu}/LC_MESSAGES; dev/docs/tests/test_docs_localization.py; dev/docs/tests/test_docs_catalogue_drift.py`.
 
 ## Parallelization
 
