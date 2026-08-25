@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:8d075e2dbeba5efe2329eb3403b8c1fa215ae0390c00fba297a219478f3758f4'
+body_hash: 'sha256:00048970a43621483cd5a428d79b68187df74764e50f399f43866129f93e42dd'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -302,7 +302,7 @@ Carry assembled typed worksheet rows across the governed calculation and encrypt
 - [x] `W05.P14.S87` - define the application command that accepts assembled typed row observations for calculation; `src/cadrumo/application/calculations/_row_set_assembly.py`.
 - [x] `W05.P14.S88` - route Google Sheets pull output into the governed calculation input boundary; `src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py`.
 - [x] `W05.P14.S89` - preserve grouping, row index, binding identity, source identity, and fingerprint through ingress; `src/cadrumo/domain/modelos/_calculation_revision.py`.
-- [ ] `W05.P14.S90` - reject unknown fields, row ownership collisions, sparse invalid rows, and caller substitution; `src/cadrumo/application/storage/calc_sheets/_row_set_assembly.py`.
+- [x] `W05.P14.S90` - reject unknown fields, row ownership collisions, sparse invalid rows, and caller substitution; `src/cadrumo/application/storage/calc_sheets/_row_set_assembly.py`.
 - [ ] `W05.P14.S91` - prove a real worksheet export-pull-calculate encrypted revision round trip; `src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py`.
 
 ### Phase `W05.P15` - resolve M232 related-party operations
