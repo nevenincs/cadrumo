@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import pytest
 
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ...google.tests._drive_media_server import drive_files_list_endpoint
+from ...google.tests.drive_media_server import drive_files_list_endpoint
 from .. import (
     OutboundStorageConflictError,
     OutboundStorageError,

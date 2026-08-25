@@ -18,7 +18,7 @@ import pytest
 from .....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....core.errors import resolve_error_message
 from .....core.i18n import tr
-from ...google.tests._drive_media_server import drive_files_list_endpoint
+from ...google.tests.drive_media_server import drive_files_list_endpoint
 from .. import OutboundStorageIntegrityError, OutboundStorageNetworkError, OutboundStorageValidationError
 from .._google_drive import GoogleDriveProvider, _drive_storage_content_hash
 
