@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad25d257aa000326d368b9af82c7037995176efa7f5fc0e4561d944b632a8fba'
+body_hash: 'sha256:974e16f722c54d89077dffd084ba9a0be3c3f22b093ebaeb243e161511ef06af'
 step_id: 'S85'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
@@ -47,3 +47,8 @@ related:
 - The canonical generator drift gate remains red for `m200-2024-y-siguientes`: a fresh render differs from the committed `_generation.provenance.json`. The owner is `W04.P08.S22`; S85 neither publishes a replacement nor suppresses the failure.
 - Independent review recorded the unsafe diagnostic-authority finding in `9402efef70`; the audit index was refreshed in `130fda7541`. This follow-up replaces that public diagnostic authority with the explicit `UnvalidatedRegistryClassification` surface, which exposes neither snapshot nor runtime authority and is rejected by canonical proof construction.
 - The first focused post-remediation integration attempt was blocked at collection by concurrent core work: `cadrumo.core` lacked `resolve_active_bucket_id`. After its owner restored that public export, the three-test focused integration rerun passed in 226.49 seconds (with two upstream `openpyxl` print-area warnings). Scoped Ruff and compilation pass; the core-only smoke exercised 66 unvalidated diagnostic classifications and confirmed that no authority or snapshot API is exposed.
+- Formal re-review `0498f48a28` found that the prior diagnostic wrapper retained a recoverable validated authority and that its classification/residue logic duplicated the strict path. The remediation replaces that wrapper with a frozen projection containing only a strict-error string and tuples of identifiers, coordinates, and serialized layout/inspection facts. The diagnostic object has no authority, callable service, snapshot, catalogue, or model-definition reference; normal materialization is separately gated by a supplied validated authority and canonical builder.
+- Shared commit `96bb9e08a2` captured the four remediation paths while unrelated public-module relocation work was being committed: the registry authority projection and facade, `dev/registry/filing_export_proof.py`, and its focused tests. It is mixed provenance (474 files) and is retained without amendment or S85-only attribution.
+- Vaultspec-RAG discovery plus exact source search confirms one static classification body, one generated-provenance verifier, and one provenance/residue mapping. The two public derivation functions are only validated and refusal-only wrappers over that shared classifier; source and test search found no S85 or plan-tracking metadata.
+- The current core-only smoke constructed the diagnostic projection from the live corpus: its only slots are `strict_validation_error` and `filing_revisions`; it contains 66 serialized static facts and is not a `ValidatedRegistryAuthority`. The focused integration module passed all four tests in 237.21 seconds, including direct `object.__getattribute__` escape denial, recursive static-object graph inspection, same-facts/same-residue coverage, and strict-failure no-materialization coverage.
+- This remediation leaves S85 open for independent final review. It neither changes the measured zero-success disposition nor starts S86.
