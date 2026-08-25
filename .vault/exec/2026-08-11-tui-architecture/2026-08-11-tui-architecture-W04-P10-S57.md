@@ -67,3 +67,5 @@ The installed module command lists the real surfaces. Ruff and formatting pass; 
 ## Notes
 
 The package initializer remains intentionally inert. Consumers import `fixture`, `frame`, `journal`, `replay`, or `surfaces` directly; no convenience facade was introduced.
+
+Temporal correction: the original execution record in `eb732c9db90` described the intended public-module state before that state was reachable in its own tree. The hard move became reachable in successor `be01c4b0be2`. The current-tree exact census, command smoke, behavior test, and independent review establish the outcome now; the earlier record alone is not implementation evidence.
