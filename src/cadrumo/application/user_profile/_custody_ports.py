@@ -638,6 +638,34 @@ class ProfileCustodyRecordSessionMaterial:
 
 
 @dataclass(frozen=True, slots=True)
+class ProfileCustodyCapsuleSourceMaterial:
+    """Parsed unpublished capsule members required by restore orchestration."""
+
+    password_envelope: ProfileCustodyEnvelopePort
+    sentinel: ProfileCustodySentinelPort
+    database_bytes: bytes
+
+
+def read_profile_custody_capsule_source(source: Path) -> ProfileCustodyCapsuleSourceMaterial:
+    """Read and parse one unpublished capsule through the custody provider."""
+
+    def required(relative: Path, maximum_bytes: int, subject: str) -> bytes:
+        try:
+            return custody.read_profile_custody_local_record(source / relative, maximum_bytes=maximum_bytes)
+        except Exception as exc:
+            raise ValueError(f"capsule source is missing or has an invalid {subject}") from exc
+
+    envelope = custody.parse_profile_custody_envelope(
+        required(Path("custody/envelope.v1.json"), custody.PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, "password envelope")
+    )
+    sentinel = custody.parse_profile_custody_sentinel_record(
+        required(Path("data/dek.sentinel.v1.json"), custody.PROFILE_CUSTODY_SENTINEL_MAX_BYTES, "DEK sentinel")
+    )
+    database_bytes = required(Path("db/cadrumo.db"), custody.PROFILE_CUSTODY_DATA_FILE_MAX_BYTES, "profile database")
+    return ProfileCustodyCapsuleSourceMaterial(envelope, sentinel, database_bytes)
+
+
+@dataclass(frozen=True, slots=True)
 class ProfileCustodyRecoveryEnrollmentMaterial:
     """Creation-only recovery wrapper and the minted secret that opens it.
 
