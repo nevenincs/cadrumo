@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.entrypoints.cli import (
+from cadrumo.entrypoints.cli.command_api import (
     JsonType,
     SchemaResolutionError,
     VerbInputSchema,
