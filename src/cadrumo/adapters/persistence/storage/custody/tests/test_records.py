@@ -156,7 +156,10 @@ def test_password_contract_preserves_exact_unicode_at_every_accepted_boundary() 
 @pytest.mark.parametrize(
     ("candidate", "reason"),
     (
-        ("Q7!Ω🔒" + "x" * 9, ProfilePasswordRefusalReason.TOO_FEW_SCALARS),
+        # One scalar short of PROFILE_PASSWORD_MIN_SCALARS, so the refusal is
+        # this reason and not another: the classes are all valid and the byte
+        # count is well inside the ceiling.
+        ("Q7!Ω🔒" + "x" * (PROFILE_PASSWORD_MIN_SCALARS - 6), ProfilePasswordRefusalReason.TOO_FEW_SCALARS),
         ("leak-marker-" + "x" * 245, ProfilePasswordRefusalReason.TOO_MANY_SCALARS),
         (
             "😀" * PROFILE_PASSWORD_MAX_SCALARS + "a",
