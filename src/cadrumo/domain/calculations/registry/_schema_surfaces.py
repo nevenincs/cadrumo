@@ -14,7 +14,7 @@ from ....core import (
     RegistrySelectorPeriodCode,
 )
 from ....core.aggregation import RelationAggregation
-from ....core.identity import AeatBoxNumber
+from ....core.identity import AeatBoxNumber, ContinuidadId
 from ._errors import RegistryValidationError
 from ._ids import (
     BindingId,
@@ -27,7 +27,7 @@ from ._ids import (
     SourceRefId,
 )
 from ._modelo_localization import resolve_modelo_localization
-from ._schema_base import ContinuidadId, LegalRefs, RegistryModel, SourceRefs
+from ._schema_base import LegalRefs, RegistryModel, SourceRefs
 from ._schema_export_exemption import ExportExemptionReasonValue
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_scalars import DecimalValue

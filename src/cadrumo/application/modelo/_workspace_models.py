@@ -17,11 +17,10 @@ from ...core import (
     RegistrySchemaFamilyDisposition,
     RevisionReviewStatus,
 )
-from ...core.identity import BucketId, ContentDigest, WorkUnitId
+from ...core.identity import BucketId, ContentDigest, ContinuidadId, WorkUnitId
 from ...domain.calculations.registry import (
     ApplicabilityRuleId,
     BindingId,
-    ContinuidadId,
     ExportFieldId,
     FormulaId,
     LegalRefId,
