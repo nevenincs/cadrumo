@@ -143,7 +143,7 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
         yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def _compose_profile_login_session_port() -> Iterator[None]:
     """Compose the real login-session adapter for tests that load its app owner."""
     if "cadrumo.application.user_profile._login_session" not in sys.modules:
