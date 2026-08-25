@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:f394a061a13691bd60016423c96e5f2e05a8d250b0f5515003857ca361f823de'
+body_hash: 'sha256:d8c27860e01a6875c3f95547341831731a6e23c87b0c510a8f9cf84141034b1f'
 step_id: 'S47'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -42,3 +42,8 @@ The broader flow lane is not used as a S47 gate because it contains unrelated
 existing lifecycle and inventory failures in the shared worktree. S48 remains
 unstarted. The S47 plan checkbox is intentionally left open pending independent
 review.
+
+Independent review rejected component-symbol republication from the package
+initializer. The corrective pass made `components/__init__.py` inert with an
+empty typed export set and moved all consumers to the direct canonical theme
+module; no compatibility facade or alias remains.

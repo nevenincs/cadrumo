@@ -30,7 +30,11 @@ from textual.containers import ScrollableContainer
 from textual.css.query import NoMatches
 from textual.widgets import Button, DataTable, Input, Static
 
-from cadrumo.entrypoints.tui.components import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME, ContentScroll
+from cadrumo.entrypoints.tui.components.theme import (
+    CADRUMO_DARK_THEME_NAME,
+    CADRUMO_LIGHT_THEME_NAME,
+    ContentScroll,
+)
 
 from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
 from .....application.user_profile import (

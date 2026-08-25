@@ -36,7 +36,7 @@ from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, SelectionList, Static
 
 from ....core.i18n import tr
-from ....entrypoints.tui.components import (
+from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     ContentDataTable,
     ContentScroll,

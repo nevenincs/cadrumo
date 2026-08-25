@@ -40,7 +40,7 @@ from textual.widgets import Button, Footer, Input, Label, Select, Static
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import tr
-from ....entrypoints.tui.components import BASE_CSS, ContentScroll, install_cadrumo_themes
+from ....entrypoints.tui.components.theme import BASE_CSS, ContentScroll, install_cadrumo_themes
 from ._credential_screen import (
     CREDENTIAL_PANEL_CSS,
     CredentialApp,

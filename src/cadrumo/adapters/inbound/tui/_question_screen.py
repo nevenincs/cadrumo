@@ -45,7 +45,7 @@ from ....application.flows import (
 from ....core.flows import DEFER_TOKEN, FlowWidgetKind
 from ....core.i18n import tr
 from ....core.parsing import parse_bool
-from ....entrypoints.tui.components import ContentScroll
+from ....entrypoints.tui.components.theme import ContentScroll
 from ._confirm_screen import confirm_restart_dialog
 
 if TYPE_CHECKING:

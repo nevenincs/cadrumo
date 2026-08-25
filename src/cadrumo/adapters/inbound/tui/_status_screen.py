@@ -35,7 +35,7 @@ from textual.widgets import Footer, Static
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice
-from ....entrypoints.tui.components import (
+from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
     ContentDataTable,

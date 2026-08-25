@@ -23,7 +23,11 @@ from textual.widgets import (
     Static,
 )
 
-from cadrumo.entrypoints.tui.components import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME, ContentScroll
+from cadrumo.entrypoints.tui.components.theme import (
+    CADRUMO_DARK_THEME_NAME,
+    CADRUMO_LIGHT_THEME_NAME,
+    ContentScroll,
+)
 
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository

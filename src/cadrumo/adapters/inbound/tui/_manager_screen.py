@@ -43,7 +43,7 @@ from textual.worker import Worker, WorkerState
 
 from ....core import OperatorProgress
 from ....core.i18n import tr
-from ....entrypoints.tui.components import (
+from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
     ContentDataTable,

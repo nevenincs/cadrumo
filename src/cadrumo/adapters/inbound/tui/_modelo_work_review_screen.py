@@ -41,7 +41,7 @@ from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ....entrypoints.tui.components import (
+from ....entrypoints.tui.components.theme import (
     BASE_CSS,
     ContentDataTable,
     ContentScroll,

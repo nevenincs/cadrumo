@@ -28,7 +28,7 @@ from pydantic import BaseModel
 from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Input, Label, OptionList, ProgressBar, Static
 
-from cadrumo.entrypoints.tui.components import (
+from cadrumo.entrypoints.tui.components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
     ContentScroll,

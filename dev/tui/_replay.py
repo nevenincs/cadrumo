@@ -31,7 +31,7 @@ def _theme_name(appearance: str) -> str:
     with that preference gets.
     """
     from cadrumo.core.config import TuiAppearance
-    from cadrumo.entrypoints.tui.components import resolve_theme_name
+    from cadrumo.entrypoints.tui.components.theme import resolve_theme_name
 
     return resolve_theme_name(TuiAppearance(appearance))
 
