@@ -24,6 +24,10 @@ AEAT_HOST_SUFFIX_EXPECTED = _AEAT.domains.host_suffix
 SEDE_ROOT_URL_FIXTURE = f"{_AEAT.domains.sede}/"
 IVA_WALLET_SOURCE_URL_FIXTURE = f"{_AEAT.domains.sede}/wallet"
 COTEJO_VERIFICATION_URL_FIXTURE = f"{_AEAT.domains.sede}/cotejo/A1B2C3D4E5F6G7H8"
+#: Base of the published Diseno de Registro tree. Catalogue tests assert the
+#: DOCUMENT route AEAT records for a design, so only the tail belongs to them;
+#: the host and the static_files/Sede prefix move with the constants here.
+RECORD_DESIGN_ROUTE_BASE_FIXTURE = f"{_AEAT.domains.sede}/static_files/Sede/Disenyo_registro"
 NOTIFICATION_DETALLE_SEDE_PATH_FIXTURE = "/wlpl/GNNO-JDIT/DetalleSede"
 #: Notification paths the same-host guard must REFUSE: a comparecencia surface
 #: that is mutation-shaped, and an acknowledge surface reached by redirect.
@@ -356,6 +360,7 @@ __all__ = [
     "PORTAL_RETIRED_WITH_NOTES_PATH_CANARY",
     "PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE",
     "PUBLIC_OPEN_SIMULATOR_PATH_FIXTURE",
+    "RECORD_DESIGN_ROUTE_BASE_FIXTURE",
     "REDACTION_INTERNAL_PATH_CANARY",
     "REDACTION_SECRET_WLPL_PATH_CANARY",
     "REMOTE_GUARD_LITERAL_SCAN_TOKENS",
