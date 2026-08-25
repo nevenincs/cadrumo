@@ -80,7 +80,8 @@ def resolve_filing_window(
 
     This is the single matching authority for "which registry deadline window
     covers this filing target". Every consumer — the extemporaneidad surface
-    that needs only :attr:`~cadrumo.domain.deadlines.DeadlineWindowDefinition.closes_on`,
+    that needs only
+    :attr:`~cadrumo.domain.calculations.registry.DeadlineWindowDefinition.closes_on`,
     and the overview calendar that also
     needs ``opens_on`` and ``payment_cutoff_on`` — resolves through here, so a
     change to the year/token matching rule or to the no-window behaviour can

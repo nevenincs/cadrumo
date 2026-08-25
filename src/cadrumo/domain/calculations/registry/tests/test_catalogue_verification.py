@@ -351,10 +351,10 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     gates = {gate.tier: gate for gate in modelo_038.gates}
     assert gates["legal_authority"].legal_refs == (
         "ley-58-2003:art-93",
-        "orden-hac-66-2002:art-1",
-        "orden-hac-66-2002:art-6",
         "orden-hac-646-2024:art-1",
         "orden-hac-646-2024:df-unica",
+        "orden-hac-66-2002:art-1",
+        "orden-hac-66-2002:art-6",
     )
     assert gates["official_source_guidance"].source_refs == ("enrolled-modelo-038-procedure",)
     assert gates["layout_authority"].source_refs == ("aeat-dr-038-2024",)
@@ -778,11 +778,41 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         "aeat-dr-390-2016": "held by the in-flight M390 generator-authority campaign",
     }
 
-    catalogues = _catalogues()
+    # A SEPARATE category from ``pending``: these sources will never acquire an
+    # epoch. The corpus evidences no filing-period window for them, so leaving
+    # them unreachable by every generator is the ruling, not an omission. Held to
+    # a stricter staleness check than ``pending`` -- an entry that gains an epoch
+    # OR becomes cited by a revision leaves this map.
+    unreachable_by_design: dict[str, str] = {
+        "aeat-dr-038-2012-inspection": ("hash-pinned inspection receipt for the unevidenced 2002-to-May-2024 interval"),
+    }
+
+    modelos, catalogues = _registry_tree()
     designs = [source for source in catalogues.sources.values() if source.kind == "record_design"]
     assert designs, "the catalogue must declare record-design sources for this gate to mean anything"
 
+    cited = {source_ref for modelo in modelos for source_ref in modelo.source_refs}
+    cited |= {
+        source_ref
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        for source_ref in revision.source_refs
+    }
+
     undeclared = {source.id for source in designs if source.record_design_epoch is None}
+
+    wrongly_cited = sorted(source_id for source_id in unreachable_by_design if source_id in cited)
+    assert wrongly_cited == [], (
+        "record-design source(s) recorded as deliberately unreachable are cited by a modelo or a "
+        "revision, so a generator can now select a design whose filing-period window the corpus "
+        "does not evidence:\n  " + "\n  ".join(wrongly_cited)
+    )
+    resolved = sorted(source_id for source_id in unreachable_by_design if source_id not in undeclared)
+    assert resolved == [], (
+        "deliberately-unreachable record-design entr(ies) are stale -- the source now declares an "
+        "epoch, or no longer exists. Remove them from the map:\n  " + "\n  ".join(resolved)
+    )
+    undeclared -= set(unreachable_by_design)
     malformed = sorted(
         f"{source.id!r} declares epoch {source.record_design_epoch!r}"
         for source in designs
