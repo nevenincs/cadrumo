@@ -8,23 +8,6 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-)
-
 from ...core import (
     OperationCancellation,
     OperationClosePolicy,
@@ -36,7 +19,23 @@ from ...core import (
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.time import now
 from ...domain.deadlines import TaxpayerProfile
+from ..operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from ..operations.models import OperationRequest
 from ..operations.owner import OperationEventEmitter, OperationExecutorContext
+from ..operations.registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+)
 from ..storage.sync_runs import SyncRunRecordRepositoryProtocol
 from .filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
@@ -110,9 +109,8 @@ type FiledHistorySyncRunRepositoryFactory = Callable[[], SyncRunRecordRepository
 
 def _resolve_active_filed_history_profile() -> TaxpayerProfile | None:
     """Load the selected profile through its canonical internal projection."""
-    from cadrumo.application.workflow.persistence import workflow_state_repository
-
     from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
+    from ..workflow.persistence import workflow_state_repository
 
     try:
         return load_active_taxpayer_profile(workflow_state_repository().load())
