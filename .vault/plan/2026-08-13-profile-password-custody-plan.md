@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-25'
-body_hash: 'sha256:c78d51e8671854292a2e75c81fab600bcbbb80906a43e1516c640fe67876f840'
+body_hash: 'sha256:6261df43a0887d9d6110430e67ee55f6728fd3e75c98f4e1d5468123ba5b8a29'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -368,3 +368,4 @@ Close every red gate and witness gap identified by the corrected fresh-context h
 - [ ] `W06.P12.S257` - Route CLI and manager censal apply through the canonical user-profile.censo-review operation, preserving one acquisition, encrypted reviewed operand, exact baseline, resume-without-reread, and apply_cotejo sole-writer authority; `src/cadrumo/application/user_profile/_censal_operation.py and src/cadrumo/entrypoints/cli/_config/ and src/cadrumo/adapters/inbound/tui/`.
 - [ ] `W06.P12.S258` - Make registry referential-integrity preflight validate every revision at its declared authority grade while retaining full reference checks and real invalid-reference failures across applicability, calculation, and filing revisions; `src/cadrumo/application/preflight.py and src/cadrumo/application/tests/test_preflight.py`.
 - [ ] `W06.P12.S259` - Correct Modelo 220 revision 2025 source grounding so it cites official authority applicable within its validity window and does not borrow the later 2026 form source; `src/cadrumo/_data/registry/aeat/modelos/220/ and src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W06.P12.S260` - Reconcile Modelo 182 deadline windows with canonical revision ownership so no revision projects filing years outside its evidenced design era and unsupported 2026 remains refused; `src/cadrumo/_data/registry/aeat/modelos/182/ and src/cadrumo/domain/calculations/registry/tests/`.
