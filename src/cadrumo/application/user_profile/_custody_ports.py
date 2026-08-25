@@ -768,8 +768,11 @@ class ProfileSecureObjectInventoryPort(Protocol):
 
     def list_namespaces(self) -> tuple[str, ...]:
         """Return the registered namespaces present in the active bucket."""
+        ...
 
-    ...
+    def list_keys(self, namespace: str) -> tuple[str, ...]:
+        """Return object keys present in one namespace."""
+        ...
 
 
 class ProfileCustodyInventoryEntryPort(Protocol):
@@ -787,11 +790,6 @@ class ProfileCustodyInventoryPort(Protocol):
 
     @property
     def digest_entries(self) -> tuple[ProfileCustodyInventoryEntryPort, ...]: ...
-
-    def list_keys(self, namespace: str) -> tuple[str, ...]:
-        """Return object keys present in one namespace."""
-        ...
-
 
 class _PersistenceProfileBucketStorage:
     """Adapt canonical bucket layout and locking to the application port."""
