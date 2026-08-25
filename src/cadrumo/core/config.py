@@ -1269,7 +1269,7 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
     "_settings_override",
     default=None,
 )
-_settings_pointer_observation: contextvars.ContextVar[tuple[Path, "BucketPointer"] | None] = contextvars.ContextVar(
+_settings_pointer_observation: contextvars.ContextVar[tuple[Path, BucketPointer] | None] = contextvars.ContextVar(
     "_settings_pointer_observation",
     default=None,
 )
@@ -1301,7 +1301,7 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
     return settings_for_bucket_route(bucket_id, source or load_settings())
 
 
-def _active_profile_pointer_observation() -> tuple[Path, "BucketPointer"]:
+def _active_profile_pointer_observation() -> tuple[Path, BucketPointer]:
     """Identify the current active-profile pointer through its native coordinate.
 
     Settings construction is not a pure function of the environment: when
@@ -1334,7 +1334,7 @@ def _active_profile_pointer_observation() -> tuple[Path, "BucketPointer"]:
 
 
 @lru_cache(maxsize=8)
-def _constructed_settings(root: Path, pointer: "BucketPointer") -> Settings:
+def _constructed_settings(root: Path, pointer: BucketPointer) -> Settings:
     """Build the settings for one active-profile pointer state and hold them.
 
     Construction is expensive out of proportion to what it produces: the model
