@@ -21,9 +21,7 @@ from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
 
-from ...adapters.persistence.storage import custody
 from ...core import (
     BucketPointer,
     capture_pointer,
@@ -36,6 +34,7 @@ from ...core.config import load_settings
 from ...core.errors import CadrumoError
 from ...core.locks_errors import LockAcquisitionError
 from ...core.paths import effective_storage_root
+from ._custody_ports import default_profile_custody_local_record_store
 from ._profile_pointer_ports import ProfileCustodyRootLockPort
 
 
@@ -151,10 +150,7 @@ def _canonical_root(root: Path | None) -> Path:
 
 def _default_root_lock_port() -> ProfileCustodyRootLockPort:
     """Resolve the concrete storage lock through the storage facade."""
-    provider = custody.profile_custody_root_lock
-    if not callable(provider):
-        raise TypeError("profile custody root-lock provider is unavailable")
-    return cast(ProfileCustodyRootLockPort, provider)
+    return default_profile_custody_local_record_store().root_lock
 
 
 @contextmanager
