@@ -107,6 +107,7 @@ def _ensure_logged_in() -> None:
 def _manager() -> ProfileManagerApp:
     _ensure_logged_in()
     record = load_test_profile_record(require_active_bucket_id())
+
     def persist(path: str, value: str):
         applied = apply_manager_profile_field_mutation(
             profile_id=require_active_bucket_id(),
