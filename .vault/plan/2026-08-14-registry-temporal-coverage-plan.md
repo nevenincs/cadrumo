@@ -4,7 +4,7 @@ tags:
   - '#registry-temporal-coverage'
 date: '2026-08-14'
 modified: '2026-08-25'
-body_hash: 'sha256:75f4b553a4ba7304e13c2db24f33eacd0a522ceede315ccbe2f0bceaa3c090d5'
+body_hash: 'sha256:27344a4053b9223875c0566daa43e656b5fa6403ae0a904aaf61e8f730a0cb0c'
 tier: L3
 related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
@@ -112,7 +112,7 @@ Refuse or advise at the authority and snapshot resolution boundary, which execut
 Replace the single-representative-year assessment with the full-span derived matrix and collapse the duplicated filing-eligibility predicate to one.
 
 - [x] `W02.P06.S13` - Replace the single-representative-year assessment with a derived modelo, filing-year, period and schema-family matrix over the validated authority that assesses every claimed year up to the assessment horizon, proven by property on a real long-span open revision; `src/cadrumo/domain/calculations/registry/_coverage.py; src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W02.P06.S14` - Collapse the duplicated filing-eligibility predicate onto the snapshot-owned check and delete the coverage-ledger duplicate and the by-construction-empty filing gap surface outright, replacing them with matrix-derived gaps proven non-vacuous on a synthetic reviewed corpus, with no superseded ledger surface retained beside the matrix; `src/cadrumo/domain/calculations/registry/_coverage.py; src/cadrumo/domain/calculations/registry/_snapshot.py; src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W02.P06.S14` - Collapse the duplicated filing-eligibility predicate onto the snapshot-owned check and delete the coverage-ledger duplicate and the by-construction-empty filing gap surface outright, replacing them with matrix-derived gaps proven non-vacuous on a synthetic reviewed corpus, with no superseded ledger surface retained beside the matrix; `src/cadrumo/domain/calculations/registry/_coverage.py; src/cadrumo/domain/calculations/registry/_snapshot.py; src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Wave `W03` - corpus migration and enforcement flip
 
