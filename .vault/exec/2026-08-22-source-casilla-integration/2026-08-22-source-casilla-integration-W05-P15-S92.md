@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e14c2d1ed8b9201fdfcc63c075b70ad99e86592f371701c893b369c9fb927e06'
+body_hash: 'sha256:56a8bab827ac8d3149565635b2648f2a482b9395c696959e1363bf78f899de4c'
 step_id: 'S92'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -63,16 +63,3 @@ Official evidence supports distinct related-party report rows by direction, coun
 
 The plan named a missing research filename. The canonical CLI-created research artifact retains the feature filename segment; it is the authoritative S92 research record.
 
-## Scope
-
-- `.vault/research/2026-08-22-m232-row-source-grounding-research.md`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
-
-## Outcome
-
-## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

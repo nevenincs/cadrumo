@@ -5,7 +5,7 @@ tags:
 date: '2026-08-22'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:3a1f8a399585d4a0d7908d336652ab51b77ec1f97497f2140a8efb52cdf0a75f'
+body_hash: 'sha256:5afb2b17ab712267c138c4191d53c0e053d401d2e02ae2409ddec91e1676017a'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
 ---
@@ -46,7 +46,7 @@ Modelo 232 is informative, not a tax calculation. Official evidence supports a r
 
 Article 3.1 of Orden HFP/816/2017 requires separate income/payment reporting, no compensation, grouping by related party/entity, operation type, and valuation method; operations with different methods are separate. Required facts include identity/name/residence, relationship type, amount before reductions and excluding IVA. https://www.boe.es/buscar/doc.php?id=BOE-A-2017-10042
 
-Thus S93 cannot resolve arbitrary ledger transactions or merge merely by counterparty. The current observation lacks direction and relationship-type fields, and its helper groups `(party, country, kind, method)` while summing amounts: gaps that require an authority decision, not defaults. `src/cadrumo/domain/calculations/registry/_detail_record_bindings.py:69`
+Thus S93 cannot resolve arbitrary ledger transactions or merge merely by counterparty. The domain `RelatedPartyOperationObservation` lacks direction and relationship-type fields, although the separate CLI `Modelo232VinculadaRow` carries `tipo_vinculacion`; the domain helper groups `(party, country, kind, method)` while summing amounts: gaps that require an authority decision, not defaults. `src/cadrumo/domain/calculations/registry/_detail_record_bindings.py:69`
 
 ### Existing row assembly is not ownership
 
@@ -63,3 +63,4 @@ S93 may remove deferral only for one established ingress owner preserving every 
 - `src/cadrumo/application/calculations/_row_set_assembly.py:680`
 - `src/cadrumo/application/aggregation/_source_mesh.py:290`
 - `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/revision.toml:73`
+
