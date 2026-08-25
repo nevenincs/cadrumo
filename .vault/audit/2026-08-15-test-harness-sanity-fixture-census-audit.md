@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#test-harness-sanity'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:a61fd05f785026da81952fd9a2e1ea3b668be6a64c814039eb9a4afab4a18984'
+body_hash: 'sha256:e083b7577c5a76a50b5e2ed97383e4bc0fbce0da2a9fbacdf01fe7565d2efba9'
 related:
   - "[[2026-08-14-test-harness-sanity-plan]]"
   - "[[2026-08-14-test-harness-sanity-successor-adr]]"
@@ -340,6 +340,26 @@ Run as an independent fresh-context pass against the live tree, briefed to belie
 **Verification, with the revert-to-red proof obtained for free:** the gate was RED (1 failed / 8 passed) before the edit and is GREEN (9 passed) after, on the same sequential `-n0` invocation — so the gate is proven to bite on exactly this violation without needing a deliberate breakage window. The subject file's own three tests pass (3 passed), and `ruff check` is clean on it.
 
 **Standing lesson for the campaign:** a checked gate step records that the gate passed *once*. On a worktree three teams commit to concurrently, that is a perishable claim. The close-phase honesty review must RE-RUN the gates a wave claims green, not re-read the checkmarks — a reviewer that verifies counts and file existence will confirm every structural claim in this record and still miss a red gate entirely, which is precisely what happened here.
+
+### find_observation | census | 13 sites, one canonical owner
+
+`W09.P29.S112` landed in `c7b3206ecc`: the thirteen application-calculation
+test consumers route through `_observation_lookup_support.find_observation`,
+whose narrow return annotation replaces the unannotated local lookup bodies.
+Commit `0c0b3079745` later moved the M036 caller onto that same owner rather
+than creating a sibling helper. Current-tree inspection still finds thirteen
+consumers and no substitutable local implementation.
+
+### ephemeral_secure_repo | census | postdated S119 delivery reconciled
+
+The earlier per-step pass correctly reported that its 2026-08-15 snapshot
+could not locate the ephemeral-repository clause of `W09.P29.S119`. That gap
+was subsequently delivered in `e8475e8289d` on 2026-08-25:
+`_ephemeral_secure_repo` and `_ephemeral_secure_repo_at` became the shared
+definitions, the write-batching and part-two local bodies were deleted, and
+the mutation-sensitive canonical-home test proves direct consumers and one
+shared definition. This census entry supersedes only the historical
+"no locatable evidence" observation; it does not rewrite the as-of record.
 
 ### W09 per-step evidence map | close-gate | the formal carry-forward record, and two steps returned to open
 
