@@ -175,9 +175,7 @@ class TestCompute:
         )
         periods = [obligation.period for obligation in schedule.obligations if obligation.modelo == "349"]
 
-        # Filing-year 2026 Q4 closes in 2027. It remains deliberately absent
-        # until the official 2027 taxpayer calendar is enrolled.
-        assert periods == [_period(2026, "1T"), _period(2026, "2T"), _period(2026, "3T")]
+        assert periods == [_period(2026, quarter) for quarter in ("1T", "2T", "3T", "4T")]
 
     def test_intracommunity_threshold_selects_monthly_modelo_349(self) -> None:
         schedule = _engine().compute(
@@ -210,6 +208,7 @@ class TestCompute:
             _period(2026, "09"),
             _period(2026, "10"),
             _period(2026, "11"),
+            _period(2026, "12"),
         ]
 
     def test_modelo_303_2025_emits_exact_quarterly_or_monthly_cadence_from_profile(self) -> None:

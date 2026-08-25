@@ -523,17 +523,15 @@ def test_modelo_303_historical_deadline_census_is_exact_and_canonically_owned() 
             assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
 
 
-def test_modelo_303_only_unpublished_2026_month_12_remains_unmaterialised() -> None:
+def test_modelo_303_2026_supported_periods_are_fully_materialised() -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2026-y-siguientes"]
     authored = {window.period.registry_token for window in revision.deadline_windows if window.filing_year == 2026}
 
-    assert authored == {"1T", "2T", "3T", "4T", *(f"{month:02d}" for month in range(1, 12))}
-    assert set(revision.period_selector.periods) - authored == {"12"}
+    assert authored == set(revision.period_selector.periods)
 
 
-def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
-    """Monthly IVA windows for 2026 periods 01-11 match the AEAT 2026 calendar."""
+def test_modelo_303_sii_2026_monthly_deadlines_are_exactly_grounded() -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2026-y-siguientes"]
     windows = {w.id: w for w in revision.deadline_windows}
@@ -549,6 +547,7 @@ def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
         "modelo-303-2026-09-mensual": (date(2026, 10, 1), date(2026, 10, 30), date(2026, 10, 27)),
         "modelo-303-2026-10-mensual": (date(2026, 11, 1), date(2026, 11, 30), date(2026, 11, 25)),
         "modelo-303-2026-11-mensual": (date(2026, 12, 1), date(2026, 12, 30), date(2026, 12, 24)),
+        "modelo-303-2026-12-mensual": (date(2027, 1, 1), date(2027, 2, 1), date(2027, 1, 27)),
     }
 
     for window_id, (opens_on, closes_on, payment_cutoff_on) in expected.items():
@@ -556,7 +555,11 @@ def test_modelo_303_sii_2026_monthly_deadlines_use_aeat_2026_calendar() -> None:
         assert window.opens_on == opens_on
         assert window.closes_on == closes_on
         assert window.payment_cutoff_on == payment_cutoff_on
-        assert "aeat-calendario-contribuyente-2026-domiciliacion" in window.source_refs
+        assert (
+            "aeat-modelo-303-procedure"
+            if window.period.registry_token == "12"
+            else "aeat-calendario-contribuyente-2026-domiciliacion"
+        ) in window.source_refs
 
     assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in windows["modelo-303-2026-01-mensual"].source_refs
 

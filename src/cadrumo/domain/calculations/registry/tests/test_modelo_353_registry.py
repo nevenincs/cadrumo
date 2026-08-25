@@ -395,8 +395,7 @@ def test_modelo_353_2025_deadlines_exactly_match_the_official_aeat_calendars() -
         }
 
 
-def test_modelo_353_2026_deadlines_stop_at_the_officially_published_calendar_horizon() -> None:
-    """The 2026 AEAT table publishes 1M--11M; 12M awaits the 2027 calendar."""
+def test_modelo_353_2026_deadlines_are_exactly_grounded() -> None:
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2026-y-siguientes"]
     windows = {window.period.registry_token: window for window in revision.deadline_windows}
@@ -412,19 +411,24 @@ def test_modelo_353_2026_deadlines_stop_at_the_officially_published_calendar_hor
         "09": (date(2026, 10, 1), date(2026, 10, 30), date(2026, 10, 27)),
         "10": (date(2026, 11, 1), date(2026, 11, 30), date(2026, 11, 25)),
         "11": (date(2026, 12, 1), date(2026, 12, 30), date(2026, 12, 24)),
+        "12": (date(2027, 1, 1), date(2027, 2, 1), date(2027, 1, 27)),
     }
 
-    assert len(windows) == len(expected) == 11
+    assert len(windows) == len(expected) == 12
     assert set(windows) == set(expected)
-    assert "12" in revision.period_selector.periods
-    assert "12" not in windows
+    assert set(windows) == set(revision.period_selector.periods)
     for period, dates in expected.items():
         window = windows[period]
         assert window.id == f"modelo-353-2026-{period}"
         assert window.filing_year == window.period.filing_year == 2026
         assert window.period_kind == "monthly"
         assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == dates
-        assert "aeat-calendario-contribuyente-2026-domiciliacion" in window.source_refs
+        expected_source = (
+            "aeat-modelo-303-procedure"
+            if period == "12"
+            else "aeat-calendario-contribuyente-2026-domiciliacion"
+        )
+        assert expected_source in window.source_refs
 
 
 @pytest.mark.parametrize(
@@ -434,7 +438,7 @@ def test_modelo_353_2026_deadlines_stop_at_the_officially_published_calendar_hor
         (2023, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
         (2024, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
         (2025, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
-        (2026, "2026-y-siguientes", tuple(f"{month:02d}" for month in range(1, 12))),
+        (2026, "2026-y-siguientes", tuple(f"{month:02d}" for month in range(1, 13))),
     ],
 )
 def test_modelo_353_authored_deadlines_have_one_canonical_owner_and_projection(

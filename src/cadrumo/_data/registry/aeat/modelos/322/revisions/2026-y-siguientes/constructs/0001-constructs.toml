@@ -11,6 +11,7 @@ legal_refs = [
 source_refs = [
     "aeat-dr-322-2026",
     "aeat-modelo-322-procedure",
+    "aeat-modelo-303-procedure",
     "boe-modelo-322-2007-form",
     "aeat-calendario-contribuyente-2026",
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
@@ -69,6 +70,7 @@ deadline_windows = [
     "modelo-322-2026-09",
     "modelo-322-2026-10",
     "modelo-322-2026-11",
+    "modelo-322-2026-12",
 ]
 
 # Calculation-completeness manifest for revision 2026-y-siguientes: the
