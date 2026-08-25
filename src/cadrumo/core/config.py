@@ -1323,14 +1323,16 @@ def _active_profile_pointer_observation() -> tuple[Path, BucketPointer]:
     """
     import os
 
-    root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT") or str(default_storage_root())
+    configured_root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
+    root = normalize_project_relative_path(Path(configured_root)) if configured_root else default_storage_root()
+    assert root is not None
     try:
         from .bucket_pointer import read_pointer
 
-        pointer = read_pointer(Path(root))
+        pointer = read_pointer(root)
     except (OSError, ValueError):
         raise
-    return (Path(root), pointer)
+    return (root, pointer)
 
 
 @lru_cache(maxsize=8)
