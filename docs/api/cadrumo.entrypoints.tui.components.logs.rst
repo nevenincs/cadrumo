@@ -1,7 +1,7 @@
-cadrumo.application.operations._journal module
+cadrumo.entrypoints.tui.components.logs module
 ==============================================
 
-.. automodule:: cadrumo.application.operations._journal
+.. automodule:: cadrumo.entrypoints.tui.components.logs
    :members:
    :show-inheritance:
    :ignore-module-all:

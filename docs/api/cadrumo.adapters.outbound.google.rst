@@ -23,5 +23,6 @@ Submodules
    cadrumo.adapters.outbound.google._errors
    cadrumo.adapters.outbound.google._impersonation
    cadrumo.adapters.outbound.google._oauth_flow
+   cadrumo.adapters.outbound.google._preconditions
    cadrumo.adapters.outbound.google._records
    cadrumo.adapters.outbound.google._session_store

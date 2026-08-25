@@ -1,7 +1,7 @@
-cadrumo.adapters.inbound.tui._status_bar module
+cadrumo.entrypoints.tui.components.theme module
 ===============================================
 
-.. automodule:: cadrumo.adapters.inbound.tui._status_bar
+.. automodule:: cadrumo.entrypoints.tui.components.theme
    :members:
    :show-inheritance:
    :ignore-module-all:

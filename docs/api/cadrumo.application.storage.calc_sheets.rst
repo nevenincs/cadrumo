@@ -21,6 +21,7 @@ Submodules
    cadrumo.application.storage.calc_sheets._parity_comparison
    cadrumo.application.storage.calc_sheets._parity_harness
    cadrumo.application.storage.calc_sheets._records
+   cadrumo.application.storage.calc_sheets._row_set_assembly
    cadrumo.application.storage.calc_sheets._styling
    cadrumo.application.storage.calc_sheets._theme
    cadrumo.application.storage.calc_sheets._translator

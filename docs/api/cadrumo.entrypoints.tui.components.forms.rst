@@ -1,7 +1,7 @@
-cadrumo.application.operations._executor module
+cadrumo.entrypoints.tui.components.forms module
 ===============================================
 
-.. automodule:: cadrumo.application.operations._executor
+.. automodule:: cadrumo.entrypoints.tui.components.forms
    :members:
    :show-inheritance:
    :ignore-module-all:
