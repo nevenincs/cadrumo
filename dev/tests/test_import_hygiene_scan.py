@@ -186,6 +186,24 @@ def test_module_body_defs_still_ignores_a_bare_alias_inside_a_conditional_branch
     assert n_defs == 0, "a platform-branch bare-Name alias is still an alias, not a real def"
 
 
+def test_module_body_defs_counts_a_pep695_named_type_alias_as_a_real_definition() -> None:
+    """A canonical named type contract is a definition, not a re-export shim."""
+    from ..quality.import_hygiene_scan import module_body_defs
+
+    tree = ast.parse(
+        "from typing import Annotated\n"
+        "from pydantic import Field\n"
+        "type OperationEventCursor = Annotated[int, Field(ge=0)]\n"
+        '__all__ = ["OperationEventCursor"]\n'
+    )
+
+    n_imports, n_defs, n_all = module_body_defs(tree)
+
+    assert n_imports == 2
+    assert n_defs == 1
+    assert n_all == 1
+
+
 def test_walk_module_imports_tolerates_file_removed_after_discovery(tmp_path: Path) -> None:
     """A generated module removed after discovery is not a scanner failure."""
     generated = tmp_path / "generated_test_module.py"

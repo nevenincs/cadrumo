@@ -56,6 +56,7 @@ from cadrumo.domain.calculations.registry import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ModeloId,
+    ModeloRevision,
     RegistryRevisionInspection,
     RegistrySnapshotError,
     RegistryValidationError,
@@ -107,6 +108,7 @@ _BUILDER_RESIDUE_OWNER = "filing-export-conformance"
 
 _ConformanceResidueReason = Literal[
     "law_selection_failed",
+    "revision_validation_failed",
     "layout_unavailable",
     "generated_provenance_missing",
     "generated_provenance_invalid",
@@ -115,6 +117,7 @@ _ConformanceResidueReason = Literal[
     "period_unrepresentable",
     "canonical_builder_missing",
     "canonical_builder_conflict",
+    "registry_validation_incomplete",
 ]
 
 
@@ -142,6 +145,7 @@ class FilingExportConformanceResidue:
 class FilingExportConformanceEnrollmentReport:
     """Dynamic public-provenance enrollment and its non-success residue."""
 
+    full_registry_validation_error: str | None
     provenance_candidates: tuple[FilingExportConformanceProvenanceCandidate, ...]
     materializable_vectors: tuple[FilingExportConformanceVector, ...]
     residues: tuple[FilingExportConformanceResidue, ...]
@@ -244,6 +248,7 @@ def derive_filing_export_conformance_enrollment(
     source_root: Path,
     authority: ValidatedRegistryAuthority,
     vectors: tuple[FilingExportConformanceVector, ...],
+    full_registry_validation_error: str | None = None,
 ) -> FilingExportConformanceEnrollmentReport:
     """Derive every filing revision's public candidate or explicit residue."""
     vector_by_revision = {
@@ -261,6 +266,10 @@ def derive_filing_export_conformance_enrollment(
     candidates: list[FilingExportConformanceProvenanceCandidate] = []
     materializable_vectors: list[FilingExportConformanceVector] = []
     residues: list[FilingExportConformanceResidue] = []
+    if authority.is_registry_validated and full_registry_validation_error is not None:
+        raise ValueError("a fully validated authority cannot carry a registry validation error")
+    if not authority.is_registry_validated and full_registry_validation_error is None:
+        raise ValueError("diagnostic conformance classification requires its strict registry validation error")
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
 
     for modelo in sorted(authority.modelos, key=lambda item: item.id):
@@ -272,6 +281,22 @@ def derive_filing_export_conformance_enrollment(
                     revision,
                     assessment_horizon=assessment_horizon,
                 )
+            except ValueError as error:
+                residues.append(
+                    _conformance_residue(
+                        modelo=modelo.id,
+                        revision=revision.id,
+                        layout_ids=(),
+                        reason="law_selection_failed",
+                        owner=_GENERATOR_RESIDUE_OWNER,
+                        reconsideration_condition=(
+                            "Restore a filing-grade law-selection coordinate for the registered revision."
+                        ),
+                        detail=_residue_detail(error),
+                    )
+                )
+                continue
+            try:
                 snapshots = tuple(
                     authority.snapshot(
                         modelo.id,
@@ -281,7 +306,19 @@ def derive_filing_export_conformance_enrollment(
                     )
                     for filing_year, period in selection_coordinates
                 )
-            except (RegistrySnapshotError, RegistryValidationError, ValueError) as error:
+            except RegistryValidationError as error:
+                residues.append(
+                    _modelo_validation_residue(
+                        registry_root=registry_root,
+                        verifier=verifier,
+                        modelo=modelo.id,
+                        revision=revision,
+                        selection_coordinates=selection_coordinates,
+                        validation_error=error,
+                    )
+                )
+                continue
+            except RegistrySnapshotError as error:
                 residues.append(
                     _conformance_residue(
                         modelo=modelo.id,
@@ -520,12 +557,111 @@ def derive_filing_export_conformance_enrollment(
                     )
                 )
                 continue
+            if full_registry_validation_error is not None:
+                residues.append(
+                    _conformance_residue(
+                        modelo=modelo.id,
+                        revision=revision.id,
+                        layout_ids=layout_ids,
+                        reason="registry_validation_incomplete",
+                        owner=_GENERATOR_RESIDUE_OWNER,
+                        reconsideration_condition=(
+                            "Resolve the recorded whole-registry validation failure, then re-run "
+                            "canonical conformance enrollment."
+                        ),
+                        detail=full_registry_validation_error,
+                    )
+                )
+                continue
             materializable_vectors.append(vector)
 
     return FilingExportConformanceEnrollmentReport(
+        full_registry_validation_error=full_registry_validation_error,
         provenance_candidates=tuple(candidates),
         materializable_vectors=tuple(materializable_vectors),
         residues=tuple(residues),
+    )
+
+
+def _modelo_validation_residue(
+    *,
+    registry_root: Path,
+    verifier: LiveFilingExportProofAuthority,
+    modelo: ModeloId,
+    revision: ModeloRevision,
+    selection_coordinates: tuple[tuple[int, str], ...],
+    validation_error: RegistryValidationError,
+) -> FilingExportConformanceResidue:
+    """Classify one failed modelo without treating its validation as a waiver."""
+    layout_ids = tuple(layout.id for layout in revision.export_layouts)
+    if len(layout_ids) != 1:
+        return _conformance_residue(
+            modelo=modelo,
+            revision=revision.id,
+            layout_ids=layout_ids,
+            reason="revision_validation_failed",
+            owner=_GENERATOR_RESIDUE_OWNER,
+            reconsideration_condition=(
+                "Resolve the canonical revision validation failure before selecting its filing layout."
+            ),
+            detail=_residue_detail(validation_error),
+        )
+    manifest_path = (
+        registry_root
+        / "modelos"
+        / str(modelo)
+        / "revisions"
+        / str(revision.id)
+        / "export"
+        / "_generation.provenance.json"
+    )
+    if not manifest_path.is_file():
+        return _conformance_residue(
+            modelo=modelo,
+            revision=revision.id,
+            layout_ids=layout_ids,
+            reason="generated_provenance_missing",
+            owner=_GENERATOR_RESIDUE_OWNER,
+            reconsideration_condition=(
+                "Publish canonical generated provenance for the exact selected layout and revision."
+            ),
+            detail="the validation-failed revision has no canonical provenance manifest",
+        )
+    try:
+        manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
+        if manifest.modelo != modelo or manifest.revision_id != revision.id:
+            raise RegistryValidationError("generated provenance identity conflicts with the revision under validation")
+        verifier._verify_generation(
+            entry=_ConformanceGenerationEntry(
+                modelo=modelo,
+                revision=revision.id,
+                design_epoch=manifest.design_epoch,
+                filing_year=selection_coordinates[0][0],
+            ),
+            layout=revision.export_layouts[0],
+        )
+    except (OSError, RegistryValidationError, ValueError) as error:
+        return _conformance_residue(
+            modelo=modelo,
+            revision=revision.id,
+            layout_ids=layout_ids,
+            reason="generated_provenance_invalid",
+            owner=_GENERATOR_RESIDUE_OWNER,
+            reconsideration_condition=(
+                "Regenerate and verify the exact canonical provenance, source bytes, semantic map, and render profile."
+            ),
+            detail=_residue_detail(error),
+        )
+    return _conformance_residue(
+        modelo=modelo,
+        revision=revision.id,
+        layout_ids=layout_ids,
+        reason="revision_validation_failed",
+        owner=_GENERATOR_RESIDUE_OWNER,
+        reconsideration_condition=(
+            "Resolve the canonical revision validation failure before conformance enrollment."
+        ),
+        detail=_residue_detail(validation_error),
     )
 
 
@@ -961,14 +1097,21 @@ def canonical_two_channel_filing_export_proof_authority(
     authority: ValidatedRegistryAuthority,
     secure_replay_source: FilingExportSecureReplaySourceAuthority | None,
     secure_replay_custody: FilingExportSecureReplayCustody | None,
+    full_registry_validation_error: str | None = None,
 ) -> CanonicalTwoChannelFilingExportProofAuthority:
-    """Bind canonical public vectors and operator-supplied secure attestations."""
+    """Bind canonical public vectors and operator-supplied secure attestations.
+
+    An unvalidated diagnostic authority may classify only after its strict
+    load failure is preserved in ``full_registry_validation_error``.  It can
+    never contribute a successful conformance vector.
+    """
     enrollment = derive_filing_export_conformance_enrollment(
         workspace_root=workspace_root,
         registry_root=registry_root,
         source_root=source_root,
         authority=authority,
         vectors=CANONICAL_FILING_EXPORT_CONFORMANCE_VECTORS,
+        full_registry_validation_error=full_registry_validation_error,
     )
     return CanonicalTwoChannelFilingExportProofAuthority(
         workspace_root=workspace_root,

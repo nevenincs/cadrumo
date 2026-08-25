@@ -1680,7 +1680,8 @@ def module_body_defs(tree: ast.Module) -> tuple[int, int, int]:
     ``__future__`` imports are excluded from the import count (every module
     may carry one; it is not "re-export" signal). Annotated assignments
     (``NAME: Type = value``, e.g. a module-level typed constant/data record)
-    count as real defs, same as a plain ``Assign``, a function, or a class --
+    count as real defs, same as a plain ``Assign``, a PEP 695 ``TypeAlias``,
+    a function, or a class --
     UNLESS the value is a bare ``Name`` reference (``Foo = _internal.Foo`` /
     ``Foo = Foo``), which is itself a re-export alias, not a real definition.
 
@@ -1700,7 +1701,7 @@ def module_body_defs(tree: ast.Module) -> tuple[int, int, int]:
             n_imports += 1
         elif isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets):
             n_all += 1
-        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.TypeAlias)):
             n_defs += 1
         elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
             continue  # docstring
