@@ -53,11 +53,9 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo import (
-    ModeloCalculationRevisionSelector,
-    create_work_unit,
-    workflow_period_for_work_unit,
-)
+from ...modelo._selectors import ModeloCalculationRevisionSelector
+from ...modelo._work_lifecycle import create_work_unit
+from ...modelo._workflow_gate import workflow_period_for_work_unit
 from ...modelo.work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from ...operator_actions import (
     ConditionEvidence,
@@ -627,6 +625,8 @@ def test_visible_modelo_resume_target_resolves_single_workflow_run(tmp_path: Pat
             period=Period.from_year_and_code(2026, "1T"),
             bucket_id=_BUCKET_ID,
         ),
+        catalogue=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load(),
+        bucket_id=_BUCKET_ID,
     )
 
     assert resolved.run_id == run.run_id
@@ -691,6 +691,8 @@ def test_exact_modelo_work_target_resolves_latest_run_for_period(tmp_path: Path)
     resolved = resolve_modelo_exact_workflow_run_for_resume(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID)
     via_target = resolve_modelo_workflow_run_for_resume(
         ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID),
+        catalogue=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load(),
+        bucket_id=_BUCKET_ID,
     )
 
     assert resolved.run_id == later.run_id

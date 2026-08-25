@@ -45,7 +45,7 @@ from .....application.live.borrador_100 import (
     derive_borrador_100_snapshot_id,
 )
 from .....application.live.snapshot_base import SnapshotLifecycleState
-from .....application.modelo import RecipientFingerprintRegistryRepository
+from .....application.modelo._review_package_recipient_registry import RecipientFingerprintRegistryRepository
 from .....application.repair_integrity import (
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,

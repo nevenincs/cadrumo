@@ -43,11 +43,12 @@ from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
 from .....core import STRICT_FROZEN_CONFIG
+from .....core.errors import AuthError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....core.time import coerce_utc_aware
-from .errors import AuthError, AuthValidationError
+from .errors import AuthValidationError
 
 log = get_logger(__name__)
 

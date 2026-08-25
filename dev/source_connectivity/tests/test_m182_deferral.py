@@ -4,7 +4,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.aggregation import collect_unhandled_source_diagnostics
-from cadrumo.application.modelo import CALCULATION_ROUTE_RESOLVER_OWNERSHIP, CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from cadrumo.application.modelo._calculation_route import (
+    CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
+    CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
+)
 from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.core import BindingSourceKind, RegistryAuthorityGrade

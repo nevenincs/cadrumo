@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from pydantic import Field, model_validator
 
-from ...application.modelo import ResultSummaryRole
+from ...application.modelo._result_summary import ResultSummaryRole
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema

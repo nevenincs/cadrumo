@@ -158,7 +158,7 @@ def test_every_nominated_modelo_is_one_the_registry_actually_models() -> None:
     # Asserted as a containment property rather than against
     # UNMODELED_OBLIGATIONS, which is EMPTY at present -- an intersection test
     # against it would pass vacuously and keep passing if the filter were deleted.
-    from ....application.modelo import registry_modelo_codes
+    from ...modelo._registry_discovery import registry_modelo_codes
 
     grid = expected_filed_declaration_grid(_autonomo(), today=_TODAY)
     registry_codes = set(registry_modelo_codes())

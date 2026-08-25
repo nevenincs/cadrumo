@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     from ...adapters.outbound.aeat.sede import Declaracion, Expediente
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
-    from ..modelo import ModeloReconciliationReport
+    from ..modelo._reconcile import ModeloReconciliationReport
 
 from ...adapters.outbound.aeat.sede import (
     capture_justificante,
@@ -656,11 +656,11 @@ def reconcile_capture(
     Returns:
         A :class:`ModeloReconciliationReport` for the in-memory receipt comparison.
     """
-    from ..modelo import (
+    from ..modelo._reconcile import (
         ModeloReconciliationBytesCommand,
-        ModeloReconciliationEvidenceKind,
         modelo_reconcile_bytes,
     )
+    from ..modelo._reconciliation_records import ModeloReconciliationEvidenceKind
 
     return modelo_reconcile_bytes(
         ModeloReconciliationBytesCommand(

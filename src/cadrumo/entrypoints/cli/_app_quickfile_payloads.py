@@ -9,7 +9,12 @@ consumer can read exactly which stage the chain reached and where it halted.
 
 from __future__ import annotations
 
-from ...application.modelo import ModeloExportResult, QuickfileResult, QuickfileStage, QuickfileStageStatus
+from ...application.modelo._export import ModeloExportResult
+from ...application.modelo._quickfile import (
+    QuickfileResult,
+    QuickfileStage,
+    QuickfileStageStatus,
+)
 from ...application.state_projection import ProjectionModeloReadiness
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection, ResultDisposition
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId

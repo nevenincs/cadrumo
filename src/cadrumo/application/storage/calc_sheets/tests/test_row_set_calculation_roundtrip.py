@@ -23,7 +23,8 @@ from .....domain.calculations.registry import Modelo720RowObservation
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .....tests.profile_capsule import seed_test_profile_record
 from .....tests.secure_sql import isolated_runtime_profile
-from ....modelo import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
+from ....modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from ....modelo._work_lifecycle import create_work_unit
 from .._engine import build_export_plan
 from .._records import TabName
 from .._row_set_assembly import assemble_row_sets_for_snapshot

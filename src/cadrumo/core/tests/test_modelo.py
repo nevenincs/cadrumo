@@ -29,7 +29,7 @@ def test_modelo_registry_backed_members_match_registry() -> None:
     parallel execution, re-run sequentially (``-p no:xdist``) before concluding
     it is a real regression.
     """
-    from ...application.modelo import registry_modelo_codes
+    from ...application.modelo._registry_discovery import registry_modelo_codes
 
     registry_set = set(registry_modelo_codes())
     enum_set = {m.value for m in Modelo}

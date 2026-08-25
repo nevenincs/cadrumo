@@ -83,7 +83,7 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
     summaries = " ".join(item.summary for item in inventory.grounding)
     assert "schema-v3" in summaries
     assert "0181" in summaries
-    assert "missing resolver" in summaries
+    assert "missing repeated-row materialization" in summaries
 
 
 def test_modelo_036_manual_profile_evidence_uses_its_exact_event_coordinate() -> None:
@@ -263,6 +263,16 @@ def test_reviewed_helpers_have_no_new_connectivity_candidate_or_connected_outcom
     assert census_claims == set()
 
 
+def test_profile_repeatable_row_ingress_stays_in_structural_coverage() -> None:
+    """A profile write surface is not a new source owner or connection claim."""
+    manifest = load_source_connectivity_census()
+    assignments = assign_capabilities_to_census(discovered_source_capability_ids(REPO_ROOT), manifest)
+    capability_id = "ingress:src/cadrumo/entrypoints/cli/_config/_profile_repeatable_row.py:profile_add_row"
+
+    assert capability_id in assignments["coverage.remaining-ingress-surfaces"]
+    assert all(capability_id not in entry.capability_ids for entry in manifest.entries)
+
+
 def test_s115_freezes_reviewed_s112_helper_set_by_secondary_count() -> None:
     """Count is a secondary selector guard; the digest remains its canonical identity proof."""
     manifest = load_source_connectivity_census()
@@ -337,7 +347,7 @@ def test_censo_event_coordinate_refuses_modelo_100_alta() -> None:
 
 def test_absent_registry_destination_candidate_is_rejected() -> None:
     manifest = load_source_connectivity_census()
-    first = manifest.entries[0]
+    first = next(entry for entry in manifest.entries if entry.candidate_id == "inventory.stock-valuation")
     phantom = RegistryDestinationCandidate(
         kind="casilla_semantic_role",
         modelo_id="100",
@@ -349,7 +359,9 @@ def test_absent_registry_destination_candidate_is_rejected() -> None:
     mutated = first.model_copy(
         update={"registry_destination_candidates": (*first.registry_destination_candidates, phantom)}
     )
-    changed = manifest.model_copy(update={"entries": (mutated, *manifest.entries[1:])})
+    changed = manifest.model_copy(
+        update={"entries": tuple(mutated if entry is first else entry for entry in manifest.entries)}
+    )
 
     with pytest.raises(ValueError, match="semantic role is absent"):
         validate_census_destination_candidates(changed, resources().modelos.authority)
@@ -357,7 +369,7 @@ def test_absent_registry_destination_candidate_is_rejected() -> None:
 
 def test_ambiguous_registry_destination_candidate_is_rejected() -> None:
     manifest = load_source_connectivity_census()
-    first = manifest.entries[0]
+    first = next(entry for entry in manifest.entries if entry.candidate_id == "inventory.stock-valuation")
     ambiguous = RegistryDestinationCandidate(
         kind="casilla_semantic_role",
         modelo_id="100",
@@ -369,7 +381,9 @@ def test_ambiguous_registry_destination_candidate_is_rejected() -> None:
     mutated = first.model_copy(
         update={"registry_destination_candidates": (*first.registry_destination_candidates, ambiguous)}
     )
-    changed = manifest.model_copy(update={"entries": (mutated, *manifest.entries[1:])})
+    changed = manifest.model_copy(
+        update={"entries": tuple(mutated if entry is first else entry for entry in manifest.entries)}
+    )
 
     with pytest.raises(ValueError, match="semantic role is ambiguous"):
         validate_census_destination_candidates(changed, resources().modelos.authority)

@@ -13,7 +13,11 @@ __all__ = ["_isolated_backend"]
 
 from ....core import Modelo
 from ....core.directory_scan import scan_directory
-from ...modelo import ModeloReconciliationVerdict, ReconciliationEvidenceInvalidError, list_modelo_reconciliations
+from ...modelo._reconcile import ReconciliationEvidenceInvalidError
+from ...modelo._reconciliation_records import (
+    ModeloReconciliationVerdict,
+    list_modelo_reconciliations,
+)
 from ..justificante import JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE, reconcile_capture
 from ._justificante_reconcile_support import (
     MODELO_130_FIXTURE,

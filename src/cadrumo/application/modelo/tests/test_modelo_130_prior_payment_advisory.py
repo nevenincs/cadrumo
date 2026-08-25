@@ -66,11 +66,11 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceDiagnostic
 from ...calculations import CalculationObservationRepository
-from .. import (
+from .._calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    create_work_unit,
 )
+from .._work_lifecycle import create_work_unit
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from .._prior_payment_advisory import collect_prior_payment_not_deducted_diagnostics
 

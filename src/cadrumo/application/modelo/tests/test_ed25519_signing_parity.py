@@ -13,6 +13,7 @@ Lives in the application layer because it imports both a ``core`` module and an
 from __future__ import annotations
 
 import inspect
+from importlib import import_module
 
 import pytest
 from cryptography.exceptions import InvalidSignature
@@ -27,7 +28,8 @@ from ....core.ed25519_signing import (
     generate_ed25519_keypair_hex,
     sign_digest_hex,
 )
-from .. import _review_package_signing as review_signing
+
+review_signing = import_module("cadrumo.application.modelo._review_package_signing")
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

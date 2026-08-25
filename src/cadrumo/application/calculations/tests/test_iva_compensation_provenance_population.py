@@ -81,7 +81,7 @@ from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...live.filed_observation_persistence import persist_filed_calculation_observation
-from ...modelo import persist_filed_revision_observation
+from ...modelo._filed_revision_observation import persist_filed_revision_observation
 from .._binding_prefill import (
     _observation_from_iva_compensation_history,
     extract_modelo_303_local_iva_compensation_recurrence,

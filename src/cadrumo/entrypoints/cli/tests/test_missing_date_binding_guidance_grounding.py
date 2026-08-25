@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....application.modelo import profile_requirements_for_binding
+from ....application.modelo._data_inventory import profile_requirements_for_binding
 from ....application.user_profile.preflight import build_profile_preflight_requirement
 from ....core import Period, PeriodError
 from ....core.resources import resources

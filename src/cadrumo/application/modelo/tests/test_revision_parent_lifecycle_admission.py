@@ -6,12 +6,10 @@ import pytest
 
 from ....core import NoRecoveryOutcome
 from ....domain.modelos import CalculationRevisionState
-from .. import (
-    CalculationRevisionNotFoundError,
-    discard_work_unit,
-    file_modelo_revision,
-    verify_modelo_revision_with_preconditions,
-)
+from .._action_errors import CalculationRevisionNotFoundError
+from .._filing_actions import file_modelo_revision
+from .._verification_actions import verify_modelo_revision_with_preconditions
+from .._work_lifecycle import discard_work_unit
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,

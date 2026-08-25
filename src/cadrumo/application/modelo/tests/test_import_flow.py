@@ -26,12 +26,10 @@ from ....domain.modelos import (
     ExternalEvidenceKind,
     ModeloRecordStatus,
 )
-from .. import (
-    amend_modelo_revision,
-    get_calculation_revision,
-    get_filing_record,
-    get_work_unit,
-)
+from .._amendment_actions import amend_modelo_revision
+from .._calculation_actions import get_calculation_revision
+from .._filing_actions import get_filing_record
+from .._work_lifecycle import get_work_unit
 from ._import_flow_support import (
     _IMPORT_EXPENSE_CASILLA,
     _IMPORT_INCOME_CASILLA,

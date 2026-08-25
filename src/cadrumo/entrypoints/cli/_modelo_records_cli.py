@@ -15,25 +15,31 @@ from pathlib import Path
 
 import typer
 
-from ...application.modelo import (
-    ExternalFilingBaselineSource,
+from ...application.modelo._action_errors import (
     ExternalModeloImportError,
     ModeloLocalObservationError,
     ModeloRecordNotFoundError,
     VerificationReportNotFoundError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
-    get_filing_record,
-    get_verification_report,
-    get_work_unit,
+)
+from ...application.modelo._external_import_actions import (
+    ExternalFilingBaselineSource,
     import_external_filing_evidence,
     import_external_filing_source,
+)
+from ...application.modelo._filing_actions import (
+    get_filing_record,
+    get_verification_report,
     list_filing_records,
     list_verification_reports,
+)
+from ...application.modelo._local_observation_actions import record_operator_local_observation
+from ...application.modelo._local_observation_spreadsheet import (
     parse_casilla_lexical_spreadsheet,
     parse_casilla_value_spreadsheet,
-    record_operator_local_observation,
 )
+from ...application.modelo._work_lifecycle import get_work_unit
 from ...core import CasillaId, Period, PeriodError, validated_casilla_id
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.i18n import tr

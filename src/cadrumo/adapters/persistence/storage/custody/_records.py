@@ -12,7 +12,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.credentials import assess_profile_password as _assess_profile_password
+from .....core.credentials import assess_profile_password
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
@@ -74,7 +74,7 @@ def _canonical_json_bytes(value: object) -> bytes:
 
 def _encode_profile_password(password: str) -> bytes:
     """Encode an exact password after canonical defense-in-depth assessment."""
-    assessment = _assess_profile_password(password)
+    assessment = assess_profile_password(password)
     if assessment.reason is not None:
         raise ProfileCustodyPasswordError(
             f"profile password refused by canonical policy: {assessment.reason.value}",

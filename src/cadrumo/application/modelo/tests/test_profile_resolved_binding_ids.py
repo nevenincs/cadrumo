@@ -73,7 +73,9 @@ def test_no_consumer_re_encodes_the_channel_union() -> None:
     prevent.
     """
     from ... import state_projection
-    from .. import _binding_readiness
+    from importlib import import_module
+
+    _binding_readiness = import_module("cadrumo.application.modelo._binding_readiness")
 
     for module in (_binding_readiness, state_projection):
         source = inspect.getsource(module)

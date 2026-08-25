@@ -70,11 +70,9 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import ForeignAssetIngestObservation
-from ...modelo import (
-    calculate_modelo_revision_from_bucket_aggregation,
-    create_work_unit,
-    verify_modelo_revision,
-)
+from ...modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+from ...modelo._verification_actions import verify_modelo_revision
+from ...modelo._work_lifecycle import create_work_unit
 from .._foreign_asset_redeclaration import modelo_720_evidence_observation
 from .._observations_repository import CalculationObservationRepository
 

@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.adapters.outbound.aeat.auth.errors.AeatLoginAssertionError",
+        "cadrumo.core.errors.AeatLoginAssertionError",
         ErrorCode(
             code="AUTH_AEAT_LOGIN_ASSERTION",
             category=ErrorCategory.AUTH,

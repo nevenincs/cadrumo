@@ -23,10 +23,8 @@ from ....application.filing import (
     build_filing_producer_snapshot,
     m303_rectificativa_motive_producer_values,
 )
-from ....application.modelo import (
-    AmendmentM303RectificativaMotiveError,
-    amend_modelo_revision,
-)
+from .._action_errors import AmendmentM303RectificativaMotiveError
+from .._amendment_actions import amend_modelo_revision
 from ....core import (
     FilingProducerKey,
     Modelo,

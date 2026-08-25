@@ -18,11 +18,11 @@ from __future__ import annotations
 
 import pytest
 
-from .. import (
+from .._m145_communication import (
+    M145CommunicationAction,
     M145_COMMUNICATION_MODELO,
     M145_COMMUNICATION_PERIOD,
     M145_COMMUNICATION_SERVICE_OWNER,
-    M145CommunicationAction,
     build_m145_communication_service_contract,
 )
 

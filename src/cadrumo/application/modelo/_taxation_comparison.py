@@ -451,9 +451,20 @@ def compare_taxation_for_work_address(address: object) -> TaxationComparisonResu
     Returns:
         A :class:`TaxationComparisonResult` for the resolved work unit.
     """
-    from .work_addressing import ModeloWorkAddress, resolve_modelo_work_address_unit
+    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from .work_addressing import (
+        ModeloWorkAddress,
+        ModeloWorkSelectorRequest,
+        resolve_modelo_work_address_unit,
+        resolve_modelo_work_bucket,
+    )
 
     if not isinstance(address, ModeloWorkAddress):
         raise TypeError(f"expected ModeloWorkAddress, got {type(address).__name__}")
-    work_unit = resolve_modelo_work_address_unit(address)
+    bucket_id = address.bucket_id or resolve_modelo_work_bucket(ModeloWorkSelectorRequest())
+    work_unit = resolve_modelo_work_address_unit(
+        address,
+        catalogue=WorkUnitCatalogueRepository(bucket_id=bucket_id).load(),
+        bucket_id=bucket_id,
+    )
     return compare_taxation_for_work_unit(work_unit.work_unit_id)

@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo import preview_maritime_exemption_for_active_profile
+from ...application.modelo._maritime_preview import preview_maritime_exemption_for_active_profile
 from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...domain.renta import RentaValidationError

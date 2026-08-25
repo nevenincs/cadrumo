@@ -20,12 +20,10 @@ from ...calculations import (
     query_iva_wallet_balance,
     reconcile_modelo_303_iva_compensation,
 )
-from .. import (
-    ModeloIvaWalletReconciliationBlocked,
-    calculate_modelo_revision,
-    file_modelo_revision,
-    verify_modelo_revision,
-)
+from .._calculation_actions import calculate_modelo_revision
+from .._filing_actions import file_modelo_revision
+from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from .._verification_actions import verify_modelo_revision
 from ._file_flow_support import seed_clean_cross_period_sources
 from ._iva_wallet_engine_support import (
     _BUCKET_ID,

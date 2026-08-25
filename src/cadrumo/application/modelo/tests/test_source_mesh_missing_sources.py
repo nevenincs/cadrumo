@@ -55,7 +55,8 @@ from ...aggregation import (
     BindingSourceDisposition,
     build_binding_source_dispositions,
 )
-from .. import ModeloAggregationBindingError, assert_no_novel_source_kinds
+from .._action_errors import ModeloAggregationBindingError
+from .._calculation_actions import assert_no_novel_source_kinds
 from .._calculation_source_policy import (
     ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS,
     BUCKET_AGGREGATION_OWNED_SOURCES,

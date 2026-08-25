@@ -55,12 +55,10 @@ from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo import (
-    calculate_modelo_revision,
-    create_work_unit,
-    import_external_filing_evidence,
-    verify_modelo_revision,
-)
+from ...modelo._calculation_actions import calculate_modelo_revision
+from ...modelo._external_import_actions import import_external_filing_evidence
+from ...modelo._verification_actions import verify_modelo_revision
+from ...modelo._work_lifecycle import create_work_unit
 from ...modelo.tests.justificante_metadata import persist_justificante_metadata
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._observations_repository import CalculationObservationRepository

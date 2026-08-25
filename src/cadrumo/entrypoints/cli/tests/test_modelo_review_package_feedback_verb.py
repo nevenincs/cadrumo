@@ -45,11 +45,11 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....application.modelo import (
-    RecipientFingerprintRegistryRepository,
+from ....application.modelo._review_package_recipient_encryption import (
     ensure_recipient_encryption_keypair,
     recipient_encryption_public_key,
 )
+from ....application.modelo._review_package_recipient_registry import RecipientFingerprintRegistryRepository
 from ....core import STR_KEYED_MAPPING_ADAPTER, CasillaId, validated_casilla_id
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile.values import UserProfileFact

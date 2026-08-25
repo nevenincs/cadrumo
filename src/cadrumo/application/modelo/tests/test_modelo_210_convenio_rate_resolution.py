@@ -41,7 +41,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import ModeloVerificationFindingKind
-from .. import ModeloApplicabilityFilterError
+from .._action_errors import ModeloApplicabilityFilterError
 from .._m210_rate import resolve_m210_rate as _resolve_m210_rate
 from .._verification_actions import (
     _evaluate_applicability_filter,

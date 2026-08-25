@@ -27,7 +27,18 @@ from pydantic import (
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema
 
-from cadrumo.application.operations.capabilities import (
+from ....core import (
+    STRICT_FROZEN_CONFIG,
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationLifecycle,
+)
+from ....core.operations import OperationInteractionKind
+from ...operator_actions import ActionReference
+from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
@@ -36,12 +47,14 @@ from cadrumo.application.operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from cadrumo.application.operations.models import (
+from ..interactions import OperationInteractionRequest
+from ..models import (
     OperationIdentity,
     OperationRequest,
+    OperationSnapshot,
     OperationTerminalReceipt,
 )
-from cadrumo.application.operations.registry import (
+from ..registry import (
     OperationDefinition,
     OperationExecutorFactory,
     OperationFrontendProjection,
@@ -53,20 +66,6 @@ from cadrumo.application.operations.registry import (
     OperationSchemaBindingV1,
     OperationSchemaIdentityV1,
 )
-from cadrumo.core.operations import OperationInteractionKind
-
-from ....core import (
-    STRICT_FROZEN_CONFIG,
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
-    OperationLifecycle,
-)
-from ...operator_actions import ActionReference
-from ..interactions import OperationInteractionRequest
-from ..models import OperationSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

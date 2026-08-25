@@ -9,14 +9,14 @@ import pytest
 from ....core import BindingSourceKind, ModeloCalculationRouteId
 from ...aggregation import AggregationValidationError, BindingSourceDisposition
 from ...calculations import M303RegimenSimplificadoAnnualSummarySourceResolver
-from .. import (
+from .._calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
     CALCULATION_ROUTE_ID,
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
-    MANUAL_INPUT_RESOLVER_ID,
     CalculationRouteManualOwnership,
     CalculationRouteResolverOwnership,
+    MANUAL_INPUT_RESOLVER_ID,
     validate_calculation_route_resolver_ownership,
 )
 

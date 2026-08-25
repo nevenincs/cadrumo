@@ -25,7 +25,7 @@ See Also:
     :func:`~cadrumo.application.user_profile.register_profile_with_credentials`
         The application door this screen drives; it creates the profile,
         provisions the key material, and leaves the session unlocked.
-    :func:`~cadrumo.core.assess_profile_password`
+    :func:`~cadrumo.core.credentials.assess_profile_password`
         The canonical assessment behind validation and the live strength line.
     :class:`LoginApp`
         The other credential surface; the two share their attempt

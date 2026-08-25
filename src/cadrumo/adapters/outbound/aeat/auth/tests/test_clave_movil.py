@@ -191,7 +191,7 @@ def test_probe_without_persisted_session_refuses_without_fresh_login(tmp_path: P
     )
 
     async def run() -> None:
-        from ..authenticator import AeatLoginAssertionError
+        from ......core.errors import AeatLoginAssertionError
 
         with pytest.raises(AeatLoginAssertionError, match="no persisted"):
             await provider.probe_persisted_session()

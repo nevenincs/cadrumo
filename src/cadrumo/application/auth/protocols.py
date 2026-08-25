@@ -11,8 +11,77 @@ records to the persisted-session service.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import datetime
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+from ...core import AuthProviderKind
+
+if TYPE_CHECKING:
+    from ...core.config import Settings
+
+
+@runtime_checkable
+class AeatSessionPort(Protocol):
+    """Secret-free authenticated-session facts consumed outside auth adapters."""
+
+    @property
+    def authenticated_at(self) -> datetime:
+        """Timestamp at which AEAT authentication succeeded."""
+        ...
+
+    @property
+    def idle_deadline(self) -> datetime:
+        """Deadline after which the live session must be refreshed."""
+        ...
+
+    @property
+    def storage_state_path(self) -> Path | None:
+        """Logical encrypted browser-state key, when persistence exists."""
+        ...
+
+    @property
+    def identity_nif(self) -> str:
+        """Tax identity proved by the authenticated session."""
+        ...
+
+    @property
+    def provider_kind(self) -> AuthProviderKind:
+        """Provider that established the session."""
+        ...
+
+
+@runtime_checkable
+class AeatLoginAssertionPort(Protocol):
+    """Secret-free result of probing one authenticated AEAT session."""
+
+    @property
+    def is_valid(self) -> bool:
+        """Whether the protected-resource probe confirmed the session."""
+        ...
+
+    @property
+    def status_code(self) -> int:
+        """HTTP status observed by the probe."""
+        ...
+
+    @property
+    def error_message(self) -> str | None:
+        """Non-secret provider diagnostic for a failed probe."""
+        ...
+
+    @property
+    def assertion_detail(self) -> object:
+        """Provider-specific, secret-free assertion evidence."""
+        ...
+
+
+class BrowserSessionFactoryPort(Protocol):
+    """Async browser-session constructor accepted by auth composition."""
+
+    async def __call__(self, settings: Settings) -> object:
+        """Create the concrete outbound browser session for ``settings``."""
+        ...
 
 
 @runtime_checkable
@@ -51,6 +120,9 @@ class SessionStoreProtocol(Protocol):
 
 
 __all__ = [
+    "AeatLoginAssertionPort",
+    "AeatSessionPort",
+    "BrowserSessionFactoryPort",
     "PersistedSessionDataProtocol",
     "SessionStoreProtocol",
 ]

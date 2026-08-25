@@ -39,7 +39,7 @@ from ....domain.modelos import (
 )
 from ....entrypoints.cli import current_operator_surface_reconciliation
 from ...aggregation import BindingSourceDisposition
-from ...modelo import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from ...modelo._calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 from ...operator_surface import build_supported_modelo_calculation_workflow_catalogue
 from .. import (
     CalculationRouteResolverSourceOwnership,

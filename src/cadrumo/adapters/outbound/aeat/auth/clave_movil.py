@@ -50,6 +50,7 @@ import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
 from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
+from .....core.errors import AeatLoginAssertionError, AuthError
 from .....core.i18n import tr
 from .....core.identity import same_tax_identifier, tax_id_identity_token
 from .....core.logging import get_logger
@@ -65,7 +66,6 @@ from ._clave_provider_common import (
     default_sede_target_url,
     verification_probe_url,
 )
-from .session_probe import run_authenticated_landing_probe
 from .authenticator import (
     AEAT_SESSION_IDLE_TTL,
     AeatLoginAssertion,
@@ -95,11 +95,12 @@ from .clave_movil_support import (
 from .clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
-from .errors import AeatLoginAssertionError, AuthError, AuthProviderCleanupError
+from .errors import AuthProviderCleanupError
 from .providers import (
     ClaveMovilLoginAssertionDetail,
     ClaveMovilSessionDetail,
 )
+from .session_probe import run_authenticated_landing_probe
 
 if TYPE_CHECKING:
     from .....core.config import Settings

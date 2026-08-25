@@ -43,14 +43,16 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import DEFERRED_SOURCE_KINDS, ForeignAssetClass, ForeignAssetIngestObservation
 from ...user_profile.preflight import build_profile_preflight_requirement
-from .. import (
-    BucketAggregationCalculationResult,
+from .._action_errors import (
     ModeloAggregationBindingError,
     ModeloProfileReadinessError,
+)
+from .._calculation_actions import (
+    BucketAggregationCalculationResult,
     assert_no_novel_source_kinds,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    create_work_unit,
 )
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -55,18 +55,20 @@ from ...calculations import (
     cross_period_dependency_requirements,
     is_official_aeat_observation_source,
 )
-from .. import (
-    APP_FILING_SOURCE_KIND,
-    ModeloCrossPeriodCleanStateError,
-    ModeloExportCommand,
+from .._action_errors import ModeloCrossPeriodCleanStateError
+from .._calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    create_work_unit,
-    export_modelo_revision,
-    file_modelo_revision,
-    import_external_filing_evidence,
     mark_revision_verificado_completo,
-    verify_modelo_revision,
 )
+from .._export import (
+    ModeloExportCommand,
+    export_modelo_revision,
+)
+from .._external_import_actions import import_external_filing_evidence
+from .._filed_revision_observation import APP_FILING_SOURCE_KIND
+from .._filing_actions import file_modelo_revision
+from .._verification_actions import verify_modelo_revision
+from .._work_lifecycle import create_work_unit
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

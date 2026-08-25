@@ -66,7 +66,7 @@ from ....domain.prorrata_register import ProrrataProvisionalResolution
 from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo import persist_filed_revision
+from ...modelo._revision_persistence import persist_filed_revision
 from ...prorrata_register import evaluate_carried_prior_definitiva_seed
 from .. import CalculationObservationRepository
 from .._prorrata_regularizacion import (

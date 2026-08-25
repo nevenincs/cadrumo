@@ -28,14 +28,14 @@ from typing import TYPE_CHECKING, Any
 import typer
 from pydantic import ValidationError
 
-from ...application.modelo import (
+from ...application.modelo._action_errors import (
     CalculationRegistryUnavailableError,
-    Modelo100BorradorBindingError,
-    ModeloIvaWalletReconciliationBlocked,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
-    calculate_modelo_work_revision,
 )
+from ...application.modelo._borrador_binding import Modelo100BorradorBindingError
+from ...application.modelo._calculate_input import calculate_modelo_work_revision
+from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...core import M210GrossIncomeSourceMode, RescateType
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
@@ -64,7 +64,7 @@ from ._modelo_rendering import (
 
 if TYPE_CHECKING:
     from ...application.aggregation import CalculationSourceDiagnostic
-    from ...application.modelo import ModeloWorkCalculationServiceResult
+    from ...application.modelo._calculate_input import ModeloWorkCalculationServiceResult
     from ...domain.modelos import CalculationRevision, WorkUnit
 
 

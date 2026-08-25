@@ -63,13 +63,11 @@ from ...calculations import (
     reconcile_modelo_303_iva_compensation,
     resolve_relations_from_local_store,
 )
-from .. import (
-    ModeloRefundElectionNotEligibleError,
-    calculate_modelo_revision,
-    create_work_unit,
-    file_modelo_revision,
-    verify_modelo_revision,
-)
+from .._action_errors import ModeloRefundElectionNotEligibleError
+from .._calculation_actions import calculate_modelo_revision
+from .._filing_actions import file_modelo_revision
+from .._verification_actions import verify_modelo_revision
+from .._work_lifecycle import create_work_unit
 from .._result_disposition_resolution import resolve_modelo_result_disposition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -47,6 +47,7 @@ from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.async_cleanup import close_async_resources
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from .....core.config import Settings as _Settings
+from .....core.errors import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.time import now
 from .authenticator_persistence import (
@@ -82,7 +83,6 @@ from .certificate import (
     health as certificate_health,
 )
 from .errors import (
-    AeatLoginAssertionError,
     AeatSessionExpiredError,
     AuthConfigurationError,
     AuthProviderCleanupError,

@@ -14,7 +14,7 @@ related:
 
 ## Scope
 
-Execution evidence for `W06.P20.S116` at the current tree after the completed source slices. The scope is the canonical structural discovery and census-assignment boundary only. It does not change census entries, registry dispositions, runtime, the source plan, or the generated feature index.
+Execution and review evidence for `W06.P20.S116` at the current tree after the completed source slices and public-module relocations. Scope includes the structural discovery boundary, census locator/digest maintenance, and the inventory readiness truth correction. It does not promote a source candidate or claim filing readiness.
 
 ## Findings
 
@@ -32,14 +32,35 @@ A read-only manifest inventory reports 15 rows: `censo.modelo-036-profile-status
 
 All seven entries with `expires_on` are current through 2026-12-31. That static expiry observation is not a substitute for a successful canonical assignment: there is no valid candidate/disposition membership set, count, or equality proof while the locator drift is outstanding.
 
+### s116-locator-drift-resolved | pass | Every reviewed locator re-fetches after proven relocations
+
+The inventory command declarations resolve to the split inventory command-spec modules, and the row-assembler locators resolve to their current typed dispatch branches. Discovery independently returns each updated locator for the capability it claims. No replacement capability, candidate, disposition, or source owner was invented.
+
+### s116-public-definition-discovery | pass | Public modules remain visible without facade redeclaration
+
+The private-to-public cutover moved fourteen calculation-helper definitions one-for-one. The reviewed helper cardinality remains 267. Discovery now treats a non-private definition module as a public surface while excluding colocated `conftest.py`; a mutation test proves both directions. The resulting digest is `sha256:cf1081c06fe140c568dd58e6b14bc970ce1929f6c7d3639b39d61e519bd60a18`. This preserves capability identity at its defining module and does not recreate an inert package facade.
+
+### s116-secure-port-discovery | pass | Workflow custody remains visible behind its typed secure-store port
+
+The public workflow repositories still persist through `WorkflowSecureObjectStorePort`; their disappearance was a scanner blind spot, not a repository retirement. A generic typed-port detector and mutation proof retain both repositories. The only net-new secure repository is the encrypted filing-export replay custody adapter, classified in the existing operational remainder without a calculation-source claim.
+
+### s116-inventory-truth | pass | Readiness names only the remaining filing boundary
+
+The inventory readiness fact no longer restates already-completed resolver, mesh, binding, orchestration, identity, and override-refusal work as missing. It remains false for the actual open boundary: grounded repeated M100 activity-row casilla materialization, official rendering, and end-to-end verification without fabricated activity-envelope facts. The census retains `connect_candidate`.
+
+### s116-two-pass-fixed-point | pass | Two fresh comparisons produce the same complete assignment
+
+Two separate fresh processes each return `status = match`, 478 discovered capabilities, 478 assignments, and 15 census rows. No capability is unclassified or unactioned. All seven dated deferrals remain current through 2026-12-31, and no row is promoted to `connected`.
+
 ## Recommendations
 
-- Assign a distinct mechanical locator-maintenance step to determine whether `inventory.stock-valuation` has a relocated live command-spec capability or has disappeared from discovery. Update only a proven live locator, or route candidate retirement through its owning census decision; never invent a replacement line or revise its disposition merely to make comparison pass.
-- Rerun two separate fresh generate-and-compare passes after that correction. Close `S116` only if both comparisons emit validated, identical assignment sets with no unclassified or unactioned candidate and no expired governed deferral.
+- Close `S116` after the focused source-connectivity suite and Vaultspec checks pass.
+- Keep `S117` open until its dedicated campaign-close test proves no expired deferral, unexplained disappearance, or unsupported connected claim. Do not treat the S116 fixed point as registry filing readiness.
 
 ## Verification receipt
 
-- Fresh discovery pass 1: exit 0; 464 capabilities; digest above.
-- Fresh comparison pass 1: exit 1; exact absent-locator refusal above.
-- Fresh discovery pass 2: exit 0; 464 capabilities; same digest and ID set.
-- Fresh comparison pass 2: exit 1; byte-identical absent-locator refusal.
+- Historical pre-repair passes: 464 capabilities; both refused the obsolete inventory command-spec locator as recorded above.
+- Final comparison pass 1: exit 0; 478 capabilities; 478 assignments; 15 rows; `status = match`.
+- Final comparison pass 2: exit 0; identical counts and `status = match`.
+- Focused discovery tests: 10 passed.
+- Inventory readiness test: 1 passed.

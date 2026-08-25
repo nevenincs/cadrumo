@@ -48,15 +48,15 @@ import typer
 from pydantic import ValidationError
 
 from ...application.flows.line_frontend import LineFlowFrontend
-from ...application.modelo import (
+from ...application.modelo._action_errors import (
     CalculationRegistryUnavailableError,
-    Modelo100BorradorBindingError,
-    ModeloIvaWalletReconciliationBlocked,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
-    calculate_modelo_work_revision,
     modelo_work_wizard_retry_exhausted_precondition,
 )
+from ...application.modelo._borrador_binding import Modelo100BorradorBindingError
+from ...application.modelo._calculate_input import calculate_modelo_work_revision
+from ...application.modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ...application.modelo.work_wizard import (
     ModeloWorkWizardRun,
     ModeloWorkWizardStep,
@@ -85,7 +85,7 @@ from ._modelo_rendering import (
 from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
 
 if TYPE_CHECKING:
-    from ...application.modelo import ModeloWorkCalculationServiceResult
+    from ...application.modelo._calculate_input import ModeloWorkCalculationServiceResult
     from ...domain.modelos import WorkUnit
 
 

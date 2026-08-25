@@ -23,8 +23,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import Period
 from ....domain.modelos import WorkUnit, WorkUnitState, derive_work_unit_id, upsert_work_unit
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    WorkUnitNotFoundError,
+from .._action_errors import WorkUnitNotFoundError
+from .._work_lifecycle import (
     discard_work_unit,
     get_work_unit,
     list_work_units,

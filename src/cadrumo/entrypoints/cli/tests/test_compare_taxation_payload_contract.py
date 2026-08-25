@@ -21,7 +21,10 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....application.modelo import TaxationComparisonResult, TaxationRecommendation
+from ....application.modelo._taxation_comparison import (
+    TaxationComparisonResult,
+    TaxationRecommendation,
+)
 from ....core import Modelo
 from .._payloads_modelo_reconcile import WorkCompareTaxationResult
 

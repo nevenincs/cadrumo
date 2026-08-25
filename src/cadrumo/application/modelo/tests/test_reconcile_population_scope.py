@@ -28,11 +28,11 @@ from ....domain.modelos import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .. import (
+from .._reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
-    resolve_casilla_population_scope,
 )
+from .._reconcile_population import resolve_casilla_population_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

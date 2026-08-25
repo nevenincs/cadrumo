@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
 from ....application.modelo.work_wizard import ModeloWorkWizardRun, open_modelo_work_wizard
 from ....core import Modelo, Period
@@ -87,6 +88,7 @@ def _ensure_modelo_work_unit(bucket_id: str) -> WorkUnit:
         period=period,
         registry_revision_id=None,
         actor="tui-devtools",
+        catalogue=WorkUnitCatalogueRepository(bucket_id=bucket_id).load(),
     )
     return result.work_unit
 

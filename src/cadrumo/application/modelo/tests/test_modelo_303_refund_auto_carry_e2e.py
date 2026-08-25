@@ -64,12 +64,10 @@ from ...calculations import (
     reconcile_modelo_303_iva_compensation,
     resolve_relations_from_local_store,
 )
-from .. import (
-    calculate_modelo_revision,
-    create_work_unit,
-    file_modelo_revision,
-    verify_modelo_revision,
-)
+from .._calculation_actions import calculate_modelo_revision
+from .._filing_actions import file_modelo_revision
+from .._verification_actions import verify_modelo_revision
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

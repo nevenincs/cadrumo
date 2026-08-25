@@ -18,6 +18,7 @@ from ......core import AuthProviderKind
 from ......core.async_cleanup import AsyncResourceCleanupError
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
+from ......core.errors import AeatLoginAssertionError, AuthError
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, opened_http_boundary, real_browser_factory
 from ..authenticator import AEAT_SESSION_IDLE_TTL
@@ -27,7 +28,6 @@ from ..clave_movil_metadata import ClaveMovilSessionMetadata
 from ..clave_movil_support import ClaveMovilApprovalTimeoutError, ClaveMovilFailureMode
 from ..clave_permanente_metadata import ClavePermanenteSessionMetadata
 from ..clave_permanente_support import ClavePermanenteFailureMode
-from ..errors import AeatLoginAssertionError, AuthError
 from ..provider_selection import select_provider
 from ..providers import CertificateSessionDetail, ClaveMovilLoginAssertionDetail, ClaveMovilSessionDetail
 from ._authenticator_support import SECRET_PASSPHRASE, _build_bundle

@@ -28,6 +28,7 @@ from .....core.auth_session_keys import (
     former_product_auth_session_path_for,
     is_former_product_auth_session_path,
 )
+from .....core.errors import AuthError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import content_hash_hex
 from .....core.time import now
@@ -36,7 +37,6 @@ from ....persistence.storage import (
     SecureObjectRepository,
     secure_object_repository_for_active_bucket,
 )
-from .errors import AuthError
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 type JsonObject = Mapping[str, JsonValue]

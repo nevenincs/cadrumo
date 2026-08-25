@@ -42,6 +42,26 @@ def test_new_secure_repository_is_detected_without_an_inventory_entry(tmp_path: 
     ]
 
 
+def test_secure_repository_behind_a_typed_store_port_remains_discoverable(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "src/cadrumo/application/probe.py",
+        """class ProbeRepository:
+    def __init__(self, objects: ProbeSecureObjectStorePort) -> None:
+        self._objects = objects
+
+    def save(self, payload: ProbePayload) -> None:
+        self._objects.save(payload)
+""",
+    )
+
+    rows = discover_secure_repositories(tmp_path)
+
+    assert [(row.repository_name, row.payload_types, row.mechanism) for row in rows] == [
+        ("ProbeRepository", ("ProbePayload",), "secure_object"),
+    ]
+
+
 def test_new_cli_ingress_is_detected_from_command_and_write_policy(tmp_path: Path) -> None:
     _write(
         tmp_path,
@@ -172,6 +192,35 @@ def calculate_probe(left: Decimal, right: Decimal) -> Decimal:
     assert [(row.function_name, row.return_type, row.operation_kinds) for row in rows] == [
         ("calculate_probe", "Decimal", ("Add",)),
     ]
+
+
+def test_public_definition_module_needs_no_package_facade_redeclaration(tmp_path: Path) -> None:
+    _write(tmp_path, "src/cadrumo/domain/probe/__init__.py", "__all__: list[str] = []\n")
+    _write(
+        tmp_path,
+        "src/cadrumo/domain/probe/calculations.py",
+        """def calculate_probe(left: Decimal, right: Decimal) -> Decimal:
+    return left + right
+""",
+    )
+
+    rows = discover_calculation_helpers(tmp_path)
+
+    assert [(row.module, row.function_name) for row in rows] == [
+        ("src/cadrumo/domain/probe/calculations.py", "calculate_probe"),
+    ]
+
+
+def test_colocated_conftest_function_is_not_a_production_capability(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "src/cadrumo/domain/probe/conftest.py",
+        """def calculate_fixture(left: Decimal, right: Decimal) -> Decimal:
+    return left + right
+""",
+    )
+
+    assert discover_calculation_helpers(tmp_path) == ()
 
 
 def test_new_source_readiness_declaration_is_detected_independently(tmp_path: Path) -> None:

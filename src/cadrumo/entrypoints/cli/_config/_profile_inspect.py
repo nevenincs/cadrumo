@@ -256,7 +256,7 @@ def config_profile_preflight(
         operators discover the gap via the shell exit status.
         """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.modelo import modelo_work_profile_preflight_report
+    from ....application.modelo._profile_readiness_gate import modelo_work_profile_preflight_report
     from ....core.resources import resources
     from ....domain.user_profile.errors import ProfileNotFoundError
 
@@ -398,7 +398,7 @@ def config_profile_validate(
         payload (no fact dump).
         """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.modelo import modelo_work_profile_baseline_validation_issues
+    from ....application.modelo._profile_readiness_gate import modelo_work_profile_baseline_validation_issues
     from ....application.user_profile.validation import ProfileValidationService
     from ....domain.user_profile.errors import ProfileNotFoundError
     from ....domain.user_profile.loader import load_user_profile_schema

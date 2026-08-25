@@ -19,11 +19,9 @@ from ...calculations import (
     ResultDispositionProjection,
     reconcile_modelo_303_iva_compensation,
 )
-from .. import (
-    ModeloIvaWalletReconciliationBlocked,
-    calculate_modelo_revision,
-    persist_filed_revision_observation,
-)
+from .._calculation_actions import calculate_modelo_revision
+from .._filed_revision_observation import persist_filed_revision_observation
+from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .._iva_wallet_gate import (
     lazily_reconcile_local_iva_compensation_for_work_unit,
     resolve_iva_compensation_decision_for_calculation,

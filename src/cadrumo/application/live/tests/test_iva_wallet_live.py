@@ -27,8 +27,10 @@ from ....core.config import load_settings
 from ....core.resources import resources
 from ....tests.live_gate import requires_live_enabled
 from ...calculations import IvaWalletDecisionRepository
-from ...modelo import ModeloIvaWalletReconciliationBlocked
-from ...modelo import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
+from ...modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...modelo._iva_wallet_gate import (
+    apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
+)
 from ...user_profile.profile_record_repository import ProfileRecordRepository
 from ...user_profile.projections import record_to_path_values
 from ..iva_remote_state import capture_iva_compensation_wallet

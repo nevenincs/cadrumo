@@ -8,13 +8,9 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from ...core import AuthProviderDescription, AuthProviderKind
 from ..auth_credentials import ActiveCertificateCredentials
 from .credentials import resolve_active_certificate_credentials
+from .protocols import AeatLoginAssertionPort, AeatSessionPort, BrowserSessionFactoryPort
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth.authenticator_types import (
-        AeatLoginAssertion,
-        AeatSession,
-        BrowserSessionFactory,
-    )
     from ...core.config import Settings
 
 
@@ -24,11 +20,11 @@ class AuthProvider(Protocol):
 
     kind: AuthProviderKind
 
-    async def authenticate(self) -> AeatSession:
+    async def authenticate(self) -> AeatSessionPort:
         """Establish an authenticated AEAT session."""
         ...
 
-    async def verify(self, session: AeatSession) -> AeatLoginAssertion:
+    async def verify(self, session: AeatSessionPort) -> AeatLoginAssertionPort:
         """Verify an acquired AEAT session."""
         ...
 
@@ -45,7 +41,7 @@ def select_provider(
     kind: AuthProviderKind,
     *,
     settings: Settings,
-    browser_session_factory: BrowserSessionFactory | None = None,
+    browser_session_factory: BrowserSessionFactoryPort | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
 ) -> AuthProvider:
     """Construct the concrete outbound provider for ``kind``.

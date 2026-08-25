@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, NoReturn
 from urllib.parse import urlsplit
 
 from .....core.config import unwrap_optional_secret
+from .....core.errors import AeatLoginAssertionError
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time import now
@@ -64,7 +65,6 @@ from .clave_movil_support import (
 from .clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
-from .errors import AeatLoginAssertionError
 
 if TYPE_CHECKING:
     from playwright.async_api import Dialog

@@ -31,7 +31,7 @@ _REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 
 def _python_files() -> tuple[Path, ...]:
     """Return every production, test, development, and packaging Python file."""
-    roots = tuple(_REPOSITORY_ROOT / name for name in ("src", "dev", "packaging"))
+    roots = tuple(_REPOSITORY_ROOT / name for name in ("src", "dev", "packaging", "docs"))
     return tuple(
         path
         for root in roots

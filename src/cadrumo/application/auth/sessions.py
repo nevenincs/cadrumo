@@ -25,7 +25,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from importlib import import_module
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, TypeAdapter, ValidationError
@@ -34,7 +34,7 @@ from cadrumo.application.workflow.persistence import workflow_state_repository
 
 from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind, ClaveMovilRoute
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from ...core.errors import CadrumoError
+from ...core.errors import AeatLoginAssertionError, CadrumoError
 from ...core.identity import (
     IdentityError,
     same_tax_identifier,
@@ -58,15 +58,15 @@ from .operator_scope import (
     assert_auth_recovery_not_in_progress,
     auth_mutation_span,
 )
-from .protocols import SessionStoreProtocol
+from .protocols import (
+    AeatLoginAssertionPort,
+    AeatSessionPort,
+    BrowserSessionFactoryPort,
+    SessionStoreProtocol,
+)
 from .providers import AuthProvider, select_provider
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth.authenticator_types import (
-        AeatLoginAssertion,
-        AeatSession,
-        BrowserSessionFactory,
-    )
     from ...core.config import Settings
 
 _logger = get_logger(__name__)
@@ -81,14 +81,14 @@ class _TargetedAuthProvider(Protocol):
         self,
         *,
         target_url: str | None = None,
-    ) -> AeatSession: ...
+    ) -> AeatSessionPort: ...
 
     async def verify_for_target(
         self,
-        session: AeatSession,
+        session: AeatSessionPort,
         *,
         target_url: str | None = None,
-    ) -> AeatLoginAssertion: ...
+    ) -> AeatLoginAssertionPort: ...
 
 
 @runtime_checkable
@@ -99,7 +99,7 @@ class _PersistedTargetProbeProvider(_TargetedAuthProvider, Protocol):
         self,
         *,
         target_url: str | None = None,
-    ) -> tuple[AeatSession, AeatLoginAssertion]: ...
+    ) -> tuple[AeatSessionPort, AeatLoginAssertionPort]: ...
 
 
 def _get_session_store() -> SessionStoreProtocol:
@@ -110,7 +110,7 @@ def _get_session_store() -> SessionStoreProtocol:
     return session_store
 
 
-def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> dict[str, object]:
+def _invalid_assertion_diagnostic(assertion: AeatLoginAssertionPort) -> dict[str, object]:
     """Return the non-secret machine facts describing a failed live assertion.
 
     The landing URL is decomposed into host and path so a query string, which
@@ -218,8 +218,8 @@ class AuthenticatedAeatSessionResult(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
     provider_kind: AuthProviderKind
-    session: SkipValidation[Any]
-    assertion: SkipValidation[Any]
+    session: SkipValidation[AeatSessionPort]
+    assertion: SkipValidation[AeatLoginAssertionPort]
     reused_persisted_session: bool
     acquired_lock: AuthAcquisitionLockRecord | None = None
     reset_lock: AuthAcquisitionLockStatus | None = None
@@ -341,8 +341,8 @@ async def require_verified_aeat_session(
     *,
     kind: AuthProviderKind | None = None,
     target_url: str | None = None,
-) -> AeatSession:
-    """Return a verified active :class:`AeatSession` without exposing provider mechanics."""
+) -> AeatSessionPort:
+    """Return a verified active session without exposing provider mechanics."""
     provider_kind = _resolve_provider_kind(settings, kind)
     settings, expected_identity = _prepare_clave_auth(settings, provider_kind)
     persisted = load_persisted_session(settings, provider_kind)
@@ -381,7 +381,7 @@ async def require_verified_aeat_session(
         raise AuthSessionUnavailableError(
             translated_message="application.auth.sessions.errors.sede_rejected",
         )
-    _assert_session_identity_matches_expected(refreshed_session, expected_identity)
+    _assert_session_identity_matches_expected(refreshed_session.identity_nif, expected_identity)
     return refreshed_session
 
 
@@ -393,7 +393,7 @@ async def ensure_authenticated_aeat_session(
     reset_lock: bool = False,
     operation: str = "auth-ensure-session",
     target_url: str | None = None,
-    browser_session_factory: BrowserSessionFactory | None = None,
+    browser_session_factory: BrowserSessionFactoryPort | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
 ) -> AuthenticatedAeatSessionResult:
     """Serialize and fail-close the central live-session writer."""
@@ -424,7 +424,7 @@ async def _ensure_authenticated_aeat_session_locked(
     reset_lock: bool = False,
     operation: str = "auth-ensure-session",
     target_url: str | None = None,
-    browser_session_factory: BrowserSessionFactory | None = None,
+    browser_session_factory: BrowserSessionFactoryPort | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
 ) -> AuthenticatedAeatSessionResult:
     """Return a verified AEAT session, authenticating only when required.
@@ -460,7 +460,7 @@ async def _ensure_authenticated_aeat_session_locked(
         )
         if reused is not None:
             session, assertion = reused
-            _assert_session_identity_matches_expected(session, expected_identity)
+            _assert_session_identity_matches_expected(session.identity_nif, expected_identity)
             return AuthenticatedAeatSessionResult(
                 provider_kind=provider_kind,
                 session=session,
@@ -486,7 +486,7 @@ async def _ensure_authenticated_aeat_session_locked(
             )
             if reused is not None:
                 session, assertion = reused
-                _assert_session_identity_matches_expected(session, expected_identity)
+                _assert_session_identity_matches_expected(session.identity_nif, expected_identity)
                 return AuthenticatedAeatSessionResult(
                     provider_kind=provider_kind,
                     session=session,
@@ -510,13 +510,11 @@ async def _ensure_authenticated_aeat_session_locked(
                 target_url=target_url,
             )
         if not bool(getattr(assertion, "is_valid", False)):
-            from ...adapters.outbound.aeat.auth.errors import AeatLoginAssertionError
-
             raise AeatLoginAssertionError(
                 translated_message="errors.auth.auth_aeat_login_assertion",
                 context=_invalid_assertion_diagnostic(assertion),
             )
-        _assert_session_identity_matches_expected(session, expected_identity)
+        _assert_session_identity_matches_expected(session.identity_nif, expected_identity)
         return AuthenticatedAeatSessionResult(
             provider_kind=provider_kind,
             session=session,
@@ -1059,10 +1057,10 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     return clave_auth_facts_from_profile_values(path_values, profile_setup_state=record.setup_state)
 
 
-def _assert_session_identity_matches_expected(session: object, expected_identity: str | None) -> None:
+def _assert_session_identity_matches_expected(session_identity: str, expected_identity: str | None) -> None:
     if not expected_identity:
         return
-    session_identity = _normalise_tax_identity(getattr(session, "identity_nif", ""))
+    session_identity = _normalise_tax_identity(session_identity)
     # A blank session identity means there is nothing to check, and that stays
     # a skip rather than a refusal. The comparison itself moves onto the
     # separator-tolerant predicate: a session identity and a profile identity
@@ -1078,9 +1076,9 @@ async def _try_probe_verified_session(
     kind: AuthProviderKind,
     *,
     target_url: str | None,
-    browser_session_factory: BrowserSessionFactory | None,
+    browser_session_factory: BrowserSessionFactoryPort | None,
     certificate_credentials: ActiveCertificateCredentials | None,
-) -> tuple[AeatSession, AeatLoginAssertion] | None:
+) -> tuple[AeatSessionPort, AeatLoginAssertionPort] | None:
     provider = _build_provider(
         settings,
         kind,
@@ -1102,7 +1100,7 @@ def _build_provider(
     settings: Settings,
     kind: AuthProviderKind,
     *,
-    browser_session_factory: BrowserSessionFactory | None,
+    browser_session_factory: BrowserSessionFactoryPort | None,
     certificate_credentials: ActiveCertificateCredentials | None,
 ) -> AuthProvider:
     if browser_session_factory is None:
@@ -1121,7 +1119,7 @@ async def _probe_existing_session(
     provider: AuthProvider,
     *,
     target_url: str | None = None,
-) -> tuple[AeatSession, AeatLoginAssertion]:
+) -> tuple[AeatSessionPort, AeatLoginAssertionPort]:
     if provider.kind is AuthProviderKind.CLAVE_MOVIL:
         if not isinstance(provider, _PersistedTargetProbeProvider):
             raise TypeError("clave movil provider lacks persisted-session probing")
@@ -1135,7 +1133,7 @@ async def _authenticate_and_verify_provider(
     provider: AuthProvider,
     *,
     target_url: str | None,
-) -> tuple[AeatSession, AeatLoginAssertion]:
+) -> tuple[AeatSessionPort, AeatLoginAssertionPort]:
     """Authenticate and verify without weakening certificate target authority."""
     if provider.kind is AuthProviderKind.CERTIFICATE:
         session = await provider.authenticate()

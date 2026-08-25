@@ -120,7 +120,10 @@ def test_capability_locator_correspondence_drift_is_rejected(
 ) -> None:
     manifest = load_source_connectivity_census()
     first = manifest.entries[0]
-    stale = first.model_copy(update={"capability_locators": first.capability_locators[1:]})
+    expected_locator = live_capability_evidence[first.capability_ids[0]]
+    stale = first.model_copy(
+        update={"capability_locators": tuple(item for item in first.capability_locators if item != expected_locator)}
+    )
     mutation = manifest.model_copy(update={"entries": (stale, *manifest.entries[1:])})
 
     with pytest.raises(SourceConnectivityCheckError, match="capability locator drift"):

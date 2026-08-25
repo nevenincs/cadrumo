@@ -22,7 +22,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.registry_observations import registry_grounded_observations
-from .. import create_work_unit
+from .._work_lifecycle import create_work_unit
 from .._selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
 from ._export_test_support import _M130_INPUT_CASILLA, _seed_profile
 

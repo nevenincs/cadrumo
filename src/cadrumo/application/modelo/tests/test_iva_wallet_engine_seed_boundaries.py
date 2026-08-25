@@ -16,10 +16,8 @@ from ...calculations import (
     reconcile_modelo_303_iva_compensation,
     seed_iva_compensation_period,
 )
-from .. import (
-    ModeloIvaWalletReconciliationBlocked,
-    calculate_modelo_revision,
-)
+from .._calculation_actions import calculate_modelo_revision
+from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ._iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,

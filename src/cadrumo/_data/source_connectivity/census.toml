@@ -364,7 +364,7 @@ owner = "source-connectivity-campaign"
 capability_locators = ["dev/source_connectivity/discovery.py"]
 capability_selector = "remaining_calculation_helpers"
 expected_capability_count = 267
-expected_capability_digest = "sha256:3b827ccf9f7fd2c3b30a37f042e9ede32be236d0b4600c8e3a09dcebbfeeeb6a"
+expected_capability_digest = "sha256:cf1081c06fe140c568dd58e6b14bc970ce1929f6c7d3639b39d61e519bd60a18"
 
 [[entries.grounding]]
 locator_kind = "repository"
@@ -377,7 +377,7 @@ disposition = "not_applicable"
 owner = "source-connectivity-campaign"
 capability_locators = ["dev/source_connectivity/discovery.py"]
 capability_selector = "remaining_ingress_surfaces"
-expected_capability_digest = "sha256:e46792929eaccb593e16d999a5a41929f3e3c2f826d80985cbd5df08a9bd09c1"
+expected_capability_digest = "sha256:7fcc37ebb61ac157f8bc7b4cd3bcb52e74a4acfff5e40b14902369fa6f52e435"
 
 [[entries.grounding]]
 locator_kind = "repository"
@@ -403,7 +403,7 @@ disposition = "duplicate_or_stale"
 owner = "source-connectivity-campaign"
 capability_locators = ["dev/source_connectivity/discovery.py"]
 capability_selector = "remaining_secure_repositories"
-expected_capability_digest = "sha256:568799bff1927133b375b537378095adacb4c701cbd3b3bf3f0573dcf489223a"
+expected_capability_digest = "sha256:d959380f5aeddd9562be35c91e1a20b840dcba58eef6acdd0e67891f87fd355d"
 
 [[entries.grounding]]
 locator_kind = "repository"

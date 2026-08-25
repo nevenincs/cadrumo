@@ -510,7 +510,10 @@ def test_quickfile_stage_payload_refuses_unknown_stage_and_status() -> None:
     """
     from pydantic import ValidationError
 
-    from ....application.modelo import QuickfileStage, QuickfileStageStatus
+    from ....application.modelo._quickfile import (
+        QuickfileStage,
+        QuickfileStageStatus,
+    )
     from .._app_quickfile_payloads import QuickfileStageOutcomePayload
 
     with pytest.raises(ValidationError):
@@ -526,7 +529,10 @@ def test_quickfile_stage_payload_serialises_enums_as_strings() -> None:
     Typing the fields must not change the wire contract: ``StrEnum`` members
     serialise to their value, so machine consumers keep reading plain strings.
     """
-    from ....application.modelo import QuickfileStage, QuickfileStageStatus
+    from ....application.modelo._quickfile import (
+        QuickfileStage,
+        QuickfileStageStatus,
+    )
     from .._app_quickfile_payloads import QuickfileStageOutcomePayload
 
     row = QuickfileStageOutcomePayload(

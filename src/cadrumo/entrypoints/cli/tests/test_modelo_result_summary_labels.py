@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....application.modelo import calculation_result_summary
+from ....application.modelo._result_summary import calculation_result_summary
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
@@ -128,7 +128,7 @@ def test_result_summary_row_refuses_an_unknown_role() -> None:
     """The application and CLI rows both refuse a role outside the closed taxonomy."""
     from pydantic import ValidationError
 
-    from ....application.modelo import ResultSummaryRow
+    from ....application.modelo._result_summary import ResultSummaryRow
     from .._modelo_revision_payload_parts import ResultSummaryRowPayload
 
     with pytest.raises(ValidationError):
@@ -140,7 +140,10 @@ def test_result_summary_row_refuses_an_unknown_role() -> None:
 
 def test_result_summary_row_accepts_every_canonical_role() -> None:
     """Every canonical role round-trips through both the application row and the CLI payload."""
-    from ....application.modelo import ResultSummaryRole, ResultSummaryRow
+    from ....application.modelo._result_summary import (
+        ResultSummaryRole,
+        ResultSummaryRow,
+    )
     from .._modelo_revision_payload_parts import ResultSummaryRowPayload
 
     for role in ResultSummaryRole:

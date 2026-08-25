@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 import cadrumo.adapters.outbound.aeat.auth.authenticator as authenticator
 
+from ......core.errors import AeatLoginAssertionError
 from ......core.i18n import tr
 from ..authenticator import _require_exact_active_certificate_session
 from ..authenticator_types import _is_exact_active_provider_session
@@ -23,7 +24,6 @@ from ._authenticator_support import (
     UTC,
     AeatAuthenticator,
     AeatLoginAssertion,
-    AeatLoginAssertionError,
     AeatSession,
     AuthProvider,
     AuthProviderKind,

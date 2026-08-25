@@ -55,12 +55,10 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution, merge_source_resolutions
 from ...calculations import CalculationObservationRepository
-from .. import (
-    APP_FILING_SOURCE_KIND,
-    ModeloIvaWalletReconciliationBlocked,
-    calculate_modelo_revision,
-    create_work_unit,
-)
+from .._calculation_actions import calculate_modelo_revision
+from .._filed_revision_observation import APP_FILING_SOURCE_KIND
+from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from .._work_lifecycle import create_work_unit
 from .._calculation_actions import (
     _resolve_bucket_source_mesh,
     _source_resolution_excluding_iva_compensation,

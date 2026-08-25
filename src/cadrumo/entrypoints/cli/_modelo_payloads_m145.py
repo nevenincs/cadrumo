@@ -32,7 +32,7 @@ from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import LegalRefId, RevisionId, SourceRefId
 
 if TYPE_CHECKING:
-    from ...application.modelo import (
+    from ...application.modelo._m145_communication_records import (
         M145CommunicationExportResult,
         M145CommunicationRecord,
         M145CommunicationValidationIssue,

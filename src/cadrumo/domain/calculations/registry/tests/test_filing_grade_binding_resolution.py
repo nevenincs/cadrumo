@@ -20,10 +20,10 @@ import pytest
 
 from .....application.aggregation import BindingSourceDisposition
 from .....application.filing import _binding_provenance
-from .....application.modelo import (
+from .....application.modelo._calculation_actions import assert_no_novel_source_kinds
+from .....application.modelo._calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
-    assert_no_novel_source_kinds,
 )
 from .....application.registry import (
     SourceConnectivityCensusEntry,

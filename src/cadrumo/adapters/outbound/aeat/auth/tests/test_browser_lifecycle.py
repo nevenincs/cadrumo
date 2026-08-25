@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from ......core.config import Settings
+from ......core.errors import AeatLoginAssertionError
 from ...browser import Profile, create_browser_session
 from ...tests import wait_for_process_exit
 from ..authenticator_types import AeatSession
@@ -19,7 +20,6 @@ from ..browser_lifecycle import (
 )
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_permanente import ClavePermanenteAuthProvider
-from ..errors import AeatLoginAssertionError
 from ..providers import ClaveMovilSessionDetail, ClavePermanenteSessionDetail
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

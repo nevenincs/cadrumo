@@ -15,21 +15,25 @@ related:
 
 ## Scope
 
-`W06.P20.S116` reruns the canonical source-connectivity discovery and assignment gate. This execution record records an open result only: it does not edit the census, runtime, source plan, or generated source index.
+`W06.P20.S116` reruns the canonical source-connectivity discovery and assignment gate to a stable fixed point after concurrent public-module and command-spec relocations.
 
 ## Description
 
-- Ran two separate fresh-process structural discovery probes through `dev.source_connectivity.cli generate`.
-- Ran the canonical census assignment comparison in a fresh process after each discovery probe.
-- Compared the two discovered capability-ID sets and their deterministic digest.
-- Read the manifest solely to report the existing candidate/disposition and expiry posture after comparison refused.
+- Re-fetched every census capability locator and repaired only proven line or module relocations.
+- Corrected the inventory readiness fact so it acknowledges the connected resolver, source mesh, registry row bindings, orchestration, source identity, and caller-override refusal while remaining false for missing repeated-row filing proof.
+- Extended structural discovery to retain functions defined by public modules without requiring package-facade redeclaration, excluding colocated `conftest.py` support.
+- Retained workflow repositories behind their typed secure-object store port and classified the new encrypted filing-export replay custody repository in the existing secure-repository remainder.
+- Classified the new profile repeatable-row CLI write in the existing ingress remainder without creating a source owner or connection claim.
+- Ran the canonical comparison twice in separate fresh processes and verified identical complete assignment results.
 
 ## Outcome
 
-The current two discovery probes are stable at 464 capabilities, with equal capability sets and digest `sha256:0be7d9fae88abef85b83af8eddd87a1cc4a030c8e6e751587c6f6ae42975cf64`. Neither canonical assignment comparison completed: both refused because the census locator for `inventory.stock-valuation`, `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py:4866`, no longer exists after the concurrent CLI command-spec relocation.
+Both fresh comparisons completed with `status = match`, 478 discovered capabilities, 478 assignments, and 15 census rows. Every capability has exactly one frozen assignment; no capability is unclassified or unactioned.
 
-`S116` remains unchecked. Its required zero-unclassified-or-unactioned and stable-assignment proof is not available. No source candidate was added, removed, connected, or reclassified; no expiration was waived; and no census, plan, or index authority was mutated.
+The calculation-helper remainder retains its reviewed count of 267. Its digest changes to `sha256:cf1081c06fe140c568dd58e6b14bc970ce1929f6c7d3639b39d61e519bd60a18` solely because fourteen definitions moved one-for-one from private to public modules. The scanner now follows the public defining modules instead of requiring forbidden package-facade redeclarations. The ingress remainder adds the profile repeatable-row write at `sha256:7fcc37ebb61ac157f8bc7b4cd3bcb52e74a4acfff5e40b14902369fa6f52e435`. The secure-repository remainder retains the relocated workflow repositories and adds the encrypted filing-export replay custody repository at `sha256:d959380f5aeddd9562be35c91e1a20b840dcba58eef6acdd0e67891f87fd355d`.
+
+No candidate was promoted to `connected`, no deferral was extended, and no unsupported source was manufactured. `inventory.stock-valuation` remains `connect_candidate` until grounded repeated activity rows are materialized, rendered, and verified end to end. `S116` is complete; this fixed-point classification does not close the remaining source campaign or establish filing readiness.
 
 ## Notes
 
-The earlier related-party locator drift was repaired and is no longer the refusal. The 15 static census rows retain their authored dispositions; all seven dated deferrals are current through 2026-12-31. Those facts cannot stand in for the refused canonical assignment set. A separately owned mechanical locator-maintenance step must either prove the relocated live inventory capability and update its locator or retire the stale census candidate from evidence; it may not change the candidate disposition merely to make comparison pass.
+The first full focused suite exposed four stale mutation assertions after the census ordering and readiness wording changed. Those assertions were repaired to target the intended capability and inventory row; the production validation order and refusal behavior were not weakened. All seven dated deferrals remain current through 2026-12-31. `S117` remains responsible for the final disappearance, expiry, and unsupported-connected-claim gate.

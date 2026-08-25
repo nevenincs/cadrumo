@@ -195,7 +195,7 @@ def _secure_mechanism(node: ast.ClassDef) -> SecureRepositoryMechanism | None:
     names = _class_names(node)
     if "ProfileBareModelSecurePersistence" in names:
         return "profile_secure_document"
-    if names & _SECURE_NAMES:
+    if names & _SECURE_NAMES or any(name.endswith("SecureObjectStorePort") for name in names):
         return "secure_object"
     return None
 
@@ -546,7 +546,13 @@ def _exported_symbols(source_root: Path) -> frozenset[str]:
 
 
 def discover_calculation_helpers(repo_root: Path) -> tuple[CalculationHelperCapability, ...]:
-    """Enumerate exported domain functions with structural calculation behavior."""
+    """Enumerate public domain functions with structural calculation behavior.
+
+    Package facades expose selected private-module definitions through
+    ``__all__``.  A non-private module is itself a public definition surface,
+    so its public functions remain discoverable even when the package root is
+    intentionally inert and does not redeclare them.
+    """
     domain_root = repo_root / "src" / "cadrumo" / "domain"
     exported = _exported_symbols(domain_root)
     capabilities: list[CalculationHelperCapability] = []
@@ -554,8 +560,11 @@ def discover_calculation_helpers(repo_root: Path) -> tuple[CalculationHelperCapa
         if "tests" in path.relative_to(domain_root).parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        module_is_public = path.name not in {"__init__.py", "conftest.py"} and not path.name.startswith("_")
         for node in tree.body:
-            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or node.name not in exported:
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if node.name.startswith("_") or (not module_is_public and node.name not in exported):
                 continue
             binary_operations = {
                 type(child.op).__name__ for child in ast.walk(node) if isinstance(child, (ast.BinOp, ast.AugAssign))
@@ -677,7 +686,7 @@ def discover_row_assemblers(repo_root: Path) -> tuple[RowAssemblerCapability, ..
 
 def discover_source_ownership() -> tuple[SourceOwnershipCapability, ...]:
     """Project source ownership from the canonical live calculation route."""
-    from cadrumo.application.modelo import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+    from cadrumo.application.modelo._calculation_route import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
 
     return tuple(
         SourceOwnershipCapability(

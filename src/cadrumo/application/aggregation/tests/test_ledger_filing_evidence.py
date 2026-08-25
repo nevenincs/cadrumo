@@ -226,7 +226,7 @@ def test_evidence_roundtrips_through_encrypted_revision(secure_objects: SecureOb
 
 
 def test_no_silent_omission_guard_refuses_uncovered_evidence() -> None:
-    from ...modelo import ModeloError
+    from ....domain.modelos import ModeloError
 
     txn = _txn()
     catalogue = TransactionCatalogue.from_transactions((txn,))

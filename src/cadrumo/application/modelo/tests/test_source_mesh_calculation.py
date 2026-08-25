@@ -29,11 +29,9 @@ from ....domain.transactions import (
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    ModeloAggregationBindingError,
-    calculate_modelo_revision_from_bucket_aggregation,
-    create_work_unit,
-)
+from .._action_errors import ModeloAggregationBindingError
+from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

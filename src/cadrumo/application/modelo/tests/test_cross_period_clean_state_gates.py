@@ -54,7 +54,9 @@ from ...calculations import (
     CrossPeriodDependencyRequirement,
     cross_period_dependency_requirements,
 )
-from .. import create_work_unit, import_external_filing_evidence, verify_modelo_revision
+from .._external_import_actions import import_external_filing_evidence
+from .._verification_actions import verify_modelo_revision
+from .._work_lifecycle import create_work_unit
 from .._verification_cross_period import _cross_period_clean_state_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....application.modelo import casilla_id_for_unique_revision_semantic_role
+from .....application.modelo._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 from ._modelo_100_registry_support import _modelo_100_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

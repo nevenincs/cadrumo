@@ -73,11 +73,11 @@ from ...aggregation import (
     RetencionScheme,
 )
 from ...calculations import CalculationObservationRepository
-from .. import (
+from .._calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    create_work_unit,
 )
+from .._work_lifecycle import create_work_unit
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from ._fold_in_assertions_support import _assert_distinct_positive
 

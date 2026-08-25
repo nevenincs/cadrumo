@@ -46,7 +46,10 @@ from ...application.calculations import (
     observation_key,
     persist_observation_envelope_and_iva_history,
 )
-from ...application.modelo import ExternalFilingBaselineSource, import_external_filing_source
+from ..modelo._external_import_actions import (
+    ExternalFilingBaselineSource,
+    import_external_filing_source,
+)
 from ...core import IvaCompensationStateProvenance, Modelo, Period, PeriodKind, normalise_aeat_csv
 from ...core.hashing import sha256_hex
 from ...core.identity import same_tax_identifier

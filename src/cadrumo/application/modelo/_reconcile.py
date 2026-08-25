@@ -144,17 +144,7 @@ def _captured_work_unit_for_reconciliation(*, work_unit_id: WorkUnitId, bucket_i
     """Capture one catalogue and preserve reconcile's typed absence policy."""
     request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
     resolved_bucket_id = bucket_id or resolve_modelo_work_bucket(request)
-    catalogue = WorkUnitCatalogueRepository().load()
-    observed = catalogue.get(work_unit_id)
-    if observed is not None and bucket_id is not None and observed.bucket_id != resolved_bucket_id:
-        raise ReconciliationCrossBucketRefusedError(
-            translated_message="errors.refused.reconciliation_cross_bucket",
-            context={
-                "work_unit_id": work_unit_id,
-                "work_unit_bucket_id": observed.bucket_id,
-                "active_bucket_id": resolved_bucket_id,
-            },
-        )
+    catalogue = WorkUnitCatalogueRepository(bucket_id=resolved_bucket_id).load()
     try:
         resolution = select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=resolved_bucket_id)
     except ModeloWorkUnitNotFoundError as exc:

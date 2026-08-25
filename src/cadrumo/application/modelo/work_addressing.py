@@ -35,7 +35,6 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance, Period
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
@@ -738,6 +737,8 @@ def resolve_modelo_work_unit_for_operator_target(
     period: Period | None = None,
     registry_revision_id: RevisionId | None = None,
     bucket_id: str | None = None,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> WorkUnit:
     """Resolve exact or visible operator input to one active :class:`~cadrumo.domain.modelos.WorkUnit`.
 
@@ -753,6 +754,8 @@ def resolve_modelo_work_unit_for_operator_target(
             registry_revision_id=registry_revision_id,
             bucket_id=bucket_id,
         ),
+        catalogue=catalogue,
+        bucket_id=resolved_bucket_id,
     )
 
 
@@ -767,6 +770,8 @@ def resolve_modelo_revision_for_operator_target(
     bucket_id: str | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     default_for: ModeloCalculationRevisionDefault | None = None,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> CalculationRevision:
     """Resolve one :class:`CalculationRevision` from exact or visible operator input.
 
@@ -788,6 +793,8 @@ def resolve_modelo_revision_for_operator_target(
         calculation_revision_id=calculation_revision_id,
         selector=selector,
         default_for=default_for,
+        catalogue=catalogue,
+        resolved_bucket_id=resolved_bucket_id,
     )
 
 
@@ -827,6 +834,8 @@ def _resolve_revision_with_precondition_translation(
     calculation_revision_id: CalculationRevisionId | None,
     selector: ModeloCalculationRevisionSelector,
     default_for: ModeloCalculationRevisionDefault | None,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> CalculationRevision:
     try:
         return _resolve_revision_for_default(
@@ -834,6 +843,8 @@ def _resolve_revision_with_precondition_translation(
             calculation_revision_id=calculation_revision_id,
             selector=selector,
             default_for=default_for,
+            catalogue=catalogue,
+            resolved_bucket_id=resolved_bucket_id,
         )
     except CalculationRevisionNotFoundError as error:
         recovery_error = _calculation_revision_work_unit_target_error(
@@ -841,6 +852,8 @@ def _resolve_revision_with_precondition_translation(
             calculation_revision_id=calculation_revision_id,
             address=address,
             default_for=default_for,
+            catalogue=catalogue,
+            resolved_bucket_id=resolved_bucket_id,
         )
         if recovery_error is error:
             raise
@@ -871,6 +884,8 @@ def _resolve_revision_for_default(
     calculation_revision_id: CalculationRevisionId | None,
     selector: ModeloCalculationRevisionSelector,
     default_for: ModeloCalculationRevisionDefault | None,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> CalculationRevision:
     resolver = (
         {
@@ -887,6 +902,8 @@ def _resolve_revision_for_default(
         address=address,
         calculation_revision_id=calculation_revision_id,
         selector=selector,
+        catalogue=catalogue,
+        resolved_bucket_id=resolved_bucket_id,
     )
 
 
@@ -896,6 +913,8 @@ def _calculation_revision_work_unit_target_error(
     calculation_revision_id: CalculationRevisionId | None,
     address: ModeloWorkAddress,
     default_for: ModeloCalculationRevisionDefault | None,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> CalculationRevisionNotFoundError:
     """Attach the declared calculate recovery when an exact work unit was supplied."""
     if default_for == "verify":
@@ -907,7 +926,11 @@ def _calculation_revision_work_unit_target_error(
     if calculation_revision_id is None or address != ModeloWorkAddress():
         return error
     try:
-        work_unit = resolve_modelo_work_unit_for_operator_target(work_unit_id=calculation_revision_id)
+        work_unit = resolve_modelo_work_unit_for_operator_target(
+            work_unit_id=calculation_revision_id,
+            catalogue=catalogue,
+            resolved_bucket_id=resolved_bucket_id,
+        )
     except ModeloWorkUnitNotFoundError:
         return error
     is_active = work_unit.state is WorkUnitState.BORRADOR
@@ -1041,18 +1064,32 @@ def _exact_work_unit_absent_precondition_error(
     )
 
 
-def resolve_modelo_work_target(target: ModeloWorkTarget) -> ModeloWorkResolution:
+def resolve_modelo_work_target(
+    target: ModeloWorkTarget,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> ModeloWorkResolution:
     """Resolve any supported modelo target through the shared selector boundary.
 
     Returns a :class:`ModeloWorkResolution` containing the resolved work unit or
     typed absence/ambiguity metadata from this defining module's pure selector.
     """
-    return resolve_modelo_work_address(work_address_for_modelo_target(target))
+    return resolve_modelo_work_address(
+        work_address_for_modelo_target(target),
+        catalogue=catalogue,
+        bucket_id=bucket_id,
+    )
 
 
-def resolve_modelo_work_unit_id(target: ModeloWorkTarget) -> WorkUnitId:
+def resolve_modelo_work_unit_id(
+    target: ModeloWorkTarget,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> WorkUnitId:
     """Resolve a visible or exact modelo target to the authoritative work-unit id."""
-    resolution = resolve_modelo_work_target(target)
+    resolution = resolve_modelo_work_target(target, catalogue=catalogue, bucket_id=bucket_id)
     assert resolution.work_unit is not None
     return resolution.work_unit.work_unit_id
 
@@ -1062,9 +1099,14 @@ def project_modelo_work_unit(work_unit: WorkUnit) -> ModeloResolvedWorkProjectio
     return ModeloResolvedWorkProjection.from_work_unit(work_unit)
 
 
-def project_modelo_work_target(target: ModeloWorkTarget) -> ModeloResolvedWorkProjection:
+def project_modelo_work_target(
+    target: ModeloWorkTarget,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> ModeloResolvedWorkProjection:
     """Resolve a target and project it back to a :class:`ModeloResolvedWorkProjection`."""
-    resolution = resolve_modelo_work_target(target)
+    resolution = resolve_modelo_work_target(target, catalogue=catalogue, bucket_id=bucket_id)
     assert resolution.work_unit is not None
     return project_modelo_work_unit(resolution.work_unit)
 
@@ -1147,6 +1189,7 @@ def ensure_modelo_work_unit_for_active_target(
     actor: str = "operator",
     causante_ccaa: CCAA | None = None,
     enforce_applicability: bool = True,
+    catalogue: WorkUnitCatalogue,
 ) -> ModeloWorkEnsureResult:
     """Resume or create the active work unit for one visible filing target.
 
@@ -1159,7 +1202,6 @@ def ensure_modelo_work_unit_for_active_target(
         newly created.
     """
     requested_revision = registry_revision_id.strip() if registry_revision_id is not None else None
-    catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
     resolution = select_modelo_work_resolution(
         ModeloWorkSelectorRequest(
             bucket_id=bucket_id,
@@ -1203,9 +1245,14 @@ def ensure_modelo_work_unit_for_active_target(
     return ModeloWorkEnsureResult(work_unit=unit, reused=False)
 
 
-def resolve_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolution:
+def resolve_modelo_work_address(
+    address: ModeloWorkAddress,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> ModeloWorkResolution:
     """Resolve an operator-facing modelo work address to a required :class:`ModeloWorkResolution`."""
-    resolution = resolve_optional_modelo_work_address(address)
+    resolution = resolve_optional_modelo_work_address(address, catalogue=catalogue, bucket_id=bucket_id)
     if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
         raise ModeloWorkAddressNotFoundError(
             translated_message="errors.error.modelo_work_address_not_found",
@@ -1214,7 +1261,12 @@ def resolve_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolut
     return resolution
 
 
-def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolution:
+def resolve_optional_modelo_work_address(
+    address: ModeloWorkAddress,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> ModeloWorkResolution:
     """Resolve an operator-facing modelo work address to a :class:`ModeloWorkResolution`."""
     request = ModeloWorkSelectorRequest(
         work_unit_id=address.work_unit_id,
@@ -1225,14 +1277,17 @@ def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWo
         revision_id=address.registry_revision_id,
         bucket_id=address.bucket_id,
     )
-    bucket_id = resolve_modelo_work_bucket(request)
-    catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
     return select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
 
 
-def resolve_modelo_work_address_unit(address: ModeloWorkAddress) -> WorkUnit:
+def resolve_modelo_work_address_unit(
+    address: ModeloWorkAddress,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> WorkUnit:
     """Resolve an operator-facing modelo work address to one :class:`~cadrumo.domain.modelos.WorkUnit`."""
-    resolution = resolve_modelo_work_address(address)
+    resolution = resolve_modelo_work_address(address, catalogue=catalogue, bucket_id=bucket_id)
     assert resolution.work_unit is not None
     return resolution.work_unit
 
@@ -1243,6 +1298,8 @@ def resolve_modelo_calculation_revision_address(
     calculation_revision_id: CalculationRevisionId | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     default_for: ModeloCalculationRevisionDefault | None = None,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> CalculationRevision:
     """Resolve a :class:`CalculationRevision` by exact id or under a modelo work address.
 
@@ -1259,23 +1316,41 @@ def resolve_modelo_calculation_revision_address(
         revision = _resolve_exact_calculation_revision_or_current_work_unit_revision(
             calculation_revision_id=calculation_revision_id,
             default_for=default_for,
+            catalogue=catalogue,
+            resolved_bucket_id=resolved_bucket_id,
         )
-        return _require_revision_parent_admitted_for_operation(revision, default_for=default_for)
+        return _require_revision_parent_admitted_for_operation(
+            revision,
+            default_for=default_for,
+            catalogue=catalogue,
+            resolved_bucket_id=resolved_bucket_id,
+        )
 
-    work_unit = resolve_modelo_work_address_unit(address)
+    work_unit = resolve_modelo_work_address_unit(
+        address,
+        catalogue=catalogue,
+        bucket_id=resolved_bucket_id,
+    )
     revision = resolve_modelo_calculation_revision_pick(
         work_unit,
         selector=selector,
         calculation_revision_id=calculation_revision_id,
         default_for=default_for,
     ).revision
-    return _require_revision_parent_admitted_for_operation(revision, default_for=default_for)
+    return _require_revision_parent_admitted_for_operation(
+        revision,
+        default_for=default_for,
+        catalogue=catalogue,
+        resolved_bucket_id=resolved_bucket_id,
+    )
 
 
 def _resolve_exact_calculation_revision_or_current_work_unit_revision(
     *,
     calculation_revision_id: CalculationRevisionId,
     default_for: ModeloCalculationRevisionDefault | None,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> CalculationRevision:
     """Resolve an exact revision, or a current revision reached through its work unit.
 
@@ -1293,7 +1368,11 @@ def _resolve_exact_calculation_revision_or_current_work_unit_revision(
         if default_for not in {"verify", "file"}:
             raise
         try:
-            work_unit = resolve_modelo_work_unit_for_operator_target(work_unit_id=calculation_revision_id)
+            work_unit = resolve_modelo_work_unit_for_operator_target(
+                work_unit_id=calculation_revision_id,
+                catalogue=catalogue,
+                resolved_bucket_id=resolved_bucket_id,
+            )
         except ModeloWorkUnitNotFoundError:
             raise revision_error from None
         if work_unit.state is not WorkUnitState.BORRADOR or work_unit.current_calculation_revision_id is None:
@@ -1305,6 +1384,8 @@ def _require_revision_parent_admitted_for_operation(
     revision: CalculationRevision,
     *,
     default_for: ModeloCalculationRevisionDefault | None,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> CalculationRevision:
     """Refuse verify/file when a resolved revision belongs to a discarded work unit."""
     if default_for == "verify":
@@ -1313,7 +1394,11 @@ def _require_revision_parent_admitted_for_operation(
         operation = RevisionParentOperation.FILE
     else:
         return revision
-    work_unit = resolve_modelo_work_unit_for_operator_target(work_unit_id=revision.work_unit_id)
+    work_unit = resolve_modelo_work_unit_for_operator_target(
+        work_unit_id=revision.work_unit_id,
+        catalogue=catalogue,
+        resolved_bucket_id=resolved_bucket_id,
+    )
     require_revision_parent_active(
         work_unit=work_unit,
         calculation_revision_id=revision.calculation_revision_id,
@@ -1326,11 +1411,17 @@ def resolve_modelo_revision_pick(
     *,
     target: ModeloWorkTarget,
     pick: ModeloRevisionPick | None = None,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> ModeloResolvedRevisionProjection:
     """Resolve and project a revision selection as :class:`ModeloResolvedRevisionProjection`."""
     if pick is None:
         pick = ModeloRevisionPick()
-    work_unit = resolve_modelo_work_address_unit(work_address_for_modelo_target(target))
+    work_unit = resolve_modelo_work_address_unit(
+        work_address_for_modelo_target(target),
+        catalogue=catalogue,
+        bucket_id=resolved_bucket_id,
+    )
     selection = resolve_modelo_calculation_revision_pick(
         work_unit,
         selector=pick.selector,
@@ -1360,6 +1451,8 @@ def resolve_verifiable_modelo_calculation_revision_address(
     address: ModeloWorkAddress,
     calculation_revision_id: CalculationRevisionId | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> CalculationRevision:
     """Resolve the :class:`CalculationRevision` that ``work verify`` addresses.
 
@@ -1377,6 +1470,8 @@ def resolve_verifiable_modelo_calculation_revision_address(
         calculation_revision_id=calculation_revision_id,
         selector=selector,
         default_for="verify",
+        catalogue=catalogue,
+        resolved_bucket_id=resolved_bucket_id,
     )
 
 
@@ -1385,6 +1480,8 @@ def resolve_fileable_modelo_calculation_revision_address(
     address: ModeloWorkAddress,
     calculation_revision_id: CalculationRevisionId | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> CalculationRevision:
     """Resolve the verified-complete :class:`CalculationRevision` that ``work file`` may consume."""
     revision = resolve_modelo_calculation_revision_address(
@@ -1392,10 +1489,16 @@ def resolve_fileable_modelo_calculation_revision_address(
         calculation_revision_id=calculation_revision_id,
         selector=selector,
         default_for="file",
+        catalogue=catalogue,
+        resolved_bucket_id=resolved_bucket_id,
     )
     if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO:
         return revision
-    work_unit = resolve_modelo_work_unit_for_operator_target(work_unit_id=revision.work_unit_id)
+    work_unit = resolve_modelo_work_unit_for_operator_target(
+        work_unit_id=revision.work_unit_id,
+        catalogue=catalogue,
+        resolved_bucket_id=resolved_bucket_id,
+    )
     raise CalculationRevisionStateError(
         translated_message="errors.error.error_modelo_calculation_revision_state",
         context={"calculation_revision_id": revision.calculation_revision_id, "state": revision.state.value},
@@ -1412,6 +1515,8 @@ def resolve_exportable_modelo_calculation_revision_address(
     address: ModeloWorkAddress,
     calculation_revision_id: CalculationRevisionId | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
+    catalogue: WorkUnitCatalogue,
+    resolved_bucket_id: str,
 ) -> CalculationRevision:
     """Resolve the filed or verified-complete :class:`CalculationRevision` that ``modelo export`` may consume."""
     revision = resolve_modelo_calculation_revision_address(
@@ -1419,6 +1524,8 @@ def resolve_exportable_modelo_calculation_revision_address(
         calculation_revision_id=calculation_revision_id,
         selector=selector,
         default_for="export",
+        catalogue=catalogue,
+        resolved_bucket_id=resolved_bucket_id,
     )
     return _require_revision_state(
         revision,

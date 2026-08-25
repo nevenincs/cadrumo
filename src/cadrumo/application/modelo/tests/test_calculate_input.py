@@ -14,7 +14,7 @@ from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .. import create_work_unit
+from .._work_lifecycle import create_work_unit
 from .._calculate_input import (
     ModeloCalculateCasillaInputError,
     ModeloCalculateDecimalInputError,

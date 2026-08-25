@@ -55,7 +55,7 @@ from ...application.flows.copy import register_copy_source
 from ...application.flows.definition import CopyRef, FlowChoice, FlowCondition, FlowDefinition, FlowPage, FlowSection
 from ...application.flows.engine import FlowState
 from ...application.flows.line_frontend import LineFlowFrontend
-from ...application.modelo import (
+from ...application.modelo._action_errors import (
     AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,
     AmendmentKindNotPermittedError,
@@ -67,12 +67,12 @@ from ...application.modelo import (
     CalculationRevisionStateError,
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
-    amend_modelo_revision,
     amendment_evidence_missing_precondition,
-    get_calculation_revision,
-    get_filing_record,
-    registry_casillas_for_registry_scope,
 )
+from ...application.modelo._amendment_actions import amend_modelo_revision
+from ...application.modelo._calculation_actions import get_calculation_revision
+from ...application.modelo._filing_actions import get_filing_record
+from ...application.modelo._registry_discovery import registry_casillas_for_registry_scope
 from ...core import STRICT_FROZEN_CONFIG, Modelo, Period, permitted_amendment_kind_values
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage

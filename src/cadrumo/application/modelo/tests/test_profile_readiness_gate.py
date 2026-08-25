@@ -28,16 +28,20 @@ from ....tests.profile_capsule import load_test_profile_record, replace_test_pro
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
 from ...user_profile.projections import record_to_path_values
-from .. import (
+from .._action_errors import (
     ModeloProfileReadinessError,
     WorkUnitMutationRefusedError,
+)
+from .._calculation_actions import (
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    create_work_unit,
     mark_revision_verificado_completo,
+)
+from .._profile_readiness_gate import (
     modelo_applicability_refusal,
     pre_activity_period_refusal,
 )
+from .._work_lifecycle import create_work_unit
 from ..work_addressing import ensure_modelo_work_unit_for_active_target
 from .._profile_readiness_gate import _profile_activity_start_date
 

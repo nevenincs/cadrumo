@@ -44,11 +44,11 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
-from .. import (
+from .._external_import_actions import import_external_filing_evidence
+from .._work_lifecycle import (
     create_work_unit,
     discard_work_unit,
     get_work_unit,
-    import_external_filing_evidence,
     rename_work_unit,
 )
 from .justificante_metadata import persist_justificante_metadata

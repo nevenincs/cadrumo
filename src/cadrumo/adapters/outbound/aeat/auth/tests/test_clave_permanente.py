@@ -9,6 +9,7 @@ import pytest
 from pydantic import AnyUrl
 
 from ......core import AuthProviderKind
+from ......core.errors import AeatLoginAssertionError
 from ......domain.calculations.registry import (
     RegistryValidationError,
     RemoteOperation,
@@ -17,7 +18,7 @@ from ......domain.calculations.registry import (
 from ......tests.secure_sql import isolated_runtime_profile
 from ..clave_permanente import ClavePermanenteAuthProvider
 from ..clave_permanente_support import clave_permanente_auth_browser_action_policy
-from ..errors import AeatLoginAssertionError, AuthConfigurationError
+from ..errors import AuthConfigurationError
 from ..providers import ClavePermanenteSessionDetail
 from ._clave_permanente_support import (
     _DOMAINS,

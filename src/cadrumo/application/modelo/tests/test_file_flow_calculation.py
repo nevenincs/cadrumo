@@ -162,10 +162,8 @@ def test_calculate_refused_on_discarded_work_unit(repos: Repos) -> None:
     """A discarded work unit refuses further calculation. The
     operator must create a fresh work unit to continue."""
 
-    from .. import (
-        WorkUnitMutationRefusedError,
-        discard_work_unit,
-    )
+    from .._action_errors import WorkUnitMutationRefusedError
+    from .._work_lifecycle import discard_work_unit
 
     wu_repo, cr_repo, _, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
@@ -193,7 +191,7 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos: Repos) -> None:
     bucket event with actor + reason payload."""
 
     from ....domain.buckets import BucketEventObjectType, BucketEventType
-    from .. import discard_work_unit
+    from .._work_lifecycle import discard_work_unit
 
     wu_repo, _, _, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
@@ -316,7 +314,7 @@ def test_calculate_refuses_when_registry_snapshot_unresolvable(repos: Repos) -> 
     ``CalculationRegistryUnavailableError`` rather than persisting a
     revision that bypasses the engine."""
 
-    from .. import CalculationRegistryUnavailableError
+    from .._action_errors import CalculationRegistryUnavailableError
 
     wu_repo, cr_repo, _, _, bv_repo = repos
     # Modelo 130 at year 2010 predates the registry's earliest

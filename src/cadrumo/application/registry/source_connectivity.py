@@ -57,7 +57,7 @@ from ...domain.calculations.registry import (
     select_revision,
 )
 from ..aggregation import BindingSourceDisposition
-from ..modelo import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from ..modelo._calculation_route import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 
 __all__ = [
     "ManualCasillaRequirement",

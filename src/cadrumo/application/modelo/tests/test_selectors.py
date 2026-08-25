@@ -685,15 +685,32 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
     wu_repo.save(upsert_work_unit(wu_repo.load(), current_draft))
     address = ModeloWorkAddress(modelo="130", filing_year=2026, period=_P_2026_1T)
 
-    assert resolve_verifiable_modelo_calculation_revision_address(address=address) == draft
+    catalogue = wu_repo.load()
+    assert (
+        resolve_verifiable_modelo_calculation_revision_address(
+            address=address,
+            catalogue=catalogue,
+            resolved_bucket_id=work_unit.bucket_id,
+        )
+        == draft
+    )
     assert (
         resolve_fileable_modelo_calculation_revision_address(
             address=address,
             selector=ModeloCalculationRevisionSelector.LATEST_VERIFIED,
+            catalogue=catalogue,
+            resolved_bucket_id=work_unit.bucket_id,
         )
         == verified
     )
-    assert resolve_exportable_modelo_calculation_revision_address(address=address) == filed
+    assert (
+        resolve_exportable_modelo_calculation_revision_address(
+            address=address,
+            catalogue=catalogue,
+            resolved_bucket_id=work_unit.bucket_id,
+        )
+        == filed
+    )
 
     # The verify resolver no longer gates state: an explicitly-addressed verified
     # revision is returned (not refused) so verify_modelo_revision can collapse it
@@ -702,6 +719,8 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
         resolve_verifiable_modelo_calculation_revision_address(
             address=ModeloWorkAddress(),
             calculation_revision_id=verified.calculation_revision_id,
+            catalogue=catalogue,
+            resolved_bucket_id=work_unit.bucket_id,
         )
         == verified
     )
@@ -709,6 +728,8 @@ def test_addressed_revision_policy_resolvers_enforce_command_specific_state(
         resolve_fileable_modelo_calculation_revision_address(
             address=address,
             selector=ModeloCalculationRevisionSelector.LATEST_DRAFT,
+            catalogue=catalogue,
+            resolved_bucket_id=work_unit.bucket_id,
         )
     failure = raised.value.precondition_failure
     assert failure is not None

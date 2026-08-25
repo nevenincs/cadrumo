@@ -60,6 +60,7 @@ from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 from .....core.bucket_pointer import require_active_bucket_id
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
+from .....core.errors import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.time import now
 from .....domain.calculations.registry import canonical_remote_hostname
@@ -70,7 +71,6 @@ from ._clave_provider_common import (
     default_sede_target_url,
     verification_probe_url,
 )
-from .session_probe import run_authenticated_landing_probe
 from .authenticator import AEAT_SESSION_IDLE_TTL
 from .authenticator_types import (
     AeatLoginAssertion,
@@ -87,11 +87,12 @@ from .clave_permanente_metadata import ClavePermanenteSessionMetadata
 from .clave_permanente_support import ClavePermanenteFailureMode
 from .clave_permanente_support import clave_permanente_configuration_error as _configuration_error
 from .clave_permanente_support import clave_permanente_login_error as _login_error
-from .errors import AeatLoginAssertionError, AuthConfigurationError, AuthProviderCleanupError
+from .errors import AuthConfigurationError, AuthProviderCleanupError
 from .providers import (
     ClavePermanenteLoginAssertionDetail,
     ClavePermanenteSessionDetail,
 )
+from .session_probe import run_authenticated_landing_probe
 
 if TYPE_CHECKING:
     from .....core.config import Settings

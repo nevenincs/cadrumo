@@ -12,11 +12,11 @@ import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
 
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.config import Settings
+from ......core.errors import AeatLoginAssertionError
 from ......tests.secure_sql import isolated_runtime_profile
 from ..authenticator import AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata
 from ..certificate import extract_nif_from_subject
-from ..errors import AeatLoginAssertionError
 from ._authenticator_support import SECRET_PASSPHRASE, _build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

@@ -19,13 +19,10 @@ from dataclasses import dataclass
 
 import typer
 
-from ...application.modelo import (
-    CalculationRevisionNotFoundError,
-    ModeloCalculationRevisionSelector,
-    list_calculation_revisions,
-    modelo_202_modality_for_work_unit,
-)
-from ...application.modelo.work_addressing import resolve_modelo_work_unit_for_operator_target
+from ...application.modelo._action_errors import CalculationRevisionNotFoundError
+from ...application.modelo._calculate_input import modelo_202_modality_for_work_unit
+from ...application.modelo._calculation_actions import list_calculation_revisions
+from ...application.modelo._selectors import ModeloCalculationRevisionSelector
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ._common import activate_subcommand_output_language, emit_envelope
@@ -196,7 +193,7 @@ def work_revision(
     )
     modality_payload: dict[str, object] = {}
     modality_lines: list[str] = []
-    unit_for_modality = resolve_modelo_work_unit_for_operator_target(work_unit_id=selected_revision.work_unit_id)
+    unit_for_modality = resolve_work_unit_for_cli(work_unit_id=selected_revision.work_unit_id)
     modality_summary = modelo_202_modality_for_work_unit(unit_for_modality)
     if modality_summary is not None:
         modality_payload = {"modality": modality_summary.modality, "modality_reason": modality_summary.reason}

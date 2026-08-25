@@ -70,10 +70,8 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.secure_sql import isolated_runtime_profile
 from cadrumo.tests.profile_capsule import seed_test_profile_record
-from cadrumo.application.modelo import (
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    create_work_unit,
-)
+from cadrumo.application.modelo._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from cadrumo.application.modelo._work_lifecycle import create_work_unit
 
 # Custody is composed AFTER the catalogue probe above, so it cannot perturb the
 # discriminating precondition this child exists to prove. The ports are bound by

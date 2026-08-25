@@ -33,7 +33,7 @@ from ....domain.modelos import (
     upsert_filing_record,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import ModeloPriorDomiciliationElectionRefusedError
+from .._action_errors import ModeloPriorDomiciliationElectionRefusedError
 from .._prior_domiciliation import resolve_prior_domiciliation_election
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

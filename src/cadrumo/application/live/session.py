@@ -18,7 +18,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...adapters.outbound.aeat.auth.authenticator_types import AeatSession
+from ...application.auth.protocols import AeatSessionPort
 from ...application.auth.sessions import ensure_authenticated_aeat_session
 from ...core.access_gate import AeatAccessGate
 from ...core.config import Settings, load_settings
@@ -28,8 +28,8 @@ async def active_verified_session(
     *,
     operation: str = "live-filed-read",
     target_url: str | None = None,
-) -> tuple[AeatSession, Settings]:
-    """Return an :class:`AeatSession` and :class:`Settings` after the live-read gate.
+) -> tuple[AeatSessionPort, Settings]:
+    """Return an authenticated session and :class:`Settings` after the live-read gate.
 
     The ``operation`` and optional ``target_url`` are forwarded to the
     authentication service for diagnostics and provider routing after
@@ -42,7 +42,7 @@ async def active_verified_session(
         operation=operation,
         target_url=target_url,
     )
-    session: AeatSession = result.session
+    session: AeatSessionPort = result.session
     return session, settings
 
 

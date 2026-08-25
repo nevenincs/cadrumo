@@ -41,7 +41,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Hex64Str
-from ...core.directory_scan import scan_directory as _scan_directory
+from ...core.directory_scan import scan_directory
 from ..errors import CoreValidationError as _CoreValidationError
 from ..hashing import canonical_json_bytes as _canonical_json_bytes
 from ..hashing import hash_file as _hash_file
@@ -239,7 +239,7 @@ def _iter_corpus_files(corpus_root: Path) -> Iterator[Path]:
     integrity-tracked-only, but the manifest must reflect the literal
     on-disk corpus contents — symlinks defeat that contract.
     """
-    for path in _scan_directory(corpus_root, recursive=True):
+    for path in scan_directory(corpus_root, recursive=True):
         # ``is_symlink()`` is checked first because ``is_file()`` follows
         # the symlink target on most filesystems and would mask the link.
         if path.is_symlink():

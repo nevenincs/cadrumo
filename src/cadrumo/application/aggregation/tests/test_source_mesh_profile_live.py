@@ -20,7 +20,7 @@ from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
-from ...modelo import resolve_profile_sourced_bindings
+from ...modelo._profile_binding import resolve_profile_sourced_bindings
 from .. import CalculationSourceContext, ProfileSourceResolver
 from ._secure_objects_fixtures import secure_profile_backend  # noqa: F401
 

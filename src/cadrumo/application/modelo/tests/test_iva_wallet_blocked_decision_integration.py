@@ -16,7 +16,8 @@ from ...calculations import (
     IvaWalletDecisionRepository,
     reconcile_modelo_303_iva_compensation,
 )
-from .. import ModeloIvaWalletReconciliationBlocked, calculate_modelo_revision
+from .._calculation_actions import calculate_modelo_revision
+from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .test_iva_wallet_engine_integration import (
     _DECIDED_AT,
     _TARGET_PERIOD,

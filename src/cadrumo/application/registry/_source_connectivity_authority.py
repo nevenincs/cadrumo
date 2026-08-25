@@ -25,12 +25,12 @@ from ...core import (
 )
 from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
 from ..aggregation import BindingSourceDisposition
-from ..modelo import (
+from ..modelo._calculation_route import (
     CALCULATION_ROUTE_ID,
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
-    MANUAL_INPUT_RESOLVER_ID,
     CalculationRouteManualOwnership,
+    MANUAL_INPUT_RESOLVER_ID,
 )
 from ..operator_surface import SupportedModeloCalculationWorkflowCatalogue
 

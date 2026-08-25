@@ -38,7 +38,6 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.aeat.auth.authenticator_types import AeatSession as _AeatSession
 from ...adapters.outbound.aeat.sede import PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL
 from ...adapters.outbound.aeat.sede import Declaracion as _Declaracion
 from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation as _FiledDeclaracionObservation
@@ -59,6 +58,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
 )
+from ...application.auth.protocols import AeatSessionPort as _AeatSessionPort
 from ...application.auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ...application.auth.sessions import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
 from ...application.calculations import CalculationObservationRepository as _CalculationObservationRepository
@@ -268,7 +268,7 @@ async def capture_iva_compensation_history(
 
 
 async def _capture_iva_compensation_history_with_session(
-    session: _AeatSession,
+    session: _AeatSessionPort,
     *,
     settings: _Settings,
     year_from: int,
@@ -696,7 +696,7 @@ async def capture_iva_compensation_wallet(
 
 
 async def _capture_iva_compensation_wallet_with_session(
-    session: _AeatSession,
+    session: _AeatSessionPort,
     *,
     settings: _Settings,
     target_year: int,
@@ -888,7 +888,7 @@ def _filed_history_surface_timeout_ms(settings: _Settings, *, year_from: int, ye
 
 
 async def _capture_iva_compensation_history_by_year_with_session(
-    session: _AeatSession,
+    session: _AeatSessionPort,
     *,
     settings: _Settings,
     year_from: int,

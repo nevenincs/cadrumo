@@ -59,12 +59,12 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .._action_errors import (
     AmendmentComplementariaLiabilityDecreaseError,
     AmendmentKindNotPermittedError,
-    amend_modelo_revision,
-    create_work_unit,
 )
+from .._amendment_actions import amend_modelo_revision
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

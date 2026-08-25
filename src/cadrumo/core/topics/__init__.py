@@ -32,7 +32,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from .. import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..directory_scan import scan_directory as _scan_directory
+from ..directory_scan import scan_directory
 from ..errors import CadrumoError as _CadrumoError
 from ..external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..paths import file_stat_fingerprint as _file_stat_fingerprint
@@ -121,7 +121,7 @@ def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
     """
     target = root if root is not None else _TOPIC_REGISTRY_ROOT
     resolved = target.resolve()
-    paths = _scan_directory(resolved, pattern="*.toml")
+    paths = scan_directory(resolved, pattern="*.toml")
     fingerprint = tuple(_file_stat_fingerprint(path) for path in paths)
     return _load_topic_catalogue_cached(str(resolved), fingerprint)
 

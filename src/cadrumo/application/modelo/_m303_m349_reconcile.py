@@ -35,6 +35,7 @@ from ...domain.modelos import (
     CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
+    ModeloCode,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -42,6 +43,12 @@ from ...domain.modelos import (
     WorkUnitCatalogue,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from .work_addressing import (
+    ModeloWorkSelectionMode,
+    ModeloWorkSelectorRequest,
+    ModeloWorkSelectorState,
+    select_modelo_work_resolution,
+)
 
 #: Modelo 303 information box: base of intra-community acquisitions of goods and
 #: services (official casilla 10).
@@ -99,23 +106,22 @@ def _sibling_work_unit(
     sibling_modelo: str,
     catalogue: WorkUnitCatalogue,
 ) -> WorkUnit | None:
-    """Return the same-bucket, same-period work unit for the reconcile counterpart.
-
-    Matches on ``(bucket_id, modelo, filing_year, period)`` exactly. A period
-    cadence mismatch (a quarterly 303 against a monthly 349) yields no match, so
-    the reconcile is skipped rather than comparing non-comparable totals.
-    Discarded work units are excluded.
-    """
-    for unit in catalogue.values():
-        if (
-            unit.bucket_id == work_unit.bucket_id
-            and str(unit.modelo) == sibling_modelo
-            and unit.filing_year == work_unit.filing_year
-            and unit.period.registry_token == work_unit.period.registry_token
-            and unit.discarded_at is None
-        ):
-            return unit
-    return None
+    """Select one active same-period counterpart through the canonical policy."""
+    resolution = select_modelo_work_resolution(
+        ModeloWorkSelectorRequest(
+            bucket_id=work_unit.bucket_id,
+            modelo=ModeloCode(sibling_modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+        ),
+        catalogue=catalogue,
+        bucket_id=work_unit.bucket_id,
+        mode=ModeloWorkSelectionMode.ACTIVE_NATURAL,
+    )
+    if resolution.state is ModeloWorkSelectorState.ABSENT:
+        return None
+    assert resolution.work_unit is not None
+    return resolution.work_unit
 
 
 def _reconcile_revision_priority(revision: CalculationRevision) -> tuple[int, datetime]:

@@ -23,7 +23,10 @@ from datetime import datetime
 
 from pydantic import Field
 
-from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationVerdict
+from ...application.modelo._reconciliation_records import (
+    ModeloReconciliationEvidenceKind,
+    ModeloReconciliationVerdict,
+)
 from ...core import IvaCompensationStateProvenance, Period
 from ...core.identity import BucketId, ProfileId, WorkUnitId
 from ...core.json_contract import OutputSchema
