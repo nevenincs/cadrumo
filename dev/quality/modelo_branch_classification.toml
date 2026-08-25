@@ -304,13 +304,6 @@ group = "obligation-condition"
 
 [[branch]]
 path = "src/cadrumo/application/filing/_export.py"
-enclosing_symbol = "_prepare_export_draft"
-modelo_codes = "M303"
-group = "modelo-scope-guard"
-selects = "_prepare_export_draft"
-
-[[branch]]
-path = "src/cadrumo/application/filing/_export.py"
 enclosing_symbol = "_projection_plan_for_layout"
 modelo_codes = "M303"
 group = "modelo-path-routing"
@@ -322,27 +315,6 @@ enclosing_symbol = "_render_layout"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
 selects = "_render_layout"
-
-[[branch]]
-path = "src/cadrumo/application/filing/_export.py"
-enclosing_symbol = "_validate_m303_filing_draft"
-modelo_codes = "M303"
-group = "modelo-scope-guard"
-selects = "_validate_m303_filing_draft"
-
-[[branch]]
-path = "src/cadrumo/application/filing/_export.py"
-enclosing_symbol = "_validate_m303_filing_producer"
-modelo_codes = "M303"
-group = "modelo-scope-guard"
-selects = "_validate_m303_filing_producer"
-
-[[branch]]
-path = "src/cadrumo/application/filing/_export.py"
-enclosing_symbol = "_validate_m303_filing_snapshot"
-modelo_codes = "M303"
-group = "modelo-scope-guard"
-selects = "_validate_m303_filing_snapshot"
 
 [[branch]]
 path = "src/cadrumo/application/filing/_export_xml_dictionary.py"
@@ -578,13 +550,6 @@ enclosing_symbol = "_raise_if_m200_ledger_requires_accounting_result_input"
 modelo_codes = "M200"
 group = "modelo-scope-guard"
 selects = "_raise_if_m200_ledger_requires_accounting_result_input"
-
-[[branch]]
-path = "src/cadrumo/application/modelo/_export.py"
-enclosing_symbol = "_resolve_amendment_export_evidence"
-modelo_codes = "M303"
-group = "modelo-scope-guard"
-selects = "_resolve_amendment_export_evidence"
 
 [[branch]]
 path = "src/cadrumo/application/modelo/_export.py"
