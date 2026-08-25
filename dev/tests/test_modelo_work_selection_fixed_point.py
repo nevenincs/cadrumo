@@ -1,17 +1,15 @@
 """Declarative Modelo work-selection fixed point backed by the canonical scanner."""
 from __future__ import annotations
 
-import inspect
 from pathlib import Path
 
 import pytest
-
-import cadrumo.application.modelo.work_addressing as work_addressing
 
 from ..quality.import_hygiene_scan import (
     CanonicalAuthoritySpec,
     CanonicalAuthorityTarget,
     DelegatingWrapperRule,
+    public_definition_names,
     scan_canonical_authority,
     tracked_live_files,
 )
@@ -25,12 +23,7 @@ _MODELO_PACKAGE = ".".join(("cadrumo", "application", "modelo"))
 _RETIRED = frozenset(
     f"{_MODELO_PACKAGE}.{name}" for name in ("_" + "work_addressing", "work_unit_" + "selection")
 )
-_DEFINED_SYMBOLS = frozenset(
-    name
-    for name in work_addressing.__all__
-    if (inspect.isclass(value := getattr(work_addressing, name)) or inspect.isfunction(value))
-    and getattr(value, "__module__", None) == _MODULE
-)
+_DEFINED_SYMBOLS = public_definition_names(_CANONICAL)
 _SPEC = CanonicalAuthoritySpec(
     targets=(CanonicalAuthorityTarget(_MODULE, _CANONICAL, _DEFINED_SYMBOLS),),
     retired_modules=_RETIRED,
