@@ -12,12 +12,67 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
-from ....adapters.persistence.operations import (
-    OperationJournalRepository,
-    OperationLeaseFilesystemRepository,
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
+from cadrumo.application.operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.frontend_contracts import (
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
+)
+from cadrumo.application.operations.models import (
+    OperationIdentity,
+    OperationReconciliationOutcome,
+    OperationRequest,
+    OperationTerminalReceipt,
+)
+from cadrumo.application.operations.observation import OperationObservationService
+from cadrumo.application.operations.persistence.events import (
+    OperationDiagnosticEvent,
+    OperationNoticeEvent,
+    OperationReconciliationEvent,
+    OperationTerminalEvent,
+)
+from cadrumo.application.operations.persistence.journal import (
+    OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
+)
+from cadrumo.application.operations.persistence.leases import (
+    OperationLeaseDisposition,
+    OperationOwnerLease,
+    operation_conflict_scope_reference,
+)
+from cadrumo.application.operations.registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+    OperationRegistry,
+    OperationSchemaBindingV1,
+)
+from cadrumo.core.operations import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
+
 from ....adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
     RepositoryError,
@@ -28,58 +83,16 @@ from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.errors import CoreError, get_registered_error_code
 from ....tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
 from ....tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
-from .. import (
-    OperationBaselinePolicy,
-    OperationCancellation,
-    OperationCapabilities,
-    OperationClosePolicy,
-    OperationConflictScope,
-    OperationDeadline,
-    OperationDefinition,
-    OperationDurability,
-    OperationEffect,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationIdentity,
-    OperationInteractionKind,
-    OperationLifecycle,
-    OperationObservationRequestV1,
-    OperationObservationService,
-    OperationObservationSuccessV1,
-    OperationOwnedResource,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationOutcome,
-    OperationReconciliationPolicy,
-    OperationRegistry,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationSchemaBindingV1,
-    OperationSensitiveInputPolicy,
-    OperationTerminalCondition,
-    OperationTerminalReceipt,
-)
 from .._execution_context import OperationDeclarationError
-from .._interactions import (
+from ..interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
     OperationInteractionRequest,
     OperationPendingInteraction,
     OperationRejectResponse,
 )
-from .._supervisor import OperationSupervisor, _SupervisorExecutorContext
 from ..owner import OperationExecutor, OperationExecutorContext
-from ..persistence import (
-    OperationDiagnosticEvent,
-    OperationLeaseDisposition,
-    OperationNoticeEvent,
-    OperationOwnerLease,
-    OperationPersistedSnapshot,
-    OperationReconciliationEvent,
-    OperationSecureReferenceStore,
-    OperationTerminalEvent,
-    operation_conflict_scope_reference,
-)
+from ..supervisor import OperationSupervisor, _SupervisorExecutorContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

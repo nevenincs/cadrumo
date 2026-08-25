@@ -16,31 +16,31 @@ from ....core import (
 )
 from ....core.identity import ContentDigest
 from ....core.time import validate_utc_aware
-from .._capabilities import OperationRequestStoragePolicy
-from .._events import OperationEventCode
-from .._interactions import OperationConsumedInteraction, OperationPendingInteraction
-from .._models import (
+from ..capabilities import OperationRequestStoragePolicy
+from ..event_replay import OperationEventCursor
+from ..events import OperationEventCode
+from ..interactions import OperationConsumedInteraction, OperationPendingInteraction
+from ..models import (
     OperationId,
     OperationIdentity,
     OperationRevision,
     OperationTerminalReceipt,
 )
-from .._replay import OperationEventCursor
-from .._secret_submission import OperationSecretRequirement
-from ._events import (
+from ..secret_submission import OperationSecretRequirement
+from .events import (
     OperationEvent,
     OperationPhaseEvent,
     OperationProgressEvent,
     OperationTerminalEvent,
 )
-from ._idempotency import OperationIdempotencyClaim
-from ._leases import (
+from .idempotency import OperationIdempotencyClaim
+from .leases import (
     OperationConflictScopeReference,
     OperationLeaseObservation,
     OperationLeaseResult,
     OperationOwnerLease,
 )
-from ._replay import (
+from .replay import (
     OperationReplayLimit,
     OperationReplayPage,
     OperationReplayStatus,

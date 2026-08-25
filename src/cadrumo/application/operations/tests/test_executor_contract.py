@@ -10,45 +10,53 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
-from ....adapters.persistence.operations import (
-    OperationJournalRepository,
-    OperationLeaseFilesystemRepository,
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
     operation_secure_reference_repository,
 )
+from cadrumo.application.operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.models import (
+    OperationRequest,
+    OperationTerminalReceipt,
+)
+from cadrumo.application.operations.persistence.events import OperationNoticeEvent
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+from cadrumo.application.operations.registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+    OperationRegistry,
+    OperationSchemaBindingV1,
+)
+from cadrumo.core.operations import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
+
 from ....adapters.persistence.storage import (
     SecureObjectRepository,
 )
 from ....core import STRICT_FROZEN_CONFIG
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    OperationBaselinePolicy,
-    OperationCancellation,
-    OperationCapabilities,
-    OperationClosePolicy,
-    OperationConflictScope,
-    OperationDeadline,
-    OperationDefinition,
-    OperationDurability,
-    OperationEffect,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationLifecycle,
-    OperationOwnedResource,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationRegistry,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationSchemaBindingV1,
-    OperationSensitiveInputPolicy,
-    OperationTerminalCondition,
-    OperationTerminalReceipt,
-)
-from .._supervisor import OperationSupervisor, _SupervisorExecutorContext
 from ..owner import OperationExecutorContext
-from ..persistence import OperationNoticeEvent, OperationPersistedSnapshot
+from ..supervisor import OperationSupervisor, _SupervisorExecutorContext
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

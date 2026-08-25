@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from types import SimpleNamespace
@@ -20,7 +21,13 @@ from ....core import (
     SourceConnectivityGroundingLocatorKind,
     SourceConnectivityOperatorReachabilityProof,
 )
-from ....domain.modelos import CalculationSourceRef
+from ....core.identity import CalculationRevisionId
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    CalculationSourceRef,
+)
 from ...aggregation import BindingSourceDisposition
 from ...modelo import CALCULATION_ROUTE_SOURCE_DISPOSITIONS
 from ...operator_surface import (
@@ -203,14 +210,33 @@ def test_registry_facade_exposes_authority_and_injected_verifier_port() -> None:
 
 
 class _RevisionRepository:
-    def __init__(self, revision: object) -> None:
+    def __init__(self, revision: CalculationRevision) -> None:
         self._revision = revision
 
     def exists(self) -> bool:
         return True
 
-    def load(self) -> object:
-        return SimpleNamespace(revisions={self._revision.calculation_revision_id: self._revision})
+    def load(self) -> CalculationRevisionCatalogue:
+        return CalculationRevisionCatalogue(revisions={self._revision.calculation_revision_id: self._revision})
+
+
+_REVISION_CREATED_AT = datetime(2026, 8, 25, tzinfo=UTC)
+
+
+def _revision(
+    *,
+    calculation_revision_id: CalculationRevisionId,
+    source_provenance: tuple[CalculationSourceRef, ...] = (),
+) -> CalculationRevision:
+    return CalculationRevision.model_construct(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id="a" * 64,
+        state=CalculationRevisionState.BORRADOR,
+        filing_instance_evidence=None,
+        source_provenance=source_provenance,
+        created_at=_REVISION_CREATED_AT,
+        updated_at=_REVISION_CREATED_AT,
+    )
 
 
 _WORKFLOW_PATHS = {
@@ -290,7 +316,7 @@ def test_live_workflow_authority_joins_each_reviewed_workflow_to_route_ownership
         calculation_revisions=cast(
             Any,
             _RevisionRepository(
-                SimpleNamespace(calculation_revision_id=connection.calculation_revision_id),
+                _revision(calculation_revision_id=connection.calculation_revision_id),
             ),
         ),
         evidence_verifier=RepositoryRootEvidenceDigestVerifier(repository_root=tmp_path),
@@ -319,7 +345,7 @@ def test_live_workflow_authority_refuses_cross_paired_route_workflow_and_owner_a
         workflows=_workflow_catalogue("modelo.work.calculate"),
         calculation_revisions=cast(
             Any,
-            _RevisionRepository(SimpleNamespace(calculation_revision_id=connection.calculation_revision_id)),
+            _RevisionRepository(_revision(calculation_revision_id=connection.calculation_revision_id)),
         ),
         evidence_verifier=RepositoryRootEvidenceDigestVerifier(repository_root=tmp_path),
     )
@@ -361,7 +387,7 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
         parent_source_ref=None,
         fingerprint="sha256:" + "b" * 64,
     )
-    revision = SimpleNamespace(calculation_revision_id=revision_id, source_provenance=(persisted,))
+    revision = _revision(calculation_revision_id=revision_id, source_provenance=(persisted,))
     authority = LiveSourceConnectivityProofAuthority(
         source_ownership=build_calculation_route_source_ownership_catalogue(),
         workflows=cast(Any, object()),
@@ -389,7 +415,7 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
     )
 
     rival = persisted.model_copy(update={"resolver_id": "rival-resolver"})
-    ambiguous_revision = SimpleNamespace(
+    ambiguous_revision = _revision(
         calculation_revision_id=revision_id,
         source_provenance=(persisted, rival),
     )
@@ -401,13 +427,8 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
     )
     assert not ambiguous_authority.encrypted_revision_matches(cast(Any, proof(connection)))
 
-    incoherent = CalculationSourceRef.model_construct(
-        **{
-            **persisted.model_dump(),
-            "resolved_binding_source": BindingSourceKind.PAYABLE_INVOICE,
-        },
-    )
-    incoherent_revision = SimpleNamespace(
+    incoherent = persisted.model_copy(update={"resolved_binding_source": BindingSourceKind.PAYABLE_INVOICE})
+    incoherent_revision = _revision(
         calculation_revision_id=revision_id,
         source_provenance=(incoherent,),
     )
@@ -431,7 +452,7 @@ def test_encrypted_revision_match_is_not_tautological_over_resolver_identity() -
         calculation_revisions=cast(
             Any,
             _RevisionRepository(
-                SimpleNamespace(calculation_revision_id=revision_id, source_provenance=(contributor_only,)),
+                _revision(calculation_revision_id=revision_id, source_provenance=(contributor_only,)),
             ),
         ),
         evidence_verifier=cast(Any, object()),

@@ -8,7 +8,6 @@ import typer
 
 if TYPE_CHECKING:
     from ....application.workflow import ProfileBucketPointer
-    from ....domain.auth import ApoderamientosCatalogue
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
@@ -98,6 +97,7 @@ def apoderado_configure(
     """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import ApoderadoRepresentedNifInvalidError, ApoderadoService
+    from ....application.auth.apoderado_flow import run_apoderado_flow
     from ....application.workflow import workflow_state_repository
 
     workflow_state_repository().load()
@@ -106,9 +106,19 @@ def apoderado_configure(
 
     scope_tokens = tuple(scope or ())
     if represented_nif is None:
-        resolved_nif, scope_tokens = _collect_apoderado_answers_interactively(svc.catalogue)
+        from ....application.flows.errors import FlowUnsupportedConsoleError
+
+        try:
+            result = run_apoderado_flow(svc, bucket_id=pointer.bucket_id)
+        except FlowUnsupportedConsoleError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.auth.apoderado.configure.no_console_hint",
+            ) from exc
+        except ApoderadoRepresentedNifInvalidError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
+            ) from exc
     else:
-        resolved_nif = represented_nif
         if not scope_tokens:
             # A late, catalogue-driven refusal must enumerate the accepted
             # scope set, never bare "value required" -- the CLI gate is the
@@ -118,18 +128,18 @@ def apoderado_configure(
                 context={"codes": ", ".join(sorted(svc.catalogue.code_set()))},
             )
 
-    try:
-        result = svc.configure(
-            bucket_id=pointer.bucket_id,
-            represented_nif=resolved_nif,
-            scope_tokens=scope_tokens,
-        )
-    except ApoderadoRepresentedNifInvalidError as exc:
-        # Both transports commit through the service's single identity
-        # authority; the raw identifier never enters the refusal context.
-        raise _CliRefusedBoundaryError(
-            translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
-        ) from exc
+        try:
+            result = svc.configure(
+                bucket_id=pointer.bucket_id,
+                represented_nif=represented_nif,
+                scope_tokens=scope_tokens,
+            )
+        except ApoderadoRepresentedNifInvalidError as exc:
+            # Both transports commit through the service's single identity
+            # authority; the raw identifier never enters the refusal context.
+            raise _CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_apoderado_invalid_represented_nif",
+            ) from exc
 
     from .._config_payloads import ApoderadoConfigureResult
 
@@ -147,24 +157,6 @@ def apoderado_configure(
         notes=result.notes,
     )
     emit_envelope(ctx, command="config.auth.apoderado.configure", result=configure_result, lines=lines)
-
-
-def _collect_apoderado_answers_interactively(
-    catalogue: ApoderamientosCatalogue,
-) -> tuple[str, tuple[str, ...]]:
-    """Collect representation intent through the canonical line-mode flow."""
-    from ....application.auth import apoderado_answers_from_state, build_apoderado_flow_definition
-    from ....application.flows import FlowUnsupportedConsoleError, LineFlowFrontend
-    from ....core.flows import FlowMode
-
-    definition = build_apoderado_flow_definition(catalogue)
-    try:
-        state, _projection = LineFlowFrontend(definition).run(mode=FlowMode.MODIFY)
-    except FlowUnsupportedConsoleError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.apoderado.configure.no_console_hint",
-        ) from exc
-    return apoderado_answers_from_state(state)
 
 
 def apoderado_clear(

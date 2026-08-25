@@ -12,8 +12,8 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.time import validate_utc_aware
-from ._interactions import OperationInteractionId
-from ._models import OperationId, OperationIdentity, OperationRevision
+from .interactions import OperationInteractionId
+from .models import OperationId, OperationIdentity, OperationRevision
 
 OperationSecretKind = Annotated[
     str,

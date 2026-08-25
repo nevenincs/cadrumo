@@ -113,7 +113,7 @@ class ApoderadoStatus(BaseModel):
     configured_at: datetime | None = Field(default=None)
 
 
-class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
+class ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     """Encrypted per-bucket apoderado configuration store.
 
     Records carry :class:`adapters.persistence.storage.SensitivityClass`
@@ -214,13 +214,13 @@ class ApoderadoService:
         # Build repositories lazily per requested bucket so catalogue-only
         # verbs never touch storage and a long-lived service cannot route
         # bucket B's apoderado NIF into bucket A's database.
-        self._repository_instances: dict[str, _ApoderadoConfigRepository] = {}
+        self._repository_instances: dict[str, ApoderadoConfigRepository] = {}
 
-    def _repository_for(self, bucket_id: str) -> _ApoderadoConfigRepository:
+    def _repository_for(self, bucket_id: str) -> ApoderadoConfigRepository:
         safe_bucket_id = safe_repository_id(canonical_bucket_id(bucket_id), context="bucket_id")
         repository = self._repository_instances.get(safe_bucket_id)
         if repository is None:
-            repository = _ApoderadoConfigRepository(bucket_id=safe_bucket_id, settings=self._settings)
+            repository = ApoderadoConfigRepository(bucket_id=safe_bucket_id, settings=self._settings)
             self._repository_instances[safe_bucket_id] = repository
         return repository
 
@@ -323,6 +323,7 @@ __all__ = [
     "ApoderadoConfigurationNotSetError",
     "ApoderadoLiveCheckUnavailableError",
     "ApoderadoRepresentedNifInvalidError",
+    "ApoderadoConfigRepository",
     "ApoderadoService",
     "ApoderadoStatus",
 ]

@@ -22,7 +22,7 @@ an export file itself, mirroring how ``work wizard`` hands off to
 ``work calculate`` rather than re-deriving casilla values.
 
 A real interactive terminal is required: the prompting is the flow
-substrate's line frontend (:class:`~cadrumo.application.flows.LineFlowFrontend`)
+substrate's line frontend (:class:`~cadrumo.application.flows.line_frontend.LineFlowFrontend`)
 over the one flow engine, so the non-TTY / Windows-no-console detection and
 the translated refusal are the substrate's single implementation rather than
 a re-derived copy of it, and the operator gets the engine's review surface
@@ -59,9 +59,9 @@ from ...application.flows import (
     FlowPage,
     FlowSection,
     FlowState,
-    LineFlowFrontend,
     register_copy_source,
 )
+from ...application.flows.line_frontend import LineFlowFrontend
 from ...application.modelo import (
     AmendmentComplementariaLiabilityDecreaseError,
     AmendmentEvidenceMissingError,

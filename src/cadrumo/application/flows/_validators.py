@@ -28,7 +28,7 @@ from ...core.flows import DEFER_TOKEN, FlowWidgetKind
 from ...core.parsing import parse_bool, parse_date
 from ...core.redaction import redact_validation_context
 from ._definition import FlowPage
-from ._errors import FlowValidatorRegistryError
+from .errors import FlowValidatorRegistryError
 
 
 class ValidationVerdict(BaseModel):

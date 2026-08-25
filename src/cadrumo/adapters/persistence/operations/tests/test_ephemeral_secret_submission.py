@@ -12,31 +12,38 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from .....application.operations import (
-    CredentialFreeOperationRequest,
-    EphemeralSecretSubmission,
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.models import (
+    CredentialFreeOperationRequest,
+    OperationRequest,
+    OperationTerminalReceipt,
+)
+from cadrumo.application.operations.registry import (
     OperationDefinition,
-    OperationEffect,
-    OperationEphemeralSecretDeclaration,
     OperationExecutorFactory,
     OperationFrontendProjection,
-    OperationLifecycle,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
     OperationRegistry,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
     OperationSchemaBindingV1,
-    OperationSecretRequirement,
-    OperationSensitiveInputPolicy,
-    OperationSupervisor,
-    OperationTerminalCondition,
-    OperationTerminalReceipt,
 )
+from cadrumo.application.operations.secret_submission import (
+    EphemeralSecretSubmission,
+    OperationEphemeralSecretDeclaration,
+    OperationSecretRequirement,
+)
+from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+
 from .....application.operations.owner import OperationExecutorContext
 from .....core import (
     STRICT_FROZEN_CONFIG,
@@ -46,7 +53,6 @@ from .....core import (
     OperationDurability,
 )
 from ...storage import RepositoryError
-from .. import OperationJournalRepository, OperationLeaseFilesystemRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

@@ -22,7 +22,7 @@ from collections.abc import Iterable, Mapping
 from ...core.flows import FlowMode
 from ._definition import FlowDefinition
 from ._engine import FlowState, answer, jump_to, next_page, start_flow, visible_sequence
-from ._errors import FlowAnswerError
+from .errors import FlowAnswerError
 from ._review import ReviewProjection, assert_submit_eligible
 
 

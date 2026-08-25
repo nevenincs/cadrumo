@@ -24,21 +24,23 @@ from ...core import (
 from ...core.async_cleanup import AsyncCloseable
 from ...core.identity import ContentDigest, ContentDigestOrAbsent, ProfileId
 from ...domain.user_profile import UserProfileRecord
-from ..operations import (
+from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import (
     OperationDefinition,
     OperationExecutorFactory,
     OperationFrontendProjection,
-    OperationOwnedResource,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
     OperationSchemaBindingV1,
-    OperationSensitiveInputPolicy,
     operation_public_schema_reference,
 )
 from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint

@@ -10,8 +10,8 @@ from pydantic import BaseModel, Field, model_validator
 from ....core import STRICT_FROZEN_CONFIG, Hex64Str, OperationEffect, OperationEventKind
 from ....core.identity import ContentDigest
 from ....core.time import validate_utc_aware
-from .._events import OperationEventCode, OperationEventSequence, OperationLogSeverity
-from .._models import (
+from ..events import OperationEventCode, OperationEventSequence, OperationLogSeverity
+from ..models import (
     OperationDiagnosticReference,
     OperationIdentity,
     OperationReconciliationOutcome,

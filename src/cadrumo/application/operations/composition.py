@@ -8,10 +8,19 @@ from datetime import datetime, timedelta
 
 from pydantic import BaseModel, TypeAdapter
 
-from ._interactions import OperationActorReference
-from ._models import OperationId, OperationRequest
-from ._observation import OperationObservationService
-from ._projection_services import (
+from cadrumo.application.operations.persistence.journal import (
+    OperationEventStream,
+    OperationJournal,
+    OperationLeaseRepository,
+    OperationObservationReader,
+    OperationSecureReferenceStore,
+)
+
+from .frontend_contracts import OperationResponseControlRequestV1, OperationSubmissionReceiptV1
+from .interactions import OperationActorReference
+from .models import OperationId, OperationRequest
+from .observation import OperationObservationService
+from .projection_services import (
     OperationCancellationService,
     OperationDetachService,
     OperationResponseAuthorityBroker,
@@ -23,17 +32,9 @@ from ._projection_services import (
     _UnavailableOperationSecureResponseAuthority,
     _UnavailableSnapshot,
 )
-from ._public import OperationResponseControlRequestV1, OperationSubmissionReceiptV1
-from ._registry import OperationRegistry
-from ._secret_submission import OperationSecretRequirement
-from ._supervisor import OperationSupervisor
-from .persistence import (
-    OperationEventStream,
-    OperationJournal,
-    OperationLeaseRepository,
-    OperationObservationReader,
-    OperationSecureReferenceStore,
-)
+from .registry import OperationRegistry
+from .secret_submission import OperationSecretRequirement
+from .supervisor import OperationSupervisor
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,7 +49,7 @@ class OperationSubmissionService:
     """Public submit/start door over the private canonical supervisor."""
 
     def __init__(self, supervisor: OperationSupervisor, authority_broker: OperationResponseAuthorityBroker) -> None:
-        self._supervisor = supervisor
+        self.supervisor = supervisor
         self._authority_broker = authority_broker
 
     async def submit(
@@ -60,8 +61,8 @@ class OperationSubmissionService:
     ) -> OperationSubmission:
         """Durably submit one typed registered request without starting it."""
         validated_actor = TypeAdapter(OperationActorReference).validate_python(actor_ref)
-        submitted_id = await self._supervisor.submit(request, operation_id=operation_id)
-        snapshot = await self._supervisor.inspect(submitted_id)
+        submitted_id = await self.supervisor.submit(request, operation_id=operation_id)
+        snapshot = await self.supervisor.inspect(submitted_id)
         receipt = OperationSubmissionReceiptV1(
             operation_id=submitted_id, secret_requirement=snapshot.secret_requirement
         )
@@ -72,11 +73,11 @@ class OperationSubmissionService:
 
     async def submit_secret(self, requirement: OperationSecretRequirement, secret: bytearray) -> None:
         """Transfer one exact mutable secret buffer into runtime-only custody."""
-        await self._supervisor.submit_ephemeral_secret(requirement, secret)
+        await self.supervisor.submit_ephemeral_secret(requirement, secret)
 
     async def start(self, operation_id: OperationId) -> OperationId:
         """Start one submitted operation without exposing its raw snapshot."""
-        snapshot = await self._supervisor.start(operation_id)
+        snapshot = await self.supervisor.start(operation_id)
         return snapshot.identity.operation_id
 
 

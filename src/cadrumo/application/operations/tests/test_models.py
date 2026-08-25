@@ -11,7 +11,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, PrivateAttr, ValidationError
 
 from ....core import STRICT_FROZEN_CONFIG, OperationEffect, OperationLifecycle, OperationTerminalCondition
-from .._models import (
+from ..models import (
     OperationIdentity,
     OperationRequest,
     OperationSnapshot,

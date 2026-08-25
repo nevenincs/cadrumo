@@ -14,10 +14,10 @@ module closes that gap with three flag verbs mounted under ``config profile desc
 
 Invoked with no subcommand (``aeat config profile descendiente``), the group opens the
 paged descendant door: a deep link onto the setup flow's descendant repeating group
-(:func:`~application.wizard.build_descendant_door`) that seeds from the profile's existing
+(:func:`~application.wizard.descendant_door.run_descendant_door`) that seeds from the profile's existing
 ``renta_family.descendiente.*`` facts, lets the operator add / edit / remove rows on the
 best frontend the host supports, and commits the reviewed set back through one atomic
-write (:func:`~application.wizard.persist_descendant_door_answers`). The three flag verbs
+write (:func:`~application.wizard.descendant_door.persist_descendant_door_answers`). The three flag verbs
 remain the flag-driven automation contract for non-interactive callers, unchanged.
 
 Every verb rewrites the FULL declared descendant set on the active profile: a partial
@@ -288,10 +288,8 @@ def descendiente_door(
 
 def _run_descendant_door(ctx: typer.Context) -> None:
     """Drive the descendant application flow through its line-mode frontend."""
-    from ....application.flows import LineFlowFrontend
-    from ....application.wizard import build_descendant_door, persist_descendant_door_answers
+    from ....application.wizard.descendant_door import run_descendant_door
     from ....application.workflow import workflow_state_repository
-    from ....core.flows import FlowMode
     from ....domain.user_profile import ProfileNotFoundError
     from ._profile_readiness import _read_profile_record
 
@@ -303,12 +301,7 @@ def _run_descendant_door(ctx: typer.Context) -> None:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.no_active_profile",
         ) from exc
-    definition, resume_state = build_descendant_door(record)
-    state, _projection = LineFlowFrontend(definition).run(
-        mode=FlowMode.MODIFY,
-        resume_state=resume_state,
-    )
-    persist_descendant_door_answers(state.answers)
+    _state, _projection, _persisted = run_descendant_door(record)
     _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
 
 

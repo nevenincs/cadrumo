@@ -1,4 +1,4 @@
-"""Flow-substrate error hierarchy.
+"""Canonical flow-substrate error hierarchy.
 
 Every substrate error inherits from :class:`CadrumoError` so callers
 catch the package-wide base class to handle every cadrumo domain error

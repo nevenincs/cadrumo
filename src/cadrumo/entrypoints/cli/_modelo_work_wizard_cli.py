@@ -23,7 +23,7 @@ refusal.
 
 A real interactive terminal is required: the prompting is the flow
 substrate's line-mode frontend
-(:class:`~cadrumo.application.flows.LineFlowFrontend`) over the one flow
+(:class:`~cadrumo.application.flows.line_frontend.LineFlowFrontend`) over the one flow
 engine, so the non-TTY / Windows-no-console detection and the translated
 refusal are the substrate's single implementation rather than a
 re-derived copy of it, and the operator gets the engine's review surface
@@ -47,9 +47,7 @@ from typing import TYPE_CHECKING, Any
 import typer
 from pydantic import ValidationError
 
-from ...application.flows import (
-    LineFlowFrontend,
-)
+from ...application.flows.line_frontend import LineFlowFrontend
 from ...application.modelo import (
     CalculationRegistryUnavailableError,
     Modelo100BorradorBindingError,

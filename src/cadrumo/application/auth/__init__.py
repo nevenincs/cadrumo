@@ -188,21 +188,15 @@ from ._acquisition_lock import (
     inspect_auth_acquisition_lock,
 )
 from ._actions import update_auth
-from ._apoderado import (
+from .apoderado_service import (
     ApoderadoConfiguration,
     ApoderadoConfigurationIdentityError,
     ApoderadoConfigurationNotSetError,
     ApoderadoLiveCheckUnavailableError,
     ApoderadoRepresentedNifInvalidError,
+    ApoderadoConfigRepository,
     ApoderadoService,
     ApoderadoStatus,
-)
-from ._apoderado_flow import (
-    APODERADO_FLOW_ID,
-    APODERADO_FLOW_LOCALE_KEYS,
-    ApoderadoFlowAnswers,
-    apoderado_answers_from_state,
-    build_apoderado_flow_definition,
 )
 from ._certificate_secret_backend import (
     CertificateSecretBackend,
@@ -314,8 +308,6 @@ from ._sessions import (
 )
 
 __all__ = [
-    "APODERADO_FLOW_ID",
-    "APODERADO_FLOW_LOCALE_KEYS",
     "AUTH_DIAGNOSTIC_PHONE_STATES",
     "AUTH_PROVIDER_CATALOGUE",
     "ActiveAuthProjectionSnapshot",
@@ -323,8 +315,8 @@ __all__ = [
     "ApoderadoConfiguration",
     "ApoderadoConfigurationIdentityError",
     "ApoderadoConfigurationNotSetError",
-    "ApoderadoFlowAnswers",
     "ApoderadoLiveCheckUnavailableError",
+    "ApoderadoConfigRepository",
     "ApoderadoRepresentedNifInvalidError",
     "ApoderadoService",
     "ApoderadoStatus",
@@ -383,12 +375,10 @@ __all__ = [
     "StorageStatePaths",
     "acquire_auth_acquisition_lock",
     "active_auth_projection_span",
-    "apoderado_answers_from_state",
     "auth_acquisition_lock_path",
     "auth_lock_ttl_seconds",
     "bind_clave_credentials_to_settings",
     "bind_profile_auth_settings",
-    "build_apoderado_flow_definition",
     "build_auth_operation_definitions",
     "build_auth_operation_registrations",
     "build_live_auth_preflight_report",

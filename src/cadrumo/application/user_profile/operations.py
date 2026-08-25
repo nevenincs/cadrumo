@@ -20,21 +20,23 @@ from ...core import (
 )
 from ...core.identity import ContentDigest
 from ...core.time import now
-from ..operations import (
+from cadrumo.application.operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import (
     OperationDefinition,
-    OperationEphemeralSecretDeclaration,
     OperationExecutorFactory,
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
+from cadrumo.application.operations.secret_submission import OperationEphemeralSecretDeclaration
 from ..operations.owner import OperationExecutorContext
 from ._bundle_export import (
     ProfileBundleExportPurpose,

@@ -14,29 +14,36 @@ from queue import Empty
 
 import pytest
 
-from .....application.operations import (
+from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
+from cadrumo.application.operations.interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
-    OperationIdentity,
     OperationInteractionRequest,
     OperationPendingInteraction,
-    OperationRequestStoragePolicy,
+)
+from cadrumo.application.operations.models import (
+    OperationIdentity,
     OperationTerminalReceipt,
 )
-from .....application.operations.persistence import (
-    OperationIdempotencyClaim,
-    OperationLeaseDisposition,
+from cadrumo.application.operations.persistence.events import (
+    OperationPhaseEvent,
+    OperationProgressEvent,
+    OperationTerminalEvent,
+)
+from cadrumo.application.operations.persistence.idempotency import OperationIdempotencyClaim
+from cadrumo.application.operations.persistence.journal import (
     OperationObservationCursorAheadError,
     OperationObservationMaterialization,
     OperationObservationUnknownOperationError,
-    OperationOwnerLease,
     OperationPersistedSnapshot,
-    OperationPhaseEvent,
-    OperationProgressEvent,
-    OperationReplayStatus,
-    OperationTerminalEvent,
+)
+from cadrumo.application.operations.persistence.leases import (
+    OperationLeaseDisposition,
+    OperationOwnerLease,
     operation_conflict_scope_reference,
 )
+from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+
 from .....core import (
     OperationEffect,
     OperationInteractionKind,
@@ -46,8 +53,8 @@ from .....core import (
     scan_directory,
 )
 from ...storage import RepositoryError
-from .._journal import OperationJournalRepository
-from .._lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
+from ..journal import OperationJournalRepository
+from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

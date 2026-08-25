@@ -52,11 +52,6 @@ from ._copy_sources import (
     resolve_profile_schema_copy,
     resolve_profile_terminology_copy,
 )
-from ._descendant_door import (
-    DESCENDANT_DOOR_LOCALE_KEYS,
-    build_descendant_door,
-    persist_descendant_door_answers,
-)
 from ._descendant_group import (
     DESCENDANT_GROUP,
     DESCENDANT_LOCALE_KEYS,
@@ -108,7 +103,6 @@ __all__ = [
     "DEFAULT_PROFILE_NEXT_COMMAND",
     "DESCENDANTS_COUNT_PAGE_ID",
     "DESCENDANTS_GROUP_ID",
-    "DESCENDANT_DOOR_LOCALE_KEYS",
     "DESCENDANT_GROUP",
     "DESCENDANT_LOCALE_KEYS",
     "DESCENDANT_NIF_VALIDATOR_ID",
@@ -134,7 +128,6 @@ __all__ = [
     "WizardVisibility",
     "attach_descendant_group",
     "attach_setup_legal_validators",
-    "build_descendant_door",
     "build_flow_legal_zones",
     "build_taxpayer_projection_validator",
     "build_wizard_command",
@@ -144,7 +137,6 @@ __all__ = [
     "ensure_profile_keys_registered",
     "load_active_taxpayer_profile",
     "next_step_command_for_profile_values",
-    "persist_descendant_door_answers",
     "profile_next_step_modelo",
     "project_answers",
     "register_profile_copy_sources",

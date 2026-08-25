@@ -28,7 +28,8 @@ from ...core import (
 )
 from ...core.identity import ContentDigest
 from ..operator_actions import ActionReference
-from ._capabilities import (
+from ._model_contract import require_strict_frozen_operation_model_graph
+from .capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
@@ -37,10 +38,9 @@ from ._capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ._events import OperationEventCode
-from ._interactions import OperationInteractionRequest
-from ._model_contract import require_strict_frozen_operation_model_graph
-from ._models import (
+from .events import OperationEventCode
+from .interactions import OperationInteractionRequest
+from .models import (
     CredentialFreeOperationRequest,
     OperationDefinitionId,
     OperationIdentity,
@@ -48,8 +48,8 @@ from ._models import (
     OperationSnapshot,
     OperationTerminalReceipt,
 )
-from ._secret_submission import OperationEphemeralSecretDeclaration
 from .owner import OperationExecutor, OperationResumableExecutor
+from .secret_submission import OperationEphemeralSecretDeclaration
 
 _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
     {

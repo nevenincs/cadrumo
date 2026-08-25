@@ -1,7 +1,7 @@
 """Prompt-singularity gate: one live prompt authority, tree-wide.
 
 The flow substrate (:mod:`cadrumo.application.flows`) is the canonical home
-of interactive prompting: ``_line_frontend.py`` is the one line-mode prompt
+of interactive prompting: ``line_frontend.py`` is the one line-mode prompt
 surface (questionary over injectable ``prompt_toolkit`` IO) and
 ``_capability.py`` owns the single console-capability probe every frontend
 selector consults. No other production module may prompt.
@@ -29,7 +29,7 @@ excluded), with NO stored baseline and NO per-violation allowlist:
 2. No module outside the sanctioned surfaces imports a prompter-library
    handle *indirectly*, through a first-party module that re-exports one.
    Rule 1 reads import statements for a third-party root, so a rival
-   reaching questionary as ``from ..flows._line_frontend import
+   reaching questionary as ``from ..flows.line_frontend import
    questionary`` names only a first-party module and walks straight past
    it. This rule resolves the re-export instead of matching the spelling.
 3. No class outside the sanctioned surfaces declares an ``ask``/``ask_text``
@@ -78,7 +78,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-LINE_FRONTEND_MODULE = "application/flows/_line_frontend.py"
+LINE_FRONTEND_MODULE = "application/flows/line_frontend.py"
 """The flow substrate's line-mode prompt surface — the one questionary owner."""
 
 CANONICAL_PROMPT_MODULES = frozenset(
@@ -89,7 +89,7 @@ CANONICAL_PROMPT_MODULES = frozenset(
 )
 """The only production modules that may import a prompting/console library.
 
-``_line_frontend.py`` is the substrate's line-mode prompter (questionary
+``line_frontend.py`` is the substrate's line-mode prompter (questionary
 over injectable ``prompt_toolkit`` IO), and ``_capability.py`` owns the
 SINGLE console-capability probe both the line frontend and the frontend
 selector consult (``prompt_toolkit`` only, no ``questionary`` — it
@@ -568,7 +568,7 @@ def _synthetic_modules(sources: Mapping[str, str]) -> tuple[tuple[Path, ast.AST]
 
 _LAUNDERED_THROUGH_REEXPORTS: Mapping[str, str] = {
     LINE_FRONTEND_MODULE: "import questionary\n",
-    "entrypoints/cli/_reexports.py": "from ...application.flows._line_frontend import questionary\n",
+    "entrypoints/cli/_reexports.py": "from ...application.flows.line_frontend import questionary\n",
     "entrypoints/cli/_rival.py": (
         "from ._reexports import questionary as prompt_lib\n"
         "\n"
@@ -630,7 +630,7 @@ def test_rule_two_ignores_ordinary_imports_from_the_canonical_prompt_surfaces() 
             ),
             "application/flows/__init__.py": (
                 "from ._capability import NO_CONSOLE_ERRORS, detect_frontend_capability\n"
-                "from ._line_frontend import LineFlowFrontend\n"
+                "from .line_frontend import LineFlowFrontend\n"
             ),
         },
     )

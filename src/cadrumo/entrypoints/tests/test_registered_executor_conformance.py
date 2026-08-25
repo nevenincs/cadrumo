@@ -14,26 +14,22 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from ...adapters.persistence.operations import (
-    OperationJournalRepository,
-    OperationLeaseFilesystemRepository,
-    operation_secure_reference_repository,
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from cadrumo.application.operations.composition import (
+    OperationComposedServices,
+    OperationSubmission,
+    compose_operation_services,
 )
-from ...adapters.persistence.storage import SecureObjectRepository
-from ...application.auth import build_auth_operation_definitions
-from ...application.export import build_google_sheets_export_operation_definition
-from ...application.operations import (
+from cadrumo.application.operations.frontend_contracts import (
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
     OperationCancellationSuccessV1,
-    OperationComposedServices,
-    OperationDefinition,
     OperationNoPendingInteractionV1,
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationPublicPhaseEventV1,
-    OperationRegistry,
-    OperationRequest,
     OperationResponseApplyRequestV1,
     OperationResponseControlRequestV1,
     OperationResponseMutationSuccessV1,
@@ -42,9 +38,16 @@ from ...application.operations import (
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
     OperationReviewProjectionRequestV1,
-    OperationSubmission,
-    compose_operation_services,
 )
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import (
+    OperationDefinition,
+    OperationRegistry,
+)
+
+from ...adapters.persistence.storage import SecureObjectRepository
+from ...application.auth import build_auth_operation_definitions
+from ...application.export import build_google_sheets_export_operation_definition
 from ...application.user_profile import (
     CENSAL_ADOPTABLE_PATHS,
     CensalFieldIntent,

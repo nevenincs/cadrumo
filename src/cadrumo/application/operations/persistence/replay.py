@@ -9,8 +9,8 @@ from typing import Annotated
 from pydantic import BaseModel, Field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from .._replay import OperationEventCursor
-from ._events import OperationEvent
+from ..event_replay import OperationEventCursor
+from .events import OperationEvent
 
 OperationReplayLimit = Annotated[int, Field(gt=0, le=1_000)]
 

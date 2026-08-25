@@ -648,12 +648,13 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
 
 def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path) -> None:
     """ABA selection equality cannot hide a changed reset preflight witness."""
+    from .._config_reset_models import ConfigResetPauseReason
     from ..config_reset import resume_config_reset, start_config_reset
     from ..user_profile import active_profile_pointer_transaction
 
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="aba")
+        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="c")
         operation = start_config_reset(confirmed=True)
         before = operation.pointer_snapshot.record
         assert before.bucket_id == _PROFILE_A_ID

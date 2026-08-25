@@ -237,7 +237,6 @@ def _write_active_pointer_in_sibling(root_text: str, bucket_id_text: str, result
     transaction is the only work left, so a caller timing "did the sibling get
     in?" measures the lock rather than the seconds a spawn spends importing.
     """
-    from ....core import BucketPointer
     from ....tests.profile_persistence import composed_profile_persistence_ports
     from .._profile_pointer_transaction import active_profile_pointer_transaction
 
@@ -695,7 +694,7 @@ def test_pointer_capture_and_cas_refuse_a_real_pointer_link(tmp_path: Path) -> N
     )
     os.symlink(outside, tmp_path / "active-profile")
 
-    with pytest.raises(OSError, match="link|reparse|symbolic"):
+    with pytest.raises(OSError, match=r"link|reparse|symbolic"):
         _observe_pointer(tmp_path)
 
     assert outside.read_text(encoding="utf-8") == BucketPointer.selected(
@@ -1007,12 +1006,14 @@ def test_pointer_transition_and_active_pointer_writer_share_one_root_lock(tmp_pa
         assert writer.exitcode == 0
         replacement = _observe_pointer(tmp_path)
         assert replacement.bucket_id == str(_OTHER_PROFILE_ID)
-        with user_profiles.active_profile_pointer_transaction(tmp_path) as transaction:
-            with pytest.raises(ProfileCustodyTransactionConflictError, match="pointer changed"):
-                transaction.compare_and_restore(
-                    expected=captured,
-                    captured=BucketPointer.absent(transition_revision=0),
-                )
+        with (
+            user_profiles.active_profile_pointer_transaction(tmp_path) as transaction,
+            pytest.raises(user_profiles.ActiveProfilePointerTransactionError),
+        ):
+            transaction.compare_and_restore(
+                expected=captured,
+                captured=BucketPointer.absent(transition_revision=0),
+            )
         assert _observe_pointer(tmp_path) == replacement
     finally:
         if writer.is_alive():

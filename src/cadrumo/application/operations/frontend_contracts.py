@@ -9,6 +9,11 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cadrumo.application.operations.persistence.replay import (
+    OperationReplayLimit,
+    OperationReplayStatus,
+)
+
 from ...core import (
     OperationCancellation,
     OperationClosePolicy,
@@ -20,9 +25,10 @@ from ...core import (
 )
 from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
-from ._events import OperationEventCode, OperationEventSequence, OperationLogSeverity
-from ._interactions import OperationActorReference, OperationInteractionId
-from ._models import (
+from .event_replay import OperationEventCursor
+from .events import OperationEventCode, OperationEventSequence, OperationLogSeverity
+from .interactions import OperationActorReference, OperationInteractionId
+from .models import (
     OperationDefinitionId,
     OperationDiagnosticReference,
     OperationId,
@@ -31,13 +37,11 @@ from ._models import (
     OperationRevision,
     validate_terminal_reference_meaning,
 )
-from ._registry import (
+from .registry import (
     OperationPublicDefinitionContractV1,
     OperationSchemaIdentityV1,
 )
-from ._replay import OperationEventCursor
-from ._secret_submission import OperationSecretRequirement
-from .persistence import OperationReplayLimit, OperationReplayStatus
+from .secret_submission import OperationSecretRequirement
 
 _PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 

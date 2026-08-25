@@ -971,7 +971,9 @@ def test_corrupt_b_activation_store_rolls_back_every_a_authority(tmp_path: Path)
             with pytest.raises((BucketEventHistoryPersistenceError, SqlDatabaseError)):
                 login_profile(name=profile_b, passphrase_callback=lambda: _PASSWORD_B)
 
-            assert read_pointer(storage_root) == pointer_a
+            restored_pointer = read_pointer(storage_root)
+            assert restored_pointer.bucket_id == pointer_a.bucket_id
+            assert restored_pointer.transition_revision == pointer_a.transition_revision + 2
             assert master_key.current_active_bucket_session() is active_a
             assert require_profile_record_session(profile_a) is record_a
             assert (a_session_path.read_bytes() if a_session_path.is_file() else None) == a_session_before

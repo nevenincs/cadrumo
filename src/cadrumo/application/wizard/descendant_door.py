@@ -63,8 +63,11 @@ from ._descendant_group import (
 from ._persistence import descendant_answers_from_record, descendant_facts_from_answers
 
 if TYPE_CHECKING:
+    from prompt_toolkit.input import Input
+    from prompt_toolkit.output import Output
+
     from ...domain.user_profile import UserProfileRecord
-    from ..workflow import WorkflowState
+    from ..flows._review import ReviewProjection
 
 #: The door's flow and familia section ids.
 DESCENDANT_DOOR_FLOW_ID = "descendiente-door"
@@ -160,7 +163,7 @@ def build_descendant_door(record: UserProfileRecord | None) -> tuple[FlowDefinit
     return definition, resume_state
 
 
-def persist_descendant_door_answers(answers: Mapping[str, str]) -> WorkflowState:
+def persist_descendant_door_answers(answers: Mapping[str, str]) -> UserProfileRecord:
     """Commit the door's submitted answers as the full descendant fact set.
 
     Projects the committed page-keyed answers into the canonical
@@ -174,24 +177,49 @@ def persist_descendant_door_answers(answers: Mapping[str, str]) -> WorkflowState
     count-shrink never strands a descendant index above the answered count.
     """
     from ...core import require_active_bucket_id
-    from ...domain.user_profile import UserProfileFact
+    from ...domain.user_profile import UserProfileFact, UserProfileRecord
     from ..user_profile import (
         ProfileFactWriteDoor,
         ProfileRecordRepository,
         apply_profile_fact_changes,
     )
-    from ..workflow import workflow_state_repository
-
     profile_id = require_active_bucket_id()
     record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_answers(answers))
     clearing = descendant_clearing_facts(record, answers)
-    apply_profile_fact_changes(
+    return apply_profile_fact_changes(
         profile_id=profile_id,
         changes=(*facts, *clearing),
         door=ProfileFactWriteDoor.DESCENDANTS,
     )
-    return workflow_state_repository().load()
+
+
+def run_descendant_door(
+    record: UserProfileRecord | None,
+    *,
+    input: Input | None = None,
+    output: Output | None = None,
+) -> tuple[FlowState, ReviewProjection, UserProfileRecord]:
+    """Drive and persist one descendant door invocation through the real line frontend.
+
+    The CLI supplies the current profile record and leaves ``input``/``output``
+    unbound for a real terminal. Headless callers bind prompt-toolkit devices,
+    which exercises the same production frontend and the same atomic profile
+    writer without replacing either boundary with a test callback.
+    """
+    from ..flows.line_frontend import LineFlowFrontend
+
+    definition, resume_state = build_descendant_door(record)
+    state, projection = LineFlowFrontend(
+        definition,
+        input=input,
+        output=output,
+    ).run(
+        mode=FlowMode.MODIFY,
+        resume_state=resume_state,
+    )
+    persisted = persist_descendant_door_answers(state.answers)
+    return state, projection, persisted
 
 
 __all__ = [
@@ -201,4 +229,5 @@ __all__ = [
     "build_descendant_door",
     "build_descendant_door_definition",
     "persist_descendant_door_answers",
+    "run_descendant_door",
 ]

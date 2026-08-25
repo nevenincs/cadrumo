@@ -11,11 +11,9 @@ from uuid import UUID
 
 import pytest
 
-from ...adapters.persistence.operations import (
-    OperationJournalRepository,
-    OperationLeaseFilesystemRepository,
-    operation_secure_reference_repository,
-)
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...application.export import (
     GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
     GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
@@ -26,14 +24,14 @@ from ...application.export import (
     build_google_sheets_export_operation_registration,
     build_google_sheets_export_service,
 )
-from ...application.operations import (
+from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
+from cadrumo.application.operations.composition import compose_operation_services
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.core.operations import (
     OperationEffect,
     OperationEventKind,
-    OperationRegistry,
-    OperationRequest,
-    OperationRequestStoragePolicy,
     OperationTerminalCondition,
-    compose_operation_services,
 )
 from ...tests.secure_sql import isolated_runtime_profile
 from .. import compose_operation_dependencies

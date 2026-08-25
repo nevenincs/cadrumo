@@ -9,39 +9,46 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from .. import (
+from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
+from cadrumo.application.operations.models import (
     OperationId,
     OperationIdentity,
     OperationRequest,
-    OperationRequestStoragePolicy,
     OperationTerminalReceipt,
 )
-from .._models import OperationSnapshot
-from ..persistence import (
-    OperationConflictScopeReference,
+from cadrumo.application.operations.persistence.events import (
+    OperationPhaseEvent,
+    OperationProgressEvent,
+    OperationTerminalEvent,
+)
+from cadrumo.application.operations.persistence.journal import (
     OperationEventStream,
     OperationJournal,
+    OperationLeaseRepository,
+    OperationObservationMaterialization,
+    OperationObservationReader,
+    OperationPersistedSnapshot,
+    OperationProgressFoldCheckpoint,
+    OperationProgressFoldInput,
+    OperationSecureReferenceStore,
+)
+from cadrumo.application.operations.persistence.leases import (
+    OperationConflictScopeReference,
     OperationLeaseDisposition,
     OperationLeaseObservation,
     OperationLeaseObservationDisposition,
-    OperationLeaseRepository,
     OperationLeaseResult,
-    OperationObservationMaterialization,
-    OperationObservationReader,
     OperationOwnerLease,
-    OperationPersistedSnapshot,
-    OperationPhaseEvent,
-    OperationProgressEvent,
-    OperationProgressFoldCheckpoint,
-    OperationProgressFoldInput,
+    operation_conflict_scope_reference,
+)
+from cadrumo.application.operations.persistence.replay import (
     OperationReplayLimit,
     OperationReplayPage,
     OperationReplayStatus,
-    OperationSecureReferenceStore,
-    OperationTerminalEvent,
-    operation_conflict_scope_reference,
 )
+
+from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ..models import OperationSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

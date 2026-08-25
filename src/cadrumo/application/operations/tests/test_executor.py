@@ -12,10 +12,12 @@ from types import SimpleNamespace
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.application.operations.capabilities import OperationOwnedResource
+from cadrumo.application.operations.models import OperationIdentity
+from cadrumo.core.operations import OperationEffect
+
 from ....core import STRICT_FROZEN_CONFIG
-from .. import OperationEffect, OperationIdentity, OperationOwnedResource
-from .._events import OperationLogSeverity
-from .._secret_submission import OperationEphemeralSecretAccess
+from ..events import OperationLogSeverity
 from ..owner import (
     OperationCancellationScope,
     OperationCleanupOwner,
@@ -26,6 +28,7 @@ from ..owner import (
     OperationInteractionAccess,
     OperationSecureOperandLookup,
 )
+from ..secret_submission import OperationEphemeralSecretAccess
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -48,7 +48,7 @@ class FilingExportProofCoordinate(BaseModel):
 
     modelo: ModeloId
     revision: RevisionId
-    layout_ids: tuple[_Token, ...] = Field(min_length=1)
+    layout_ids: tuple[_Token, ...] = ()
 
     @model_validator(mode="after")
     def _require_coherent_coordinate(self) -> FilingExportProofCoordinate:
@@ -138,6 +138,12 @@ class FilingExportConformanceVectorEvidence(BaseModel):
     mechanism_source_ref: _Token
     mechanism_source_sha256: ContentDigest
     provenance: FilingExportPublicProvenance
+
+    @model_validator(mode="after")
+    def _require_selected_layout_for_success(self) -> FilingExportConformanceVectorEvidence:
+        if not self.coordinate.layout_ids:
+            raise ValueError("conformance vector evidence requires one selected filing layout")
+        return self
 
 
 class FilingExportConformanceRenderInputs(BaseModel):

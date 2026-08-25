@@ -5,7 +5,7 @@ from typing import Annotated
 
 from pydantic import Field
 
-from ._models import OperationDiagnosticReference
+from .models import OperationDiagnosticReference
 
 OperationEventSequence = Annotated[int, Field(ge=1)]
 OperationEventCode = Annotated[

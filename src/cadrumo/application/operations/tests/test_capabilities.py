@@ -12,7 +12,7 @@ from ....core import (
     OperationDurability,
     OperationEffect,
 )
-from .._capabilities import (
+from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,

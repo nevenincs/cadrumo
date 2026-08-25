@@ -7,7 +7,7 @@ two honesty surfaces must be LOUD, never silent:
    save-and-exit UNAVAILABLE, so the review renders the
    substrate's ``flows.review.save_unavailable`` refusal and never offers
    the save action. Driven here through the real
-   :class:`~cadrumo.application.flows.LineFlowFrontend` over a definition
+   :class:`~cadrumo.application.flows.line_frontend.LineFlowFrontend` over a definition
    carrying the setup flow's own checkpoint declaration.
 2. THE ENVELOPE — every interactive modify run's final envelope carries
    an info :class:`Notice` (``config.profile.edit.modify_no_resume``)
@@ -49,10 +49,10 @@ from ...flows import (
     FlowDefinition,
     FlowPage,
     FlowSection,
-    LineFlowFrontend,
     checkpoint_available,
     flow_definition_from_wizard_flow,
 )
+from ...flows.line_frontend import LineFlowFrontend
 from .._catalogue import SETUP_FLOW
 from .._commands import (
     _MODIFY_DESCENDANTS_DOOR_CODE,

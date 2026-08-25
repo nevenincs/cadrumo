@@ -71,16 +71,13 @@ def _login() -> App[Any]:
 
 
 def _manager() -> App[Any]:
-    from ....application.operations import ManagerAction, ManagerActionOutcome
     from ....application.user_profile import (
         CommittedProfileRepository,
         ProfileRecordRepository,
         apply_manager_profile_field_mutation,
         build_profile_overview,
-        logout_active_profile,
     )
     from ....core import require_active_bucket_id
-    from ....core.i18n import tr
     from ....entrypoints.tui.profile.overview import ProfileManagerApp
 
     profile_id = require_active_bucket_id()
@@ -94,21 +91,9 @@ def _manager() -> App[Any]:
         record = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
         return build_profile_overview(record, label=label)
 
-    def _logout() -> ManagerActionOutcome:
-        logout_active_profile()
-        return ManagerActionOutcome(message=tr("flows.manager.action.logout_done"), close_session=True)
-
     return ProfileManagerApp(
         _overview(),
         persist=_persist,
-        actions=(
-            ManagerAction(
-                key="logout",
-                label=tr("flows.manager.action.logout"),
-                label_key="flows.manager.action.logout",
-                run=_logout,
-            ),
-        ),
     )
 
 

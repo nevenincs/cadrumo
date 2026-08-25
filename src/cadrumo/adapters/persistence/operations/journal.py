@@ -8,24 +8,30 @@ from typing import override
 
 from pydantic import BaseModel
 
-from ....application import JournalRepositoryBase
-from ....application.operations import OperationEventCursor, OperationRevision
-from ....application.operations.persistence import (
+from cadrumo.application.operations.event_replay import OperationEventCursor
+from cadrumo.application.operations.models import OperationRevision
+from cadrumo.application.operations.persistence.idempotency import OperationIdempotencyClaim
+from cadrumo.application.operations.persistence.journal import (
     OperationEventStream,
-    OperationIdempotencyClaim,
     OperationJournal,
     OperationObservationCursorAheadError,
     OperationObservationMaterialization,
     OperationObservationReader,
     OperationObservationUnknownOperationError,
-    OperationOwnerLease,
     OperationPersistedSnapshot,
     OperationProgressFoldInput,
+)
+from cadrumo.application.operations.persistence.leases import (
+    OperationOwnerLease,
+    operation_conflict_scope_reference,
+)
+from cadrumo.application.operations.persistence.replay import (
     OperationReplayLimit,
     OperationReplayPage,
     OperationReplayStatus,
-    operation_conflict_scope_reference,
 )
+
+from ....application import JournalRepositoryBase
 from ....core import (
     STRICT_FROZEN_CONFIG,
     StorageCategory,
@@ -35,7 +41,7 @@ from ....core import (
 )
 from ..storage import RepositoryError
 from ._journal_validation import OperationJournalRecord, validate_advance
-from ._lease import OperationLeaseStorage
+from .lease import OperationLeaseStorage
 
 
 class _OperationReplayRequest(BaseModel):

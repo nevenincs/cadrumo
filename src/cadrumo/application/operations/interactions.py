@@ -11,8 +11,8 @@ from pydantic import BaseModel, Field, model_validator
 from ...core import STRICT_FROZEN_CONFIG, Hex64Str, OperationInteractionKind, content_hash_hex
 from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
-from ._events import OperationEventCode
-from ._models import OperationIdentity, OperationReference, OperationRevision
+from .events import OperationEventCode
+from .models import OperationIdentity, OperationReference, OperationRevision
 
 OperationInteractionId = Hex64Str
 OperationResponseToken = Hex64Str

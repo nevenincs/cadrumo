@@ -16,10 +16,10 @@ from pydantic import BaseModel
 from ...core import OperationEffect
 from ...core.async_cleanup import AsyncCloseable
 from ...core.identity import ContentDigest
-from ._capabilities import OperationOwnedResource
-from ._events import OperationDiagnosticReference, OperationEventCode, OperationLogSeverity
-from ._models import OperationIdentity, OperationReference, OperationRequest, OperationRevision
-from ._secret_submission import OperationEphemeralSecretAccess
+from .capabilities import OperationOwnedResource
+from .events import OperationDiagnosticReference, OperationEventCode, OperationLogSeverity
+from .models import OperationIdentity, OperationReference, OperationRequest, OperationRevision
+from .secret_submission import OperationEphemeralSecretAccess
 
 
 @runtime_checkable

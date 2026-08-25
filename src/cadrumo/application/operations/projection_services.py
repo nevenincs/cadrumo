@@ -12,6 +12,13 @@ from typing import Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel
 
+from cadrumo.application.operations.persistence.journal import (
+    OperationObservationReader,
+    OperationObservationUnknownOperationError,
+    OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
+)
+
 from ...core import (
     OperationCancellation,
     OperationClosePolicy,
@@ -21,18 +28,7 @@ from ...core import (
     content_hash_hex,
 )
 from ...core.identity import ContentDigest
-from ._interactions import (
-    OperationActorReference,
-    OperationApplyResponse,
-    OperationConsumedInteraction,
-    OperationInteractionId,
-    OperationPendingInteraction,
-    OperationRejectResponse,
-    OperationResponseIntent,
-    OperationResponseToken,
-)
-from ._models import OperationId
-from ._public import (
+from .frontend_contracts import (
     OperationCancellationRefusalCode,
     OperationCancellationRefusalV1,
     OperationCancellationRequestV1,
@@ -69,14 +65,19 @@ from ._public import (
     OperationWorkspaceRefreshTargetSuccessV1,
     OperationWorkspaceRefreshTargetVersionHeader,
 )
-from ._registry import OperationRegistry, operation_public_schema_reference
-from ._secret_submission import zeroize_secret_buffer
-from .persistence import (
-    OperationObservationReader,
-    OperationObservationUnknownOperationError,
-    OperationPersistedSnapshot,
-    OperationSecureReferenceStore,
+from .interactions import (
+    OperationActorReference,
+    OperationApplyResponse,
+    OperationConsumedInteraction,
+    OperationInteractionId,
+    OperationPendingInteraction,
+    OperationRejectResponse,
+    OperationResponseIntent,
+    OperationResponseToken,
 )
+from .models import OperationId
+from .registry import OperationRegistry, operation_public_schema_reference
+from .secret_submission import zeroize_secret_buffer
 
 _SUPPORTED_VERSION = 1
 _READ_LIMIT = 1

@@ -8,8 +8,7 @@ from typing import Any
 
 import pytest
 
-from ....core import BucketPointer, read_pointer
-from ....core._bucket_pointer_io import pointer_path
+from ....core import BucketPointer, pointer_path, read_pointer
 from .. import (
     ActiveProfilePointerTransactionError,
     active_profile_pointer_transaction,
@@ -27,10 +26,9 @@ def _select_b_then_a_in_child(root_text: str, result_queue: Any) -> None:
     from ....tests.profile_persistence import composed_profile_persistence_ports
     from .. import active_profile_pointer_transaction as transaction_context
 
-    with composed_profile_persistence_ports():
-        with transaction_context(Path(root_text)) as transaction:
-            selected_b = transaction.select(_B)
-            selected_a = transaction.select(_A)
+    with composed_profile_persistence_ports(), transaction_context(Path(root_text)) as transaction:
+        selected_b = transaction.select(_B)
+        selected_a = transaction.select(_A)
     result_queue.put((selected_b, selected_a))
 
 
@@ -76,9 +74,11 @@ def test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba(
     assert selected_a_again != initial_a
     assert observe_active_profile_pointer(tmp_path) == selected_a_again
 
-    with active_profile_pointer_transaction(tmp_path) as transaction:
-        with pytest.raises(ActiveProfilePointerTransactionError):
-            transaction.compare_and_select(expected=initial_a, bucket_id=_B)
+    with (
+        active_profile_pointer_transaction(tmp_path) as transaction,
+        pytest.raises(ActiveProfilePointerTransactionError),
+    ):
+        transaction.compare_and_select(expected=initial_a, bucket_id=_B)
 
 
 def test_facades_are_the_only_public_pointer_transition_surface() -> None:

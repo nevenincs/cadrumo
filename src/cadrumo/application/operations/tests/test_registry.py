@@ -27,6 +27,34 @@ from pydantic import (
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema
 
+from cadrumo.application.operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from cadrumo.application.operations.models import (
+    OperationIdentity,
+    OperationRequest,
+    OperationTerminalReceipt,
+)
+from cadrumo.application.operations.registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicContractSetV1,
+    OperationPublicDefinitionContractV1,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+    OperationRegistry,
+    OperationSchemaBindingV1,
+    OperationSchemaIdentityV1,
+)
+from cadrumo.core.operations import OperationInteractionKind
+
 from ....core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,
@@ -37,31 +65,8 @@ from ....core import (
     OperationLifecycle,
 )
 from ...operator_actions import ActionReference
-from .. import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationIdentity,
-    OperationInteractionKind,
-    OperationOwnedResource,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationRegistry,
-    OperationReplayPolicy,
-    OperationRequest,
-    OperationRequestStoragePolicy,
-    OperationSchemaBindingV1,
-    OperationSchemaIdentityV1,
-    OperationSensitiveInputPolicy,
-    OperationTerminalReceipt,
-)
-from .._interactions import OperationInteractionRequest
-from .._models import OperationSnapshot
+from ..interactions import OperationInteractionRequest
+from ..models import OperationSnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

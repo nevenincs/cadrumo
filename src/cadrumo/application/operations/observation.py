@@ -5,9 +5,29 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, Literal, cast
 
+from cadrumo.application.operations.persistence.events import (
+    OperationDiagnosticEvent,
+    OperationEffectEvent,
+    OperationEvent,
+    OperationInteractionEvent,
+    OperationLogRecord,
+    OperationNoticeEvent,
+    OperationPhaseEvent,
+    OperationProgressEvent,
+    OperationReconciliationEvent,
+    OperationTerminalEvent,
+)
+from cadrumo.application.operations.persistence.journal import (
+    OperationObservationCursorAheadError,
+    OperationObservationMaterialization,
+    OperationObservationReader,
+    OperationObservationUnknownOperationError,
+    OperationProgressFoldInput,
+)
+from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+
 from ...core import OperationCancellation, OperationInteractionKind, OperationLifecycle
-from ._interactions import OperationPendingInteraction
-from ._public import (
+from .frontend_contracts import (
     OperationNoPendingInteractionV1,
     OperationObservationRefusalCode,
     OperationObservationRefusalV1,
@@ -33,28 +53,11 @@ from ._public import (
     OperationReviewProjectionReferenceV1,
     OperationUnsupportedInteractionV1,
 )
-from ._registry import (
+from .interactions import OperationPendingInteraction
+from .registry import (
     OperationPublicDefinitionContractV1,
     OperationRegistry,
     operation_public_schema_reference,
-)
-from .persistence import (
-    OperationDiagnosticEvent,
-    OperationEffectEvent,
-    OperationEvent,
-    OperationInteractionEvent,
-    OperationLogRecord,
-    OperationNoticeEvent,
-    OperationObservationCursorAheadError,
-    OperationObservationMaterialization,
-    OperationObservationReader,
-    OperationObservationUnknownOperationError,
-    OperationPhaseEvent,
-    OperationProgressEvent,
-    OperationProgressFoldInput,
-    OperationReconciliationEvent,
-    OperationReplayStatus,
-    OperationTerminalEvent,
 )
 
 _SUPPORTED_OBSERVATION_VERSION = 1

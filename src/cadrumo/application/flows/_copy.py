@@ -24,7 +24,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.flows import CopyRefKind
 from ...core.i18n import tr
 from ._definition import CopyRef, FlowDefinition, FlowPage
-from ._errors import FlowCopyResolutionError
+from .errors import FlowCopyResolutionError
 
 CopySourceResolver = Callable[[str], "str | None"]
 """Resolver for one :class:`CopyRefKind`: reference id in, display text or None."""

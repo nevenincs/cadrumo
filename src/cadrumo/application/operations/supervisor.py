@@ -10,6 +10,35 @@ from typing import cast
 
 from pydantic import BaseModel
 
+from cadrumo.application.operations.persistence.events import (
+    OperationDiagnosticEvent,
+    OperationEvent,
+    OperationInteractionEvent,
+    OperationNoticeEvent,
+    OperationPhaseEvent,
+    OperationReconciliationEvent,
+    OperationTerminalEvent,
+)
+from cadrumo.application.operations.persistence.idempotency import OperationIdempotencyClaim
+from cadrumo.application.operations.persistence.journal import (
+    OperationEventStream,
+    OperationJournal,
+    OperationLeaseRepository,
+    OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
+)
+from cadrumo.application.operations.persistence.leases import (
+    OperationLeaseDisposition,
+    OperationLeaseObservationDisposition,
+    OperationLeaseToken,
+    OperationOwnerLease,
+    operation_conflict_scope_reference,
+)
+from cadrumo.application.operations.persistence.replay import (
+    OperationReplayLimit,
+    OperationReplayPage,
+)
+
 from ...core import (
     Hex64Str,
     OperationCancellation,
@@ -22,16 +51,18 @@ from ...core import (
 )
 from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors import ErrorCategory, get_registered_error_code
-from ._capabilities import OperationRequestStoragePolicy
 from ._execution_context import DefinitionBoundContext, OperationDeclarationError
-from ._interactions import (
+from ._supervisor_lease import OperationSupervisorLeaseMixin
+from .capabilities import OperationRequestStoragePolicy
+from .event_replay import OperationEventCursor
+from .interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
     OperationInteractionRequest,
     OperationPendingInteraction,
     OperationRejectResponse,
 )
-from ._models import (
+from .models import (
     OperationId,
     OperationIdentity,
     OperationReconciliationOutcome,
@@ -39,38 +70,14 @@ from ._models import (
     OperationTerminalReceipt,
     new_operation_id,
 )
-from ._projection_services import OperationResponseAuthorityIssuer
-from ._registry import OperationDefinition, OperationReconciliationPolicy, OperationRegistry
-from ._replay import OperationEventCursor
-from ._secret_submission import (
+from .owner import OperationResumableExecutor
+from .projection_services import OperationResponseAuthorityIssuer
+from .registry import OperationDefinition, OperationReconciliationPolicy, OperationRegistry
+from .secret_submission import (
     BoundEphemeralSecretAccess,
     EphemeralSecretBroker,
     OperationSecretRequirement,
     zeroize_secret_buffer,
-)
-from ._supervisor_lease import OperationSupervisorLeaseMixin
-from .owner import OperationResumableExecutor
-from .persistence import (
-    OperationDiagnosticEvent,
-    OperationEvent,
-    OperationEventStream,
-    OperationIdempotencyClaim,
-    OperationInteractionEvent,
-    OperationJournal,
-    OperationLeaseDisposition,
-    OperationLeaseObservationDisposition,
-    OperationLeaseRepository,
-    OperationLeaseToken,
-    OperationNoticeEvent,
-    OperationOwnerLease,
-    OperationPersistedSnapshot,
-    OperationPhaseEvent,
-    OperationReconciliationEvent,
-    OperationReplayLimit,
-    OperationReplayPage,
-    OperationSecureReferenceStore,
-    OperationTerminalEvent,
-    operation_conflict_scope_reference,
 )
 
 _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
@@ -100,7 +107,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         response_authority_issuer: OperationResponseAuthorityIssuer | None = None,
         response_token_factory: Callable[[], str] = _new_response_token,
     ) -> None:
-        self._registry = registry
+        self.registry = registry
         self._journal = journal
         self._event_stream = event_stream
         self._leases = leases
@@ -140,8 +147,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
     async def submit(
         self, request: OperationRequest[BaseModel], *, operation_id: OperationId | None = None
     ) -> OperationId:
-        definition = self._registry.lookup(request.definition_id)
-        definition_contract = self._registry.lookup_public_contract(request.definition_id)
+        definition = self.registry.lookup(request.definition_id)
+        definition_contract = self.registry.lookup_public_contract(request.definition_id)
         self._validate_request_payload(request, definition.request_type)
         now = self._clock()
         identity = OperationIdentity(
@@ -225,8 +232,8 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
 
     def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition:
         definition_id = snapshot.identity.definition_id
-        definition = self._registry.lookup(definition_id)
-        current_contract = self._registry.lookup_public_contract(definition_id)
+        definition = self.registry.lookup(definition_id)
+        current_contract = self.registry.lookup_public_contract(definition_id)
         if current_contract.definition_contract_digest != snapshot.definition_contract_digest:
             raise ValueError("operation definition contract no longer reproduces its invocation digest")
         return definition
@@ -341,7 +348,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         raw = snapshot.credential_free_request_json
         if raw is None:
             raise ValueError("credential-free operation request is absent")
-        payload = self._registry.resolve_credential_free_payload(definition.definition_id, raw)
+        payload = self.registry.resolve_credential_free_payload(definition.definition_id, raw)
         if content_hash_hex(payload.model_dump(mode="json")) != snapshot.request_reference:
             raise ValueError("credential-free operation request digest does not match durable content")
         return payload
@@ -1105,7 +1112,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
     def _build_context(self, snapshot: OperationPersistedSnapshot) -> DefinitionBoundContext:
         return DefinitionBoundContext(
             snapshot=snapshot,
-            registry=self._registry,
+            registry=self.registry,
             operands=self._operands,
             clock=self._clock,
             resources=self._resources,

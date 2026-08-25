@@ -618,7 +618,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._apoderado.ApoderadoConfigurationIdentityError",
+        "cadrumo.application.auth.apoderado_service.ApoderadoConfigurationIdentityError",
         ErrorCode(
             code="INTEGRITY_APODERADO_CONFIGURATION_IDENTITY",
             category=ErrorCategory.INTEGRITY,
@@ -628,7 +628,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._apoderado.ApoderadoConfigurationNotSetError",
+        "cadrumo.application.auth.apoderado_service.ApoderadoConfigurationNotSetError",
         ErrorCode(
             code="REFUSED_APODERADO_NOT_CONFIGURED",
             category=ErrorCategory.REFUSED,
@@ -638,7 +638,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._apoderado.ApoderadoLiveCheckUnavailableError",
+        "cadrumo.application.auth.apoderado_service.ApoderadoLiveCheckUnavailableError",
         ErrorCode(
             code="REFUSED_APODERADO_LIVE_CHECK_UNAVAILABLE",
             category=ErrorCategory.REFUSED,
@@ -648,7 +648,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth._apoderado.ApoderadoRepresentedNifInvalidError",
+        "cadrumo.application.auth.apoderado_service.ApoderadoRepresentedNifInvalidError",
         ErrorCode(
             code="REFUSED_APODERADO_INVALID_REPRESENTED_NIF",
             category=ErrorCategory.REFUSED,

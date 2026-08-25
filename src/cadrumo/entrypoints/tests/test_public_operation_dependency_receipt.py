@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import asyncio
+import importlib
 import os
 import re
 import shutil
@@ -15,12 +16,12 @@ from typing import Annotated, Literal
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...application.operations import (
+from cadrumo.application.operations.registry import (
     OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
     OperationSchemaIdentityV1,
 )
-from ...application.operations import __all__ as operation_public_exports
+
 from ...core import content_hash_hex
 from ...tests.secure_sql import isolated_runtime_profile
 from .. import compose_operation_dependencies
@@ -40,6 +41,32 @@ _UVX_EXECUTABLE = shutil.which("uvx")
 _SEMANTIC_PRODUCER_QUERY: Literal[
     "public operation observation immutable snapshot progress fold safe review workspace refresh authority only:prod exclude:tests"
 ] = "public operation observation immutable snapshot progress fold safe review workspace refresh authority only:prod exclude:tests"
+_CANONICAL_OPERATION_MODULES = (
+    "cadrumo.application.operations.capabilities",
+    "cadrumo.application.operations.composition",
+    "cadrumo.application.operations.event_replay",
+    "cadrumo.application.operations.events",
+    "cadrumo.application.operations.frontend_contracts",
+    "cadrumo.application.operations.interactions",
+    "cadrumo.application.operations.models",
+    "cadrumo.application.operations.observation",
+    "cadrumo.application.operations.projection_services",
+    "cadrumo.application.operations.registry",
+    "cadrumo.application.operations.secret_submission",
+    "cadrumo.application.operations.supervisor",
+)
+
+
+def _canonical_operation_definitions() -> tuple[str, ...]:
+    definitions: list[str] = []
+    for module_name in _CANONICAL_OPERATION_MODULES:
+        module = importlib.import_module(module_name)
+        for symbol in module.__all__:
+            owned = getattr(module, symbol)
+            if getattr(owned, "__module__", module_name) != module_name:
+                raise ValueError(f"operation contract {module_name}:{symbol} is not defined by its canonical module")
+            definitions.append(f"{module_name}:{symbol}")
+    return tuple(sorted(definitions))
 
 
 class TuiOperationReceiptDocumentProvenanceV1(BaseModel):
@@ -148,8 +175,11 @@ class TuiOperationObservationDependencyReceiptV1(BaseModel):
     definition_digests: tuple[TuiOperationDefinitionDigestV1, ...] = Field(min_length=1)
     schema_identities: tuple[OperationSchemaIdentityV1, ...] = Field(min_length=1)
     schema_manifest_digest: _DIGEST
-    public_exports: tuple[Annotated[str, Field(pattern=r"^[A-Za-z][A-Za-z0-9_]+$")], ...] = Field(min_length=1)
-    public_export_digest: _DIGEST
+    canonical_definitions: tuple[
+        Annotated[str, Field(pattern=r"^cadrumo\.application\.operations\.[a-z_]+:[A-Za-z_][A-Za-z0-9_]+$")],
+        ...,
+    ] = Field(min_length=1)
+    canonical_definition_digest: _DIGEST
     capability_inventory: tuple[TuiOperationCapabilityInventoryV1, ...] = Field(min_length=1)
     capability_inventory_digest: _DIGEST
     semantic_producer_census: TuiOperationSemanticProducerCensusV1
@@ -177,11 +207,11 @@ class TuiOperationObservationDependencyReceiptV1(BaseModel):
             raise ValueError("schema identity inventory must be sorted and unique")
         return value
 
-    @field_validator("public_exports")
+    @field_validator("canonical_definitions")
     @classmethod
-    def _public_exports_are_sorted(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+    def _canonical_definitions_are_sorted(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if value != tuple(sorted(value)) or len(set(value)) != len(value):
-            raise ValueError("public export inventory must be sorted and unique")
+            raise ValueError("canonical definition inventory must be sorted and unique")
         return value
 
     @field_validator("capability_inventory")
@@ -216,8 +246,8 @@ class TuiOperationObservationDependencyReceiptV1(BaseModel):
             raise ValueError("schema identity inventory does not reproduce the public contract set")
         if self.schema_manifest_digest != _manifest_digest(expected_schemas):
             raise ValueError("schema manifest digest does not reproduce")
-        if self.public_export_digest != content_hash_hex(self.public_exports):
-            raise ValueError("public export digest does not reproduce")
+        if self.canonical_definition_digest != content_hash_hex(self.canonical_definitions):
+            raise ValueError("canonical definition digest does not reproduce")
         expected_capabilities = _capability_inventory(contracts)
         if self.capability_inventory != expected_capabilities:
             raise ValueError("capability inventory does not reproduce the public contract set")
@@ -274,36 +304,36 @@ _REQUIRED_PROOFS: Mapping[str, tuple[str, str]] = {
 }
 
 _EXPECTED_AUTHORITY_OWNERS: Mapping[str, str] = {
-    "OperationSnapshot": "src/cadrumo/application/operations/_models.py",
-    "OperationPersistedSnapshot": "src/cadrumo/application/operations/persistence/_journal.py",
-    "OperationRegistry": "src/cadrumo/application/operations/_registry.py",
-    "OperationObservationService": "src/cadrumo/application/operations/_observation.py",
-    "OperationReviewProjectionService": "src/cadrumo/application/operations/_projection_services.py",
-    "OperationWorkspaceRefreshTargetService": "src/cadrumo/application/operations/_projection_services.py",
-    "OperationComposedServices": "src/cadrumo/application/operations/_composition.py",
-    "_fold_progress": "src/cadrumo/application/operations/_observation.py",
+    "OperationSnapshot": "src/cadrumo/application/operations/models.py",
+    "OperationPersistedSnapshot": "src/cadrumo/application/operations/persistence/journal.py",
+    "OperationRegistry": "src/cadrumo/application/operations/registry.py",
+    "OperationObservationService": "src/cadrumo/application/operations/observation.py",
+    "OperationReviewProjectionService": "src/cadrumo/application/operations/projection_services.py",
+    "OperationWorkspaceRefreshTargetService": "src/cadrumo/application/operations/projection_services.py",
+    "OperationComposedServices": "src/cadrumo/application/operations/composition.py",
+    "_fold_progress": "src/cadrumo/application/operations/observation.py",
     "compose_operation_dependencies": "src/cadrumo/entrypoints/_operation_composition.py",
 }
 
 _EXPECTED_CONSTRUCTORS: Mapping[str, str] = {
     "OperationRegistry": "src/cadrumo/entrypoints/_operation_composition.py",
-    "OperationPersistedSnapshot": "src/cadrumo/application/operations/_supervisor.py",
-    "OperationObservationService": "src/cadrumo/application/operations/_composition.py",
-    "OperationPublicProjectionV1": "src/cadrumo/application/operations/_observation.py",
-    "OperationReviewProjectionService": "src/cadrumo/application/operations/_composition.py",
-    "OperationWorkspaceRefreshTargetService": "src/cadrumo/application/operations/_composition.py",
+    "OperationPersistedSnapshot": "src/cadrumo/application/operations/supervisor.py",
+    "OperationObservationService": "src/cadrumo/application/operations/composition.py",
+    "OperationPublicProjectionV1": "src/cadrumo/application/operations/observation.py",
+    "OperationReviewProjectionService": "src/cadrumo/application/operations/composition.py",
+    "OperationWorkspaceRefreshTargetService": "src/cadrumo/application/operations/composition.py",
 }
 
 _SEMANTIC_ALLOWED_OWNERS = frozenset(
     {
-        "src/cadrumo/application/operations/_composition.py",
-        "src/cadrumo/application/operations/_models.py",
-        "src/cadrumo/application/operations/_observation.py",
-        "src/cadrumo/application/operations/_projection_services.py",
-        "src/cadrumo/application/operations/_public.py",
-        "src/cadrumo/application/operations/_registry.py",
-        "src/cadrumo/application/operations/_supervisor.py",
-        "src/cadrumo/application/operations/persistence/_journal.py",
+        "src/cadrumo/application/operations/composition.py",
+        "src/cadrumo/application/operations/models.py",
+        "src/cadrumo/application/operations/observation.py",
+        "src/cadrumo/application/operations/projection_services.py",
+        "src/cadrumo/application/operations/frontend_contracts.py",
+        "src/cadrumo/application/operations/registry.py",
+        "src/cadrumo/application/operations/supervisor.py",
+        "src/cadrumo/application/operations/persistence/journal.py",
     }
 )
 
@@ -586,8 +616,8 @@ def _build_tui_operation_observation_dependency_receipt(
         definition_digests=_definition_digests(contract_set.definitions),
         schema_identities=schemas,
         schema_manifest_digest=_manifest_digest(schemas),
-        public_exports=tuple(sorted(operation_public_exports)),
-        public_export_digest=content_hash_hex(tuple(sorted(operation_public_exports))),
+        canonical_definitions=_canonical_operation_definitions(),
+        canonical_definition_digest=content_hash_hex(_canonical_operation_definitions()),
         capability_inventory=capabilities,
         capability_inventory_digest=_manifest_digest(capabilities),
         semantic_producer_census=semantic_producer_census,
@@ -710,9 +740,9 @@ def _validate_semantic_producer_census(
         raise ValueError("semantic producer census source-tree digest drifted")
     discovered = set(census.discovered_paths)
     required = {
-        "src/cadrumo/application/operations/_observation.py",
-        "src/cadrumo/application/operations/_projection_services.py",
-        "src/cadrumo/application/operations/_registry.py",
+        "src/cadrumo/application/operations/observation.py",
+        "src/cadrumo/application/operations/projection_services.py",
+        "src/cadrumo/application/operations/registry.py",
     }
     if not required <= discovered:
         raise ValueError(f"semantic producer census missed canonical operation authorities: {discovered!r}")
@@ -764,8 +794,8 @@ def _validate_receipt_evidence(
         asyncio.run(dependencies.shutdown())
     if receipt.public_contract_set != live_contract_set:
         raise ValueError("C0 receipt public contract set is not production DI parity")
-    if receipt.public_exports != tuple(sorted(operation_public_exports)):
-        raise ValueError("C0 receipt public export inventory drifted")
+    if receipt.canonical_definitions != _canonical_operation_definitions():
+        raise ValueError("C0 receipt canonical definition inventory drifted")
     _validate_proofs(receipt, workspace_root)
     _validate_exact_producer_census(workspace_root)
     _validate_semantic_producer_census(
@@ -938,7 +968,7 @@ def test_c0_receipt_semantic_census_refuses_missing_and_competing_authorities(
     for discovered_paths, message in (
         (
             tuple(
-                path for path in current.discovered_paths if path != "src/cadrumo/application/operations/_registry.py"
+                path for path in current.discovered_paths if path != "src/cadrumo/application/operations/registry.py"
             ),
             "missed canonical operation authorities",
         ),

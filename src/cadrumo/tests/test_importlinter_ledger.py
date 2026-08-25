@@ -62,7 +62,6 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.aggregation._renta_ledger",
         "cadrumo.application.aggregation._retencion_observations_repository",
         "cadrumo.application.aggregation._withholding_source",
-        "cadrumo.application.auth._apoderado",
         "cadrumo.application.auth._certificate_secret_backend",
         "cadrumo.application.auth._diagnostics",
         "cadrumo.application.auth._operator_probes",

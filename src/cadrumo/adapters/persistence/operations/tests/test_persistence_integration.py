@@ -1,4 +1,4 @@
-"""Integrated real-filesystem proof for durable operation persistence facades."""
+"""Integrated real-filesystem proof for durable operation persistence modules."""
 
 from __future__ import annotations
 
@@ -14,22 +14,22 @@ from pathlib import Path
 
 import pytest
 
-from .....application.operations import (
-    OperationIdentity,
-    OperationRequestStoragePolicy,
-)
-from .....application.operations.persistence import (
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
+from cadrumo.application.operations.capabilities import OperationRequestStoragePolicy
+from cadrumo.application.operations.models import OperationIdentity
+from cadrumo.application.operations.persistence.events import OperationPhaseEvent
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+from cadrumo.application.operations.persistence.leases import (
     OperationLeaseDisposition,
     OperationLeaseObservationDisposition,
     OperationOwnerLease,
-    OperationPersistedSnapshot,
-    OperationPhaseEvent,
-    OperationReplayStatus,
     operation_conflict_scope_reference,
 )
+from cadrumo.application.operations.persistence.replay import OperationReplayStatus
+
 from .....core import OperationEffect, OperationLifecycle, scan_directory
 from ...storage import RepositoryError
-from .. import OperationJournalRepository, OperationLeaseFilesystemRepository
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -141,7 +141,7 @@ def _assert_no_staging_residue(directory: Path) -> None:
     assert scan_directory(directory, pattern="*.tmp") == ()
 
 
-def test_public_persistence_facades_commit_replay_and_reload_credential_free_history(tmp_path: Path) -> None:
+def test_public_persistence_modules_commit_replay_and_reload_credential_free_history(tmp_path: Path) -> None:
     """A restart sees one complete credential-free snapshot and idempotent cursor pages."""
     owner = _lease(
         owner_id="b" * 64,
@@ -206,7 +206,7 @@ def test_public_persistence_facades_commit_replay_and_reload_credential_free_his
     _assert_no_staging_residue(journal_path.parent)
 
 
-def test_public_persistence_facades_enforce_exact_owner_across_conflict_takeover_and_release(tmp_path: Path) -> None:
+def test_public_persistence_modules_enforce_exact_owner_across_conflict_takeover_and_release(tmp_path: Path) -> None:
     """Only the exact live owner can advance the journal before or after takeover."""
     initial_owner = _lease(
         owner_id="b" * 64,
@@ -280,7 +280,7 @@ def test_public_persistence_facades_enforce_exact_owner_across_conflict_takeover
     _assert_no_staging_residue(journal_path.parent)
 
 
-def test_public_persistence_facades_serialize_expired_takeover_races_without_residue(tmp_path: Path) -> None:
+def test_public_persistence_modules_serialize_expired_takeover_races_without_residue(tmp_path: Path) -> None:
     """Two fresh processes race an expired lease CAS and preserve one durable winner."""
     predecessor = _lease(
         owner_id="b" * 64,
@@ -344,7 +344,7 @@ def test_public_persistence_facades_serialize_expired_takeover_races_without_res
     _assert_no_staging_residue(lease_path.parent)
 
 
-def test_public_persistence_facades_serialize_snapshot_cas_and_refuse_linked_roots(tmp_path: Path) -> None:
+def test_public_persistence_modules_serialize_snapshot_cas_and_refuse_linked_roots(tmp_path: Path) -> None:
     """Concurrent snapshot CAS leaves one complete winner, while linked roots cannot redirect bytes."""
     owner = _lease(
         owner_id="b" * 64,

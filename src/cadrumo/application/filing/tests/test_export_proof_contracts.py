@@ -8,7 +8,7 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from ....core import sha256_hex
+from ....core import Period, sha256_hex
 from ....core.time import now
 from ....domain.filing import FilingExportValidationError
 from .. import (
@@ -144,6 +144,24 @@ def test_conformance_request_cannot_carry_caller_supplied_filing_inputs() -> Non
         "prior_domiciliation_election",
         "product_software_identity",
     }.intersection(FilingExportConformanceVectorEvidence.model_fields)
+
+
+def test_layoutless_coordinate_can_report_refusal_but_not_conformance_success() -> None:
+    """A total-corpus refusal may name a layoutless revision, never a vector."""
+    coordinate = FilingExportProofCoordinate(modelo="111", revision="layout-unavailable")
+    request = FilingExportConformanceRequest(coordinate=coordinate)
+
+    assert request.coordinate.layout_ids == ()
+    with pytest.raises(ValidationError, match="requires one selected filing layout"):
+        FilingExportConformanceVectorEvidence(
+            authority_id="test.conformance",
+            coordinate=coordinate,
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            mechanism_source_ref="test/provenance",
+            mechanism_source_sha256=_DIGEST,
+            provenance=_provenance(),
+        )
 
 
 def test_public_replay_receipt_excludes_secret_payload_facts() -> None:

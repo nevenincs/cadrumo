@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from ....core import STRICT_FROZEN_CONFIG, content_hash_hex
 from ....core.identity import ContentDigest
-from .._models import OperationDefinitionId, OperationId, OperationIdentity, OperationReference
+from ..models import OperationDefinitionId, OperationId, OperationIdentity, OperationReference
 
 
 class OperationIdempotencyClaim(BaseModel):
