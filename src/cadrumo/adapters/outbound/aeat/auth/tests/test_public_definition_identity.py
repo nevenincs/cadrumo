@@ -8,21 +8,23 @@ from types import ModuleType
 
 import pytest
 
-import cadrumo.adapters.outbound.aeat.auth.authenticator as authenticator
-import cadrumo.adapters.outbound.aeat.auth.authenticator_persistence as authenticator_persistence
-import cadrumo.adapters.outbound.aeat.auth.authenticator_types as authenticator_types
-import cadrumo.adapters.outbound.aeat.auth.browser_lifecycle as browser_lifecycle
-import cadrumo.adapters.outbound.aeat.auth.certificate as certificate
-import cadrumo.adapters.outbound.aeat.auth.clave_movil as clave_movil
-import cadrumo.adapters.outbound.aeat.auth.clave_movil_metadata as clave_movil_metadata
-import cadrumo.adapters.outbound.aeat.auth.clave_movil_support as clave_movil_support
-import cadrumo.adapters.outbound.aeat.auth.clave_permanente as clave_permanente
-import cadrumo.adapters.outbound.aeat.auth.clave_permanente_metadata as clave_permanente_metadata
-import cadrumo.adapters.outbound.aeat.auth.clave_permanente_support as clave_permanente_support
-import cadrumo.adapters.outbound.aeat.auth.errors as errors
-import cadrumo.adapters.outbound.aeat.auth.provider_selection as provider_selection
-import cadrumo.adapters.outbound.aeat.auth.providers as providers
-import cadrumo.adapters.outbound.aeat.auth.session_store as session_store
+from .. import (
+    authenticator,
+    authenticator_persistence,
+    authenticator_types,
+    browser_lifecycle,
+    certificate,
+    clave_movil,
+    clave_movil_metadata,
+    clave_movil_support,
+    clave_permanente,
+    clave_permanente_metadata,
+    clave_permanente_support,
+    errors,
+    provider_selection,
+    providers,
+    session_store,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
