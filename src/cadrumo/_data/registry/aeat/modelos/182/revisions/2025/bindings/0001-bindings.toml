@@ -1,4 +1,4 @@
-[[revisions."2007-y-siguientes".bindings]]
+[[revisions."2025".bindings]]
 id = "modelo-182-donor-row-nif"
 source = "donativo_donor"
 selector = { fact = "row_field", row_field = "donor_tax_id", grouping = "per_donativo_donor", record = "donante", data_type = "text" }
@@ -6,11 +6,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
 
-[[revisions."2007-y-siguientes".bindings.source_citations]]
+[[revisions."2025".bindings.source_citations]]
 source_ref = "enrolled-modelo-182-procedure"
 required_text = ["Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas"]
 
-[[revisions."2007-y-siguientes".bindings]]
+[[revisions."2025".bindings]]
 id = "modelo-182-donor-row-name"
 source = "donativo_donor"
 selector = { fact = "row_field", row_field = "donor_legal_name", grouping = "per_donativo_donor", record = "donante", data_type = "text" }
@@ -18,11 +18,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
 
-[[revisions."2007-y-siguientes".bindings.source_citations]]
+[[revisions."2025".bindings.source_citations]]
 source_ref = "enrolled-modelo-182-procedure"
 required_text = ["Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas"]
 
-[[revisions."2007-y-siguientes".bindings]]
+[[revisions."2025".bindings]]
 id = "modelo-182-donor-row-amount"
 source = "donativo_donor"
 selector = { fact = "row_field", row_field = "amount_donated", grouping = "per_donativo_donor", record = "donante", data_type = "money" }
@@ -30,11 +30,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
 
-[[revisions."2007-y-siguientes".bindings.source_citations]]
+[[revisions."2025".bindings.source_citations]]
 source_ref = "enrolled-modelo-182-procedure"
 required_text = ["Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas"]
 
-[[revisions."2007-y-siguientes".bindings]]
+[[revisions."2025".bindings]]
 id = "modelo-182-donor-row-deduction-percentage"
 source = "donativo_donor"
 selector = { fact = "row_field", row_field = "deduction_percentage", grouping = "per_donativo_donor", record = "donante", data_type = "decimal" }
@@ -42,11 +42,11 @@ aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
 
-[[revisions."2007-y-siguientes".bindings.source_citations]]
+[[revisions."2025".bindings.source_citations]]
 source_ref = "enrolled-modelo-182-procedure"
 required_text = ["Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas"]
 
-[[revisions."2007-y-siguientes".bindings]]
+[[revisions."2025".bindings]]
 id = "modelo-182-donor-row-recurrencia"
 source = "donativo_donor"
 selector = { fact = "row_field", row_field = "is_recurrent", grouping = "per_donativo_donor", record = "donante", data_type = "text" }
@@ -54,6 +54,6 @@ aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
 
-[[revisions."2007-y-siguientes".bindings.source_citations]]
+[[revisions."2025".bindings.source_citations]]
 source_ref = "enrolled-modelo-182-procedure"
 required_text = ["Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas"]

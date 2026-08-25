@@ -5,7 +5,7 @@
 # official_source_guidance. runner_required stays false pending a verified
 # byte-position parity run against the design.
 
-[[revisions."2007-y-siguientes".workbook_parity_refs]]
+[[revisions."2025".workbook_parity_refs]]
 id = "modelo-182-orden-static-layout"
 workbook_source = "aeat-dr-182-2025"
 fixture_id = "modelo-182-orden-eha-3021-2007-layout"

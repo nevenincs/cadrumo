@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:692797e1e13fc1cce1087f8e17b8ca014bd6ac0d984313c0bdf898a01c72aeac'
+body_hash: 'sha256:150637c85d3ac14cda81b162c3ce33554add4f32ab0cd8fcac08fcaf346cef2a'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P09-S27]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S24]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S43]]'
+  - '[[2026-08-14-registry-temporal-coverage-W02-P05-S44]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S48]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P06-S13]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P06-S14]]'
@@ -100,6 +101,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-W01-P01-S03` - Enforce the disposition-conditional grade ladder in registry build validation, registered in the family dispatch table: a calculation claim with an empty applicable formula family refuses and an informative revision at filing grade with a reasoned not_applicable formula family passes
 - `2026-08-14-registry-temporal-coverage-W02-P05-S24` - Declare the supported-filing-years catalogue in the registry authoring tree, replacing every Python-resident year set including SUPPORTED_EJERCICIOS, and refuse the entire registry load when any declared year has any obliged modelo without its required grade, resolvable revision or evidence-backed cells for every period, enumerating every gap with modelo, period and missing prerequisite, advisory-first until the flip
 - `2026-08-14-registry-temporal-coverage-W02-P05-S43` - Correct Modelo 038 source-era scope: retain the 2024 dr038 design only from the June 2024 declaration, acquire and hash-pin an earlier official design before asserting the 2002-to-May-2024 window, and split the revision or source binding through the validated temporal authority without guessed coverage, legacy fallback, a filing-grade promotion, or an export layout.
+- `2026-08-14-registry-temporal-coverage-W02-P05-S44` - Acquire and hash-pin exact official Modelo 182 design eras and amendment authority
 - `2026-08-14-registry-temporal-coverage-W02-P05-S48` - Constrain Modelo 220 2025 source and selection scope to 2025 authority, remove or replace the 2026 publication-bound exception, and admit a 2026 successor only from hash-pinned exact authority without promoting authority grade.
 - `2026-08-14-registry-temporal-coverage-W02-P06-S13` - Replace the single-representative-year assessment with a derived modelo, filing-year, period and schema-family matrix over the validated authority that assesses every claimed year up to the assessment horizon, proven by property on a real long-span open revision
 - `2026-08-14-registry-temporal-coverage-W02-P06-S14` - Collapse the duplicated filing-eligibility predicate onto the snapshot-owned check and delete the coverage-ledger duplicate and the by-construction-empty filing gap surface outright, replacing them with matrix-derived gaps proven non-vacuous on a synthetic reviewed corpus, with no superseded ledger surface retained beside the matrix

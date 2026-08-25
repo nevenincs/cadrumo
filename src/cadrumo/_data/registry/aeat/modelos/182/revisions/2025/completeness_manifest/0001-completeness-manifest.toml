@@ -1,17 +1,17 @@
-[revisions."2007-y-siguientes".completeness_manifest]
+[revisions."2025".completeness_manifest]
 source_ref = "enrolled-modelo-182-procedure"
 legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
 
-[[revisions."2007-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "decl.ejercicio"
 number = "ejercicio"
 
-[[revisions."2007-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
 
-[[revisions."2007-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "tipo2.donante-nif"
 number = "nif-donante"
 
@@ -26,14 +26,14 @@ number = "nif-donante"
 # enumerated here. It remains a declared, filed casilla — just not a closure
 # member.
 
-[[revisions."2007-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "tipo2.importe-donado"
 number = "importe-donativo"
 
-[[revisions."2007-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "tipo2.porcentaje-deduccion"
 number = "porcentaje-deduccion"
 
-[[revisions."2007-y-siguientes".completeness_manifest.casillas]]
+[[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "tipo2.recurrencia"
 number = "recurrencia"

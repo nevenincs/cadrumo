@@ -35,7 +35,7 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
         bundled_path("registry", "aeat"),
         source_root=bundled_path(),
     )
-    revision = authority.modelo("182").revisions["2007-y-siguientes"]
+    revision = authority.modelo("182").revisions["2025"]
     assert revision.review_status is RevisionReviewStatus.AGENT_REVIEWED
     assert revision.legal_refs, "the non-promotion claim needs the revision to cite legal refs at all"
     assert all(
@@ -52,7 +52,7 @@ def test_authority_refuses_real_m182_through_the_public_accessor() -> None:
     # where the later gates are the subject.
     with pytest.raises(
         RegistryValidationError,
-        match=r"modelo 182 revision 2007-y-siguientes declares .applicability. authority grade",
+        match=r"modelo 182 revision 2025 declares .applicability. authority grade",
     ):
         authority.snapshot("182", filing_year=2025, period="0A")
 
@@ -84,7 +84,7 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
         source_root=bundled_path(),
     )
     modelo = authority.modelo("182")
-    revision = modelo.revisions["2007-y-siguientes"].model_copy(
+    revision = modelo.revisions["2025"].model_copy(
         update={
             "review_status": review_status,
             "reviewed_by": reviewed_by,
@@ -103,14 +103,14 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
 
     with pytest.raises(
         RegistryValidationError,
-        match=rf"modelo 182 revision 2007-y-siguientes {refusal}",
+        match=rf"modelo 182 revision 2025 {refusal}",
     ):
         build_validated_snapshot(
             mutated_modelo,
             authority.catalogues,
             filing_year=2025,
             period="0A",
-            revision_id="2007-y-siguientes",
+            revision_id="2025",
         )
 
 
@@ -130,7 +130,7 @@ def test_filing_grade_snapshot_refuses_a_reviewed_revision_that_declares_no_expo
     """
     modelos, catalogues = _committed_registry()
     modelo = next(candidate for candidate in modelos if candidate.id == "182")
-    revision = modelo.revisions["2007-y-siguientes"]
+    revision = modelo.revisions["2025"]
     assert not revision.export_layouts, "fixture drift: M182 gained an export layout, pick another subject"
     reviewed = revision.model_copy(
         update={
@@ -148,14 +148,14 @@ def test_filing_grade_snapshot_refuses_a_reviewed_revision_that_declares_no_expo
 
     with pytest.raises(
         RegistryValidationError,
-        match=r"modelo 182 revision 2007-y-siguientes declares no export layout",
+        match=r"modelo 182 revision 2025 declares no export layout",
     ):
         build_validated_snapshot(
             mutated,
             catalogues,
             filing_year=2025,
             period="0A",
-            revision_id="2007-y-siguientes",
+            revision_id="2025",
         )
 
 
@@ -199,7 +199,7 @@ def test_loader_tier_snapshots_in_this_module_carry_no_compiled_orden_authority(
     )
 
     modelo = next(candidate for candidate in modelos if candidate.id == "182")
-    revision = modelo.revisions["2007-y-siguientes"]
+    revision = modelo.revisions["2025"]
     reviewed = revision.model_copy(
         update={
             "review_status": RevisionReviewStatus.OPERATOR_REVIEWED,
@@ -215,4 +215,4 @@ def test_loader_tier_snapshots_in_this_module_carry_no_compiled_orden_authority(
     mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, reviewed.id: reviewed}})
 
     with pytest.raises(RegistryValidationError, match="declares no export layout"):
-        build_validated_snapshot(mutated, catalogues, filing_year=2025, period="0A", revision_id="2007-y-siguientes")
+        build_validated_snapshot(mutated, catalogues, filing_year=2025, period="0A", revision_id="2025")
