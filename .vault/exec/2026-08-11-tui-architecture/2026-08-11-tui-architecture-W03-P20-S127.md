@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:64b50612bb02b70af0ef2874ce2ca873add3accc2460015c919ae140cc7bce24'
+body_hash: 'sha256:e81a67427009768944d8968ed167958bd87954450718826672af4eca62d0b214'
 step_id: 'S127'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -28,8 +28,10 @@ related:
 
 - The manifest is frozen, sorted, digested, and validates exactly against the current public registry schema fixed point.
 - Raw registry authoring, loaders, and private registry modules remain outside the application boundary.
+- Focused Ruff passed; focused basedpyright reported 0 errors and 0 warnings; the S127 integration module passed 5 tests.
+- The feature-scoped Vault check passed with only external feature warnings. Post-change Vaultspec RAG found no indexed semantic duplicate, and exact census found one manifest owner module.
 
 ## Notes
 
 - S127 remains open and review-ready; no plan status was changed.
-- Focused Ruff, basedpyright, and integration gates passed before commit.
+- Shared-tree facade bridge correction was handled in a separate current-only commit and is outside S127 scope.
