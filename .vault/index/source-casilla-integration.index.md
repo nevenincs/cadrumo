@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:7af35dd1e8666d955bef3e691c7ae3188d4eb57ecfe9cf219719af6f1589cbe1'
+body_hash: 'sha256:3d431e7c942329a0c938fd0c5ec68102e2960a1518c666841c39cfccfc82e3a6'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -195,6 +195,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s112-connectivity-census-regeneration-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research]]'
+  - '[[2026-08-25-source-casilla-integration-s113-helper-candidate-classification-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s87-independent-post-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit]]'
@@ -280,6 +281,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-followup-audit` - `source-casilla-integration` audit: `S102 M182 terminal-deferral follow-up review`
 - `2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-review-audit` - `source-casilla-integration` audit: `S102 M182 terminal-deferral review`
 - `2026-08-25-source-casilla-integration-s112-connectivity-census-regeneration-review-audit` - `source-casilla-integration` audit: `S112 connectivity census regeneration review`
+- `2026-08-25-source-casilla-integration-s113-helper-candidate-classification-review-audit` - `source-casilla-integration` audit: `S113 helper candidate classification review`
 - `2026-08-25-source-casilla-integration-s226-m187-source-owner-decision-review-audit` - `source-casilla-integration` audit: `S226 Modelo 187 source-owner decision review`
 - `2026-08-25-source-casilla-integration-s87-independent-post-review-audit` - `source-casilla-integration` audit: `S87 snapshot-bound row assembly independent review`
 - `2026-08-25-source-casilla-integration-s88-google-pull-post-review-audit` - `source-casilla-integration` audit: `s88 google pull post review`

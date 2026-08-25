@@ -17,6 +17,7 @@ related:
   - '[[2026-08-23-inventory-casilla-grounding-research]]'
   - '[[2026-08-23-amortization-casilla-grounding-research]]'
   - '[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]'
+  - '[[2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research]]'
 ---
 
 <!-- RETIRED: S52, S191, S193 -->
