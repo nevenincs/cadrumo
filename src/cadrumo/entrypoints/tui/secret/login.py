@@ -31,7 +31,6 @@ See Also:
 from __future__ import annotations
 
 from contextvars import copy_context
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast, override
 
 from textual.app import ComposeResult
@@ -46,7 +45,6 @@ from ....entrypoints.tui.components.widgets import ContentScroll
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
     CredentialApp,
-    CredentialAttempt,
     run_credential_app,
 )
 
@@ -54,29 +52,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
     from ....application.user_profile import ProfileLoginOutcome
-
-
-@dataclass(frozen=True, slots=True)
-class LoginChoice:
-    """One profile the operator can log in to.
-
-    Carries only what a chooser row needs. The label is what the operator
-    named the profile and the id is what the application resolves, so the
-    screen never has to guess which of the two it is holding — the
-    ambiguity that makes a name-or-uuid argument hard to type is resolved
-    before the page is built.
-    """
-
-    profile_id: str
-    label: str
-
-
-class LoginAttempt(CredentialAttempt["ProfileLoginOutcome"]):
-    """The outcome of asking the application to unlock a profile.
-
-    Named rather than used as the bare generic so the seam that builds it
-    and the screen that reads it agree on more than a shape.
-    """
+    from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
 
 
 class LoginApp(CredentialApp["ProfileLoginOutcome"]):
@@ -96,8 +72,8 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
     def __init__(
         self,
         *,
-        choices: Sequence[LoginChoice],
-        authenticate: Callable[[str, str], LoginAttempt],
+        choices: Sequence[ProfileLoginChoice],
+        authenticate: Callable[[str, str], ProfileLoginAttempt],
         preselected: str | None = None,
     ) -> None:
         """Bind the supplied profile choices and authentication callback."""
@@ -220,7 +196,7 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
         # thing that leaves an extra copy alive for the process lifetime.
         passphrase_buffer = bytearray(passphrase, UTF_8_ENCODING)
 
-        def _unlock() -> LoginAttempt:
+        def _unlock() -> ProfileLoginAttempt:
             try:
                 return login_context.run(
                     self._authenticate,
@@ -265,8 +241,8 @@ class LoginApp(CredentialApp["ProfileLoginOutcome"]):
 
 def run_login_tui(
     *,
-    choices: Sequence[LoginChoice],
-    authenticate: Callable[[str, str], LoginAttempt],
+    choices: Sequence[ProfileLoginChoice],
+    authenticate: Callable[[str, str], ProfileLoginAttempt],
     preselected: str | None = None,
 ) -> ProfileLoginOutcome | None:
     """Run the login screen and return the opened session, or ``None``.
@@ -280,4 +256,4 @@ def run_login_tui(
     )
 
 
-__all__ = ["LoginApp", "LoginAttempt", "LoginChoice", "run_login_tui"]
+__all__ = ["LoginApp", "run_login_tui"]

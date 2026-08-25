@@ -27,9 +27,7 @@ See Also:
 
 from __future__ import annotations
 
-import threading
 from collections.abc import Callable
-from contextlib import nullcontext
 from contextvars import copy_context
 from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar, cast, override
@@ -38,14 +36,11 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Button, DataTable, Footer, Input, Label, LoadingIndicator, OptionList, Static
+from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, Static
 from textual.worker import Worker, WorkerState
 
-from ....application.operations import ManagerAction, ManagerActionDisposition, ManagerActionOutcome
 from ....application.user_profile import notice_presentation, profile_field_shape_hint
-from ....core import OperatorProgress
 from ....core.i18n import tr
-from ....entrypoints.tui.components.form_screen import FormScreen, presenting_forms_through
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import (
     BASE_CSS,
@@ -56,12 +51,11 @@ from ....entrypoints.tui.components.theme import (
 from ....entrypoints.tui.components.widgets import ContentDataTable, ContentScroll, NoticeBand
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Mapping
 
     from textual.widgets.data_table import ColumnKey
 
     from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
-    from ....core.presentation import FormPage
 
 
 _PRESENT_GLYPH = "●"
@@ -103,13 +97,6 @@ number is a stored identity. A taxpayer with three socios would otherwise
 read three identical ``NIF`` rows, since the path telling them apart is
 shown only once the row is opened.
 """
-
-_FORM_WAIT_POLL_SECONDS = 0.1
-"""How often the action thread re-checks that the application is still up.
-
-Only a liveness poll: the dismissal wakes the wait immediately, and this
-bounds how long the thread survives an application that went away without
-answering."""
 
 _OUTPUT_LANGUAGE_PATH = "preferences.output_language"
 
@@ -281,10 +268,6 @@ class ProfileManagerApp(App[None]):
     #manager-context { width: 100%; height: auto; }
     #manager-requirements { width: 100%; height: auto; }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
-    #manager-actions { height: auto; width: 100%; }
-    #manager-actions Button { width: 100%; margin: 0; }
-    #manager-busy { display: none; height: 1; margin: 0; }
-    #manager-busy.busy { display: block; }
     """
     )
 
@@ -310,7 +293,6 @@ class ProfileManagerApp(App[None]):
         overview: ProfileOverview,
         *,
         persist: Callable[[str, str], ProfileOverview],
-        actions: Sequence[ManagerAction] = (),
         validate: Callable[[str, str], str | None] | None = None,
     ) -> None:
         """Initialize the overview with injected projection and write doors."""
@@ -323,12 +305,6 @@ class ProfileManagerApp(App[None]):
         dialog refuses exactly what storage would refuse. A host that
         supplies none leaves every box unchecked until the write — which is
         where the refusal used to arrive, unhelpfully."""
-        self._actions = tuple(actions)
-        """Operations offered above the field table.
-
-        Empty is a valid page: the manager is useful with nothing but its
-        fields, and a host that cannot offer an action should show none
-        rather than a button that refuses."""
         self._persist_field = persist
         """Writes one field and hands back the page as storage now holds it.
 
@@ -365,15 +341,6 @@ class ProfileManagerApp(App[None]):
 
         Kept because one field decides how the whole page is worded, so
         settling its write needs a different redraw from every other."""
-        self._pending_action: Worker[ManagerActionOutcome] | None = None
-        """The one in-flight action, or ``None`` when no button is working.
-
-        Separate from the write worker because the two mean different
-        things to the operator and are reported differently, but serialised
-        against each other for the same reason writes are serialised among
-        themselves: an action reloads and rewrites the whole profile, so
-        letting one overlap a field write would let either land on a
-        snapshot the other had already moved."""
 
     @override
     def compose(self) -> ComposeResult:
@@ -381,12 +348,6 @@ class ProfileManagerApp(App[None]):
         yield PinnedStatusBar(id="manager-status")
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             yield Vertical(id="manager-context")
-            if self._actions:
-                with Vertical(id="manager-actions-panel", classes="cadrumo-panel"):
-                    with Vertical(id="manager-actions"):
-                        for action in self._actions:
-                            yield Button(self._action_label(action), id=f"action-{action.key}")
-                    yield LoadingIndicator(id="manager-busy")
             for section in self.overview.sections:
                 yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()
@@ -583,11 +544,6 @@ class ProfileManagerApp(App[None]):
         self.sub_title = ""
         self.query_one("#manager-banner", Static).update(title)
         self._offer_language_in_footer()
-        if not self._actions:
-            return
-        self.query_one("#manager-actions-panel", Vertical).border_title = tr("flows.manager.actions.section")
-        for action in self._actions:
-            self.query_one(f"#action-{action.key}", Button).label = self._action_label(action)
 
     def _language_field(self) -> ProfileFieldView | None:
         """The field holding the page's language, if the schema declares one.
@@ -640,13 +596,6 @@ class ProfileManagerApp(App[None]):
         ]
         self.refresh_bindings()
 
-    @staticmethod
-    def _action_label(action: ManagerAction) -> str:
-        """Render a supplied action label without freezing its locale at construction."""
-        if action.label_key is None:
-            return action.label
-        return tr(action.label_key, default=action.label)
-
     # ── editing ─────────────────────────────────────────────────────────
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -671,33 +620,16 @@ class ProfileManagerApp(App[None]):
         if self._pending_write is not None:
             self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
-        if self._pending_action is not None:
-            self._refuse(tr("flows.manager.action.busy"))
-            return
         key = event.row_key.value
         if key is None:
             return
         field = self._field_by_key.get(str(key))
         if field is None:
             return
-        owner = self._action_owning(field.path)
-        if owner is not None:
-            self._start_action(owner)
-            return
         self.push_screen(
             FieldEditScreen(field, validate=self._validator_for(field)),
             self._apply_edit_for(field),
         )
-
-    def _action_owning(self, path: str) -> ManagerAction | None:
-        """Return the action that is the sole writer of ``path``, or ``None``.
-
-        Only the declaring action decides this. The screen holds no list of
-        special paths of its own, so an action that stops owning a field
-        takes the routing with it and cannot leave a row pointing at a
-        writer that no longer wants it.
-        """
-        return next((action for action in self._actions if path in action.owns_paths), None)
 
     def _validator_for(self, field: ProfileFieldView) -> Callable[[str], str | None] | None:
         """Bind the injected judge to one field, or ``None`` when there is none.
@@ -794,8 +726,6 @@ class ProfileManagerApp(App[None]):
         if self._pending_write is not None and event_worker is self._pending_write:
             await self._settle_write(self._pending_write)
             return
-        if self._pending_action is not None and event_worker is self._pending_action:
-            await self._settle_action(self._pending_action)
 
     async def _settle_write(self, worker: Worker[ProfileOverview]) -> None:
         """Show what storage made of one finished field write."""
@@ -819,45 +749,6 @@ class ProfileManagerApp(App[None]):
         # result-less worker would otherwise leave the page looking as
         # though nothing had been asked of it.
         self._refuse_worker(worker.error, message_key="flows.manager.edit.write_failed")
-
-    async def _settle_action(self, worker: Worker[ManagerActionOutcome]) -> None:
-        """Report one finished action and adopt any profile it handed back.
-
-        A failure is reported rather than raised for the reason the old
-        inline call caught: the operator is mid-page, and an exception
-        would take the whole screen down over, say, a missing certificate.
-        The difference is that the failure now arrives as a refusal the
-        action chose, not as the seam's own crash.
-        """
-        self._pending_action = None
-        self._set_busy(False)
-        if worker.state is not WorkerState.SUCCESS or worker.result is None:
-            self._refuse_worker(worker.error, message_key="flows.manager.action.failed")
-            return
-        outcome = worker.result
-        if outcome.close_session:
-            # The surface itself must go, not merely repaint: re-rendering
-            # here would show the just-logged-out profile's table as if it
-            # were still live. Exiting is what actually closes the operator
-            # back to their shell, the same coherent landing the quit
-            # binding already gives them -- there is nowhere else to route
-            # a session that just ended.
-            self.exit(None)
-            return
-        if outcome.overview is not None:
-            # A full redraw, not a cell diff: an action can change the
-            # profile's shape, which is exactly what the diff cannot do.
-            self.overview = outcome.overview
-            await self._render()
-        # After the redraw, which clears the channel: reporting first would
-        # write the outcome and then immediately wipe it.
-        match outcome.disposition:
-            case ManagerActionDisposition.SUCCESS:
-                self._report(outcome.message)
-            case ManagerActionDisposition.WARNING:
-                self._warn(outcome.message)
-            case ManagerActionDisposition.REFUSED:
-                self._refuse(outcome.message)
 
     def _clear_notice(self) -> None:
         """Reset the diagnostic line while preserving its pinned space."""
@@ -889,163 +780,6 @@ class ProfileManagerApp(App[None]):
             rendered = resolve_error_message(error) if isinstance(error, CadrumoError) else ""
         self._refuse(rendered or tr(message_key))
 
-    def _report(self, message: str) -> None:
-        """Show what an action did."""
-        self.query_one("#manager-status", PinnedStatusBar).show_success(message)
-
-    def _warn(self, message: str) -> None:
-        """Show a completed action whose partial failures need attention."""
-        self.query_one("#manager-status", PinnedStatusBar).show_warning(message)
-
-    def _progress(self, progress: OperatorProgress) -> None:
-        """Show what is happening while it is still happening."""
-        self.query_one("#manager-status", PinnedStatusBar).show_progress(progress.render())
-
-    def _progress_from_worker(self, progress: OperatorProgress) -> None:
-        """Move a worker-thread progress emission onto Textual's UI task."""
-        if not self.is_running:
-            return
-        try:
-            self.call_from_thread(self._progress, progress)
-        except RuntimeError:
-            # A thread-backed action may outlive a closing application. At
-            # that point there is no screen left to update.
-            return
-
-    def _set_busy(self, busy: bool) -> None:
-        """Show that background work is running, and refuse to start more.
-
-        Without this the page looks idle while an action is mid-flight —
-        the censal pull waits on a live browser session, which is long
-        enough that a still screen reads as a frozen one. Disabling the
-        buttons states the same thing the guard already enforces, rather
-        than letting a press be silently refused.
-        """
-        self.query_one("#manager-busy", LoadingIndicator).set_class(busy, "busy")
-        for action in self._actions:
-            self.query_one(f"#action-{action.key}", Button).disabled = busy
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Start the pressed action off the event loop.
-
-        An action cannot run on this task. Every one of them owns a loop
-        for the length of its work — the censal pull drives a browser
-        session through ``asyncio.run``, and the certificate and export
-        doors open a page — and a loop cannot be started from a task that
-        is already running one. Pressing a button therefore used to report
-        ``asyncio.run() cannot be called from a running event loop`` into
-        the result line and do nothing at all.
-
-        On a worker thread there is no running loop, so an action that
-        starts one is legal again, and one that wants to show a page gets a
-        presenter that opens it here instead of starting a second
-        application. Blocking is fine there and would not be here: the
-        censal pull waits on a live browser, which on this task would
-        freeze the page.
-
-        The context is copied for the same reason the field write copies
-        it: the doors these actions call resolve the active profile bucket
-        from a context variable, which a bare thread would not carry.
-        """
-        button_id = event.button.id or ""
-        action = next((item for item in self._actions if f"action-{item.key}" == button_id), None)
-        if action is None:
-            return
-        self._start_action(action)
-
-    def _start_action(self, action: ManagerAction) -> None:
-        """Run one action on a worker thread, from a button or an owned row.
-
-        Extracted so a row that routes to its owning action reaches it by
-        the same path a button press does. A second launcher would be a
-        second place for the busy check, the context copy, the presenter
-        binding and the progress line to drift out of agreement, over an
-        operation whose whole purpose here is having one writer.
-        """
-        if self._pending_action is not None or self._pending_write is not None:
-            self._refuse(tr("flows.manager.action.busy"))
-            return
-        action_context = copy_context()
-
-        def _run() -> ManagerActionOutcome:
-            progress_scope = (
-                action.progress_sink(self._progress_from_worker) if action.progress_sink is not None else nullcontext()
-            )
-            with presenting_forms_through(self._present_form_here), progress_scope:
-                return action.run()
-
-        self._pending_action = self.run_worker(
-            lambda: action_context.run(_run),
-            name=f"profile-action-{action.key}",
-            group="profile-action",
-            exit_on_error=False,
-            thread=True,
-        )
-        self._set_busy(True)
-        self._progress(OperatorProgress(message=tr("flows.manager.action.working", action=self._action_label(action))))
-
-    def _present_form_here(
-        self,
-        page: FormPage,
-        rebuild: Callable[[Mapping[str, str]], FormPage] | None = None,
-    ) -> Mapping[str, str] | None:
-        """Open one form page on this application, from the action's thread.
-
-        Called on the worker thread, where touching a widget directly is
-        not safe, so the push is handed to the UI task and this thread
-        waits for what the operator committed. That wait is the point: the
-        action is written as a straight line — show the page, use the
-        answer — and it stays that way, with only where it runs changed.
-
-        The wait is an explicit event rather than ``push_screen_wait``.
-        That call resolves the running worker from a context variable, and
-        this thread cannot satisfy it: the action runs inside a context
-        copied on the UI task before the worker existed, so the worker is
-        absent from it however the call is marshalled. Reaching for
-        ``push_screen_wait`` here raised ``NoActiveWorker`` — but only
-        AFTER the screen was already on the stack, so the operator was
-        given a working form to fill in whose every value was then thrown
-        away with the dead action. Waiting on an event the dismissal sets
-        depends on nothing ambient.
-
-        An application that stops takes both halves of this with it, and
-        both have to say so. The wait ends when it stops; the push refuses
-        outright once the loop is gone, because ``call_from_thread`` raises
-        there rather than blocking. So neither half can strand this thread,
-        and both answer ``None``, which every caller already treats as "the
-        operator walked away".
-
-        A refusal while the application is still up means something else
-        entirely — that this was called on the UI task — and is raised, not
-        dressed up as an abandonment. Telling those two apart by liveness
-        is exact rather than approximate: the application stops running
-        before it lets go of its loop, so a refusal that coincides with a
-        stopped application can only be the one the missing loop caused.
-        """
-        collected: Mapping[str, str] | None = None
-        answered = threading.Event()
-
-        def _accept(result: Mapping[str, str] | None) -> None:
-            nonlocal collected
-            collected = result
-            answered.set()
-
-        try:
-            self.call_from_thread(self.push_screen, FormScreen(page, translate=tr, rebuild=rebuild), _accept)
-        except RuntimeError:
-            # Guarded for the same reason the wait below is: the
-            # application can stop between this action starting and its
-            # page reaching the screen. Left to propagate, that refusal
-            # would surface as the settling handler rendering an untranslated
-            # Textual internal into the notice line.
-            if self.is_running:
-                raise
-            return None
-        while not answered.wait(timeout=_FORM_WAIT_POLL_SECONDS):
-            if not self.is_running:
-                return None
-        return collected
-
     @override
     async def action_quit(self) -> None:
         """Leave the manager, unless a field write is still landing.
@@ -1062,9 +796,6 @@ class ProfileManagerApp(App[None]):
         """
         if self._pending_write is not None:
             self._refuse(tr("flows.manager.edit.write_in_flight"))
-            return
-        if self._pending_action is not None:
-            self._refuse(tr("flows.manager.action.busy"))
             return
         self.exit(None)
 
@@ -1090,8 +821,8 @@ class ProfileManagerApp(App[None]):
             # only an operator who pressed it unprompted.
             self._refuse(tr("flows.manager.language.unavailable"))
             return
-        if self._pending_write is not None or self._pending_action is not None:
-            self._refuse(tr("flows.manager.action.busy"))
+        if self._pending_write is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
         self.push_screen(
             FieldEditScreen(
@@ -1115,11 +846,10 @@ def run_profile_manager_tui(
     overview: ProfileOverview,
     *,
     persist: Callable[[str, str], ProfileOverview],
-    actions: Sequence[ManagerAction] = (),
     validate: Callable[[str, str], str | None] | None = None,
 ) -> None:
     """Run the manager to completion against an already-built overview."""
-    ProfileManagerApp(overview, persist=persist, actions=actions, validate=validate).run()
+    ProfileManagerApp(overview, persist=persist, validate=validate).run()
 
 
 __all__ = [

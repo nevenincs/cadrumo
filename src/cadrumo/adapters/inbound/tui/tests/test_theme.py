@@ -37,9 +37,10 @@ from cadrumo.entrypoints.tui.components.theme import (
     resolve_theme_name,
 )
 
+from .....application.user_profile.status_projection import StatusPageData
 from .....core import scan_directory
 from .....core.config import TuiAppearance
-from .....entrypoints.tui.profile.status import StatusApp, StatusPageData
+from .....entrypoints.tui.profile.status import StatusApp
 from .....entrypoints.tui.secret.registration import RegistrationApp
 
 pytestmark = [

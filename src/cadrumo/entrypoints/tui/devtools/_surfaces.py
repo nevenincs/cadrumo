@@ -24,6 +24,7 @@ from typing import Any
 from textual.app import App
 
 from ._fixture import registration_attempt
+from .modelo_work_wizard import build_modelo_work_wizard, provision_modelo_work_wizard
 
 
 @dataclass(frozen=True)
@@ -55,96 +56,45 @@ def _registration() -> App[Any]:
 
 
 def _login() -> App[Any]:
-    from cadrumo.application.user_profile import (
-        ProfileAuthenticationRefusedError,
-        ProfileLoginThrottledError,
-        ProfileNotFoundError,
-        login_profile,
+    from cadrumo.application.user_profile.login_interaction import (
+        attempt_profile_login,
+        preselected_profile_login_id,
+        profile_login_choices,
     )
-    from cadrumo.application.workflow import list_profile_buckets
-    from cadrumo.core import resolve_active_bucket_id
-    from cadrumo.core.errors import resolve_error_message
-    from cadrumo.entrypoints.tui.secret.login import LoginApp, LoginAttempt, LoginChoice
-
-    choices = tuple(
-        LoginChoice(profile_id=pointer.bucket_id, label=pointer.label)
-        for pointer in sorted(list_profile_buckets().values(), key=lambda pointer: pointer.label.casefold())
-    )
-
-    def _authenticate(profile_id: str, candidate_passphrase: str) -> LoginAttempt:
-        try:
-            outcome = login_profile(name=profile_id, passphrase_callback=lambda: candidate_passphrase)
-        except (ProfileAuthenticationRefusedError, ProfileLoginThrottledError, ProfileNotFoundError) as refusal:
-            return LoginAttempt(refusal=resolve_error_message(refusal))
-        return LoginAttempt(outcome=outcome)
+    from cadrumo.entrypoints.tui.secret.login import LoginApp
 
     return LoginApp(
-        choices=choices,
-        authenticate=_authenticate,
-        preselected=resolve_active_bucket_id(),
+        choices=profile_login_choices(),
+        authenticate=attempt_profile_login,
+        preselected=preselected_profile_login_id(None),
     )
 
 
 def _manager() -> App[Any]:
-    from cadrumo.application.operations import ManagerAction, ManagerActionOutcome
-    from cadrumo.application.user_profile import (
-        CommittedProfileRepository,
-        ProfileRecordRepository,
-        apply_manager_profile_field_mutation,
-        build_profile_overview,
-        logout_active_profile,
+    from cadrumo.application.user_profile.manager_projection import (
+        open_active_profile_manager_projection,
+        profile_manager_field_value_refusal,
     )
-    from cadrumo.core import require_active_bucket_id
-    from cadrumo.core.i18n import tr
     from cadrumo.entrypoints.tui.profile.overview import ProfileManagerApp
 
-    profile_id = require_active_bucket_id()
-    profiles = ProfileRecordRepository.for_current_session(profile_id)
-    label = CommittedProfileRepository().load(profile_id).label
-
-    def _overview():
-        return build_profile_overview(profiles.load(profile_id), label=label)
-
-    def _persist(path: str, value: str):
-        record = apply_manager_profile_field_mutation(profile_id=profile_id, path=path, value=value)
-        return build_profile_overview(record, label=label)
-
-    def _logout() -> ManagerActionOutcome:
-        logout_active_profile()
-        return ManagerActionOutcome(message=tr("flows.manager.action.logout_done"), close_session=True)
-
+    manager = open_active_profile_manager_projection()
     return ProfileManagerApp(
-        _overview(),
-        persist=_persist,
-        actions=(
-            ManagerAction(
-                key="logout",
-                label=tr("flows.manager.action.logout"),
-                label_key="flows.manager.action.logout",
-                run=_logout,
-            ),
-        ),
+        manager.inspect(),
+        persist=manager.replace_field,
+        validate=profile_manager_field_value_refusal,
     )
 
 
 def _status() -> App[Any]:
-    from cadrumo.application.user_profile import StatusPageData, StatusProfileRow
-    from cadrumo.application.workflow import list_profile_buckets
-    from cadrumo.core import resolve_active_bucket_id
+    from cadrumo.application.user_profile.status_projection import build_status_page_data
     from cadrumo.entrypoints.tui.profile.status import StatusApp
 
-    active_profile = resolve_active_bucket_id()
-    pointers = tuple(sorted(list_profile_buckets().values(), key=lambda pointer: pointer.label.casefold()))
-    active_label = next((pointer.label for pointer in pointers if pointer.bucket_id == active_profile), None)
-    return StatusApp(
-        StatusPageData(
-            active_profile_label=active_label,
-            profiles=tuple(
-                StatusProfileRow(label=pointer.label, active=pointer.bucket_id == active_profile)
-                for pointer in pointers
-            ),
-        )
-    )
+    return StatusApp(build_status_page_data())
+
+
+def _modelo_work_wizard() -> App[Any]:
+    """Render the canonical Modelo wizard definition over its live work unit."""
+    return build_modelo_work_wizard()
 
 
 def _form() -> App[Any]:
@@ -206,6 +156,12 @@ SURFACES: dict[str, Surface] = {
             # looked correct, which is the stand-in shape this harness has
             # already been caught by twice.
             needs_session=True,
+        ),
+        Surface(
+            "modelo-work-wizard",
+            "Live Modelo 130 work wizard over the canonical application factory",
+            _modelo_work_wizard,
+            provision=provision_modelo_work_wizard,
         ),
         Surface(
             "form",

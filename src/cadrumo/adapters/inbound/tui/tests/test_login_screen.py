@@ -20,10 +20,14 @@ import asyncio
 import pytest
 from textual.widgets import Button, Input, Select
 
-from .....application.user_profile import login_profile, logout_active_profile
-from .....entrypoints.cli import attempt_login, attempt_registration
+from .....application.user_profile import (
+    login_profile,
+    logout_active_profile,
+    register_profile_with_credentials,
+)
+from .....application.user_profile.login_interaction import ProfileLoginChoice, attempt_profile_login
 from .....entrypoints.tui.components.status import PinnedStatusBar
-from .....entrypoints.tui.secret.login import LoginApp, LoginChoice
+from .....entrypoints.tui.secret.login import LoginApp
 from .....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
@@ -51,24 +55,22 @@ actually meet would prove something weaker."""
 
 def _register(label: str) -> str:
     """Create one real profile through the real door and return its id."""
-    attempt = attempt_registration(
-        label,
-        _PASSWORD,
-        "en",
-        lambda enrollment: enrollment.recovery_key.mnemonic,
+    outcome = register_profile_with_credentials(
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        label=label,
+        passphrase=_PASSWORD,
     )
-    assert attempt.outcome is not None, f"the fixture profile must exist, but: {attempt.refusal}"
     # Registration leaves the new profile unlocked. The screen under test
     # exists for a LOCKED machine, so the session is closed again here;
     # otherwise the idempotent-login guard would return the already-open
     # session and no unwrap would be exercised at all.
     logout_active_profile()
-    return attempt.outcome.bucket_id
+    return outcome.bucket_id
 
 
-def _screen(choices: list[LoginChoice], *, preselected: str | None = None) -> LoginApp:
-    """The production composition, wired to the door the CLI gives it."""
-    return LoginApp(choices=choices, authenticate=attempt_login, preselected=preselected)
+def _screen(choices: list[ProfileLoginChoice], *, preselected: str | None = None) -> LoginApp:
+    """The production composition, wired to the application interaction contract."""
+    return LoginApp(choices=choices, authenticate=attempt_profile_login, preselected=preselected)
 
 
 async def _unlock_with(pilot, password: str) -> None:
@@ -92,7 +94,7 @@ async def test_typing_the_password_and_pressing_log_in_opens_a_real_session(tmp_
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register("Login Subject")
 
-        app = _screen([LoginChoice(profile_id=profile_id, label="Login Subject")])
+        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Login Subject")])
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _unlock_with(pilot, _PASSWORD)
 
@@ -116,7 +118,7 @@ async def test_a_wrong_password_refuses_in_place_without_leaving(tmp_path) -> No
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register("Refusal Subject")
 
-        app = _screen([LoginChoice(profile_id=profile_id, label="Refusal Subject")])
+        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Refusal Subject")])
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _unlock_with(pilot, _WRONG_PASSWORD)
 
@@ -157,7 +159,7 @@ async def test_the_operator_can_retry_on_the_same_screen_once_the_backoff_clears
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register("Retry Subject")
 
-        app = _screen([LoginChoice(profile_id=profile_id, label="Retry Subject")])
+        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Retry Subject")])
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _unlock_with(pilot, _WRONG_PASSWORD)
             assert app.outcome is None
@@ -186,8 +188,8 @@ async def test_the_chosen_profile_is_the_one_that_opens(tmp_path) -> None:
 
         app = _screen(
             [
-                LoginChoice(profile_id=first, label="Alpha Subject"),
-                LoginChoice(profile_id=second, label="Beta Subject"),
+                ProfileLoginChoice(profile_id=first, label="Alpha Subject"),
+                ProfileLoginChoice(profile_id=second, label="Beta Subject"),
             ],
             preselected=first,
         )
@@ -211,7 +213,7 @@ async def test_the_password_field_is_masked(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register("Masked Subject")
 
-        app = _screen([LoginChoice(profile_id=profile_id, label="Masked Subject")])
+        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Masked Subject")])
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             assert app.query_one("#field-passphrase", Input).password is True
             await pilot.pause()
@@ -224,7 +226,7 @@ async def test_an_empty_password_refuses_without_calling_the_door(tmp_path) -> N
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register("Empty Subject")
 
-        app = _screen([LoginChoice(profile_id=profile_id, label="Empty Subject")])
+        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Empty Subject")])
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.click("#btn-unlock")
             await pilot.pause()
@@ -248,7 +250,7 @@ async def test_cancelling_leaves_without_opening_anything(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register("Cancel Subject")
 
-        app = _screen([LoginChoice(profile_id=profile_id, label="Cancel Subject")])
+        app = _screen([ProfileLoginChoice(profile_id=profile_id, label="Cancel Subject")])
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             app.query_one("#field-passphrase", Input).value = _PASSWORD
             await pilot.pause()

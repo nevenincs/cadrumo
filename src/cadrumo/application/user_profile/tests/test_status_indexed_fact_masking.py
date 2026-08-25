@@ -23,8 +23,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.classification import SensitivityClass
-from .....domain.user_profile import (
+from ....core.classification import SensitivityClass
+from ....domain.user_profile import (
     ProfileFieldDefinition,
     ProfileFieldType,
     ProfileRemovePolicy,
@@ -38,7 +38,7 @@ from .....domain.user_profile import (
     profile_field_label,
     section_field_key,
 )
-from .._status_frontend import _build_fact_rows
+from ..status_projection import _build_fact_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -60,7 +60,7 @@ def test_an_exact_lookup_still_refuses_an_indexed_path() -> None:
     Without it the test could pass on a schema that happened to resolve
     indexed paths already, proving nothing about the reduction.
     """
-    from .....domain.user_profile import UserProfileError
+    from ....domain.user_profile import UserProfileError
 
     with pytest.raises(UserProfileError):
         load_user_profile_schema().field("attribution_entity_socios.0.nif")

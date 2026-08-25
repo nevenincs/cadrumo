@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import cast, get_args
 
@@ -23,47 +21,22 @@ from textual.widgets import (
     Static,
 )
 
-from cadrumo.entrypoints.tui.components.theme import (
+from ......application.modelo import ModeloWorkOriginAnomaly
+from ......application.modelo.tests._work_review_integration_fixture import build_real_modelo_work_review
+from ......core import BindingSourceKind, EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
+from ......core.config import override_settings
+from ......core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ......domain.calculations.registry import InputKind, RelationConsumptionChannel
+from ......domain.filing import ModeloValueKind
+from ......domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ......tests.locales_root_fixture import locales_root_scope
+from ....components.theme import (
     CADRUMO_DARK_THEME_NAME,
     CADRUMO_LIGHT_THEME_NAME,
 )
-from cadrumo.entrypoints.tui.components.widgets import ContentScroll
-
-from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from .....application.modelo import ModeloWorkOriginAnomaly, ModeloWorkReview, build_modelo_work_review
-from .....core import BindingSourceKind, EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis, Period
-from .....core.config import override_settings
-from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from .....domain.calculations.registry import (
-    CasillaObservation,
-    InputKind,
-    RelationConsumptionChannel,
-    bundled_authority,
-)
-from .....domain.filing import ModeloValueKind
-from .....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
-    ModeloCode,
-    ModeloVerificationFinding,
-    ModeloVerificationFindingKind,
-    ModeloVerificationFindingSeverity,
-    VerificationCompletenessStatus,
-    VerificationReport,
-    WorkUnit,
-    derive_calculation_revision_id,
-    derive_verification_report_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_verification_report,
-    upsert_work_unit,
-)
-from .....tests.locales_root_fixture import locales_root_scope
-from .....tests.secure_sql import isolated_runtime_profile
+from ....components.widgets import ContentScroll
 from .. import ModeloWorkReviewApp
-from .._modelo_work_review_screen import (
+from ..work_review import (
     _ABSENT,
     _PRESENT,
     _enum_options,
@@ -72,163 +45,7 @@ from .._modelo_work_review_screen import (
     _resolved_options,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
-
-_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_NOW = datetime(2026, 8, 12, 10, 0, tzinfo=UTC)
-
-
-def _real_review(
-    tmp_path: Path,
-    *,
-    modelo: str,
-    filing_year: int,
-    period_code: str,
-    blocked: bool = False,
-    materialised: bool = False,
-) -> ModeloWorkReview:
-    """Build the public review record from genuine encrypted repositories."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        objects = runtime.repository
-        work_repository = WorkUnitCatalogueRepository(objects=objects)
-        calculation_repository = CalculationRevisionCatalogueRepository(objects=objects)
-        verification_repository = VerificationReportCatalogueRepository(objects=objects)
-        modelo_code = ModeloCode(modelo)
-        period = Period.from_year_and_code(filing_year, period_code)
-        authority = bundled_authority()
-        snapshot = authority.snapshot(modelo_code, filing_year=filing_year, period=period.registry_token)
-        work_unit_id = derive_work_unit_id(
-            bucket_id=_BUCKET_ID,
-            modelo=modelo_code,
-            filing_year=filing_year,
-            period=period,
-            revision_id=snapshot.revision.id,
-        )
-        casilla_values: dict[str, Decimal] = {}
-        binding_overrides: dict[str, str] = {}
-        observations: tuple[CasillaObservation, ...] = ()
-        if materialised:
-            materialised_values = {
-                "01": Decimal("10000"),
-                "02": Decimal("5000"),
-                "03": Decimal("5000"),
-                "06": Decimal("0"),
-            }
-            definitions = {str(casilla.id): casilla for casilla in snapshot.revision.casillas}
-            casilla_values = dict(materialised_values)
-            binding_overrides = {
-                "modelo-130-actividad-economica-ingresos-cumulative": "9000",
-                "modelo-130-actividad-economica-gastos-cumulative": "5000",
-            }
-            observations = tuple(
-                CasillaObservation(
-                    casilla_id=casilla_id,
-                    value=value,
-                    legal_refs=tuple(definitions[casilla_id].legal_refs),
-                    source_refs=tuple(definitions[casilla_id].source_refs),
-                )
-                for casilla_id, value in materialised_values.items()
-            )
-        calculation_revision_id = (
-            derive_calculation_revision_id(
-                work_unit_id=work_unit_id,
-                input_values_by_casilla_id={},
-                binding_overrides=binding_overrides,
-                casilla_values=casilla_values,
-                filing_instance_evidence=None,
-                source_provenance=(),
-            )
-            if blocked or materialised
-            else None
-        )
-        work_unit = WorkUnit(
-            work_unit_id=work_unit_id,
-            bucket_id=_BUCKET_ID,
-            modelo=modelo_code,
-            filing_year=filing_year,
-            period=period,
-            revision_id=snapshot.revision.id,
-            name=f"{modelo}-{filing_year}-{period_code}",
-            current_calculation_revision_id=calculation_revision_id,
-            created_at=_NOW,
-            updated_at=_NOW,
-        )
-        work_repository.save(upsert_work_unit(work_repository.load(), work_unit))
-
-        if calculation_revision_id is not None:
-            calculation = CalculationRevision(
-                calculation_revision_id=calculation_revision_id,
-                work_unit_id=work_unit_id,
-                state=CalculationRevisionState.BORRADOR,
-                binding_overrides=binding_overrides,
-                casilla_values=casilla_values,
-                observations=observations,
-                created_at=_NOW,
-                updated_at=_NOW,
-                filing_instance_evidence=None,
-                source_provenance=(),
-            )
-            calculation_repository.save(
-                upsert_calculation_revision(calculation_repository.load(), calculation),
-            )
-            affected = next(casilla for casilla in snapshot.revision.casillas if casilla.legal_refs)
-            finding = ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                casilla_id=affected.id,
-                expectation_id="review-screen-expectation",
-                message_locale_key="application.modelo.findings.blocking_rule",
-                message_facts={"casilla_id": str(affected.id)},
-                legal_refs=tuple(affected.legal_refs),
-                source_refs=tuple(affected.source_refs),
-            )
-            findings = (finding,)
-            if materialised:
-                findings = (
-                    finding,
-                    ModeloVerificationFinding(
-                        kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
-                        severity=ModeloVerificationFindingSeverity.WARNING,
-                        message_locale_key=("application.modelo.findings.m303_m349_intracom_reconciliation_mismatch"),
-                        message_facts={
-                            "period_code": period.registry_token,
-                            "filing_year": filing_year,
-                            "m303_total": Decimal("100"),
-                            "m349_total": Decimal("80"),
-                            "gap": Decimal("20"),
-                        },
-                        legal_refs=tuple(affected.legal_refs),
-                        source_refs=tuple(affected.source_refs),
-                    ),
-                )
-            report = VerificationReport(
-                verification_report_id=derive_verification_report_id(
-                    calculation_revision_id=calculation_revision_id,
-                    completeness_status=VerificationCompletenessStatus.BLOCKED,
-                    findings=findings,
-                    verified_by="modelo-review-tui-test",
-                ),
-                calculation_revision_id=calculation_revision_id,
-                completeness_status=VerificationCompletenessStatus.BLOCKED,
-                findings=findings,
-                run_at=_NOW,
-                verified_by="modelo-review-tui-test",
-                granted_verificado_completo=False,
-            )
-            verification_repository.save(
-                upsert_verification_report(verification_repository.load(), report),
-            )
-
-        return build_modelo_work_review(
-            _BUCKET_ID,
-            modelo_code,
-            filing_year,
-            period,
-            authority=authority,
-            work_unit_repository=work_repository,
-            calculation_repository=calculation_repository,
-            verification_repository=verification_repository,
-        )
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _cells(table: DataTable[str]) -> tuple[str, ...]:
@@ -252,7 +69,7 @@ def _visible_in(widget: Widget, container: Widget) -> bool:
 
 @pytest.mark.asyncio
 async def test_blocked_review_renders_all_canonical_grains_without_mutation_controls(tmp_path: Path) -> None:
-    review = _real_review(tmp_path, modelo="130", filing_year=2026, period_code="1T", blocked=True)
+    review = build_real_modelo_work_review(tmp_path, modelo="130", filing_year=2026, period_code="1T", blocked=True)
     app = ModeloWorkReviewApp(review)
     locale_root = tmp_path / "review-locales"
     locale_root.mkdir()
@@ -324,7 +141,7 @@ def test_facet_option_sets_are_exactly_the_canonical_closed_axes() -> None:
 
 @pytest.mark.asyncio
 async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutation(tmp_path: Path) -> None:
-    review = _real_review(tmp_path, modelo="100", filing_year=2024, period_code="0A")
+    review = build_real_modelo_work_review(tmp_path, modelo="100", filing_year=2024, period_code="0A")
     original_record = review.model_dump(mode="json")
     app = ModeloWorkReviewApp(review)
 
@@ -488,7 +305,7 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
 
 @pytest.mark.asyncio
 async def test_m130_realised_anomaly_finding_and_blocker_facets_bite_and_empty_truthfully(tmp_path: Path) -> None:
-    review = _real_review(
+    review = build_real_modelo_work_review(
         tmp_path,
         modelo="130",
         filing_year=2026,
@@ -636,7 +453,7 @@ async def test_named_outlier_review_renders_every_registry_casilla(
     filing_year: int,
     period_code: str,
 ) -> None:
-    review = _real_review(
+    review = build_real_modelo_work_review(
         tmp_path,
         modelo=modelo,
         filing_year=filing_year,
@@ -658,7 +475,7 @@ async def test_named_outlier_review_renders_every_registry_casilla(
 
 @pytest.mark.asyncio
 async def test_undefined_progress_never_renders_a_manufactured_zero_denominator(tmp_path: Path) -> None:
-    review = _real_review(tmp_path, modelo="189", filing_year=2025, period_code="0A")
+    review = build_real_modelo_work_review(tmp_path, modelo="189", filing_year=2025, period_code="0A")
     app = ModeloWorkReviewApp(review)
 
     async with app.run_test(size=(120, 36)):
@@ -672,7 +489,7 @@ async def test_undefined_progress_never_renders_a_manufactured_zero_denominator(
 @pytest.mark.asyncio
 async def test_large_outlier_frame_scroll_focus_and_last_row_are_usable_at_three_sizes(tmp_path: Path) -> None:
     """The real M100 surface remains operable, not merely populated, at every target size."""
-    review = _real_review(tmp_path, modelo="100", filing_year=2024, period_code="0A")
+    review = build_real_modelo_work_review(tmp_path, modelo="100", filing_year=2024, period_code="0A")
 
     for size in ((80, 24), (120, 36), (160, 48)):
         app = ModeloWorkReviewApp(review)
@@ -716,7 +533,7 @@ async def test_representative_outlier_localizes_opened_filters_at_narrow_width_a
     tmp_path: Path,
 ) -> None:
     """M720 keeps the opened localized facet disclosure usable at narrow width."""
-    review = _real_review(tmp_path, modelo="720", filing_year=2024, period_code="0A")
+    review = build_real_modelo_work_review(tmp_path, modelo="720", filing_year=2024, period_code="0A")
 
     for language in SUPPORTED_OUTPUT_LANGUAGES:
         size = (80, 24)

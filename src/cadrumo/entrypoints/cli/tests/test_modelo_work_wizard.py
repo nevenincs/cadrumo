@@ -27,8 +27,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....application.flows import run_scripted_flow
+from ....application.flows import FlowCopyResolutionError, assemble_page_copy, run_scripted_flow
 from ....application.modelo import modelo_work_wizard_retry_exhausted_precondition
+from ....application.modelo.work_wizard import ModeloWorkWizardStep, open_modelo_work_wizard
 from ....core import ActionConditionality, NoRecoveryOutcome, resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -37,14 +38,6 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
 from ....tests.user_profile import register_cli_profile
 from .._modelo_behavior_support import resolve_work_unit_for_cli
-from .._modelo_work_wizard_cli import (
-    _ACTIVE_RUNS,
-    _binding_grounding_lookup,
-    _definition_from_steps,
-    _outstanding_wizard_steps,
-    _page_key,
-    _WizardStep,
-)
 from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _create_m130_work_unit
@@ -90,7 +83,7 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _scripted_manual_answers(work_unit_id: str) -> list[tuple[_WizardStep, str]]:
+def _scripted_manual_answers(work_unit_id: str) -> list[tuple[ModeloWorkWizardStep, str]]:
     """Walk the wizard's outstanding manual pages through the scripted substrate.
 
     Reproduces exactly what the wizard does — resolve the unit, discover its
@@ -101,7 +94,6 @@ def _scripted_manual_answers(work_unit_id: str) -> list[tuple[_WizardStep, str]]
     pairs in flow order, read back off the engine state exactly as the wizard
     reads them.
     """
-    run_token = "test-scripted-wizard"  # noqa: S105 - a copy-table run token, not a credential
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     # Step discovery reads the registry and the bucket-scoped profile, so it
@@ -109,19 +101,12 @@ def _scripted_manual_answers(work_unit_id: str) -> list[tuple[_WizardStep, str]]
     # command opens per invocation.
     with open_test_profile_session(bucket_id):
         unit = resolve_work_unit_for_cli(work_unit_id=work_unit_id)
-        steps = _outstanding_wizard_steps(unit)
-        _ACTIVE_RUNS[run_token] = {}
-        try:
-            definition = _definition_from_steps(steps, run_token=run_token)
-            tokens = ["0"] * len(steps)
+        with open_modelo_work_wizard(unit) as wizard:
+            definition = wizard.definition_for()
+            tokens = ["0"] * len(wizard.steps)
             state, projection = run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
             assert projection.submit_eligible
-            answers: list[tuple[_WizardStep, str]] = []
-            for step in steps:
-                answers.append((step, (state.answers.get(_page_key(step)) or "").strip()))
-            return answers
-        finally:
-            _ACTIVE_RUNS.pop(run_token, None)
+            return list(wizard.answer_pairs(state))
 
 
 def _calculate_flags(overrides: list[str]) -> list[str]:
@@ -306,15 +291,8 @@ def test_wizard_prompted_casilla_payload_refuses_malformed_field(field: str, bad
         WizardPromptedCasillaPayload.model_validate(kwargs)
 
 
-def test_binding_grounding_lookup_covers_a_real_m130_binding() -> None:
-    """The follow-up-step grounding lookup resolves real registry grounding.
-
-    ``_follow_up_step_for_missing_input`` used to leave ``legal_refs`` /
-    ``source_refs`` empty for a retry-discovered binding/relation step, which
-    the now-required grounding on ``WizardPromptedCasillaPayload`` would
-    refuse. This proves the lookup actually finds non-empty grounding for a
-    real registry binding on a real work unit, not just that it type-checks.
-    """
+def test_canonical_wizard_factory_carries_real_registry_grounding() -> None:
+    """The public wizard factory discovers the registry's grounded question set."""
     _create_profile()
     _seed_m130_ledger("wizard-binding-grounding-lookup")
     work_unit_id = _create_m130_work_unit()
@@ -323,9 +301,15 @@ def test_binding_grounding_lookup_covers_a_real_m130_binding() -> None:
 
     with open_test_profile_session(bucket_id):
         unit = resolve_work_unit_for_cli(work_unit_id=work_unit_id)
-        lookup = _binding_grounding_lookup(unit)
+        with open_modelo_work_wizard(unit) as wizard:
+            steps = wizard.steps
+            definition = wizard.definition_for()
+            first_page = definition.sections[0].items[0]
+            assert assemble_page_copy(first_page).prompt
 
-    assert lookup, "expected at least one registry binding for the M130 1T scope"
-    for legal_refs, source_refs in lookup.values():
-        assert legal_refs, "every looked-up binding must carry legal_refs"
-        assert source_refs, "every looked-up binding must carry source_refs"
+    assert steps, "expected the M130 wizard to expose registry-backed questions"
+    for step in steps:
+        assert step.legal_refs, f"wizard question {step.key} must carry legal_refs"
+        assert step.source_refs, f"wizard question {step.key} must carry source_refs"
+    with pytest.raises(FlowCopyResolutionError):
+        assemble_page_copy(first_page)

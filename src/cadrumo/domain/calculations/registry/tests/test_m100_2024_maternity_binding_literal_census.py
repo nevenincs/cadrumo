@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-
 _REGISTRY_TESTS_ROOT = Path(__file__).parent
 _BINDING_PREFIX = "renta-2024-profile-"
 _BINDING_SUFFIX = "deduccion-maternidad"

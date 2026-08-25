@@ -19,12 +19,16 @@ from textual.widgets import Input
 
 from .....adapters.persistence.storage.custody import ProfileCustodyRefusedError
 from .....application.user_profile import (
-    login_profile,
     logout_active_profile,
     register_profile_with_credentials,
     restore_profile_from_source_with_password,
 )
-from .....entrypoints.tui.secret.login import LoginApp, LoginAttempt, LoginChoice
+from .....application.user_profile.login_interaction import (
+    ProfileLoginChoice,
+    attempt_profile_login,
+    profile_login_choices,
+)
+from .....entrypoints.tui.secret.login import LoginApp
 from .....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
@@ -36,13 +40,8 @@ _TERMINAL_SIZE = (140, 60)
 _PASSWORD = "login-restored-operator-secret"  # noqa: S105 - synthetic test fixture
 
 
-def _authenticate(profile_id: str, passphrase: str) -> LoginAttempt:
-    """Drive the public login door through the adapter's injected contract."""
-    return LoginAttempt(outcome=login_profile(name=profile_id, passphrase_callback=lambda: passphrase))
-
-
-def _screen(choices: list[LoginChoice]) -> LoginApp:
-    return LoginApp(choices=choices, authenticate=_authenticate)
+def _screen(choices: list[ProfileLoginChoice]) -> LoginApp:
+    return LoginApp(choices=choices, authenticate=attempt_profile_login)
 
 
 async def _unlock_with(pilot, password: str) -> None:
@@ -50,15 +49,6 @@ async def _unlock_with(pilot, password: str) -> None:
     await pilot.pause()
     await pilot.click("#btn-unlock")
     await pilot.app.workers.wait_for_complete()
-
-
-def _login_choices() -> list[LoginChoice]:
-    from .....application.workflow import list_profile_buckets
-
-    return [
-        LoginChoice(profile_id=pointer.bucket_id, label=pointer.label)
-        for pointer in sorted(list_profile_buckets().values(), key=lambda pointer: pointer.label.casefold())
-    ]
 
 
 @pytest.mark.asyncio
@@ -84,7 +74,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
     from .....core.config import override_settings
 
     with override_settings(cadrumo_local_storage_root=str(tmp_path / "tui-root")):
-        choices = _login_choices()
+        choices = list(profile_login_choices())
         assert any(choice.profile_id == restored.profile_id for choice in choices)
         logout_active_profile()
 
@@ -111,4 +101,4 @@ async def test_a_legacy_custody_member_refuses_at_the_login_surface(
             encoding="utf-8",
         )
         with pytest.raises(ProfileCustodyRefusedError):
-            _login_choices()
+            profile_login_choices()

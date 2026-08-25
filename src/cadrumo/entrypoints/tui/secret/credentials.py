@@ -18,8 +18,7 @@ drives, so this tier keeps rendering and never reaches up.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar, Final, cast
+from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast
 
 from textual.app import App
 from textual.binding import Binding
@@ -46,8 +45,7 @@ appearance of a labelled field, a refusal line, a busy line, and a button
 row is one decision for both surfaces."""
 
 
-@dataclass(frozen=True, slots=True)
-class CredentialAttempt[OutcomeT]:
+class CredentialAttempt[OutcomeT](Protocol):
     """The outcome of asking the application to act on a credential.
 
     A refusal arrives as text the screen displays, not as an exception it
@@ -56,8 +54,8 @@ class CredentialAttempt[OutcomeT]:
     show the operator what happened.
     """
 
-    outcome: OutcomeT | None = None
-    refusal: str | None = None
+    outcome: OutcomeT | None
+    refusal: str | None
 
 
 class CredentialApp[OutcomeT](App[OutcomeT | None]):

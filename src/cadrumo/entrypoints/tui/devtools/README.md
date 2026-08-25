@@ -66,12 +66,12 @@ the same bucket and active-profile pointer. Without it everyone shares
 
 ## Surfaces
 
-`registration`, `login`, `manager`, `status`, `form`.
+`registration`, `login`, `manager`, `status`, `modelo-work-wizard`, `form`.
 
 Each uses the canonical public profile and presentation contracts. The manager
-surface exercises authenticated profile editing and logout; effectful manager
-operations and the Modelo wizard stay behind their application-owned public
-contracts until their dedicated operation and flow migrations land.
+surface exercises authenticated profile editing and logout. The Modelo wizard
+surface provisions a real Modelo 130 work unit and renders the exact
+application-owned flow definition over it.
 
 ## The frame
 

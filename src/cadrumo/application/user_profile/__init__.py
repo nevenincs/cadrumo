@@ -877,10 +877,6 @@ if TYPE_CHECKING:
     from ._section_rows import (
         section_row_facts as section_row_facts,
     )
-    from ._status_projection import StatusAuthView as StatusAuthView
-    from ._status_projection import StatusFactRow as StatusFactRow
-    from ._status_projection import StatusPageData as StatusPageData
-    from ._status_projection import StatusProfileRow as StatusProfileRow
     from ._validation import (
         COMPLETENESS_ISSUE_CODES as COMPLETENESS_ISSUE_CODES,
     )
@@ -1061,10 +1057,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileLoginThrottledError": "._login_session",
     "ProfileNotFoundError": "._profile_repository",
     "ProfileOverview": "._overview",
-    "StatusAuthView": "._status_projection",
-    "StatusFactRow": "._status_projection",
-    "StatusPageData": "._status_projection",
-    "StatusProfileRow": "._status_projection",
     "ProfilePersistedSessionPort": "._login_session_port",
     "ProfilePreflightReport": "._commands",
     "ProfilePreflightRequirement": "._commands",
@@ -1353,10 +1345,6 @@ __all__ = [
     "ProfileValidationReport",
     "ProfileValidationService",
     "ProspectiveProfilePasswordRefusal",
-    "StatusAuthView",
-    "StatusFactRow",
-    "StatusPageData",
-    "StatusProfileRow",
     "UnsupportedBundleSchemaVersionError",
     "UserProfileFact",
     "UserProfileFactValue",
