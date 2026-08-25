@@ -4,4 +4,4 @@
 aeat app ledger view e3eeac5e
 @step Read the transaction's history.
 @result aeat --format json app ledger history e3eeac5e
-@expect result.events[0].event_type == "ledger.transaction.imported"
+@expect result.transaction_id == "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"

@@ -17,7 +17,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\nperiod\t2026 1T\nchecked\t0\nissues\t0\nready\ttrue\nadvisory\tempty_ledger\tNo active ledger transactions were checked for this period.\n"
+      "text": "bucket\t<profile-id>\nperiod\t2026 1T\nchecked\t0\nissues\t0\nready\ttrue\nadvisory\tempty_ledger\tNo active ledger transactions were checked for this period.\nnotice\tledger.preflight.empty_period\tNo active ledger transactions were checked for this period.\n"
     },
     {
       "argv": [

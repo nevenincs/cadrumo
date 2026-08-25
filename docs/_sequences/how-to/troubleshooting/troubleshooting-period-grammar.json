@@ -287,7 +287,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\nperiod\t2026 03\nchecked\t0\nissues\t0\nready\ttrue\nadvisory\tempty_ledger\tNo active ledger transactions were checked for this period.\n"
+      "text": "bucket\t<profile-id>\nperiod\t2026 03\nchecked\t0\nissues\t0\nready\ttrue\nadvisory\tempty_ledger\tNo active ledger transactions were checked for this period.\nnotice\tledger.preflight.empty_period\tNo active ledger transactions were checked for this period.\n"
     },
     {
       "argv": [
@@ -350,7 +350,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88",
+          "calculation_revision_id": "c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -470,7 +470,6 @@
             "98": "0",
             "99": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "0",
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
@@ -3039,7 +3038,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "0"
+              "value": "1T"
             },
             {
               "absent_by_design": false,
@@ -3850,30 +3849,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 252fee217dd1b1667fe787c0e79172fe5126e13acced838f078c937433eabb88`.",
-          "source_provenance": [
-            {
-              "binding_source": "ledger_iva_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
-              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
-            },
-            {
-              "binding_source": "ledger_iva_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_iva_aggregation",
-              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
-            },
-            {
-              "binding_source": "prorrata_regularizacion",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "prorrata_regularizacion",
-              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
-            }
-          ],
+          "saved_confirmation": "Saved as draft calculation revision c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision c00c463e7fc667aac950c725ae60c56c47b817c7d722d2a44683c59f57c8e2c1`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

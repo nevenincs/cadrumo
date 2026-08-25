@@ -57,6 +57,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from tempfile import TemporaryDirectory
 from pathlib import Path
 
 # Pure stdlib, deliberately not `from cadrumo.tests import collection_storage_root`
@@ -87,11 +88,12 @@ from cadrumo.tests._env_loader import bridge_env_file_into_environ  # noqa: E402
 # against is already set by the pure-stdlib line above.
 bridge_env_file_into_environ(Path(__file__).resolve().parent / "env" / ".env")
 
+from collections.abc import Iterator  # noqa: E402
 from typing import TYPE_CHECKING  # noqa: E402
 
 import pytest  # noqa: E402
 
-from cadrumo.tests import register_collection_storage_root_cleanup  # noqa: E402
+from cadrumo.tests import register_collection_storage_root_cleanup, temporary_env  # noqa: E402
 from cadrumo.tests._deselection_hook import apply as _report_deselection  # noqa: E402
 from cadrumo.tests._host_load_hook import arm_pre_timeout_stamp as _arm_host_load_stamp  # noqa: E402
 from cadrumo.tests._host_load_hook import disarm_pre_timeout_stamp as _disarm_host_load_stamp  # noqa: E402
@@ -103,6 +105,32 @@ if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
 register_collection_storage_root_cleanup(collection_storage_root())
+
+
+@pytest.fixture(scope="session")
+def _resident_service_environment(
+) -> Iterator[None]:
+    """Give resident-service child processes one isolated singleton scope."""
+    with TemporaryDirectory(prefix="vaultspec-rag-pytest-") as root_text:
+        root = Path(root_text)
+        status_dir = root / "status"
+        qdrant_dir = root / "qdrant"
+        status_dir.mkdir()
+        qdrant_dir.mkdir()
+        with temporary_env(
+            _VAULTSPEC_RAG_PYTEST_SINGLETON_ROOT=str(root),
+            _VAULTSPEC_RAG_PYTEST_SINGLETON_ACTIVE="1",
+            VAULTSPEC_RAG_STATUS_DIR=str(status_dir),
+            VAULTSPEC_RAG_QDRANT_STORAGE_DIR=str(qdrant_dir),
+        ):
+            yield
+
+
+@pytest.fixture(autouse=True)
+def _inherit_resident_service_environment(request: pytest.FixtureRequest) -> None:
+    """Activate the shared singleton scope only for resident-service tests."""
+    if request.node.get_closest_marker("resident_service") is not None:
+        request.getfixturevalue("_resident_service_environment")
 
 
 @pytest.hookimpl(tryfirst=True)

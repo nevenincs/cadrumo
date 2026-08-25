@@ -18,7 +18,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\nDRY RUN MODE\tYes\nNotice\tDry run: no rows were saved. The counts above are a preview of what a real import would add and skip.\n"
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\nDRY RUN MODE\tYes\nNotice\tDry run: no rows were saved. The counts above are a preview of what a real import would add and skip.\nnotice\tledger.import.dry_run_preview\tDry run: no rows were saved. The counts above are a preview of what a real import would add and skip.\n"
     },
     {
       "argv": [
