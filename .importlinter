@@ -244,8 +244,6 @@ ignore_imports =
     cadrumo.llm.tests.test_llm_vision_classifier -> cadrumo.application.ledger._llm_classification
     cadrumo.llm.tests.test_local_text_reader_wiring -> cadrumo.application.ledger._llm_classification
     cadrumo.llm.tests.test_evidence_draft_vision -> cadrumo.application.ledger
-    cadrumo.llm.tests.test_llm_vision_classifier -> cadrumo.application.ledger.tests._llm_vision_evidence_support
-    cadrumo.llm.tests.test_evidence_draft_vision -> cadrumo.application.ledger.tests._llm_vision_evidence_support
     # ── The subpackage's own tests, into the LLM adapter facade ────────────
     # These tests construct the REAL cache, usage recorder and telemetry
     # recorder, because the properties under test -- no cloud fallback on
