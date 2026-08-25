@@ -39,6 +39,7 @@ from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from datetime import date
 from decimal import Decimal
+from typing import TypeGuard
 
 from pydantic import BaseModel
 
@@ -74,6 +75,7 @@ from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
     UserProfileFactValue,
+    UserProfileRecord,
     derived_selector_for_path,
     load_user_profile_schema,
     profile_binding_selectors,
@@ -141,6 +143,11 @@ def _profile_record_fingerprint(profile_record: object | None) -> str | None:
     return f"sha256:{digest}"
 
 
+def _is_user_profile_record(record: object) -> TypeGuard[UserProfileRecord]:
+    """Prove that an optional caller override is the canonical live record."""
+    return isinstance(record, UserProfileRecord)
+
+
 def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, UserProfileFactValue]:
     """Build a selector -> typed-value index covering both selector forms.
 
@@ -161,9 +168,11 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
         for field in section.fields:
             selector_index[f"{section.key}.{field.key}"] = tuple(field.model_selectors)
 
+    if not _is_user_profile_record(record):
+        return {}
+
     index: dict[str, UserProfileFactValue] = {}
-    facts = getattr(record, "facts", ())
-    for fact in facts:
+    for fact in record.facts:
         if fact.value is None:
             continue
         index[fact.path] = fact.value

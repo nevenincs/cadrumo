@@ -118,6 +118,7 @@ from ._values import (
 
 if TYPE_CHECKING:
     from ._portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
+    from ._registry_contract import profile_binding_selectors
 
 
 #: Names ``_registry_contract`` owns, resolved on first use. Kept as an explicit
