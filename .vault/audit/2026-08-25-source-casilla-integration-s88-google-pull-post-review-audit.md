@@ -24,6 +24,11 @@ It checked the snapshot-owned public-command route, preservation of the existing
 Google refusal projection, and the narrow boundary between S88 and the still-open
 S89 carrier/persistence, S90 hostile-validation, and S91 roundtrip steps.
 
+Shared-worktree provenance: the no-mock test correction was captured in mixed
+commit `d576b46ead`, the audit scaffold and S88 execution-record whitespace
+normalization in mixed commit `c8487a7435`, and this audit/index follow-up is
+scoped separately.
+
 ## Findings
 
 ### monkeypatched-delegation-guard | low | The original S88 call-path proof violated the real-gate rule
