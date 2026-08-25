@@ -7,9 +7,10 @@ own export keys, layout offsets, or rendered record fragments.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, ClassVar, Final, Literal, Mapping
+from typing import Annotated, ClassVar, Final, Literal
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
@@ -32,13 +33,13 @@ from ...core import (
     StandardPeriodCode,
     result_disposition_is_refund,
 )
-from ...domain.calculations.registry import SourceReference
 from ...core.identity import SubjectTaxId
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
+from ...domain.calculations.registry import SourceReference
 from ...domain.deadlines import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevisionAmendmentKind,
@@ -1688,8 +1689,8 @@ __all__ = [
     "M390ActivityValueArrival",
     "M390DifferentiatedDeductionValueArrival",
     "M390FilingFacts",
-    "M390ProrrataActivityValueArrival",
     "M390ProjectionScalar",
+    "M390ProrrataActivityValueArrival",
     "M390RegimenSimplificadoActivityValueArrival",
     "M390RegimenSimplificadoModuleValueArrival",
     "M390RepresentativeValueArrival",
