@@ -188,16 +188,6 @@ from ._acquisition_lock import (
     inspect_auth_acquisition_lock,
 )
 from ._actions import update_auth
-from .apoderado_service import (
-    ApoderadoConfiguration,
-    ApoderadoConfigurationIdentityError,
-    ApoderadoConfigurationNotSetError,
-    ApoderadoLiveCheckUnavailableError,
-    ApoderadoRepresentedNifInvalidError,
-    ApoderadoConfigRepository,
-    ApoderadoService,
-    ApoderadoStatus,
-)
 from ._certificate_secret_backend import (
     CertificateSecretBackend,
     SecureStorageCertificateSecretBackend,
@@ -306,17 +296,27 @@ from ._sessions import (
     resolve_clave_credentials,
     storage_state_paths,
 )
+from .apoderado_service import (
+    ApoderadoConfigRepository,
+    ApoderadoConfiguration,
+    ApoderadoConfigurationIdentityError,
+    ApoderadoConfigurationNotSetError,
+    ApoderadoLiveCheckUnavailableError,
+    ApoderadoRepresentedNifInvalidError,
+    ApoderadoService,
+    ApoderadoStatus,
+)
 
 __all__ = [
     "AUTH_DIAGNOSTIC_PHONE_STATES",
     "AUTH_PROVIDER_CATALOGUE",
     "ActiveAuthProjectionSnapshot",
     "ActiveCertificateCredentials",
+    "ApoderadoConfigRepository",
     "ApoderadoConfiguration",
     "ApoderadoConfigurationIdentityError",
     "ApoderadoConfigurationNotSetError",
     "ApoderadoLiveCheckUnavailableError",
-    "ApoderadoConfigRepository",
     "ApoderadoRepresentedNifInvalidError",
     "ApoderadoService",
     "ApoderadoStatus",
