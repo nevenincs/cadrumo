@@ -311,7 +311,7 @@ Adjudicate, connect or close, persist, and review the M232 row source.
 
 - [x] `W05.P15.S92` - adjudicate M232 row semantics and source ownership from official evidence; `.vault/research/2026-08-22-source-casilla-integration-m232-row-source-grounding-research.md`.
 - [x] `W05.P15.S93` - retain the M232 related-party-operation deferral until its carrier preserves direction and relationship type, a secure source owner exists, and S94 proves the full encrypted row route; `src/cadrumo/_data/source_connectivity/census.toml`.
-- [ ] `W05.P15.S94` - prove row persistence, diagnostics, provenance, replay, review, and export for M232; `src/cadrumo/application/modelo/tests/test_m232_row_source.py`.
+- [ ] `W05.P15.S94` - prove M232 rows remain unavailable across persistence, replay, review, and repeated-record export until S93 reopening conditions are satisfied; `src/cadrumo/application/modelo/tests/test_deferred_detalle_source_advisories.py`.
 - [ ] `W05.P15.S95` - close the M232 census disposition and obtain formal review; `.vault/audit/2026-08-22-m232-row-source-code-review.md`.
 
 ### Phase `W05.P16` - resolve M360 refund operations

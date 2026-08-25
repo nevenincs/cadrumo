@@ -9,7 +9,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-research]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
 modified: '2026-08-25'
-body_hash: 'sha256:10d94f0da8856253ebd0cd28d6bceb57da1738782fd1004bed22e240f7952d48'
+body_hash: 'sha256:fecd41055487caf6a7b33e051d213f6069ced3370fb82db809009a6650797577'
 ---
 
 <!-- RETIRED: S109, S118, S119 -->
@@ -210,7 +210,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [x] `W05.P10.S72` - Prove the complete M303 carry-contradiction and official-evidence displacement refusal population through exact canonical terminal contracts; `src/cadrumo/application/calculations/_errors.py; src/cadrumo/application/calculations/_m303_carry_ingress.py; src/cadrumo/application/calculations/_observation_repository.py; src/cadrumo/application/calculations/tests`.
 - [x] `W05.P10.S73` - Migrate corpus-search recovery producers to typed conditions and canonical actions; `src/cadrumo/application/corpus_search`.
 - [x] `W05.P10.S74` - Migrate evidence-service recovery producers to typed conditions and canonical actions; `src/cadrumo/application/evidence`.
-- [ ] `W05.P10.S75` - Migrate filing continuation producers to typed conditions and canonical actions; `src/cadrumo/application/filing`.
+- [x] `W05.P10.S75` - Migrate filing continuation producers to typed conditions and canonical actions; `src/cadrumo/application/filing`.
 - [x] `W05.P10.S76` - Migrate inventory recovery producers to typed conditions and canonical actions; `src/cadrumo/application/inventory`.
 - [x] `W05.P10.S77` - Replace operator-output suggestion producers with resolved typed action projections; `src/cadrumo/application/operator_output`.
 - [x] `W05.P10.S78` - Migrate residual operator-surface action producers outside the manifest and model owners; `src/cadrumo/application/operator_surface/_contract.py; src/cadrumo/application/operator_surface/_errors.py`.
@@ -271,8 +271,8 @@ rows, revalidates each final typed-producer resolver or terminal proof, proves
 retired absence and reference-only status, and preserves the complete immutable
 612-row history.
 
-- [x] `W06.P12.S46` - Require a complete semantic and mechanical pass with no newly discovered action site or alias; `dev/quality/cli_action_census.py; dev/quality/cli_action_census_dispositions.py; dev/quality/cli_action_census_dispositions.toml; dev/tests/test_cli_action_census.py; dev/tests/test_cli_action_census_dispositions.py`.
-- [x] `W06.P12.S47` - Add a code-only closure gate that rejects unclassified sites, unresolved actions, insufficient bindings, missing proofs, or ungrounded exclusions against the live census and operator surface, without reading plans, execution records, audits, or retired rehoming ledgers; `dev/tests/test_action_coverage_closure.py [new]; dev/quality/cli_action_census_dispositions.toml; src/cadrumo/application/operator_surface/_manifest.py; src/cadrumo/application/operator_actions`.
+- [ ] `W06.P12.S46` - Require a complete semantic and mechanical pass with no newly discovered action site or alias; `dev/quality/cli_action_census.py; dev/quality/cli_action_census_dispositions.py; dev/quality/cli_action_census_dispositions.toml; dev/tests/test_cli_action_census.py; dev/tests/test_cli_action_census_dispositions.py`.
+- [ ] `W06.P12.S47` - Add a code-only closure gate that rejects unclassified sites, unresolved actions, insufficient bindings, missing proofs, or ungrounded exclusions against the live census and operator surface, without reading plans, execution records, audits, or retired rehoming ledgers; `dev/tests/test_action_coverage_closure.py [new]; dev/quality/cli_action_census_dispositions.toml; src/cadrumo/application/operator_surface/_manifest.py; src/cadrumo/application/operator_actions`.
 - [ ] `W06.P12.S48` - Publish the final reconciliation and fresh-context honesty findings; `.vault/audit/2026-08-09-cli-action-envelope-hardening-audit.md`.
 - [x] `W06.P12.S95` - Teach autonomous operators the explicit actionable-versus-no-recovery refusal algorithm and pin the rule to the live envelope schema; `src/cadrumo-harness/src/cadrumo_harness/_data/agent/rules/cadrumo-operator-envelope-reading.md; src/cadrumo-harness/src/cadrumo_harness/tests; src/cadrumo/core/tests; src/cadrumo/application/operator_actions/tests`.
 - [x] `W06.P12.S120` - Derive and exclusively partition the whole-tree registered-error-code to authored-message-site join without migrating producer code; `dev/quality/cli_action_census.py; dev/quality/cli_action_census_dispositions.py; dev/quality/cli_action_census_dispositions.toml; dev/tests/test_cli_action_census.py; dev/tests/test_cli_action_census_dispositions.py; dev/tests/test_authored_error_message_join.py [new]`.
