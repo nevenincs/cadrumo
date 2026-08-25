@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:0584700a9071f8eebd6770ea880821b789faa1e11bc1e456f1352c95ed1d2308'
+body_hash: 'sha256:95dd97002090b2f7029b48b475472fade21bd2349232a495201156f4448b7e92'
 related:
   - '[[2026-08-23-registry-unblock-loop-reference]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
@@ -88,6 +88,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S32]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S33]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S84]]'
+  - '[[2026-08-24-registry-completeness-closure-W03-P05-S85]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P06-S34]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P06-S35]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -399,6 +400,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W03-P05-S32` - 2026-08-24-registry-completeness-closure-W03-P05-S32
 - `2026-08-24-registry-completeness-closure-W03-P05-S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision
 - `2026-08-24-registry-completeness-closure-W03-P05-S84` - Implement a two-channel filing export proof port: value-independent official-layout conformance plus encrypted operator-specific source-owned replay, using only the canonical export_draft writer.
+- `2026-08-24-registry-completeness-closure-W03-P05-S85` - Dynamically classify every current filing-grade revision through canonical law selection, generated provenance, official source bytes, semantic owners, and positioned literal probes
 - `2026-08-24-registry-completeness-closure-W03-P06-S34` - Close registry-temporal-coverage predicate-relevant rows, execution records, summaries, stale assumptions, and final review
 - `2026-08-24-registry-completeness-closure-W03-P06-S35` - Close source-casilla-integration predicate-relevant rows, execution records, summaries, stale assumptions, and final review
 

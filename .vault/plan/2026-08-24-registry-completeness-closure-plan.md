@@ -3,6 +3,8 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
+modified: '2026-08-25'
+body_hash: 'sha256:014bfc2f6c4b0e30098fa89509e1c234e9fa75e856679d48ff935643935c982d'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -10,8 +12,6 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
-modified: '2026-08-25'
-body_hash: 'sha256:87ab4a3b11cadcd9ae9d5d76330a1c015832963f266e58d326f17a74d71c9636'
 ---
 
 # `registry-completeness-closure` plan
@@ -143,8 +143,8 @@ Exercise the supported revision umbrella through localization, casilla continuit
 - [x] `W03.P05.S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W03.P05.S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision; `src/cadrumo/application/filing/tests/`.
 - [x] `W03.P05.S84` - Implement a two-channel filing export proof port: value-independent official-layout conformance plus encrypted operator-specific source-owned replay, using only the canonical export_draft writer.; `src/cadrumo/application/filing/; dev/registry/`.
-- [ ] `W03.P05.S85` - Dynamically classify every current filing-grade revision through canonical law selection, generated provenance, official source bytes, semantic owners, and positioned literal probes; materialize a non-sensitive conformance vector only after full-registry validation and a separately reviewed canonical builder, otherwise retain one typed per-revision residue and its owner. Reconcile the concurrent Modelo 200 spanning-tree authority conflict through `W04.P08.S22`, never by re-pinning or regenerating it here; `src/cadrumo/_data/registry/aeat/; dev/registry/`.
-- [ ] `W03.P05.S86` - Re-run S33 as the dynamic dual-channel release gate, including secure replay receipts and explicit per-revision refusal; it cannot pass while any selected revision lacks validated provenance or a canonical builder, including a zero-success enrollment; `dev/registry/tests/; dev/registry/conformance/`.
+- [x] `W03.P05.S85` - Dynamically classify every current filing-grade revision through canonical law selection, generated provenance, official source bytes, semantic owners, and positioned literal probes; `materialize a non-sensitive conformance vector only after full-registry validation and a separately reviewed canonical builder, otherwise retain one typed per-revision residue and its owner. Reconcile the concurrent Modelo 200 spanning-tree authority conflict through `W04.P08.S22`, never by re-pinning or regenerating it here; `src/cadrumo/_data/registry/aeat/; dev/registry/`.
+- [ ] `W03.P05.S86` - Re-run S33 as the dynamic dual-channel release gate, including secure replay receipts and explicit per-revision refusal; `it cannot pass while any selected revision lacks validated provenance or a canonical builder, including a zero-success enrollment; `dev/registry/tests/; dev/registry/conformance/`.
 
 ### Phase `W03.P06` - predecessor campaign closure
 
