@@ -113,6 +113,10 @@ CONSTANTS_OUTSIDE_THE_INVENTORY: Final[Mapping[str, str]] = {
     ),
     "SIDECAR_SCHEMA_VERSION": "Bundled registry source sidecar; ships with the code, same grounds as the corpus.",
     "ENVELOPE_SCHEMA_VERSION": "The CLI JSON wire envelope. A transport contract, never written to disk as a record.",
+    "SECURE_REPLAY_PROOF_SCHEMA_VERSION": (
+        "Public secure-replay proof receipt contract emitted transiently from encrypted custody; its bytes are "
+        "not persisted by the application, and the internal custody record is already covered by secure_object."
+    ),
     "EPOCH_SCHEMA_VERSION": (
         "Workspace producer's current-only in-memory capture-comparison protocol. Its frozen declaration is "
         "constructed at import, and no persistence adapter writes or reads a payload carrying this number; "
