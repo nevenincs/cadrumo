@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:589875d81a9d27a1a7bc6d69e84ee6830776c5772f087d20b2216d3ef79ee8c1'
+body_hash: 'sha256:c1e6fc20171318b187237d29fa5fe0b0a1c842fef541d97c17aa14296ce89317'
 step_id: 'S106'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
@@ -52,10 +52,12 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Assert the canonical candidate/fixture absence, deferred calculation route, standing diagnostic, refused coverage limb, and expiry mutation.
+- Preserve direct manual gasto casillas and do not enroll an M193 expense resolver.
 
 ## Outcome
 
+The contributor-expense source remains unavailable to the connected encrypted lifecycle and source-owned repeated-record export until the S105 predicate is met. Manual gasto entry and the distinct withholding source remain unaffected.
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+- Independent audit remains separate.
