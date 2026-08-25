@@ -296,7 +296,11 @@ def build_censal_operation_registration(
             schema_version=1,
             model_type=CensalOperationRequest,
         ),
-        result_schema=None,
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="user-profile.censo-review.result",
+            schema_version=1,
+            model_type=CensalOperationResult,
+        ),
         review_projection_schema=CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
         interaction_response_schema=CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
         reviewed_operand_type=CensalReviewedOperand,

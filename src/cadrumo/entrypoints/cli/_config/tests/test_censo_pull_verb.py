@@ -28,13 +28,21 @@ import click
 import pytest
 import typer
 from pydantic import ValidationError
+from textual.widgets import DataTable, OptionList
 
-from .....application.user_profile import CENSO_SOURCE_TAG
+from .....adapters.inbound.tui import FormApp, FormScreen
+from .....application.user_profile import (
+    CENSO_SOURCE_TAG,
+    CensalFieldIntent,
+    CensalReviewFieldProjectionV1,
+    CensalReviewProjectionV1,
+)
 from .....core.config import Settings
 from .....tests.cli_runner import invoke_cached_cli
 from ... import app as _live_app
 from .. import _censo_file
 from .._censo_payloads import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
+from .._censo_review_ui import build_censal_review_page, censal_review_decision
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -418,13 +426,42 @@ def test_live_pull_contains_no_censal_write_authority() -> None:
     assert "apply_fact_changes(" not in source
 
 
-def test_apply_refuses_before_profile_or_live_acquisition() -> None:
-    """The handler forecloses legacy apply before profile or remote authority."""
-    from ..._errors import CliRefusedBoundaryError
+def test_apply_routes_through_the_canonical_reviewed_operation() -> None:
+    """The CLI apply branch delegates acquisition, review, and apply as one operation."""
+    source = inspect.getsource(_censo_file.censo_pull)
+    assert 'run_censal_review(actor_ref="operator:cli-censo"' in source
+    assert "confirm_censal_review" in source
+    assert "apply_cotejo" not in source
+    assert "apply_censal_read" not in source
 
-    with pytest.raises(CliRefusedBoundaryError) as raised:
-        _censo_file.censo_pull(typer.Context(_censo_commands()["pull"]), apply=True)
-    assert raised.value.translated_message == "cli.config.profile.censo.pull_apply_unavailable"
+
+@pytest.mark.asyncio
+async def test_exact_projection_requires_a_real_tui_apply_choice() -> None:
+    """The shared manager/CLI review page displays and returns an exact choice."""
+    projection = CensalReviewProjectionV1(
+        projection_version=1,
+        fields=(
+            CensalReviewFieldProjectionV1(
+                path="contact.postcode",
+                intent=CensalFieldIntent.ADOPT,
+                observed_value="28013",
+            ),
+        ),
+    )
+    app = FormApp(build_censal_review_page(projection))
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        screen = next(item for item in reversed(app.screen_stack) if isinstance(item, FormScreen))
+        screen.query_one("#form-table", DataTable).action_select_cursor()
+        await pilot.pause()
+        app.screen.query_one("#edit-options", OptionList).highlighted = 0
+        await pilot.click("#btn-edit-save")
+        await pilot.pause()
+        await pilot.click("#btn-form-save")
+        await pilot.pause()
+
+    assert app.collected is not None
+    assert censal_review_decision(app.collected) is True
 
 
 def test_the_module_docstring_does_not_declare_the_pull_retired() -> None:

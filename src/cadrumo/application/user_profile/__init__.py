@@ -290,6 +290,9 @@ if TYPE_CHECKING:
         CensalReviewedFieldIntent as CensalReviewedFieldIntent,
     )
     from ._censal_operation import (
+        CensalReviewFieldProjectionV1 as CensalReviewFieldProjectionV1,
+    )
+    from ._censal_operation import (
         CensalReviewProjectionV1 as CensalReviewProjectionV1,
     )
     from ._censal_operation import CensalReviewResponse as CensalReviewResponse
@@ -918,6 +921,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "CensalOperationResult": "._censal_operation",
     "CensalProfileBaseline": "._censal_operation",
     "CensalReviewProjectionV1": "._censal_operation",
+    "CensalReviewFieldProjectionV1": "._censal_operation",
     "CensalReviewedFieldIntent": "._censal_operation",
     "CensalReviewResponse": "._censal_operation",
     "build_censal_operation_definition": "._censal_operation",
@@ -1157,6 +1161,7 @@ __all__ = [
     "CensalOperationResult",
     "CensalProfileBaseline",
     "CensalReconciliation",
+    "CensalReviewFieldProjectionV1",
     "CensalReviewProjectionV1",
     "CensalReviewResponse",
     "CensalReviewedFieldIntent",

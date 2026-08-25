@@ -1,56 +1,36 @@
-"""Application ports for custody records supplied to profile lifecycle actions.
+"""Typed application boundary for profile-custody infrastructure.
 
-The protocol declarations live beside the boundary helpers that bind them to
-the real persistence facade: a consumer takes a narrowed port from here and
-the default provider that satisfies it resolves from the same module, so the
-custody surface has exactly one application-owned door.
+Application policy owns the neutral models and structural protocols declared
+here. Persistence owns bucket layout, custody records, cryptography, key
+material, and repository construction. An executable host binds that concrete
+infrastructure for its lifetime through the single aggregate port below.
 """
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterator
+from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, NoReturn, Protocol, cast
+from typing import TYPE_CHECKING, NoReturn, Protocol, Self, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.storage import (
-    USER_PROFILE_VALUE_NAMESPACE,
-    KeyringUnavailableError,
-    MasterKeyMaterialMissingError,
-    SecureObjectRepository,
-    bucket,
-    crypto,
-    generate_recovery_key,
-    master_key,
-    secure_object_repository_for_active_bucket,
-    secure_object_repository_for_bucket,
-    secure_object_repository_for_staged_bucket,
-)
 from ...core import SecureObjectWrite, StorageCategory, storage_location
 from ...core.classification import SensitivityClass
-from ...core.config import Settings
 from ...core.errors import CoreError
-from ...core.time import now as _utc_now
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage import RecoveryKey
     from ...domain.buckets import BucketEventHistoryCatalogue
+    from ._recovery_contracts import ProfileCustodyRecoveryArtifactWarning
 
-
-from ...adapters.persistence.storage import custody
-from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest, prefixed_digest
+from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
 from ._authentication import ProfileAuthenticationRefusedError, ProfilePasswordProofOperation
-
-if TYPE_CHECKING:
-    from ...core import SecureObjectWrite
-    from ...core.classification import SensitivityClass
+from ._login_session_port import profile_current_bucket_session, profile_session_serves_bucket
 
 
 class ProfileCustodyPasswordMaterialPort(Protocol):
@@ -316,22 +296,6 @@ class ProfileCustodyLocalRecordStore(Protocol):
         ...
 
 
-def _substrate_handle[T](value: object, expected: type[T], subject: str) -> T:
-    """Re-widen a narrowed custody handle to the substrate type that minted it.
-
-    The record-shaped ports above narrow what the application may READ.  A few
-    of the delegates below then hand the same object straight back to the
-    substrate, which requires its own concrete type, and a narrowed view is not
-    that type.  The reconciliation is a real check rather than an assertion:
-    each of these handles is opaque to the application, so an object that did
-    not come from the substrate is a composition error and custody refuses it
-    instead of forwarding it.
-    """
-    if not isinstance(value, expected):
-        raise TypeError(f"{subject} did not originate from the custody substrate: {type(value).__name__}")
-    return value
-
-
 def canonical_snapshot_payload(model: BaseModel) -> dict[str, object]:
     """Return a snapshot's canonical digest payload without its self-digest."""
     payload = cast(dict[str, object], model.model_dump(mode="json"))
@@ -379,67 +343,9 @@ def ensure_profile_custody_owner_root(store: ProfileCustodyLocalRecordStore, roo
         store.ensure_directory(directory)
 
 
-class _PersistenceProfileCustodyLocalRecordStore:
-    """Adapt the real persistence facade to the application-owned port."""
-
-    def ensure_directory(self, path: Path) -> None:
-        custody.ensure_profile_custody_local_directory(path)
-
-    def lock(self, path: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
-        return custody.profile_custody_local_lock(path, timeout_seconds=timeout_seconds)
-
-    def root_lock(self, root: Path, *, timeout_seconds: float = 30.0) -> AbstractContextManager[None]:
-        return custody.profile_custody_root_lock(root, timeout_seconds=timeout_seconds)
-
-    def read(self, path: Path, *, maximum_bytes: int) -> bytes:
-        return custody.read_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
-
-    def read_optional(self, path: Path, *, maximum_bytes: int) -> bytes | None:
-        return custody.read_optional_profile_custody_local_record(path, maximum_bytes=maximum_bytes)
-
-    def write(self, path: Path, payload: bytes, *, publish_once: bool) -> None:
-        custody.write_profile_custody_local_record(path, payload, publish_once=publish_once)
-
-    def clear(self, path: Path) -> None:
-        custody.clear_profile_custody_local_record(path)
-
-    def compare_and_replace(
-        self,
-        path: Path,
-        *,
-        expected: bytes | None,
-        replacement: bytes,
-        maximum_bytes: int,
-    ) -> None:
-        custody.compare_and_replace_profile_custody_local_record(
-            path,
-            expected=expected,
-            replacement=replacement,
-            maximum_bytes=maximum_bytes,
-        )
-
-    def compare_and_clear(self, path: Path, *, expected: bytes, maximum_bytes: int) -> None:
-        custody.compare_and_clear_profile_custody_local_record(path, expected=expected, maximum_bytes=maximum_bytes)
-
-    def compare_and_replace_same_or_predecessor(
-        self,
-        path: Path,
-        *,
-        current: bytes,
-        predecessor: bytes | None,
-        maximum_bytes: int,
-    ) -> None:
-        custody.compare_and_replace_same_or_predecessor_profile_custody_local_record(
-            path,
-            current=current,
-            predecessor=predecessor,
-            maximum_bytes=maximum_bytes,
-        )
-
-
 def default_profile_custody_local_record_store() -> ProfileCustodyLocalRecordStore:
-    """Return the production custody adapter through the application boundary."""
-    return _PersistenceProfileCustodyLocalRecordStore()
+    """Resolve the composed local-record store through the custody boundary."""
+    return profile_custody_port().local_record_store()
 
 
 class ProfileRecordCryptoError(CoreError, RuntimeError):
@@ -549,7 +455,7 @@ class ProfileCapsuleArchiveContentsMaterial:
 
 def profile_capsule_archive_schema_version() -> int:
     """Return the sealed-container schema version implemented by persistence."""
-    return bucket.ARCHIVE_SCHEMA_VERSION
+    return profile_custody_port().archive_schema_version()
 
 
 def write_profile_capsule_archive_container(
@@ -559,62 +465,53 @@ def write_profile_capsule_archive_container(
     payload_bytes: bytes,
 ) -> None:
     """Write an opaque profile payload through the sealed-container provider."""
-    bucket.write_sealed_archive(
+    profile_custody_port().write_archive_container(
         target,
-        header=bucket.ExportArchiveHeader(
-            product=header.product,
-            bucket_id=header.bucket_id,
-            manifest_digest=header.manifest_digest,
-            archive_schema_version=header.archive_schema_version,
-            created_at=header.created_at,
-        ),
+        header=header,
         payload_bytes=payload_bytes,
     )
 
 
 def read_profile_capsule_archive_container(source: Path) -> ProfileCapsuleArchiveContentsMaterial:
     """Read an opaque profile payload through the sealed-container provider."""
-    contents = bucket.read_sealed_archive(source)
-    return ProfileCapsuleArchiveContentsMaterial(
-        header=ProfileCapsuleArchiveHeaderMaterial(
-            product=contents.header.product,
-            bucket_id=contents.header.bucket_id,
-            manifest_digest=contents.header.manifest_digest,
-            archive_schema_version=contents.header.archive_schema_version,
-            created_at=contents.header.created_at,
-        ),
-        payload_bytes=contents.payload_bytes,
-    )
+    return profile_custody_port().read_archive_container(source)
 
 
 def parse_profile_custody_capsule_members(
     *, envelope_bytes: bytes, sentinel_bytes: bytes, database_bytes: bytes
 ) -> ProfileCustodyCapsuleSourceMaterial:
     """Parse archive-carried custody records through their persistence owner."""
-    return ProfileCustodyCapsuleSourceMaterial(
-        password_envelope=custody.parse_profile_custody_envelope(envelope_bytes),
-        sentinel=custody.parse_profile_custody_sentinel_record(sentinel_bytes),
+    return profile_custody_port().parse_capsule_members(
+        envelope_bytes=envelope_bytes,
+        sentinel_bytes=sentinel_bytes,
         database_bytes=database_bytes,
     )
 
 
 def read_profile_custody_capsule_source(source: Path) -> ProfileCustodyCapsuleSourceMaterial:
     """Read and parse one unpublished capsule through the custody provider."""
+    return profile_custody_port().read_capsule_source(source)
 
-    def required(relative: Path, maximum_bytes: int, subject: str) -> bytes:
-        try:
-            return custody.read_profile_custody_local_record(source / relative, maximum_bytes=maximum_bytes)
-        except Exception as exc:
-            raise ValueError(f"capsule source is missing or has an invalid {subject}") from exc
 
-    envelope = custody.parse_profile_custody_envelope(
-        required(Path("custody/envelope.v1.json"), custody.PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, "password envelope")
-    )
-    sentinel = custody.parse_profile_custody_sentinel_record(
-        required(Path("data/dek.sentinel.v1.json"), custody.PROFILE_CUSTODY_SENTINEL_MAX_BYTES, "DEK sentinel")
-    )
-    database_bytes = required(Path("db/cadrumo.db"), custody.PROFILE_CUSTODY_DATA_FILE_MAX_BYTES, "profile database")
-    return ProfileCustodyCapsuleSourceMaterial(envelope, sentinel, database_bytes)
+class ProfileRecoveryKeyPort(Protocol):
+    """Wipeable recovery secret held across the enrollment handoff."""
+
+    @property
+    def mnemonic(self) -> str:
+        """Return the exact 24-word recovery mnemonic."""
+        ...
+
+    def wipe(self) -> None:
+        """Overwrite the key material owned by this container."""
+        ...
+
+    def __enter__(self) -> Self:
+        """Retain the key until the caller's explicit handoff scope closes."""
+        ...
+
+    def __exit__(self, *_exc_info: object) -> None:
+        """Wipe the key material when its handoff scope closes."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -628,7 +525,7 @@ class ProfileCustodyRecoveryEnrollmentMaterial:
     """
 
     envelope: ProfileCustodyRecoveryEnvelopePort
-    recovery_key: RecoveryKey
+    recovery_key: ProfileRecoveryKeyPort
 
 
 class ProfileCustodyUnlockPort(Protocol):
@@ -647,6 +544,68 @@ class ProfileCustodyUnlockPort(Protocol):
     @property
     def dek(self) -> bytes:
         """The authenticated data-encryption key."""
+        ...
+
+
+class ProfileCustodyRecoveryUnlockPort(Protocol):
+    """A DEK accepted through the explicit recovery-artifact door."""
+
+    @property
+    def profile_id(self) -> UUID:
+        """The profile whose recovery artifact produced this key."""
+        ...
+
+    @property
+    def dek_epoch(self) -> str:
+        """The DEK epoch bound into the proven artifact."""
+        ...
+
+    @property
+    def recovery_digest(self) -> str:
+        """The digest of the exact recovery record that was proved."""
+        ...
+
+    @property
+    def dek(self) -> bytes:
+        """The authenticated data-encryption key."""
+        ...
+
+
+class ProfileCustodyRecoveryArtifactPort(Protocol):
+    """Non-secret artifact identity fields projected after export."""
+
+    @property
+    def profile_id(self) -> UUID:
+        """The profile named by the artifact."""
+        ...
+
+    @property
+    def dek_epoch(self) -> str:
+        """The DEK epoch named by the artifact."""
+        ...
+
+    @property
+    def self_digest(self) -> str:
+        """The artifact's canonical self-digest."""
+        ...
+
+
+class ProfileCustodyRecoveryArtifactExportReceiptPort(Protocol):
+    """Durable artifact export result consumed by application policy."""
+
+    @property
+    def artifact(self) -> ProfileCustodyRecoveryArtifactPort:
+        """The exported artifact's non-secret identity."""
+        ...
+
+    @property
+    def target(self) -> Path:
+        """The exact path durably created by the export."""
+        ...
+
+    @property
+    def warnings(self) -> tuple[ProfileCustodyRecoveryArtifactWarning, ...]:
+        """The mandatory operator warnings carried by every export."""
         ...
 
 
