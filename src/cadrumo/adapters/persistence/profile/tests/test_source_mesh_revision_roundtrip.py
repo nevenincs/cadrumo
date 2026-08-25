@@ -206,13 +206,16 @@ def test_row_casilla_target_row_must_equal_direct_source_row() -> None:
         source_row_identity="reordered-row-refusal",
         fingerprint="6" * 64,
     )
-    with pytest.raises(CalculationRevisionPersistenceError):
+    # The rule is enforced by the model, so a mismatched index cannot be
+    # constructed at all -- it never reaches persistence to be refused there.
+    with pytest.raises(ValidationError) as refusal:
         _revision(
             _source_provenance(),
             row_identity=identity,
             with_row_materialization=True,
             target_row_index=2,
         )
+    assert "row casilla index must match its direct source row index" in str(refusal.value)
 
 
 def test_row_source_identity_roundtrips_only_through_encrypted_revision(
