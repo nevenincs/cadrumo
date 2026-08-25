@@ -33,9 +33,7 @@ _STAGING_ADR_STEM = "2026-08-24-tui-operation-observation-adr"
 _RECEIPT_PATH = ".vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md"
 _GIT_EXECUTABLE = shutil.which("git")
 _UVX_EXECUTABLE = shutil.which("uvx")
-_SEMANTIC_PRODUCER_QUERY = (
-    "public operation observation immutable snapshot progress fold safe review workspace refresh authority only:prod exclude:tests"
-)
+_SEMANTIC_PRODUCER_QUERY = "public operation observation immutable snapshot progress fold safe review workspace refresh authority only:prod exclude:tests"
 
 
 class TuiOperationReceiptDocumentProvenanceV1(BaseModel):
@@ -191,7 +189,9 @@ class TuiOperationObservationDependencyReceiptV1(BaseModel):
 
     @field_validator("proofs")
     @classmethod
-    def _proofs_are_sorted(cls, value: tuple[TuiOperationProofEvidenceV1, ...]) -> tuple[TuiOperationProofEvidenceV1, ...]:
+    def _proofs_are_sorted(
+        cls, value: tuple[TuiOperationProofEvidenceV1, ...]
+    ) -> tuple[TuiOperationProofEvidenceV1, ...]:
         proof_ids = tuple(item.proof_id for item in value)
         if proof_ids != tuple(sorted(proof_ids)) or len(set(proof_ids)) != len(proof_ids):
             raise ValueError("proof inventory must be sorted and unique")
@@ -404,9 +404,7 @@ def _source_tree_digest(workspace_root: Path) -> str:
     source_paths = tuple(sorted(item for item in tracked if (workspace_root / item).is_file()))
     if not source_paths:
         raise ValueError("C0 receipt source tree is not a tracked Cadrumo worktree")
-    return content_hash_hex(
-        tuple((relative, _file_digest(workspace_root / relative)) for relative in source_paths)
-    )
+    return content_hash_hex(tuple((relative, _file_digest(workspace_root / relative)) for relative in source_paths))
 
 
 def _document_provenance(workspace_root: Path, *, stem: str, status: Literal["accepted", "rejected"]):
@@ -422,7 +420,9 @@ def _document_provenance(workspace_root: Path, *, stem: str, status: Literal["ac
         stem=stem,
         status=status,
         body_hash=hash_match.group(1),
-        producing_commit=_run_git(workspace_root, "log", "-1", "--format=%H", "--", path.relative_to(workspace_root).as_posix()),
+        producing_commit=_run_git(
+            workspace_root, "log", "-1", "--format=%H", "--", path.relative_to(workspace_root).as_posix()
+        ),
     )
 
 
@@ -701,9 +701,7 @@ def test_c0_receipt_round_trips_strictly_and_validates_current_production_di(
     semantic_producer_census: TuiOperationSemanticProducerCensusV1,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        receipt = build_tui_operation_observation_dependency_receipt(
-            semantic_producer_census=semantic_producer_census
-        )
+        receipt = build_tui_operation_observation_dependency_receipt(semantic_producer_census=semantic_producer_census)
         restored = TuiOperationObservationDependencyReceiptV1.model_validate_json(receipt.model_dump_json())
 
         assert restored == receipt
@@ -716,9 +714,7 @@ def test_c0_receipt_refuses_digest_and_provenance_drift(
     semantic_producer_census: TuiOperationSemanticProducerCensusV1,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        receipt = build_tui_operation_observation_dependency_receipt(
-            semantic_producer_census=semantic_producer_census
-        )
+        receipt = build_tui_operation_observation_dependency_receipt(semantic_producer_census=semantic_producer_census)
         changed_digest = receipt.model_copy(update={"source_tree_digest": "f" * 64})
         changed_provenance = receipt.model_copy(
             update={"governing_adr": receipt.governing_adr.model_copy(update={"body_hash": "sha256:" + "f" * 64})}
@@ -736,9 +732,7 @@ def test_c0_receipt_model_is_closed_and_proof_inventory_is_complete(
     semantic_producer_census: TuiOperationSemanticProducerCensusV1,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        receipt = build_tui_operation_observation_dependency_receipt(
-            semantic_producer_census=semantic_producer_census
-        )
+        receipt = build_tui_operation_observation_dependency_receipt(semantic_producer_census=semantic_producer_census)
         raw = receipt.model_dump(mode="json")
         raw["undeclared"] = "forbidden"
 
@@ -767,7 +761,9 @@ def test_c0_receipt_semantic_census_refuses_missing_and_competing_authorities(
     current = semantic_producer_census
     for discovered_paths, message in (
         (
-            tuple(path for path in current.discovered_paths if path != "src/cadrumo/application/operations/_registry.py"),
+            tuple(
+                path for path in current.discovered_paths if path != "src/cadrumo/application/operations/_registry.py"
+            ),
             "missed canonical operation authorities",
         ),
         (
