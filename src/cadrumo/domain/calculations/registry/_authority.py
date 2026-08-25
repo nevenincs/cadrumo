@@ -477,6 +477,23 @@ def _clear_authority_load_caches() -> None:
 _load_authority.cache_clear = _clear_authority_load_caches  # type: ignore[attr-defined]
 
 
+def reset_registry_caches() -> None:
+    """Drop every memoised registry layer so the next read recompiles from disk.
+
+    The compiled-tree lru, the authority load caches and the tree-fingerprint
+    cache are one staleness surface: clearing a subset leaves a later layer
+    answering from a tree state an earlier layer has already forgotten. Callers
+    that swap the registry root or rewrite bundled TOML need all three, so the
+    package exposes the whole reset rather than its parts.
+    """
+    from ._loader import _load_registry_tree_cached
+    from ._loader_fingerprints import clear_fingerprint_cache
+
+    _clear_authority_load_caches()
+    _load_registry_tree_cached.cache_clear()
+    clear_fingerprint_cache()
+
+
 @lru_cache(maxsize=16)
 def _load_validated_authority(
     root: Path,

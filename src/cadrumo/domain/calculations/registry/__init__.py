@@ -134,6 +134,7 @@ from ._authority import (
     bundled_authority,
     bundled_revision_inspection,
     collect_registry_identity_fingerprints,
+    reset_registry_caches,
     stamp_bundled_registry_release,
 )
 from ._deadline_coordinate import (
@@ -1398,6 +1399,7 @@ __all__ = [
     "render_m303_annual_orden_censuses",
     "render_m303_annual_orden_manifest",
     "renta_first_slice_binding_target_casillas",
+    "reset_registry_caches",
     "resolve_applicability_rule_from_authority",
     "resolve_atribucion_binding_row_values",
     "resolve_available_bound_inputs_by_casilla_id",
