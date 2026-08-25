@@ -11,6 +11,8 @@ from cadrumo.core.resources import resources
 from ..check import SourceConnectivityCheckError, check_census_governance
 from ..live_proof import CONNECTED_PROOF_FIXTURES, connected_candidate_ids
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
 
 def test_m296_registry_blocked_refusal_is_bounded_and_unconnected() -> None:
     entry = next(
@@ -32,10 +34,9 @@ def test_m296_registry_blocked_refusal_is_bounded_and_unconnected() -> None:
         authority=resources().modelos.authority, census=load_source_connectivity_census(), as_of=date(2026, 8, 25)
     )
     limb = next(item for item in coverage.limbs if item.modelo == "296")
-    assert limb.outcome == "refused"
-    assert (
-        limb.refusal is not None and limb.refusal.disposition.work_item == "source-casilla.rows-withholding296-registry"
-    )
+    assert limb.outcome == "unmeasured"
+    assert entry.disposition.value == "registry_blocked"
+    assert entry.bounded_follow_up.action_id == "source-casilla.rows-withholding296-registry"
 
 
 def test_m296_refusal_expires() -> None:
