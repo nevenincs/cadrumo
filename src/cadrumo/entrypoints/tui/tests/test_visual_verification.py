@@ -30,15 +30,6 @@ from textual.containers import ScrollableContainer
 from textual.css.query import NoMatches
 from textual.widgets import Button, DataTable, Input, Static
 
-from cadrumo.core.presentation import FormField, FormPage
-from cadrumo.entrypoints.tui.components.form_screen import FormApp, FormScreen
-from cadrumo.entrypoints.tui.components.theme import (
-    CADRUMO_DARK_THEME_NAME,
-    CADRUMO_LIGHT_THEME_NAME,
-)
-from cadrumo.entrypoints.tui.components.widgets import ContentScroll
-from cadrumo.entrypoints.tui.flows.app import FlowTuiApp
-
 from ....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ....application.user_profile import (
     build_profile_overview,
@@ -48,11 +39,19 @@ from ....application.user_profile import (
 from ....application.user_profile.status_projection import StatusFactRow, StatusPageData
 from ....core import require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from ....core.presentation import FormField, FormPage
 from ....entrypoints.tui.profile.overview import ProfileManagerApp
 from ....entrypoints.tui.profile.status import StatusApp
 from ....entrypoints.tui.secret.app import LoginApp, RegistrationApp
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..components.form_screen import FormApp, FormScreen
+from ..components.theme import (
+    CADRUMO_DARK_THEME_NAME,
+    CADRUMO_LIGHT_THEME_NAME,
+)
+from ..components.widgets import ContentScroll
+from ..flows.app import FlowTuiApp
 from .manager_pilot import wait_until_settled
 
 pytestmark = [

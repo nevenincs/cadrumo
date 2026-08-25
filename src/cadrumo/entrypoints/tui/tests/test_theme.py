@@ -25,7 +25,12 @@ import pytest
 from textual.containers import Vertical
 from textual.theme import Theme
 
-from cadrumo.entrypoints.tui.components.theme import (
+from ....application.user_profile.status_projection import StatusPageData
+from ....core import scan_directory
+from ....core.config import TuiAppearance
+from ....entrypoints.tui.profile.status import StatusApp
+from ....entrypoints.tui.secret.app import RegistrationApp
+from ..components.theme import (
     BASE_CSS,
     CADRUMO_DARK,
     CADRUMO_DARK_THEME_NAME,
@@ -36,12 +41,6 @@ from cadrumo.entrypoints.tui.components.theme import (
     SCROLLBAR_CELLS,
     resolve_theme_name,
 )
-
-from ....application.user_profile.status_projection import StatusPageData
-from ....core import scan_directory
-from ....core.config import TuiAppearance
-from ....entrypoints.tui.profile.status import StatusApp
-from ....entrypoints.tui.secret.app import RegistrationApp
 
 pytestmark = [
     pytest.mark.unit,
