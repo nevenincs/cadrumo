@@ -16,10 +16,10 @@ other gate stays green. AEAT's own design prescribes a format for that field
 (``Nota 8``: ``- - - - / - -`` estatal, ``- - - / - - A`` foral) on a return only groups
 file.
 
-The project already ruled on this. ADR ``2026-06-13-m303-form-vs-semantic-casilla-dual-keying``
-states that "a layout containing any unsupported or deferred producer is physically
-withdrawn with a grounded support-removal decision". A layout that ships one instead is
-outside that decision, and until now nothing detected it.
+The governing layout-authority decision states that "a layout containing any
+unsupported or deferred producer is physically withdrawn with a grounded
+support-removal decision". A layout that ships one instead is outside that
+decision, and until now nothing detected it.
 
 This gate is the detector. It does not assert a tally -- it asserts the property that every
 cited key resolves -- so it keeps biting as layouts are added.

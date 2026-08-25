@@ -46,7 +46,7 @@ def _contract(
     return _CarrierContract(condition, facts, outcome)
 
 
-# Complete source-level contract for every BrowserError carrier in the S58
+# Complete source-level contract for every BrowserError carrier in the current
 # scope.  Fact values remain AST expressions so dynamic checks and polarities
 # cannot silently drift while retaining the same mapping keys.
 _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {

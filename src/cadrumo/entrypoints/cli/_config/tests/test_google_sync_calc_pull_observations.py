@@ -46,7 +46,7 @@ def test_pull_row_assembly_calls_the_public_snapshot_command_with_the_selected_s
 
 
 def test_pull_row_assembly_returns_live_snapshot_assembled_observations() -> None:
-    """A pulled row reaches S87's typed observation boundary under the live snapshot."""
+    """A pulled row reaches the typed observation boundary under the live snapshot."""
     snapshot = _snapshot()
     row_set = RowSetEdit(
         grouping="per_perceptor_clave",

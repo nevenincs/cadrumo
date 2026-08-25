@@ -20,11 +20,11 @@ hardcodes ``unsecured_backend=False`` because a resumed session comes from
 per-profile password custody, which the unsecured backend never participates
 in, so there is no unsecured session for a canary to refuse.
 
-The gate enumerates rather than pattern-matches for a reason recorded across
-this campaign: four successive shape-hunting detectors for a different defect
-each went green over live instances of it. An enumeration cannot be defeated
-by a shape nobody imagined; it can only be defeated by someone writing down an
-exemption, which is visible.
+The gate enumerates rather than pattern-matches for a reason established by
+four successive shape-hunting detectors for a different defect: each went green
+over live instances of it. An enumeration cannot be defeated by a shape nobody
+imagined; it can only be defeated by someone writing down an exemption, which
+is visible.
 """
 
 from __future__ import annotations
@@ -145,7 +145,7 @@ def test_a_production_session_open_is_actually_found() -> None:
     If the AST walk stops matching -- a rename, a moved constructor, a call
     spelled through an alias -- every assertion here goes green while nothing
     is being checked at all. This is the same vacuous shape that hid an empty
-    remote-mirror manifest elsewhere in this campaign.
+    remote-mirror manifest elsewhere in the test suite.
     """
     assert _functions_opening_a_session(), "no production BucketSession.open call found; the walk has stopped matching"
 

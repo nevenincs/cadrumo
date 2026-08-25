@@ -1,8 +1,9 @@
 """Inventory resolver boundary tests for registry-owned row templates.
 
-S176 restores the displaced encrypted success, absence, corruption, conflict,
-fingerprint/tamper, determinism, and multi-activity cohort matrix once runtime
-activity-row expansion exists. S172 must fail closed without reading storage.
+The inventory boundary restores the displaced encrypted success, absence,
+corruption, conflict, fingerprint/tamper, determinism, and multi-activity
+cohort matrix once runtime activity-row expansion exists. It must fail closed
+without reading storage.
 """
 
 from __future__ import annotations

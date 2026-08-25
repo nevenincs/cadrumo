@@ -52,7 +52,7 @@ def _contract(
 
 # This exact source-level census includes only operator-reachable status and
 # command-boundary refusals. Compiler and widget-validation invariants remain
-# outside S37 because they do not carry terminal operator outcomes.
+# outside the census because they do not carry terminal operator outcomes.
 _WIZARD_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     "_status:load_active_taxpayer_profile:WizardStatusError:1": _contract(
         WizardPreconditionCondition.ACTIVE_PROFILE_AVAILABLE,
