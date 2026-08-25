@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e61782aab96b5b8cb60a8b46b8c32036370e3faa7c931d9c643c14487b683e9d'
+body_hash: 'sha256:46f5ed80a402fe0d47d34ec1b4528ff12076ce9ee2931d5ab5abf2b2253209f7'
 related: []
 ---
 
@@ -585,6 +585,37 @@ The shape that resolves both is for the preflight to consult the graph the app
 was built from rather than a module-global, which is a change to how the gate
 receives its graph. Left to the owner of the command-runtime work with the
 cause named, since the diagnosis -- not the patch -- was the hard part.
+
+## Partially diagnosed: the TUI locale tests
+
+`test_rebuild_for_locale_reassembles_copy_under_the_new_language` fails on its
+FIRST assertion: inside `output_language_scope("en")` the rendered page prompt
+is `es-copy`, not `en-copy`. It fails in isolation, so it is not pollution from
+a sibling test.
+
+What is established:
+
+- The scope itself is sound. Driving it standalone -- enter
+  `output_language_scope("en")` plus `locales_root_scope(root)`, then call
+  `output_language()` and `tr("flows.test.copy")` -- returns `en` and
+  `en-copy`. The seam works.
+- `resolve_copy` calls `tr()` directly for a `LOCALE_KEY` ref with no caching,
+  so the flow copy path adds nothing between the scope and the lookup.
+- The locales-root override DOES reach the running app: the rendered text is
+  `es-copy`, a string that exists only in the test's fixture root, so the app is
+  reading the fixture catalogues and picking the wrong language within them.
+
+So the divergence appears once the copy is resolved inside the running Textual
+app rather than on the calling thread, while the same call resolves correctly
+outside it. `activate_output_language` writes `os.environ` and resets the
+process-wide Settings cache, which should cross threads; identifying what the
+app resolves differently needs instrumentation inside the app's own render
+path, which is where this stops.
+
+Recorded rather than guessed at. Note the shape for whoever continues: the
+useful next probe is asserting `output_language()` from inside the running app
+rather than from the test body, which distinguishes "the app sees a different
+language" from "the app resolved its copy earlier than the assertion assumes".
 
 ## Durable lesson
 
