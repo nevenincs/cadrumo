@@ -67,10 +67,14 @@ class WorkflowFindingLike(Protocol):
     """
 
     @property
-    def severity(self) -> BaseSeverity: ...
+    def severity(self) -> BaseSeverity:
+        """Return the severity that the workflow preflight should report."""
+        ...
 
     @property
-    def code(self) -> str: ...
+    def code(self) -> str:
+        """Return the stable registry code identifying this finding."""
+        ...
 
 
 @runtime_checkable
@@ -203,10 +207,14 @@ class WorkflowExpedienteProtocol(Protocol):
     """
 
     @property
-    def modelo(self) -> str | None: ...
+    def modelo(self) -> str | None:
+        """Return the expediente's modelo identifier, when declared."""
+        ...
 
     @property
-    def ejercicio(self) -> int | None: ...
+    def ejercicio(self) -> int | None:
+        """Return the expediente's tax year, when declared."""
+        ...
 
 
 class WorkflowNotificationProtocol(Protocol):
@@ -218,16 +226,24 @@ class WorkflowNotificationProtocol(Protocol):
     """
 
     @property
-    def tipo(self) -> str: ...
+    def tipo(self) -> str:
+        """Return the AEAT notification type."""
+        ...
 
     @property
-    def leida(self) -> bool | None: ...
+    def leida(self) -> bool | None:
+        """Return whether the source marks this notification as read."""
+        ...
 
     @property
-    def certificado_id(self) -> str: ...
+    def certificado_id(self) -> str:
+        """Return the certificate identifier associated with the notification."""
+        ...
 
     @property
-    def concepto(self) -> str: ...
+    def concepto(self) -> str:
+        """Return the notification's concept or subject."""
+        ...
 
 
 class WorkflowNotificationsSnapshotProtocol(Protocol):
@@ -239,7 +255,9 @@ class WorkflowNotificationsSnapshotProtocol(Protocol):
     """
 
     @property
-    def rows(self) -> Sequence[WorkflowNotificationProtocol]: ...
+    def rows(self) -> Sequence[WorkflowNotificationProtocol]:
+        """Return the notification rows contained in this snapshot."""
+        ...
 
 
 ExpedientesSource = Callable[[object, str | None], Awaitable[tuple[WorkflowExpedienteProtocol, ...]]]
