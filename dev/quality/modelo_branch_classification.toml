@@ -1090,3 +1090,17 @@ field. The citation names the refusal the branch raises, which is the only code 
 inside the guarded body -- the carrier's name lives in the message string, and
 the checker reads tokens rather than prose, correctly.
 """
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_work_plazo.py"
+enclosing_symbol = "calculated_m210_plazo_notice"
+modelo_codes = "M210"
+group = "modelo-scope-guard"
+selects = "calculated_m210_plazo_notice"
+
+[[branch]]
+path = "src/cadrumo/application/modelo/_calculate_input.py"
+enclosing_symbol = "calculate_modelo_work_revision"
+modelo_codes = "M210"
+group = "modelo-path-routing"
+selects = "calculated_m210_plazo_notice"
