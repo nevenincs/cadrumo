@@ -127,6 +127,7 @@ if TYPE_CHECKING:
         restore_pointer,
         write_pointer,
     )
+    from ._calculation_route import ModeloCalculationRouteId
     from ._capabilities import ServiceCapability
     from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
     from ._casilla_value_kind import CasillaValueKind
