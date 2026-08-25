@@ -1,12 +1,11 @@
-"""Boundary proofs for canonical TUI presentation components."""
+"""Boundary proofs for the canonical TUI presentation-component package."""
 
 from __future__ import annotations
 
 import pytest
 
-import cadrumo.entrypoints.tui.components as components
-
 from .....core.presentation import FormField
+from ... import components
 from ..dialogs import TextEditScreen
 from ..errors import ErrorPanel
 from ..logs import BoundedLogPanel
