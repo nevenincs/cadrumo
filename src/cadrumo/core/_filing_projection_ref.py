@@ -248,6 +248,251 @@ class M303Exonerado390OperacionesTercerosProjectionRef(BaseModel):
     projection_kind: Literal["m303_exonerado_390_operaciones_terceros"]
 
 
+class M390ActivityField(StrEnum):
+    """Closed identity fields of one page-one statistical activity row."""
+
+    DESCRIPTION = "description"
+    ACTIVITY_CODE = "activity_code"
+    IAE_EPIGRAFE = "iae_epigrafe"
+
+
+class M390ActivityProjectionRef(BaseModel):
+    """One field of the fixed six-row statistical-activity block on page one."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m390_activity"]
+    slot: int = Field(ge=1, le=6)
+    field: M390ActivityField
+
+
+class M390RepresentativeKind(StrEnum):
+    """The two non-interchangeable official representative blocks on page one."""
+
+    FISICA_COMUNIDAD_BIENES = "fisica_comunidad_bienes"
+    JURIDICA = "juridica"
+
+
+class M390RepresentativeField(StrEnum):
+    """Closed fields printed by one physical or legal representative row."""
+
+    NIF = "nif"
+    NOMBRE_RAZON_SOCIAL = "nombre_razon_social"
+    TIPO_VIA = "tipo_via"
+    NOMBRE_VIA = "nombre_via"
+    NUMERO_VIA = "numero_via"
+    ESCALERA = "escalera"
+    PISO = "piso"
+    PUERTA = "puerta"
+    TELEFONO = "telefono"
+    MUNICIPIO = "municipio"
+    PROVINCIA = "provincia"
+    CODIGO_POSTAL = "codigo_postal"
+    FECHA_PODER = "fecha_poder"
+    NOTARIA = "notaria"
+
+
+_M390_PHYSICAL_REPRESENTATIVE_FIELDS = frozenset(
+    {
+        M390RepresentativeField.NIF,
+        M390RepresentativeField.NOMBRE_RAZON_SOCIAL,
+        M390RepresentativeField.TIPO_VIA,
+        M390RepresentativeField.NOMBRE_VIA,
+        M390RepresentativeField.NUMERO_VIA,
+        M390RepresentativeField.ESCALERA,
+        M390RepresentativeField.PISO,
+        M390RepresentativeField.PUERTA,
+        M390RepresentativeField.TELEFONO,
+        M390RepresentativeField.MUNICIPIO,
+        M390RepresentativeField.PROVINCIA,
+        M390RepresentativeField.CODIGO_POSTAL,
+    },
+)
+_M390_LEGAL_REPRESENTATIVE_FIELDS = frozenset(
+    {
+        M390RepresentativeField.NOMBRE_RAZON_SOCIAL,
+        M390RepresentativeField.NIF,
+        M390RepresentativeField.FECHA_PODER,
+        M390RepresentativeField.NOTARIA,
+    },
+)
+
+
+class M390RepresentativeProjectionRef(BaseModel):
+    """One source-shaped page-one representative field.
+
+    Natural-person/community representation has one address-shaped row;
+    juridical persons have three compact power/notary rows.  Keeping those
+    shapes in one discriminated projection prevents a caller from creating a
+    fictitious fourth legal representative or a second physical address row.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m390_representative"]
+    representative_kind: M390RepresentativeKind
+    slot: int = Field(ge=1, le=3)
+    field: M390RepresentativeField
+
+    @model_validator(mode="after")
+    def _require_source_declared_representative_shape(self) -> M390RepresentativeProjectionRef:
+        if self.representative_kind is M390RepresentativeKind.FISICA_COMUNIDAD_BIENES:
+            if self.slot != 1 or self.field not in _M390_PHYSICAL_REPRESENTATIVE_FIELDS:
+                raise ValueError("physical/community representative requires its one address-shaped source row")
+            return self
+        if self.field not in _M390_LEGAL_REPRESENTATIVE_FIELDS:
+            raise ValueError("legal representative requires one of its compact source-row fields")
+        return self
+
+
+class M390RegimenSimplificadoCohort(StrEnum):
+    """The two distinct simplified-regime activity blocks on page five."""
+
+    NO_AGRICOLA = "no_agricola"
+    AGRICOLA_GANADERA = "agricola_ganadera"
+
+
+class M390RegimenSimplificadoActivityField(StrEnum):
+    """Closed source fields for one simplified-regime activity row."""
+
+    IAE_EPIGRAFE = "iae_epigrafe"
+    AUXILIARY_ACTIVITY_INDICATOR = "auxiliary_activity_indicator"
+    CUOTA_DEVENGADA_OPERACIONES_CORRIENTES = "cuota_devengada_operaciones_corrientes"
+    REDUCCION_LORCA = "reduccion_lorca"
+    CUOTA_SOPORTADA_OPERACIONES_CORRIENTES = "cuota_soportada_operaciones_corrientes"
+    INDICE_CORRECTOR = "indice_corrector"
+    RESULTADO = "resultado"
+    PORCENTAJE_CUOTA_MINIMA = "porcentaje_cuota_minima"
+    DEVOLUCION_CUOTAS_SOPORTADAS_OTROS_PAISES = "devolucion_cuotas_soportadas_otros_paises"
+    CUOTA_MINIMA = "cuota_minima"
+    ACTIVITY_CODE = "activity_code"
+    VOLUMEN_INGRESOS = "volumen_ingresos"
+    INDICE_CUOTA = "indice_cuota"
+    CUOTA_DEVENGADA = "cuota_devengada"
+    CUOTA_SOPORTADA = "cuota_soportada"
+    CUOTA_DERIVADA_REGIMEN_SIMPLIFICADO = "cuota_derivada_regimen_simplificado"
+
+
+_M390_NO_AGRICOLA_SIMPLIFICADO_FIELDS = frozenset(
+    {
+        M390RegimenSimplificadoActivityField.IAE_EPIGRAFE,
+        M390RegimenSimplificadoActivityField.AUXILIARY_ACTIVITY_INDICATOR,
+        M390RegimenSimplificadoActivityField.CUOTA_DEVENGADA_OPERACIONES_CORRIENTES,
+        M390RegimenSimplificadoActivityField.REDUCCION_LORCA,
+        M390RegimenSimplificadoActivityField.CUOTA_SOPORTADA_OPERACIONES_CORRIENTES,
+        M390RegimenSimplificadoActivityField.INDICE_CORRECTOR,
+        M390RegimenSimplificadoActivityField.RESULTADO,
+        M390RegimenSimplificadoActivityField.PORCENTAJE_CUOTA_MINIMA,
+        M390RegimenSimplificadoActivityField.DEVOLUCION_CUOTAS_SOPORTADAS_OTROS_PAISES,
+        M390RegimenSimplificadoActivityField.CUOTA_MINIMA,
+        M390RegimenSimplificadoActivityField.CUOTA_DERIVADA_REGIMEN_SIMPLIFICADO,
+    },
+)
+_M390_AGRICOLA_SIMPLIFICADO_FIELDS = frozenset(
+    {
+        M390RegimenSimplificadoActivityField.ACTIVITY_CODE,
+        M390RegimenSimplificadoActivityField.VOLUMEN_INGRESOS,
+        M390RegimenSimplificadoActivityField.INDICE_CUOTA,
+        M390RegimenSimplificadoActivityField.CUOTA_DEVENGADA,
+        M390RegimenSimplificadoActivityField.CUOTA_SOPORTADA,
+        M390RegimenSimplificadoActivityField.CUOTA_DERIVADA_REGIMEN_SIMPLIFICADO,
+    },
+)
+
+
+class M390RegimenSimplificadoActivityProjectionRef(BaseModel):
+    """One source-shaped endpoint on a page-five simplified-regime activity."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m390_regimen_simplificado_activity"]
+    cohort: M390RegimenSimplificadoCohort
+    slot: int = Field(ge=1, le=5)
+    field: M390RegimenSimplificadoActivityField
+
+    @model_validator(mode="after")
+    def _require_source_declared_cohort_shape(self) -> M390RegimenSimplificadoActivityProjectionRef:
+        if self.cohort is M390RegimenSimplificadoCohort.NO_AGRICOLA:
+            if self.slot > 2 or self.field not in _M390_NO_AGRICOLA_SIMPLIFICADO_FIELDS:
+                raise ValueError("non-agricultural simplified activity requires one of its two source rows and fields")
+            return self
+        if self.field not in _M390_AGRICOLA_SIMPLIFICADO_FIELDS:
+            raise ValueError("agricultural simplified activity requires one of its five source rows and fields")
+        return self
+
+
+class M390RegimenSimplificadoModuleValue(StrEnum):
+    """The paired module inputs printed for each non-agricultural activity."""
+
+    UNITS = "units"
+    IMPORTE = "importe"
+
+
+class M390RegimenSimplificadoModuleProjectionRef(BaseModel):
+    """One of seven numbered module pairs on either non-agricultural activity."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m390_regimen_simplificado_module"]
+    slot: int = Field(ge=1, le=2)
+    module_order: int = Field(ge=1, le=7)
+    value: M390RegimenSimplificadoModuleValue
+
+
+class M390ProrrataActivityProjectionField(StrEnum):
+    """Closed fields on one of the five page-seven prorrata activity rows."""
+
+    ACTIVITY_DESCRIPTION = "activity_description"
+    CNAE = "cnae"
+    OPERACIONES_TOTAL = "operaciones_total"
+    OPERACIONES_CON_DERECHO = "operaciones_con_derecho"
+    TIPO = "tipo"
+    PORCENTAJE = "porcentaje"
+
+
+class M390ProrrataActivityProjectionRef(BaseModel):
+    """One source-shaped page-seven prorrata endpoint."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m390_prorrata_activity"]
+    slot: int = Field(ge=1, le=5)
+    field: M390ProrrataActivityProjectionField
+
+
+class M390DifferentiatedDeductionProjectionField(StrEnum):
+    """Closed deduction fields on one of the three differentiated-sector rows."""
+
+    DOMESTIC_CURRENT_BASE = "domestic_current_base"
+    DOMESTIC_CURRENT_CUOTA = "domestic_current_cuota"
+    DOMESTIC_INVESTMENT_BASE = "domestic_investment_base"
+    DOMESTIC_INVESTMENT_CUOTA = "domestic_investment_cuota"
+    IMPORT_CURRENT_BASE = "import_current_base"
+    IMPORT_CURRENT_CUOTA = "import_current_cuota"
+    IMPORT_INVESTMENT_BASE = "import_investment_base"
+    IMPORT_INVESTMENT_CUOTA = "import_investment_cuota"
+    INTRA_EU_CURRENT_BASE = "intra_eu_current_base"
+    INTRA_EU_CURRENT_CUOTA = "intra_eu_current_cuota"
+    INTRA_EU_INVESTMENT_BASE = "intra_eu_investment_base"
+    INTRA_EU_INVESTMENT_CUOTA = "intra_eu_investment_cuota"
+    REAGP_BASE = "reagp_base"
+    REAGP_CUOTA = "reagp_cuota"
+    RECTIFICATION_BASE = "rectification_base"
+    RECTIFICATION_CUOTA = "rectification_cuota"
+    INVESTMENT_REGULARISATION = "investment_regularisation"
+    TOTAL = "total"
+
+
+class M390DifferentiatedDeductionProjectionRef(BaseModel):
+    """One page-eight endpoint on one of three differentiated deduction sectors."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_kind: Literal["m390_differentiated_deduction"]
+    slot: int = Field(ge=1, le=3)
+    field: M390DifferentiatedDeductionProjectionField
+
+
 class M200EstablecimientoPermanenteField(StrEnum):
     """Closed fields of one detail row for a permanent establishment abroad."""
 
@@ -819,6 +1064,12 @@ FilingProjectionRef = Annotated[
     | M303RegimenSimplificadoModuleProjectionRef
     | M303Exonerado390ActivityProjectionRef
     | M303Exonerado390OperacionesTercerosProjectionRef
+    | M390ActivityProjectionRef
+    | M390RepresentativeProjectionRef
+    | M390RegimenSimplificadoActivityProjectionRef
+    | M390RegimenSimplificadoModuleProjectionRef
+    | M390ProrrataActivityProjectionRef
+    | M390DifferentiatedDeductionProjectionRef
     | M200EstablecimientoPermanenteProjectionRef
     | M200SocioSicavDisolucionProjectionRef
     | M200EntidadMenorDependienteProjectionRef
@@ -849,6 +1100,7 @@ _STRING_WIRE_FIELDS = frozenset(
         "fact",
         "field",
         "projection_kind",
+        "representative_kind",
         "value",
     },
 )
@@ -971,6 +1223,20 @@ __all__ = [
     "M303RegimenSimplificadoFactProjectionRef",
     "M303RegimenSimplificadoModuleProjectionRef",
     "M303RegimenSimplificadoModuleValue",
+    "M390ActivityField",
+    "M390ActivityProjectionRef",
+    "M390DifferentiatedDeductionProjectionField",
+    "M390DifferentiatedDeductionProjectionRef",
+    "M390ProrrataActivityProjectionField",
+    "M390ProrrataActivityProjectionRef",
+    "M390RegimenSimplificadoActivityField",
+    "M390RegimenSimplificadoActivityProjectionRef",
+    "M390RegimenSimplificadoCohort",
+    "M390RegimenSimplificadoModuleProjectionRef",
+    "M390RegimenSimplificadoModuleValue",
+    "M390RepresentativeField",
+    "M390RepresentativeKind",
+    "M390RepresentativeProjectionRef",
     "compile_filing_projection_ref",
     "filing_projection_ref_casilla_id",
     "hydrate_filing_projection_ref",
