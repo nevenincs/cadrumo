@@ -3,15 +3,17 @@ tags:
   - '#plan'
   - '#docs-sphinx-ux'
 date: '2026-06-04'
-modified: '2026-08-23'
-body_hash: 'sha256:6a4dfeda9c0aecc11ae3619007c4c5207875ae3e325af4aa6750c91fc307aa95'
 tier: L3
 related:
   - '[[2026-06-04-docs-sphinx-ux-adr]]'
   - '[[2026-06-04-docs-sphinx-ux-research]]'
   - '[[2026-06-01-docs-cli-buildtime-research]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'
+modified: '2026-08-25'
+body_hash: 'sha256:f9ae3354868c08403e7e93db1097d674b524f645b167436d3cbf23cc03a1694e'
 ---
+
+<!-- RETIRED: S27 -->
 
 # `docs-sphinx-ux` implementation plan
 
@@ -96,7 +98,6 @@ Build and inspect the real HTML output so the decision is validated against the 
 - [x] `W03.P05.S14` - run docs dependency and stub drift gates; `docs conformance lane`.
 - [x] `W03.P05.S15` - build the rendered HTML documentation; `docs/_build/html`.
 - [x] `W03.P05.S16` - inspect desktop and mobile rendered UX; `docs/_build/html`.
-- [ ] `W03.P05.S27` - Reconcile post-close nitpicky documentation-build drift by refreshing the six non-machine-secret sequence sources whose directive frame counts exceed their goldens, restoring every generated or authored target currently missing from the all-pages build, resolving the current generated Modelo markup failure, and proving the complete Sphinx and documentation-conformance lanes green without suppressing warnings; `docs/how-to/filing-spine.md; docs/how-to/modelo-303.md; docs/how-to/verification-reports.md; docs/_sequences; docs/reference; docs/api; docs/cli; dev/docs; full docs gates`.
 
 ### Phase `W03.P08` - approve rendered experience
 

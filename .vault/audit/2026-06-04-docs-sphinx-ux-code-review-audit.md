@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#docs-sphinx-ux'
 date: '2026-06-04'
-modified: '2026-07-17'
-body_hash: 'sha256:66389a5642a8d110a96e14deb98dbeac9e0bc2ece1ce69f407cb74d016238310'
+modified: '2026-08-25'
+body_hash: 'sha256:5a587317fe7188c66022ed6bb826f0dd11132550bf9ceaa3a1bef6d60ceb6136'
 related:
   - '[[2026-06-04-docs-sphinx-ux-plan]]'
   - '[[2026-06-04-docs-sphinx-ux-adr]]'
@@ -170,3 +170,25 @@ The canvas no longer relies on stacked low alpha and CSS opacity that made earli
 The shader owns its panel alpha while the CSS canvas opacity remains `1`, producing a visible but low-contrast brand-gradient background behind the centered logo.
 Browser verification at `?rev=shader-gradient3` confirmed the WebGL canvas was ready, had no shader error, advanced frames from `64` to `118`, and caused no horizontal overflow.
 The inspected `shader-gradient3` screenshot shows the intended soft blue brand gradient rather than the earlier stripe texture.
+
+## DOCS-SPHINX-UX-012 | RECONCILED | Post-close umbrella retired without claiming global docs health
+
+Fresh curation found that `W03.P05.S27` combined an obsolete finite inventory
+with a permanent whole-documentation green condition. The named sequence and
+generated-target backlog was delivered later: filing-spine outputs in
+`522ee05830`, broad how-to outputs including Modelo 303 in `92c8aaa35f`,
+verification contracts in `74a15f5485`, and later API/reference rescaffolds
+including `de05300c27`, `61d4ff3930`, and `6e5e679f53`. The original six-frame
+and missing-target list is therefore no longer an executable current worklist.
+
+The current documentation failure is unrelated to the June UX delivery:
+`415944f178` deliberately removed `SequenceEngineError` from the
+`dev.docs.sequences` facade while `sequence_directive.py` retained the old
+facade import. That relocation owner must use the canonical direct errors-module
+import; compatibility must not be restored. Ongoing Sphinx and documentation
+health remains owned by canonical docs/CI gates, which route new failures to
+their actual producers rather than reopening this historical UX campaign.
+
+S27 and its failed-observation execution record are retired through the VaultSpec
+CLI, never checked. Archiving this feature records delivered historical UX and
+does not assert that every future HEAD has a green global documentation build.
