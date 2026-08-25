@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:c477f233fd301f9cfdfbb2e245b5d585d2f871296b9a62fb8caaef0033a4ad88'
+body_hash: 'sha256:2fd6406b19448e77b483fd5d43a4b7eef1c3ea37db5da31de244772428778b9f'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S33]]'
@@ -32,6 +32,10 @@ The existing corpus-wide integration module was run against current HEAD. Its dy
 
 This is an honest verifier-maintenance item, not evidence that Modelo 353 or another model is emitted. It must be recast dynamically by its test owner before this step can claim a green full gate.
 
+### s33-m353-dynamic-witness-followup | resolved | Both M353 eras reach the current production-emission refusal
+
+The integration witness now derives each M353 revision's non-overlapping law-selection coordinates and requires both limbs to retain the canonical `production-emission-proof` refusal. A current sequential rerun passes all three integration cases. This resolves only the stale verifier finding; the zero-live-proof high finding remains open and no emitted-byte success is inferred.
+
 ## Recommendations
 
 - Keep `S33` open. Do not infer payload bytes, probes, or a success claim from the 66 layout/owner-ready rows.
@@ -41,4 +45,5 @@ This is an honest verifier-maintenance item, not evidence that Modelo 353 or ano
 ## Verification receipt
 
 - Read-only dynamic authority inventory: 66 filing revisions; 66 exact selections; 66 nonempty verified layout sets; 58 revisions / 662 declared shared-snapshot producer keys; 8 revisions with no producer key; 0 canonical live proof entries; 66 `production-emission-proof` refusals.
-- `uv run --no-sync pytest -n 0 -q -m integration dev/registry/tests/test_filing_emitted_byte_acceptance.py`: 2 passed, 1 failed in 159.82 seconds. The failure is the stale M353-specific `filing-layout` expectation above and is not masked.
+- Historical run: 2 passed, 1 failed in 159.82 seconds on the stale M353 expectation.
+- Current run: 3 passed in 111.91 seconds after the dynamic M353 correction; all 66 production-emission refusals remain.

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:9556fdd6d348a001d46451aa82d33f893bc4e3bf202d1f405ada27f83b8e1706'
+body_hash: 'sha256:8be67ca52cb63d558f1a26a0957afa1d6807e3c9fa69bf9535d1290ba1167aa1'
 related:
   - '[[2026-08-23-registry-unblock-loop-reference]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
@@ -205,6 +205,7 @@ related:
   - '[[2026-08-25-registry-completeness-closure-s34-temporal-predecessor-closure-audit-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s34-temporal-predecessor-final-close-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s35-source-predecessor-final-close-audit]]'
+  - '[[2026-08-25-registry-completeness-closure-s36-export-predecessor-checkpoint-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s72-independent-post-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s73-independent-post-review-audit]]'
   - '[[2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit]]'
@@ -322,6 +323,7 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-25-registry-completeness-closure-s34-temporal-predecessor-closure-audit-audit` - `registry-completeness-closure` audit: `S34 temporal predecessor closure reconciliation`
 - `2026-08-25-registry-completeness-closure-s34-temporal-predecessor-final-close-audit` - `registry-completeness-closure` audit: `S34 temporal predecessor predicate closure reconciliation`
 - `2026-08-25-registry-completeness-closure-s35-source-predecessor-final-close-audit` - `registry-completeness-closure` audit: `S35 source predecessor final close`
+- `2026-08-25-registry-completeness-closure-s36-export-predecessor-checkpoint-audit` - `registry-completeness-closure` audit: `S36 export predecessor checkpoint`
 - `2026-08-25-registry-completeness-closure-s72-independent-post-review-audit` - `registry-completeness-closure` audit: `S72 independent post-review`
 - `2026-08-25-registry-completeness-closure-s73-independent-post-review-audit` - `registry-completeness-closure` audit: `S73 independent post-review`
 - `2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit` - `registry-completeness-closure` audit: `S73 source-connectivity revalidation audit`
