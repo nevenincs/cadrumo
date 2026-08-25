@@ -174,18 +174,15 @@ def _compose_revision_temporal_coverage(
     declared_authority_grade: RegistryAuthorityGrade | None,
 ) -> TemporalRevisionCoverage:
     """Build one row, preserving an explicit refusal at each authority boundary."""
-    base = {
-        "modelo": modelo_id,
-        "revision": revision_id,
-        "filing_year": filing_year,
-        "period": period,
-        "declared_authority_grade": declared_authority_grade,
-    }
     try:
         inspection = authority.inspect_revision(modelo_id, filing_year=filing_year, period=period)
     except (RegistrySnapshotError, RegistryValidationError) as exc:
         return TemporalRevisionCoverage(
-            **base,
+            modelo=modelo_id,
+            revision=revision_id,
+            filing_year=filing_year,
+            period=period,
+            declared_authority_grade=declared_authority_grade,
             status="refused",
             failure_code="law_selection_refused",
             failure_detail=_failure_detail(exc),
@@ -193,7 +190,11 @@ def _compose_revision_temporal_coverage(
     selected_revision = str(inspection.revision_id)
     if selected_revision != revision_id:
         return TemporalRevisionCoverage(
-            **base,
+            modelo=modelo_id,
+            revision=revision_id,
+            filing_year=filing_year,
+            period=period,
+            declared_authority_grade=declared_authority_grade,
             selected_revision=selected_revision,
             status="refused",
             failure_code="selected_revision_mismatch",
@@ -204,7 +205,11 @@ def _compose_revision_temporal_coverage(
         )
     if declared_authority_grade is None:
         return TemporalRevisionCoverage(
-            **base,
+            modelo=modelo_id,
+            revision=revision_id,
+            filing_year=filing_year,
+            period=period,
+            declared_authority_grade=declared_authority_grade,
             selected_revision=selected_revision,
             status="refused",
             failure_code="undeclared_authority_grade",
@@ -219,7 +224,11 @@ def _compose_revision_temporal_coverage(
         )
     except RegistryValidationError as exc:
         return TemporalRevisionCoverage(
-            **base,
+            modelo=modelo_id,
+            revision=revision_id,
+            filing_year=filing_year,
+            period=period,
+            declared_authority_grade=declared_authority_grade,
             selected_revision=selected_revision,
             status="refused",
             failure_code="declared_grade_snapshot_refused",
@@ -228,7 +237,11 @@ def _compose_revision_temporal_coverage(
     snapshot_revision = str(snapshot.revision.id)
     if snapshot_revision != revision_id:
         return TemporalRevisionCoverage(
-            **base,
+            modelo=modelo_id,
+            revision=revision_id,
+            filing_year=filing_year,
+            period=period,
+            declared_authority_grade=declared_authority_grade,
             selected_revision=snapshot_revision,
             status="refused",
             failure_code="snapshot_revision_mismatch",
@@ -238,7 +251,11 @@ def _compose_revision_temporal_coverage(
             ),
         )
     return TemporalRevisionCoverage(
-        **base,
+        modelo=modelo_id,
+        revision=revision_id,
+        filing_year=filing_year,
+        period=period,
+        declared_authority_grade=declared_authority_grade,
         selected_revision=snapshot_revision,
         status="validated",
     )

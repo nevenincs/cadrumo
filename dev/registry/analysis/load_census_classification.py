@@ -564,9 +564,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
             "Spending-category resolution and casilla-id typing run when a snapshot is built, "
             "traced alongside the registry members of the same trigger."
         ),
-        members=(
-            "cadrumo.core.i18n._translatable",
-        ),
+        members=("cadrumo.core.i18n._translatable",),
         prefixes=("cadrumo.domain.categories",),
     ),
     ClassificationRule(

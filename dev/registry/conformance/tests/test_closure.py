@@ -193,10 +193,7 @@ def test_missing_and_extra_limb_coordinates_remain_visible_cross_authority_disag
     assert row.source_connectivity is None
     assert row.predicate_outcome == "refused"
     assert row.refusals[0].reason == "cross_limb_disagreement"
-    assert [
-        (item.modelo, item.revision, item.limb, item.kind)
-        for item in report.join_disagreements
-    ] == [
+    assert [(item.modelo, item.revision, item.limb, item.kind) for item in report.join_disagreements] == [
         ("100", "2026", "source_connectivity", "unexpected_limb_coordinate"),
         ("999", "2026", "source_connectivity", "missing_from_limb"),
     ]

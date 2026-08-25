@@ -44,7 +44,7 @@ _TABLE_ROUTED_KEYS = frozenset(
 #: A row table read by ``tr``. The key column is the second; the siblings are
 #: prose, which is the whole reason the dict shape's "every value is a key"
 #: test cannot be applied here.
-_ROUTED = '''
+_ROUTED = """
 TABLE = (
     ("Missing argument", "cli.help.missing_argument", "Missing argument"),
     ("Missing option", "cli.help.missing_option", "Missing option"),
@@ -56,20 +56,20 @@ def render(rendered):
         if rendered.startswith(prefix):
             return tr(key, default=default)
     return rendered
-'''
+"""
 
 #: The SAME table, never read by a translator. Shape alone must not qualify it.
 _UNROUTED = _ROUTED.replace("return tr(key, default=default)", "return default")
 
 #: A table of the same shape whose columns are ordinary strings.
-_PROSE = '''
+_PROSE = """
 PAIRS = (("alpha", "beta"), ("gamma", "delta"))
 
 
 def render():
     for left, right in PAIRS:
         return tr(right)
-'''
+"""
 
 
 def _framework_tree() -> ast.Module:

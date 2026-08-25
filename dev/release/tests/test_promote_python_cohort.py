@@ -163,9 +163,7 @@ def _make_cohort_dir(
         "sha256": sha256,
         "source_commit": commit,
         "version": version,
-        "command_spec_attestation": make_test_command_spec_attestation(
-            cohort_dir, artifacts, source_commit=commit
-        ),
+        "command_spec_attestation": make_test_command_spec_attestation(cohort_dir, artifacts, source_commit=commit),
     }
     (cohort_dir / "python-cohort.json").write_text(
         json.dumps(manifest_data, indent=2, sort_keys=True) + "\n",

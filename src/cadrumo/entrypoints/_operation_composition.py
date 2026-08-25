@@ -5,6 +5,8 @@ from __future__ import annotations
 import secrets
 from datetime import timedelta
 
+from ..adapters.outbound.google import apply_export_plan, preview_export_plan
+from ..adapters.outbound.storage import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.operations import (
     OperationJournalRepository,
     OperationLeaseFilesystemRepository,
@@ -12,6 +14,14 @@ from ..adapters.persistence.operations import (
 )
 from ..adapters.persistence.profile import SyncRunRecordRepository
 from ..application.auth import build_auth_operation_definitions, build_auth_operation_registrations
+from ..application.export import (
+    GoogleSheetsExportRemoteResult,
+    GoogleSheetsExportRootFolderRequiredError,
+    GoogleSheetsExportService,
+    build_google_sheets_export_operation_definition,
+    build_google_sheets_export_operation_registration,
+    build_google_sheets_export_service,
+)
 from ..application.live import (
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,
@@ -21,6 +31,7 @@ from ..application.operations import (
     OperationRegistry,
     compose_operation_services,
 )
+from ..application.storage.calc_sheets import SheetExportPlan, TabName, export_modelo_to_sheets
 from ..application.user_profile import (
     CENSAL_OPERATION_DEFINITION,
     build_censal_operation_registration,
@@ -34,6 +45,66 @@ from ..core.time import now
 _LEASE_DURATION = timedelta(minutes=10)
 _EXECUTION_TIMEOUT = timedelta(hours=1)
 _CLEANUP_TIMEOUT = timedelta(minutes=2)
+
+
+def _google_sheets_export_port(
+    *,
+    settings: Settings,
+):
+    """Compose the sole Google transport and mandatory sync-run provenance handoff."""
+
+    def export(profile_id: str, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
+        credentials = build_google_credentials(profile=profile_id)
+        root_folder_id = resolve_drive_root_folder_id(profile=profile_id, settings=settings)
+        if not root_folder_id:
+            raise GoogleSheetsExportRootFolderRequiredError("Google Drive root folder is required")
+        if dry_run:
+            preview = preview_export_plan(plan, credentials=credentials, root_folder_id=root_folder_id)
+            return GoogleSheetsExportRemoteResult(
+                dry_run=True,
+                root_folder_id=root_folder_id,
+                spreadsheet_exists=preview.spreadsheet_exists,
+                folder_id=preview.folder_id,
+                spreadsheet_id=preview.spreadsheet_id,
+                spreadsheet_url=preview.spreadsheet_url,
+                value_cells_written=len(plan.value_cells),
+                formula_cells_written=len(plan.formula_cells),
+                protected_ranges_written=len(plan.protected_ranges),
+                tab_count=len(TabName),
+                ranges_to_clear=preview.ranges_to_clear,
+                value_cells_changed=preview.value_cells_changed,
+                value_cells_unchanged=preview.value_cells_unchanged,
+                formula_cells_to_write=preview.formula_cells_to_write,
+            )
+        applied = export_modelo_to_sheets(
+            plan,
+            credentials=credentials,
+            root_folder_id=root_folder_id,
+            sync_run_repository=SyncRunRecordRepository(),
+            apply_export_plan=apply_export_plan,
+        )
+        return GoogleSheetsExportRemoteResult(
+            dry_run=False,
+            root_folder_id=root_folder_id,
+            folder_id=applied.folder_id,
+            spreadsheet_id=applied.spreadsheet_id,
+            spreadsheet_url=applied.spreadsheet_url,
+            value_cells_written=applied.value_cells_written,
+            formula_cells_written=applied.formula_cells_written,
+            protected_ranges_written=applied.protected_ranges_written,
+            tab_count=applied.tab_count,
+        )
+
+    return export
+
+
+def compose_google_sheets_export_service(
+    *,
+    settings: Settings | None = None,
+) -> GoogleSheetsExportService:
+    """Return the canonical application service with its outer transport bound."""
+    resolved_settings = settings or load_settings()
+    return build_google_sheets_export_service(export_port=_google_sheets_export_port(settings=resolved_settings))
 
 
 def compose_operation_dependencies(
@@ -51,12 +122,21 @@ def compose_operation_dependencies(
     storage_root = effective_storage_root(settings=resolved_settings)
     auth_definitions = build_auth_operation_definitions()
     profile_definitions = build_user_profile_operation_definitions()
+    google_export_definition = build_google_sheets_export_operation_definition(
+        export_port=_google_sheets_export_port(settings=resolved_settings)
+    )
     filed_history_definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository
     )
     definitions = tuple(
         sorted(
-            (*auth_definitions, *profile_definitions, CENSAL_OPERATION_DEFINITION, filed_history_definition),
+            (
+                *auth_definitions,
+                *profile_definitions,
+                CENSAL_OPERATION_DEFINITION,
+                filed_history_definition,
+                google_export_definition,
+            ),
             key=lambda item: item.definition_id,
         )
     )
@@ -67,6 +147,7 @@ def compose_operation_dependencies(
                 *build_user_profile_operation_registrations(profile_definitions),
                 build_censal_operation_registration(CENSAL_OPERATION_DEFINITION),
                 build_filed_history_operation_registration(filed_history_definition),
+                build_google_sheets_export_operation_registration(google_export_definition),
             ),
             key=lambda item: item.contract.definition_id,
         )
@@ -91,4 +172,4 @@ def compose_operation_dependencies(
     )
 
 
-__all__ = ["compose_operation_dependencies"]
+__all__ = ["compose_google_sheets_export_service", "compose_operation_dependencies"]

@@ -1004,11 +1004,7 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     # clears rather than that provisioning override. Narrowly mask the harness
     # field for this exact leaf; every sibling retains the normal sandbox span.
     is_profile_delete = any(args[index : index + 3] == ("config", "profile", "delete") for index in range(len(args)))
-    settings_context = (
-        override_settings(cadrumo_active_profile=None)
-        if is_profile_delete
-        else nullcontext()
-    )
+    settings_context = override_settings(cadrumo_active_profile=None) if is_profile_delete else nullcontext()
     with settings_context:
         result = invoke_cached_cli(list(args))
     if os.environ.get("CI"):

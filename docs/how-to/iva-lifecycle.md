@@ -152,7 +152,7 @@ finding, not a warning.
 Open the annual summary, then run the same chain as a quarter:
 
 ```{cli-sequence} iva-lifecycle-annual
-:verify: Confirm the annual Modelo 390 summary opens on its 2026 registry revision.
+:verify: Confirm the latest filing-grade annual Modelo 390 summary opens on its 2025 registry revision.
 ```
 
 The commands from `work calculate` onwards each resolve all four filed quarters,

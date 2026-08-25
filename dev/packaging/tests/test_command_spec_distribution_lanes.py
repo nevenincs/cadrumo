@@ -161,9 +161,7 @@ def _authored_spec_modules(checkout: Path) -> set[str]:
         if any(
             isinstance(node, (ast.Assign, ast.AnnAssign))
             and any(
-                isinstance(target, ast.Name)
-                and target.id.isupper()
-                and _is_spec_export_name(target.id)
+                isinstance(target, ast.Name) and target.id.isupper() and _is_spec_export_name(target.id)
                 for target in (node.targets if isinstance(node, ast.Assign) else [node.target])
             )
             for node in tree.body

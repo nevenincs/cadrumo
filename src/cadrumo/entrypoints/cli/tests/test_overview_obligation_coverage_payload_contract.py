@@ -116,6 +116,10 @@ def test_calendar_rendering_round_trips_the_canonical_coverage_partition() -> No
 
     assert rendered.coverage is not None
     assert rendered.coverage.model_dump(mode="json") == coverage.model_dump(mode="json")
+    assert rendered.generated_at == "2026-01-01T00:00:00+00:00"
+    assert rendered.completeness is not None
+    assert rendered.taxpayer_model_declared is True
+    assert rendered.incomplete_reason is None
     assert any(line.startswith("coverage_advised\t1\t") for line in lines)
     assert notices[0].context == {"modelo": "190", "reason": "applicable_window_missing"}
     notice_action = notices[0].action

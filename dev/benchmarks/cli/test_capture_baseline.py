@@ -44,9 +44,7 @@ def _republish_mutated_raw(
     raw = _load_raw_evidence(summary, baseline_path=DEFAULT_OUTPUT)
     commands = raw["commands"]
     assert isinstance(commands, dict)
-    frozen: object = json.loads(
-        DEFAULT_OUTPUT.with_name("baseline.census.json").read_text(encoding="utf-8")
-    )
+    frozen: object = json.loads(DEFAULT_OUTPUT.with_name("baseline.census.json").read_text(encoding="utf-8"))
     assert isinstance(frozen, dict)
     raw["frozen_census"] = frozen["commands"]
     mutate(commands)
@@ -58,6 +56,7 @@ def _republish_mutated_raw(
 
 def test_exact_set_gate_bites_on_coherently_republished_missing_node(tmp_path: Path) -> None:
     """Independent frozen authority rejects a self-consistent shortened pair."""
+
     def remove_first(commands: dict[str, object]) -> None:
         commands.pop(next(iter(commands)))
 
@@ -68,6 +67,7 @@ def test_exact_set_gate_bites_on_coherently_republished_missing_node(tmp_path: P
 
 def test_exact_set_gate_bites_on_coherently_republished_invented_node(tmp_path: Path) -> None:
     """Independent frozen authority rejects a self-consistent invented node."""
+
     def add_invented(commands: dict[str, object]) -> None:
         commands["aeat invented"] = next(iter(commands.values()))
 

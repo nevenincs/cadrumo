@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.user_profile import load_user_profile_schema, ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord, load_user_profile_schema
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile

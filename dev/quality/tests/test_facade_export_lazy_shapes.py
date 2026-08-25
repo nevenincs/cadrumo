@@ -40,7 +40,7 @@ from ..facade_export_scan import _lazy_resolvable_names
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: The shape that produced the nineteen false positives.
-_CONTAINER_DISPATCH = '''
+_CONTAINER_DISPATCH = """
 _LAZY_EXPORTS = frozenset({"Alpha", "beta_helper"})
 
 
@@ -50,20 +50,20 @@ def __getattr__(name):
 
         return getattr(_heavy, name)
     raise AttributeError(name)
-'''
+"""
 
 #: The shape the scanner already modelled.
-_INLINE_DISPATCH = '''
+_INLINE_DISPATCH = """
 def __getattr__(name):
     if name == "Gamma":
         from ._other import Gamma
 
         return Gamma
     raise AttributeError(name)
-'''
+"""
 
 #: A container the dispatch never consults, beside one it does.
-_UNREFERENCED_CONTAINER = '''
+_UNREFERENCED_CONTAINER = """
 _LAZY_EXPORTS = frozenset({"Alpha"})
 _UNRELATED_CONSTANTS = frozenset({"NotDispatched", "AlsoNotDispatched"})
 
@@ -74,12 +74,12 @@ def __getattr__(name):
 
         return getattr(_heavy, name)
     raise AttributeError(name)
-'''
+"""
 
 #: No dispatch at all: a module that resolves nothing lazily.
-_NO_GETATTR = '''
+_NO_GETATTR = """
 ORDINARY = 1
-'''
+"""
 
 
 def _names(source: str) -> set[str]:

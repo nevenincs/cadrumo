@@ -30,7 +30,7 @@ from typing import Any
 import pytest
 
 from ....domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
-from ....domain.user_profile import load_user_profile_schema, ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord, load_user_profile_schema
 from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.profile_capsule import seed_test_profile_record

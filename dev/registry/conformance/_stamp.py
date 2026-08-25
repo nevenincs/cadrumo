@@ -951,7 +951,7 @@ def _render_toml_value(value: object) -> str:
 
 _QUOTE = '"'
 _TRIPLE_QUOTE = '"""'
-_LINE_CONTINUATION = '\\\n'
+_LINE_CONTINUATION = "\\\n"
 
 #: Physical width the wrapped form aims for. Deliberately well under BOTH
 #: reviewability caps in the tree (520 and 600) rather than tracking either: this
@@ -1053,7 +1053,6 @@ def _apply_governance(text: str, revision: str, rendered: dict[str, str]) -> str
     while rebuilt and not rebuilt[-1].strip():
         rebuilt.pop()
     return newline.join(rebuilt) + newline
-
 
 
 def _revision_table_end(lines: list[str], start: int) -> int:

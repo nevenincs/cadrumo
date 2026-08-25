@@ -66,8 +66,7 @@ def _observation_payload(profile: CliPerformanceProfile) -> dict[str, Any]:
             "imported_module_count": len(observation.imported_modules),
             "imported_modules": list(module_names),
             "import_families": {
-                family: list(sorted(modules))
-                for family, modules in sorted(observation.import_families.items())
+                family: list(sorted(modules)) for family, modules in sorted(observation.import_families.items())
             },
             "pydantic_model_constructions": observation.pydantic_model_constructions,
             "filesystem": {
@@ -376,9 +375,7 @@ def _write_bytes_atomic(path: Path, payload: bytes) -> None:
     os.replace(temporary, path)
 
 
-def _reject_unexpected_checkpoint_commands(
-    commands: Mapping[str, Any], expected_paths: Sequence[str]
-) -> None:
+def _reject_unexpected_checkpoint_commands(commands: Mapping[str, Any], expected_paths: Sequence[str]) -> None:
     unexpected = sorted(set(commands) - set(expected_paths))
     if unexpected:
         raise RuntimeError(f"CLI baseline checkpoint contains unexpected commands: {unexpected}")
@@ -537,8 +534,7 @@ def capture(
             continue
         with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="cli-baseline") as pool:
             futures = {
-                pool.submit(_measure, node, warmups=warmups, samples=samples, timeout=timeout): node
-                for node in batch
+                pool.submit(_measure, node, warmups=warmups, samples=samples, timeout=timeout): node for node in batch
             }
             for future in as_completed(futures):
                 path, payload = future.result()
@@ -693,8 +689,7 @@ def check_baseline(
         node = actual[path] if actual is not None else None
         identity = frozen_census[path]
         if not isinstance(identity, dict) or any(
-            entry.get(key) != identity.get(key)
-            for key in ("kind", "loader_owner", "handler_owner", "policy")
+            entry.get(key) != identity.get(key) for key in ("kind", "loader_owner", "handler_owner", "policy")
         ):
             raise RuntimeError(f"frozen CLI baseline metadata mismatch: {path}")
         if node is not None and (

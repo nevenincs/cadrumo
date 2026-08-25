@@ -744,9 +744,7 @@ def test_canonicalize_product_identity_references_handles_folded_help_copy(tmp_p
         assert _leaf(data, "cli", "root", "next_action") == (
             "Cadrumo prepares tax forms for AEAT. Run aeat app modelo work calculate or aeat manual fetch."
         )
-        assert _leaf(data, "product", "machine_names") == (
-            "Install cadrumo; read cadrumo://status."
-        )
+        assert _leaf(data, "product", "machine_names") == ("Install cadrumo; read cadrumo://status.")
 
 
 def test_canonicalize_product_identity_cli_selects_only_one_supported_locale(tmp_path: Path) -> None:

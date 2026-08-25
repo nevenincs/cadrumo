@@ -108,8 +108,7 @@ register_collection_storage_root_cleanup(collection_storage_root())
 
 
 @pytest.fixture(scope="session")
-def _resident_service_environment(
-) -> Iterator[None]:
+def _resident_service_environment() -> Iterator[None]:
     """Give resident-service child processes one isolated singleton scope."""
     with TemporaryDirectory(prefix="vaultspec-rag-pytest-") as root_text:
         root = Path(root_text)

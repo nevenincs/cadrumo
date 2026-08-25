@@ -162,11 +162,7 @@ def test_machine_secret_and_profile_authentication_metadata_matches_live_project
 
     root = resolve_command_path(cli_tree, "aeat")
     assert root.profile_authentication_contract == registration.profile_authentication_contract
-    assert all(
-        node.profile_authentication_contract is None
-        for key, node in cli_tree.root.items()
-        if key != "aeat"
-    )
+    assert all(node.profile_authentication_contract is None for key, node in cli_tree.root.items() if key != "aeat")
     rendered = serialise_cli_tree(cli_tree).lower()
     assert all(token not in rendered for token in ('"value"', '"example"', "secretstr"))
 

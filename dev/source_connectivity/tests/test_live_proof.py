@@ -52,9 +52,7 @@ def _m349_fixture(
         command_id="modelo.work.calculate",
         route_id=ModeloCalculationRouteId.MODELO_WORK_CALCULATION,
         canonical_cli_path=("app", "modelo", "work", "calculate"),
-        destination_identities=(
-            ("binding_source", "349", "2020-y-siguientes", "2026", "1T", "collectible_invoice"),
-        ),
+        destination_identities=(("binding_source", "349", "2020-y-siguientes", "2026", "1T", "collectible_invoice"),),
         modelo="349",
         revision_id="2020-y-siguientes",
         filing_year=2026,

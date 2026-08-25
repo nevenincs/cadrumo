@@ -570,8 +570,7 @@ def result_frame_asserts_result_payload(sequence: ParsedSequence) -> bool:
         # contract; text rendering itself is covered by the CLI help snapshots.
         return any(assertion.json_path == "exit_code" and assertion.expected == 0 for assertion in frame.expects)
     return any(
-        assertion.json_path in {"result", "error"}
-        or assertion.json_path.startswith(_SEMANTIC_PAYLOAD_PREFIXES)
+        assertion.json_path in {"result", "error"} or assertion.json_path.startswith(_SEMANTIC_PAYLOAD_PREFIXES)
         for assertion in frame.expects
     )
 

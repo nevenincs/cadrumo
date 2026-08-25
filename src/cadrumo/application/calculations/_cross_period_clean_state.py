@@ -20,7 +20,7 @@ from datetime import date
 from typing import Final, NamedTuple, cast
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
-from ...core import CasillaId, Modelo, Period, normalise_aeat_csv
+from ...core import CasillaId, Modelo, Period, RegistryAuthorityGrade, normalise_aeat_csv
 from ...core.identity import CalculationRevisionId, same_tax_identifier
 from ...domain.calculations.registry import (
     Modelo202Modality,
@@ -169,6 +169,11 @@ def cross_period_dependency_inventory(
     for modelo in selected_modelos:
         for revision in modelo.revisions.values():
             if not revision.period_selector.includes_year(filing_year):
+                continue
+            # Dependency inventory is a filing-readiness surface. Applicability-
+            # and calculation-grade revisions cannot lawfully produce the filing
+            # snapshot consumed below, and therefore cannot own filing blockers.
+            if revision.effective_authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
             for period in revision.period_selector.periods:
                 snapshot = authority.snapshot(

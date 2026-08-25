@@ -62,9 +62,7 @@ def test_new_capability_refuses_selector_digest_drift(new_capability: str) -> No
 def test_registry_destination_candidates_have_one_census_owner() -> None:
     manifest = load_source_connectivity_census()
     destination_ids = tuple(
-        destination.identity
-        for entry in manifest.entries
-        for destination in entry.registry_destination_candidates
+        destination.identity for entry in manifest.entries for destination in entry.registry_destination_candidates
     )
 
     assert destination_ids
@@ -256,9 +254,7 @@ def test_manual_source_reference_grounding_must_resolve_from_catalogue_and_selec
     authority = resources().modelos.authority
     entry = next(item for item in manifest.entries if item.candidate_id == "censo.modelo-036-profile-status")
     grounding = next(
-        item
-        for item in entry.grounding
-        if item.locator_kind is SourceConnectivityGroundingLocatorKind.SOURCE_REFERENCE
+        item for item in entry.grounding if item.locator_kind is SourceConnectivityGroundingLocatorKind.SOURCE_REFERENCE
     )
 
     invented = grounding.model_copy(update={"reference": "invented-source-reference"})

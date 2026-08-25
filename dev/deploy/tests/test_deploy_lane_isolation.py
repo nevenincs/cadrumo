@@ -275,4 +275,3 @@ def test_no_publisher_here_reaches_the_site_root() -> None:
     assert not (_REPO_ROOT / "dev" / "deploy" / "frontend_static_site.py").exists(), (
         "an external-site publisher entered the product repository"
     )
-

@@ -249,16 +249,11 @@ def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
         "202",
         "303",
         "353",
-        "390",
         "720",
     )
     assert all(item.dependencies for item in inventory.items)
-    assert any(
-        item.target_modelo == "390"
-        and item.target_period == Period.from_year_and_code(2026, "0A")
-        and item.source_modelos == ("303",)
-        for item in inventory.items
-    )
+    assert "036" not in inventory.target_modelos
+    assert "390" not in inventory.target_modelos
     assert any(
         item.target_modelo == "353"
         and item.target_period == Period.from_year_and_code(2026, "12")

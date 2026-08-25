@@ -64,9 +64,7 @@ def check_census_governance(manifest: SourceConnectivityCensusManifest, *, as_of
                 f"unresolved census row lacks owned bounded follow-up: {row.candidate_id}"
             )
         if row.expiry_posture(as_of=as_of) is SourceConnectivityExpiryPosture.EXPIRED:
-            raise SourceConnectivityCheckError(
-                f"blocked census row expired without adjudication: {row.candidate_id}"
-            )
+            raise SourceConnectivityCheckError(f"blocked census row expired without adjudication: {row.candidate_id}")
 
 
 def check_capability_locators(
@@ -99,6 +97,8 @@ def check_capability_locators(
                     f"census capability locator drift for {row.candidate_id}: "
                     f"{capability_id} now resolves to {expected!r}"
                 )
+
+
 def check_capability_census(
     repo_root: Path,
     *,

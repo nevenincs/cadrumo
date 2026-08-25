@@ -89,9 +89,7 @@ def _write_placeholder_cohort(root: Path) -> dict[str, str]:
                 "sha256": sha256,
                 "source_commit": "a" * 40,
                 "version": "1.0.0",
-                "command_spec_attestation": make_test_command_spec_attestation(
-                    root, names, source_commit="a" * 40
-                ),
+                "command_spec_attestation": make_test_command_spec_attestation(root, names, source_commit="a" * 40),
             },
         ),
         encoding="utf-8",
@@ -152,9 +150,7 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
                 "sha256": sha256,
                 "source_commit": "a" * 40,
                 "version": "1.0.0",
-                "command_spec_attestation": make_test_command_spec_attestation(
-                    tmp_path, names, source_commit="a" * 40
-                ),
+                "command_spec_attestation": make_test_command_spec_attestation(tmp_path, names, source_commit="a" * 40),
             },
         ),
         encoding="utf-8",
