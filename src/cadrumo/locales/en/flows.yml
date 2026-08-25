@@ -19,7 +19,6 @@ flows:
     select_unknown: 'Choose one of the accepted values: %{choices}.'
     tui_abandoned: Flow {flow_id} was closed in mode {mode} before it was submitted
       or saved; nothing was recorded.
-    unexpected_app_type: The interactive screen is not attached to a flow application.
     unsupported_console: This console cannot host interactive questions. Run the flow
       from a real terminal, or drive it with a scripted answer file.
   login:

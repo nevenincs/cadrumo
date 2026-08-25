@@ -19,7 +19,6 @@ flows:
     select_unknown: 'Válassz az elfogadott értékek közül: %{choices}.'
     tui_abandoned: A(z) {flow_id} folyamatot {mode} módban bezárták a beküldés vagy
       mentés előtt; semmi sem került rögzítésre.
-    unexpected_app_type: Az interaktív képernyő nem kapcsolódik folyamat-alkalmazáshoz.
     unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
       Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
   login:
