@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:1b6bdea20e63c400c83dbe6e7a68597428171ec508fb8ef7f22ce19318cd70a6'
+body_hash: 'sha256:011e70cc8dfac7805c56c158ffbea431248d81b844d46a2136f83bf0d5e5fe6b'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -366,7 +366,7 @@ Repeat the census after every delivered capability, process newly exposed candid
 Repeat discovery and bounded delivery until the census reaches a stable, fully actioned state.
 
 - [x] `W06.P20.S112` - regenerate and compare the canonical connectivity census after completed source slices, record capability-selector drift without adjudicating it, and hand the result to S113/S115; `.vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S112.md; .vault/index/source-casilla-integration.index.md`.
-- [ ] `W06.P20.S113` - create bounded research and decision records for every newly discovered connect candidate; `.vault/research`.
+- [x] `W06.P20.S113` - classify the two S112-discovered structural helper identities under existing source-connectivity governance and hand their evidence-backed not_applicable disposition to S115 without census mutation; `.vault/research/2026-08-25-source-casilla-integration-s113-helper-candidate-classification-research.md; .vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S113.md; .vault/index/source-casilla-integration.index.md`.
 - [ ] `W06.P20.S114` - deliver every newly adjudicated connection through the canonical vertical-slice contract; `src/cadrumo/application/aggregation`.
 - [ ] `W06.P20.S115` - classify every rejected or blocked candidate with evidence, owner, review condition, and bounded follow-up; `src/cadrumo/_data/source_connectivity/census.toml`.
 - [ ] `W06.P20.S116` - rerun discovery until two consecutive runs produce no unclassified or unactioned candidate; `.vault/audit/2026-08-22-source-casilla-connectivity-close-audit.md`.
