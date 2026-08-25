@@ -5,31 +5,12 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:92dee64c0548374b806f77e3025fc64df8efb5f8aad467f808cc59eb9893cc56'
+body_hash: 'sha256:290631e3d8d6790bf4ef36b98f1b700acc914ba751e403ca9dacd18b6500c746'
 related:
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-workspace-v1-contract-reference]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `S125 Workspace V1 model review`
 
@@ -78,3 +59,20 @@ Beyond the unrestricted localized value at `src/cadrumo/application/modelo/_work
 ## Recommendations
 
 Keep S125 open. Amend the canonical model module in place to bind capability and facet rows to exact coordinates, provide typed schema relationship destinations, replace the materialization container with a real discriminated union, bound all strings and cursors, and clear focused basedpyright without aliases, shims, re-export bridges, or duplicate owners. Extend adversarial tests for every repaired invariant, then repeat this independent review before S125 closure.
+## Correction re-review: `f4a5fd5c05` + `e32d3453fb`
+
+### Final disposition - PASS
+
+Every prior HIGH and MEDIUM finding is resolved at the corrected commits.
+
+- `ModeloWorkspaceCapabilityV1` now carries the exact resolved target and selected revision; every facet carries the V1 contract, selected revision, schema identity, baseline, and contributor tuple, and root projection validation enforces equality.
+- Schema rows now provide typed, bounded destinations for continuity, applicability, constraints, formula operands, relation endpoints, and export exposure.
+- Materialization is now the closed discriminated union of `scalar` and `repeated_row` record arms, with no nullable sibling container.
+- Localized display values, cursors, schema paths/relationships, evidence lists, repeated-row values/provenance, family dispositions, and closure limbs have executable finite bounds.
+- The request target is a literal-tagged Workspace union that retains canonical `ModeloVisibleFilingTarget` or `ModeloExactWorkUnitTarget` operands. `_target_from_mapping` and `_adapt_wire_target` are gone; no duplicate wire grammar or private cross-class validator remains.
+- `ModeloWorkspaceReadinessV1` preserves the typed canonical readiness axes, missing requirements/bindings, refusal values, nullable ledger state, issues, and aggregate readiness.
+- `ContinuidadId` has exactly one canonical definition in `core.identity`. Registry schema surfaces and Workspace import that identity directly; the prior registry definition/export is deleted. Exact source search finds no shim, alias, fallback, duplicate owner, or re-export bridge.
+
+Vaultspec RAG on port 8766 located the Workspace models and canonical continuity identity; exact source/commit searches confirmed the result. Focused validation passed: `16 passed` integration workspace-model tests, Ruff clean, and basedpyright `0 errors, 0 warnings` over the corrected surfaces. No LOW finding remains from this correction review.
+
+S125 may close.
