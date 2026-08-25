@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:5ff01c70796096a2eed8be8e4da4c08c524985ccaf98eea976cc8ba343d2a990'
+body_hash: 'sha256:77c46d44851a7defa7e7388b75d1bb0786fd2163e7624b8899f0883d57930649'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -130,6 +130,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W05-P18-summary]]'
   - '[[2026-08-22-source-casilla-integration-W05-P19-S108]]'
   - '[[2026-08-22-source-casilla-integration-W05-P19-S109]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P19-S110]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -205,6 +206,7 @@ related:
   - '[[2026-08-25-source-casilla-integration-w05-p18-s106-m193-refusal-lifecycle-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-w05-p19-s108-m296-grounding-review-audit]]'
   - '[[2026-08-25-source-casilla-integration-w05-p19-s109-m296-registry-refusal-review-audit]]'
+  - '[[2026-08-25-source-casilla-integration-w05-p19-s110-m296-refusal-lifecycle-review-audit]]'
 ---
 
 # `source-casilla-integration` feature index
@@ -285,6 +287,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-25-source-casilla-integration-w05-p18-s106-m193-refusal-lifecycle-review-audit` - `source-casilla-integration` audit: `W05 P18 S106 Modelo 193 refusal lifecycle review`
 - `2026-08-25-source-casilla-integration-w05-p19-s108-m296-grounding-review-audit` - `source-casilla-integration` audit: `w05 p19 s108 m296 grounding review`
 - `2026-08-25-source-casilla-integration-w05-p19-s109-m296-registry-refusal-review-audit` - `source-casilla-integration` audit: `W05 P19 S109 Modelo 296 registry refusal review`
+- `2026-08-25-source-casilla-integration-w05-p19-s110-m296-refusal-lifecycle-review-audit` - `source-casilla-integration` audit: `W05 P19 S110 Modelo 296 refusal lifecycle review`
 
 ### exec
 
@@ -410,6 +413,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W05-P18-summary` - `source-casilla-integration` `W05.P18` summary
 - `2026-08-22-source-casilla-integration-W05-P19-S108` - adjudicate M296 withholding-row semantics and source ownership from official evidence
 - `2026-08-22-source-casilla-integration-W05-P19-S109` - recast Modelo 296 withholding rows as a bounded registry-blocked refusal pending a non-lossy encrypted M296 owner, declarant-owned recipient/representative/Annex identity and provenance, row-preserving resolver lifecycle, and source-owned repeated-record export proof while preserving manual/direct paths and the distinct M180/M193 withholding lifecycle
+- `2026-08-22-source-casilla-integration-W05-P19-S110` - prove Modelo 296 remains unavailable to connected encrypted persistence, provenance, replay, review, and source-owned repeated-row export until S109's predicate, with explicit registry-blocked/unmeasured governance and no binding/resolver/fixture while preserving direct/manual and M180/M193 paths
 
 ### plan
 

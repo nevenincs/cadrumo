@@ -1,4 +1,5 @@
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -9,7 +10,7 @@ from cadrumo.core import BindingSourceKind
 from cadrumo.core.resources import resources
 
 from ..check import SourceConnectivityCheckError, check_census_governance
-from ..live_proof import CONNECTED_PROOF_FIXTURES, connected_candidate_ids
+from ..live_proof import CONNECTED_PROOF_FIXTURES, canonical_live_connected_proof_authority, connected_candidate_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -35,7 +36,8 @@ def test_m296_registry_blocked_refusal_is_bounded_and_unconnected() -> None:
     assert all(fixture.candidate_id != "rows.withholding296" for fixture in CONNECTED_PROOF_FIXTURES)
     # Connected fixtures are the sole lifecycle authority for encrypted persistence,
     # provenance, replay, review, and source-owned repeated-row export.
-    assert not any(fixture.candidate_id == "rows.withholding296" for fixture in CONNECTED_PROOF_FIXTURES)
+    with canonical_live_connected_proof_authority(Path.cwd()) as proof_authority:
+        assert proof_authority is None
     retenciones = BindingSourceKind.RETENCIONES_AGGREGATION
     assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[retenciones].value == "enrolled"
     assert any(retenciones in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
