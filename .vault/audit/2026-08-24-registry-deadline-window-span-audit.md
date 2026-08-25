@@ -856,3 +856,29 @@ The transferable lesson: the deleted measurement comment was LOAD-BEARING. It
 recorded that someone had enumerated exactly which names the rule kept and
 dropped. Replacing a measured rule with an unmeasured whitelist converts a
 scoping fix into a coverage hole, and nothing in the suite goes red to say so.
+
+### what the modelo 200 filing-grade attestation actually blocks
+
+`dev/registry/tests/test_filing_export_live_proof.py` — 8 failures, one cause:
+`ModeloApplicationError: application.filing.runtime.errors.registry_empty_for_period`.
+
+This is the genuine attestation gap, not a caller over-demanding a rung, and it
+is the concrete cost of leaving modelo 200 at `calculation` grade. The tests
+reach `registry_authority.snapshot("200", filing_year=2025, period="0A")
+.revision.export_layouts[0]` and drive real emitted bytes — an export-layout
+path that legitimately requires FILING. `build_runtime_schema_provider`
+(`application/filing/runtime.py:527`) `continue`s past any snapshot failing
+`_is_below_filing_authority`, so with modelo 200 below filing grade the snapshot
+set ends empty and the runtime raises `registry_empty_for_period` rather than
+the underlying grade refusal — which is why this cluster does not look like the
+grade-refusal family until traced.
+
+Left red deliberately. The fix is to validate and attest modelo 200's
+`2024-y-siguientes` revision at filing grade; nothing in the test or the caller
+is wrong. Contrast with the 57 domain failures closed earlier, where the callers
+asked calculation and structure questions and merely inherited a FILING default:
+here the caller genuinely needs the rung the registry does not declare.
+
+Note also `CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES` in
+`dev/registry/filing_export_proof.py` is currently an empty tuple, so the live
+proof authority enrols no coordinates; these eight tests construct their own.
