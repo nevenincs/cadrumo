@@ -86,21 +86,9 @@ def _ledger(actividad_id: str, *, physical_closing: Decimal | None = None) -> In
         consideration_deductible_iva_ratio=Decimal("1"),
         attributable_cost_components=(),
         evidence=(
-            InventoryAcquisitionEvidence(
-                reference=_ref(f"invoice-{actividad_id}"),
-                evidence_kind=InventoryAcquisitionEvidenceKind.PURCHASE_INVOICE,
-                content_digest="a" * 64,
-            ),
-            InventoryAcquisitionEvidence(
-                reference=_ref(f"cost-{actividad_id}"),
-                evidence_kind=InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW,
-                content_digest="b" * 64,
-            ),
-            InventoryAcquisitionEvidence(
-                reference=_ref(f"iva-{actividad_id}"),
-                evidence_kind=InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW,
-                content_digest="c" * 64,
-            ),
+            InventoryAcquisitionEvidence(reference=_ref(f"invoice-{actividad_id}"), evidence_kind=InventoryAcquisitionEvidenceKind.PURCHASE_INVOICE, content_digest="a" * 64),
+            InventoryAcquisitionEvidence(reference=_ref(f"cost-{actividad_id}"), evidence_kind=InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW, content_digest="b" * 64),
+            InventoryAcquisitionEvidence(reference=_ref(f"iva-{actividad_id}"), evidence_kind=InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW, content_digest="c" * 64),
         ),
         completeness=InventoryAcquisitionCompleteness(
             consideration_evidence=_ref(f"invoice-{actividad_id}"),
@@ -113,81 +101,44 @@ def _ledger(actividad_id: str, *, physical_closing: Decimal | None = None) -> In
         total_acquisition_cost=Decimal("100.00"),
     )
     movement = MovementRecord.from_purchase_acquisition(
-        movement_id=f"purchase-{actividad_id}",
-        movement_date=date(2025, 2, 1),
-        quantity=Decimal("1"),
-        acquisition_cost=acquisition,
+        movement_id=f"purchase-{actividad_id}", movement_date=date(2025, 2, 1), quantity=Decimal("1"), acquisition_cost=acquisition
     )
     observation = None
     if physical_closing is not None:
         observation = PhysicalClosingObservation(
-            observation_id=f"physical-{actividad_id}",
-            observed_on=date(2026, 1, 1),
-            as_of_date=date(2025, 12, 31),
-            actividad_id=actividad_id,
-            filing_year=2025,
-            closing_value=physical_closing,
+            observation_id=f"physical-{actividad_id}", observed_on=date(2026, 1, 1), as_of_date=date(2025, 12, 31),
+            actividad_id=actividad_id, filing_year=2025, closing_value=physical_closing,
             valuation_basis=InventoryClosingValuationBasis.FIFO_ACQUISITION_PRICE,
             evidence=(
-                PhysicalClosingEvidence(
-                    reference=_ref(f"count-{actividad_id}"),
-                    role=PhysicalClosingEvidenceRole.PHYSICAL_COUNT,
-                    content_digest="1" * 64,
-                ),
-                PhysicalClosingEvidence(
-                    reference=_ref(f"value-{actividad_id}"),
-                    role=PhysicalClosingEvidenceRole.ACQUISITION_PRICE_VALUATION,
-                    content_digest="2" * 64,
-                ),
+                PhysicalClosingEvidence(reference=_ref(f"count-{actividad_id}"), role=PhysicalClosingEvidenceRole.PHYSICAL_COUNT, content_digest="1" * 64),
+                PhysicalClosingEvidence(reference=_ref(f"value-{actividad_id}"), role=PhysicalClosingEvidenceRole.ACQUISITION_PRICE_VALUATION, content_digest="2" * 64),
             ),
         )
     decision = InventoryClosingAuthorityDecision(
-        decision_id=f"decision-{actividad_id}",
-        actividad_id=actividad_id,
-        filing_year=2025,
+        decision_id=f"decision-{actividad_id}", actividad_id=actividad_id, filing_year=2025,
         authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
         physical_observation_id=None if observation is None else observation.observation_id,
         physical_observation_fingerprint=None if observation is None else observation.fingerprint,
-        reason="Reviewed movement authority.",
-        actor="reviewer-secret",
-        source_command="inventory-secret-command",
+        reason="Reviewed movement authority.", actor="reviewer-secret", source_command="inventory-secret-command",
         decided_at=datetime(2026, 1, 2, tzinfo=UTC),
-        evidence=(
-            InventoryClosingDecisionEvidence(
-                reference=_ref(f"decision-{actividad_id}"),
-                role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
-                content_digest="d" * 64,
-            ),
-        ),
+        evidence=(InventoryClosingDecisionEvidence(reference=_ref(f"decision-{actividad_id}"), role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION, content_digest="d" * 64),),
     )
     prior_fingerprint = fingerprint_prior_authoritative_closing(
-        actividad_id=actividad_id,
-        filing_year=2024,
-        authoritative_closing_value=Decimal("100.00"),
-        authoritative_source_fingerprint="e" * 64,
-        evidence=continuity,
+        actividad_id=actividad_id, filing_year=2024, authoritative_closing_value=Decimal("100.00"),
+        authoritative_source_fingerprint="e" * 64, evidence=continuity,
     )
     record = InventoryClosingAuthorityRecord(
-        decision=decision,
-        physical_observation=observation,
+        decision=decision, physical_observation=observation,
         prior_closing_link=PriorAuthoritativeClosingLink(
-            actividad_id=actividad_id,
-            current_filing_year=2025,
-            prior_filing_year=2024,
-            prior_authoritative_closing_value=Decimal("100.00"),
-            current_opening_value=Decimal("100.00"),
+            actividad_id=actividad_id, current_filing_year=2025, prior_filing_year=2024,
+            prior_authoritative_closing_value=Decimal("100.00"), current_opening_value=Decimal("100.00"),
             prior_authoritative_source_fingerprint="e" * 64,
-            prior_authoritative_closing_fingerprint=prior_fingerprint,
-            evidence=continuity,
+            prior_authoritative_closing_fingerprint=prior_fingerprint, evidence=continuity,
         ),
     )
     return InventoryLedger(
-        actividad_id=actividad_id,
-        year=2025,
-        valuation_method=ValuationMethod.FIFO,
-        opening_stock=Decimal("100.00"),
-        period_movements=(movement,),
-        closing_authority_record=record,
+        actividad_id=actividad_id, year=2025, valuation_method=ValuationMethod.FIFO,
+        opening_stock=Decimal("100.00"), period_movements=(movement,), closing_authority_record=record,
     )
 
 
@@ -284,10 +235,9 @@ def test_inventory_row_templates_expand_complete_activities_in_canonical_rows() 
     for binding_id in ("inventory-0177", "inventory-0181", "inventory-0182"):
         assert result.row_source_identities[(binding_id, 1)].source_row_identity == "alpha"
         assert result.row_source_identities[(binding_id, 2)].source_row_identity == "zeta"
-        assert (
-            result.row_source_identities[(binding_id, 1)].fingerprint
-            == compute_inventory_anexo_d_projection(alpha).projection_fingerprint
-        )
+        assert result.row_source_identities[(binding_id, 1)].fingerprint == compute_inventory_anexo_d_projection(
+            alpha
+        ).projection_fingerprint
     assert len({item.fingerprint for key, item in result.row_source_identities.items() if key[1] == 1}) == 1
     assert len({item.fingerprint for key, item in result.row_source_identities.items() if key[1] == 2}) == 1
     public = f"{result!r} {result.model_dump()!r} {result.model_dump_json()}"
@@ -312,10 +262,9 @@ def test_inventory_activity_order_is_insertion_invariant_and_semantic_change_cha
 
     assert forward.row_binding_values == reverse.row_binding_values == mutated.row_binding_values
     assert forward.row_source_identities == reverse.row_source_identities
-    assert (
-        forward.row_source_identities[("inventory-0181", 1)].fingerprint
-        != mutated.row_source_identities[("inventory-0181", 1)].fingerprint
-    )
+    assert forward.row_source_identities[("inventory-0181", 1)].fingerprint != mutated.row_source_identities[
+        ("inventory-0181", 1)
+    ].fingerprint
 
 
 def test_inventory_conflict_is_safe_per_activity_advisory() -> None:
@@ -390,9 +339,7 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
             row_statement=statement,
             mutate=orphan_authority,
         )
-        corrupted = InventorySourceResolver(inventory_repository=repository).resolve(
-            _context(_revision(inventory=True))
-        )
+        corrupted = InventorySourceResolver(inventory_repository=repository).resolve(_context(_revision(inventory=True)))
 
     assert absent.row_binding_values == {}
     assert absent.diagnostics[0].reason == "source_domain_not_ready"

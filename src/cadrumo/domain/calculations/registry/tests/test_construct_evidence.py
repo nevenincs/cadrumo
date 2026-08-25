@@ -14,8 +14,8 @@ from .._coverage import (
     audit_registry_construct_evidence,
     build_construct_evidence_ledger,
 )
+from .._authority import bundled_authority
 from .._snapshot import build_snapshot
-from ._catalogue_verification_support import _registry_tree
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -23,9 +23,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_construct_evidence_audit_enumerates_every_declared_construct_and_selector() -> None:
     """The evidence ledger has one exact row for each real revision declaration."""
-    modelos, catalogues = _registry_tree()
-
-    audit = audit_registry_construct_evidence(modelos, catalogues, source_root=bundled_path())
+    authority = bundled_authority()
+    modelos = authority.modelos
+    audit = audit_registry_construct_evidence(authority)
 
     ledgers_by_coordinate = {(ledger.modelo, ledger.revision): ledger for ledger in audit.ledgers}
     expected_ledger_coordinates = {

@@ -50,7 +50,12 @@
           ],
           "source_refs": [
             "aeat-dr-130-2019-v12",
-            "aeat-modelo-130-instructions"
+            "aeat-modelo-130-instructions",
+            "aeat-calendario-contribuyente-2022",
+            "aeat-calendario-contribuyente-2023",
+            "aeat-calendario-contribuyente-2024",
+            "aeat-calendario-contribuyente-2025",
+            "aeat-calendario-contribuyente-2026"
           ],
           "tax_domain": "irpf",
           "title": "IRPF pago fraccionado estimación directa",

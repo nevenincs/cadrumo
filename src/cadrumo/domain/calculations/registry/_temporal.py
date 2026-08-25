@@ -8,10 +8,58 @@ from __future__ import annotations
 
 from datetime import date
 
-from ._errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError
+from ....core import RegistrySelectorPeriodCode
+from ._errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
 from ._ids import RevisionId
 from ._period_selector_match import selector_token_for_request
-from ._schema import ModeloDefinition, ModeloRevision
+from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+
+
+def coverage_assessment_horizon(catalogues: RegistryCatalogues) -> int:
+    """Return the current registry-declared horizon for finite coverage work.
+
+    The supported-filing-years catalogue is the registry's sole declaration of
+    what the product currently claims to support.  A coverage derivation must
+    therefore stop at its latest year, rather than copying a clock year or a
+    modelo-specific year list into another authority surface.
+    """
+    catalogue = catalogues.supported_filing_years
+    if catalogue is None:
+        raise RegistryValidationError("registry has no supported_filing_years catalogue for coverage assessment")
+    return catalogue.years[-1]
+
+
+def revision_selection_coordinates(
+    revision: ModeloRevision,
+    *,
+    assessment_horizon: int,
+) -> tuple[tuple[int, RegistrySelectorPeriodCode], ...]:
+    """Derive every declared selection coordinate through the assessment horizon.
+
+    The expansion has exactly one owner because a single representative year
+    can prove neither an open selector's later years nor all of a revision's
+    declared period tokens.  It intentionally returns the declared token --
+    including ``EVENT-N`` -- rather than expanding aliases or re-implementing
+    period grammar.  The canonical selector remains responsible for matching a
+    request to that token.
+    """
+    if not 2000 <= assessment_horizon <= 2099:
+        raise ValueError("assessment_horizon must be between 2000 and 2099")
+    selector = revision.period_selector
+    if selector.years:
+        years = tuple(year for year in sorted(selector.years) if year <= assessment_horizon)
+    else:
+        if selector.year_from is None:
+            raise RegistryValidationError(
+                f"revision {revision.id!r} declares no selector start for coverage assessment",
+            )
+        end = min(selector.year_to or assessment_horizon, assessment_horizon)
+        years = tuple(range(selector.year_from, end + 1))
+    if not years:
+        raise RegistryValidationError(
+            f"revision {revision.id!r} declares no filing year through coverage horizon {assessment_horizon}",
+        )
+    return tuple((filing_year, period) for filing_year in years for period in selector.periods)
 
 
 def select_revision_for_year(

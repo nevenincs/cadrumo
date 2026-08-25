@@ -35,6 +35,7 @@ from ....domain.user_profile import ProfileSetupState
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
+from .. import _overview as overview_module
 from .._overview import _calendar_shift_reason_text, _live_censo_verified_profile_keys, _profile_to_taxpayer, _state
 from ._overview_calendar_support import (
     _SOURCE_URL,
@@ -214,8 +215,12 @@ def test_calendar_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -
     )
 
 
-def test_calendar_json_matches_application_coordinates_for_every_supported_year() -> None:
+def test_calendar_json_matches_application_coordinates_for_every_supported_year(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Real CLI fleet parity consumes the canonical horizon and application projection."""
+    reference_today = today_madrid()
+    monkeypatch.setattr(overview_module, "today_madrid", lambda: reference_today)
     current = _state()
     profile = _profile_to_taxpayer(current)
     record = current.active_profile_record()
@@ -245,7 +250,7 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
         expected_calendar = build_overview_calendar(
             profile,
             OverviewCalendarRange(from_date=from_date, to_date=to_date),
-            today=today_madrid(),
+            today=reference_today,
             raw_values=raw_values,
         )
         expected = tuple(

@@ -256,15 +256,9 @@ def test_clear_auth_acquisition_lock_is_repeatable(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     path = _write_live_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", now=now)
 
-    first = clear_auth_acquisition_lock(
-        settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", allow_held=True, reason="reset-1"
-    )
-    second = clear_auth_acquisition_lock(
-        settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", allow_held=True, reason="reset-2"
-    )
-    third = clear_auth_acquisition_lock(
-        settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", allow_held=True, reason="reset-3"
-    )
+    first = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", allow_held=True, reason="reset-1")
+    second = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", allow_held=True, reason="reset-2")
+    third = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", allow_held=True, reason="reset-3")
 
     assert first.state is AuthAcquisitionLockState.HELD
     assert first.recoverable is True

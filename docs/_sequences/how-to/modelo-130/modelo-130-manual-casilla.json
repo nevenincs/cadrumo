@@ -261,7 +261,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "a42bbcca3d40a399e5dabef7b0949cb15d69d271c5313746e0c8d0f6d2594fc8"
+          "value": "768bf78452ed807a3bc240026aefcc765ae6a6936fc3fc9cdd31a1e165ea8ebb"
         }
       ],
       "envelope": {
@@ -293,7 +293,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "a42bbcca3d40a399e5dabef7b0949cb15d69d271c5313746e0c8d0f6d2594fc8",
+          "calculation_revision_id": "768bf78452ed807a3bc240026aefcc765ae6a6936fc3fc9cdd31a1e165ea8ebb",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -908,30 +908,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a42bbcca3d40a399e5dabef7b0949cb15d69d271c5313746e0c8d0f6d2594fc8 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision a42bbcca3d40a399e5dabef7b0949cb15d69d271c5313746e0c8d0f6d2594fc8`.",
-          "source_provenance": [
-            {
-              "binding_source": "ledger_renta_income_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_renta_income_aggregation",
-              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
-            },
-            {
-              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
-            },
-            {
-              "binding_source": "previous_filing",
-              "dependency_treatment": "factual_evidence",
-              "fingerprint": null,
-              "source_kind": "previous_filing",
-              "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
-            }
-          ],
+          "saved_confirmation": "Saved as draft calculation revision 768bf78452ed807a3bc240026aefcc765ae6a6936fc3fc9cdd31a1e165ea8ebb (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 768bf78452ed807a3bc240026aefcc765ae6a6936fc3fc9cdd31a1e165ea8ebb`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -957,7 +934,7 @@
         "modelo",
         "work",
         "revision",
-        "a42bbcca3d40a399e5dabef7b0949cb15d69d271c5313746e0c8d0f6d2594fc8"
+        "768bf78452ed807a3bc240026aefcc765ae6a6936fc3fc9cdd31a1e165ea8ebb"
       ],
       "captures": [],
       "envelope": {
@@ -975,7 +952,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "a42bbcca3d40a399e5dabef7b0949cb15d69d271c5313746e0c8d0f6d2594fc8",
+          "calculation_revision_id": "768bf78452ed807a3bc240026aefcc765ae6a6936fc3fc9cdd31a1e165ea8ebb",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -1585,24 +1562,36 @@
           ],
           "source_provenance": [
             {
-              "binding_source": "ledger_renta_income_aggregation",
+              "contributor_binding_source": "ledger_renta_income_aggregation",
+              "contributor_source_kind": "ledger_renta_income_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "ledger_renta_income_aggregation",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_income_aggregation",
+              "resolver_id": "ledger_renta_income_aggregation",
               "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
             },
             {
-              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "contributor_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "contributor_source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "resolver_id": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
             },
             {
-              "binding_source": "previous_filing",
+              "contributor_binding_source": "previous_filing",
+              "contributor_source_kind": "previous_filing",
               "dependency_treatment": "factual_evidence",
               "fingerprint": null,
-              "source_kind": "previous_filing",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "previous_filing",
+              "resolver_id": "previous_filing",
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
             }
           ],

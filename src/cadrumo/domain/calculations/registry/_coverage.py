@@ -45,7 +45,6 @@ consumed BY that validation. Housing both here inverted the dependency.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, PrivateAttr, computed_field, model_validator
@@ -54,8 +53,10 @@ from ....core import (
     REVIEWED_LEGAL_STATUSES,
     REVIEWED_REVISION_REVIEW_STATUSES,
     LegalReviewStatus,
+    RegistrySelectorPeriodCode,
     RevisionReviewStatus,
 )
+from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
 from ._schema import (
@@ -67,7 +68,6 @@ from ._schema import (
     ModeloDefinition,
     ModeloRevision,
     ParameterDefinition,
-    RegistryCatalogues,
     RegistrySnapshot,
     RelationDefinition,
     SourceReference,
@@ -76,12 +76,11 @@ from ._schema import (
 from ._schema_family_coverage import (
     CoverageModel,
 )
-from ._snapshot import build_validated_snapshot
 from ._static_inspection import RegistryRevisionInspection
-from ._validate import RegistryValidator
+from ._temporal import coverage_assessment_horizon, revision_selection_coordinates
 
 CoverageGateStatus = Literal["satisfied", "gap"]
-CoverageAuthorityScope = Literal["filing", "inspection_only"]
+CoverageAuthorityScope = Literal["filing", "inspection_only", "mixed"]
 RequiredCoverageTier = Literal["legal_authority", "official_source_guidance", "layout_authority"]
 
 REQUIRED_COVERAGE_TIERS: tuple[RequiredCoverageTier, ...] = (
@@ -122,10 +121,12 @@ class EvidenceTierCoverageGate(CoverageModel):
 
 
 class ModelLawCoverageLedger(CoverageModel):
-    """Per-modelo/revision coverage ledger for legal, source, parity, and layout evidence."""
+    """One law-selected coverage cell for legal, source, parity, and layout evidence."""
 
     modelo: str
     revision: str
+    filing_year: int = Field(ge=2000, le=2099)
+    period: RegistrySelectorPeriodCode
     gates: tuple[EvidenceTierCoverageGate, ...]
     authority_scope: CoverageAuthorityScope = "filing"
     authority_fallback_reason: str | None = Field(default=None, min_length=1, max_length=512)
@@ -174,6 +175,23 @@ class RegistryCoverageAudit(CoverageModel):
     def ok(self) -> bool:
         """Return whether every mandatory model-law evidence tier is covered."""
         return not self.required_gate_failures
+
+    @property
+    def ledgers_by_revision(self) -> Mapping[tuple[str, str], tuple[ModelLawCoverageLedger, ...]]:
+        """Group the full cell matrix without discarding later selector coordinates.
+
+        Callers that render one revision row must consume this aggregate rather
+        than indexing :attr:`ledgers` by ``(modelo, revision)`` directly.  The
+        latter would retain an arbitrary final coordinate and recreate the
+        representative-coordinate defect this matrix removes.
+        """
+        grouped: dict[tuple[str, str], list[ModelLawCoverageLedger]] = {}
+        for ledger in self.ledgers:
+            grouped.setdefault((ledger.modelo, ledger.revision), []).append(ledger)
+        return {
+            key: tuple(sorted(value, key=lambda ledger: (ledger.filing_year, ledger.period)))
+            for key, value in grouped.items()
+        }
 
 
 ConstructEvidenceKind = Literal["formula", "parameter", "binding", "relation", "selector"]
@@ -359,45 +377,38 @@ class RegistryConstructEvidenceAudit(CoverageModel):
 
 
 def audit_registry_model_law_coverage(
-    modelos: Iterable[ModeloDefinition],
-    catalogues: RegistryCatalogues,
-    *,
-    source_root: Path,
+    authority: ValidatedRegistryAuthority,
 ) -> RegistryCoverageAudit:
-    """Validate registry coverage ledgers and return a :class:`RegistryCoverageAudit`.
+    """Return the full derived coverage matrix from validated authority.
 
-    Legal authority, official guidance, and layout authority are mandatory for
-    every filing-grade revision because the registry cannot be filing-grade
-    without them. A revision whose canonical review state is not filing-grade
-    is measured through inspection and retained in the ledger without turning
-    its expected filing ineligibility into a coverage failure. Executable parity
-    remains a reported gap unless an official safe calculator or formula
-    workbook exists for the revision.
-
-    Args:
-        modelos: Iterable of :class:`ModeloDefinition` instances to audit.
-        catalogues: Legal and source catalogues for reference validation.
-        source_root: Filesystem root for resolving source artefacts.
+    Every ledger is one ``(modelo, revision, filing_year, period)`` cell. The
+    canonical selector is re-run without an injected revision id for every
+    declared coordinate through the registry's supported-year horizon. An old
+    source or layout therefore cannot make an open selector's later years
+    invisible behind a revision-level summary.
     """
-    modelo_tuple = tuple(sorted(modelos, key=lambda item: item.id))
-    RegistryValidator(catalogues, source_root=source_root).validate_registry(modelo_tuple)
-
+    authority.validate_registry()
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     ledgers: list[ModelLawCoverageLedger] = []
     required_gate_failures: list[str] = []
     executable_parity_gaps: list[str] = []
-    for modelo in modelo_tuple:
+    for modelo in sorted(authority.modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            ledger = _model_law_coverage_for_revision(
-                modelo,
+            for filing_year, period in revision_selection_coordinates(
                 revision,
-                catalogues,
-                source_root=source_root,
-            )
-            ledgers.append(ledger)
-            required_failures, parity_gaps = _model_law_coverage_findings(modelo, revision, ledger)
-            required_gate_failures.extend(required_failures)
-            executable_parity_gaps.extend(parity_gaps)
-
+                assessment_horizon=assessment_horizon,
+            ):
+                ledger = _model_law_coverage_for_coordinate(
+                    authority=authority,
+                    modelo=modelo,
+                    revision=revision,
+                    filing_year=filing_year,
+                    period=period,
+                )
+                ledgers.append(ledger)
+                required_failures, parity_gaps = _model_law_coverage_findings(modelo, revision, ledger)
+                required_gate_failures.extend(required_failures)
+                executable_parity_gaps.extend(parity_gaps)
     return RegistryCoverageAudit(
         ledgers=tuple(ledgers),
         required_gate_failures=tuple(required_gate_failures),
@@ -405,46 +416,44 @@ def audit_registry_model_law_coverage(
     )
 
 
-def _model_law_coverage_for_revision(
+def _model_law_coverage_for_coordinate(
+    *,
+    authority: ValidatedRegistryAuthority,
     modelo: ModeloDefinition,
     revision: ModeloRevision,
-    catalogues: RegistryCatalogues,
-    *,
-    source_root: Path,
+    filing_year: int,
+    period: RegistrySelectorPeriodCode,
 ) -> ModelLawCoverageLedger:
-    """Build one revision ledger from filing or inspection authority as applicable."""
-    inspection = RegistryRevisionInspection.from_revision(
-        modelo=modelo,
-        revision=revision,
-        source_root=source_root,
-        sources=catalogues.sources,
-        legal_ref_ids=frozenset(catalogues.legal),
-    )
-    proof = _revision_filing_authority_proof(revision, inspection, catalogues.legal)
+    """Build one cell from the law-selected inspection or filing snapshot."""
+    inspection = authority.inspect_revision(modelo.id, filing_year=filing_year, period=period)
+    if inspection.revision_id != revision.id:
+        raise RegistryValidationError(
+            f"coverage coordinate {modelo.id}/{filing_year}/{period} selected revision "
+            f"{inspection.revision_id!r} instead of declared revision {revision.id!r}",
+        )
+    proof = _revision_filing_authority_proof(revision, inspection, authority.catalogues.legal)
     if proof is not None:
         try:
-            snapshot = build_validated_snapshot(
-                modelo,
-                catalogues,
-                filing_year=_representative_year(revision),
-                period=revision.period_selector.periods[0],
-                revision_id=revision.id,
+            snapshot = authority.snapshot(
+                modelo.id,
+                filing_year=filing_year,
+                period=period,
+                grade=revision.effective_authority_grade,
             )
         except RegistryValidationError as capability_refusal:
-            # Reviewed, but not filing-CAPABLE. Review state and filing
-            # capability are different conditions and the proof above tests only
-            # the first; 83 revisions currently declare no export layout and
-            # refuse here. Caught rather than propagated because this audit
-            # reports on the whole corpus: letting one revision abort the fold
-            # would replace 102 ledgers with a stack trace. Recorded rather than
-            # swallowed, so the ledger can still distinguish this from a revision
-            # nobody reviewed -- both otherwise read `inspection_only`.
             return build_model_law_coverage_ledger(
                 inspection,
+                filing_year=filing_year,
+                period=period,
                 _fallback_reason=str(capability_refusal).splitlines()[0][:512],
             )
-        return build_model_law_coverage_ledger(snapshot, _authority_proof=proof)
-    return build_model_law_coverage_ledger(inspection)
+        return build_model_law_coverage_ledger(
+            snapshot,
+            filing_year=filing_year,
+            period=period,
+            _authority_proof=proof,
+        )
+    return build_model_law_coverage_ledger(inspection, filing_year=filing_year, period=period)
 
 
 def _model_law_coverage_findings(
@@ -468,41 +477,43 @@ def _model_law_coverage_findings(
 
 
 def audit_registry_construct_evidence(
-    modelos: Iterable[ModeloDefinition],
-    catalogues: RegistryCatalogues,
-    *,
-    source_root: Path,
+    authority: ValidatedRegistryAuthority,
 ) -> RegistryConstructEvidenceAudit:
     """Build construct evidence ledgers from the validated registry authority.
 
-    The fold validates the given :class:`ModeloDefinition` set and enumerates
-    only revision-level declarations. It deliberately does
-    not turn revision evidence floors or casilla declarations into construct
-    evidence, and it never supplies a reference that is absent from the owning
-    declaration.
+    Construct declarations are revision-level, so this report retains one row
+    per revision.  Its filing-capability probe nevertheless traverses every
+    law-selected coordinate through the same coverage horizon: no first
+    coordinate may bless an open selector's later cells.
     """
-    modelo_tuple = tuple(sorted(modelos, key=lambda item: item.id))
-    RegistryValidator(catalogues, source_root=source_root).validate_registry(modelo_tuple)
-
+    authority.validate_registry()
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     ledgers: list[ConstructEvidenceLedger] = []
-    for modelo in modelo_tuple:
+    for modelo in sorted(authority.modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            inspection = RegistryRevisionInspection.from_revision(
-                modelo=modelo,
-                revision=revision,
-                source_root=source_root,
-                sources=catalogues.sources,
-                legal_ref_ids=frozenset(catalogues.legal),
+            coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
+            inspections = tuple(
+                authority.inspect_revision(modelo.id, filing_year=filing_year, period=period)
+                for filing_year, period in coordinates
             )
-            proof = _revision_filing_authority_proof(revision, inspection, catalogues.legal)
+            for (filing_year, period), inspection in zip(coordinates, inspections, strict=True):
+                if inspection.revision_id != revision.id:
+                    raise RegistryValidationError(
+                        f"construct-evidence coordinate {modelo.id}/{filing_year}/{period} selected revision "
+                        f"{inspection.revision_id!r} instead of declared revision {revision.id!r}",
+                    )
+            inspection = inspections[0]
+            proof = _revision_filing_authority_proof(revision, inspection, authority.catalogues.legal)
             if proof is not None:
                 try:
-                    snapshot = build_validated_snapshot(
-                        modelo,
-                        catalogues,
-                        filing_year=_representative_year(revision),
-                        period=revision.period_selector.periods[0],
-                        revision_id=revision.id,
+                    snapshots = tuple(
+                        authority.snapshot(
+                            modelo.id,
+                            filing_year=filing_year,
+                            period=period,
+                            grade=revision.effective_authority_grade,
+                        )
+                        for filing_year, period in coordinates
                     )
                 except RegistryValidationError as capability_refusal:
                     # Reviewed, but not filing-CAPABLE -- exactly the condition the
@@ -525,7 +536,7 @@ def audit_registry_construct_evidence(
                 else:
                     ledgers.append(
                         _build_construct_evidence_ledger(
-                            snapshot,
+                            snapshots[0],
                             authority_proof=proof,
                         ),
                     )
@@ -537,6 +548,8 @@ def audit_registry_construct_evidence(
 def build_model_law_coverage_ledger(
     authority: RegistrySnapshot | RegistryRevisionInspection,
     *,
+    filing_year: int | None = None,
+    period: RegistrySelectorPeriodCode | None = None,
     _authority_proof: _AuthorityCheckProof | None = None,
     _fallback_reason: str | None = None,
 ) -> ModelLawCoverageLedger:
@@ -545,6 +558,10 @@ def build_model_law_coverage_ledger(
     Args:
         authority: Filing-grade :class:`RegistrySnapshot` or non-filing
             :class:`RegistryRevisionInspection` to assess for model-law coverage.
+        filing_year: The law-selected filing year for an inspection projection.
+            A snapshot supplies its own coordinate and rejects a conflict.
+        period: The canonical selector token for an inspection projection.
+            A snapshot supplies its own coordinate and rejects a conflict.
         _authority_proof: Private marker supplied only by the validated
             registry-wide audit. A hand-built or otherwise unproven snapshot
             remains inspection-only even though its shape is a
@@ -556,6 +573,12 @@ def build_model_law_coverage_ledger(
     if isinstance(authority, RegistrySnapshot):
         modelo_id = authority.modelo.id
         revision_id = authority.revision.id
+        if filing_year is not None and filing_year != authority.filing_year:
+            raise RegistryValidationError("coverage ledger filing_year must match its snapshot")
+        if period is not None and period != authority.period:
+            raise RegistryValidationError("coverage ledger period must match its snapshot")
+        resolved_filing_year = authority.filing_year
+        resolved_period = authority.period
         legal_refs: Iterable[LegalRefId] = authority.legal
         sources: Mapping[SourceRefId, SourceReference] = authority.sources
         workbook_parity_refs: Iterable[WorkbookParityReference] = authority.workbook_parity_refs.values()
@@ -566,6 +589,10 @@ def build_model_law_coverage_ledger(
     else:
         modelo_id = authority.modelo_id
         revision_id = authority.revision_id
+        if filing_year is None or period is None:
+            raise RegistryValidationError("inspection coverage ledger requires its law-selected filing coordinate")
+        resolved_filing_year = filing_year
+        resolved_period = period
         legal_refs = authority.legal_ref_ids
         sources = authority.sources
         workbook_parity_refs = authority.workbook_parity_refs
@@ -576,6 +603,8 @@ def build_model_law_coverage_ledger(
     return ModelLawCoverageLedger(
         modelo=modelo_id,
         revision=revision_id,
+        filing_year=resolved_filing_year,
+        period=resolved_period,
         gates=(
             _legal_authority_gate(legal_refs),
             _source_guidance_gate(
@@ -898,10 +927,3 @@ def _revision_filing_authority_proof(
     return _PROOF_BY_TIER[tier]
 
 
-def _representative_year(revision: ModeloRevision) -> int:
-    selector = revision.period_selector
-    if selector.years:
-        return selector.years[0]
-    if selector.year_from is None:
-        raise RegistryValidationError(f"revision {revision.id!r} has no representative filing year")
-    return selector.year_from

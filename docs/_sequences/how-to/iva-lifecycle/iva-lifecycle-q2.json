@@ -54,7 +54,7 @@
         "notices": [],
         "result": {
           "bucket_event_ids": [
-            "9c9d14b4c6bc8226f53e09f1735306211a8f24c7eced92681b4b046876ee30d3"
+            "b881beca98f76ed59f81bb0215e81aa7b317eed5509f2c96aca10bd96122c6c5"
           ],
           "bucket_id": "<bucket-id>",
           "review_status": "reviewed",
@@ -90,12 +90,12 @@
             "purchase_invoice_evidence_id": null,
             "source_jurisdiction": "ES",
             "taxable_base": "1500",
-            "transaction_id": "66230d4a9844945e649b611f8015cf4f877e0c24a99d82573df230e12e8bdd08",
+            "transaction_id": "84361a5024c83aef5cb99429635aea12eab17e2291fc4835deec6c0be577e910",
             "usage_ratio_id": null,
             "value_date": null,
             "value_in_eur": null
           },
-          "transaction_id": "66230d4a9844945e649b611f8015cf4f877e0c24a99d82573df230e12e8bdd08"
+          "transaction_id": "84361a5024c83aef5cb99429635aea12eab17e2291fc4835deec6c0be577e910"
         },
         "schema_version": "2",
         "status": "success"

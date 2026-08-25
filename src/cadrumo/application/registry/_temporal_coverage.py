@@ -21,6 +21,8 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     RevisionId,
     ValidatedRegistryAuthority,
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
 )
 
 TemporalCoverageStatus = Literal["validated", "refused"]
@@ -34,13 +36,13 @@ TemporalCoverageFailureCode = Literal[
 
 
 class TemporalRevisionCoverage(BaseModel):
-    """Validated temporal evidence for one registered modelo revision.
+    """Validated temporal evidence for one law-selected revision coordinate.
 
-    A ``validated`` row proves that a coordinate declared by the revision's
-    selector chose that same revision without an injected revision id and that
-    the validated snapshot boundary admitted its declared authority grade.
-    ``refused`` rows retain the exact failed boundary rather than silently
-    omitting the revision from the release denominator.
+    A ``validated`` row proves that its exact filing-year and declared-period
+    selector coordinate chose the owning revision without an injected revision
+    id and that the validated snapshot boundary admitted its declared authority
+    grade.  ``refused`` rows retain the failed cell rather than allowing a
+    first-year success to hide a later unsupported span.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -95,6 +97,61 @@ class TemporalRevisionCoverage(BaseModel):
         return self
 
 
+class TemporalRevisionCoverageSummary(BaseModel):
+    """Full temporal matrix result for one registered revision.
+
+    The release predicate remains revision-scoped, while its temporal limb is
+    now derived from every coordinate that revision claims through the current
+    supported-year horizon.  This summary is therefore an aggregation of the
+    cells, never a separately selected representative coordinate.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: ModeloId
+    revision: RevisionId
+    declared_authority_grade: RegistryAuthorityGrade | None = None
+    coordinates: tuple[TemporalRevisionCoverage, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _validate_coordinate_membership(self) -> TemporalRevisionCoverageSummary:
+        coordinates = tuple((row.filing_year, row.period) for row in self.coordinates)
+        if len(coordinates) != len(set(coordinates)):
+            raise ValueError("temporal revision coverage cannot contain a coordinate more than once")
+        if coordinates != tuple(sorted(coordinates)):
+            raise ValueError("temporal revision coverage coordinates must be deterministically ordered")
+        for row in self.coordinates:
+            if row.modelo != self.modelo or row.revision != self.revision:
+                raise ValueError("temporal revision coverage coordinate must match its summary revision")
+            if row.declared_authority_grade is not self.declared_authority_grade:
+                raise ValueError("temporal revision coverage coordinate must match its summary authority grade")
+        return self
+
+    @computed_field
+    @property
+    def status(self) -> TemporalCoverageStatus:
+        """Return validated only when every claimed coordinate validated."""
+        return "validated" if all(row.status == "validated" for row in self.coordinates) else "refused"
+
+    @computed_field
+    @property
+    def failure_code(self) -> TemporalCoverageFailureCode | None:
+        """Return the first deterministic failure while retaining all failed cells."""
+        return next((row.failure_code for row in self.coordinates if row.status == "refused"), None)
+
+    @computed_field
+    @property
+    def failure_detail(self) -> str | None:
+        """Return the first deterministic failure detail for release rendering."""
+        return next((row.failure_detail for row in self.coordinates if row.status == "refused"), None)
+
+    @computed_field
+    @property
+    def refused_coordinates(self) -> tuple[TemporalRevisionCoverage, ...]:
+        """Expose every refused coordinate rather than reducing it to one summary field."""
+        return tuple(row for row in self.coordinates if row.status == "refused")
+
+
 class TemporalCoverageReport(BaseModel):
     """The complete temporal and authority-grade denominator for one authority."""
 
@@ -103,10 +160,10 @@ class TemporalCoverageReport(BaseModel):
     rows: tuple[TemporalRevisionCoverage, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
-    def _validate_unique_revision_coordinates(self) -> TemporalCoverageReport:
-        coordinates = tuple((row.modelo, row.revision) for row in self.rows)
+    def _validate_unique_matrix_coordinates(self) -> TemporalCoverageReport:
+        coordinates = tuple((row.modelo, row.revision, row.filing_year, row.period) for row in self.rows)
         if len(coordinates) != len(set(coordinates)):
-            raise ValueError("temporal coverage report must contain each modelo revision exactly once")
+            raise ValueError("temporal coverage report must contain each law-selected coordinate exactly once")
         return self
 
     @computed_field
@@ -121,23 +178,40 @@ class TemporalCoverageReport(BaseModel):
         """Return every visible temporal or authority-grade refusal."""
         return tuple(row for row in self.rows if row.status == "refused")
 
+    @computed_field
+    @property
+    def revision_summaries(self) -> tuple[TemporalRevisionCoverageSummary, ...]:
+        """Aggregate every matrix cell back to the release predicate's revision denominator."""
+        grouped: dict[tuple[ModeloId, RevisionId], list[TemporalRevisionCoverage]] = {}
+        for row in self.rows:
+            grouped.setdefault((row.modelo, row.revision), []).append(row)
+        return tuple(
+            TemporalRevisionCoverageSummary(
+                modelo=modelo,
+                revision=revision,
+                declared_authority_grade=coordinates[0].declared_authority_grade,
+                coordinates=tuple(sorted(coordinates, key=lambda row: (row.filing_year, row.period))),
+            )
+            for (modelo, revision), coordinates in sorted(grouped.items(), key=lambda item: item[0])
+        )
+
 
 def compose_temporal_coverage(*, authority: ValidatedRegistryAuthority) -> TemporalCoverageReport:
     """Compose temporal evidence from validated, law-selected registry revisions.
 
-    The selection coordinate comes only from the revision's declared selector.
-    Each coordinate is first resolved through ``inspect_revision`` without a
-    revision-id filter.  A matching revision with a declared authority grade is
-    then admitted through ``snapshot`` at that exact grade.  Consequently, an
-    ungraded, unselectable, or over-claimed revision remains a row with an
-    explicit refusal rather than becoming an absent denominator member.
+    Every coordinate comes only from the revision's declared selector through
+    the registry-supported assessment horizon.  Each is resolved through
+    ``inspect_revision`` without a revision-id filter, then admitted through
+    ``snapshot`` at the revision's exact grade.  Consequently, an ungraded,
+    unselectable, or over-claimed later cell remains visible rather than being
+    concealed by an earlier representative coordinate.
     """
     authority.validate_registry()
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     rows: list[TemporalRevisionCoverage] = []
     for modelo in sorted(authority.modelos, key=lambda item: item.id):
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            filing_year, period = law_selection_coordinate(revision)
-            rows.append(
+            rows.extend(
                 _compose_revision_temporal_coverage(
                     authority=authority,
                     modelo_id=modelo.id,
@@ -145,23 +219,13 @@ def compose_temporal_coverage(*, authority: ValidatedRegistryAuthority) -> Tempo
                     filing_year=filing_year,
                     period=period,
                     declared_authority_grade=revision.authority_grade,
-                ),
+                )
+                for filing_year, period in revision_selection_coordinates(
+                    revision,
+                    assessment_horizon=assessment_horizon,
+                )
             )
     return TemporalCoverageReport(rows=tuple(rows))
-
-
-def law_selection_coordinate(revision: ModeloRevision) -> tuple[int, RegistrySelectorPeriodCode]:
-    """Return one coordinate declared by a revision's temporal selector.
-
-    The authoritative registry has already validated every selector before this
-    projection runs, so absence of both forms is an explicit authority failure
-    rather than a reason to manufacture a representative year.
-    """
-    selector = revision.period_selector
-    filing_year = selector.years[0] if selector.years else selector.year_from
-    if filing_year is None:
-        raise RegistryValidationError(f"revision {revision.id!r} declares no law-selectable filing year")
-    return filing_year, selector.periods[0]
 
 
 def _compose_revision_temporal_coverage(
@@ -269,5 +333,6 @@ def _failure_detail(error: RegistrySnapshotError | RegistryValidationError) -> s
 __all__ = [
     "TemporalCoverageReport",
     "TemporalRevisionCoverage",
+    "TemporalRevisionCoverageSummary",
     "compose_temporal_coverage",
 ]

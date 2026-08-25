@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind
+from ...core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG, BindingSourceKind
 from ...core.identity import ContentDigest
 from ...domain import canonical_decimal_string
 from ...domain.calculations import RowBindingKey
@@ -18,7 +18,7 @@ from ...domain.modelos import CalculationRevision, ModeloValidationError
 class ModeloRowSourceFingerprint(BaseModel):
     """Safe public provenance for one replayed row coordinate."""
 
-    model_config = ConfigDict(**{**STRICT_FROZEN_CONFIG, "hide_input_in_errors": True})
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     binding_id: BindingId
     row_index: int = Field(ge=1)
@@ -33,14 +33,10 @@ def attach_revision_row_source_identities(
 ) -> ModeloDraft:
     """Attach every persisted row identity to its exact replayed draft row."""
     revision_row_keys: set[RowBindingKey] = {
-        (binding_id, int(row_index))
-        for binding_id, rows in revision.row_binding_values.items()
-        for row_index in rows
+        (binding_id, int(row_index)) for binding_id, rows in revision.row_binding_values.items() for row_index in rows
     }
     draft_row_keys = {
-        (value.binding_id, value.row_index)
-        for value in draft.binding_values
-        if value.row_index is not None
+        (value.binding_id, value.row_index) for value in draft.binding_values if value.row_index is not None
     }
     if not revision_row_keys.issubset(draft_row_keys):
         raise ModeloValidationError("row source identity replay is missing a revision row coordinate")

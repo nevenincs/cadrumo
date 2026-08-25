@@ -32,7 +32,7 @@
         "--modelo",
         "390",
         "--year",
-        "2026",
+        "2025",
         "--period",
         "0A"
       ],
@@ -52,24 +52,24 @@
           "discarded_at": null,
           "discarded_by": null,
           "filed_calculation_revision_id": null,
-          "filing_year": 2026,
+          "filing_year": 2025,
           "modelo": "390",
-          "name": "390-2026-0A",
+          "name": "390-2025-0A",
           "name_applied": null,
           "operation": "modelo.work.create",
           "period": {
             "code": "0A",
-            "filing_year": 2026
+            "filing_year": 2025
           },
-          "revision_id": "2010-y-siguientes",
+          "revision_id": "2025",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "d171fcbd5bc4",
+          "short_work_unit_id": "b24b688e777b",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "0402651eecc99d50602c553cefad9851498b06313ed80c1b3f72d171fcbd5bc4"
+          "work_unit_id": "66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b"
         },
         "schema_version": "2",
         "status": "success"

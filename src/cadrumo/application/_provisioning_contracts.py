@@ -93,10 +93,8 @@ def provisioning_no_recovery_verdict(
 ) -> PreconditionVerdict:
     """Return the explicit closed outcome for one provisioning refusal."""
     from .operator_actions import no_action_precondition_verdict
-
     return no_action_precondition_verdict(
-        condition_id=condition.value,
-        facts=facts,
+        condition_id=condition.value, facts=facts,
         provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )

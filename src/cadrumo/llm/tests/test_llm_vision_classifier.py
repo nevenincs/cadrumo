@@ -9,16 +9,6 @@ import pytest
 
 from ...application.ledger import PurchaseInvoiceEvidenceInputError
 from ...application.ledger._llm_classification import _classify_with_evidence, _ResolvedEvidence
-from ...application.ledger.tests._llm_vision_evidence_support import (
-    _json_array,
-    _json_object,
-    _png_image,
-    _run_against_loopback_ollama,
-    _transaction,
-)
-from ...application.ledger.tests._llm_vision_evidence_support import (
-    profile as profile,
-)
 from ...application.provisioning import (
     AcceleratorReading,
     HardwareProfile,
@@ -34,6 +24,16 @@ from ...domain.transactions import (
     BusinessClassification,
     LLMClassificationResponse,
     prompt_spec_with_saturation_fields,
+)
+from ...tests._llm_vision_evidence_support import (
+    _json_array,
+    _json_object,
+    _png_image,
+    _run_against_loopback_ollama,
+    _transaction,
+)
+from ...tests._llm_vision_evidence_support import (
+    profile as profile,
 )
 from ...tests.secure_sql import TestRuntimeProfile
 from .. import LLMClient

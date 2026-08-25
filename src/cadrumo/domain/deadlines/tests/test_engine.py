@@ -256,7 +256,7 @@ class TestCompute:
             _assert_exact_once([*expected, expected[0]], expected)
 
     @pytest.mark.parametrize("monthly_iva", [False, True])
-    def test_compute_preserves_each_applicable_authored_periodic_coordinate_once(
+    def test_compute_preserves_each_applicable_authored_precalculation_coordinate_once(
         self,
         monthly_iva: bool,
     ) -> None:
@@ -276,17 +276,14 @@ class TestCompute:
 
         for filing_year in supported_years.years:
             expected = []
-            periodic_coordinates = set()
             for modelo, revision, window in authority.deadline_windows(filing_year):
-                if window.period_kind not in {"monthly", "quarterly"}:
+                # Qualified windows (currently M210 resultado/tipo-renta variants)
+                # resolve only after calculation and are intentionally absent from
+                # the pre-calculation schedule. Every unqualified authored window,
+                # periodic or annual, belongs in this fleet comparison.
+                if window.resultado_scope is not None or window.tipo_renta_scope is not None:
                     continue
-                # Periodic filing schedules are pre-calculation obligations, so their
-                # authored identity has no resultado/tipo-renta qualifier. Reuse the
-                # canonical coordinate constructor instead of restating that identity.
-                assert window.resultado_scope is None
-                assert window.tipo_renta_scope is None
                 coordinate = deadline_semantic_coordinate(modelo, window.period, None, None)
-                periodic_coordinates.add(coordinate)
 
                 schedule_applies = not revision.filing_schedules or bool(
                     applicable_filing_schedules(
@@ -308,10 +305,8 @@ class TestCompute:
 
             schedule = _engine().compute(profile, filing_year, today=date(filing_year, 1, 1))
             actual = [
-                coordinate
+                deadline_semantic_coordinate(item.modelo, item.period, None, None)
                 for item in schedule.obligations
-                if (coordinate := deadline_semantic_coordinate(item.modelo, item.period, None, None))
-                in periodic_coordinates
             ]
 
             _assert_exact_once(actual, expected)

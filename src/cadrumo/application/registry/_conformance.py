@@ -202,6 +202,7 @@ type _MeasurementStatus = Literal["measured", "unsupported", "unmeasured"]
 # filing authority.  Keep that distinction on the application projection so a
 # renderer cannot infer filing-grade scope merely because a ledger is present.
 type CoverageAuthorityScope = Literal["filing", "inspection_only"]
+type RevisionCoverageAuthorityScope = Literal["filing", "inspection_only", "mixed"]
 
 _XML_DICTIONARY_PARSER_ATTRIBUTES = ("field_id", "path", "data_type", "casilla_id")
 _UNMEASURED_DICTIONARY_ATTRIBUTES = ("label", "data_type", "number", "segmento")
@@ -652,7 +653,8 @@ class RevisionModelLawCoverage(ConformanceModel):
     satisfied_tiers: tuple[_EvidenceTier, ...]
     gap_tiers: tuple[_EvidenceTier, ...]
     required_tier_gaps: tuple[_RequiredCoverageTier, ...]
-    authority_scope: CoverageAuthorityScope = "filing"
+    authority_scope: RevisionCoverageAuthorityScope = "filing"
+    coordinates: tuple[tuple[int, str], ...] = Field(min_length=1)
 
     @property
     def filing_eligible(self) -> bool:
@@ -971,7 +973,7 @@ class _AxisIndex:
 
     grounding_rows: Mapping[tuple[_ModeloId, _RevisionId], _RevisionExternalGroundingRow]
     classification_rows: Mapping[_ModeloId, _ModeloClassificationRow]
-    coverage_ledgers: Mapping[tuple[_ModeloId, _RevisionId], _ModelLawCoverageLedger]
+    coverage_ledgers: Mapping[tuple[_ModeloId, _RevisionId], tuple[_ModelLawCoverageLedger, ...]]
     construct_evidence_ledgers: Mapping[tuple[_ModeloId, _RevisionId], _ConstructEvidenceLedger]
     support_entries: Mapping[_ModeloId, _ModeloEntry]
 
@@ -992,7 +994,7 @@ class _AxisIndex:
             coverage_ledgers=(
                 {}
                 if model_law_coverage is None
-                else {(ledger.modelo, ledger.revision): ledger for ledger in model_law_coverage.ledgers}
+                else model_law_coverage.ledgers_by_revision
             ),
             construct_evidence_ledgers=(
                 {}
@@ -1069,7 +1071,7 @@ def _revision_conformance_row(
     refused before any other axis is computed for it.
     """
     grounding_row = index.require_grounding_row(modelo_id, revision.id)
-    ledger = index.coverage_ledgers.get((modelo_id, revision.id))
+    ledgers = index.coverage_ledgers.get((modelo_id, revision.id))
     construct_ledger = construct_evidence_ledgers.get((modelo_id, revision.id))
     return RevisionConformanceRow(
         modelo=modelo_id,
@@ -1080,7 +1082,7 @@ def _revision_conformance_row(
         latest_revision_support=(
             None if support_entry is None else _support_probe(support_entry, revision_id=revision.id)
         ),
-        model_law_coverage=None if ledger is None else _model_law_coverage(ledger),
+        model_law_coverage=None if ledgers is None else _model_law_coverage(ledgers),
         construct_evidence=None if construct_ledger is None else RevisionConstructEvidence(ledger=construct_ledger),
         casilla_provenance=_casilla_producer_traces(revision),
         external_grounding=grounding_row,
@@ -1245,16 +1247,8 @@ def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConf
         ),
         scope_diagnostics=_validate_registry_scope(authority.modelos),
         registry_validated=True,
-        model_law_coverage=_audit_registry_model_law_coverage(
-            authority.modelos,
-            authority.catalogues,
-            source_root=authority.source_root,
-        ),
-        construct_evidence=_audit_registry_construct_evidence(
-            authority.modelos,
-            authority.catalogues,
-            source_root=authority.source_root,
-        ),
+        model_law_coverage=_audit_registry_model_law_coverage(authority),
+        construct_evidence=_audit_registry_construct_evidence(authority),
         support_matrix=_build_support_matrix(authority),
         authorizations={modelo.id: authority.authorization(modelo.id) for modelo in authority.modelos},
     )
@@ -1334,8 +1328,8 @@ def _casilla_producer_traces(revision: _ModeloRevision) -> tuple[RevisionCasilla
     return tuple(projected)
 
 
-def _model_law_coverage(ledger: _ModelLawCoverageLedger) -> RevisionModelLawCoverage:
-    """Split one coverage ledger's gates into visible and filing-grade tiers.
+def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> RevisionModelLawCoverage:
+    """Aggregate every coverage cell into one visible revision projection.
 
     The three locals are annotated because a generator comprehension widens the
     tier ``Literal`` back to ``str``, and the strict row models would then refuse
@@ -1346,16 +1340,36 @@ def _model_law_coverage(ledger: _ModelLawCoverageLedger) -> RevisionModelLawCove
     filing-scope ledger.  This leaves discovery evidence visible without turning
     a non-filing inspection read into a filing-grade defect.
     """
-    satisfied: tuple[_EvidenceTier, ...] = tuple(gate.tier for gate in ledger.gates if gate.status == "satisfied")
-    gaps: tuple[_EvidenceTier, ...] = tuple(gate.tier for gate in ledger.gates if gate.status == "gap")
+    if not ledgers:
+        raise _RegistryValidationError("revision model-law coverage requires at least one selector coordinate")
+    gates_by_tier = {
+        tier: tuple(next(gate for gate in ledger.gates if gate.tier == tier) for ledger in ledgers)
+        for tier in _REQUIRED_COVERAGE_TIERS + ("executable_parity_evidence",)
+    }
+    satisfied: tuple[_EvidenceTier, ...] = tuple(
+        tier for tier, gates in gates_by_tier.items() if all(gate.status == "satisfied" for gate in gates)
+    )
+    gaps: tuple[_EvidenceTier, ...] = tuple(
+        tier for tier, gates in gates_by_tier.items() if any(gate.status == "gap" for gate in gates)
+    )
     required_gaps: tuple[_RequiredCoverageTier, ...] = tuple(
-        tier for tier in _REQUIRED_COVERAGE_TIERS if ledger.filing_eligible and tier in gaps
+        tier
+        for tier in _REQUIRED_COVERAGE_TIERS
+        if any(
+            ledger.filing_eligible and next(gate for gate in ledger.gates if gate.tier == tier).status == "gap"
+            for ledger in ledgers
+        )
+    )
+    scopes = {ledger.authority_scope for ledger in ledgers}
+    authority_scope: RevisionCoverageAuthorityScope = (
+        next(iter(scopes)) if len(scopes) == 1 else "mixed"
     )
     return RevisionModelLawCoverage(
         satisfied_tiers=satisfied,
         gap_tiers=gaps,
         required_tier_gaps=required_gaps,
-        authority_scope=ledger.authority_scope,
+        authority_scope=authority_scope,
+        coordinates=tuple((ledger.filing_year, ledger.period) for ledger in ledgers),
     )
 
 

@@ -123,7 +123,10 @@ class TestTheMintingPathIsUnreachableFromTheTui:
         """
         source = "from cadrumo.application.user_profile import mint_profile_creation_recovery\n"
         assert "mint_profile_creation_recovery" in _imported_names(source)
-        aliased = "from cadrumo.application.user_profile import mint_profile_creation_recovery as _mint\n"
+        aliased = (
+            "from cadrumo.application.user_profile "
+            "import mint_profile_creation_recovery as _mint\n"
+        )
         assert "mint_profile_creation_recovery" in _imported_names(aliased)
         attribute = "import cadrumo\ncadrumo.adapters.persistence.storage.generate_recovery_key()\n"
         assert "generate_recovery_key" in _imported_names(attribute)

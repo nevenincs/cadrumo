@@ -19,6 +19,8 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     SourceReference,
     ValidatedRegistryAuthority,
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
     verify_source_file,
 )
 from ._closure import (
@@ -33,8 +35,6 @@ from ._filing_export_authority import (
     FilingExportProofAuthority,
     FilingExportProofConflictError,
 )
-from ._temporal_coverage import law_selection_coordinate
-
 __all__ = [
     "FilingExportCoverageReport",
     "compose_filing_export_coverage",
@@ -120,49 +120,69 @@ def _compose_revision_limb(
             work_item="aeat-export-fragment-generator-authority:reviewed-layout",
             reconsideration_condition="Record a valid review for the exact revision and its official layout authority.",
         )
-    filing_year, period = law_selection_coordinate(revision)
-    try:
-        snapshot = authority.snapshot(
-            modelo_id,
-            filing_year=filing_year,
-            period=period,
-            grade=RegistryAuthorityGrade.FILING,
-        )
-    except (RegistrySnapshotError, RegistryValidationError) as exc:
-        return _refused_limb(
-            modelo_id=modelo_id,
-            revision_id=revision.id,
-            reason="missing_evidence",
-            detail=_failure_detail(exc),
-            work_item="aeat-export-fragment-generator-authority:filing-layout",
-            reconsideration_condition=(
-                "Supply the exact official layout evidence required by the filing snapshot boundary."
-            ),
-        )
-    if snapshot.revision.id != revision.id:
-        return _refused_limb(
-            modelo_id=modelo_id,
-            revision_id=revision.id,
-            reason="cross_limb_disagreement",
-            detail=(
-                f"filing snapshot selected revision {snapshot.revision.id!r} instead of "
-                f"the registered revision {revision.id!r}"
-            ),
-            work_item="registry-temporal-coverage:law-selection",
-            reconsideration_condition=(
-                "Reconcile the filing snapshot selection with the revision's declared temporal scope."
-            ),
-        )
-    evidence, evidence_failure = _layout_byte_evidence(authority=authority, snapshot=snapshot)
-    if evidence_failure is not None:
-        return _refused_limb(
-            modelo_id=modelo_id,
-            revision_id=revision.id,
-            reason=evidence_failure.reason,
-            detail=evidence_failure.detail,
-            work_item="aeat-export-fragment-generator-authority:official-layout-evidence",
-            reconsideration_condition="Restore byte-exact official layout evidence for every emitted filing layout.",
-        )
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
+    snapshots = []
+    evidence_by_locator: dict[tuple[str, str], RegistryClosureEvidence] = {}
+    expected_layout_ids: tuple[str, ...] | None = None
+    for filing_year, period in coordinates:
+        try:
+            snapshot = authority.snapshot(
+                modelo_id,
+                filing_year=filing_year,
+                period=period,
+                grade=RegistryAuthorityGrade.FILING,
+            )
+        except (RegistrySnapshotError, RegistryValidationError) as exc:
+            return _refused_limb(
+                modelo_id=modelo_id,
+                revision_id=revision.id,
+                reason="missing_evidence",
+                detail=f"{filing_year}/{period}: {_failure_detail(exc)}",
+                work_item="aeat-export-fragment-generator-authority:filing-layout",
+                reconsideration_condition=(
+                    "Supply the exact official layout evidence required by the filing snapshot boundary."
+                ),
+            )
+        if snapshot.revision.id != revision.id:
+            return _refused_limb(
+                modelo_id=modelo_id,
+                revision_id=revision.id,
+                reason="cross_limb_disagreement",
+                detail=(
+                    f"{filing_year}/{period}: filing snapshot selected revision {snapshot.revision.id!r} instead "
+                    f"of the registered revision {revision.id!r}"
+                ),
+                work_item="registry-temporal-coverage:law-selection",
+                reconsideration_condition=(
+                    "Reconcile the filing snapshot selection with the revision's declared temporal scope."
+                ),
+            )
+        layout_ids = tuple(layout.id for layout in snapshot.revision.export_layouts)
+        if expected_layout_ids is not None and layout_ids != expected_layout_ids:
+            return _refused_limb(
+                modelo_id=modelo_id,
+                revision_id=revision.id,
+                reason="cross_limb_disagreement",
+                detail=f"{filing_year}/{period}: filing snapshot changed materialised export layout ids",
+                work_item="registry-temporal-coverage:law-selection",
+                reconsideration_condition="Split the revision at the exact layout boundary before asserting one export proof.",
+            )
+        expected_layout_ids = layout_ids
+        evidence, evidence_failure = _layout_byte_evidence(authority=authority, snapshot=snapshot)
+        if evidence_failure is not None:
+            return _refused_limb(
+                modelo_id=modelo_id,
+                revision_id=revision.id,
+                reason=evidence_failure.reason,
+                detail=f"{filing_year}/{period}: {evidence_failure.detail}",
+                work_item="aeat-export-fragment-generator-authority:official-layout-evidence",
+                reconsideration_condition="Restore byte-exact official layout evidence for every emitted filing layout.",
+            )
+        evidence_by_locator.update({(item.authority, item.locator): item for item in evidence})
+        snapshots.append(snapshot)
+    snapshot = snapshots[0]
+    evidence = tuple(evidence_by_locator.values())
     proof, proof_failure = _filing_export_proof(
         proof_authority=proof_authority,
         snapshot=snapshot,

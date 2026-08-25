@@ -8,8 +8,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import RegistryAuthorityGrade
-from ....domain.calculations.registry import RegistryValidationError, bundled_authority
-from .. import TemporalRevisionCoverage, compose_temporal_coverage
+from ....domain.calculations.registry import (
+    RegistryValidationError,
+    bundled_authority,
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+)
+from .. import TemporalRevisionCoverage, TemporalRevisionCoverageSummary, compose_temporal_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -23,13 +28,18 @@ def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_de
         _snapshots={},
     )
     report = compose_temporal_coverage(authority=authority)
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     expected_coordinates = {
-        (modelo.id, revision.id)
+        (modelo.id, revision.id, filing_year, period)
         for modelo in authority.modelos
         for revision in modelo.revisions.values()
+        for filing_year, period in revision_selection_coordinates(
+            revision,
+            assessment_horizon=assessment_horizon,
+        )
     }
 
-    assert {(row.modelo, row.revision) for row in report.rows} == expected_coordinates
+    assert {(row.modelo, row.revision, row.filing_year, row.period) for row in report.rows} == expected_coordinates
     assert report.fully_validated is True
     assert report.refused_rows == ()
     for row in report.rows:
@@ -60,6 +70,169 @@ def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_de
                     period=row.period,
                     grade=row.declared_authority_grade,
                 )
+
+
+def test_temporal_coverage_derives_the_complete_registered_matrix_from_authority(
+    registry_authority,
+) -> None:
+    """Every selector cell through the registry horizon remains in the denominator."""
+    assessment_horizon = coverage_assessment_horizon(registry_authority.catalogues)
+    report = compose_temporal_coverage(authority=registry_authority)
+    expected_coordinates = {
+        (modelo.id, revision.id, filing_year, period)
+        for modelo in registry_authority.modelos
+        for revision in modelo.revisions.values()
+        for filing_year, period in revision_selection_coordinates(
+            revision,
+            assessment_horizon=assessment_horizon,
+        )
+    }
+
+    actual_coordinates = {(row.modelo, row.revision, row.filing_year, row.period) for row in report.rows}
+    assert actual_coordinates == expected_coordinates
+    assert len(report.rows) == len(expected_coordinates)
+    assert len(report.rows) > len(report.revision_summaries)
+    assert {
+        (summary.modelo, summary.revision, coordinate.filing_year, coordinate.period)
+        for summary in report.revision_summaries
+        for coordinate in summary.coordinates
+    } == expected_coordinates
+
+
+def test_temporal_coverage_expands_open_selectors_through_the_supported_horizon(
+    registry_authority,
+) -> None:
+    """A real long-span selector proves later years are not silently skipped."""
+    modelo = registry_authority.modelo("341")
+    revision = next(iter(modelo.revisions.values()))
+    authority = _authority_with_single_model(registry_authority, composed_modelo=modelo)
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+
+    report = compose_temporal_coverage(authority=authority)
+    expected_coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
+
+    assert {(row.filing_year, row.period) for row in report.rows} == set(expected_coordinates)
+    assert {row.filing_year for row in report.rows} == set(range(revision.period_selector.year_from, assessment_horizon + 1))
+    assert len(report.rows) > len(revision.period_selector.periods)
+
+
+def test_temporal_coverage_uses_the_catalogue_horizon_not_a_copied_year_list(
+    registry_authority,
+) -> None:
+    """A shortened supported-year declaration removes only its later derived cells."""
+    modelo = registry_authority.modelo("036")
+    revision = next(iter(modelo.revisions.values()))
+    original_years = registry_authority.catalogues.supported_filing_years.years
+    shortened_catalogues = registry_authority.catalogues.model_copy(
+        update={
+            "supported_filing_years": registry_authority.catalogues.supported_filing_years.model_copy(
+                update={"years": original_years[:-1]},
+            ),
+        },
+    )
+    authority = replace(
+        _authority_with_single_model(registry_authority, composed_modelo=modelo),
+        catalogues=shortened_catalogues,
+    )
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+
+    report = compose_temporal_coverage(authority=authority)
+
+    assert {(row.filing_year, row.period) for row in report.rows} == set(
+        revision_selection_coordinates(revision, assessment_horizon=assessment_horizon),
+    )
+    assert all(row.filing_year <= assessment_horizon for row in report.rows)
+
+
+def test_temporal_coverage_preserves_declared_period_alias_tokens_without_manufacturing_cells(
+    registry_authority,
+) -> None:
+    """The matrix retains a selector's canonical EVENT-N token, never its request aliases."""
+    modelo = registry_authority.modelo("210")
+    authority = _authority_with_single_model(registry_authority, composed_modelo=modelo)
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    report = compose_temporal_coverage(authority=authority)
+    expected_coordinates = {
+        (revision.id, filing_year, period)
+        for revision in modelo.revisions.values()
+        for filing_year, period in revision_selection_coordinates(
+            revision,
+            assessment_horizon=assessment_horizon,
+        )
+    }
+
+    assert {(row.revision, row.filing_year, row.period) for row in report.rows} == expected_coordinates
+    assert "EVENT-N" in {row.period for row in report.rows}
+    assert "EVENT-1" not in {row.period for row in report.rows}
+
+
+def test_revision_coordinate_derivation_fails_closed_when_no_declared_year_reaches_the_horizon(
+    registry_authority,
+) -> None:
+    """A revision beyond a requested assessment horizon cannot disappear as an empty span."""
+    revision = next(
+        revision
+        for modelo in registry_authority.modelos
+        for revision in modelo.revisions.values()
+        if revision.period_selector.year_from is not None
+    )
+    with pytest.raises(RegistryValidationError, match="declares no filing year through coverage horizon"):
+        revision_selection_coordinates(
+            revision,
+            assessment_horizon=revision.period_selector.year_from - 1,
+        )
+
+
+def test_temporal_coverage_retains_a_hidden_later_cell_refusal_from_an_authority_mutation(
+    registry_authority,
+) -> None:
+    """A first-year success cannot mask a later selector cell removed from lookup authority."""
+    modelo = registry_authority.modelo("036")
+    revision = next(iter(modelo.revisions.values()))
+    assessment_horizon = coverage_assessment_horizon(registry_authority.catalogues)
+    lookup_revision = revision.model_copy(
+        update={"period_selector": revision.period_selector.model_copy(update={"year_to": assessment_horizon - 1})},
+    )
+    lookup_modelo = modelo.model_copy(update={"revisions": {lookup_revision.id: lookup_revision}})
+    authority = _authority_with_single_model(
+        registry_authority,
+        composed_modelo=modelo,
+        lookup_modelo=lookup_modelo,
+    )
+
+    report = compose_temporal_coverage(authority=authority)
+
+    late_rows = tuple(row for row in report.rows if row.filing_year == assessment_horizon)
+    assert late_rows
+    assert all(row.failure_code == "law_selection_refused" for row in late_rows)
+    assert all(row.status == "validated" for row in report.rows if row.filing_year < assessment_horizon)
+
+
+def test_temporal_revision_summary_refuses_duplicate_or_cross_revision_cells() -> None:
+    """The revision-facing projection cannot re-hide matrix cells during aggregation."""
+    row = TemporalRevisionCoverage(
+        modelo="036",
+        revision="2025-02-03-y-siguientes",
+        filing_year=2025,
+        period="alta",
+        selected_revision="2025-02-03-y-siguientes",
+        declared_authority_grade=RegistryAuthorityGrade.APPLICABILITY,
+        status="validated",
+    )
+    with pytest.raises(ValidationError, match="cannot contain a coordinate more than once"):
+        TemporalRevisionCoverageSummary(
+            modelo=row.modelo,
+            revision=row.revision,
+            declared_authority_grade=row.declared_authority_grade,
+            coordinates=(row, row),
+        )
+    with pytest.raises(ValidationError, match="must match its summary revision"):
+        TemporalRevisionCoverageSummary(
+            modelo=row.modelo,
+            revision="2024-01-01-a-2024-12-31",
+            declared_authority_grade=row.declared_authority_grade,
+            coordinates=(row,),
+        )
 
 
 def test_temporal_coverage_row_refuses_a_claim_without_its_required_evidence() -> None:
@@ -259,7 +432,7 @@ def test_temporal_coverage_retains_law_selection_refusal_from_an_authority_mutat
         lookup_modelo=lookup_modelo,
     )
 
-    row = _single_refusal(compose_temporal_coverage(authority=authority), "law_selection_refused")
+    row = _refusals(compose_temporal_coverage(authority=authority), "law_selection_refused")[0]
 
     assert (row.modelo, row.revision, row.selected_revision) == ("100", "2020", None)
 
@@ -280,7 +453,7 @@ def test_temporal_coverage_retains_selection_identity_mismatch_from_an_authority
         lookup_modelo=lookup_modelo,
     )
 
-    row = _single_refusal(compose_temporal_coverage(authority=authority), "selected_revision_mismatch")
+    row = _refusals(compose_temporal_coverage(authority=authority), "selected_revision_mismatch")[0]
 
     assert (row.modelo, row.revision, row.selected_revision) == ("100", "2020", "2021")
 
@@ -296,7 +469,13 @@ def test_temporal_coverage_retains_undeclared_grade_refusal_from_an_authority_mu
         composed_modelo=modelo.model_copy(update={"revisions": {ungraded.id: ungraded}}),
     )
 
-    row = _single_refusal(compose_temporal_coverage(authority=authority), "undeclared_authority_grade")
+    refusals = _refusals(compose_temporal_coverage(authority=authority), "undeclared_authority_grade")
+    row = refusals[0]
+
+    assert len(refusals) == len(revision_selection_coordinates(
+        ungraded,
+        assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+    ))
 
     assert (row.modelo, row.revision, row.selected_revision) == ("036", revision.id, revision.id)
 
@@ -312,7 +491,13 @@ def test_temporal_coverage_retains_declared_grade_snapshot_refusal_from_an_autho
         composed_modelo=modelo.model_copy(update={"revisions": {filing_grade.id: filing_grade}}),
     )
 
-    row = _single_refusal(compose_temporal_coverage(authority=authority), "declared_grade_snapshot_refused")
+    refusals = _refusals(compose_temporal_coverage(authority=authority), "declared_grade_snapshot_refused")
+    row = refusals[0]
+
+    assert len(refusals) == len(revision_selection_coordinates(
+        filing_grade,
+        assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+    ))
 
     assert (row.modelo, row.revision, row.selected_revision) == ("036", revision.id, revision.id)
 
@@ -333,7 +518,7 @@ def test_temporal_coverage_retains_snapshot_identity_mismatch_from_an_authority_
         },
     )
 
-    row = _single_refusal(compose_temporal_coverage(authority=authority), "snapshot_revision_mismatch")
+    row = _refusals(compose_temporal_coverage(authority=authority), "snapshot_revision_mismatch")[0]
 
     assert (row.modelo, row.revision, row.selected_revision) == ("100", "2020", "2021")
 
@@ -355,16 +540,14 @@ def _authority_with_single_model(
     )
 
 
-def _single_refusal(report, expected_failure_code: str) -> TemporalRevisionCoverage:
-    """Assert one retained denominator row and return it for its identity proof."""
+def _refusals(report, expected_failure_code: str) -> tuple[TemporalRevisionCoverage, ...]:
+    """Return every retained refusal for one mutation without discarding later cells."""
     assert report.fully_validated is False
-    assert len(report.rows) == 1
-    assert len(report.refused_rows) == 1
-    row = report.refused_rows[0]
-    assert row.status == "refused"
-    assert row.failure_code == expected_failure_code
-    assert row.failure_detail
-    return row
+    rows = tuple(row for row in report.refused_rows if row.failure_code == expected_failure_code)
+    assert rows
+    assert all(row.status == "refused" for row in rows)
+    assert all(row.failure_detail for row in rows)
+    return rows
 
 
 def _temporal_refusal_payload(

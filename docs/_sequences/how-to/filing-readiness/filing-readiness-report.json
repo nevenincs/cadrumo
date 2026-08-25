@@ -29,22 +29,22 @@
           "binding_count": 35,
           "bound_casilla_count": 33,
           "cadence": "quarterly",
-          "casilla_count": 218,
+          "casilla_count": 208,
           "code": "303",
-          "computed_casilla_count": 30,
+          "computed_casilla_count": 28,
           "filing_period": {
             "code": "1T",
             "filing_year": 2026
           },
           "filing_year": 2026,
-          "formula_count": 30,
+          "formula_count": 28,
           "jurisdiction": "ES-AEAT",
           "legal_refs": [
             "rd-1624-1992:art-71",
             "orden-eha-3786-2008:art-1",
             "orden-eha-3786-2008:art-7"
           ],
-          "manual_casilla_count": 92,
+          "manual_casilla_count": 84,
           "official_name": "Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.",
           "operation": "modelo.describe",
           "period": "1T",
@@ -68,10 +68,10 @@
           ],
           "revision": "2026-y-siguientes",
           "revision_ids": [
-            "2009-y-siguientes",
+            "2022",
             "2023",
-            "2024-desde-09-y-3t",
             "2024-hasta-08-y-2t",
+            "2024-desde-09-y-3t",
             "2025",
             "2026-y-siguientes"
           ],
@@ -137,36 +137,6 @@
             },
             "message": "ledger_ready only means the period ledger rows passed transaction preflight; missing_bindings/source_binding_ready still decide source completeness.",
             "severity": "info"
-          },
-          {
-            "action": {
-              "action": {
-                "action_id": "operator.modelo.describe",
-                "cli_path": [
-                  "app",
-                  "modelo",
-                  "describe"
-                ],
-                "target_command_key": "modelo.describe"
-              },
-              "argument_bindings": [
-                {
-                  "argument_name": "modelo",
-                  "source": "operator_action.verdict_context",
-                  "source_evidence_id": null,
-                  "source_key": "modelo",
-                  "status": "resolved",
-                  "value": "303"
-                }
-              ]
-            },
-            "code": "modelo.readiness.export_unsupported",
-            "context": {
-              "modelo": "303",
-              "reason": "the registry snapshot has no complete export_layouts definition"
-            },
-            "message": "Modelo 303 cannot produce a local fichero-BOE export: the registry snapshot has no complete export_layouts definition.",
-            "severity": "warning"
           }
         ],
         "result": {
