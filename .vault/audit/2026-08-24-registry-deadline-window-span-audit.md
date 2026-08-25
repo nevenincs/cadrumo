@@ -823,3 +823,36 @@ was accepted. Also worth a sweep on the way down — several modules now sit wel
 under stale pins (`_validate_exports.py` 463 vs 536, `_validate_revision_sections.py`
 320 vs 323), and the gate's comment asks for re-pinning in that direction too,
 because slack is silent permission to grow back into the gap.
+
+### registry gaps found while closing domain failures (owner-gated authoring)
+
+`domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`
+holds two deliberate reds. Both need BOE/AEAT-grounded authoring, not a test
+change, so they are left failing rather than adjusted:
+
+- Modelos 184, 308 and 309 have no bundled record design, so the span cannot be
+  matched against a published design at all.
+- Modelo 194 (filing years 2020-2022 and 2025) and modelo 721 (2025) have no
+  revision covering those years.
+
+### a gate narrowed to clear a red, where the red was a false positive
+
+Second instance today, and worth naming as a class. `test_registry_legal_grounding.py`
+had its source-reference scanner re-keyed from holder NAME to a two-name
+annotation whitelist (`SourceRefId`, `SourceRefs`). That cleared two genuine
+false positives — a `Field()` description prose string and a StrEnum member
+value — but opened a real coverage hole: holders spelled
+`tuple[_RegistrySourceRef, ...]`, `tuple[_Token, ...]` and `tuple[str, ...]`
+became invisible to the gate. Proven, not argued: an ungrounded ref planted on
+`domain/iva/_schema.py:606` PASSED under the narrowed rule.
+
+Closed forward in `6de44bfecb` rather than by revert, because a revert would
+have restored the two false positives. The scanner keys on the holder name
+again, and the false positives are killed at their cause — read only a `Field`
+default and never its prose/title/alias metadata, and skip members of an
+enclosing `*Enum` class. No annotation whitelist, no class-body exclusion.
+
+The transferable lesson: the deleted measurement comment was LOAD-BEARING. It
+recorded that someone had enumerated exactly which names the rule kept and
+dropped. Replacing a measured rule with an unmeasured whitelist converts a
+scoping fix into a coverage hole, and nothing in the suite goes red to say so.
