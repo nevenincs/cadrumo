@@ -16,6 +16,7 @@ from .. import (
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
     MANUAL_INPUT_RESOLVER_ID,
     CalculationRouteManualOwnership,
+    CalculationRouteResolverOwnership,
     validate_calculation_route_resolver_ownership,
 )
 
@@ -68,6 +69,8 @@ def test_route_reads_class_level_identity_and_declares_every_stage_and_manual_ow
 
 def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_owner() -> None:
     first, second, *remaining = CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+    assert isinstance(first, CalculationRouteResolverOwnership)
+    assert isinstance(second, CalculationRouteResolverOwnership)
     with pytest.raises(RuntimeError, match="resolver ids must be unique"):
         validate_calculation_route_resolver_ownership(
             (first, replace(second, resolver_id=first.resolver_id), *remaining),
@@ -78,17 +81,21 @@ def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_own
         )
     with pytest.raises(AggregationValidationError):
         validate_calculation_route_resolver_ownership(CALCULATION_ROUTE_RESOLVER_OWNERSHIP[:-1])
-    invented = replace(
-        CALCULATION_ROUTE_RESOLVER_OWNERSHIP[-1],
-        resolver_id="invented-deferred-owner",
-        owned_sources=(BindingSourceKind.RELATED_PARTY_OPERATION,),
+    invented = CalculationRouteManualOwnership(
+        stage="manual",
+        resolver_type=None,
+        resolver_id=MANUAL_INPUT_RESOLVER_ID,
+        owned_sources=(BindingSourceKind.MANUAL_INPUT,),
     )
+    object.__setattr__(invented, "resolver_id", "invented-deferred-owner")
+    object.__setattr__(invented, "owned_sources", (BindingSourceKind.RELATED_PARTY_OPERATION,))
     with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership((*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, invented))
 
 
 def test_route_refuses_resolver_class_identity_mutations() -> None:
     profile, *remaining = CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+    assert isinstance(profile, CalculationRouteResolverOwnership)
     with pytest.raises(RuntimeError, match="resolver id drifted"):
         validate_calculation_route_resolver_ownership(
             (replace(profile, resolver_id="renamed-profile"), *remaining),
@@ -97,15 +104,19 @@ def test_route_refuses_resolver_class_identity_mutations() -> None:
         validate_calculation_route_resolver_ownership(
             (replace(profile, owned_sources=(BindingSourceKind.RELATED_PARTY_OPERATION,)), *remaining),
         )
+    invented = replace(profile)
+    object.__setattr__(invented, "resolver_type", None)
     with pytest.raises(RuntimeError, match="contains an invented resolver"):
         validate_calculation_route_resolver_ownership(
-            (replace(profile, resolver_type=None), *remaining),
+            (invented, *remaining),
         )
 
 
 def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
     manual = CALCULATION_ROUTE_RESOLVER_OWNERSHIP[-1]
-    invented_pseudo_owner = replace(manual, resolver_id="second-manual-owner")
+    assert isinstance(manual, CalculationRouteManualOwnership)
+    invented_pseudo_owner = replace(manual)
+    object.__setattr__(invented_pseudo_owner, "resolver_id", "second-manual-owner")
     with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership(
             (*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, invented_pseudo_owner),
@@ -114,11 +125,14 @@ def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
         validate_calculation_route_resolver_ownership((*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, manual))
 
     profile = CALCULATION_ROUTE_RESOLVER_OWNERSHIP[0]
+    assert isinstance(profile, CalculationRouteResolverOwnership)
+    typed_manual_owner = replace(manual)
+    object.__setattr__(typed_manual_owner, "resolver_type", profile.resolver_type)
     with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership(
             (
                 *CALCULATION_ROUTE_RESOLVER_OWNERSHIP[:-1],
-                replace(manual, resolver_type=profile.resolver_type),
+                typed_manual_owner,
             ),
         )
 
