@@ -22,7 +22,10 @@ from ....application.filing import ModeloHistoryRepository
 from ....application.ledger.confirmation_record import ConfirmationRecordRepository
 from ....application.ledger.counterparty_establishment import ConfirmedCounterpartyFactsRepository
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceRepository
-from ....application.ledger.extracted_document_cache import ExtractedDocumentCacheRepository
+from ....application.ledger.extracted_document_cache import (
+    ExtractedDocumentCacheDocument,
+    extracted_document_cache_object_key,
+)
 from ....application.ledger.extraction_draft_store import ExtractionDraftDocument, extraction_draft_object_key
 from ....application.ledger.rule_repository import LedgerClassificationRuleRepository
 from ....application.live.borrador_100 import Borrador100Snapshot, borrador_100_snapshot_object_key
@@ -357,12 +360,11 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 def _ledger_extraction_and_live_deudas_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers: dict[str, NaturalKeyResolver] = {}
 
-    def _extracted_document_cache_repo() -> ExtractedDocumentCacheRepository:
-        return ExtractedDocumentCacheRepository()
+    def _extracted_document_cache_key(record: SecureObjectRecord, _bucket_id: str) -> str:
+        document = _envelope_payload(record, ExtractedDocumentCacheDocument)
+        return extracted_document_cache_object_key(document)
 
-    resolvers["cadrumo.application.ledger.extracted_document_cache"] = _bound_resolver(
-        _extracted_document_cache_repo,
-    )
+    resolvers["cadrumo.application.ledger.extracted_document_cache"] = _extracted_document_cache_key
 
     def _extraction_draft_key(record: SecureObjectRecord, _bucket_id: str) -> str:
         document = _envelope_payload(record, ExtractionDraftDocument)

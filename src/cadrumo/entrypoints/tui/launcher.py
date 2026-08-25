@@ -27,10 +27,12 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     """
     from ...adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ...adapters.outbound.aeat.auth.session_store import build_session_store
+    from ...adapters.persistence.profile.extracted_document_cache import ExtractedDocumentCacheRepository
     from ...adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
     from ...adapters.persistence.workflow import build_workflow_persistence_port
     from ...application.auth.protocols import bind_session_store
     from ...application.auth.providers import bind_auth_provider_selector
+    from ...application.ledger.extracted_document_cache import bind_extracted_document_cache_repository_factory
     from ...application.user_profile.custody_ports import bind_profile_custody_port
     from ...application.user_profile.language_resolver import register_language_resolver
     from ...application.user_profile.login_session_port import bind_profile_login_session_port
@@ -58,6 +60,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
         composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
         composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
         composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
+        composition.enter_context(bind_extracted_document_cache_repository_factory(ExtractedDocumentCacheRepository))
         composition.enter_context(bind_auth_provider_selector(select_outbound_auth_provider))
         composition.enter_context(bind_session_store(build_session_store()))
         register_language_resolver()
