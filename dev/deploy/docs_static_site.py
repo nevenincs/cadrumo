@@ -22,8 +22,8 @@ from urllib.parse import urlsplit
 from defusedxml import ElementTree
 
 from cadrumo.core import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
 
+from .._paths import REPO_ROOT, UTF_8
 from ..docs.i18n import DEFAULT_SITE_LANGUAGE, DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
 from ..docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
