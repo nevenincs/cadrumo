@@ -112,7 +112,7 @@ class FieldRole(StrEnum):
     """Recargo de equivalencia charged alongside the cuota."""
 
     SUPLIDO_AMOUNT = "suplido_amount"
-    """Suplidos: sums advanced on the customer's behalf, outside the base."""
+    """``Suplidos``: sums advanced on the customer's behalf, outside the base."""
 
     GRAND_TOTAL = "grand_total"
     """The printed total the arithmetic closure is checked against."""

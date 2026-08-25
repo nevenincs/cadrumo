@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import ast
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from pathlib import Path
 from threading import Barrier, Event, Lock, Thread
 
 import pytest
@@ -235,6 +237,76 @@ def test_native_authority_load_is_singleflight_per_observed_identity(
     assert {authority.read_current_generation() for authority in authorities} == {
         authorities[0].read_current_generation(),
     }
+
+
+def test_native_authority_construction_overlaps_for_distinct_owner_roots(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """Unrelated owner roots must enter long authority construction together.
+
+    The barrier is deliberately inside ``_construct_authority``: holding a
+    process-global lifecycle lock across compilation would strand the first
+    worker at the barrier and prevent the second root from ever arriving.
+    Neither worker is released to compile until the test has observed both
+    distinct ``(root, source_root)`` scopes at that long-work boundary.
+    """
+    root_a = registry_authority.root
+    source_root = registry_authority.source_root
+    root_b = tmp_path / "registry-b"
+    shutil.copytree(root_a, root_b)
+    reset_registry_caches()
+
+    original_construct = authority_module._construct_authority
+    first_construct_entered = Event()
+    both_constructs_entered = Event()
+    release_construct = Event()
+    construct_barrier = Barrier(2)
+    entered_scopes: set[tuple[Path, Path]] = set()
+    entered_lock = Lock()
+    returned: list[ValidatedRegistryAuthority] = []
+    failures: list[BaseException] = []
+
+    def block_construct(*args: object, **kwargs: object) -> ValidatedRegistryAuthority:
+        root, construct_source_root = args[:2]
+        assert isinstance(root, Path)
+        assert isinstance(construct_source_root, Path)
+        with entered_lock:
+            entered_scopes.add((root, construct_source_root))
+            if len(entered_scopes) == 1:
+                first_construct_entered.set()
+        construct_barrier.wait(timeout=10)
+        both_constructs_entered.set()
+        assert release_construct.wait(timeout=10)
+        return original_construct(*args, **kwargs)
+
+    monkeypatch.setattr(authority_module, "_construct_authority", block_construct)
+
+    def load(root: Path) -> None:
+        try:
+            returned.append(ValidatedRegistryAuthority.load(root, source_root=source_root))
+        except BaseException as exc:  # pragma: no cover - asserted immediately below
+            failures.append(exc)
+
+    workers = (Thread(target=load, args=(root_a,)), Thread(target=load, args=(root_b,)))
+    try:
+        for worker in workers:
+            worker.start()
+        assert first_construct_entered.wait(timeout=10)
+        assert both_constructs_entered.wait(timeout=10)
+    finally:
+        release_construct.set()
+        for worker in workers:
+            worker.join(timeout=30)
+
+    assert all(not worker.is_alive() for worker in workers)
+    assert not failures
+    assert entered_scopes == {
+        (root_a.resolve(), source_root.resolve()),
+        (root_b.resolve(), source_root.resolve()),
+    }
+    assert len(returned) == 2
 
 
 def test_reset_drains_an_inflight_load_before_clearing_authority_publication(

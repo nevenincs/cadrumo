@@ -16,14 +16,14 @@ from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTE
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
 from .._authority import ValidatedRegistryAuthority, bundled_authority
-from .._corpus_catalogue import verify_source_catalogue, verify_source_file
+from .._corpus_catalogue import resolve_record_design_binary, verify_source_catalogue, verify_source_file
 from .._coverage import (
     EvidenceTierCoverageGate,
     _snapshot_filing_review_proof,
     audit_registry_model_law_coverage,
     build_model_law_coverage_ledger,
 )
-from .._errors import NoRevisionForPeriodError
+from .._errors import NoRevisionForPeriodError, RegistryValidationError
 from .._legal import verify_legal_catalogue_grounding
 from .._loader import clear_fingerprint_cache
 from .._schema import filing_period_from_scope
@@ -283,6 +283,22 @@ def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselec
     current_source = catalogues.sources["aeat-dr-038-2024"]
     historical_source = catalogues.sources["aeat-dr-038-2012-inspection"]
 
+    manifest_path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_038", "manifest.json")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    (historical_artefact,) = [
+        artefact for artefact in manifest["artefacts"] if artefact["sha256"] == historical_source.sha256
+    ]
+    assert {
+        key: historical_artefact[key] for key in ("modelo", "title", "original_filename", "sha256", "bytes", "url")
+    } == {
+        "bytes": 79486,
+        "modelo": "038",
+        "original_filename": "dr038_2005.pdf",
+        "sha256": "e9008d9c0c407c76143d6997f3a5fb52a2a482c40571f395da7dcf8a8fee3d9d",
+        "title": "038 - Orden HAC/66/2002, de 15 de enero (actualizado a 18/01/2012)",
+        "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2005.pdf",
+    }
+
     amendment_refs = {ref_id: catalogues.legal[ref_id] for ref_id in _M038_SOURCE_ERA_LEGAL_REFS}
     verify_legal_catalogue_grounding(amendment_refs, source_root=bundled_path())
     assert amendment_refs["orden-hac-646-2024:art-1"].required_text == (
@@ -301,13 +317,26 @@ def test_modelo_038_refuses_unevidenced_history_and_keeps_historical_pdf_unselec
 
     assert historical_source.applies_from is None
     assert historical_source.applies_to is None
-    assert historical_source.record_design_epoch is None
+    assert historical_source.record_design_epoch == "2012"
+    verify_source_file(REPO_ROOT, historical_source)
     assert historical_source.id not in modelo.source_refs
     assert all(historical_source.id not in revision.source_refs for revision in modelo.revisions.values())
     assert current_source.applies_from == date(2024, 6, 1)
     assert current_source.applies_to is None
 
-    for filing_year, period in ((2023, "12"), (2024, "01"), (2024, "05")):
+    # The documented 2012 era identifies the binary, but does not invent an
+    # unsupported filing window. Selection therefore still fails closed before
+    # a parser can consume the hash-verified historical PDF.
+    with pytest.raises(RegistryValidationError, match="does not declare applies_from"):
+        resolve_record_design_binary(
+            bundled_path(),
+            catalogues.sources,
+            source_ref="aeat-dr-038-2012-inspection",
+            filing_year=2012,
+            design_epoch="2012",
+        )
+
+    for filing_year, period in ((2012, "12"), (2023, "12"), (2024, "01"), (2024, "05")):
         with pytest.raises(NoRevisionForPeriodError):
             select_revision(modelo, filing_year=filing_year, period=period)
     assert select_revision(modelo, filing_year=2024, period="06").id == "2024-desde-06"
@@ -778,15 +807,6 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         "aeat-dr-390-2016": "held by the in-flight M390 generator-authority campaign",
     }
 
-    # A SEPARATE category from ``pending``: these sources will never acquire an
-    # epoch. The corpus evidences no filing-period window for them, so leaving
-    # them unreachable by every generator is the ruling, not an omission. Held to
-    # a stricter staleness check than ``pending`` -- an entry that gains an epoch
-    # OR becomes cited by a revision leaves this map.
-    unreachable_by_design: dict[str, str] = {
-        "aeat-dr-038-2012-inspection": ("hash-pinned inspection receipt for the unevidenced 2002-to-May-2024 interval"),
-    }
-
     modelos, catalogues = _registry_tree()
     designs = [source for source in catalogues.sources.values() if source.kind == "record_design"]
     assert designs, "the catalogue must declare record-design sources for this gate to mean anything"
@@ -801,18 +821,6 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
 
     undeclared = {source.id for source in designs if source.record_design_epoch is None}
 
-    wrongly_cited = sorted(source_id for source_id in unreachable_by_design if source_id in cited)
-    assert wrongly_cited == [], (
-        "record-design source(s) recorded as deliberately unreachable are cited by a modelo or a "
-        "revision, so a generator can now select a design whose filing-period window the corpus "
-        "does not evidence:\n  " + "\n  ".join(wrongly_cited)
-    )
-    resolved = sorted(source_id for source_id in unreachable_by_design if source_id not in undeclared)
-    assert resolved == [], (
-        "deliberately-unreachable record-design entr(ies) are stale -- the source now declares an "
-        "epoch, or no longer exists. Remove them from the map:\n  " + "\n  ".join(resolved)
-    )
-    undeclared -= set(unreachable_by_design)
     malformed = sorted(
         f"{source.id!r} declares epoch {source.record_design_epoch!r}"
         for source in designs

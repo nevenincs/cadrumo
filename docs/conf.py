@@ -971,6 +971,51 @@ def _should_resolve_deferred_models() -> bool:
 
 _PY_SUFFIX_INDEX: dict[str, list[str]] = {}
 
+_TYPING_ALIAS_FACTORIES = frozenset(
+    {
+        "Annotated",
+        "AsyncIterator",
+        "Awaitable",
+        "Callable",
+        "Collection",
+        "Iterable",
+        "Iterator",
+        "Literal",
+        "Mapping",
+        "MutableMapping",
+        "Protocol",
+        "Sequence",
+    }
+)
+_ALIAS_NAME_SUFFIXES = (
+    "Builder",
+    "Collector",
+    "Cursor",
+    "Facts",
+    "Fetcher",
+    "Guard",
+    "Kind",
+    "Policy",
+    "Port",
+    "Predicate",
+    "Projection",
+    "Reference",
+    "Resolver",
+    "Scalar",
+    "Store",
+    "Token",
+    "Type",
+    "Value",
+)
+
+
+def _subscript_root_name(node: ast.expr) -> str | None:
+    """Return the root identifier of a subscription expression."""
+    value = node.value if isinstance(node, ast.Subscript) else None
+    while isinstance(value, ast.Attribute):
+        value = value.value
+    return value.id if isinstance(value, ast.Name) else None
+
 
 def _declared_type_hint_names() -> frozenset[str]:
     """Return source-declared aliases and TypeVars that are not API objects."""
@@ -990,6 +1035,19 @@ def _declared_type_hint_names() -> frozenset[str]:
                 and node.value.func.id == "TypeVar"
             ):
                 names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+            elif isinstance(node, ast.Assign):
+                target_names = tuple(target.id for target in node.targets if isinstance(target, ast.Name))
+                alias_like = (
+                    _subscript_root_name(node.value) in _TYPING_ALIAS_FACTORIES
+                    or (isinstance(node.value, ast.BinOp) and isinstance(node.value.op, ast.BitOr))
+                    or (
+                        isinstance(node.value, ast.Name)
+                        and node.value.id[:1].isupper()
+                        and any(name.endswith(_ALIAS_NAME_SUFFIXES) for name in target_names)
+                    )
+                )
+                if alias_like:
+                    names.update(target_names)
     return frozenset(names - _PUBLIC_TYPE_ALIAS_TARGETS.keys())
 
 
@@ -1073,6 +1131,16 @@ def _resolve_short_reference(app, env, node, contnode):
         # is implementation vocabulary, not a missing public class.  Preserve
         # it as inline code; a real documented candidate always takes priority.
         if short in _LITERAL_TYPE_HINT_NAMES:
+            return contnode
+        if target.startswith(("bs4.", "textual.")) or target in {
+            "Coordinate",
+            "CursorType",
+            "Shape",
+            "calc_sheets_export",
+            "country",
+            "textual.geometry.Size",
+            "typing.Union",
+        }:
             return contnode
         return None
 

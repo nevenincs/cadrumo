@@ -120,7 +120,7 @@ def compute_corpus_sha256(settings: Settings) -> str:
     :class:`Settings` snapshot, which already folds every
     environment-variable-sourced override. Production ``Settings`` carries
     no dotenv source of its own (see
-    :meth:`~cadrumo.core.config.Settings.settings_customise_sources`): an
+    ``Settings.settings_customise_sources``): an
     operator's ``env/.env`` is development/test-only configuration bridged
     into the process environment before ``Settings`` resolves, so its
     values are already reflected in the snapshot hashed here and it needs
