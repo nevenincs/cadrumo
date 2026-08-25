@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ._secure_objects_fixtures import secure_objects
+from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
 
@@ -147,7 +147,7 @@ def test_irpf_actividad_economica_flows_despite_unclassified_business() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert len(result.observations) == 1, result
     assert result.observations[0].gross_amount == amount
@@ -177,7 +177,7 @@ def test_trabajo_income_excluded_from_m130() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((nomina, actividad))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert len(result.observations) == 1
     assert result.observations[0].transaction_id == actividad.transaction_id
@@ -207,7 +207,7 @@ def test_taxable_base_amount_populated_when_set() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert len(result.observations) == 1
     obs = result.observations[0]
@@ -234,7 +234,7 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    aggregation = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    aggregation = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
     assert len(aggregation.observations) == 1
     observation = aggregation.observations[0]
     assert observation.taxable_base_amount == Decimal("2000.00")
@@ -288,7 +288,7 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
         )
         aggregation = aggregate_renta_income_ledger(
             TransactionCatalogue.from_transactions((tx,)),
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_Q1_2024,
         )
         resolved = resolve_ledger_renta_income_aggregation_binding_values(
@@ -332,10 +332,10 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06(
         iva_rate=Decimal("0.21"),
         iva_amount=Decimal("420.00"),
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
     context = CalculationSourceContext(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=_period(2026, "1T"),
@@ -344,7 +344,7 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06(
 
     resolution = LedgerRentaIncomeAggregationSourceResolver(
         transaction_repository=tx_repo,
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     ).resolve(context)
 
     assert resolution.binding_values[_M130_RETENCIONES_BINDING] == Decimal("300.00")
@@ -370,11 +370,11 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit(
         iva_rate=Decimal("0.21"),
         iva_amount=Decimal("420.00"),
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
     income_only = _m130_revision_without_the_retenciones_binding()
     context = CalculationSourceContext(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=_period(2026, "1T"),
@@ -383,7 +383,7 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit(
 
     resolution = LedgerRentaIncomeAggregationSourceResolver(
         transaction_repository=tx_repo,
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     ).resolve(context)
 
     advisories = [
@@ -410,10 +410,10 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit(
     # advisory must not fire, or it would fire on every correct M130 filing.
     complete = LedgerRentaIncomeAggregationSourceResolver(
         transaction_repository=tx_repo,
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     ).resolve(
         CalculationSourceContext(
-            bucket_id="test",
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
             modelo="130",
             filing_year=2026,
             period=_period(2026, "1T"),
@@ -449,7 +449,7 @@ def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> Non
     )
     catalogue = TransactionCatalogue.from_transactions((tagged, untagged))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     # Field-selection wiring contract: tagged row contributes its declared
     # IVA-exclusive base, untagged row its gross transfer amount. The
@@ -485,7 +485,7 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
         business_classification=BusinessClassification.BUSINESS,
     )
     catalogue_a = TransactionCatalogue.from_transactions((actividad, trabajo))
-    result_a = aggregate_renta_income_ledger(catalogue_a, bucket_id="test", period=_Q1_2024)
+    result_a = aggregate_renta_income_ledger(catalogue_a, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     # Scenario B: both transactions as actividad — both should flow
     actividad_b1 = _actividad_transaction(
@@ -501,7 +501,7 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
         irpf_category="actividad_economica",
     )
     catalogue_b = TransactionCatalogue.from_transactions((actividad_b1, actividad_b2))
-    result_b = aggregate_renta_income_ledger(catalogue_b, bucket_id="test", period=_Q1_2024)
+    result_b = aggregate_renta_income_ledger(catalogue_b, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     casilla_a = result_a.casilla_aggregation.casilla_values.get(_M130_INGRESOS_CASILLA, Decimal("0"))
     casilla_b = result_b.casilla_aggregation.casilla_values.get(_M130_INGRESOS_CASILLA, Decimal("0"))
@@ -550,10 +550,10 @@ def test_cash_fallback_income_raises_the_ungrounded_substrate_advisory(
         amount=Decimal("1700.00"),
         taxable_base=None,
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
     context = CalculationSourceContext(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=_period(2026, "1T"),
@@ -562,7 +562,7 @@ def test_cash_fallback_income_raises_the_ungrounded_substrate_advisory(
 
     resolution = LedgerRentaIncomeAggregationSourceResolver(
         transaction_repository=tx_repo,
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     ).resolve(context)
 
     advisories = _ungrounded_diagnostics(resolution)
@@ -593,10 +593,10 @@ def test_substrate_declared_income_raises_no_ungrounded_advisory(
         iva_rate=Decimal("0.21"),
         iva_amount=Decimal("420.00"),
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
     context = CalculationSourceContext(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=_period(2026, "1T"),
@@ -605,7 +605,7 @@ def test_substrate_declared_income_raises_no_ungrounded_advisory(
 
     resolution = LedgerRentaIncomeAggregationSourceResolver(
         transaction_repository=tx_repo,
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     ).resolve(context)
 
     assert _ungrounded_diagnostics(resolution) == (), (
@@ -633,10 +633,10 @@ def test_many_ungrounded_rows_raise_one_advisory_not_one_each(
         )
         for index in range(3)
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions(transactions))
     context = CalculationSourceContext(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         modelo="130",
         filing_year=2026,
         period=_period(2026, "1T"),
@@ -645,7 +645,7 @@ def test_many_ungrounded_rows_raise_one_advisory_not_one_each(
 
     resolution = LedgerRentaIncomeAggregationSourceResolver(
         transaction_repository=tx_repo,
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     ).resolve(context)
 
     advisories = _ungrounded_diagnostics(resolution)

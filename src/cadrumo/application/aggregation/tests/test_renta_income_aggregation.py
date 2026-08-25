@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ._secure_objects_fixtures import secure_objects
+from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
 from pydantic import ValidationError
@@ -52,7 +52,7 @@ def test_q1_window_includes_jan_mar_transactions() -> None:
     apr = _income_transaction("apr", value_date=date(2024, 4, 1), amount=Decimal("800.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, feb, mar, apr))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     observation_ids = {o.transaction_id for o in result.observations}
     # Transaction.transaction_id is a content hash; compare against the created objects.
@@ -73,7 +73,7 @@ def test_q2_window_accumulates_jan_through_jun() -> None:
     jul = _income_transaction("jul", value_date=date(2024, 7, 1), amount=Decimal("3000.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, may, jul))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q2_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q2_2024)
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, may.transaction_id}
@@ -94,7 +94,7 @@ def test_mixed_classification_applies_business_pct() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert len(result.observations) == 1
     assert result.observations[0].gross_amount == Decimal("600.00")
@@ -109,7 +109,7 @@ def test_personal_transaction_excluded_with_reason() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations == ()
     assert len(result.issues) == 1
@@ -120,7 +120,7 @@ def test_non_eur_transaction_excluded_with_reason() -> None:
     tx = _income_transaction("usd", value_date=date(2024, 3, 1), currency="USD")
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations == ()
     assert len(result.issues) == 1
@@ -161,7 +161,7 @@ def test_outgoing_business_expense_is_skipped_silently_by_income_pipeline() -> N
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     # No income observation and — critically — no issue/advisory: the income
     # pipeline does not own deductible expenses.
@@ -191,7 +191,7 @@ def test_outgoing_personal_transaction_is_skipped_silently_by_income_pipeline() 
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations == ()
     assert result.issues == ()
@@ -206,7 +206,7 @@ def test_inactive_transaction_skipped_silently() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert result.observations == ()
     assert result.issues == ()
@@ -217,7 +217,7 @@ def test_non_quarterly_period_raises() -> None:
 
     catalogue = TransactionCatalogue.from_transactions(())
     with pytest.raises(AggregationPeriodError):
-        aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+        aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2024)
 
 
 # ---------------------------------------------------------------------------
@@ -234,14 +234,16 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     # Q2-only transaction: excluded from Q1 window summary, included in Q2 window
     q2_only = _income_transaction("q2-only", value_date=date(2024, 5, 10), amount=Decimal("3000.00"))
 
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((q1_tx1, q1_tx2, q2_only)))
 
     result_q1 = aggregate_renta_income_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
 
     # q2_only is outside Q1 window so it produces one compact summary entry.
@@ -258,10 +260,12 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     assert observation_ids_q1 == {q1_tx1.transaction_id, q1_tx2.transaction_id}
 
     result_q2 = aggregate_renta_income_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q2_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
 
     # Q2 is cumulative YTD: Jan-Jun, so all three transactions qualify
@@ -292,14 +296,16 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
         amount=Decimal("900.00"),
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((in_window, archived_out_of_window)))
 
     result = aggregate_renta_income_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
 
     assert {o.transaction_id for o in result.observations} == {in_window.transaction_id}
@@ -329,16 +335,18 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
         lifecycle_state=TransactionLifecycleState.ARCHIVED,
     )
     catalogue = TransactionCatalogue.from_transactions((q1_row, q3_row, archived_q3_row))
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects)
     tx_repo.save(catalogue)
 
     partitioned = aggregate_renta_income_ledger_from_repositories(
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
-        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
     )
-    full_scan = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    full_scan = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     # Declared-value invariance: observations and casilla aggregation identical
     # (as sets: full-scan iterates catalogue insertion order, partitioned
@@ -368,7 +376,7 @@ def test_casilla_01_target_matches_expected_binding_contract() -> None:
     ]
     catalogue = TransactionCatalogue.from_transactions(transactions)
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
 
     assert all(o.target_casilla_id == _M130_INGRESOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "130"
@@ -380,7 +388,7 @@ def test_income_observation_rejects_legacy_target_casilla_key() -> None:
     ]
     result = aggregate_renta_income_ledger(
         TransactionCatalogue.from_transactions(transactions),
-        bucket_id="test",
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
     )
     payload = result.observations[0].model_dump()

@@ -9,10 +9,17 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....tests import bucket_id
 from ....tests.secure_sql import isolated_runtime_profile
 
+#: The bucket the ``secure_objects`` fixture makes ACTIVE. A test that builds a
+#: repository for any other bucket id gets a route that is not attached to the
+#: active bucket, so every self-loading repository inside a resolver degrades
+#: instead of reading -- silently, as a storage_degraded diagnostic rather than
+#: a refusal. Consumers must address this bucket, not a literal of their own.
+SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
+
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="78804f92-b6f7-4daf-9ddf-a8ce3829dbb1") as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=SECURE_OBJECTS_BUCKET_ID) as profile:
         yield profile.repository
 
 
@@ -28,4 +35,4 @@ def secure_profile_backend(tmp_path: Path, bucket_id: str) -> Iterator[None]:
         yield
 
 
-__all__ = ["bucket_id", "secure_objects", "secure_profile_backend"]
+__all__ = ["SECURE_OBJECTS_BUCKET_ID", "bucket_id", "secure_objects", "secure_profile_backend"]
