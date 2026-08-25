@@ -20,6 +20,7 @@ from ....domain.modelos import (
     CalculationRevisionState,
     ModeloCode,
     WorkUnit,
+    WorkUnitCatalogue,
     WorkUnitState,
     derive_calculation_revision_id,
     derive_work_unit_id,
@@ -52,7 +53,6 @@ from ..work_addressing import (
     resolve_exportable_modelo_calculation_revision_address,
     resolve_fileable_modelo_calculation_revision_address,
     resolve_modelo_work_bucket,
-    resolve_modelo_work_unit,
     resolve_verifiable_modelo_calculation_revision_address,
     select_modelo_work_resolution,
 )
@@ -141,6 +141,22 @@ def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
     )
 
 
+def _select_captured_work_unit(
+    repository: WorkUnitCatalogueRepository,
+    request: ModeloWorkSelectorRequest,
+    *,
+    mode: ModeloWorkSelectionMode = ModeloWorkSelectionMode.VISIBLE_OR_EXACT,
+):
+    """Capture one encrypted catalogue explicitly before applying the pure selector."""
+    bucket_id = repository.bucket_id or _SELECTOR_PROFILE_ID
+    return select_modelo_work_resolution(
+        request,
+        catalogue=repository.load(),
+        bucket_id=bucket_id,
+        mode=mode,
+    )
+
+
 def _seed_revision(
     cr_repo: CalculationRevisionCatalogueRepository,
     *,
@@ -193,7 +209,7 @@ def test_selector_honours_explicit_bucket_over_active_bucket(work_repo: WorkUnit
 
 
 def test_visible_target_resolution_reports_absent_before_exact_creation(work_repo: WorkUnitCatalogueRepository) -> None:
-    resolution = resolve_modelo_work_unit(_request(), repository=work_repo)
+    resolution = _select_captured_work_unit(work_repo, _request())
 
     assert resolution.state is ModeloWorkSelectorState.ABSENT
     assert resolution.work_unit is None
@@ -226,7 +242,7 @@ def test_natural_target_resolution_retains_discarded_work_units_for_terminal_sta
     )
     work_repo.save(upsert_work_unit(work_repo.load(), discarded))
 
-    resolution = resolve_modelo_work_unit(_request(), repository=work_repo)
+    resolution = _select_captured_work_unit(work_repo, _request())
     assert resolution.state is ModeloWorkSelectorState.RESOLVED
     assert resolution.work_unit == discarded
     captured_catalogue = work_repo.load()
@@ -296,7 +312,7 @@ def test_visible_target_resolution_returns_single_active_work_unit(work_repo: Wo
         clock=_T0,
     )
 
-    resolution = resolve_modelo_work_unit(_request(), repository=work_repo)
+    resolution = _select_captured_work_unit(work_repo, _request())
 
     assert resolution.state is ModeloWorkSelectorState.RESOLVED
     assert resolution.work_unit == unit
@@ -315,6 +331,26 @@ def test_operator_work_unit_selector_accepts_displayed_short_id(work_repo: WorkU
 
     assert resolution.state is ModeloWorkSelectorState.RESOLVED
     assert resolution.work_unit == unit
+
+
+def test_operator_short_id_refuses_ordered_prefix_or_suffix_ambiguity(work_repo: WorkUnitCatalogueRepository) -> None:
+    """The 12-character operator path is deliberately not a full-id lookup."""
+    unit = _seed_work_unit(work_repo)
+    operator_id = "a" * 12
+    prefix_match = unit.model_copy(update={"work_unit_id": operator_id + "0" * 52})
+    suffix_match = unit.model_copy(update={"work_unit_id": "1" * 52 + operator_id})
+    catalogue = WorkUnitCatalogue.from_work_units((prefix_match, suffix_match))
+
+    with pytest.raises(ModeloWorkVisibleTargetAmbiguousError) as raised:
+        select_modelo_work_resolution(
+            ModeloWorkSelectorRequest(operator_work_unit_id=operator_id),
+            catalogue=catalogue,
+            bucket_id=work_repo.bucket_id or _SELECTOR_PROFILE_ID,
+        )
+
+    assert tuple(candidate.work_unit_id for candidate in raised.value.candidates) == tuple(
+        sorted((prefix_match.work_unit_id, suffix_match.work_unit_id))
+    )
 
 
 def test_strict_work_unit_id_selector_refuses_operator_display_handles() -> None:
@@ -337,10 +373,7 @@ def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: W
     )
 
     with pytest.raises(ModeloWorkSelectorContradictionError):
-        resolve_modelo_work_unit(
-            _request(work_unit_id=unit.work_unit_id, filing_year=2025),
-            repository=work_repo,
-        )
+        _select_captured_work_unit(work_repo, _request(work_unit_id=unit.work_unit_id, filing_year=2025))
 
 
 def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkUnitCatalogueRepository) -> None:
@@ -355,10 +388,7 @@ def test_revision_conflict_refuses_before_exact_target_creation(work_repo: WorkU
     )
 
     with pytest.raises(ModeloWorkRevisionConflictError) as raised:
-        resolve_modelo_work_unit(
-            _request(revision_id="future-revision"),
-            repository=work_repo,
-        )
+        _select_captured_work_unit(work_repo, _request(revision_id="future-revision"))
 
     assert raised.value.requested_revision_id == "future-revision"
     assert raised.value.existing.work_unit_id == unit.work_unit_id
@@ -397,7 +427,7 @@ def test_visible_target_ambiguity_refuses_with_candidate_guidance(work_repo: Wor
     work_repo.save(upsert_work_unit(work_repo.load(), second))
 
     with pytest.raises(ModeloWorkVisibleTargetAmbiguousError) as raised:
-        resolve_modelo_work_unit(_request(), repository=work_repo)
+        _select_captured_work_unit(work_repo, _request())
 
     candidate_ids = {candidate.work_unit_id for candidate in raised.value.candidates}
     assert candidate_ids == {first.work_unit_id, second.work_unit_id}

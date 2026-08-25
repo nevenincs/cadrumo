@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -125,7 +125,13 @@ def assemble_work_unit_history(
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
-    request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
+    try:
+        request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
+    except ValidationError as exc:
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit_id},
+        ) from exc
     bucket_id = wu_repo.bucket_id or resolve_modelo_work_bucket(request)
     resolution = select_modelo_work_resolution(
         request,

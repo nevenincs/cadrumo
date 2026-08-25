@@ -57,7 +57,6 @@ from ...domain.modelos import (
     WorkUnitCatalogue,
     WorkUnitState,
 )
-from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -417,29 +416,6 @@ def resolve_modelo_work_bucket(request: ModeloWorkSelectorRequest) -> str:
             context={"active_bucket_present": False},
         )
     return active_bucket_id
-
-
-def resolve_modelo_work_unit(
-    request: ModeloWorkSelectorRequest, *, repository: WorkUnitCatalogueRepositoryProtocol | None = None
-) -> ModeloWorkResolution:
-    """Capture one catalogue, then delegate selection without rereading it."""
-    bucket_id = resolve_modelo_work_bucket(request)
-    repository = repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
-    return select_modelo_work_resolution(request, catalogue=repository.load(), bucket_id=bucket_id)
-
-
-def resolve_active_natural_modelo_work_unit(
-    request: ModeloWorkSelectorRequest, *, repository: WorkUnitCatalogueRepositoryProtocol | None = None
-) -> ModeloWorkResolution:
-    """Capture one catalogue for lifecycle create-or-reuse and select active work only."""
-    bucket_id = resolve_modelo_work_bucket(request)
-    repository = repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
-    return select_modelo_work_resolution(
-        request,
-        catalogue=repository.load(),
-        bucket_id=bucket_id,
-        mode=ModeloWorkSelectionMode.ACTIVE_NATURAL,
-    )
 
 
 class ModeloRevisionPickError(ModeloError, ValueError):
@@ -1183,7 +1159,8 @@ def ensure_modelo_work_unit_for_active_target(
         newly created.
     """
     requested_revision = registry_revision_id.strip() if registry_revision_id is not None else None
-    resolution = resolve_active_natural_modelo_work_unit(
+    catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+    resolution = select_modelo_work_resolution(
         ModeloWorkSelectorRequest(
             bucket_id=bucket_id,
             modelo=ModeloCode(modelo),
@@ -1191,6 +1168,9 @@ def ensure_modelo_work_unit_for_active_target(
             period=period,
             revision_id=requested_revision,
         ),
+        catalogue=catalogue,
+        bucket_id=bucket_id,
+        mode=ModeloWorkSelectionMode.ACTIVE_NATURAL,
     )
     if resolution.work_unit is not None:
         unit = resolution.work_unit
@@ -1236,18 +1216,18 @@ def resolve_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolut
 
 def resolve_optional_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolution:
     """Resolve an operator-facing modelo work address to a :class:`ModeloWorkResolution`."""
-    resolution = resolve_modelo_work_unit(
-        ModeloWorkSelectorRequest(
-            work_unit_id=address.work_unit_id,
-            operator_work_unit_id=address.operator_work_unit_id,
-            modelo=ModeloCode(address.modelo) if address.modelo is not None else None,
-            filing_year=address.filing_year,
-            period=address.period,
-            revision_id=address.registry_revision_id,
-            bucket_id=address.bucket_id,
-        ),
+    request = ModeloWorkSelectorRequest(
+        work_unit_id=address.work_unit_id,
+        operator_work_unit_id=address.operator_work_unit_id,
+        modelo=ModeloCode(address.modelo) if address.modelo is not None else None,
+        filing_year=address.filing_year,
+        period=address.period,
+        revision_id=address.registry_revision_id,
+        bucket_id=address.bucket_id,
     )
-    return resolution
+    bucket_id = resolve_modelo_work_bucket(request)
+    catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+    return select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
 
 
 def resolve_modelo_work_address_unit(address: ModeloWorkAddress) -> WorkUnit:
@@ -1482,7 +1462,6 @@ __all__ = [
     "modelo_work_address_from_operator_target",
     "project_modelo_work_target",
     "project_modelo_work_unit",
-    "resolve_active_natural_modelo_work_unit",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
     "resolve_modelo_calculation_revision_address",
@@ -1492,7 +1471,6 @@ __all__ = [
     "resolve_modelo_work_address_unit",
     "resolve_modelo_work_bucket",
     "resolve_modelo_work_target",
-    "resolve_modelo_work_unit",
     "resolve_modelo_work_unit_for_operator_target",
     "resolve_modelo_work_unit_id",
     "resolve_optional_modelo_work_address",
