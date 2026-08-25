@@ -123,7 +123,7 @@ matching the module docstring above), which is itself the anti-tautology
 proof that the per-quarter observation set is faithful to the manual before
 ever reaching the annual M390 formula under test.
 
-Registry mapping (M390 2010-y-siguientes revision):
+Registry mapping (the M390 revision law-selected for ejercicio 2024):
 
     iva.anual.cuota-devengada-total = repercutido.general (iva sum across all
       four quarters = 17.430+17.850+18.522+20.790 = 74.592) +
