@@ -81,6 +81,7 @@ class _RegisteredExecutorConformanceCase:
     expected_terminal: OperationTerminalCondition
     expected_effect: OperationEffect
     expected_phase_codes: tuple[str, ...] | None = None
+    expected_refusal_ref: str | None = None
 
 
 _MATRIX = (
@@ -94,7 +95,10 @@ _MATRIX = (
         "auth.provider.configure", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
     ),
     _RegisteredExecutorConformanceCase(
-        "auth.session.acquire", OperationTerminalCondition.REFUSED, OperationEffect.UNKNOWN
+        "auth.session.acquire",
+        OperationTerminalCondition.REFUSED,
+        OperationEffect.UNKNOWN,
+        expected_refusal_ref="REFUSED_AUTH_LOGIN_LIVE_TESTS_DISABLED",
     ),
     _RegisteredExecutorConformanceCase(
         "auth.session.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
@@ -109,13 +113,16 @@ _MATRIX = (
         "user-profile.repeatable-row-mutation", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
     ),
     _RegisteredExecutorConformanceCase(
-        "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
     ),
     _RegisteredExecutorConformanceCase(
         "user-profile.logout", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
     ),
     _RegisteredExecutorConformanceCase(
-        "live.filed-history.pull", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        "live.filed-history.pull",
+        OperationTerminalCondition.REFUSED,
+        OperationEffect.NONE,
+        expected_refusal_ref="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
     ),
     _RegisteredExecutorConformanceCase(
         "export.google-sheets",
@@ -413,6 +420,9 @@ def test_every_production_registered_executor_runs_through_the_shared_supervisor
         assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
         assert observed.projection.terminal_condition is case.expected_terminal, case.definition_id
         assert observed.projection.effect is case.expected_effect, case.definition_id
+        assert observed.projection.refusal_ref == case.expected_refusal_ref, case.definition_id
+        if case.expected_terminal is OperationTerminalCondition.FAILED:
+            assert observed.projection.diagnostic_ref is not None
         assert isinstance(observed.projection.pending_interaction, OperationNoPendingInteractionV1)
         asyncio.run(
             driver.review_not_pending(

@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import override
 
 import pytest
 from pydantic import BaseModel, Field
@@ -126,6 +127,7 @@ class JournalObservedFileResource:
 class CleanupFailingFileResource(JournalObservedFileResource):
     """A real file close that reports a cleanup error after releasing its handle."""
 
+    @override
     async def close(self) -> None:
         await super().close()
         raise OSError("terminal lifecycle cleanup reporting failed")
@@ -339,6 +341,7 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
         async def settle_after_observed_cleanup() -> None:
             operation_id = f"{case.condition.value.__len__():064x}"
             await supervisor.submit(_request(subject_ref=f"subject:{case.condition.value}"), operation_id=operation_id)
+            terminal_task: asyncio.Task[OperationPersistedSnapshot]
             if case.await_cancellation:
                 start_task = asyncio.create_task(supervisor.start(operation_id))
                 await executor.started.wait()
@@ -348,12 +351,13 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
                 terminal_waiter = asyncio.create_task(supervisor.await_terminal(operation_id))
                 await resource.cleanup_started.wait()
                 ready_for_settlement = await supervisor.inspect(operation_id)
+                terminal_task = start_task
             else:
                 ready_for_settlement = await supervisor.start(operation_id)
                 resource = executor.resource
                 assert resource is not None
                 terminal_waiter = asyncio.create_task(supervisor.await_terminal(operation_id))
-                settlement_task = asyncio.create_task(
+                terminal_task = asyncio.create_task(
                     supervisor.settle(operation_id, _receipt(ready_for_settlement, case, settled_at=_NOW))
                 )
                 await resource.cleanup_started.wait()
@@ -368,7 +372,7 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
             assert not any(isinstance(event, OperationTerminalEvent) for event in replay_before_close.events)
 
             resource.allow_cleanup()
-            terminal = await start_task if case.await_cancellation else await settlement_task
+            terminal = await terminal_task
             awaited_terminal = await terminal_waiter
             replay = await journal.read_after(operation_id, 0, limit=20)
 
@@ -505,6 +509,7 @@ def test_cleanup_timeout_refuses_terminal_journal_persistence(tmp_path: Path) ->
             executor=executor,
             cleanup_timeout=_CLEANUP_WINDOW,
         )
+
         async def retain_nonterminal_state_after_cleanup_timeout() -> None:
             operation_id = "4" * 64
             await supervisor.submit(_request(subject_ref="subject:cleanup-timeout"), operation_id=operation_id)
