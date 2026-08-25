@@ -1325,9 +1325,32 @@ def setup(app):
         """Keep private/generated typing objects out of public object indexing."""
         if name in {"__pydantic_serializer__", "__pydantic_validator__"}:
             return True
+        generic_metadata = getattr(obj, "__pydantic_generic_metadata__", None)
+        if isinstance(generic_metadata, dict) and generic_metadata.get("origin") is not None:
+            return True
         if get_origin(obj) is Annotated:
             return True
         return None
+
+    # Napoleon's optional private/special-member listener probes ``__doc__``
+    # on every candidate before deciding to skip it.  A deferred Pydantic
+    # serializer deliberately raises on that probe, even though autodoc's own
+    # exclude-members contract has already made the descriptor non-public.
+    # None of Napoleon's inclusion switches are enabled here, so disconnecting
+    # that redundant selector preserves member selection and prevents an
+    # excluded implementation descriptor from aborting public API discovery.
+    for listener in tuple(app.events.listeners.get("autodoc-skip-member", ())):
+        handler = listener.handler
+        if handler.__module__ == "sphinx.ext.napoleon" and handler.__name__ == "_skip_member":
+            if any(
+                (
+                    app.config.napoleon_include_init_with_doc,
+                    app.config.napoleon_include_private_with_doc,
+                    app.config.napoleon_include_special_with_doc,
+                )
+            ):
+                raise RuntimeError("Napoleon member inclusion is incompatible with the Pydantic API boundary")
+            app.disconnect(listener.id)
 
     def _resolve_deferred_models(app):
         """Import the diagnostics module and run its idempotent model rebuild.

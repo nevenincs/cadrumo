@@ -5,3 +5,4 @@ cadrumo.application.aggregation._renta_income_ledger module
    :members:
    :show-inheritance:
    :ignore-module-all:
+   :exclude-members: LedgerAggregationResultBase
