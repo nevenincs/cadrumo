@@ -10,71 +10,8 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
-    OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
-)
-from cadrumo.application.operations.frontend_contracts import (
-    OperationObservationRefusalCode,
-    OperationObservationRefusalV1,
-    OperationObservationRequestV1,
-    OperationObservationSuccessV1,
-    OperationObservationVersionHeader,
-    OperationPublicProgressEventV1,
-    OperationReviewAvailableInteractionV1,
-    OperationUnsupportedInteractionV1,
-)
-from cadrumo.application.operations.models import (
-    OperationIdentity,
-    OperationReconciliationOutcome,
-    OperationRequest,
-    OperationTerminalReceipt,
-)
-from cadrumo.application.operations.observation import OperationObservationService
-from cadrumo.application.operations.persistence.events import (
-    OperationDiagnosticEvent,
-    OperationEffectEvent,
-    OperationInteractionEvent,
-    OperationLogRecord,
-    OperationNoticeEvent,
-    OperationPhaseEvent,
-    OperationProgressEvent,
-    OperationReconciliationEvent,
-    OperationTerminalEvent,
-)
-from cadrumo.application.operations.persistence.journal import (
-    OperationObservationMaterialization,
-    OperationPersistedSnapshot,
-    OperationProgressFoldCheckpoint,
-    OperationProgressFoldInput,
-)
-from cadrumo.application.operations.persistence.leases import (
-    OperationOwnerLease,
-    operation_conflict_scope_reference,
-)
-from cadrumo.application.operations.persistence.replay import (
-    OperationReplayPage,
-    OperationReplayStatus,
-)
-from cadrumo.application.operations.registry import (
-    OperationDefinition,
-    OperationExecutorFactory,
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationReconciliationPolicy,
-    OperationRegistry,
-    OperationSchemaBindingV1,
-    operation_public_schema_reference,
-)
-from cadrumo.core.operations import OperationInteractionKind
-
+from ....adapters.persistence.operations.journal import OperationJournalRepository
+from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....core import (
     STRICT_FROZEN_CONFIG,
     OperationCancellation,
@@ -86,9 +23,71 @@ from ....core import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from ....core.operations import OperationInteractionKind
+from ..capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
 from ..events import OperationLogSeverity
+from ..frontend_contracts import (
+    OperationObservationRefusalCode,
+    OperationObservationRefusalV1,
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
+    OperationObservationVersionHeader,
+    OperationPublicProgressEventV1,
+    OperationReviewAvailableInteractionV1,
+    OperationUnsupportedInteractionV1,
+)
 from ..interactions import OperationInteractionRequest, OperationPendingInteraction
+from ..models import (
+    OperationIdentity,
+    OperationReconciliationOutcome,
+    OperationRequest,
+    OperationTerminalReceipt,
+)
+from ..observation import OperationObservationService
 from ..owner import OperationExecutorContext
+from ..persistence.events import (
+    OperationDiagnosticEvent,
+    OperationEffectEvent,
+    OperationInteractionEvent,
+    OperationLogRecord,
+    OperationNoticeEvent,
+    OperationPhaseEvent,
+    OperationProgressEvent,
+    OperationReconciliationEvent,
+    OperationTerminalEvent,
+)
+from ..persistence.journal import (
+    OperationObservationMaterialization,
+    OperationPersistedSnapshot,
+    OperationProgressFoldCheckpoint,
+    OperationProgressFoldInput,
+)
+from ..persistence.leases import (
+    OperationOwnerLease,
+    operation_conflict_scope_reference,
+)
+from ..persistence.replay import (
+    OperationReplayPage,
+    OperationReplayStatus,
+)
+from ..registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+    OperationRegistry,
+    OperationSchemaBindingV1,
+    operation_public_schema_reference,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
