@@ -222,10 +222,12 @@ def test_row_source_identity_roundtrips_only_through_encrypted_revision(
     secure_objects: SecureObjectRepository,
 ) -> None:
     canary = "opaque-inventory-activity-canary"
+    grouping = "per_inventory_activity"
     identity = RowSourceIdentity(
         source_kind=BindingSourceKind.INVENTORY,
         source_row_identity=canary,
         fingerprint="3" * 64,
+        row_set_grouping=grouping,
     )
     original = _revision(_source_provenance(), row_identity=identity)
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
@@ -237,6 +239,7 @@ def test_row_source_identity_roundtrips_only_through_encrypted_revision(
     at_rest = database_path.read_bytes() + (wal_path.read_bytes() if wal_path.exists() else b"")
     for plaintext in (
         canary,
+        grouping,
         "3" * 64,
         "collectible_invoice:inv-0001",
         "payable_invoice:inv-0002",
@@ -247,6 +250,7 @@ def test_row_source_identity_roundtrips_only_through_encrypted_revision(
 
     assert loaded is not None
     assert loaded.row_source_identities == original.row_source_identities
+    assert loaded.row_source_identities[("inventory-operation-0181", 1)].row_set_grouping == grouping
     assert loaded == original
 
 

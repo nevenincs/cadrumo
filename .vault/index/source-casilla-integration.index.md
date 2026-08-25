@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd969544fe1f0c7a08b39993982145d582cdeda6be13fecb26896ed0c6545972'
+body_hash: 'sha256:7f3528912cca06b1ae0ddbeed3ec918ae55d6ae92ad72f2a907115ec0ee8fc48'
 related:
   - '[[2026-08-22-source-casilla-integration-W01-P01-S01]]'
   - '[[2026-08-22-source-casilla-integration-W01-P01-S02]]'
@@ -105,6 +105,7 @@ related:
   - '[[2026-08-22-source-casilla-integration-W03-P10-S59]]'
   - '[[2026-08-22-source-casilla-integration-W05-P14-S87]]'
   - '[[2026-08-22-source-casilla-integration-W05-P14-S88]]'
+  - '[[2026-08-22-source-casilla-integration-W05-P14-S89]]'
   - '[[2026-08-22-source-casilla-integration-adr]]'
   - '[[2026-08-22-source-casilla-integration-census-code-review-audit]]'
   - '[[2026-08-22-source-casilla-integration-composite-provenance-research]]'
@@ -311,6 +312,7 @@ Auto-generated index of all documents tagged with `#source-casilla-integration`.
 - `2026-08-22-source-casilla-integration-W01-P23-S225` - Adjudicate Modelo 036's exact event-driven profile source as manual-by-design and retain the human-filed no-local-submission boundary
 - `2026-08-22-source-casilla-integration-W05-P14-S87` - define the application command that accepts assembled typed row observations for calculation
 - `2026-08-22-source-casilla-integration-W05-P14-S88` - route Google Sheets pull output into the governed calculation input boundary
+- `2026-08-22-source-casilla-integration-W05-P14-S89` - preserve grouping, row index, binding identity, source identity, and fingerprint through ingress
 
 ### plan
 
