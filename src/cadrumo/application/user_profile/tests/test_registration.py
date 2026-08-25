@@ -27,10 +27,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.application.user_profile.custody_ports import unlock_profile_custody_password
-from cadrumo.application.user_profile.login_session import logout_active_profile
-from cadrumo.application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
-
 from ....adapters.persistence.storage.custody import (
     ProfileCustodyPasswordError,
     load_committed_profile_password_material,
@@ -45,6 +41,9 @@ from ....core import (
 )
 from ....domain.user_profile.values import ProfileSetupState
 from ....tests.secure_sql import isolated_profile_storage_root
+from ..custody_ports import unlock_profile_custody_password
+from ..login_session import logout_active_profile
+from ..registration import ProfileRegistrationError, register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -110,8 +109,8 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
 
         material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
         unlocked = unlock_profile_custody(material.envelope, _OPERATOR_PASSPHRASE, sentinel=material.sentinel)
-        from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
-        from cadrumo.application.user_profile.profile_record_repository import (
+        from ..capsule_record import ProfileRecordSession
+        from ..profile_record_repository import (
             ProfileRecordRepository,
             bound_profile_record_session,
         )
@@ -138,9 +137,8 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
     fact about a brand-new profile rather than an assumption of clearance,
     exactly the same class of fact already recorded for its filing history.
     """
-    from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
-
     from ....application.evidence import LegalHoldCaseAuthority
+    from ..lifecycle import ProfileCapsuleLifecycle
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
