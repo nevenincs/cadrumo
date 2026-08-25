@@ -81,7 +81,7 @@ _MIN_DIRECTORIES = 40
 #: could have been lost there; and across the whole modelos tree the set of
 #: continuidad_id lines is IDENTICAL to its state forty commits back (1,283
 #: distinct lines, none gone), so no chain anywhere dropped its stamp. The
-#: +1,066 is this campaign's export-schema and casilla authoring arriving
+#: +1,066 is newly authored export-schema and casilla content arriving
 #: un-reviewed, which is the arm the gate's own message calls legitimate.
 _UNGROUNDED_BASELINE: dict[str, int] = {
     "100": 1518,

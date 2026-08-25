@@ -37,7 +37,7 @@ _KNOWN_ID_TAILS = frozenset(
         "-2022",
         "-2023",
         "-2024",
-        # Coined by this campaign's span splits. Each names a CLOSED range or a
+        # Introduced by this tree's span splits. Each names a CLOSED range or a
         # period-scoped half -- modelo 185's 2003-2025, modelo 322 and 353's
         # 2008-2025, modelo 490's 2022-1t and 2022-2t-4t -- and the marker was
         # checked against all three before they were admitted here: none reads

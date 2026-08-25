@@ -369,8 +369,8 @@ def _blocker(
     payload. A revision whose designs are bundled but unregistered needs the era
     each governs grounded first, and that is not mechanical: a design may state
     no orden, no BOE reference and no ejercicio anywhere in its text, leaving
-    only AEAT's update date, which this campaign has twice had to undo reading
-    as a governed period. A revision whose modelo HAS registered designs but
+    only AEAT's update date, which has twice had to be rejected as a governed
+    period. A revision whose modelo HAS registered designs but
     cites none of them is waiting on the design for its own window, which is
     modelo 185's 2003-2025 case: the one bundled design governs 2026 onward and
     correctly grounds its sibling revision instead. A revision already citing a
@@ -422,7 +422,7 @@ def _blocker(
             "a machine-readable Modelo 136 contract is cited, but its semantic map and emitted-byte proof are absent",
             # No current predecessor route may be claimed for a machine contract
             # that does not yet exist.  The classifier must be re-adjudicated
-            # when the authority condition changes instead of borrowing S28's
+            # when the authority condition changes instead of borrowing a
             # completed enrollment label.
             owners=(_EXPORT_OWNER,),
             reconsideration=(

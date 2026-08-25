@@ -80,8 +80,8 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     shift = shift_deadline(window.closes_on, modelo="345", ccaa_code=None)
     assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (date(2026, 2, 2), True, "sabado")
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"aeat-dr-345-2025"}
-    # "export" joined the surfaces when this campaign authored the modelo's
-    # export layout; the link set is a consequence of that, not a drift.
+    # "export" joined the surfaces when the modelo's export layout was authored;
+    # the link set is a consequence of that, not a drift.
     assert {link.surface for link in revision.application_links} == {"deadline", "export", "filing"}
     assert {schedule.id for schedule in revision.filing_schedules} == {"modelo-345-anual"}
 
