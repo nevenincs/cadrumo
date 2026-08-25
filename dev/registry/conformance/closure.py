@@ -28,7 +28,7 @@ from cadrumo.application.registry import (
     RegistryClosureOwnerDisposition,
     SourceConnectivityCoverageReport,
     TemporalCoverageReport,
-    TemporalRevisionCoverage,
+    TemporalRevisionCoverageSummary,
     compose_filing_export_coverage,
     compose_source_connectivity_coverage,
     compose_temporal_coverage,
@@ -111,7 +111,7 @@ class RegistryClosureRevisionReport(_ClosureReportModel):
 
     modelo: str = Field(min_length=1, max_length=32)
     revision: str = Field(min_length=1, max_length=128)
-    temporal_coverage: TemporalRevisionCoverage
+    temporal_coverage: TemporalRevisionCoverageSummary
     source_connectivity: RegistryClosureLimb | None = None
     filing_export: RegistryClosureLimb | None = None
     join_disagreements: tuple[RegistryClosureJoinDisagreement, ...] = ()
@@ -268,9 +268,7 @@ def build_registry_closure_report(
     """
     source_by_coordinate = {(str(limb.modelo), str(limb.revision)): limb for limb in source_connectivity.limbs}
     filing_by_coordinate = {(str(limb.modelo), str(limb.revision)): limb for limb in filing_export.limbs}
-    temporal_rows = tuple(
-        sorted(temporal_coverage.rows, key=lambda row: (str(row.modelo), str(row.revision))),
-    )
+    temporal_rows = temporal_coverage.revision_summaries
     temporal_coordinates = {(str(row.modelo), str(row.revision)) for row in temporal_rows}
     row_disagreements: list[RegistryClosureJoinDisagreement] = []
     rows: list[RegistryClosureRevisionReport] = []
@@ -432,7 +430,7 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
     return "\n".join(lines)
 
 
-def _temporal_refusal(coverage: TemporalRevisionCoverage) -> RegistryClosurePredicateRefusal:
+def _temporal_refusal(coverage: TemporalRevisionCoverageSummary) -> RegistryClosurePredicateRefusal:
     """Translate a typed temporal refusal without discarding its specific code."""
     assert coverage.failure_code is not None
     assert coverage.failure_detail is not None

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import io
 import json
 import subprocess
@@ -35,6 +36,9 @@ from typing import Final, cast
 
 import yaml
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
+
+from cadrumo.core import scan_directory
+from cadrumo.core.errors import declared_error_codes
 
 from dev._paths import REPO_ROOT, UTF_8
 
@@ -63,6 +67,11 @@ _RENDERER_SINKS: Final[frozenset[str]] = frozenset(
 )
 FIXED_POINT_STATE_VERSION: Final[int] = 1
 FIXED_POINT_PRODUCTION_SCOPE: Final[str] = "production-src-cadrumo-v1"
+AUTHORED_ERROR_MESSAGE_SCOPE: Final[str] = "production-src-cadrumo-v1"
+"""The whole production tree whose registered-error messages are joined."""
+
+_CADRUMO_ERROR_QUALNAME: Final[str] = "cadrumo.core.errors.CadrumoError"
+_MESSAGE_KEYWORDS: Final[frozenset[str]] = frozenset({"message", "translated_message"})
 
 type CandidateKey = tuple[str, str, str, str, str]
 
@@ -184,6 +193,82 @@ class FixedPointPass:
 
 class FixedPointNotClosedError(RuntimeError):
     """Raised when a proposed closing pass finds unadmitted evidence."""
+
+
+@dataclass(frozen=True, slots=True)
+class RegisteredErrorCode:
+    """One live registry declaration used as an authored-message join owner."""
+
+    error_qualname: str
+    code: str
+
+
+@dataclass(frozen=True, slots=True)
+class AuthoredErrorMessageSite:
+    """One source call that supplies a registered error's direct message text.
+
+    The location is a diagnostic locator only.  ``fingerprint`` excludes it so
+    an intentional disposition stays current through a formatting-only move.
+    ``owner_qualnames`` is deliberately a set-shaped tuple: its cardinality is
+    the mechanical join result that the disposition layer must partition.
+    """
+
+    path: str
+    enclosing_symbol: str
+    callee: str
+    message_expression: str
+    normalized_call_sha256: str
+    ordinal: int
+    line: int
+    column: int
+    owner_qualnames: tuple[str, ...]
+
+    @property
+    def fingerprint(self) -> str:
+        """Return the stable physical identity used by exclusion rows."""
+        return "|".join(
+            (
+                self.path,
+                self.enclosing_symbol,
+                self.callee,
+                self.message_expression,
+                self.normalized_call_sha256,
+                str(self.ordinal),
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class AuthoredErrorMessageJoin:
+    """The complete mechanical join of live codes to direct message sites."""
+
+    registered_codes: tuple[RegisteredErrorCode, ...]
+    sites: tuple[AuthoredErrorMessageSite, ...]
+
+    @property
+    def clean_codes(self) -> tuple[RegisteredErrorCode, ...]:
+        """Return declared codes with no authored-message site in this tree."""
+        joined = {owner for site in self.sites for owner in site.owner_qualnames}
+        return tuple(code for code in self.registered_codes if code.error_qualname not in joined)
+
+    @property
+    def unresolved_sites(self) -> tuple[AuthoredErrorMessageSite, ...]:
+        """Return known error-message calls without a registered-code owner."""
+        return tuple(site for site in self.sites if not site.owner_qualnames)
+
+    @property
+    def multiply_owned_sites(self) -> tuple[AuthoredErrorMessageSite, ...]:
+        """Return calls whose static path resolves to more than one code."""
+        return tuple(site for site in self.sites if len(site.owner_qualnames) > 1)
+
+    @property
+    def singly_owned_sites(self) -> tuple[AuthoredErrorMessageSite, ...]:
+        """Return calls that resolve to exactly one registered-code owner."""
+        return tuple(site for site in self.sites if len(site.owner_qualnames) == 1)
+
+
+class AuthoredErrorMessageCensusError(ValueError):
+    """Raised when the live source tree cannot be scanned as one whole input."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -1017,6 +1102,388 @@ def close_fixed_point(result: FixedPointPass) -> FixedPointPass:
         for record in result.unknown_clusters
     )
     raise FixedPointNotClosedError("\n".join(lines))
+
+
+@dataclass(frozen=True, slots=True)
+class _ErrorReference:
+    """A lexical name binding that may resolve to error classes or modules."""
+
+    error_qualnames: frozenset[str] = frozenset()
+    modules: frozenset[str] = frozenset()
+
+    def merged(self, other: _ErrorReference) -> _ErrorReference:
+        return _ErrorReference(
+            error_qualnames=self.error_qualnames | other.error_qualnames,
+            modules=self.modules | other.modules,
+        )
+
+
+_EMPTY_ERROR_REFERENCE: Final[_ErrorReference] = _ErrorReference()
+
+
+def registered_error_codes() -> tuple[RegisteredErrorCode, ...]:
+    """Return the live canonical registry declarations without restating them.
+
+    The core registry remains the only owner of error codes.  This quality
+    census consumes its declared projection solely to make the source join
+    mechanical and complete.
+    """
+    return tuple(
+        sorted(
+            (
+                RegisteredErrorCode(error_qualname=qualname, code=error.code)
+                for qualname, error in declared_error_codes()
+            ),
+            key=lambda record: (record.error_qualname, record.code),
+        ),
+    )
+
+
+def _authored_message_module_name(path: Path, *, root: Path) -> tuple[str, bool]:
+    """Return the Python module name and package status for one production file."""
+    relative = path.relative_to(root / "src").with_suffix("")
+    is_package = relative.name == "__init__"
+    parts = relative.parts[:-1] if is_package else relative.parts
+    return ".".join(parts), is_package
+
+
+def _authored_message_import_module(
+    *,
+    module: str,
+    is_package: bool,
+    level: int,
+    imported: str | None,
+) -> str:
+    """Resolve an import statement's lexical module without importing source."""
+    package = module if is_package else module.rpartition(".")[0]
+    parts = package.split(".") if package else []
+    if level:
+        parts = parts[: len(parts) - level + 1]
+    if imported:
+        parts.extend(imported.split("."))
+    return ".".join(part for part in parts if part)
+
+
+def _authored_message_sources(root: Path) -> tuple[tuple[str, str, str, bool], ...]:
+    """Read every production Python module or fail rather than shrink the join."""
+    source_root = root / SOURCE_ROOT
+    if not source_root.is_dir():
+        raise AuthoredErrorMessageCensusError(f"authored-message census source root is absent: {source_root}")
+    sources: list[tuple[str, str, str, bool]] = []
+    for source_path in scan_directory(
+        source_root,
+        pattern="*.py",
+        recursive=True,
+        prune_directories=("__pycache__",),
+    ):
+        if "tests" in source_path.relative_to(source_root).parts or source_path.name.startswith("test_"):
+            continue
+        path = source_path.relative_to(root).as_posix()
+        try:
+            source = source_path.read_text(encoding=_UTF_8)
+        except OSError as error:
+            raise AuthoredErrorMessageCensusError(
+                f"authored-message census cannot read {path}: {type(error).__name__}",
+            ) from error
+        except UnicodeDecodeError as error:
+            raise AuthoredErrorMessageCensusError(
+                f"authored-message census cannot decode {path}: {type(error).__name__}",
+            ) from error
+        try:
+            ast.parse(source, filename=path)
+        except SyntaxError as error:
+            raise AuthoredErrorMessageCensusError(
+                f"authored-message census cannot parse {path}: {type(error).__name__}",
+            ) from error
+        module, is_package = _authored_message_module_name(source_path, root=root)
+        sources.append((path, source, module, is_package))
+    if not sources:
+        raise AuthoredErrorMessageCensusError(f"authored-message census found no production modules: {source_root}")
+    return tuple(sorted(sources))
+
+
+def _authored_message_call_hash(node: ast.Call) -> str:
+    """Return a location-free source identity for one complete constructor call."""
+    return hashlib.sha256(ast.dump(node, include_attributes=False).encode(_UTF_8)).hexdigest()
+
+
+def _authored_message_argument(node: ast.Call) -> ast.expr | None:
+    """Return the direct message argument supplied by a registered error call."""
+    if node.args:
+        return node.args[0]
+    return next((keyword.value for keyword in node.keywords if keyword.arg in _MESSAGE_KEYWORDS), None)
+
+
+class _AuthoredMessageVisitor(ast.NodeVisitor):
+    """Resolve direct error constructors in one module without executing it."""
+
+    def __init__(
+        self,
+        *,
+        path: str,
+        module: str,
+        is_package: bool,
+        registered_qualnames: frozenset[str],
+    ) -> None:
+        self.path = path
+        self.module = module
+        self.is_package = is_package
+        self._known_qualnames = registered_qualnames | {_CADRUMO_ERROR_QUALNAME}
+        self._scopes: list[dict[str, _ErrorReference]] = [{}]
+        self._symbols: list[str] = []
+        self._classes: list[_ErrorReference] = []
+        self.records: list[AuthoredErrorMessageSite] = []
+
+    @property
+    def _symbol(self) -> str:
+        return ".".join(self._symbols) if self._symbols else MODULE_SYMBOL
+
+    @property
+    def _scope(self) -> dict[str, _ErrorReference]:
+        return self._scopes[-1]
+
+    def _lookup(self, name: str) -> _ErrorReference:
+        for scope in reversed(self._scopes):
+            if name in scope:
+                return scope[name]
+        return _EMPTY_ERROR_REFERENCE
+
+    def _resolve(self, node: ast.AST) -> _ErrorReference:
+        if isinstance(node, ast.Name):
+            return self._lookup(node.id)
+        if isinstance(node, ast.Attribute):
+            base = self._resolve(node.value)
+            errors = frozenset(
+                candidate
+                for module in base.modules
+                if (candidate := f"{module}.{node.attr}") in self._known_qualnames
+            )
+            return _ErrorReference(
+                error_qualnames=errors,
+                modules=frozenset(f"{module}.{node.attr}" for module in base.modules),
+            )
+        return _EMPTY_ERROR_REFERENCE
+
+    def _bind_target(self, target: ast.expr, reference: _ErrorReference) -> None:
+        if isinstance(target, ast.Name):
+            self._scope[target.id] = reference
+        elif isinstance(target, (ast.Tuple, ast.List)):
+            for element in target.elts:
+                self._bind_target(element, _EMPTY_ERROR_REFERENCE)
+
+    def _record(self, node: ast.Call, owners: frozenset[str]) -> None:
+        message = _authored_message_argument(node)
+        if message is None:
+            return
+        self.records.append(
+            AuthoredErrorMessageSite(
+                path=self.path,
+                enclosing_symbol=self._symbol,
+                callee=ast.unparse(node.func),
+                message_expression=ast.unparse(message),
+                normalized_call_sha256=_authored_message_call_hash(node),
+                ordinal=0,
+                line=node.lineno,
+                column=node.col_offset,
+                owner_qualnames=tuple(sorted(owners - {_CADRUMO_ERROR_QUALNAME})),
+            ),
+        )
+
+    def _super_owner(self, node: ast.Call) -> frozenset[str] | None:
+        if not isinstance(node.func, ast.Attribute) or node.func.attr != "__init__" or not self._classes:
+            return None
+        receiver = node.func.value
+        direct_super = isinstance(receiver, ast.Call) and isinstance(receiver.func, ast.Name) and receiver.func.id == "super"
+        cast_super = (
+            isinstance(receiver, ast.Call)
+            and isinstance(receiver.func, ast.Name)
+            and receiver.func.id == "cast"
+            and len(receiver.args) == 2
+            and isinstance(receiver.args[1], ast.Call)
+            and isinstance(receiver.args[1].func, ast.Name)
+            and receiver.args[1].func.id == "super"
+        )
+        if direct_super or cast_super:
+            return self._classes[-1].error_qualnames
+        return None
+
+    def visit_Import(self, node: ast.Import) -> None:
+        for imported in node.names:
+            name = imported.asname or imported.name.split(".")[0]
+            module = imported.name if imported.asname else imported.name.split(".")[0]
+            self._scope[name] = _ErrorReference(modules=frozenset({module}))
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        source = _authored_message_import_module(
+            module=self.module,
+            is_package=self.is_package,
+            level=node.level,
+            imported=node.module,
+        )
+        for imported in node.names:
+            if imported.name == "*":
+                for qualname in self._known_qualnames:
+                    if qualname.rpartition(".")[0] == source:
+                        self._scope[qualname.rpartition(".")[2]] = _ErrorReference(
+                            error_qualnames=frozenset({qualname}),
+                        )
+                continue
+            name = imported.asname or imported.name
+            candidate = f"{source}.{imported.name}"
+            self._scope[name] = _ErrorReference(
+                error_qualnames=frozenset({candidate}) if candidate in self._known_qualnames else frozenset(),
+                modules=frozenset({candidate}),
+            )
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        self.visit(node.value)
+        reference = self._resolve(node.value)
+        for target in node.targets:
+            self._bind_target(target, reference)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+        if node.value is not None:
+            self.visit(node.value)
+            self._bind_target(node.target, self._resolve(node.value))
+
+    def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
+        self.visit(node.value)
+        self._bind_target(node.target, self._resolve(node.value))
+
+    def visit_If(self, node: ast.If) -> None:
+        self.visit(node.test)
+        before = self._scope.copy()
+        for statement in node.body:
+            self.visit(statement)
+        body = self._scope.copy()
+        self._scopes[-1] = before.copy()
+        for statement in node.orelse:
+            self.visit(statement)
+        otherwise = self._scope.copy()
+        merged: dict[str, _ErrorReference] = {}
+        for name in set(before) | set(body) | set(otherwise):
+            baseline = before.get(name, _EMPTY_ERROR_REFERENCE)
+            left = body.get(name, baseline)
+            right = otherwise.get(name, baseline)
+            merged[name] = left.merged(right)
+        self._scopes[-1] = merged
+
+    def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        self._scope[node.name] = _EMPTY_ERROR_REFERENCE
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        self._symbols.append(node.name)
+        parameters = (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+        scope = {parameter.arg: _EMPTY_ERROR_REFERENCE for parameter in parameters}
+        if node.args.vararg is not None:
+            scope[node.args.vararg.arg] = _EMPTY_ERROR_REFERENCE
+        if node.args.kwarg is not None:
+            scope[node.args.kwarg.arg] = _EMPTY_ERROR_REFERENCE
+        self._scopes.append(scope)
+        for statement in node.body:
+            self.visit(statement)
+        self._scopes.pop()
+        self._symbols.pop()
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_function(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_function(node)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        qualname = f"{self.module}.{node.name}"
+        reference = _ErrorReference(
+            error_qualnames=frozenset({qualname}) if qualname in self._known_qualnames else frozenset(),
+        )
+        self._scope[node.name] = reference
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        for base in node.bases:
+            self.visit(base)
+        self._symbols.append(node.name)
+        self._classes.append(reference)
+        self._scopes.append({})
+        for statement in node.body:
+            self.visit(statement)
+        self._scopes.pop()
+        self._classes.pop()
+        self._symbols.pop()
+
+    def visit_Call(self, node: ast.Call) -> None:
+        super_owner = self._super_owner(node)
+        if super_owner is not None:
+            self._record(node, super_owner)
+        else:
+            resolved = self._resolve(node.func)
+            if resolved.error_qualnames:
+                self._record(node, resolved.error_qualnames)
+        self.generic_visit(node)
+
+
+def authored_error_message_join(
+    *,
+    root: Path = REPO_ROOT,
+    codes: Iterable[RegisteredErrorCode] | None = None,
+) -> AuthoredErrorMessageJoin:
+    """Mechanically join every production message constructor to live registry code(s).
+
+    The scan covers every non-test Python module below ``src/cadrumo`` and
+    fails closed on unreadable, undecodable, or unparsable input.  It neither
+    imports producers nor infers a code from error prose: every owner comes
+    from the existing registry declaration and direct AST name resolution.
+    """
+    registered = tuple(codes) if codes is not None else registered_error_codes()
+    by_qualname: dict[str, RegisteredErrorCode] = {}
+    for record in registered:
+        if record.error_qualname in by_qualname:
+            raise AuthoredErrorMessageCensusError(
+                f"authored-message census has duplicate registered qualname: {record.error_qualname}",
+            )
+        by_qualname[record.error_qualname] = record
+
+    raw_sites: list[AuthoredErrorMessageSite] = []
+    for path, source, module, is_package in _authored_message_sources(root):
+        tree = ast.parse(source, filename=path)
+        visitor = _AuthoredMessageVisitor(
+            path=path,
+            module=module,
+            is_package=is_package,
+            registered_qualnames=frozenset(by_qualname),
+        )
+        visitor.visit(tree)
+        raw_sites.extend(visitor.records)
+
+    grouped: dict[tuple[str, str, str, str, str], list[AuthoredErrorMessageSite]] = {}
+    for site in raw_sites:
+        group = (
+            site.path,
+            site.enclosing_symbol,
+            site.callee,
+            site.message_expression,
+            site.normalized_call_sha256,
+        )
+        grouped.setdefault(group, []).append(site)
+    numbered: list[AuthoredErrorMessageSite] = []
+    for group in grouped.values():
+        for ordinal, site in enumerate(sorted(group, key=lambda item: (item.line, item.column)), start=1):
+            numbered.append(
+                AuthoredErrorMessageSite(
+                    path=site.path,
+                    enclosing_symbol=site.enclosing_symbol,
+                    callee=site.callee,
+                    message_expression=site.message_expression,
+                    normalized_call_sha256=site.normalized_call_sha256,
+                    ordinal=ordinal,
+                    line=site.line,
+                    column=site.column,
+                    owner_qualnames=site.owner_qualnames,
+                ),
+            )
+    return AuthoredErrorMessageJoin(
+        registered_codes=tuple(sorted(registered, key=lambda record: (record.error_qualname, record.code))),
+        sites=tuple(sorted(numbered, key=lambda site: (site.fingerprint, site.line, site.column))),
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
