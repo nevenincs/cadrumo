@@ -13,8 +13,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ._fixture import workspace
 from ._journal import Click, Fill, Press, Session, Type, describe, read_session, write_session
 from ._replay import replay, screenshot

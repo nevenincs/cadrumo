@@ -37,8 +37,8 @@ def _theme_name(appearance: str) -> str:
     here: the harness must render under exactly the theme an operator
     with that preference gets.
     """
-    from cadrumo.core.config import TuiAppearance
-    from cadrumo.entrypoints.tui.components.theme import resolve_theme_name
+    from ....core.config import TuiAppearance
+    from ..components.theme import resolve_theme_name
 
     return resolve_theme_name(TuiAppearance(appearance))
 
@@ -68,8 +68,8 @@ def _activate_locale(locale: str | None) -> None:
 
     import os
 
-    from cadrumo.core.config import reset_settings_cache
-    from cadrumo.core.i18n import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
+    from ....core.config import reset_settings_cache
+    from ....core.i18n import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
 
     os.environ[OUTPUT_LANGUAGE_ENV_VAR] = locale
     reset_settings_cache()

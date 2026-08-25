@@ -16,7 +16,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core.external_constants import UTF_8_ENCODING
+from ....core.external_constants import UTF_8_ENCODING
 
 _STRICT = ConfigDict(frozen=True, extra="forbid")
 
