@@ -4,7 +4,7 @@ tags:
   - '#source-casilla-integration'
 date: '2026-08-22'
 modified: '2026-08-25'
-body_hash: 'sha256:e4a849943dee9cdb70fecfd1afe39e4206d42a398bf9566d188d08780a22f220'
+body_hash: 'sha256:1b6bdea20e63c400c83dbe6e7a68597428171ec508fb8ef7f22ce19318cd70a6'
 tier: L3
 related:
   - '[[2026-08-22-source-casilla-integration-adr]]'
@@ -365,7 +365,7 @@ Repeat the census after every delivered capability, process newly exposed candid
 
 Repeat discovery and bounded delivery until the census reaches a stable, fully actioned state.
 
-- [ ] `W06.P20.S112` - regenerate the connectivity census after all planned source slices; `src/cadrumo/_data/source_connectivity/census.toml`.
+- [x] `W06.P20.S112` - regenerate and compare the canonical connectivity census after completed source slices, record capability-selector drift without adjudicating it, and hand the result to S113/S115; `.vault/exec/2026-08-22-source-casilla-integration/2026-08-22-source-casilla-integration-W06-P20-S112.md; .vault/index/source-casilla-integration.index.md`.
 - [ ] `W06.P20.S113` - create bounded research and decision records for every newly discovered connect candidate; `.vault/research`.
 - [ ] `W06.P20.S114` - deliver every newly adjudicated connection through the canonical vertical-slice contract; `src/cadrumo/application/aggregation`.
 - [ ] `W06.P20.S115` - classify every rejected or blocked candidate with evidence, owner, review condition, and bounded follow-up; `src/cadrumo/_data/source_connectivity/census.toml`.
