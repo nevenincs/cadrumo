@@ -29,6 +29,7 @@ class ProfileCustodyTransactionRepository:
     """Persist strict current-format transaction journals and owner receipts."""
 
     def __init__(self, *, root: Path | None = None, adapters: ProfileCustodyLocalRecordStore | None = None) -> None:
+        """Initialize the repository with an optional root and local record store."""
         self._storage_root = effective_storage_root(root)
         self._adapters = adapters if adapters is not None else default_profile_custody_local_record_store()
         self._journal_root = (
@@ -39,9 +40,11 @@ class ProfileCustodyTransactionRepository:
         )
 
     def journal_path(self, transaction_id: UUID) -> Path:
+        """Return the durable path for a transaction journal."""
         return self._journal_root / f"{transaction_id}.json"
 
     def receipt_path(self, transaction_id: UUID) -> Path:
+        """Return the durable path for an application-local receipt."""
         return self._receipt_root / f"{transaction_id}.application-local-custody.json"
 
     def owner_receipt_path(
@@ -49,15 +52,18 @@ class ProfileCustodyTransactionRepository:
         transaction_id: UUID,
         owner: Literal["process-secret-revocation", "local-session-acceleration"],
     ) -> Path:
+        """Return the durable path for an owner-specific receipt."""
         return self._receipt_root / f"{transaction_id}.{owner}.json"
 
     def create_journal(self, journal: ProfileCustodyTransactionJournal) -> None:
+        """Create a transaction journal with exclusive publication."""
         self._ensure_root(self._journal_root, "custody transaction journal")
         path = self.journal_path(journal.transaction_id)
         with self._adapters.lock(self._journal_root / ".repository.lock"):
             self._write_exclusive(path, journal.canonical_json_bytes(), "custody transaction journal")
 
     def load_journal(self, transaction_id: UUID) -> ProfileCustodyTransactionJournal:
+        """Load and validate a transaction journal."""
         path = self.journal_path(transaction_id)
         payload = self._read_bounded(path, CUSTODY_TRANSACTION_MAX_BYTES, "custody transaction journal")
         try:
@@ -71,6 +77,7 @@ class ProfileCustodyTransactionRepository:
         return journal
 
     def save_journal(self, journal: ProfileCustodyTransactionJournal) -> None:
+        """Replace an existing transaction journal with canonical bytes."""
         self._ensure_root(self._journal_root, "custody transaction journal")
         path = self.journal_path(journal.transaction_id)
         with self._adapters.lock(self._journal_root / f".{path.name}.lock"):
@@ -81,6 +88,7 @@ class ProfileCustodyTransactionRepository:
             self._write_replace(path, journal.canonical_json_bytes(), "custody transaction journal")
 
     def write_receipt(self, receipt: ProfileCustodyTransactionReceipt) -> ProfileCustodyTransactionReceipt:
+        """Write or confirm an application-local receipt."""
         self._ensure_root(self._receipt_root, "custody receipt")
         path = self.receipt_path(receipt.transaction_id)
         payload = receipt.canonical_json_bytes()
@@ -96,6 +104,7 @@ class ProfileCustodyTransactionRepository:
         return receipt
 
     def load_receipt(self, transaction_id: UUID) -> ProfileCustodyTransactionReceipt | None:
+        """Load and validate an application-local receipt, if present."""
         path = self.receipt_path(transaction_id)
         try:
             payload = self._read_bounded(path, CUSTODY_RECEIPT_MAX_BYTES, "custody receipt")
@@ -110,6 +119,7 @@ class ProfileCustodyTransactionRepository:
         return receipt
 
     def write_owner_receipt(self, receipt: ProfileCustodyOwnerReceipt) -> ProfileCustodyOwnerReceipt:
+        """Write or confirm an owner-specific receipt."""
         self._ensure_root(self._receipt_root, "custody owner receipt")
         path = self.owner_receipt_path(receipt.transaction_id, receipt.owner)
         payload = receipt.canonical_json_bytes()
@@ -131,6 +141,7 @@ class ProfileCustodyTransactionRepository:
         transaction_id: UUID,
         owner: Literal["process-secret-revocation", "local-session-acceleration"],
     ) -> ProfileCustodyOwnerReceipt | None:
+        """Load and validate an owner-specific receipt, if present."""
         path = self.owner_receipt_path(transaction_id, owner)
         try:
             receipt = ProfileCustodyOwnerReceipt.model_validate_json(
