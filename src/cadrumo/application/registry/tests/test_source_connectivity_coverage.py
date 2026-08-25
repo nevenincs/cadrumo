@@ -76,7 +76,14 @@ def test_source_connectivity_coverage_accepts_current_terminal_census_evidence(
     terminal_inventory = inventory.model_copy(update={"disposition": SourceConnectivityDisposition.NOT_APPLICABLE})
     report = compose_source_connectivity_coverage(
         authority=registry_authority,
-        census=census.model_copy(update={"entries": (terminal_inventory, *census.entries[1:])}),
+        census=census.model_copy(
+            update={
+                "entries": tuple(
+                    terminal_inventory if entry.candidate_id == inventory.candidate_id else entry
+                    for entry in census.entries
+                ),
+            },
+        ),
         as_of=_AS_OF,
     )
 
@@ -96,7 +103,14 @@ def test_modelo_100_destination_cannot_cross_satisfy_other_revisions(
     terminal_inventory = inventory.model_copy(update={"disposition": SourceConnectivityDisposition.NOT_APPLICABLE})
     report = compose_source_connectivity_coverage(
         authority=registry_authority,
-        census=census.model_copy(update={"entries": (terminal_inventory, *census.entries[1:])}),
+        census=census.model_copy(
+            update={
+                "entries": tuple(
+                    terminal_inventory if entry.candidate_id == inventory.candidate_id else entry
+                    for entry in census.entries
+                ),
+            },
+        ),
         as_of=_AS_OF,
     )
 
@@ -109,10 +123,10 @@ def test_modelo_100_destination_cannot_cross_satisfy_other_revisions(
     assert all(outcomes[revision] == "unmeasured" for revision in ("2020", "2021", "2022", "2023", "2024"))
 
 
-def test_modelo_193_destination_cannot_cross_satisfy_2024_revision(
+def test_modelo_193_destination_certifies_each_explicitly_scoped_revision(
     registry_authority,
 ) -> None:
-    """A 2025 gasto-row decision cannot certify the distinct 2024 revision."""
+    """One row can satisfy only the two Modelo 193 revisions it explicitly scopes."""
     census = load_source_connectivity_census()
     gasto = next(entry for entry in census.entries if entry.candidate_id == "rows.gasto193-contributor")
     terminal_gasto = gasto.model_copy(update={"disposition": SourceConnectivityDisposition.NOT_APPLICABLE})
@@ -128,7 +142,7 @@ def test_modelo_193_destination_cannot_cross_satisfy_2024_revision(
         for limb in report.limbs
         if str(limb.modelo) == "193"
     }
-    assert outcomes == {"2024": "unmeasured", "2025-y-siguientes": "satisfied"}
+    assert outcomes == {"2024": "satisfied", "2025-y-siguientes": "satisfied"}
 
 
 def test_source_connectivity_coverage_refuses_expired_terminal_evidence_without_follow_up(
@@ -147,7 +161,14 @@ def test_source_connectivity_coverage_refuses_expired_terminal_evidence_without_
     )
     report = compose_source_connectivity_coverage(
         authority=registry_authority,
-        census=census.model_copy(update={"entries": (expired_terminal, *census.entries[1:])}),
+        census=census.model_copy(
+            update={
+                "entries": tuple(
+                    expired_terminal if entry.candidate_id == inventory.candidate_id else entry
+                    for entry in census.entries
+                ),
+            },
+        ),
         as_of=_AS_OF,
     )
 

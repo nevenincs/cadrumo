@@ -3,8 +3,6 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-25'
-body_hash: 'sha256:9272662216b7b0a8a2f13637068b9c0681dd62530b96ec57dae55e8124b10fec'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -12,6 +10,8 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-plan]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
+modified: '2026-08-25'
+body_hash: 'sha256:c18efcc7d40fefa05559337673851170a634f6b94a10d3a9ba2f92807fcb441f'
 ---
 
 # `registry-completeness-closure` plan
@@ -85,7 +85,7 @@ Compose one typed cross-authority report from validated registry coverage, sourc
 - [x] `W01.P02.S69` - Prove complete, refused, stale-evidence, below-filing-grade, and cross-limb-disagreement outcomes through real composed authority limbs and guard-weakening bites.; `src/cadrumo/application/registry/tests/; dev/registry/conformance/tests/`.
 - [x] `W01.P02.S70` - Correct S11 evidence and independent-review claims after successor proof passes, then re-attest the records.; `.vault/exec/2026-08-24-registry-completeness-closure/; .vault/audit/; .vault/index/`.
 - [x] `W01.P02.S71` - Replace the stale fixed completion-step total with a current-plan-derived closure criterion that remains valid as Steps are added; `.vault/plan/2026-08-24-registry-completeness-closure-plan.md`.
-- [ ] `W01.P02.S72` - Make filing-export participation grade-scoped per the accepted ADR, revise closure eligibility so below-filing revisions are not filing refusals, prove a genuinely complete real composed below-grade row when canonical temporal and source evidence support it, and add durable mutation-bite evidence for complete, refused, stale-evidence, below-filing-grade, and cross-limb-disagreement guards; `src/cadrumo/application/registry/; dev/registry/conformance/`.
+- [x] `W01.P02.S72` - Make filing-export participation grade-scoped per the accepted ADR, revise closure eligibility so below-filing revisions are not filing refusals, prove a genuinely complete real composed below-grade row when canonical temporal and source evidence support it, and add durable mutation-bite evidence for complete, refused, stale-evidence, below-filing-grade, and cross-limb-disagreement guards; `src/cadrumo/application/registry/; dev/registry/conformance/`.
 
 ## Wave `W02` - filing-gap adjudication and owner routing
 
