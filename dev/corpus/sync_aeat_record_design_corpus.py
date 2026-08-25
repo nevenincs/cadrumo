@@ -29,7 +29,7 @@ from ..packaging._hashing import sha256_path  # noqa: E402
 
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 _HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"
-_RETRIEVED_AT = "2026-08-25"
+_RETRIEVED_AT = "2026-08-26"
 _STATIC = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro"
 _INDEX = "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro"
 _PAGES = {
@@ -279,6 +279,12 @@ _REQUIRED = (
         "345", "345 - Diseño de registro actualizado en 2024", "DR_300_399/DR_Modelo_345_2024.pdf", "h300"
     ),
     _RequiredArtifact("353", "353 - Ejercicios 2021 a 2025", "DR_300_399/archivos_17/DR353e21v21.xls", "h300"),
+    _RequiredArtifact(
+        "341",
+        "341 - Orden EHA/3212/2004 (Ejercicios hasta 2015)",
+        "ant_300_399/archivos/dr341_2005.pdf",
+        "h300",
+    ),
     _RequiredArtifact("714", "714 - Ejercicio 2022", "DR_Resto_Mod/archivos/DR714_2022.xls", "hresto"),
     _RequiredArtifact("714", "714 - Ejercicio 2023", "DR_Resto_Mod/archivos/DR714_2023.xls", "hresto"),
     _RequiredArtifact("714", "714 - Ejercicio 2024", "DR_Resto_Mod/DR714_2024.xls", "hresto"),
