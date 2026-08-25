@@ -4,7 +4,7 @@ tags:
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
 modified: '2026-08-25'
-body_hash: 'sha256:048a9623d43d1cfb8acdc0808e4e58c189d5f032da50e1b11a4c3233a74e78b6'
+body_hash: 'sha256:db24e95f68f395bf1ae670df05567087940ce0d9bc6e262d6378f865d6fa1544'
 tier: L3
 related:
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
@@ -153,7 +153,7 @@ Close against fleet invariants, source evidence, repository rules, and architect
 - [x] `W04.P13.S33` - Run the bundled-registry invariant proving zero ownership, identity, uniqueness, qualifier, period, and completeness violations; `src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W04.P13.S34` - Run exact historical engine and CLI scenarios for every repaired modelo against the adjudicated registry census; `src/cadrumo/domain/deadlines/tests/; src/cadrumo/entrypoints/cli/tests/; .vault/audit/`.
 - [ ] `W04.P13.S35` - Run Ruff, focused and full pytest, Vaultspec, registry validation, generated-reference drift, locale, and real CLI smoke gates; `src/cadrumo/; dev/; .vault/`.
-- [ ] `W04.P13.S36` - Perform formal code and architecture review for canonical reuse, source fidelity, warm-load enforcement, consumer parity, and absence of superseded paths, running Vaultspec RAG discovery followed by exact-symbol sweeps to prove no revision selector, filing-window resolver, period parser, cadence authority, supported-year horizon, deadline catalogue, qualifier vocabulary, or downstream deduplication has been redeclared; `src/cadrumo/; .vault/exec/; .vault/audit/`.
+- [x] `W04.P13.S36` - Perform formal code and architecture review for canonical reuse, source fidelity, warm-load enforcement, consumer parity, and absence of superseded paths, running Vaultspec RAG discovery followed by exact-symbol sweeps to prove no revision selector, filing-window resolver, period parser, cadence authority, supported-year horizon, deadline catalogue, qualifier vocabulary, or downstream deduplication has been redeclared; `src/cadrumo/; .vault/exec/; .vault/audit/`.
 
 ## Parallelization
 
