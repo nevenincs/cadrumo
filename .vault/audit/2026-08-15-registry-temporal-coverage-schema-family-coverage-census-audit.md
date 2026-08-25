@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:ae629200782b0aec0bb869d4518091abf14e7201a40b7e5b8d50417c9db47648'
+body_hash: 'sha256:8f2ae0c2c72281fdf7ecbb52b3a8dd82be1b5de81824f7dbc383335020f6b47d'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]"
@@ -15,9 +15,24 @@ related:
 
 ## Scope
 
+Historical census of schema-family coverage across the registry corpus, the
+grade-refusal handover assumption, and the export-layout discriminator. The
+remaining detail is deliberately retained in the chronological Context section
+below; this document is not a current-head release review.
+
 ## Findings
 
+### historical-census-context | low | The detailed 2026-08-15 findings were preserved under Context
+
+The census, corrected grade interpretation, discriminator analysis, and
+measured counts below are historical discovery evidence. They must not be read
+as a current completion claim or used in place of the later predicate review.
+
 ## Recommendations
+
+Use the current predecessor-closure audit and live derived authority for release
+decisions. Treat the historical census as grounding for its enrolled rows, not
+as proof that any unchecked row has since been implemented.
 
 ## Context
 

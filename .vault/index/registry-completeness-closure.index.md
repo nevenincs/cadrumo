@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#registry-completeness-closure'
-date: '2026-08-24'
-modified: '2026-08-24'
+date: '2026-08-25'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:74b62a5d7ec3949b56e3cacd2ac8bbc300c17ea2ef25327c40f3c0cc64df6aa3'
+body_hash: 'sha256:851854b0f0275f6f39a392c8e15c2d1c4367c7ebc72982a9e671c97f8812b842'
 related:
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S01]]'
   - '[[2026-08-24-registry-completeness-closure-W01-P01-S02]]'
@@ -86,6 +86,7 @@ related:
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S31]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S32]]'
   - '[[2026-08-24-registry-completeness-closure-W03-P05-S33]]'
+  - '[[2026-08-24-registry-completeness-closure-W03-P06-S34]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'
   - '[[2026-08-24-registry-completeness-closure-audit]]'
   - '[[2026-08-24-registry-completeness-closure-modelo-036-2025-filing-authority-reference]]'
@@ -186,6 +187,12 @@ related:
   - '[[2026-08-24-registry-completeness-closure-s80-structured-message-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s81-post-review-audit]]'
   - '[[2026-08-24-registry-completeness-closure-s82-source-evidence-post-review-audit]]'
+  - '[[2026-08-25-registry-completeness-closure-audit]]'
+  - '[[2026-08-25-registry-completeness-closure-s32-independent-post-review-audit]]'
+  - '[[2026-08-25-registry-completeness-closure-s34-temporal-predecessor-closure-audit-audit]]'
+  - '[[2026-08-25-registry-completeness-closure-s72-independent-post-review-audit]]'
+  - '[[2026-08-25-registry-completeness-closure-s73-independent-post-review-audit]]'
+  - '[[2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit]]'
 ---
 
 # `registry-completeness-closure` feature index
@@ -282,6 +289,12 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-s80-structured-message-post-review-audit` - `registry-completeness-closure` audit: `S80 structured-message authority post-review`
 - `2026-08-24-registry-completeness-closure-s81-post-review-audit` - `registry-completeness-closure` audit: `Modelo 036 filing-route docstrings post-review`
 - `2026-08-24-registry-completeness-closure-s82-source-evidence-post-review-audit` - `registry-completeness-closure` audit: `S82 source evidence independent post-review`
+- `2026-08-25-registry-completeness-closure-audit` - `registry-completeness-closure` audit: `S11 final outcome corpus independent review`
+- `2026-08-25-registry-completeness-closure-s32-independent-post-review-audit` - `registry-completeness-closure` audit: `W03.P05.S32 independent review`
+- `2026-08-25-registry-completeness-closure-s34-temporal-predecessor-closure-audit-audit` - `registry-completeness-closure` audit: `S34 temporal predecessor closure reconciliation`
+- `2026-08-25-registry-completeness-closure-s72-independent-post-review-audit` - `registry-completeness-closure` audit: `S72 independent post-review`
+- `2026-08-25-registry-completeness-closure-s73-independent-post-review-audit` - `registry-completeness-closure` audit: `S73 independent post-review`
+- `2026-08-25-registry-completeness-closure-s73-source-connectivity-revalidation-audit` - `registry-completeness-closure` audit: `S73 source-connectivity revalidation audit`
 
 ### exec
 
@@ -361,8 +374,9 @@ Auto-generated index of all documents tagged with `#registry-completeness-closur
 - `2026-08-24-registry-completeness-closure-W02-P04-S83` - Adjudicate the Modelo 036 product boundary through an accepted ADR, choose its canonical non-filing disposition, then align the capability worklist and S28 record with mutation proof without authoring an M036 exporter.
 - `2026-08-24-registry-completeness-closure-W03-P05-S30` - Verify every shipped modelo and revision localization key across supported output locales
 - `2026-08-24-registry-completeness-closure-W03-P05-S31` - Verify casilla identity, semantic linkage, and continuity chains across every supported revision boundary
-- `2026-08-24-registry-completeness-closure-W03-P05-S32` - Verify binding selectors, resolver enrollment, calculation paths, and provenance for every filing-grade revision
+- `2026-08-24-registry-completeness-closure-W03-P05-S32` - 2026-08-24-registry-completeness-closure-W03-P05-S32
 - `2026-08-24-registry-completeness-closure-W03-P05-S33` - Verify official export layout selection, mapped semantic owners, and emitted-byte offsets for every filing-grade revision
+- `2026-08-24-registry-completeness-closure-W03-P06-S34` - Close registry-temporal-coverage predicate-relevant rows, execution records, summaries, stale assumptions, and final review
 
 ### plan
 

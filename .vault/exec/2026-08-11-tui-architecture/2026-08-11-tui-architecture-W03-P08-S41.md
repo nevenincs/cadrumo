@@ -5,57 +5,40 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:e87590dfd3d9ac5a70ddbc69e257bc1d4dc607a286a7b24586638db4cd4b3e90'
+body_hash: 'sha256:f3487bf6eae21d8ddd0fbd31b1b4c11136d398b22c40a94b44ef2beb8c970fad'
 step_id: 'S41'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S41 and 2026-08-11-tui-architecture-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Move Google export planning and application orchestration out of the CLI frontend and register its external-effect operation and ## Scope
-
-- `src/cadrumo/application/export/_google_operation.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Move Google export planning and application orchestration out of the CLI frontend and register its external-effect operation
 
 ## Scope
 
 - `src/cadrumo/application/export/_google_operation.py`
+- `src/cadrumo/application/export/tests/test_google_operation.py`
+- `src/cadrumo/entrypoints/_operation_composition.py`
+- `src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py`
+- `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Centralize active-profile admission, Google egress capability evaluation, registry snapshot selection, workbook plan construction, remote handoff, and safe result normalization in `GoogleSheetsExportService`.
+- Keep the registered executor responsible for phases, irreversible apply truth, effect settlement, and encrypted operand custody while sharing the service path with synchronous CLI consumers.
+- Compose the sole concrete Google transport at the entrypoint boundary; require every apply to call `export_modelo_to_sheets` with `SyncRunRecordRepository` and the real `apply_export_plan` adapter.
+- Delete the duplicated manager export planner and the CLI command's local plan/preview/apply orchestration; both now adapt input once and consume the public application contract.
+- Replace fabricated snapshots, plans, casts, and transport fakes with real registry-plan, real supervision, production-composition, and exact provenance-handoff evidence.
 
 ## Outcome
 
+S41 now has one application owner and one outer Google/provenance composition. The operation owner has no adapter, persistence, or entrypoint imports; the production registry binds its injected transport. CLI and manager consumers no longer reimplement export planning or bypass sync-run provenance.
+
+## Verification
+
+- Scoped Ruff and `ty` checks pass for all changed application, composition, and CLI surfaces.
+- Real contract, production composition, and AST provenance tests pass; the real default-owner registry-plan proof is running separately because model `130` plan construction is CPU-bound.
+- CLI command-schema and payload tests pass.
+- `git diff --check` passes.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+S41 remains open pending the focused real-plan gate, Vault check, and independent S40 re-review. No compatibility shim, private application import, or facade re-export bridge was introduced.

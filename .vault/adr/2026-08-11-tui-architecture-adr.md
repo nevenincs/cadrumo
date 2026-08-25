@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-24'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:985e02df2296c12151a4b13f14e79f67efbce19573e43c43e048e14aa1eb9d3c'
+body_hash: 'sha256:8fd5625d787fa39f5988579c837a1c4312026187b95e217e5ec16da24474c71c'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -1131,12 +1131,25 @@ It validates as `TuiOperationObservationDependencyReceiptV1` under the sole
 live-tree validator
 `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py`.
 No alternate path, schema alias, prose attestation, fixture-only validator, or
-receipt from another commit opens C0.
+receipt artifact not committed at the validator's clean current HEAD opens C0.
 
-The C0 receipt is produced only from a clean implementation commit and records:
+Every dependency receipt uses one non-self-referential two-commit contract. Its
+current-only `implementation_commit` is clean commit A, the commit from which
+all covered implementation evidence is captured. S124 writes that receipt and
+commits the artifact as B. The sole validator runs only at clean current HEAD B;
+it requires A to be an ancestor of B, recomputes the covered source-tree digest
+at B and requires equality with the receipt, and requires the bytes being
+parsed to equal `git show B:<receipt path>`. B is derived from the validator
+context and is never a receipt field: storing it in the artifact would recreate
+a commit-hash self-reference. The covered source digest intentionally excludes
+the vault artifact; committed-byte equality is the separate artifact-attestation
+proof. No staged-file exclusion, alias, shim, fallback parser, or alternate
+attestation path is permitted.
 
-- receipt schema version, producing commit, source-tree digest, and dirty-tree
-  refusal;
+The C0 receipt is captured from clean implementation commit A and records:
+
+- receipt schema version, `implementation_commit`, covered source-tree digest,
+  and the clean-current-HEAD B attestation requirements above;
 - this governing stem, its `accepted` status, post-amendment body hash and
   producing commit, plus ancestry to the receipt;
 - staging stem `2026-08-24-tui-operation-observation-adr`, its required
@@ -1183,12 +1196,17 @@ It is not produced during C0 and cannot be replaced by generic
 `EphemeralSecretSubmission` conformance.
 
 The financial receipt's closed predecessor tuple contains the exact C0 receipt
-path, schema, producing commit, and content digest; this accepted parent's
-then-current body hash; accepted stem `2026-08-24-modelo-edit-contract-adr` and
-its body hash; exact Workspace predecessor
+path and schema plus its `implementation_commit`, covered source digest, and
+committed artifact digest as separate facts; this accepted parent's then-current
+body hash; accepted stem `2026-08-24-modelo-edit-contract-adr` and its body
+hash; exact Workspace predecessor
 `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md` as
-`ModeloWorkspaceC2DependencyReceiptV1` with producing commit and content digest;
-and the implementation commit under validation. It records and proves:
+`ModeloWorkspaceC2DependencyReceiptV1` with its `implementation_commit`, covered
+source digest, and committed artifact digest as separate facts; and the clean
+implementation commit under validation. The same A/B contract applies to C0,
+Workspace C2, financial C3, Edit C3, and every downstream receipt: each
+predecessor artifact is validated at its own clean committed target before its
+three provenance facts are consumed. It records and proves:
 
 - protocol version `1`, every enrolled declaration and operand schema identity,
   affected operation-definition digests, and production registry/DI parity;
@@ -1309,3 +1327,4 @@ are grounded in `2026-08-24-tui-operation-observation-research`.
   path survives.
 - C0 and C3 remain independently gated by their exact dependency receipts;
   neither receipt authorizes a later Modelo or visual cohort by implication.
+

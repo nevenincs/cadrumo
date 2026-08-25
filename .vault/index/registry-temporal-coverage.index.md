@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#registry-temporal-coverage'
-date: '2026-08-24'
-modified: '2026-08-24'
+date: '2026-08-25'
+modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:d3f768610dccf96b6e93c32103b227e6f650772ffce27287894b12af36aba269'
+body_hash: 'sha256:0d0896cefeed0d34d5b461e36692d867bca06e210659a01ab5261d7d10e769b2'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -25,6 +25,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P04-S21]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P09-S26]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P09-S27]]'
+  - '[[2026-08-14-registry-temporal-coverage-W02-P05-S24]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-audit]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
@@ -40,6 +41,7 @@ related:
   - '[[2026-08-15-registry-temporal-coverage-schema-family-coverage-census-audit]]'
   - '[[2026-08-15-registry-temporal-coverage-structural-decisions-audit]]'
   - '[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]'
+  - '[[2026-08-24-registry-temporal-coverage-supported-year-redeclaration-audit]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -63,6 +65,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-15-registry-temporal-coverage-schema-family-coverage-census-audit` - `registry-temporal-coverage` audit: `schema family coverage census and the three grounded discriminators`
 - `2026-08-15-registry-temporal-coverage-structural-decisions-audit` - `registry-temporal-coverage` audit: `structural decisions`
 - `2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit` - `registry-temporal-coverage` audit: `designless modelo adjudication`
+- `2026-08-24-registry-temporal-coverage-supported-year-redeclaration-audit` - `registry-temporal-coverage` audit: `supported filing year canonical-home and redeclaration audit`
 
 ### exec
 
@@ -83,6 +86,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-W01-P09-S26` - Compute the static import closure from the sanctioned load entry points, diff it against the two traced execution sets, and classify every module reachable but never executed and every one of the 61 non-executing registry modules by owning entry point, marking each live, conditionally reachable with its trigger named, or dead, with dead members deleted and the classification persisted in the census audit
 - `2026-08-14-registry-temporal-coverage-W01-P09-S27` - Build and run a repo-wide drift detector over src/cadrumo AND dev/, not the registry package alone, explicitly naming the design-prose grammar in dev/registry/_export_tree.py (regex-parsing Spanish AEAT design prose patterns such as "15 enteros y 2 decimales", Constante "00500", and trailing Nota N references to derive filing wire facts) as a known in-scope instance alongside dev/registry/mappings/ and dev/registry/render_profiles/, finding regulatory numeric literals, year sets and modelo-conditional branches outside the sanctioned channels of registry TOML, core external_constants and the allowlisted math constants, with every allowlist entry stating its reason and keyed by path and enclosing function, and persist the census as a vault audit where every finding is enrolled as a plan row or formally deferred with a reference, gated on zero unclassified findings and on a re-run reproducing the census exactly
 - `2026-08-14-registry-temporal-coverage-W01-P01-S03` - Enforce the disposition-conditional grade ladder in registry build validation, registered in the family dispatch table: a calculation claim with an empty applicable formula family refuses and an informative revision at filing grade with a reasoned not_applicable formula family passes
+- `2026-08-14-registry-temporal-coverage-W02-P05-S24` - Declare the supported-filing-years catalogue in the registry authoring tree, replacing every Python-resident year set including SUPPORTED_EJERCICIOS, and refuse the entire registry load when any declared year has any obliged modelo without its required grade, resolvable revision or evidence-backed cells for every period, enumerating every gap with modelo, period and missing prerequisite, advisory-first until the flip
 
 ### plan
 
