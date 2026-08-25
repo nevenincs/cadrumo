@@ -303,7 +303,7 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
         profile_id = _register_profile()
         live_session = current_active_bucket_session()
         assert live_session is not None
-        assert read_pointer(root) is not None
+        assert read_pointer(root).bucket_id is not None
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
 
             async def _run_strong_close() -> OperationPersistedSnapshot:
@@ -327,5 +327,5 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
         assert terminal.effect is OperationEffect.UPDATED
         assert terminal.terminal_receipt is not None
         assert terminal.terminal_receipt.result_ref == f"profile:{profile_id}"
-        assert read_pointer(root) is None
+        assert read_pointer(root).bucket_id is None
         assert live_session.sealed is True

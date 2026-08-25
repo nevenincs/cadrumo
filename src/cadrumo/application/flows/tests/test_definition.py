@@ -23,6 +23,7 @@ from ....core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
+from ....core.hashing import content_hash_hex
 from .. import (
     CopyRef,
     FlowChoice,
@@ -242,3 +243,19 @@ def test_fingerprint_changes_when_a_page_is_added() -> None:
     base = _definition((_section("s1", (_page("name"),)),))
     grown = _definition((_section("s1", (_page("name"), _page("extra"))),))
     assert base.fingerprint != grown.fingerprint
+
+
+def test_fingerprint_has_core_content_hash_parity_after_type_normalisation() -> None:
+    definition = FlowDefinition(
+        id="flows.test.flow",
+        title=_copy("flows.test.ñ.title"),
+        description=_copy("flows.test.ñ.description"),
+        sections=(_section("s1", (_page("nombre"),)),),
+        answers_model=_Answers,
+        checkpoint=dict(_FULL_CHECKPOINT),
+    )
+    payload = definition.model_dump(mode="python", exclude={"answers_model"})
+    payload["answers_model"] = f"{definition.answers_model.__module__}.{definition.answers_model.__qualname__}"
+    payload["sections"][0]["items"][0]["answer_type"] = "builtins.str"
+
+    assert definition.fingerprint == content_hash_hex(payload)

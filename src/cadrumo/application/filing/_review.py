@@ -28,7 +28,6 @@ See Also:
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
 from decimal import Decimal
@@ -36,8 +35,7 @@ from enum import StrEnum
 from typing import Final, Protocol
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...core.hashing import canonical_json_bytes
-from ...core.hashing import sha256_hex as _sha256_hex
+from ...core.hashing import content_hash_hex
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.time import now
@@ -243,7 +241,7 @@ def compute_review_checksum(approval_basis: ModeloApprovalBasis) -> str:
     Returns:
         Lowercase hex SHA-256 of the basis's canonical JSON dump.
     """
-    return _sha256_payload(approval_basis.model_dump(mode="json"))
+    return content_hash_hex(approval_basis.model_dump(mode="json"))
 
 
 #: Every approval-basis axis, paired with the stale reason a change to it
@@ -683,7 +681,7 @@ def _prior_filing_observations_fingerprint(payloads: Iterable[_StoredPriorObserv
     repository); an empty stream yields the stable empty-set digest.
     """
     projected = sorted(_normalize_prior_filing_observation(payload) for payload in payloads)
-    return _sha256_payload(projected)
+    return content_hash_hex(projected)
 
 
 def _normalize_prior_filing_observation(payload: _StoredPriorObservation) -> list[object]:
@@ -748,7 +746,7 @@ def _profile_activity_fingerprint(path_values: Mapping[str, str] | None) -> str:
     (no profile for the bucket) yields the stable empty-projection digest.
     """
     payload = sorted((path_values or {}).items())
-    return _sha256_payload(payload)
+    return content_hash_hex(payload)
 
 
 def empty_profile_activity_fingerprint() -> str:
@@ -783,18 +781,15 @@ def _draft_review_fingerprint(draft: ModeloDraft) -> str:
             )
         ],
     }
-    return _sha256_payload(payload)
+    return content_hash_hex(payload)
 
 
 def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
-    hasher = hashlib.sha256()
-    hasher.update(b"[")
-    for index, transaction in enumerate(sorted(catalogue.values(), key=lambda item: item.transaction_id)):
-        if index > 0:
-            hasher.update(b",")
-        hasher.update(canonical_json_bytes(_normalize_transaction(transaction)))
-    hasher.update(b"]")
-    return hasher.hexdigest()
+    payload = [
+        _normalize_transaction(transaction)
+        for transaction in sorted(catalogue.values(), key=lambda item: item.transaction_id)
+    ]
+    return content_hash_hex(payload)
 
 
 def _invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
@@ -806,14 +801,10 @@ def _invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
     whenever any invoice is added, removed, or edited. An empty catalogue yields a
     stable empty-list digest. Mirrors :func:`_transaction_catalogue_fingerprint`.
     """
-    hasher = hashlib.sha256()
-    hasher.update(b"[")
-    for index, invoice in enumerate(sorted(catalogue.values(), key=lambda item: item.invoice_id)):
-        if index > 0:
-            hasher.update(b",")
-        hasher.update(canonical_json_bytes(invoice.model_dump(mode="json")))
-    hasher.update(b"]")
-    return hasher.hexdigest()
+    payload = [
+        invoice.model_dump(mode="json") for invoice in sorted(catalogue.values(), key=lambda item: item.invoice_id)
+    ]
+    return content_hash_hex(payload)
 
 
 def _normalize_transaction(transaction: Transaction) -> dict[str, str | None]:
@@ -837,7 +828,7 @@ def _category_profiles_fingerprint(profiles: Mapping[SpendingCategory, CategoryP
         }
         for category in sorted(profiles, key=lambda item: item.value)
     ]
-    return _sha256_payload(payload)
+    return content_hash_hex(payload)
 
 
 def _schema_formula_fingerprint(
@@ -859,8 +850,4 @@ def _schema_formula_fingerprint(
             for casilla in collection.all()
         ],
     }
-    return _sha256_payload(payload)
-
-
-def _sha256_payload(payload: object) -> str:
-    return _sha256_hex(canonical_json_bytes(payload))
+    return content_hash_hex(payload)

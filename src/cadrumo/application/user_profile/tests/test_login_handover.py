@@ -42,7 +42,6 @@ from ....adapters.persistence.storage.custody import (
 from ....core import (
     BucketPointer,
     ProfileSessionRefusalReason,
-    capture_pointer,
     iter_directory,
     read_pointer,
     write_pointer,
@@ -85,7 +84,7 @@ class _ConflictResult(TypedDict, total=False):
 
 class _AccelerationResult(TypedDict):
     active_bucket: str | None
-    pointer: bytes | None
+    pointer: BucketPointer
     session_persisted: bool
 
 
@@ -163,14 +162,38 @@ def _close_child_login(
 
 
 def _prepared_handover_journal() -> _ProfileLoginHandoverJournal:
-    """Build a real v1 witness through the production journal constructor."""
+    """Build a real current witness through the production journal constructor."""
     return _ProfileLoginHandoverJournal.prepare(
         profile_a="journal-profile-a",
         profile_b="journal-profile-b",
-        pointer_before=b"active-profile-a",
-        pointer_after=b"active-profile-b",
+        pointer_before=BucketPointer.selected(bucket_id="journal-profile-a", transition_revision=10),
+        pointer_after=BucketPointer.selected(bucket_id="journal-profile-b", transition_revision=11),
         activation_at=datetime(2026, 8, 14, 9, 30, tzinfo=UTC),
     )
+
+
+def test_handover_journal_rejects_the_retired_v1_byte_witness(tmp_path: Path) -> None:
+    """The v2 journal path has no byte-witness compatibility reader."""
+    storage_root = tmp_path / "handover-root"
+    path = _handover_journal_path(storage_root)
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "phase": "prepared",
+                "profile_a": "journal-profile-a",
+                "profile_b": "journal-profile-b",
+                "pointer_before_b64": "YQ==",
+                "pointer_after_b64": "Yg==",
+                "activation_at": "2026-08-14T09:30:00Z",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ActiveProfilePointerTransactionError):
+        _load_handover_journal(storage_root=storage_root)
 
 
 def _replace_journal_in_child(path_text: str, payload: bytes, result_queue: Queue[str]) -> None:
@@ -370,7 +393,7 @@ def _acceleration_failure_handover_child(
         result_queue.put(
             {
                 "active_bucket": active.bucket_id if active is not None else None,
-                "pointer": capture_pointer(storage_root),
+                "pointer": read_pointer(storage_root),
                 "session_persisted": result.session_persisted,
             }
         )
@@ -770,8 +793,8 @@ def test_handover_journal_refuses_a_fresh_canonical_replacement_from_another_pro
     replacement = _ProfileLoginHandoverJournal.prepare(
         profile_a="substituted-profile-a",
         profile_b="substituted-profile-b",
-        pointer_before=b"substituted-a",
-        pointer_after=b"substituted-b",
+        pointer_before=BucketPointer.selected(bucket_id="substituted-profile-a", transition_revision=20),
+        pointer_after=BucketPointer.selected(bucket_id="substituted-profile-b", transition_revision=21),
         activation_at=datetime(2026, 8, 14, 9, 31, tzinfo=UTC),
     )
     context = get_context("spawn")
@@ -808,8 +831,8 @@ def test_handover_journal_cas_replace_restores_a_valid_sibling_substitute(tmp_pa
     substitute = _ProfileLoginHandoverJournal.prepare(
         profile_a="interleaved-profile-a",
         profile_b="interleaved-profile-b",
-        pointer_before=b"interleaved-a",
-        pointer_after=b"interleaved-b",
+        pointer_before=BucketPointer.selected(bucket_id="interleaved-profile-a", transition_revision=30),
+        pointer_after=BucketPointer.selected(bucket_id="interleaved-profile-b", transition_revision=31),
         activation_at=datetime(2026, 8, 14, 9, 32, tzinfo=UTC),
     )
     context = get_context("spawn")
@@ -846,8 +869,8 @@ def test_handover_journal_cas_clear_refuses_and_preserves_a_valid_sibling_substi
     substitute = _ProfileLoginHandoverJournal.prepare(
         profile_a="clear-interleaved-profile-a",
         profile_b="clear-interleaved-profile-b",
-        pointer_before=b"clear-interleaved-a",
-        pointer_after=b"clear-interleaved-b",
+        pointer_before=BucketPointer.selected(bucket_id="clear-interleaved-profile-a", transition_revision=40),
+        pointer_after=BucketPointer.selected(bucket_id="clear-interleaved-profile-b", transition_revision=41),
         activation_at=datetime(2026, 8, 14, 9, 33, tzinfo=UTC),
     )
     context = get_context("spawn")
@@ -879,7 +902,7 @@ def test_rejected_b_password_is_non_oracular_and_leaves_active_a_intact(tmp_path
             login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
             active_a = master_key.current_active_bucket_session()
             record_a = require_profile_record_session(profile_a)
-            pointer_a = capture_pointer(storage_root)
+            pointer_a = read_pointer(storage_root)
 
             with pytest.raises(ProfileAuthenticationRefusedError) as refused:
                 login_profile(name=profile_b, passphrase_callback=lambda: candidate)
@@ -893,7 +916,7 @@ def test_rejected_b_password_is_non_oracular_and_leaves_active_a_intact(tmp_path
                 now=_now(),
             ).throttled
 
-            assert capture_pointer(storage_root) == pointer_a
+            assert read_pointer(storage_root) == pointer_a
             assert master_key.current_active_bucket_session() is active_a
             assert require_profile_record_session(profile_a) is record_a
             assert not profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b)).exists()
@@ -910,7 +933,7 @@ def test_invalid_b_candidate_material_leaves_active_a_and_pointer_bytes_intact(t
             login_profile(name=profile_a, now=instant, passphrase_callback=lambda: _PASSWORD_A)
             active_a = master_key.current_active_bucket_session()
             record_a = require_profile_record_session(profile_a)
-            pointer_a = capture_pointer(storage_root)
+            pointer_a = read_pointer(storage_root)
             sentinel_path = storage_root / "buckets" / profile_b / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME
             sentinel_path.write_bytes(b"not-a-current-custody-sentinel")
 
@@ -921,7 +944,7 @@ def test_invalid_b_candidate_material_leaves_active_a_and_pointer_bytes_intact(t
                     passphrase_callback=lambda: _PASSWORD_B,
                 )
 
-            assert capture_pointer(storage_root) == pointer_a
+            assert read_pointer(storage_root) == pointer_a
             assert master_key.current_active_bucket_session() is active_a
             assert require_profile_record_session(profile_a) is record_a
             assert not profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b)).exists()
@@ -937,7 +960,7 @@ def test_corrupt_b_activation_store_rolls_back_every_a_authority(tmp_path: Path)
             login_profile(name=profile_a, passphrase_callback=lambda: _PASSWORD_A)
             active_a = master_key.current_active_bucket_session()
             record_a = require_profile_record_session(profile_a)
-            pointer_a = capture_pointer(storage_root)
+            pointer_a = read_pointer(storage_root)
             a_session_path = profile_session_path(storage_root=storage_root, profile_id=UUID(profile_a))
             a_session_before = a_session_path.read_bytes() if a_session_path.is_file() else None
             b_session_path = profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b))
@@ -948,7 +971,7 @@ def test_corrupt_b_activation_store_rolls_back_every_a_authority(tmp_path: Path)
             with pytest.raises((BucketEventHistoryPersistenceError, SqlDatabaseError)):
                 login_profile(name=profile_b, passphrase_callback=lambda: _PASSWORD_B)
 
-            assert capture_pointer(storage_root) == pointer_a
+            assert read_pointer(storage_root) == pointer_a
             assert master_key.current_active_bucket_session() is active_a
             assert require_profile_record_session(profile_a) is record_a
             assert (a_session_path.read_bytes() if a_session_path.is_file() else None) == a_session_before
@@ -975,7 +998,7 @@ def test_successful_b_handover_publishes_before_retiring_a(tmp_path: Path) -> No
             assert active_b is not None
             assert active_b.bucket_id == profile_b
             assert require_profile_record_session(profile_b).profile_id.hex == profile_b.replace("-", "")
-            assert capture_pointer(storage_root) is not None
+            assert read_pointer(storage_root).bucket_id is not None
             assert profile_session_path(storage_root=storage_root, profile_id=UUID(profile_a)).exists() is False
         finally:
             _close_live_login()
@@ -1086,7 +1109,7 @@ def test_pointer_conflict_rolls_back_candidate_and_keeps_live_a(tmp_path: Path) 
         child.start()
         try:
             assert candidate_ready.wait(timeout=150), "B candidate did not reach password preflight"
-            write_pointer(storage_root, BucketPointer(bucket_id=profile_b, schema_version=1))
+            write_pointer(storage_root, BucketPointer.selected(bucket_id=profile_b, transition_revision=99))
             allow_authentication.set()
             result = result_queue.get(timeout=180)
             child.join(timeout=30)
@@ -1099,7 +1122,6 @@ def test_pointer_conflict_rolls_back_candidate_and_keeps_live_a(tmp_path: Path) 
                 "same_record": True,
             }
             current_pointer = read_pointer(storage_root)
-            assert current_pointer is not None
             assert current_pointer.bucket_id == profile_b
             assert not profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b)).exists()
         finally:
@@ -1126,7 +1148,7 @@ def test_keyring_acceleration_failure_leaves_b_process_scoped_after_handover(tmp
             assert child.exitcode == 0
             assert result["active_bucket"] == profile_b
             assert result["session_persisted"] is False
-            assert capture_pointer(storage_root) == result["pointer"]
+            assert read_pointer(storage_root) == result["pointer"]
             assert not profile_session_path(storage_root=storage_root, profile_id=UUID(profile_b)).exists()
         finally:
             if child.is_alive():
@@ -1152,7 +1174,6 @@ def test_crash_after_b_handover_recovers_only_durable_b_pointer(
         try:
             assert crashing_child.exitcode == 0
             current_pointer = read_pointer(storage_root)
-            assert current_pointer is not None
             assert current_pointer.bucket_id == profile_b
 
             result_queue: Queue[_RecoveryResult] = context.Queue()
@@ -1208,7 +1229,7 @@ def _registered_handover_profiles(tmp_path_factory: pytest.TempPathFactory) -> t
     with isolated_profile_storage_root(tmp_path=template_root) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
         pointer = read_pointer(storage_root)
-        assert pointer is not None and pointer.bucket_id == profile_b, (
+        assert pointer.bucket_id == profile_b, (
             "the handover template must materialise the durable pointer; "
             "registration through the production door did not complete"
         )
@@ -1286,7 +1307,6 @@ def test_crash_at_each_durable_handover_phase_recovers_selected_b(
                 f"the injected crash never landed at {phase.value}; the handover ran to completion"
             )
             current_pointer = read_pointer(storage_root)
-            assert current_pointer is not None
             assert current_pointer.bucket_id == profile_b
             assert _handover_journal_path(storage_root).is_file()
 

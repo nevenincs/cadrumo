@@ -9,7 +9,6 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from ...core import BucketPointer
 from ...domain.user_profile import UserProfileRecord
 from ._aggregate import CommittedProfileView, ProfileRestoreAuthority
 from ._capsule_record import (
@@ -204,7 +203,7 @@ class ProfileCapsuleLifecycle:
     def select(self, value: str) -> CommittedProfileView:
         aggregate = self._profiles.resolve(value)
         with active_profile_pointer_transaction(self.root) as pointer:
-            pointer.write(BucketPointer(bucket_id=aggregate.profile_id, schema_version=1))
+            pointer.select(aggregate.profile_id)
         return aggregate
 
     def prepare_delete(

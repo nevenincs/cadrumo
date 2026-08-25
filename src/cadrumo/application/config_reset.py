@@ -7,10 +7,9 @@ from pathlib import Path
 from typing import NamedTuple
 from uuid import UUID
 
-from ..core import BucketPointer, capture_pointer
+from ..core import BucketPointer
 from ..core.config import load_settings
 from ..core.errors import CadrumoError
-from ..core.hashing import sha256_hex
 from ..core.time import now
 from ..domain.retention import RetentionFloorAssessment, RetentionFloorError
 from ._config_reset_models import (
@@ -101,17 +100,14 @@ def start_config_reset(
         repository.operation_lock(operation_id),
         active_profile_pointer_transaction(settings.cadrumo_local_storage_root) as pointer_transaction,
     ):
-        pointer_snapshot = _capture_pointer_snapshot(
-            settings.cadrumo_local_storage_root,
-            pointer_transaction.read(),
-        )
+        pointer_snapshot = _capture_pointer_snapshot(pointer_transaction.read())
         target_ids = set(
             list_profile_buckets(
                 root=settings.cadrumo_local_storage_root,
             ),
         )
-        if pointer_snapshot.bucket_id is not None:
-            target_ids.add(pointer_snapshot.bucket_id)
+        if pointer_snapshot.record.bucket_id is not None:
+            target_ids.add(pointer_snapshot.record.bucket_id)
         try:
             repository.refuse_if_incomplete()
         except ConfigResetJournalIncompleteError as exc:
@@ -193,10 +189,7 @@ def resume_config_reset(
         with active_profile_pointer_transaction(
             settings.cadrumo_local_storage_root,
         ) as pointer_transaction:
-            current_pointer = _capture_pointer_snapshot(
-                settings.cadrumo_local_storage_root,
-                pointer_transaction.read(),
-            )
+            current_pointer = _capture_pointer_snapshot(pointer_transaction.read())
             lock_ids = tuple(
                 sorted(
                     {
@@ -204,7 +197,7 @@ def resume_config_reset(
                         for target in operation.targets
                         if target.phase is not ConfigResetTargetPhase.DELETED
                     }
-                    | ({current_pointer.bucket_id} if current_pointer.bucket_id is not None else set()),
+                    | ({current_pointer.record.bucket_id} if current_pointer.record.bucket_id is not None else set()),
                 ),
             )
             with BucketMaintenanceService().deletion_target_locks(
@@ -269,20 +262,9 @@ def _already_running_error(
     )
 
 
-def _capture_pointer_snapshot(root: Path, pointer: BucketPointer | None) -> ConfigResetPointerSnapshot:
-    captured = capture_pointer(root)
-    if captured is None:
-        return ConfigResetPointerSnapshot(present=False)
-    if pointer is None:
-        raise ConfigResetError(
-            translated_message="errors.error.error_config_boundary",
-            context={"pointer_carries_bucket_id": False},
-        )
-    return ConfigResetPointerSnapshot(
-        present=True,
-        bucket_id=pointer.bucket_id,
-        content_sha256=sha256_hex(captured),
-    )
+def _capture_pointer_snapshot(pointer: BucketPointer) -> ConfigResetPointerSnapshot:
+    """Record the one transaction-held pointer observation in the reset journal."""
+    return ConfigResetPointerSnapshot(record=pointer)
 
 
 def _initial_preflight(
@@ -397,16 +379,16 @@ def _reconcile_pointer_snapshot_for_resume(
     pointer_transition_started = any(
         _phase_at_least(target.phase, ConfigResetTargetPhase.POINTER_RECONCILING) for target in operation.targets
     )
-    if pointer_transition_started and not current_pointer.present:
+    if pointer_transition_started and current_pointer.record.bucket_id is None:
         return _Preflight(operation=operation)
     target_ids = {target.bucket_id for target in operation.targets}
     targets = list(operation.targets)
     paused_ids: tuple[str, ...] = ()
-    if current_pointer.bucket_id is not None:
-        paused_ids = (current_pointer.bucket_id,)
-        if current_pointer.bucket_id not in target_ids:
+    if current_pointer.record.bucket_id is not None:
+        paused_ids = (current_pointer.record.bucket_id,)
+        if current_pointer.record.bucket_id not in target_ids:
             assessment = BucketMaintenanceService().assess_deletion(
-                AssessBucketDeletionCommand(bucket_id=current_pointer.bucket_id),
+                AssessBucketDeletionCommand(bucket_id=current_pointer.record.bucket_id),
             )
             target, _ = _target_from_assessment(
                 assessment,
@@ -415,8 +397,8 @@ def _reconcile_pointer_snapshot_for_resume(
             )
             targets.append(target)
             targets.sort(key=lambda item: item.bucket_id)
-    elif operation.pointer_snapshot.bucket_id is not None:
-        paused_ids = (operation.pointer_snapshot.bucket_id,)
+    elif operation.pointer_snapshot.record.bucket_id is not None:
+        paused_ids = (operation.pointer_snapshot.record.bucket_id,)
     updated = _update_operation(
         operation,
         pointer_snapshot=current_pointer,
@@ -746,7 +728,7 @@ def _reconcile_pointer(
         )
     if indexes:
         repository.save(operation)
-    active_bucket_id = operation.pointer_snapshot.bucket_id
+    active_bucket_id = operation.pointer_snapshot.record.bucket_id
     if active_bucket_id is not None and any(target.bucket_id == active_bucket_id for target in operation.targets):
         with active_profile_pointer_transaction(load_settings().cadrumo_local_storage_root) as pointer_transaction:
             pointer_transaction.clear()

@@ -53,7 +53,7 @@ def test_reachability_answers_both_ways_and_an_open_session_removes_the_out_of_b
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         with open_test_profile_session(_PROFILE_ID):
             register_minimal_profile(profile_id=_PROFILE_ID, display_name="Alpha operator")
-        write_pointer(root, BucketPointer(bucket_id=_PROFILE_ID, schema_version=1))
+        write_pointer(root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
 
         certificate_path = tmp_path / "operator.p12"
         certificate_path.write_bytes(b"test certificate")
@@ -98,7 +98,7 @@ def test_a_locked_profile_refuses_the_revocation_that_reachability_predicted(
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         with open_test_profile_session(_PROFILE_ID):
             register_minimal_profile(profile_id=_PROFILE_ID, display_name="Alpha operator")
-        write_pointer(root, BucketPointer(bucket_id=_PROFILE_ID, schema_version=1))
+        write_pointer(root, BucketPointer.selected(bucket_id=_PROFILE_ID, transition_revision=1))
         settings = load_settings()
 
         assert operator_auth_revocation_is_reachable(bucket_id=_PROFILE_ID) is False

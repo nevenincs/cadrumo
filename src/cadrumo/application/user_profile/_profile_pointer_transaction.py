@@ -1,16 +1,8 @@
-"""Reentrant application transaction for the active-profile pointer.
+"""Reentrant transition authority for the active-profile pointer.
 
-The core pointer helpers own byte parsing and filesystem mutation. This module
-adds the application coordination policy required when one logical profile
-operation nests orchestration and repository pointer calls. The outermost
-transaction locks the custody root sidecar shared with destructive pointer
-CAS; same-root calls from the same process and thread reuse that ownership
-without reacquiring the non-reentrant operating-system lock.
-
-Ownership never crosses roots, processes, threads, or transaction lifetimes.
-Every operation validates the live thread-local ownership record before it
-delegates to the public core facade, so a transaction object retained after its
-context exits cannot mutate the pointer.
+The core record IO owns strict parsing and atomic replacement. This application
+authority owns the canonical custody-root lock and is consequently the only
+owner that may advance the durable pointer transition revision.
 """
 
 from __future__ import annotations
@@ -24,10 +16,7 @@ from pathlib import Path
 
 from ...core import (
     BucketPointer,
-    capture_pointer,
-    clear_pointer,
     read_pointer,
-    restore_pointer,
     write_pointer,
 )
 from ...core.config import load_settings
@@ -43,7 +32,7 @@ class ActiveProfilePointerTransactionError(CadrumoError):
 
 
 class ActiveProfilePointerTransaction:
-    """Pointer operations available only while this transaction owns its lock."""
+    """Pointer observations and transitions under the canonical root lock."""
 
     __slots__ = ("_owner_pid", "_owner_thread_id", "_root")
 
@@ -52,65 +41,50 @@ class ActiveProfilePointerTransaction:
         self._owner_pid = owner_pid
         self._owner_thread_id = owner_thread_id
 
-    def capture(self) -> bytes | None:
-        """Capture the pointer's exact bytes under live transaction ownership."""
-        self._assert_live_ownership()
-        return capture_pointer(self._root)
-
-    def read(self) -> BucketPointer | None:
-        """Read and parse the pointer under live transaction ownership."""
+    def read(self) -> BucketPointer:
+        """Return the sole selection-plus-coordinate observation."""
         self._assert_live_ownership()
         return read_pointer(self._root)
 
-    def write(self, pointer: BucketPointer) -> None:
-        """Atomically write ``pointer`` under live transaction ownership."""
+    def select(self, bucket_id: str) -> BucketPointer:
+        """Select ``bucket_id`` and advance once unless it is already selected."""
         self._assert_live_ownership()
-        write_pointer(self._root, pointer)
+        return self._publish(expected=None, bucket_id=bucket_id)
 
-    def compare_and_write(self, *, expected: bytes | None, pointer: BucketPointer) -> bytes:
-        """Durably write ``pointer`` only when the captured bytes still match.
-
-        The transaction holds the canonical custody-root lock, so cooperating
-        writers cannot interleave the comparison and durable replacement.  The
-        exact-byte comparison also detects an out-of-band writer rather than
-        silently overwriting a selection it did not observe.
-        """
+    def compare_and_select(self, *, expected: BucketPointer, bucket_id: str) -> BucketPointer:
+        """Select only when the exact observed record remains current."""
         self._assert_live_ownership()
-        observed = capture_pointer(self._root)
-        if observed != expected:
+        return self._publish(expected=expected, bucket_id=bucket_id)
+
+    def compare_and_restore(self, *, expected: BucketPointer, captured: BucketPointer) -> BucketPointer:
+        """Restore a prior selection without ever restoring its old revision."""
+        self._assert_live_ownership()
+        return self._publish(expected=expected, bucket_id=captured.bucket_id)
+
+    def clear(self) -> BucketPointer:
+        """Persist an absent tombstone unless the selection is already absent."""
+        self._assert_live_ownership()
+        return self._publish(expected=None, bucket_id=None)
+
+    def _publish(self, *, expected: BucketPointer | None, bucket_id: str | None) -> BucketPointer:
+        observed = read_pointer(self._root)
+        if expected is not None and observed != expected:
             raise ActiveProfilePointerTransactionError(
                 translated_message="errors.integrity.integrity_storage_profile_custody_record",
                 context={"owner": "active-profile-pointer", "compare_and_swap": False},
             )
-        write_pointer(self._root, pointer)
-        published = capture_pointer(self._root)
-        if published is None:
-            raise ActiveProfilePointerTransactionError(
-                translated_message="errors.integrity.integrity_storage_profile_custody_record",
-                context={"owner": "active-profile-pointer", "published": False},
+        if observed.bucket_id == bucket_id:
+            return observed
+        successor = (
+            BucketPointer.absent(transition_revision=observed.transition_revision + 1)
+            if bucket_id is None
+            else BucketPointer.selected(
+                bucket_id=bucket_id,
+                transition_revision=observed.transition_revision + 1,
             )
-        return published
-
-    def compare_and_restore(self, *, expected: bytes | None, captured: bytes | None) -> None:
-        """Restore exact bytes only while the expected post-write value remains."""
-        self._assert_live_ownership()
-        observed = capture_pointer(self._root)
-        if observed != expected:
-            raise ActiveProfilePointerTransactionError(
-                translated_message="errors.integrity.integrity_storage_profile_custody_record",
-                context={"owner": "active-profile-pointer", "compare_and_swap": False},
-            )
-        restore_pointer(self._root, captured)
-
-    def restore(self, captured: bytes | None) -> None:
-        """Atomically restore exact captured bytes under live ownership."""
-        self._assert_live_ownership()
-        restore_pointer(self._root, captured)
-
-    def clear(self) -> None:
-        """Idempotently clear the pointer under live transaction ownership."""
-        self._assert_live_ownership()
-        clear_pointer(self._root)
+        )
+        write_pointer(self._root, successor)
+        return successor
 
     def _assert_live_ownership(self) -> None:
         ownership = getattr(_THREAD_OWNERSHIP, "current", None)
@@ -254,8 +228,20 @@ def active_profile_pointer_transaction(
             del _THREAD_OWNERSHIP.current
 
 
+def observe_active_profile_pointer(root: Path | None = None) -> BucketPointer:
+    """Return one lock-scoped public pointer observation.
+
+    Purpose-specific application readers use this facade instead of opening a
+    parallel core read path; core bootstrap remains the sole inner-layer
+    exception because it cannot depend outward on this application owner.
+    """
+    with active_profile_pointer_transaction(root) as transaction:
+        return transaction.read()
+
+
 __all__ = [
     "ActiveProfilePointerTransaction",
     "ActiveProfilePointerTransactionError",
     "active_profile_pointer_transaction",
+    "observe_active_profile_pointer",
 ]

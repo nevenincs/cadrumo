@@ -46,8 +46,6 @@ from __future__ import annotations
 
 import json
 import os
-from base64 import b64decode, b64encode
-from binascii import Error as BinasciiError
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -67,7 +65,6 @@ from ...core import (
     storage_location,
 )
 from ...core.config import load_settings
-from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import (
     bounded_canonical_json_bytes,
     reject_duplicate_json_members,
@@ -116,7 +113,7 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 
-_HANDOVER_JOURNAL_FILENAME = "profile-login-handover.v1.json"
+_HANDOVER_JOURNAL_FILENAME = "profile-login-handover.v2.json"
 _HANDOVER_JOURNAL_MAX_BYTES = 4 * 1024
 
 
@@ -158,18 +155,24 @@ class _ProfileLoginHandoverJournal(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[2] = 2
     phase: _HandoverPhase
     profile_a: BucketId | None
     profile_b: BucketId
-    pointer_before_b64: str
-    pointer_after_b64: str
+    pointer_before: BucketPointer
+    pointer_after: BucketPointer
     activation_at: datetime
 
     @model_validator(mode="after")
     def _validate_journal(self) -> _ProfileLoginHandoverJournal:
         """Keep recovery time deterministic and safe to replay as an event key."""
         validate_utc_aware(self.activation_at)
+        if self.pointer_after.bucket_id != self.profile_b:
+            raise ValueError("handover pointer-after selection must name profile B")
+        if self.pointer_after != self.pointer_before and (
+            self.pointer_after.transition_revision != self.pointer_before.transition_revision + 1
+        ):
+            raise ValueError("handover pointer transition revision must advance exactly once when selection changes")
         return self
 
     @classmethod
@@ -178,8 +181,8 @@ class _ProfileLoginHandoverJournal(BaseModel):
         *,
         profile_a: str | None,
         profile_b: str,
-        pointer_before: bytes | None,
-        pointer_after: bytes,
+        pointer_before: BucketPointer,
+        pointer_after: BucketPointer,
         activation_at: datetime,
     ) -> _ProfileLoginHandoverJournal:
         """Capture the one non-secret transition before pointer publication."""
@@ -187,8 +190,8 @@ class _ProfileLoginHandoverJournal(BaseModel):
             phase=_HandoverPhase.PREPARED,
             profile_a=profile_a,
             profile_b=profile_b,
-            pointer_before_b64=_encode_pointer_bytes(pointer_before),
-            pointer_after_b64=_encode_pointer_bytes(pointer_after),
+            pointer_before=pointer_before,
+            pointer_after=pointer_after,
             activation_at=activation_at,
         )
 
@@ -201,17 +204,6 @@ class _ProfileLoginHandoverJournal(BaseModel):
         if _HANDOVER_PHASE_INDEX[self.phase] >= _HANDOVER_PHASE_INDEX[phase]:
             return self
         return self.at_phase(phase)
-
-    def pointer_before(self) -> bytes | None:
-        """Return the exact pre-handover pointer bytes after strict decoding."""
-        return _decode_pointer_bytes(self.pointer_before_b64)
-
-    def pointer_after(self) -> bytes:
-        """Return the exact B pointer bytes after strict decoding."""
-        pointer = _decode_pointer_bytes(self.pointer_after_b64)
-        if pointer is None:
-            _refuse_handover_journal("journal cannot encode an absent B pointer")
-        return pointer
 
     def canonical_json_bytes(self) -> bytes:
         """Return the journal's one bounded, byte-exact persistence form."""
@@ -326,8 +318,8 @@ class _LoginAttempt:
     """Resolved, lock-scoped inputs shared by one login attempt."""
 
     target: ProfileBucketPointer
-    selected: BucketPointer | None
-    prior_pointer: bytes | None
+    selected: BucketPointer
+    prior_pointer: BucketPointer
     pointer_transaction: ActiveProfilePointerTransaction
     storage_root: Path
     interrupted_handover: _ProfileLoginHandoverJournal | None
@@ -339,7 +331,7 @@ class _HandoverPublication:
     """Durable pointer publication returned before candidate binding."""
 
     journal: _ProfileLoginHandoverJournal
-    published_pointer: bytes
+    published_pointer: BucketPointer
 
 
 @dataclass(slots=True)
@@ -397,8 +389,6 @@ def _parse_handover_journal(payload: bytes) -> _ProfileLoginHandoverJournal:
         journal = _ProfileLoginHandoverJournal.model_validate_json(canonical)
         if journal.canonical_json_bytes() != payload:
             raise ValueError("handover journal bytes are not canonical")
-        _ = journal.pointer_before()
-        _ = journal.pointer_after()
         return journal
     except (UnicodeDecodeError, json.JSONDecodeError, ValidationError, ValueError, TypeError):
         _refuse_handover_journal("journal is malformed or noncanonical")
@@ -419,22 +409,6 @@ def _ensure_handover_journal_directory(*, storage_root: Path, store: ProfileCust
     return directory
 
 
-def _encode_pointer_bytes(pointer: bytes | None) -> str:
-    """Encode exact pointer bytes without treating them as text authority."""
-    return b64encode(pointer or b"").decode("ascii")
-
-
-def _decode_pointer_bytes(encoded: str) -> bytes | None:
-    """Decode a canonical base64 pointer witness or refuse the journal."""
-    try:
-        decoded = b64decode(encoded.encode("ascii"), validate=True)
-    except (BinasciiError, ValueError):
-        _refuse_handover_journal("journal pointer witness is not strict base64")
-    if b64encode(decoded).decode("ascii") != encoded:
-        _refuse_handover_journal("journal pointer witness is not canonical base64")
-    return decoded or None
-
-
 def _refuse_handover_journal(reason: str) -> NoReturn:
     """Fail closed when a durable handover witness cannot be trusted."""
     raise ActiveProfilePointerTransactionError(
@@ -445,9 +419,9 @@ def _refuse_handover_journal(reason: str) -> NoReturn:
 
 def _save_handover_journal(*, storage_root: Path, journal: _ProfileLoginHandoverJournal) -> None:
     """Durably publish one complete non-secret handover phase under root lock."""
-    store = _handover_journal_store()
-    _ensure_handover_journal_directory(storage_root=storage_root, store=store)
     try:
+        store = _handover_journal_store()
+        _ensure_handover_journal_directory(storage_root=storage_root, store=store)
         if journal.phase is _HandoverPhase.PREPARED:
             predecessor = None
         else:
@@ -476,9 +450,9 @@ def _save_handover_journal(*, storage_root: Path, journal: _ProfileLoginHandover
 
 def _load_handover_journal(*, storage_root: Path) -> _ProfileLoginHandoverJournal | None:
     """Load the sole bounded in-flight witness, refusing malformed replacement."""
-    store = _handover_journal_store()
-    _ensure_handover_journal_directory(storage_root=storage_root, store=store)
     try:
+        store = _handover_journal_store()
+        _ensure_handover_journal_directory(storage_root=storage_root, store=store)
         payload = store.read_optional(_handover_journal_path(storage_root), maximum_bytes=_HANDOVER_JOURNAL_MAX_BYTES)
     except Exception:
         _refuse_handover_journal("journal cannot be anchored and read")
@@ -489,9 +463,9 @@ def _load_handover_journal(*, storage_root: Path) -> _ProfileLoginHandoverJourna
 
 def _clear_handover_journal(*, storage_root: Path, journal: _ProfileLoginHandoverJournal) -> None:
     """Remove the completed or fully rolled-back witness under root lock."""
-    store = _handover_journal_store()
-    _ensure_handover_journal_directory(storage_root=storage_root, store=store)
     try:
+        store = _handover_journal_store()
+        _ensure_handover_journal_directory(storage_root=storage_root, store=store)
         current = journal.canonical_json_bytes()
         predecessor = (
             None
@@ -557,9 +531,9 @@ def _recover_interrupted_handover(
         _complete_witnessed_retirement(storage_root=storage_root, journal=journal)
         _clear_handover_journal(storage_root=storage_root, journal=journal)
         return _HandoverRecovery(completed_selection=journal.profile_b)
-    current = pointer_transaction.capture()
-    before = journal.pointer_before()
-    after = journal.pointer_after()
+    current = pointer_transaction.read()
+    before = journal.pointer_before
+    after = journal.pointer_after
     if current == before:
         # The pointer stands where it did before this handover, so nothing it
         # selected survived and the profile it moved away from is still the
@@ -663,7 +637,7 @@ def logout_active_profile() -> str | None:
     live_bucket_id = live.bucket_id if live is not None else None
     with active_profile_pointer_transaction(storage_root) as pointer_transaction:
         selected = pointer_transaction.read()
-        selected_bucket_id = selected.bucket_id if selected is not None else None
+        selected_bucket_id = selected.bucket_id
         target_ids = _distinct_bucket_ids(live_bucket_id, selected_bucket_id)
         if not target_ids:
             return None
@@ -887,7 +861,7 @@ def resolve_login_target(name: str) -> ProfileBucketPointer:
     return pointer
 
 
-def _resolve_selected_target(pointer: BucketPointer | None) -> ProfileBucketPointer:
+def _resolve_selected_target(pointer: BucketPointer) -> ProfileBucketPointer:
     """Resolve the already-selected profile for a bare ``login``.
 
     The same live-profile resolver used for ``login NAME`` is required here:
@@ -897,10 +871,11 @@ def _resolve_selected_target(pointer: BucketPointer | None) -> ProfileBucketPoin
     """
     from ..workflow import resolve_profile_bucket
 
-    if pointer is None:
+    if pointer.bucket_id is None:
         raise ProfileNotFoundError(
             translated_message="application.user_profile.errors.no_active_profile_selected",
         )
+    assert pointer.bucket_id is not None
     resolved = resolve_profile_bucket(pointer.bucket_id)
     if resolved is None:
         raise ProfileNotFoundError(
@@ -924,7 +899,7 @@ def _prepare_login_attempt(
     )
     interrupted_handover = recovery.interrupted
     target = resolve_login_target(name) if name is not None else _resolve_selected_target(selected)
-    prior_pointer = pointer_transaction.capture()
+    prior_pointer = selected
     if interrupted_handover is not None and target.bucket_id != interrupted_handover.profile_b:
         _refuse_handover_journal("incomplete handover requires authenticating its B profile")
     return _LoginAttempt(
@@ -947,7 +922,7 @@ def _can_resume_idempotent_login(
     if attempt.interrupted_handover is not None:
         return False
     selected = attempt.selected
-    if selected is None or selected.bucket_id != attempt.target.bucket_id:
+    if selected.bucket_id != attempt.target.bucket_id:
         return False
     return live_session is None or _login_sessions().session_serves_bucket(live_session, attempt.target.bucket_id)
 
@@ -1103,7 +1078,7 @@ def _finish_candidate_login(
         return _promote_candidate_login(
             candidate=candidate,
             target_label=attempt.target.label,
-            selected_bucket_id=attempt.selected.bucket_id if attempt.selected is not None else None,
+            selected_bucket_id=attempt.selected.bucket_id,
             prior_pointer=attempt.prior_pointer,
             pointer_transaction=attempt.pointer_transaction,
             storage_root=attempt.storage_root,
@@ -1167,7 +1142,7 @@ def _promote_candidate_login(
     candidate: _CandidateProfileLogin,
     target_label: str,
     selected_bucket_id: str | None,
-    prior_pointer: bytes | None,
+    prior_pointer: BucketPointer,
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
     interrupted_handover: _ProfileLoginHandoverJournal | None,
@@ -1242,7 +1217,7 @@ def _publish_candidate_handover(
     *,
     candidate: _CandidateProfileLogin,
     retired_bucket_id: str | None,
-    prior_pointer: bytes | None,
+    prior_pointer: BucketPointer,
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
     interrupted_handover: _ProfileLoginHandoverJournal | None,
@@ -1266,7 +1241,7 @@ def _publish_fresh_candidate_handover(
     *,
     candidate: _CandidateProfileLogin,
     retired_bucket_id: str | None,
-    prior_pointer: bytes | None,
+    prior_pointer: BucketPointer,
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
 ) -> _HandoverPublication:
@@ -1277,8 +1252,14 @@ def _publish_fresh_candidate_handover(
     Once the pointer is published it names B, so the journal is the only place a
     later recovery process can still learn A's identity.
     """
-    replacement = BucketPointer(bucket_id=candidate.bucket_id, schema_version=1)
-    planned_pointer = replacement.to_toml().encode(UTF_8_ENCODING)
+    planned_pointer = (
+        prior_pointer
+        if prior_pointer.bucket_id == candidate.bucket_id
+        else BucketPointer.selected(
+            bucket_id=candidate.bucket_id,
+            transition_revision=prior_pointer.transition_revision + 1,
+        )
+    )
     handover = _ProfileLoginHandoverJournal.prepare(
         profile_a=retired_bucket_id,
         profile_b=candidate.bucket_id,
@@ -1287,8 +1268,8 @@ def _publish_fresh_candidate_handover(
         activation_at=_now(),
     )
     _save_handover_journal(storage_root=storage_root, journal=handover)
-    published = pointer_transaction.compare_and_write(expected=prior_pointer, pointer=replacement)
-    if published != handover.pointer_after():
+    published = pointer_transaction.compare_and_select(expected=prior_pointer, bucket_id=candidate.bucket_id)
+    if published != handover.pointer_after:
         _refuse_handover_journal("published pointer differs from prepared B witness")
     handover = handover.at_phase(_HandoverPhase.POINTER_PUBLISHED)
     _save_handover_journal(storage_root=storage_root, journal=handover)
@@ -1301,8 +1282,8 @@ def _resume_candidate_handover(
     pointer_transaction: ActiveProfilePointerTransaction,
 ) -> _HandoverPublication:
     """Validate the durable pointer before replaying an interrupted handover."""
-    published = interrupted_handover.pointer_after()
-    if pointer_transaction.capture() != published:
+    published = interrupted_handover.pointer_after
+    if pointer_transaction.read() != published:
         _refuse_handover_journal("incomplete handover B pointer changed before recovery")
     return _HandoverPublication(journal=interrupted_handover, published_pointer=published)
 
@@ -1312,7 +1293,7 @@ def _bind_candidate_promotion(
     candidate: _CandidateProfileLogin,
     previous_live: ProfileBucketSessionPort | None,
     publication: _HandoverPublication,
-    prior_pointer: bytes | None,
+    prior_pointer: BucketPointer,
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
 ) -> _CandidatePromotionResult:
@@ -1447,8 +1428,8 @@ def _rollback_candidate_promotion(
     candidate: _CandidateProfileLogin,
     previous_live: ProfileBucketSessionPort | None,
     previous_record: ProfileRecordSession | None,
-    prior_pointer: bytes | None,
-    published_pointer: bytes,
+    prior_pointer: BucketPointer,
+    published_pointer: BucketPointer,
     pointer_transaction: ActiveProfilePointerTransaction,
     storage_root: Path,
 ) -> None:

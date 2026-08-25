@@ -12,7 +12,6 @@ from pydantic import ValidationError
 
 from ...core import StorageCategory, storage_location
 from ...core.paths import effective_storage_root
-from ._custody_pointer import ProfileCustodyPointerSnapshot
 from ._custody_ports import ProfileCustodyLocalRecordStore, default_profile_custody_local_record_store
 from ._custody_transactions import (
     CUSTODY_RECEIPT_MAX_BYTES,
@@ -203,30 +202,7 @@ def profile_custody_transaction_lock(root: Path, profile_id: UUID) -> Generator[
             yield
 
 
-def compare_and_swap_profile_pointer(
-    *,
-    root: Path,
-    expected: ProfileCustodyPointerSnapshot,
-    replacement: bytes | None,
-) -> None:
-    """Replace or clear the pointer only while its exact captured bytes still match."""
-    from ._profile_pointer_transaction import active_profile_pointer_transaction
-
-    storage_root = effective_storage_root(root)
-    with active_profile_pointer_transaction(storage_root) as pointer:
-        current = pointer.capture()
-        if current != expected.captured_bytes():
-            raise ProfileCustodyTransactionConflictError("active profile pointer changed after custody preflight")
-        try:
-            pointer.restore(replacement)
-        except Exception as exc:
-            raise ProfileCustodyTransactionCorruptError(
-                "active profile pointer cannot be atomically compared and swapped"
-            ) from exc
-
-
 __all__ = [
     "ProfileCustodyTransactionRepository",
-    "compare_and_swap_profile_pointer",
     "profile_custody_transaction_lock",
 ]

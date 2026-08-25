@@ -211,7 +211,7 @@ def test_bare_invocation_preserves_selected_profile_with_missing_manifest() -> N
     """A valid active pointer with no manifest is degraded state, not blank state."""
     write_pointer(
         load_settings().cadrumo_local_storage_root,
-        BucketPointer(bucket_id="11111111-1111-4111-8111-111111111111", schema_version=1),
+        BucketPointer.selected(bucket_id="11111111-1111-4111-8111-111111111111", transition_revision=1),
     )
 
     text_result = _invoke([])

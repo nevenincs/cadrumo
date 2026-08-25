@@ -37,14 +37,13 @@ from ....adapters.persistence.storage.master_key import (
     bind_active_bucket_session,
     current_active_bucket_session,
 )
-from ....core import BucketPointer, Period, capture_pointer, restore_pointer
+from ....core import BucketPointer, Period
 from ....core.config import Settings
 from ....domain.modelos import ModeloCode, ModeloRecord, derive_filing_record_id
 from ... import user_profile as user_profiles
 from ...evidence import LegalHoldCaseAuthority
 from ...filing import FilingRetentionAuthority
-from .._custody_pointer import ProfileCustodyPointerSnapshot
-from .._custody_repository import compare_and_swap_profile_pointer, profile_custody_transaction_lock
+from .._custody_repository import profile_custody_transaction_lock
 from .._custody_service import _ProfileCustodyTransactionCapability as ProfileCustodyTransactionService
 from .._custody_transactions import (
     ProfileCustodyHoldEvidence,
@@ -61,6 +60,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE_ID = UUID("327b296d-8377-4be0-b13a-ca4d8f692e1d")
 _OTHER_PROFILE_ID = UUID("57c9594e-65de-470b-b768-4a4dd1323597")
 _INSTANT = datetime(2026, 8, 13, 12, 34, 56, tzinfo=UTC)
+
+
+def _observe_pointer(root: Path) -> BucketPointer:
+    """Observe through the only public current-pointer transaction."""
+    with user_profiles.active_profile_pointer_transaction(root) as transaction:
+        return transaction.read()
+
+
+def _select_pointer(root: Path, bucket_id: str) -> BucketPointer:
+    """Select through the sole transition owner."""
+    with user_profiles.active_profile_pointer_transaction(root) as transaction:
+        return transaction.select(bucket_id)
+
+
+def _clear_expected_pointer(root: Path, expected: BucketPointer) -> BucketPointer:
+    """Model a crash boundary using the canonical compare-and-transition verb."""
+    with user_profiles.active_profile_pointer_transaction(root) as transaction:
+        return transaction.compare_and_restore(
+            expected=expected,
+            captured=BucketPointer.absent(transition_revision=0),
+        )
 
 
 def _committed_capsule(
@@ -224,7 +244,7 @@ def _write_active_pointer_in_sibling(root_text: str, bucket_id_text: str, result
     with composed_profile_persistence_ports():
         result_queue.put("ready")
         with active_profile_pointer_transaction(Path(root_text)) as pointer_transaction:
-            pointer_transaction.write(BucketPointer(bucket_id=bucket_id_text, schema_version=1))
+            pointer_transaction.select(bucket_id_text)
         result_queue.put("written")
 
 
@@ -251,7 +271,7 @@ def _crash_create_at_durable_boundary(root_text: str, transaction_id_text: str, 
         state=ProfileCustodyTransactionState.PREPARED,
         started_at=_INSTANT,
         updated_at=_INSTANT,
-        pointer_before=ProfileCustodyPointerSnapshot.capture(root),
+        pointer_before=_observe_pointer(root),
         proposed_generation=envelope.password_generation,
         label="crash label",
         label_revision=label_record.label_revision,
@@ -343,7 +363,7 @@ def _create_labeled_capsule_in_sibling(
 
 def test_confirmed_local_delete_is_atomic_receipted_and_idempotent(tmp_path: Path) -> None:
     capsule = _committed_capsule(tmp_path)
-    restore_pointer(tmp_path, BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8"))
+    _select_pointer(tmp_path, str(_PROFILE_ID))
     service = ProfileCustodyTransactionService(root=tmp_path)
     _authorise_clear_hold(service)
 
@@ -352,7 +372,7 @@ def test_confirmed_local_delete_is_atomic_receipted_and_idempotent(tmp_path: Pat
     receipt = service.execute_delete(confirmation, now=_INSTANT)
 
     assert not capsule.exists()
-    assert capture_pointer(tmp_path) is None
+    assert _observe_pointer(tmp_path).bucket_id is None
     assert receipt.transaction_id == journal.transaction_id
     assert receipt.pointer_cleared is True
     assert receipt.retained_external_state
@@ -377,14 +397,13 @@ def test_inactive_only_delete_revalidates_policy_after_prepare_and_before_effect
 
     # This is the durable crash/resume boundary: another canonical login may
     # publish the pointer after preparation and before a later executor resumes.
-    active_bytes = BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8")
-    restore_pointer(tmp_path, active_bytes)
+    active_pointer = _select_pointer(tmp_path, str(_PROFILE_ID))
 
     with pytest.raises(ProfileCustodyTransactionRefusalError, match="active profile"):
         service.execute_delete(confirmation, now=_INSTANT + timedelta(seconds=1))
 
     assert capsule.is_dir()
-    assert capture_pointer(tmp_path) == active_bytes
+    assert _observe_pointer(tmp_path) == active_pointer
     assert (
         service._repository.load_journal(journal.transaction_id).state is ProfileCustodyTransactionState.DELETE_PREPARED
     )
@@ -407,7 +426,7 @@ def test_delete_completes_when_preflight_and_execution_fall_at_different_instant
     import time
 
     capsule = _committed_capsule(tmp_path)
-    restore_pointer(tmp_path, BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8"))
+    _select_pointer(tmp_path, str(_PROFILE_ID))
     service = ProfileCustodyTransactionService(root=tmp_path)
     _authorise_clear_hold(service)
 
@@ -430,7 +449,7 @@ def test_delete_still_refuses_when_a_hold_is_taken_between_preflight_and_executi
     editing the journal.
     """
     _committed_capsule(tmp_path)
-    restore_pointer(tmp_path, BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8"))
+    _select_pointer(tmp_path, str(_PROFILE_ID))
     service = ProfileCustodyTransactionService(root=tmp_path)
     _authorise_clear_hold(service)
 
@@ -522,19 +541,27 @@ def test_delete_revalidates_owner_hold_records_before_destruction(tmp_path: Path
 
 def test_delete_refuses_pointer_or_inventory_drift_after_preflight(tmp_path: Path) -> None:
     capsule = _committed_capsule(tmp_path)
-    restore_pointer(tmp_path, BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8"))
+    _select_pointer(tmp_path, str(_PROFILE_ID))
     service = ProfileCustodyTransactionService(root=tmp_path)
     _authorise_clear_hold(service)
     journal = service.prepare_delete(profile_id=_PROFILE_ID, now=_INSTANT)
 
-    restore_pointer(
-        tmp_path, BucketPointer(bucket_id=str(_OTHER_PROFILE_ID), schema_version=1).to_toml().encode("utf-8")
-    )
+    _select_pointer(tmp_path, str(_OTHER_PROFILE_ID))
     with pytest.raises(ProfileCustodyTransactionConflictError, match="pointer changed"):
         service.execute_delete(service.confirmation_for(journal), now=_INSTANT)
     assert capsule.is_dir()
 
-    restore_pointer(tmp_path, journal.pointer_before.captured_bytes())
+
+def test_delete_refuses_inventory_drift_after_preflight(tmp_path: Path) -> None:
+    """A distinct preflight proves inventory drift without reviving a stale coordinate."""
+    root = tmp_path / "inventory-drift"
+    root.mkdir()
+    capsule = _committed_capsule(root)
+    _select_pointer(root, str(_PROFILE_ID))
+    service = ProfileCustodyTransactionService(root=root)
+    _authorise_clear_hold(service)
+    journal = service.prepare_delete(profile_id=_PROFILE_ID, now=_INSTANT)
+
     (capsule / "data" / "state" / "payload.bin").write_bytes(b"changed encrypted local data")
     with pytest.raises(ProfileCustodyTransactionConflictError, match=r"marker|inventory"):
         service.execute_delete(service.confirmation_for(journal), now=_INSTANT)
@@ -590,12 +617,12 @@ def test_crash_recovery_removes_only_its_transaction_tombstone(tmp_path: Path) -
 
 def test_delete_recovers_a_pointer_clear_before_its_journal_state_is_saved(tmp_path: Path) -> None:
     capsule = _committed_capsule(tmp_path)
-    restore_pointer(tmp_path, BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8"))
+    _select_pointer(tmp_path, str(_PROFILE_ID))
     service = ProfileCustodyTransactionService(root=tmp_path)
     _authorise_clear_hold(service)
     journal = service.prepare_delete(profile_id=_PROFILE_ID, now=_INSTANT)
 
-    compare_and_swap_profile_pointer(root=tmp_path, expected=journal.pointer_before, replacement=None)
+    _clear_expected_pointer(tmp_path, journal.pointer_before)
     receipt = service.execute_delete(service.confirmation_for(journal), now=_INSTANT)
 
     assert receipt.pointer_cleared is True
@@ -663,17 +690,17 @@ def test_repository_refuses_real_link_roots_and_leaves(tmp_path: Path) -> None:
 
 def test_pointer_capture_and_cas_refuse_a_real_pointer_link(tmp_path: Path) -> None:
     outside = tmp_path / "outside-pointer"
-    outside.write_bytes(BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8"))
+    outside.write_text(
+        BucketPointer.selected(bucket_id=str(_PROFILE_ID), transition_revision=1).to_toml(), encoding="utf-8"
+    )
     os.symlink(outside, tmp_path / "active-profile")
 
-    with pytest.raises(ProfileCustodyTransactionCorruptError, match="pointer"):
-        compare_and_swap_profile_pointer(
-            root=tmp_path,
-            expected=ProfileCustodyPointerSnapshot.capture(tmp_path),
-            replacement=None,
-        )
+    with pytest.raises(OSError, match="link|reparse|symbolic"):
+        _observe_pointer(tmp_path)
 
-    assert outside.read_bytes() == BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8")
+    assert outside.read_text(encoding="utf-8") == BucketPointer.selected(
+        bucket_id=str(_PROFILE_ID), transition_revision=1
+    ).to_toml()
 
 
 def test_journal_writer_refuses_an_existing_leaf_and_never_overwrites_it(tmp_path: Path) -> None:
@@ -727,7 +754,7 @@ def test_create_orchestration_journals_stages_verifies_and_publishes_pointer_las
     service = ProfileCustodyTransactionService(root=tmp_path)
     transaction_id = uuid4()
     envelope, sentinel, data_files = _create_capsule_input()
-    assert capture_pointer(tmp_path) is None
+    assert _observe_pointer(tmp_path).bucket_id is None
 
     receipt = service.create_capsule(
         profile_id=_PROFILE_ID,
@@ -742,9 +769,7 @@ def test_create_orchestration_journals_stages_verifies_and_publishes_pointer_las
 
     assert receipt.pointer_published is True
     assert receipt.pointer_cleared is False
-    assert capture_pointer(tmp_path) == BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode(
-        "utf-8"
-    )
+    assert _observe_pointer(tmp_path).bucket_id == str(_PROFILE_ID)
     journal = service._repository.load_journal(transaction_id)
     assert journal.state is ProfileCustodyTransactionState.COMPLETE
     assert journal.proposed_generation == envelope.password_generation
@@ -790,14 +815,12 @@ def test_create_recovery_after_real_subprocess_crash_at_each_durable_boundary(
     if boundary == "intent":
         assert receipt is None
         assert journal.state is ProfileCustodyTransactionState.ROLLED_BACK
-        assert capture_pointer(tmp_path) is None
+        assert _observe_pointer(tmp_path).bucket_id is None
         return
     assert receipt is not None
     assert receipt.pointer_published is True
     assert journal.state is ProfileCustodyTransactionState.COMPLETE
-    assert capture_pointer(tmp_path) == BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode(
-        "utf-8"
-    )
+    assert _observe_pointer(tmp_path).bucket_id == str(_PROFILE_ID)
     assert load_committed_profile_custody_label_record(_PROFILE_ID, root=tmp_path).label == "crash label"
 
 
@@ -953,12 +976,10 @@ def test_transaction_lock_serializes_siblings_and_releases_after_process_death(t
             second.join(10)
 
 
-def test_pointer_cas_and_active_pointer_writer_share_one_root_lock(tmp_path: Path) -> None:
-    """A sibling writer cannot slip between custody CAS comparison and mutation."""
+def test_pointer_transition_and_active_pointer_writer_share_one_root_lock(tmp_path: Path) -> None:
+    """A sibling cannot slip between a transaction observation and transition."""
     _committed_capsule(tmp_path)
-    original = BucketPointer(bucket_id=str(_PROFILE_ID), schema_version=1).to_toml().encode("utf-8")
-    replacement = BucketPointer(bucket_id=str(_OTHER_PROFILE_ID), schema_version=1).to_toml().encode("utf-8")
-    restore_pointer(tmp_path, original)
+    original = _select_pointer(tmp_path, str(_PROFILE_ID))
     context = get_context("spawn")
     result_queue = context.Queue()
     writer = context.Process(
@@ -968,7 +989,7 @@ def test_pointer_cas_and_active_pointer_writer_share_one_root_lock(tmp_path: Pat
 
     try:
         with profile_custody_transaction_lock(tmp_path, _PROFILE_ID):
-            captured = ProfileCustodyPointerSnapshot.capture(tmp_path)
+            captured = _observe_pointer(tmp_path)
             writer.start()
 
             # Opened only after the sibling reports ready: timed from start()
@@ -978,15 +999,21 @@ def test_pointer_cas_and_active_pointer_writer_share_one_root_lock(tmp_path: Pat
             assert result_queue.get(timeout=20) == "ready"
             with pytest.raises(Empty):
                 result_queue.get(timeout=2.0)
-            compare_and_swap_profile_pointer(root=tmp_path, expected=captured, replacement=None)
+            assert captured == original
+            _clear_expected_pointer(tmp_path, captured)
 
         assert result_queue.get(timeout=20) == "written"
         writer.join(10)
         assert writer.exitcode == 0
-        assert capture_pointer(tmp_path) == replacement
-        with pytest.raises(ProfileCustodyTransactionConflictError, match="pointer changed"):
-            compare_and_swap_profile_pointer(root=tmp_path, expected=captured, replacement=None)
-        assert capture_pointer(tmp_path) == replacement
+        replacement = _observe_pointer(tmp_path)
+        assert replacement.bucket_id == str(_OTHER_PROFILE_ID)
+        with user_profiles.active_profile_pointer_transaction(tmp_path) as transaction:
+            with pytest.raises(ProfileCustodyTransactionConflictError, match="pointer changed"):
+                transaction.compare_and_restore(
+                    expected=captured,
+                    captured=BucketPointer.absent(transition_revision=0),
+                )
+        assert _observe_pointer(tmp_path) == replacement
     finally:
         if writer.is_alive():
             writer.kill()

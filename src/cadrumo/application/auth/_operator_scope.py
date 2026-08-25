@@ -82,13 +82,12 @@ def auth_operator_settings_scope(settings: Settings | None) -> Generator[Setting
 
 def active_bucket_id_from_settings(settings: Settings) -> str | None:
     """Resolve the active bucket for ``settings`` without falling through to process globals."""
-    from ...core import read_pointer
+    from ..user_profile import observe_active_profile_pointer
 
     override = (settings.cadrumo_active_profile or "").strip()
     if override:
         return override
-    pointer = read_pointer(settings.cadrumo_local_storage_root)
-    return pointer.bucket_id if pointer is not None else None
+    return observe_active_profile_pointer(settings.cadrumo_local_storage_root).bucket_id
 
 
 def _canonical_storage_root(root: Path) -> str:

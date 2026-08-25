@@ -114,7 +114,7 @@ def test_resolver_uses_active_profile_precedence_chain(tmp_path: Path) -> None:
         case_root = tmp_path / f"precedence-{index}"
         case_root.mkdir()
         if pointer_bucket_id is not None:
-            write_pointer(case_root, BucketPointer(bucket_id=pointer_bucket_id, schema_version=1))
+            write_pointer(case_root, BucketPointer.selected(bucket_id=pointer_bucket_id, transition_revision=1))
 
         with override_settings(cadrumo_active_profile=settings_profile, cadrumo_local_storage_root=case_root):
             assert resolve_active_bucket_id() == expected_bucket_id
@@ -141,7 +141,7 @@ def test_active_profile_record_names_an_absent_capsule_as_the_reason(
     """
 
     bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
-    write_pointer(tmp_path, BucketPointer(bucket_id=bucket_id, schema_version=1))
+    write_pointer(tmp_path, BucketPointer.selected(bucket_id=bucket_id, transition_revision=1))
     with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None):
         caplog.set_level(logging.DEBUG, logger="cadrumo.application.workflow._state_models")
 
@@ -164,7 +164,7 @@ def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(t
     dangling_id = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
     session = _current_profile_session(bucket_id, root=tmp_path, label="Operator")
     try:
-        write_pointer(tmp_path, BucketPointer(bucket_id=dangling_id, schema_version=1))
+        write_pointer(tmp_path, BucketPointer.selected(bucket_id=dangling_id, transition_revision=1))
         target = pointer_path(tmp_path)
         dangling_bytes = target.read_bytes()
 
@@ -199,7 +199,7 @@ def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(t
         assert repaired.cleared_pointer is True
         assert repaired.after is not None
         assert repaired.after.status == "none"
-        assert read_pointer(tmp_path) is None
+        assert read_pointer(tmp_path).bucket_id is None
     finally:
         session.close()
 

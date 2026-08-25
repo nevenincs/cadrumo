@@ -151,7 +151,7 @@ def test_span_refuses_a_pointer_target_whose_session_was_never_opened(
     settings = load_settings()
     write_pointer(
         settings.cadrumo_local_storage_root,
-        BucketPointer(bucket_id=_BUCKET_B, schema_version=1),
+        BucketPointer.selected(bucket_id=_BUCKET_B, transition_revision=1),
     )
 
     with (

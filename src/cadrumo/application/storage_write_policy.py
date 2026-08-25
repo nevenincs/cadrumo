@@ -39,7 +39,6 @@ from ..core import (
     ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
-    read_pointer,
 )
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.config import (
@@ -282,8 +281,10 @@ def _classify_effective_write_route(settings: Settings | None) -> StorageRouteCl
         route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE
         and "cadrumo_database_url" not in resolved.model_fields_set
     ):
-        pointer = read_pointer(resolved.cadrumo_local_storage_root)
-        if pointer is not None:
+        from .user_profile import observe_active_profile_pointer
+
+        pointer = observe_active_profile_pointer(resolved.cadrumo_local_storage_root)
+        if pointer.bucket_id is not None:
             return classify_storage_route(settings_for_active_profile_bucket(pointer.bucket_id, resolved))
     return route
 

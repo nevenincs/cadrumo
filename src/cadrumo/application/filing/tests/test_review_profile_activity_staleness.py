@@ -76,7 +76,7 @@ def _profile_storage(tmp_path: Path) -> Iterator[None]:
 
 def _active_bucket_id() -> str:
     pointer = read_pointer(load_settings().cadrumo_local_storage_root)
-    assert pointer is not None, "config profile create did not mint an active bucket pointer"
+    assert pointer.bucket_id is not None, "config profile create did not mint an active bucket pointer"
     return pointer.bucket_id
 
 

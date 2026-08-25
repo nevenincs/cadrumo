@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_valid
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
+    BucketPointer,
 )
 from ...core.errors import CadrumoError
 from ...core.hashing import (
@@ -34,10 +35,9 @@ from ._custody_hold_models import (
     ProfileCustodyHoldEvidence,
     ProfileCustodyRetentionOverride,
 )
-from ._custody_pointer import ProfileCustodyPointerSnapshot
 from ._custody_ports import ProfileCustodyInventoryPort, default_profile_custody_local_record_store
 
-CUSTODY_TRANSACTION_SCHEMA_VERSION = 1
+CUSTODY_TRANSACTION_SCHEMA_VERSION = 2
 CUSTODY_TRANSACTION_MAX_BYTES = 16 * 1024
 CUSTODY_RECEIPT_SCHEMA_VERSION = 1
 CUSTODY_RECEIPT_MAX_BYTES = 4 * 1024
@@ -242,14 +242,14 @@ class ProfileCustodyTransactionJournal(CustodyDigestModel):
     _digest_maximum_bytes = CUSTODY_TRANSACTION_MAX_BYTES
     _digest_subject = "custody journal"
 
-    schema_version: Literal[1] = CUSTODY_TRANSACTION_SCHEMA_VERSION
+    schema_version: Literal[2] = CUSTODY_TRANSACTION_SCHEMA_VERSION
     transaction_id: UUID
     operation: ProfileCustodyTransactionOperation
     profile_id: UUID
     state: ProfileCustodyTransactionState
     started_at: datetime
     updated_at: datetime
-    pointer_before: ProfileCustodyPointerSnapshot
+    pointer_before: BucketPointer
     expected_custody_digest: str | None = Field(default=None, min_length=71, max_length=71)
     proposed_custody_digest: str | None = Field(default=None, min_length=71, max_length=71)
     proposed_generation: int | None = Field(default=None, ge=1)
@@ -450,7 +450,6 @@ __all__ = [
     "ProfileCustodyHoldAssessment",
     "ProfileCustodyHoldEvidence",
     "ProfileCustodyInventoryWitness",
-    "ProfileCustodyPointerSnapshot",
     "ProfileCustodyTransactionConflictError",
     "ProfileCustodyTransactionCorruptError",
     "ProfileCustodyTransactionError",

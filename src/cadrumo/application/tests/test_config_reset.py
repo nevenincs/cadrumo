@@ -13,7 +13,7 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.persistence.storage.custody import profile_session_path
-from ...core import iter_directory, scan_directory
+from ...core import iter_directory, read_pointer, scan_directory
 from ...tests.profile_capsule import open_test_profile_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -309,9 +309,8 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
             _DANGLING_ID,
         )
         assert all(target.bucket_id != "cadrumo.db" for target in operation.targets)
-        assert operation.pointer_snapshot.present is True
-        assert operation.pointer_snapshot.bucket_id == _DANGLING_ID
-        assert operation.pointer_snapshot.content_sha256 is not None
+        assert operation.pointer_snapshot.record.bucket_id == _DANGLING_ID
+        assert operation.pointer_snapshot.record.transition_revision == 0
         assert operation.summary is not None
         assert operation.summary.target_count == 2
         assert operation.summary.deleted_count == 1
@@ -327,7 +326,8 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
             else:
                 assert target.deletion_marker is None
 
-        assert pointer_path(root).exists() is False
+        assert pointer_path(root).is_file()
+        assert read_pointer(root).bucket_id is None
         assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
         assert bucket_paths(root, _PROFILE_B_ID).bucket_dir.exists() is False
         assert bucket_paths(root, _DANGLING_ID).bucket_dir.exists() is False
@@ -644,3 +644,33 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
             _PROFILE_A_ID,
             _PROFILE_C_ID,
         )
+
+
+def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path) -> None:
+    """ABA selection equality cannot hide a changed reset preflight witness."""
+    from ..config_reset import resume_config_reset, start_config_reset
+    from ..user_profile import active_profile_pointer_transaction
+
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="aba")
+        operation = start_config_reset(confirmed=True)
+        before = operation.pointer_snapshot.record
+        assert before.bucket_id == _PROFILE_A_ID
+
+        with active_profile_pointer_transaction(root) as transaction:
+            intermediate = transaction.select(_PROFILE_C_ID)
+            returned = transaction.select(_PROFILE_A_ID)
+        assert intermediate.transition_revision == before.transition_revision + 1
+        assert returned.transition_revision == before.transition_revision + 2
+        assert returned.bucket_id == before.bucket_id
+        assert returned != before
+
+        resumed = resume_config_reset(
+            operation.operation_id,
+            confirmed=True,
+            acknowledge_retention_override=True,
+            retention_override_reason=_OVERRIDE_REASON,
+        )
+        assert resumed.pause_reason is ConfigResetPauseReason.POINTER_CHANGED
+        assert resumed.pointer_snapshot.record == returned

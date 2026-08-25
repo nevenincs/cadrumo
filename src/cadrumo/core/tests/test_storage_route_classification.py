@@ -89,7 +89,7 @@ def test_active_bucket_database_route_is_detected(tmp_path: Path) -> None:
 
 
 def test_pointer_resolved_bucket_database_route_is_detected(tmp_path: Path) -> None:
-    write_pointer(tmp_path, BucketPointer(bucket_id="pointer-bucket", schema_version=1))
+    write_pointer(tmp_path, BucketPointer.selected(bucket_id="pointer-bucket", transition_revision=1))
     settings = Settings(cadrumo_local_storage_root=tmp_path)
 
     route = classify_storage_route(settings)

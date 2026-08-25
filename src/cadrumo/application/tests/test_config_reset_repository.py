@@ -191,7 +191,7 @@ def test_corrupt_and_filename_mismatched_journals_refuse(
         repository.load(other_id)
 
 
-def test_future_schema_version_is_refused_as_corrupt(
+def test_noncurrent_schema_versions_are_refused_as_corrupt(
     tmp_path: Path,
 ) -> None:
     repository = ConfigResetJournalRepository(storage_root=tmp_path)
@@ -199,7 +199,13 @@ def test_future_schema_version_is_refused_as_corrupt(
     repository.create(operation)
     path = repository.path_for(operation.operation_id)
     document = json.loads(path.read_text(encoding="utf-8"))
-    document["schema_version"] = 2
+    document["schema_version"] = 1
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(ConfigResetJournalCorruptError):
+        repository.load(operation.operation_id)
+
+    document["schema_version"] = 3
     path.write_text(json.dumps(document), encoding="utf-8")
 
     with pytest.raises(ConfigResetJournalCorruptError):

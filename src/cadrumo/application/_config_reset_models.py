@@ -14,13 +14,13 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from ..core import STRICT_FROZEN_CONFIG, Hex64Str
+from ..core import STRICT_FROZEN_CONFIG, BucketPointer, Hex64Str
 from ..core.identity import BucketId, ContentDigest
 from ..core.time import validate_utc_aware
 from ..domain.user_profile import ProfileSetupState
 from ._bucket_deletion_contracts import BucketDeletionFingerprint
 
-CONFIG_RESET_SCHEMA_VERSION = 1
+CONFIG_RESET_SCHEMA_VERSION = 2
 
 
 class ConfigResetOperationStatus(StrEnum):
@@ -53,19 +53,11 @@ class ConfigResetTargetPhase(StrEnum):
 
 
 class ConfigResetPointerSnapshot(BaseModel):
-    """Snapshot correlating pointer presence, bucket identity, and content hash."""
+    """Reset-journal witness over the canonical pointer record."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    present: bool
-    bucket_id: BucketId | None = None
-    content_sha256: ContentDigest | None = None
-
-    @model_validator(mode="after")
-    def _validate_presence(self) -> ConfigResetPointerSnapshot:
-        if self.present != (self.bucket_id is not None and self.content_sha256 is not None):
-            raise ValueError("pointer snapshot presence must match bucket id and content digest")
-        return self
+    record: BucketPointer
 
 
 class ConfigResetRetentionDecision(BaseModel):
@@ -265,7 +257,7 @@ class ConfigResetOperation(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: Literal[1] = CONFIG_RESET_SCHEMA_VERSION
+    schema_version: Literal[2] = CONFIG_RESET_SCHEMA_VERSION
     operation_id: Hex64Str
     status: ConfigResetOperationStatus = ConfigResetOperationStatus.INCOMPLETE
     started_at: datetime

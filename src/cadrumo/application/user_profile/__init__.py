@@ -404,9 +404,6 @@ if TYPE_CHECKING:
     from ._custody_hold_models import (
         ProfileCustodyRetentionOverride as ProfileCustodyRetentionOverride,
     )
-    from ._custody_pointer import (
-        ProfileCustodyPointerSnapshot as ProfileCustodyPointerSnapshot,
-    )
     from ._custody_ports import (
         ProfileBucketStoragePathsPort as ProfileBucketStoragePathsPort,
     )
@@ -582,9 +579,6 @@ if TYPE_CHECKING:
         ProfileCustodyTransactionRepository as ProfileCustodyTransactionRepository,
     )
     from ._custody_repository import (
-        compare_and_swap_profile_pointer as compare_and_swap_profile_pointer,
-    )
-    from ._custody_repository import (
         profile_custody_transaction_lock as profile_custody_transaction_lock,
     )
     from ._custody_transactions import (
@@ -758,7 +752,16 @@ if TYPE_CHECKING:
     from ._presentation import notice_presentation as notice_presentation
     from ._presentation import profile_field_shape_hint as profile_field_shape_hint
     from ._profile_pointer_transaction import (
+        ActiveProfilePointerTransaction as ActiveProfilePointerTransaction,
+    )
+    from ._profile_pointer_transaction import (
+        ActiveProfilePointerTransactionError as ActiveProfilePointerTransactionError,
+    )
+    from ._profile_pointer_transaction import (
         active_profile_pointer_transaction as active_profile_pointer_transaction,
+    )
+    from ._profile_pointer_transaction import (
+        observe_active_profile_pointer as observe_active_profile_pointer,
     )
     from ._profile_record_repository import (
         ProfileRecordRepository as ProfileRecordRepository,
@@ -1028,7 +1031,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ProfileCustodyHoldEvidence": "._custody_transactions",
     "ProfileCustodyInventoryWitness": "._custody_transactions",
     "ProfileCustodyPasswordMaterialPort": "._custody_ports",
-    "ProfileCustodyPointerSnapshot": "._custody_pointer",
     "ProfileCustodyRecoveryEnvelopePort": "._custody_ports",
     "ProfileCustodySecureObjectRepositoryPort": "._custody_ports",
     "ProfileCustodySentinelPort": "._custody_ports",
@@ -1086,7 +1088,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "UserProfileRecord": "...domain.user_profile",
     "UserProfileSnapshotRepository": "._repository",
     "activate_profile_record_session": "._profile_record_repository",
+    "ActiveProfilePointerTransaction": "._profile_pointer_transaction",
+    "ActiveProfilePointerTransactionError": "._profile_pointer_transaction",
     "active_profile_pointer_transaction": "._profile_pointer_transaction",
+    "observe_active_profile_pointer": "._profile_pointer_transaction",
     "add_profile_repeatable_section_row": "._section_rows",
     "apply_cotejo": "._cotejo_apply",
     "apply_manager_profile_field_mutation": "._fact_write",
@@ -1102,7 +1107,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "close_active_profile_record_session": "._profile_record_repository",
     "close_profile_session_artefacts": "._login_session",
     "cloud_evidence_upload_eligible_for_active_profile": "._capabilities",
-    "compare_and_swap_profile_pointer": "._custody_repository",
     "conditional_profile_missing_required": "._completeness",
     "decrypt_profile_bundle_with_passphrase": "._bundle_encryption",
     "deserialize_profile_bundle": "._bundle",
@@ -1213,6 +1217,8 @@ __all__ = [
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "TYPED_CATEGORY_NAMESPACES",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
+    "ActiveProfilePointerTransaction",
+    "ActiveProfilePointerTransactionError",
     "CapabilityDecision",
     "CapabilitySource",
     "CensalFieldIntent",
@@ -1272,7 +1278,6 @@ __all__ = [
     "ProfileCustodyLocalRecordStore",
     "ProfileCustodyPasswordMaterialPort",
     "ProfileCustodyPasswordProofMaterialPort",
-    "ProfileCustodyPointerSnapshot",
     "ProfileCustodyPort",
     "ProfileCustodyRecoveryArtifactExportReceiptPort",
     "ProfileCustodyRecoveryArtifactPort",
@@ -1366,7 +1371,6 @@ __all__ = [
     "close_active_profile_record_session",
     "close_profile_session_artefacts",
     "cloud_evidence_upload_eligible_for_active_profile",
-    "compare_and_swap_profile_pointer",
     "conditional_profile_missing_required",
     "decrypt_profile_bundle_with_passphrase",
     "deserialize_profile_bundle",
@@ -1391,6 +1395,7 @@ __all__ = [
     "missing_required_field_paths",
     "next_section_row_index",
     "notice_presentation",
+    "observe_active_profile_pointer",
     "open_censo_divergences",
     "prepare_profile_export",
     "profile_custody_port",

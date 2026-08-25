@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import capture_pointer, read_pointer
+from ....core import BucketPointer, read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._login_session import (
@@ -68,8 +68,8 @@ def _forge_interrupted_handover(*, storage_root: Path, profile_a: str, profile_b
     journal = _ProfileLoginHandoverJournal.prepare(
         profile_a=profile_a,
         profile_b=profile_b,
-        pointer_before=b'bucket_id = "unrelated-before"\nschema_version = 1\n',
-        pointer_after=b'bucket_id = "unrelated-after"\nschema_version = 1\n',
+        pointer_before=BucketPointer.selected(bucket_id="unrelated-before", transition_revision=70),
+        pointer_after=BucketPointer.selected(bucket_id=profile_b, transition_revision=71),
         activation_at=_now(),
     )
     _save_handover_journal(storage_root=storage_root, journal=journal)
@@ -109,17 +109,15 @@ def test_registering_a_second_profile_does_not_make_the_next_login_an_interrupte
             second = _register("Sequential Two", _PASSWORD_SECOND)
             # The create transaction has moved the pointer, so the retained
             # terminal receipt now matches neither of its own witnesses.
-            moved = capture_pointer(storage_root)
-            assert moved != terminal.pointer_before()
-            assert moved != terminal.pointer_after()
+            moved = read_pointer(storage_root)
+            assert moved != terminal.pointer_before
+            assert moved != terminal.pointer_after
 
             outcome = login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
 
             assert outcome.bucket_id == second
             assert outcome.already_authenticated is False
-            selected = read_pointer(storage_root)
-            assert selected is not None
-            assert selected.bucket_id == second
+            assert read_pointer(storage_root).bucket_id == second
         finally:
             _close_live_login()
 
@@ -185,7 +183,6 @@ def test_registration_displaced_profile_keeps_no_resumable_material_after_the_ne
 
         second = _register("Displaced Two", _PASSWORD_SECOND)
         displaced = read_pointer(storage_root)
-        assert displaced is not None
         assert displaced.bucket_id == second, "profile creation is expected to select the new capsule"
 
         entered = _login_in_separate_process(storage_root, second, _PASSWORD_SECOND)
@@ -268,8 +265,8 @@ def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_re
             witness = _ProfileLoginHandoverJournal.prepare(
                 profile_a=first,
                 profile_b=second,
-                pointer_before=b'bucket_id = "unrelated-before"\nschema_version = 1\n',
-                pointer_after=b'bucket_id = "unrelated-after"\nschema_version = 1\n',
+                pointer_before=BucketPointer.selected(bucket_id="unrelated-before", transition_revision=80),
+                pointer_after=BucketPointer.selected(bucket_id=second, transition_revision=81),
                 activation_at=_now(),
             )
             existing = _load_handover_journal(storage_root=storage_root)

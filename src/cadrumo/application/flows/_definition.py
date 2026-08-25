@@ -20,9 +20,8 @@ gates) so existing catalogues migrate by extension.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Union
+from typing import Union, cast
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -34,7 +33,7 @@ from ...core.flows import (
     FlowMode,
     FlowWidgetKind,
 )
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex
 
 _CHOICE_WIDGETS = frozenset(
     {FlowWidgetKind.SELECT, FlowWidgetKind.CHECKBOX, FlowWidgetKind.COMPARE_SELECT},
@@ -319,15 +318,23 @@ class FlowDefinition(BaseModel):
         """
         payload = self.model_dump(mode="python", exclude={"answers_model"})
         payload["answers_model"] = f"{self.answers_model.__module__}.{self.answers_model.__qualname__}"
-        canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=_stable_token)
-        return sha256_hex(canonical.encode("utf-8"))
+        return content_hash_hex(_normalise_fingerprint_types(payload))
 
 
-def _stable_token(value: object) -> str:
-    """Render non-JSON values (the ``answer_type`` type objects) stably."""
+def _normalise_fingerprint_types(value: object) -> object:
+    """Replace the definition's type declarations with their stable domain tokens."""
     if isinstance(value, type):
         return f"{value.__module__}.{value.__qualname__}"
-    return str(value)
+    if isinstance(value, dict):
+        payload = cast(dict[str, object], value)
+        return {key: _normalise_fingerprint_types(item) for key, item in payload.items()}
+    if isinstance(value, tuple):
+        values = cast(tuple[object, ...], value)
+        return tuple(_normalise_fingerprint_types(item) for item in values)
+    if isinstance(value, list):
+        values = cast(list[object], value)
+        return [_normalise_fingerprint_types(item) for item in values]
+    return value
 
 
 def iter_flow_conditions(

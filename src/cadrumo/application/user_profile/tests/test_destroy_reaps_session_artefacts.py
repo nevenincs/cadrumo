@@ -39,7 +39,7 @@ from ....adapters.persistence.storage.master_key import (
     bind_active_bucket_session,
     login_throttle_path,
 )
-from ....core import capture_pointer
+from ....core import read_pointer
 from ....core.time import now as _now
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...evidence import LegalHoldCaseAuthority
@@ -169,7 +169,7 @@ def test_destroying_a_profile_revokes_its_live_process_secret_and_clears_the_poi
             profile_id, live = _register_with_a_live_process_secret(storage_root)
             _authorise_clear_hold(storage_root, profile_id)
             assert live.sealed is False
-            assert capture_pointer(storage_root) is not None, (
+            assert read_pointer(storage_root).bucket_id is not None, (
                 "the profile must be the durable selection, or clearing the pointer proves nothing"
             )
 
@@ -177,7 +177,7 @@ def test_destroying_a_profile_revokes_its_live_process_secret_and_clears_the_poi
 
             assert live.sealed is True
             assert master_key.current_active_bucket_session() is None
-            assert capture_pointer(storage_root) is None
+            assert read_pointer(storage_root).bucket_id is None
         finally:
             _close_live_login()
 
