@@ -15,6 +15,7 @@ from .._workspace_manifest import (
     ModeloWorkspaceFieldManifestEntryV1,
     ModeloWorkspaceFieldManifestV1,
     _manifest_digest,
+    _Node,
     _walk_annotation,
     generate_modelo_workspace_field_manifest,
     validate_modelo_workspace_field_manifest,
@@ -101,7 +102,7 @@ def test_workspace_manifest_includes_every_public_selector_root_and_its_extra_un
 
 
 def test_workspace_manifest_walks_existing_tagged_union_and_collection_coordinates() -> None:
-    nodes: dict[str, tuple[str, str]] = {}
+    nodes: dict[str, _Node] = {}
     _walk_annotation(
         annotation=ModeloWorkspaceSchemaReferenceV1,
         path="workspace_schema_reference",
