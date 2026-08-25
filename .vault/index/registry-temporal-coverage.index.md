@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:b16c8a0ebefbaf81da72567bfbd6459c435ecb151c711b356929025132feda45'
+body_hash: 'sha256:30c6124fbace226d38cd195bc7747090b05250d9252f01a4af3830052e17b4d6'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -45,6 +45,7 @@ related:
   - '[[2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit]]'
   - '[[2026-08-24-registry-temporal-coverage-supported-year-redeclaration-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s13-full-span-matrix-audit]]'
+  - '[[2026-08-25-registry-temporal-coverage-s14-independent-post-review-audit]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -70,6 +71,7 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-16-registry-temporal-coverage-designless-modelo-adjudication-audit` - `registry-temporal-coverage` audit: `designless modelo adjudication`
 - `2026-08-24-registry-temporal-coverage-supported-year-redeclaration-audit` - `registry-temporal-coverage` audit: `supported filing year canonical-home and redeclaration audit`
 - `2026-08-25-registry-temporal-coverage-s13-full-span-matrix-audit` - `registry-temporal-coverage` audit: `s13 full span matrix`
+- `2026-08-25-registry-temporal-coverage-s14-independent-post-review-audit` - `registry-temporal-coverage` audit: `S14 independent post-review`
 
 ### exec
 

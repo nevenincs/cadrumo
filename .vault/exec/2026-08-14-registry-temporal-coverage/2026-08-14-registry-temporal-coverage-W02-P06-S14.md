@@ -11,9 +11,6 @@ related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
 ---
 
-
-
-
 # Collapse the duplicated filing-eligibility predicate onto the snapshot-owned check and delete the coverage-ledger duplicate and the by-construction-empty filing gap surface outright, replacing them with matrix-derived gaps proven non-vacuous on a synthetic reviewed corpus, with no superseded ledger surface retained beside the matrix
 
 ## Scope
