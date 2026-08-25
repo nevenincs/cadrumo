@@ -12,6 +12,7 @@ function registers
 from __future__ import annotations
 
 from ...core.i18n import register_profile_language_resolver
+from .profile_fields import PROFILE_OUTPUT_LANGUAGE_PATH
 
 
 def resolve_active_profile_output_language() -> str | None:
@@ -34,7 +35,7 @@ def resolve_active_profile_output_language() -> str | None:
     record = workflow_state_repository().load().active_profile_record()
     if record is None:
         return None
-    return record_to_path_values(record).get("preferences.output_language")
+    return record_to_path_values(record).get(PROFILE_OUTPUT_LANGUAGE_PATH)
 
 
 def resolve_active_profile_output_language_hint() -> str | None:

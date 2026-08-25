@@ -20,6 +20,8 @@ See Also:
         Public facade for approved-concept terminology search.
     :func:`~application.corpus_search.lookup_terminology`
         Public facade for exact concept-id lookup.
+
+Notes:
     External adapters may project ranked terminology hits into their own
     transport payloads without changing this product-side authority.
 """

@@ -62,6 +62,7 @@ from ...domain.user_profile import (
 )
 from ._completeness import missing_required_field_paths, profile_section_rows, profile_value_is_present
 from ._projections import record_to_path_values
+from .profile_fields import PROFILE_OUTPUT_LANGUAGE_PATH
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
@@ -203,7 +204,7 @@ def profile_field_choices(
             ProfileFieldChoice(value="false", label=tr("flows.confirm.no")),
         )
     if field.type is ProfileFieldType.ENUM:
-        if path == "preferences.output_language":
+        if path == PROFILE_OUTPUT_LANGUAGE_PATH:
             return tuple(
                 ProfileFieldChoice(
                     value=token,

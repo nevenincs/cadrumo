@@ -19,6 +19,8 @@ See Also:
         Typed result carrying catalogue metadata and verbatim text.
     :func:`~application.corpus_search.search_corpus`
         Exact citation ids short-circuit through this lookup before ranking.
+
+Notes:
     External adapters may resolve citation ids and retrieval ``corpus_ref``
     values through this product-owned service.
 """

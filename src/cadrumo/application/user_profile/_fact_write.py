@@ -16,6 +16,7 @@ from enum import StrEnum
 
 from ...domain.buckets import BucketEventType
 from ...domain.user_profile import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .profile_fields import PROFILE_OUTPUT_LANGUAGE_PATH
 
 
 class ProfileFactWriteDoor(StrEnum):
@@ -108,7 +109,7 @@ def apply_profile_fact_changes(
         event_type=BucketEventType.PROFILE_VALUES_UPDATED,
         event_payload={"changed_fact_count": str(len(changes)), "door": door.value},
     )
-    if "preferences.output_language" in changed_paths:
+    if PROFILE_OUTPUT_LANGUAGE_PATH in changed_paths:
         from ...core.i18n import clear_output_language_cache
 
         clear_output_language_cache()

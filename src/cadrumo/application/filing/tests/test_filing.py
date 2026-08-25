@@ -53,10 +53,10 @@ from .. import (
 from ..conftest import _BUCKET_ID
 from ..runtime import ModeloOperatorProfile
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 #: The isolated capsule predates every filing this module drafts.
 _PROFILE_SEEDED_AT = datetime(2025, 1, 6, 9, 0, 0, tzinfo=UTC)
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 
