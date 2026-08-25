@@ -122,6 +122,94 @@ def test_join_rejects_a_message_constructor_reachable_from_multiple_registered_c
         validate_authored_error_message_join(join, ())
 
 
+def test_ast_join_resolves_a_registered_error_through_nested_source_facade_reexports(tmp_path: Path) -> None:
+    """A public-package import retains the private registered error owner through aliases."""
+    _write_source(
+        tmp_path,
+        "src/cadrumo/_errors.py",
+        """
+        class FacadeError(Exception):
+            pass
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/facade/_reexport.py",
+        """
+        from cadrumo._errors import FacadeError
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/facade/__init__.py",
+        """
+        from ._reexport import FacadeError
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/consumer.py",
+        """
+        from cadrumo.facade import FacadeError
+
+        def produce() -> None:
+            FacadeError("facade detail")
+        """,
+    )
+
+    join = authored_error_message_join(
+        root=tmp_path,
+        codes=(_code("cadrumo._errors.FacadeError", "REFUSED_FACADE"),),
+    )
+
+    (site,) = join.singly_owned_sites
+    assert site.owner_qualnames == ("cadrumo._errors.FacadeError",)
+
+
+def test_join_fails_closed_when_a_facade_import_looks_like_a_registered_error_but_cannot_resolve(
+    tmp_path: Path,
+) -> None:
+    """A broken public re-export cannot silently remove a registered constructor from the join."""
+    _write_source(
+        tmp_path,
+        "src/cadrumo/_errors.py",
+        """
+        class FacadeError(Exception):
+            pass
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/facade/__init__.py",
+        """
+        from ._cycle import FacadeError
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/facade/_cycle.py",
+        """
+        from . import FacadeError
+        """,
+    )
+    _write_source(
+        tmp_path,
+        "src/cadrumo/consumer.py",
+        """
+        from cadrumo.facade import FacadeError
+
+        def produce() -> None:
+            FacadeError("unreachable detail")
+        """,
+    )
+
+    with pytest.raises(AuthoredErrorMessageCensusError, match=r"facade import cadrumo\.facade\.FacadeError"):
+        authored_error_message_join(
+            root=tmp_path,
+            codes=(_code("cadrumo._errors.FacadeError", "REFUSED_FACADE"),),
+        )
+
+
 def test_live_join_is_exhaustively_partitioned_by_the_current_registry_and_exact_ledger_exclusion() -> None:
     """A source or registry mutation changes the live join rather than clearing vacuously."""
     join = authored_error_message_join()
@@ -143,6 +231,12 @@ def test_live_join_is_exhaustively_partitioned_by_the_current_registry_and_exact
         and site.owner_qualnames == ("cadrumo.core.json_contract.OutputSchemaError",)
         for site in partition.owned_sites
     )
+    assert sum(
+        site.path == "src/cadrumo/adapters/persistence/profile/transactions.py"
+        and site.callee == "LedgerStorageError"
+        and site.owner_qualnames == ("cadrumo.domain.transactions._errors.LedgerStorageError",)
+        for site in partition.owned_sites
+    ) == 12
     assert len(partition.clean_codes) > 100
 
 

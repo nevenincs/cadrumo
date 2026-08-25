@@ -1165,6 +1165,22 @@ def _authored_message_import_module(
     return ".".join(part for part in parts if part)
 
 
+def _authored_message_literal_reexport_module(
+    *,
+    module: str,
+    is_package: bool,
+    target: str,
+) -> str:
+    """Resolve a literal lazy-facade module target without importing it."""
+    level = len(target) - len(target.lstrip("."))
+    return _authored_message_import_module(
+        module=module,
+        is_package=is_package,
+        level=level,
+        imported=target[level:] or None,
+    )
+
+
 def _authored_message_sources(root: Path) -> tuple[tuple[str, str, str, bool], ...]:
     """Read every production Python module or fail rather than shrink the join."""
     source_root = root / SOURCE_ROOT
@@ -1279,8 +1295,75 @@ class _SourceFacadeReexportResolver:
                 reference = reference.merged(
                     self._resolve(source, imported_name, ancestry=next_ancestry),
                 )
+        lazy_target = self._lazy_export_target(tree, name)
+        if lazy_target is not None:
+            source = _authored_message_literal_reexport_module(
+                module=module,
+                is_package=is_package,
+                target=lazy_target,
+            )
+            reference = reference.merged(self._resolve(source, name, ancestry=next_ancestry))
         self._cache[key] = reference
         return reference
+
+    @staticmethod
+    def _lazy_export_target(tree: ast.Module, name: str) -> str | None:
+        """Return a source-literal ``_LAZY_EXPORTS`` target for one public name."""
+        for statement in tree.body:
+            value: ast.expr | None = None
+            if (
+                (
+                    isinstance(statement, ast.Assign)
+                    and any(
+                        isinstance(target, ast.Name) and target.id == "_LAZY_EXPORTS"
+                        for target in statement.targets
+                    )
+                )
+                or (
+                    isinstance(statement, ast.AnnAssign)
+                    and isinstance(statement.target, ast.Name)
+                    and statement.target.id == "_LAZY_EXPORTS"
+                )
+            ):
+                value = statement.value
+            if not isinstance(value, ast.Dict):
+                continue
+            resolved_target: str | None = None
+            for key, target in zip(value.keys, value.values, strict=True):
+                if (
+                    isinstance(key, ast.Constant)
+                    and key.value == name
+                    and isinstance(target, ast.Constant)
+                    and isinstance(target.value, str)
+                ):
+                    resolved_target = target.value
+                elif key is None:
+                    resolved_target = (
+                        _SourceFacadeReexportResolver._dict_fromkeys_target(target, name) or resolved_target
+                    )
+            return resolved_target
+        return None
+
+    @staticmethod
+    def _dict_fromkeys_target(node: ast.AST, name: str) -> str | None:
+        """Resolve one literal ``dict.fromkeys((names), module)`` table entry."""
+        if (
+            not isinstance(node, ast.Call)
+            or not isinstance(node.func, ast.Attribute)
+            or node.func.attr != "fromkeys"
+            or not isinstance(node.func.value, ast.Name)
+            or node.func.value.id != "dict"
+            or len(node.args) != 2
+        ):
+            return None
+        names, target = node.args
+        if not isinstance(names, (ast.Tuple, ast.List)) or not (
+            isinstance(target, ast.Constant) and isinstance(target.value, str)
+        ):
+            return None
+        if any(isinstance(item, ast.Constant) and item.value == name for item in names.elts):
+            return target.value
+        return None
 
 
 def _authored_message_call_hash(node: ast.Call) -> str:
@@ -1305,11 +1388,13 @@ class _AuthoredMessageVisitor(ast.NodeVisitor):
         module: str,
         is_package: bool,
         registered_qualnames: frozenset[str],
+        facade_reexports: _SourceFacadeReexportResolver,
     ) -> None:
         self.path = path
         self.module = module
         self.is_package = is_package
         self._known_qualnames = registered_qualnames | {_CADRUMO_ERROR_QUALNAME}
+        self._facade_reexports = facade_reexports
         self._scopes: list[dict[str, _ErrorReference]] = [{}]
         self._symbols: list[str] = []
         self._classes: list[_ErrorReference] = []
@@ -1334,14 +1419,35 @@ class _AuthoredMessageVisitor(ast.NodeVisitor):
             return self._lookup(node.id)
         if isinstance(node, ast.Attribute):
             base = self._resolve(node.value)
-            errors = frozenset(
+            direct_errors = frozenset(
                 candidate
                 for module in base.modules
                 if (candidate := f"{module}.{node.attr}") in self._known_qualnames
             )
+            reexported = tuple(
+                self._facade_reexports.resolve(module, node.attr)
+                for module in base.modules
+            )
+            errors = direct_errors | frozenset(
+                owner
+                for reference in reexported
+                for owner in reference.error_qualnames
+            )
+            if (
+                not errors
+                and self._facade_reexports.is_possible_registered_name(node.attr)
+                and any(self._facade_reexports.is_source_module(module) for module in base.modules)
+            ):
+                raise AuthoredErrorMessageCensusError(
+                    "authored-message census cannot resolve possible registered-error "
+                    f"facade attribute {ast.unparse(node)} in {self.path}",
+                )
             return _ErrorReference(
                 error_qualnames=errors,
-                modules=frozenset(f"{module}.{node.attr}" for module in base.modules),
+                modules=(
+                    frozenset(f"{module}.{node.attr}" for module in base.modules)
+                    | frozenset(module for reference in reexported for module in reference.modules)
+                ),
             )
         return _EMPTY_ERROR_REFERENCE
 
@@ -1414,9 +1520,22 @@ class _AuthoredMessageVisitor(ast.NodeVisitor):
                 continue
             name = imported.asname or imported.name
             candidate = f"{source}.{imported.name}"
+            reexported = self._facade_reexports.resolve(source, imported.name)
+            errors = (
+                frozenset({candidate}) if candidate in self._known_qualnames else frozenset()
+            ) | reexported.error_qualnames
+            if (
+                not errors
+                and self._facade_reexports.is_possible_registered_name(imported.name)
+                and self._facade_reexports.is_source_module(source)
+            ):
+                raise AuthoredErrorMessageCensusError(
+                    "authored-message census cannot resolve possible registered-error "
+                    f"facade import {source}.{imported.name} in {self.path}",
+                )
             self._scope[name] = _ErrorReference(
-                error_qualnames=frozenset({candidate}) if candidate in self._known_qualnames else frozenset(),
-                modules=frozenset({candidate}),
+                error_qualnames=errors,
+                modules=frozenset({candidate}) | reexported.modules,
             )
 
     def visit_Assign(self, node: ast.Assign) -> None:
@@ -1526,14 +1645,30 @@ def authored_error_message_join(
             )
         by_qualname[record.error_qualname] = record
 
-    raw_sites: list[AuthoredErrorMessageSite] = []
-    for path, source, module, is_package in _authored_message_sources(root):
+    module_sources = _authored_message_sources(root)
+    module_trees: dict[str, tuple[ast.Module, bool]] = {}
+    parsed_sources: list[tuple[str, ast.Module, str, bool]] = []
+    for path, source, module, is_package in module_sources:
+        if module in module_trees:
+            raise AuthoredErrorMessageCensusError(
+                f"authored-message census found duplicate production module: {module}",
+            )
         tree = ast.parse(source, filename=path)
+        module_trees[module] = (tree, is_package)
+        parsed_sources.append((path, tree, module, is_package))
+
+    facade_reexports = _SourceFacadeReexportResolver(
+        modules=module_trees,
+        registered_qualnames=frozenset(by_qualname),
+    )
+    raw_sites: list[AuthoredErrorMessageSite] = []
+    for path, tree, module, is_package in parsed_sources:
         visitor = _AuthoredMessageVisitor(
             path=path,
             module=module,
             is_package=is_package,
             registered_qualnames=frozenset(by_qualname),
+            facade_reexports=facade_reexports,
         )
         visitor.visit(tree)
         raw_sites.extend(visitor.records)
