@@ -40,21 +40,27 @@ from ....application.user_profile.custody_ports import (
     ProfileRecordEncryptedBlob,
     ProfileSecureObjectInventoryPort,
     ProfileSnapshotPersistencePort,
-    ProfileSnapshotStoredRecord,
 )
 from ....core import StorageCategory, storage_location
 from ....core.classification import SensitivityClass
-from ....core.config import Settings, load_settings
+from ....core.config import Settings
 from ....core.hashing import prefixed_digest
 from ....core.time import now as _utc_now
-from ....domain.user_profile.errors import ProfileSnapshotClassificationError, ProfileSnapshotVersionError
+from ....domain.user_profile.errors import (
+    PROFILE_SNAPSHOT_CLASSIFICATION_MISMATCH_MESSAGE,
+    PROFILE_SNAPSHOT_VERSION_UNSUPPORTED_MESSAGE,
+    ProfileSnapshotClassificationError,
+    ProfileSnapshotNotFoundError,
+    ProfileSnapshotVersionError,
+    UserProfileValidationError,
+)
 from ....domain.user_profile.values import UserProfileSnapshot
 from ..profile.buckets import BucketEventHistoryRepository
+from ..profile.snapshots import SecureSnapshotRepository
 from . import (
     USER_PROFILE_SNAPSHOT_NAMESPACE,
     USER_PROFILE_VALUE_NAMESPACE,
     ClassificationError,
-    Envelope,
     EnvelopeVersionError,
     KeyringUnavailableError,
     MasterKeyMaterialMissingError,
@@ -174,34 +180,71 @@ class _PersistenceProfileSecureObjectInventory:
 
 
 class _PersistenceProfileSnapshotStore:
-    """Envelope codec and secure-object store for filing-time snapshots."""
+    """Profile port over the canonical generic snapshot persistence adapter."""
 
-    def __init__(self, objects: SecureObjectRepository) -> None:
-        self._objects = objects
+    def __init__(
+        self,
+        *,
+        bucket_id: str,
+        object_key: Callable[[str, str], str],
+        objects: SecureObjectRepository | None,
+    ) -> None:
+        def not_found(snapshot_id: str) -> Exception:
+            return ProfileSnapshotNotFoundError(context={"snapshot_id": snapshot_id})
 
-    @property
-    def namespace(self) -> str:
-        return USER_PROFILE_SNAPSHOT_NAMESPACE.namespace
+        def ambiguous(prefix: str, matches: tuple[str, ...]) -> Exception:
+            return UserProfileValidationError(context={"snapshot_id_prefix": prefix, "matches": matches})
 
-    @property
-    def sensitivity(self) -> SensitivityClass:
-        return USER_PROFILE_SNAPSHOT_NAMESPACE.sensitivity
-
-    @property
-    def schema_version(self) -> int:
-        return USER_PROFILE_SNAPSHOT_NAMESPACE.schema_version
-
-    def exists(self, object_key: str) -> bool:
-        return self._objects.exists(self.namespace, object_key)
-
-    def load(self, object_key: str) -> ProfileSnapshotStoredRecord | None:
-        try:
-            record = self._objects.load(
-                self.namespace,
-                object_key,
-                expected_class=self.sensitivity,
-                max_supported_version=self.schema_version,
+        def classification_error(
+            snapshot_id: str,
+            actual: SensitivityClass,
+            expected: SensitivityClass,
+        ) -> Exception:
+            return ProfileSnapshotClassificationError(
+                PROFILE_SNAPSHOT_CLASSIFICATION_MISMATCH_MESSAGE,
+                translated_message="application.user_profile.errors.repository_classification_mismatch",
+                context={
+                    "namespace": USER_PROFILE_SNAPSHOT_NAMESPACE.namespace,
+                    "snapshot_id": snapshot_id,
+                    "classification": actual.value,
+                    "expected": expected.value,
+                },
             )
+
+        def version_error(snapshot_id: str, actual: int, expected: int) -> Exception:
+            return ProfileSnapshotVersionError(
+                PROFILE_SNAPSHOT_VERSION_UNSUPPORTED_MESSAGE,
+                translated_message="application.user_profile.errors.repository_profile_snapshot_version_unsupported",
+                context={
+                    "snapshot_id": snapshot_id,
+                    "schema_version": actual,
+                    "max_supported_version": expected,
+                },
+            )
+
+        self._delegate = SecureSnapshotRepository(
+            bucket_id=bucket_id,
+            payload_model=UserProfileSnapshot,
+            namespace_definition=USER_PROFILE_SNAPSHOT_NAMESPACE,
+            object_key=object_key,
+            not_found_factory=not_found,
+            ambiguous_prefix_factory=ambiguous,
+            domain_label="profile",
+            input_error_cls=UserProfileValidationError,
+            objects=objects,
+            enforce_payload_identity=False,
+            classification_error_factory=classification_error,
+            version_error_factory=version_error,
+        )
+
+    def exists(self, snapshot_id: str) -> bool:
+        return self._delegate.exists(snapshot_id)
+
+    def load(self, snapshot_id: str) -> UserProfileSnapshot | None:
+        try:
+            return self._delegate.load(snapshot_id)
+        except ProfileSnapshotNotFoundError:
+            return None
         except ClassificationError as exc:
             raise ProfileSnapshotClassificationError(
                 str(exc),
@@ -214,30 +257,9 @@ class _PersistenceProfileSnapshotStore:
                 translated_message=exc.translated_message,
                 context=exc.context,
             ) from exc
-        if record is None:
-            return None
-        envelope = Envelope[UserProfileSnapshot].model_validate_json(record.payload.decode("utf-8"))
-        return ProfileSnapshotStoredRecord(
-            snapshot=envelope.payload,
-            classification=envelope.classification,
-            schema_version=envelope.schema_version,
-        )
 
-    def save(self, object_key: str, snapshot: UserProfileSnapshot, *, written_at: datetime) -> None:
-        envelope = Envelope[UserProfileSnapshot](
-            schema_version=self.schema_version,
-            written_at=written_at,
-            classification=self.sensitivity,
-            payload=snapshot,
-        )
-        self._objects.save(
-            namespace=self.namespace,
-            object_key=object_key,
-            classification=self.sensitivity,
-            schema_version=self.schema_version,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
+    def save(self, snapshot: UserProfileSnapshot) -> None:
+        self._delegate.save(snapshot)
 
 
 class _PersistenceProfileRecordCrypto:
@@ -545,14 +567,17 @@ class _PersistenceProfileCustody:
         self,
         bucket_id: str,
         *,
+        object_key: Callable[[str, str], str],
         objects: ProfileCustodySecureObjectRepositoryPort | None = None,
     ) -> ProfileSnapshotPersistencePort:
         resolved = (
-            secure_object_repository_for_bucket(bucket_id, load_settings())
-            if objects is None
-            else _substrate_handle(objects, SecureObjectRepository, "secure-object repository")
+            None if objects is None else _substrate_handle(objects, SecureObjectRepository, "secure-object repository")
         )
-        return _PersistenceProfileSnapshotStore(resolved)
+        return _PersistenceProfileSnapshotStore(
+            bucket_id=bucket_id,
+            object_key=object_key,
+            objects=resolved,
+        )
 
     def record_crypto(self) -> ProfileRecordCryptoPort:
         return _PersistenceProfileRecordCrypto()

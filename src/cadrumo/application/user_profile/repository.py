@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from ...core.time import now
 from ...domain.user_profile.errors import (
     ProfileBucketMismatchError,
-    ProfileSnapshotClassificationError,
     ProfileSnapshotNotFoundError,
-    ProfileSnapshotVersionError,
     UserProfileValidationError,
 )
 from ...domain.user_profile.values import UserProfileSnapshot
@@ -18,10 +15,6 @@ from .custody_ports import (
 )
 
 _PROFILE_SNAPSHOT_MISSING_MESSAGE = "profile snapshot not found in secure storage"
-_PROFILE_CLASSIFICATION_MISMATCH_MESSAGE = (
-    "secure-object namespace classification does not match the repository contract"
-)
-_PROFILE_SNAPSHOT_VERSION_MESSAGE = "profile snapshot schema version is not supported"
 
 
 def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
@@ -63,6 +56,7 @@ class _BucketBoundRepository:
         # bucket, not whichever profile is currently active.
         self._persistence: ProfileSnapshotPersistencePort = profile_custody_port().profile_snapshot_persistence(
             trimmed,
+            object_key=user_profile_snapshot_object_key,
             objects=objects,
         )
 
@@ -112,7 +106,7 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
         Returns:
             ``True`` when a snapshot exists under that key, else ``False``.
         """
-        return self._persistence.exists(user_profile_snapshot_object_key(self._bucket_id, snapshot_id))
+        return self._persistence.exists(snapshot_id)
 
     def load(self, snapshot_id: str) -> UserProfileSnapshot:
         """Load and decrypt the filing-time snapshot for ``snapshot_id``.
@@ -137,46 +131,25 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
         Raises:
             ProfileSnapshotNotFoundError: No snapshot is stored under
                 ``snapshot_id`` in this bucket.
-            :class:`~cadrumo.adapters.persistence.storage.ClassificationError`:
+            ProfileSnapshotClassificationError:
                 The envelope's classification differs from the level expected
                 for snapshot data.
-            :class:`~cadrumo.adapters.persistence.storage.EnvelopeVersionError`:
+            ProfileSnapshotVersionError:
                 The stored schema version is newer than this code can read.
         """
-        record = self._persistence.load(user_profile_snapshot_object_key(self._bucket_id, snapshot_id))
-        if record is None:
+        snapshot = self._persistence.load(snapshot_id)
+        if snapshot is None:
             raise ProfileSnapshotNotFoundError(
                 _PROFILE_SNAPSHOT_MISSING_MESSAGE,
                 translated_message="application.user_profile.errors.repository_profile_snapshot_missing",
                 context={"snapshot_id": snapshot_id, "bucket_id": self._bucket_id},
             )
-        if record.classification is not self._persistence.sensitivity:
-            raise ProfileSnapshotClassificationError(
-                _PROFILE_CLASSIFICATION_MISMATCH_MESSAGE,
-                translated_message="application.user_profile.errors.repository_classification_mismatch",
-                context={
-                    "namespace": self._persistence.namespace,
-                    "snapshot_id": snapshot_id,
-                    "classification": record.classification.value,
-                    "expected": self._persistence.sensitivity.value,
-                },
-            )
-        if record.schema_version != self._persistence.schema_version:
-            raise ProfileSnapshotVersionError(
-                _PROFILE_SNAPSHOT_VERSION_MESSAGE,
-                translated_message="application.user_profile.errors.repository_profile_snapshot_version_unsupported",
-                context={
-                    "snapshot_id": snapshot_id,
-                    "schema_version": record.schema_version,
-                    "max_supported_version": self._persistence.schema_version,
-                },
-            )
-        if record.snapshot.profile_id != self._bucket_id:
+        if snapshot.profile_id != self._bucket_id:
             raise ProfileBucketMismatchError(
                 translated_message="application.user_profile.errors.repository_profile_bucket_mismatch",
-                context={"profile_id": record.snapshot.profile_id, "bucket_id": self._bucket_id, "surface": "load"},
+                context={"profile_id": snapshot.profile_id, "bucket_id": self._bucket_id, "surface": "load"},
             )
-        return record.snapshot
+        return snapshot
 
     def save(self, snapshot: UserProfileSnapshot) -> None:
         """Persist ``snapshot`` as an immutable filing-time snapshot.
@@ -199,11 +172,7 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
                 translated_message="application.user_profile.errors.repository_profile_bucket_mismatch",
                 context={"profile_id": snapshot.profile_id, "bucket_id": self._bucket_id, "surface": "save"},
             )
-        self._persistence.save(
-            user_profile_snapshot_object_key(self._bucket_id, snapshot.snapshot_id),
-            snapshot,
-            written_at=now(),
-        )
+        self._persistence.save(snapshot)
 
 
 __all__ = [

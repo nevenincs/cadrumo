@@ -19,6 +19,11 @@ SCHEMA_LOAD_MESSAGE_KEY: Final[str] = "errors.fail.fail_user_profile_schema_load
 #: same condition over a different record.
 STORED_PROFILE_DRIFT_MESSAGE_KEY: Final[str] = "errors.storage.stored_data_validation_boundary"
 
+PROFILE_SNAPSHOT_CLASSIFICATION_MISMATCH_MESSAGE: Final[str] = (
+    "secure-object namespace classification does not match the repository contract"
+)
+PROFILE_SNAPSHOT_VERSION_UNSUPPORTED_MESSAGE: Final[str] = "profile snapshot schema version is not supported"
+
 
 class UserProfileError(CadrumoError):
     """Base error for every :mod:`domain.user_profile` failure mode."""

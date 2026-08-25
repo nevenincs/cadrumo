@@ -63,6 +63,7 @@ from ..storage.sql import SecureObjectRepository
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from ....core.classification import SensitivityClass
     from ..storage import SecureObjectNamespaceDefinition
     from ..storage.sql import SecureObjectRecord
 
@@ -91,6 +92,9 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         domain_label: str,
         input_error_cls: type[CadrumoError],
         objects: SecureObjectRepository | None = None,
+        enforce_payload_identity: bool = True,
+        classification_error_factory: Callable[[str, SensitivityClass, SensitivityClass], Exception] | None = None,
+        version_error_factory: Callable[[str, int, int], Exception] | None = None,
     ) -> None:
         """Bind the repository to one bucket and one payload namespace.
 
@@ -112,6 +116,14 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
                 application package's error type.
             objects: Secure-object store override. Resolved for ``bucket_id``
                 when omitted.
+            enforce_payload_identity: Whether this generic adapter owns the
+                payload bucket/id checks. Application repositories with a
+                different identity field keep that policy at their typed port
+                and disable this generic ``bucket_id`` convention.
+            classification_error_factory: Optional typed refusal factory for
+                callers whose port must not expose persistence errors.
+            version_error_factory: Optional typed version-refusal factory for
+                callers whose port must not expose persistence errors.
         """
         self._input_error_cls = input_error_cls
         trimmed = bucket_id.strip()
@@ -125,6 +137,9 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         self._ambiguous_prefix_factory = ambiguous_prefix_factory
         self._domain_label = domain_label
         self._objects = objects if objects is not None else secure_object_repository_for_bucket(trimmed)
+        self._enforce_payload_identity = enforce_payload_identity
+        self._classification_error_factory = classification_error_factory
+        self._version_error_factory = version_error_factory
 
     @property
     def bucket_id(self) -> str:
@@ -153,7 +168,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         if record is None:
             raise self._not_found_factory(snapshot_id)
         snapshot = self._snapshot_from_record(record, requested_snapshot_id=snapshot_id)
-        if self._bucket_id_of(snapshot) != self._bucket_id:
+        if self._enforce_payload_identity and self._bucket_id_of(snapshot) != self._bucket_id:
             raise self._input_error_cls(
                 f"{self._domain_label} snapshot bucket_id={self._bucket_id_of(snapshot)!r} "
                 f"does not match repository bucket {self._bucket_id!r}",
@@ -267,7 +282,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         :meth:`save` would persist directly — both build it here, so the
         committed and the prepared forms cannot drift apart.
         """
-        snapshot_bucket = self._bucket_id_of(snapshot)
+        snapshot_bucket = self._bucket_id_of(snapshot) if self._enforce_payload_identity else self._bucket_id
         if snapshot_bucket != self._bucket_id:
             raise self._input_error_cls(
                 f"{self._domain_label} snapshot bucket_id={snapshot_bucket!r} "
@@ -318,6 +333,12 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
             self._namespace_definition.sensitivity,
         ):
             snapshot_label = requested_snapshot_id or self._snapshot_id_of(envelope.payload)
+            if self._classification_error_factory is not None:
+                raise self._classification_error_factory(
+                    snapshot_label,
+                    envelope.classification,
+                    self._namespace_definition.sensitivity,
+                )
             raise ClassificationError(
                 f"{self._domain_label} snapshot {snapshot_label!r} has classification "
                 f"{envelope.classification}; consumer expected {self._namespace_definition.sensitivity}",
@@ -327,6 +348,12 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
             self._namespace_definition.schema_version,
         ):
             snapshot_label = requested_snapshot_id or self._snapshot_id_of(envelope.payload)
+            if self._version_error_factory is not None:
+                raise self._version_error_factory(
+                    snapshot_label,
+                    envelope.schema_version,
+                    self._namespace_definition.schema_version,
+                )
             raise EnvelopeVersionError(
                 f"{self._domain_label} snapshot {snapshot_label!r} is at version "
                 f"{envelope.schema_version}; consumer supports up to "

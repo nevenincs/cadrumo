@@ -249,42 +249,18 @@ class ProfileCustodySecureObjectRepositoryPort(Protocol):
         ...
 
 
-@dataclass(frozen=True, slots=True)
-class ProfileSnapshotStoredRecord:
-    """Decoded filing-time snapshot plus its inner envelope contract."""
-
-    snapshot: UserProfileSnapshot
-    classification: SensitivityClass
-    schema_version: int
-
-
 class ProfileSnapshotPersistencePort(Protocol):
     """Encrypted persistence boundary for immutable filing-time snapshots."""
 
-    @property
-    def namespace(self) -> str:
-        """Return the registered secure-object namespace."""
-        ...
-
-    @property
-    def sensitivity(self) -> SensitivityClass:
-        """Return the required inner and outer sensitivity classification."""
-        ...
-
-    @property
-    def schema_version(self) -> int:
-        """Return the current supported inner and outer schema version."""
-        ...
-
-    def exists(self, object_key: str) -> bool:
+    def exists(self, snapshot_id: str) -> bool:
         """Report whether one immutable snapshot row exists."""
         ...
 
-    def load(self, object_key: str) -> ProfileSnapshotStoredRecord | None:
-        """Load and decode one snapshot without applying application policy."""
+    def load(self, snapshot_id: str) -> UserProfileSnapshot | None:
+        """Load and decode one snapshot, or report its absence."""
         ...
 
-    def save(self, object_key: str, snapshot: UserProfileSnapshot, *, written_at: datetime) -> None:
+    def save(self, snapshot: UserProfileSnapshot) -> None:
         """Encode and persist one immutable snapshot."""
         ...
 
@@ -1022,6 +998,7 @@ class ProfileCustodyPort(Protocol):
         self,
         bucket_id: str,
         *,
+        object_key: Callable[[str, str], str],
         objects: ProfileCustodySecureObjectRepositoryPort | None = None,
     ) -> ProfileSnapshotPersistencePort:
         """Return immutable profile-snapshot persistence for one bucket."""
@@ -1501,7 +1478,6 @@ __all__ = [
     "ProfileRecoveryKeyPort",
     "ProfileSecureObjectInventoryPort",
     "ProfileSnapshotPersistencePort",
-    "ProfileSnapshotStoredRecord",
     "bind_profile_custody_port",
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
