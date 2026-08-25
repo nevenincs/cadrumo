@@ -5,45 +5,11 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:9968d72368e3ad24975291ef597272789c4eaa7ca3039b1e199c387070f44e8a'
+body_hash: 'sha256:2f7bf0daa85857275e80d7e9f9976445e65e9219ccdaeb2148b6c539a28a4153'
 step_id: 'S262'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace profile-password-custody with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S262 and 2026-08-13-profile-password-custody-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Reconcile all four production catalogues with current source and registry revision ownership, including Modelo 038, Modelo 220, Modelo 763, missing and orphaned keys, then rerun audit, drift, completeness, and every nitpicky build and ## Scope
-
-- `locales/ and dev/locales/ and docs/locales/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Reconcile all four production catalogues with current source and registry revision ownership, including Modelo 038, Modelo 220, Modelo 763, missing and orphaned keys, then rerun audit, drift, completeness, and every nitpicky build
 
 ## Scope
@@ -52,10 +18,20 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+Trace the shared runtime and documentation catalogue authorities, reconcile current source keys and Modelo revision moves through the canonical locale tooling, synchronize gettext once, and prove catalogue integrity plus localized rendering without an English fallback or a parallel locale owner.
+
+Normalize authored multiline casilla display text only at the generated raw-HTML boundary so wrapped translations cannot break RST indentation, and retain the selected build language unchanged apart from whitespace.
 
 ## Outcome
 
+The S233 state of 48 missing keys, 20 extras, and two revision moves per runtime locale is reconciled. Concurrent registry work landed Modelo 038, Modelo 220, and Modelo 763 ownership; the remaining six missing and eight stale keys per locale were supplied with real English, Spanish, Catalan, and Hungarian text through one batch and removed through one canonical scaffold. Current `scaffold --check` and `audit` report all four catalogues clean.
+
+The documentation i18n tool ran once. Two Hungarian machine-text dashes were rephrased and three retired environment-reference catalogues were removed. Unit localization checks pass 10/10 and gettext source-drift checks pass 3/3. All four localized nitpicky builds pass after the casilla renderer learned to collapse catalogue line wrapping inside generated HTML; the regression suite passes 32/32, Ruff is clean, and ty is clean.
+
+Formal review approved the change with no findings. The main nitpicky build remains red with 364 API cross-reference warnings unrelated to localization, including current `CasillaId`, `TaxIdIdentityToken`, `FormField`, `ManagerAction`, and `StatusPageData` facade/docstring ownership. S262 therefore remains open under the explicit all-lanes-green closure condition.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+Generated CLI references were not edited. No English fallback or registry-local catalogue was introduced. Runtime catalogue changes were captured amid concurrent locale and sharding commits; docs synchronization landed in `1ad8509ea4`, and the raw-HTML renderer plus regression landed amid the concurrent quality commit `b4c58f41a7`. This record claims only S262's reviewed portions of those commits.
+
+The main API build was rerun twice after localized stabilization and remained at exactly 364 warnings. Its correction belongs to the public API and documentation ownership lane, not to the runtime or gettext catalogues.
