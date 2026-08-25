@@ -29,7 +29,7 @@ import inspect
 
 import pytest
 
-from cadrumo.application.modelo import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
+from ...modelo import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
