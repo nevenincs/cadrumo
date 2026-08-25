@@ -114,7 +114,7 @@ def registration_attempt(
     """Adapt public profile registration into the TUI screen's result contract."""
     from cadrumo.application.user_profile import ProfileRegistrationError, register_profile_with_credentials
     from cadrumo.domain.user_profile import UserProfileFact
-    from cadrumo.entrypoints.tui.secret.registration import (
+    from cadrumo.entrypoints.tui.secret.app import (
         RecoveryHandoverCancelledError,
         RegistrationAttempt,
         RegistrationRefusal,

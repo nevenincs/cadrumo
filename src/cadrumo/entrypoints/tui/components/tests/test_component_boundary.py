@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 import cadrumo.entrypoints.tui.components as components
 
 from .....core.presentation import FormField

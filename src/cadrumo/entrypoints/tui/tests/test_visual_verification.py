@@ -50,11 +50,10 @@ from ....core import require_active_bucket_id
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....entrypoints.tui.profile.overview import ProfileManagerApp
 from ....entrypoints.tui.profile.status import StatusApp
-from ....entrypoints.tui.secret.login import LoginApp
-from ....entrypoints.tui.secret.registration import RegistrationApp
-from .manager_pilot import wait_until_settled
+from ....entrypoints.tui.secret.app import LoginApp, RegistrationApp
 from ....tests.profile_capsule import load_test_profile_record
 from ....tests.secure_sql import isolated_profile_storage_root
+from .manager_pilot import wait_until_settled
 
 pytestmark = [
     pytest.mark.integration,
@@ -836,7 +835,6 @@ async def test_a_modal_secret_never_paints_its_value(tmp_path: Path) -> None:
             "the fixture must exercise at least the export and passphrase dialogs' secret fields, or this test "
             "proves nothing -- got 0 or 1, which means a shipped action lost its secret field or its own gate"
         )
-
 
 
 @pytest.mark.asyncio

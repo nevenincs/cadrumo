@@ -22,7 +22,7 @@ from ....application.user_profile import (
 )
 from ....core import assess_profile_password
 from ....domain.user_profile import UserProfileFact
-from ....entrypoints.tui.secret.registration import (
+from ....entrypoints.tui.secret.app import (
     RecoveryHandoverCancelledError,
     RecoveryWordsScreen,
     RegistrationApp,

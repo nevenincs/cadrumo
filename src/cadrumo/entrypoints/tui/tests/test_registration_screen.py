@@ -33,8 +33,7 @@ from ....core import ProfilePasswordRefusalReason, assess_profile_password
 from ....core.i18n import tr
 from ....entrypoints.cli import attempt_registration
 from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.secret.passphrase import assessment_refusal
-from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationApp
+from ....entrypoints.tui.secret.app import RecoveryWordsScreen, RegistrationApp, assessment_refusal
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [

@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from ....core.json_contract import Notice
     from ....core.presentation import FormPage
     from ....domain.user_profile import ProfileFieldDefinition, ProfileValueRefusalKind, UserProfileRecord
-    from ....entrypoints.tui.secret.registration import RegistrationAttempt
+    from ....entrypoints.tui.secret.app import RegistrationAttempt
 
 
 _ROUTING_META_KEYS = frozenset(
@@ -444,11 +444,11 @@ def attempt_registration(
         register_profile_with_credentials,
     )
     from ....domain.user_profile import UserProfileFact
-    from ....entrypoints.tui.secret.registration import (
+    from ....entrypoints.tui.secret.app import (
         RecoveryHandoverCancelledError,
         RegistrationRefusal,
     )
-    from ....entrypoints.tui.secret.registration import (
+    from ....entrypoints.tui.secret.app import (
         RegistrationAttempt as _Attempt,
     )
 
@@ -490,7 +490,7 @@ def present_registration(*, suggested_name: str | None = None) -> ProfileRegistr
     than an error.
     """
     from ....core import assess_profile_password
-    from ....entrypoints.tui.secret.registration import run_registration_tui
+    from ....entrypoints.tui.secret.app import run_registration_tui
 
     return run_registration_tui(
         assess=assess_profile_password,

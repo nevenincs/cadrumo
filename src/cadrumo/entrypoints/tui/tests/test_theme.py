@@ -41,7 +41,7 @@ from ....application.user_profile.status_projection import StatusPageData
 from ....core import scan_directory
 from ....core.config import TuiAppearance
 from ....entrypoints.tui.profile.status import StatusApp
-from ....entrypoints.tui.secret.registration import RegistrationApp
+from ....entrypoints.tui.secret.app import RegistrationApp
 
 pytestmark = [
     pytest.mark.unit,

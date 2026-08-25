@@ -28,7 +28,7 @@ from ....application.user_profile.login_interaction import (
     attempt_profile_login,
     profile_login_choices,
 )
-from ....entrypoints.tui.secret.login import LoginApp
+from ....entrypoints.tui.secret.app import LoginApp
 from ....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
