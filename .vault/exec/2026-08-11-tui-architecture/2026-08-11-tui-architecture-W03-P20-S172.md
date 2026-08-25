@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:56dc049258cfb7c39c69dfcda01bdb2718fb6d173ac491eb4354281c30c56d34'
+body_hash: 'sha256:5ab9e390b4158114cbf3be434c84170d1d0a6fc4b45302cf9a1aa9ede607971b'
 step_id: 'S172'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -50,3 +50,4 @@ The producer-contract family has one public defining module. Its focused integra
 ## Notes
 
 Implementation landed concurrently in `86943ad091` (`feat(modelo): cut workspace epochs to schema v2`) while this record was being finalized. That shared commit also includes the unrelated `src/cadrumo/core/tests/test_persisted_format_enrolment_binding.py`; this record and the canonical plan closure are deliberately committed separately rather than rewriting peer history. The shared-tree-wide `dev/tests/test_import_hygiene_gate.py` baseline gate currently reports 132 unrelated cross-package private-import sites against its hard-zero baseline. The S172 direct-import and package-binding census is clean; no unrelated remediation was absorbed. Native comparison-domain derivation, concrete port realization, and field-manifest registration remain deliberately deferred to their assigned steps.
+
