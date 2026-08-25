@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:8deaa36989ed85ac758cb3a6bce8acebe1ad7b6146065e8df6c3a78be13f9814'
+body_hash: 'sha256:d1efa7be928bee632c96b2b085b240a8a7c7c46afb79ab0241cf2a685af7f184'
 step_id: 'S47'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
@@ -54,10 +54,15 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Reformat the canonical registry authority with the repository-owned Ruff formatter after concurrent authority-capture work introduced mixed line endings and overlong imports.
+- Preserve every symbol, comment, and behavior while wrapping only the two affected imports.
+- Re-run canonical deadline ownership and native-authority capture tests.
+- Obtain an independent formatting-only architecture review.
 
 ## Outcome
 
+Ruff check and format check pass. The focused registry authority, native-capture, deadline ownership, and projection suite passes 21 tests. Independent review approved with zero findings and confirmed the final diff is formatting-only: two imports wrapped, with symbol and comment identity preserved.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The first review correctly rejected an unstable intermediate tree because a peer-owned substantive authority rewrite was still uncommitted and temporarily incomplete. Work stopped without reverting that peer work. After the rewrite landed, formatting was reapplied to the new canonical revision and the review was repeated successfully. `git diff --check` was clean; Git emitted only its informational CRLF-to-LF normalization warning.

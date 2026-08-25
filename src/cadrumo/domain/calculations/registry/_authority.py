@@ -37,7 +37,9 @@ from ._identity import (
 from ._ids import RevisionId
 from ._loader import collect_registry_tree_fingerprints, load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
-from ._snapshot import _build_validated_snapshot  # pyright: ignore[reportPrivateUsage]  # the registry authority owns snapshot admission
+from ._snapshot import (
+    _build_validated_snapshot,  # pyright: ignore[reportPrivateUsage]  # the registry authority owns snapshot admission
+)
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._static_inspection import RegistryRevisionInspection
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
@@ -722,7 +724,9 @@ def reset_registry_caches() -> None:
     that swap the registry root or rewrite bundled TOML need all three, so the
     package exposes the whole reset rather than its parts.
     """
-    from ._loader import _load_registry_tree_cached  # pyright: ignore[reportPrivateUsage]  # reset owns the complete registry cache surface
+    from ._loader import (
+        _load_registry_tree_cached,  # pyright: ignore[reportPrivateUsage]  # reset owns the complete registry cache surface
+    )
     from ._loader_fingerprints import clear_fingerprint_cache
 
     with _AUTHORITY_LOAD_BARRIER.reset():
