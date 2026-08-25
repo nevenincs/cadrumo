@@ -28,7 +28,7 @@ from uuid import UUID
 
 import pytest
 
-from .._errors import ProfileCustodyRecordError
+from ..errors import ProfileCustodyRecordError
 from .._inventory import (
     DATABASE_PRESENCE_ONLY_RELATIVE_PATHS,
     DATABASE_SIDECAR_RELATIVE_PATHS,

@@ -24,7 +24,7 @@ from ...core.identity import AeatExpedienteId, BucketId
 from ...core.json_contract import Notice
 from ...domain.iva_compensation import IvaCompensationDecisionReason
 from ..storage.sync_runs import SyncRunRecordReference
-from ._errors import LiveIvaAcquisitionFailureMode
+from .errors import LiveIvaAcquisitionFailureMode
 
 
 class FiledCaptureEvidenceTally(BaseModel):
@@ -451,6 +451,7 @@ __all__ = [
     "BulkFiledDataCaptureReport",
     "ExpedientesBulkCaptureFailureRow",
     "ExpedientesBulkCaptureReport",
+    "FiledCasillaSkipRow",
     "FiledDataCaptureFailureRow",
     "FiledDataCaptureReport",
     "IvaCompensationCarryForwardLotRow",

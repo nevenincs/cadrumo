@@ -15,7 +15,7 @@ from ...operator_actions import (
     ActionReference,
 )
 from .. import ManifestActionProfile
-from .._errors import OperatorSurfaceContractError
+from ..errors import OperatorSurfaceContractError
 from .._manifest import (
     InputSchemaInventoryRow,
     LiveLeafInventoryRow,

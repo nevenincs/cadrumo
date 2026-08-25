@@ -98,7 +98,7 @@ from ._consent import (
     cloud_evidence_read_permitted,
     mint_evidence_consent_token,
 )
-from ._errors import (
+from .errors import (
     LLMBusyError,
     LLMCacheError,
     LLMConfigError,

@@ -47,7 +47,7 @@ from __future__ import annotations
 
 from ._consent import telemetry_emit_permitted
 from ._emit import LocalNoopTelemetrySink, TelemetrySink, emit_telemetry_event
-from ._errors import TelemetrySchemaError
+from .errors import TelemetrySchemaError
 from ._http_sink import HttpTelemetrySink
 from ._producers import (
     emit_command_invocation_telemetry,

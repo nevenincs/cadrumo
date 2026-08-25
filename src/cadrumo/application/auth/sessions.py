@@ -10,7 +10,7 @@ See Also:
         Public auth facade that re-exports this session lifecycle.
     :class:`application.auth.AuthAcquisitionLockRecord`
         Profile/provider lock record used to serialize live authentication.
-    :mod:`application.live._session`
+    :mod:`application.live.session`
         Read-only live-entry helper that calls this module only after
         :class:`core.access_gate.AeatAccessGate` allows a live read.
     :mod:`adapters.outbound.aeat.auth`

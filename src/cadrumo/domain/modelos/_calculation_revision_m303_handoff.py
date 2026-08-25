@@ -29,7 +29,7 @@ from ._calculation_revision_m303_evidence import (
     M303RegimenSimplificadoActivityCalculationResult,
     M303RegimenSimplificadoCalculationResult,
 )
-from ._errors import ModeloValidationError
+from .errors import ModeloValidationError
 
 # The 2022 Modelo 390 record design declares these ten annual simplified-regime
 # endpoints in this semantic order.  Keep the source-declared 51, 53, 52 order

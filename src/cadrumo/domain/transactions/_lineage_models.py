@@ -25,7 +25,7 @@ from ...core.identity import TransactionId
 from ...core.time import parse_iso_datetime
 from .._identifiers import canonical_decimal_string
 from ._enums import BusinessClassification, SplitRole, TransactionLifecycleState
-from ._errors import TransactionValidationError
+from .errors import TransactionValidationError
 from ._model_validation import (
     parse_required_aware_datetime,
     require_aware_datetime,

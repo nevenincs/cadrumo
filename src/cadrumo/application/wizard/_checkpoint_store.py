@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
-from ._descendant_group import DESCENDANTS_COUNT_PAGE_ID
+from .descendant_group import DESCENDANTS_COUNT_PAGE_ID
 
 # The descendant fact namespace: indexed rows renta_family.descendiente.{n}.*
 # plus the one aggregate the projection still stores.
@@ -49,7 +49,7 @@ def descendant_clearing_facts(
     if record is None or DESCENDANTS_COUNT_PAGE_ID not in answers:
         return ()
     from ..user_profile.projections import record_to_path_values
-    from ._persistence import descendant_facts_from_answers
+    from .persistence import descendant_facts_from_answers
 
     projected = {path for path, _ in descendant_facts_from_answers(answers)}
     existing = record_to_path_values(record)

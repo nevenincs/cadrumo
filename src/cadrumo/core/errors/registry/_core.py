@@ -188,7 +188,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.observability._errors.AeatCorpusDriftError",
+        "cadrumo.core.observability.errors.AeatCorpusDriftError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_AEAT_CORPUS_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -198,7 +198,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.observability._errors.GoldenCaptureError",
+        "cadrumo.core.observability.errors.GoldenCaptureError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_GOLDEN_CAPTURE",
             category=ErrorCategory.INTEGRITY,
@@ -208,7 +208,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.observability._errors.GoldenReplayMismatchError",
+        "cadrumo.core.observability.errors.GoldenReplayMismatchError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_GOLDEN_REPLAY_MISMATCH",
             category=ErrorCategory.INTEGRITY,
@@ -218,7 +218,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.observability._errors.RunContextMissingError",
+        "cadrumo.core.observability.errors.RunContextMissingError",
         ErrorCode(
             code="INTERNAL_OBSERVABILITY_RUN_CONTEXT_MISSING",
             category=ErrorCategory.INTERNAL,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.observability._errors.RunTraceValidationError",
+        "cadrumo.core.observability.errors.RunTraceValidationError",
         ErrorCode(
             code="INTEGRITY_OBSERVABILITY_RUN_TRACE_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -238,7 +238,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.observability._errors.RunTracePersistenceError",
+        "cadrumo.core.observability.errors.RunTracePersistenceError",
         ErrorCode(
             code="FAIL_OBSERVABILITY_RUN_TRACE_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -268,7 +268,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.corpus_manifest._errors.CorpusManifestError",
+        "cadrumo.core.corpus_manifest.errors.CorpusManifestError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST",
             category=ErrorCategory.INTEGRITY,
@@ -278,7 +278,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.corpus_manifest._errors.CorpusManifestTamperError",
+        "cadrumo.core.corpus_manifest.errors.CorpusManifestTamperError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST_TAMPER",
             category=ErrorCategory.INTEGRITY,
@@ -288,7 +288,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.corpus_manifest._errors.CorpusManifestDriftError",
+        "cadrumo.core.corpus_manifest.errors.CorpusManifestDriftError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_MANIFEST_DRIFT",
             category=ErrorCategory.INTEGRITY,
@@ -298,7 +298,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.corpus_manifest._errors.CorpusBundleError",
+        "cadrumo.core.corpus_manifest.errors.CorpusBundleError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_BUNDLE",
             category=ErrorCategory.INTEGRITY,
@@ -308,7 +308,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.corpus_manifest._errors.CorpusBundleVerificationError",
+        "cadrumo.core.corpus_manifest.errors.CorpusBundleVerificationError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_BUNDLE_VERIFICATION",
             category=ErrorCategory.INTEGRITY,
@@ -338,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.access_gate._errors.AccessGateSubmissionError",
+        "cadrumo.core.access_gate.errors.AccessGateSubmissionError",
         ErrorCode(
             code="ERROR_ACCESS_GATE_SUBMISSION",
             category=ErrorCategory.ERROR,
@@ -348,7 +348,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.access_gate._errors.AccessGateSubmissionPreflightError",
+        "cadrumo.core.access_gate.errors.AccessGateSubmissionPreflightError",
         ErrorCode(
             code="ERROR_ACCESS_GATE_SUBMISSION_PREFLIGHT",
             category=ErrorCategory.ERROR,
@@ -358,7 +358,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.access_gate._errors.LiveSubmitForbiddenError",
+        "cadrumo.core.access_gate.errors.LiveSubmitForbiddenError",
         ErrorCode(
             code="LOCKED_ACCESS_GATE_LIVE_SUBMIT_FORBIDDEN",
             category=ErrorCategory.LOCKED,
@@ -368,7 +368,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.access_gate._errors.AeatLiveReadNotEnabledError",
+        "cadrumo.core.access_gate.errors.AeatLiveReadNotEnabledError",
         ErrorCode(
             code="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
             category=ErrorCategory.REFUSED,
@@ -378,7 +378,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.access_gate._errors.AuthorizationManifestError",
+        "cadrumo.core.access_gate.errors.AuthorizationManifestError",
         ErrorCode(
             code="FAIL_ACCESS_GATE_AUTHORIZATION_MANIFEST",
             category=ErrorCategory.FAIL,
@@ -388,7 +388,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.resources._errors.ResourceLoadError",
+        "cadrumo.core.resources.errors.ResourceLoadError",
         ErrorCode(
             code="ERROR_RESOURCES_LOAD",
             category=ErrorCategory.ERROR,
@@ -398,7 +398,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.resources._errors.ResourceNotFoundError",
+        "cadrumo.core.resources.errors.ResourceNotFoundError",
         ErrorCode(
             code="ERROR_RESOURCES_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -408,7 +408,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.resources._errors.ResourceValidationError",
+        "cadrumo.core.resources.errors.ResourceValidationError",
         ErrorCode(
             code="ERROR_RESOURCES_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -418,7 +418,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.resources._errors.ResourceBackendError",
+        "cadrumo.core.resources.errors.ResourceBackendError",
         ErrorCode(
             code="ERROR_RESOURCES_BACKEND",
             category=ErrorCategory.ERROR,
@@ -488,7 +488,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.telemetry._errors.TelemetrySchemaError",
+        "cadrumo.core.telemetry.errors.TelemetrySchemaError",
         ErrorCode(
             code="ERROR_TELEMETRY_SCHEMA",
             category=ErrorCategory.ERROR,

@@ -33,6 +33,7 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
     mid-process ``switch`` is reflected on the very next command.
     """
     from cadrumo.domain.user_profile.errors import ProfileNotFoundError
+
     from ...application.user_profile.profile_repository import CommittedProfileRepository
     from ...core import FormerProductStateError
     from ...core.bucket_pointer import resolve_active_bucket_id

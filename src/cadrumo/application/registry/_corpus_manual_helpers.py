@@ -26,7 +26,7 @@ from ...domain.manuals import (
     load_manual,
     resolve_part_root,
 )
-from ._errors import RegistryPreconditionCondition, registry_terminal_refusal
+from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 
 _LOGGER = get_logger(__name__)
 

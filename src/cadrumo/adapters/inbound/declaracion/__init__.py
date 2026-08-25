@@ -51,7 +51,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._errors import DeclaracionParseError, TemplateNotDetectedError
+from .errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parser import parse_declaracion, parse_declaracion_bytes
 from ._schema import (
     ExtractionWarning,

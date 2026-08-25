@@ -28,7 +28,7 @@ import pytest
 
 from .....core import DirectoryEntryKind, iter_directory
 from .....core.hashing import sha256_hex
-from .._errors import OutboundStorageIntegrityError, OutboundStorageValidationError
+from ..errors import OutboundStorageIntegrityError, OutboundStorageValidationError
 from .._local import LocalFileSystemProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

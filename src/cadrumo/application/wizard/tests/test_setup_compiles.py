@@ -13,10 +13,10 @@ from __future__ import annotations
 import pytest
 
 from ....domain.contribuyente import PROFILE_KEYS
-from .._catalogue import SETUP_FLOW, WIZARD_FLOWS
-from .._compiler import compile_profile_keys
-from .._models import WizardQuestion, iter_conditions
-from .._widgets import validate_widget_answer
+from ..catalogue import SETUP_FLOW, WIZARD_FLOWS
+from ..compiler import compile_profile_keys
+from ..models import WizardQuestion, iter_conditions
+from ..widgets import validate_widget_answer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

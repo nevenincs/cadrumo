@@ -42,8 +42,8 @@ from cadrumo.domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.profile_capsule import open_test_profile_session, seed_test_profile_record

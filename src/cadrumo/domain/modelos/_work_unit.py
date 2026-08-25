@@ -36,7 +36,7 @@ from ...core.identity import BucketId, WorkUnitId
 from ..calculations.registry import RevisionId
 from ..contribuyente import CCAA
 from ._codes import ModeloCode
-from ._errors import ModeloValidationError
+from .errors import ModeloValidationError
 
 
 class WorkUnitState(StrEnum):

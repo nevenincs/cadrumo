@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import CasillaDefinition, NifString, _validate_nif_string
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

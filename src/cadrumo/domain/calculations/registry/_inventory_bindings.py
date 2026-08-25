@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 from ....core import CasillaId, Modelo, validated_casilla_id
 from ....core.aggregation import BindingAggregationOp
 from ._binding_selector_utils import selector_against_model
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema import DataBindingDefinition
 
 type InventoryProjectionOperation = Literal[

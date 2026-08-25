@@ -43,7 +43,7 @@ from .._calculation_revision import (
     M303InsolvencyFilingSubtype,
     derive_calculation_revision_id,
 )
-from .._errors import ModeloValidationError
+from ..errors import ModeloValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

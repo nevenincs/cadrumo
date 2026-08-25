@@ -24,7 +24,7 @@ from collections.abc import Iterable, Mapping
 
 from ....core import CasillaId
 from ....domain.modelos import LedgerFilingEvidence
-from ._errors import CalcSheetsEngineError
+from .errors import CalcSheetsEngineError
 from ._records import SheetEvidenceContributorRow, SheetEvidenceFacet, SheetEvidenceManualEntry
 
 

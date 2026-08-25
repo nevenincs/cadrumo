@@ -8,8 +8,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from playwright._impl._errors import Error as PlaywrightError
-from playwright._impl._errors import TargetClosedError
+from playwright._impl.errors import Error as PlaywrightError
+from playwright._impl.errors import TargetClosedError
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth.clave_movil_support import ClaveMovilApprovalTimeoutError
@@ -43,7 +43,7 @@ from .. import (
     load_iva_remote_state_acquisition_manifest,
     persist_iva_remote_state_acquisition_report,
 )
-from .._iva_remote_state import (
+from ..iva_remote_state import (
     _aggregate_iva_compensation_history_reports,
     _await_live_iva_surface,
     _filed_history_surface_timeout_ms,

@@ -31,7 +31,7 @@ from ._context import (
     current_run_context,
     run_context,
 )
-from ._errors import (
+from .errors import (
     AeatCorpusDriftError,
     CadrumoObservabilityError,
     GoldenCaptureError,

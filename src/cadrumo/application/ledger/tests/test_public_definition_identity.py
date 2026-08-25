@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import re
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
@@ -13,6 +14,8 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PACKAGE_ROOT = Path(__file__).parents[1]
+_REPOSITORY_ROOT = _PACKAGE_ROOT.parents[3]
+_SOURCE_SCAN_ROOTS = (_REPOSITORY_ROOT / "src", _REPOSITORY_ROOT / "dev")
 _PUBLIC_MODULE_NAMES = (
     "actions_classification",
     "actions_common",
@@ -69,6 +72,11 @@ _PUBLIC_MODULE_NAMES = (
     "review_projection",
     "rule_repository",
 )
+_RETIRED_MODULE_NAMES = tuple(f"_{name}" for name in _PUBLIC_MODULE_NAMES)
+_PACKAGE_FACADE_IMPORT = re.compile(
+    r"(?m)^\s*from\s+(?:cadrumo\.application\.ledger|(?:\.+)?application\.ledger|\.+ledger)\s+import\b"
+)
+_LEDGER_TEST_PACKAGE_FACADE_IMPORT = re.compile(r"(?m)^\s*from\s+\.\.\s+import\b")
 _PUBLIC_DEFINING_MODULES: tuple[ModuleType, ...] = tuple(
     import_module(f"cadrumo.application.ledger.{name}") for name in _PUBLIC_MODULE_NAMES
 )
@@ -111,6 +119,40 @@ def test_public_module_inventory_is_complete_and_the_package_namespace_is_inert(
 
     initializer = ast.parse((_PACKAGE_ROOT / "__init__.py").read_text(encoding="utf-8"))
     assert not any(isinstance(node, ast.Import | ast.ImportFrom | ast.FunctionDef | ast.AsyncFunctionDef) for node in initializer.body)
+
+
+def test_retired_ledger_modules_and_package_facade_imports_have_zero_remnants() -> None:
+    """Moved defining paths and the retired package facade cannot be recreated."""
+    retired_files = [str(_PACKAGE_ROOT / f"{name}.py") for name in _RETIRED_MODULE_NAMES if (_PACKAGE_ROOT / f"{name}.py").exists()]
+    source_remnants: list[str] = []
+    for source_root in _SOURCE_SCAN_ROOTS:
+        for path in source_root.rglob("*.py"):
+            source = path.read_text(encoding="utf-8")
+            for retired_name in _RETIRED_MODULE_NAMES:
+                qualified_path = f"cadrumo.application.ledger.{retired_name}"
+                relative_path = f"ledger.{retired_name}"
+                slash_path = f"application/ledger/{retired_name}.py"
+                backslash_path = f"application\\ledger\\{retired_name}.py"
+                retired_filename = f"{retired_name}.py"
+                is_ledger_test = path.is_relative_to(_PACKAGE_ROOT / "tests")
+                has_retired_filename = is_ledger_test and (
+                    f'"{retired_filename}"' in source or f"'{retired_filename}'" in source
+                )
+                if (
+                    qualified_path in source
+                    or relative_path in source
+                    or slash_path in source
+                    or backslash_path in source
+                    or has_retired_filename
+                ):
+                    source_remnants.append(f"{path}: {retired_name}")
+            if _PACKAGE_FACADE_IMPORT.search(source):
+                source_remnants.append(f"{path}: package facade import")
+            if path.is_relative_to(_PACKAGE_ROOT / "tests") and _LEDGER_TEST_PACKAGE_FACADE_IMPORT.search(source):
+                source_remnants.append(f"{path}: relative package facade import")
+
+    assert retired_files == []
+    assert source_remnants == []
 
 
 @pytest.mark.parametrize("module", _PUBLIC_DEFINING_MODULES, ids=lambda module: module.__name__)

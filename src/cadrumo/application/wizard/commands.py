@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from ...core.errors import CadrumoError
     from ...core.json_contract import Notice, ResolvedNoticeAction
     from ...domain.user_profile.values import UserProfileFact
-    from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
+    from .results import ConfigProfileCreateResult, ConfigProfileEditResult
 
 import contextlib
 
@@ -67,18 +67,18 @@ from ..flows.engine import start_flow, visible_sequence
 from ..flows.errors import FlowAnswerError, FlowSubmitError
 from ..flows.scripted import run_scripted_flow
 from ..flows.wizard_projection import flow_definition_from_wizard_flow
-from ._catalogue import SETUP_FLOW
-from ._descendant_group import attach_descendant_group
-from ._errors import (
+from .catalogue import SETUP_FLOW
+from .descendant_group import attach_descendant_group
+from .errors import (
     WizardMissingFlagError,
     WizardPreconditionCondition,
     WizardValidationError,
     wizard_no_action_verdict,
 )
 from ._format_hints import attach_format_hints
-from ._models import WizardFlow, WizardQuestion, WizardWidget
-from ._persistence import WizardPersistMode
-from ._setup_legal_validators import attach_setup_legal_validators
+from .models import WizardFlow, WizardQuestion, WizardWidget
+from .persistence import WizardPersistMode
+from .setup_legal_validators import attach_setup_legal_validators
 
 
 def _translation_context(value: object) -> dict[str, object]:
@@ -656,7 +656,7 @@ def _missing_filing_baseline_flags(flow: WizardFlow, answers: BaseModel) -> tupl
     modelo work would fail later against an already-committed profile.
     """
     from ..user_profile.filing_baseline import missing_filing_baseline_flags as _missing_profile_filing_baseline_flags
-    from ._persistence import serialise_answers
+    from .persistence import serialise_answers
 
     return _missing_profile_filing_baseline_flags(serialise_answers(flow, answers))
 
@@ -796,8 +796,8 @@ def _answers_model_from_canonical(flow: WizardFlow, committed: Mapping[str, str]
     produced identically regardless of the frontend (scripted, line, or
     full-screen) that produced ``committed``.
     """
-    from ._persistence import parse_canonical
-    from ._widgets import validate_widget_answer
+    from .persistence import parse_canonical
+    from .widgets import validate_widget_answer
 
     typed: dict[str, object] = {}
     for section in flow.sections:
@@ -1050,7 +1050,7 @@ def scripted_profile_facts(
         The supplied flags as facts, empty when the caller named none.
     """
     from ...domain.user_profile.values import UserProfileFact
-    from ._persistence import profile_values_from_patch
+    from .persistence import profile_values_from_patch
 
     canonical = _collect_flag_values(flow, dict(kwargs))
     _refuse_foral_ccaa(canonical, canonical)
@@ -1072,7 +1072,7 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_path_values
-    from ._persistence import (
+    from .persistence import (
         profile_values_from_patch,
         project_answers,
     )
@@ -1116,9 +1116,9 @@ def _run_full_flow(
     from ...domain.user_profile.values import UserProfileFact
     from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from ..user_profile.profile_record_repository import ProfileRecordRepository
-    from ..user_profile.registration import ProfileRegistrationError
     from ..user_profile.projections import record_to_path_values
-    from ._persistence import (
+    from ..user_profile.registration import ProfileRegistrationError
+    from .persistence import (
         project_answers,
         serialise_answers,
     )
@@ -1272,8 +1272,9 @@ def _resolve_profile_id_for_mode(flow: WizardFlow, mode: WizardPersistMode, prof
     itself the registration check: an unresolvable label falls through to the
     missing-flag refusal.
     """
-    from ...domain.user_profile.values import new_profile_id
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+
+    from ...domain.user_profile.values import new_profile_id
 
     if mode == "create":
         _require_profile_label_available(
@@ -1663,7 +1664,7 @@ def _emit_wizard_success(
     from ...core.click_context import json_output_requested
     from ...domain.contribuyente import CCAA
     from ..operator_output import emit_operator_json_success
-    from ._results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
+    from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
     # Two distinct values, deliberately: ``status_token`` is the closed
     # machine-readable vocabulary the JSON envelope carries, and ``verb`` is

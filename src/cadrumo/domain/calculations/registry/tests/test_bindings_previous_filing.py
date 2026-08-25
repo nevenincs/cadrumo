@@ -34,7 +34,7 @@ from .. import (
     source_presence_gaps,
 )
 from .._bindings_previous_filing import PreviousModeloSelector, is_direct_previous_filing_binding
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import BindingSelectorMap, PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

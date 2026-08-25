@@ -26,8 +26,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ...domain.user_profile.errors import ProfileSchemaValidationError
-from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from ...domain.user_profile.loader import load_user_profile_schema
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .completeness import profile_section_rows
 from .fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
 from .profile_record_repository import ProfileRecordRepository

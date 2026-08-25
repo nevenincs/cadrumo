@@ -28,7 +28,8 @@ from ....core.flows import (
 # The bridge reads the real wizard catalogue. The import is at module top so
 # a genuine peer-WIP breakage would surface as a loud collection error rather
 # than a silent skip; at HEAD it imports cleanly.
-from ...wizard import WIZARD_FLOWS, WizardFlow, WizardQuestion, WizardVisibility
+from ...wizard.catalogue import WIZARD_FLOWS
+from ...wizard.models import WizardFlow, WizardQuestion, WizardVisibility
 from ..definition import FlowCondition, FlowDefinition, FlowPage, FlowVisibility
 from ..engine import start_flow, visible_sequence
 from ..wizard_projection import flow_definition_from_wizard_flow

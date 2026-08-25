@@ -37,9 +37,9 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.registry_contract import profile_binding_selectors
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import REPO_ROOT
 from .._profile_binding import (
     inject_derived_autonomic_deduccion_facts,

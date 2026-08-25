@@ -50,7 +50,7 @@ from ..json_contract import (
     RegisteredSchema,
     SchemaEnvelope,
 )
-from ._errors import GoldenCaptureError, GoldenReplayMismatchError
+from .errors import GoldenCaptureError, GoldenReplayMismatchError
 
 #: The sentinel a masked leaf is replaced with before comparison.
 MASK_SENTINEL = "<masked>"

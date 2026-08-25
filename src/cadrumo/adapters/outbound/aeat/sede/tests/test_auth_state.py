@@ -29,7 +29,7 @@ from ......core.i18n import tr
 from ...auth.authenticator_types import AeatSession
 from ...auth.providers import CertificateSessionDetail
 from .._auth_state import storage_state_for_session
-from .._errors import SedeNavigationError
+from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -108,7 +108,7 @@ def test_no_auth_session_locale_key_resolves_to_real_copy() -> None:
 
 
 def test_fetch_notifications_summary_carries_translated_message_on_none_path() -> None:
-    from .._notifications import fetch_notifications_summary
+    from ..notifications import fetch_notifications_summary
 
     session = _minimal_session(storage_state_path=None)
 

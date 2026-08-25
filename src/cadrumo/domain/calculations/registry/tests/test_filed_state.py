@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import bundled_path
 from .._bindings import CasillaObservation, RegistryModeloObservation
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._filed_state import (
     RegistryFiledStateComparison,
     RegistryFiledStateDrift,

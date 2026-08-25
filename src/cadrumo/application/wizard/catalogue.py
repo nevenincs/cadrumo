@@ -31,7 +31,7 @@ from ...domain.deadlines import (
     M303RegimeComposition,
     M303TaxTerritory,
 )
-from ._models import (
+from .models import (
     WizardChoice,
     WizardCondition,
     WizardFlow,

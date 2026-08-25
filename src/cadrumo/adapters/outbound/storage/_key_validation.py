@@ -41,7 +41,7 @@ from collections.abc import Mapping
 
 from ....application.operator_actions import no_action_precondition_verdict
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ._errors import OutboundStorageValidationError
+from .errors import OutboundStorageValidationError
 
 
 def _validation_verdict(condition: str, facts: Mapping[str, str | bool]):

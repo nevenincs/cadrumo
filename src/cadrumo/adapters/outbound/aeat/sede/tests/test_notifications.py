@@ -26,8 +26,8 @@ from ......tests.aeat_literal_fixtures import (
 )
 from ...auth.authenticator_types import AeatSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
-from .._errors import SedeNavigationError
-from .._notifications import (
+from ..errors import SedeNavigationError
+from ..notifications import (
     _READ_GUARD_POLICY,
     _navigate_and_parse,
     _notifications_landing_url,
@@ -411,7 +411,7 @@ class TestNotificationsQueryWindow:
     def test_the_url_states_a_window_instead_of_inheriting_the_one_month_default(self) -> None:
         from datetime import date as _date
 
-        from .._notifications import notifications_query_url
+        from ..notifications import notifications_query_url
 
         url = notifications_query_url(today=_date(2026, 8, 13), lookback_years=10)
 
@@ -422,7 +422,7 @@ class TestNotificationsQueryWindow:
         """Neither the notificada axis nor the read/unread axis may narrow the result."""
         from datetime import date as _date
 
-        from .._notifications import notifications_query_url
+        from ..notifications import notifications_query_url
 
         url = notifications_query_url(today=_date(2026, 8, 13))
 
@@ -434,7 +434,7 @@ class TestNotificationsQueryWindow:
         from datetime import date as _date
 
         from ......core.config import Settings
-        from .._notifications import notifications_query_url
+        from ..notifications import notifications_query_url
 
         configured = Settings.external_constants().aeat.notifications_query.lookback_years
         url = notifications_query_url(today=_date(2026, 8, 13))
@@ -451,7 +451,7 @@ class TestNotificationsQueryWindow:
         """
         from datetime import date as _date
 
-        from .._notifications import notifications_query_url
+        from ..notifications import notifications_query_url
 
         url = notifications_query_url(today=_date(2028, 2, 29), lookback_years=1)
 
@@ -476,7 +476,7 @@ def _row(*, leida, tipo="notificacion", fecha_notificacion=None):
     """Return one notification row differing only in its read/served state."""
     from datetime import date as _date
 
-    from .._notifications import RemoteNotification
+    from ..notifications import RemoteNotification
 
     return RemoteNotification(
         certificado_id="2599062010435",
@@ -510,19 +510,19 @@ class TestNotificationContentIsGatedOnAlreadyRead:
 
     def test_an_already_read_notification_is_admitted(self) -> None:
         """The one case that may be fetched, and the control for every refusal below."""
-        from .._notifications import assert_notification_content_readable
+        from ..notifications import assert_notification_content_readable
 
         assert_notification_content_readable(_row(leida=True))
 
     def test_an_unread_notification_is_refused(self) -> None:
-        from .._notifications import assert_notification_content_readable
+        from ..notifications import assert_notification_content_readable
 
         with pytest.raises(SedeNavigationError):
             assert_notification_content_readable(_row(leida=False))
 
     def test_a_row_with_no_leida_column_is_refused(self) -> None:
         """``None`` is the pending/unrendered case and must fail CLOSED."""
-        from .._notifications import assert_notification_content_readable
+        from ..notifications import assert_notification_content_readable
 
         with pytest.raises(SedeNavigationError):
             assert_notification_content_readable(_row(leida=None))
@@ -539,7 +539,7 @@ class TestNotificationContentIsGatedOnAlreadyRead:
         """
         from datetime import date as _date
 
-        from .._notifications import assert_notification_content_readable
+        from ..notifications import assert_notification_content_readable
 
         served_unread = _row(leida=None, fecha_notificacion=_date(2026, 7, 21))
 
@@ -550,7 +550,7 @@ class TestNotificationContentIsGatedOnAlreadyRead:
 
     def test_the_refusal_names_the_notification_and_its_state(self) -> None:
         """A refusal an operator cannot act on is a dead end."""
-        from .._notifications import assert_notification_content_readable
+        from ..notifications import assert_notification_content_readable
 
         with pytest.raises(SedeNavigationError) as excinfo:
             assert_notification_content_readable(_row(leida=None))
@@ -573,7 +573,7 @@ class TestNotificationContentIsGatedOnAlreadyRead:
             def __getattr__(self, name: str) -> object:
                 raise AssertionError(f"the guard reached the session ({name!r}) before refusing")
 
-        from .._notifications import fetch_notification_document
+        from ..notifications import fetch_notification_document
 
         with pytest.raises(SedeNavigationError):
             await fetch_notification_document(cast(AeatSession, _ExplodingSession()), _row(leida=None))
@@ -581,7 +581,7 @@ class TestNotificationContentIsGatedOnAlreadyRead:
     def test_the_post_allowance_is_scoped_to_the_detail_endpoint_alone(self) -> None:
         """The transport allowance must not widen beyond the one endpoint."""
         from ......core.config import Settings
-        from .._notifications import _READ_GUARD_POLICY
+        from ..notifications import _READ_GUARD_POLICY
 
         detail = Settings.external_constants().aeat.sede_paths.notifications_detail
 

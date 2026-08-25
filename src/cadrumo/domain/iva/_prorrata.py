@@ -99,7 +99,7 @@ from ...core.external_constants import (
     PRORRATA_SECTORAL_SEPARATION_SPREAD_PP,
 )
 from ...core.money import round_to_cents as _round_to_cents
-from ._errors import ProrrataInputError, ProrrataSectorError
+from .errors import ProrrataInputError, ProrrataSectorError
 
 
 class _ProrrataStrictFrozen(BaseModel):

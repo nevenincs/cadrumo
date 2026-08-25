@@ -17,7 +17,7 @@ from ....application.modelo.tests import seed_ready_profile as _seed_ready_profi
 from ....core import CasillaValueKind, validated_casilla_id
 from ....domain.modelos import CalculationRevisionAmendmentKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._filed_data_capture import _CaptureAccumulator
+from ..filed_data_capture import _CaptureAccumulator
 from ._filed_capture_history_support import (
     _CAPTURED_AT,
     _M303_RESULTADO_CASILLA,

@@ -31,7 +31,7 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from .._errors import SedeNavigationError
+from ..errors import SedeNavigationError
 from .._groi_check import (
     _READ_GUARD_POLICY,
     DEFAULT_GROI_TIMEOUT_MS,

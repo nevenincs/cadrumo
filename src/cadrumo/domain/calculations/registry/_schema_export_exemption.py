@@ -12,7 +12,7 @@ from typing import Annotated
 from pydantic import BeforeValidator
 
 from ....core import ExportExemptionReason
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 
 __all__ = ["ExportExemptionReasonValue"]
 

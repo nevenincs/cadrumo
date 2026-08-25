@@ -65,7 +65,7 @@ from ._clave_provider_common import (
     default_sede_target_url,
     verification_probe_url,
 )
-from ._session_probe import run_authenticated_landing_probe
+from .session_probe import run_authenticated_landing_probe
 from .authenticator import (
     AEAT_SESSION_IDLE_TTL,
     AeatLoginAssertion,
@@ -274,7 +274,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 # read surface will use the session and fail as a read error
                 # if AEAT rejects it for the target application.
                 del target_url
-                assertion = await self._verify_in_work(session, target_url=None)
+                assertion = await self.verify_in_work(session, target_url=None)
                 return self._finalize_probe_result(
                     session,
                     metadata,
@@ -364,7 +364,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             An :class:`AeatLoginAssertion` describing the probe outcome.
         """
         async with self._lifecycle.work():
-            return await self._verify_in_work(session, target_url=target_url)
+            return await self.verify_in_work(session, target_url=target_url)
 
     async def _verify_in_work(
         self,
@@ -1124,7 +1124,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             self._context = context
             self._active_session = session
 
-            assertion = await self._verify_in_work(session, target_url=target_url)
+            assertion = await self.verify_in_work(session, target_url=target_url)
             if not assertion.is_valid:
                 raise AeatLoginAssertionError(
                     "Cl@ve Móvil resume failed live verification: "

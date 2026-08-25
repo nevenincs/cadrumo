@@ -39,7 +39,7 @@ from .._bindings import (
     _BINDING_VALIDATOR_REGISTRY,
     validate_binding_selector_shape,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
 from ._registry_schema_support import _committed_modelo, _committed_registry_tree
 

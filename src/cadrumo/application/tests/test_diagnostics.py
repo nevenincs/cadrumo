@@ -508,7 +508,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
         provider_only = update_auth(no_provider, provider="clave_movil")
         fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
 
-        from ..wizard import build_wizard_status
+        from ..wizard.status import build_wizard_status
 
         for state in (no_provider, provider_only, fully_authenticated):
             workflow_state_repository().save(state)
@@ -822,7 +822,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     canonical profile-editor action on the parent check.
     """
 
-    from ..wizard import WizardStatusReport
+    from ..wizard.status import WizardStatusReport
 
     report = WizardStatusReport(
         active_profile="demo",
@@ -870,7 +870,7 @@ def test_missing_log_parent_has_no_false_read_only_recovery_action(tmp_path: Pat
 def test_render_config_repair_text_lists_specific_findings() -> None:
     """The renderer prints each finding line, not just the check summary."""
 
-    from ..wizard import WizardStatusReport
+    from ..wizard.status import WizardStatusReport
 
     ensure_models_rebuilt()
 
@@ -962,7 +962,7 @@ def test_diagnostic_model_error_is_registered_in_error_registry() -> None:
     """DiagnosticModelError must be reachable via the ERROR_REGISTRY by its code string."""
 
     from ...core.errors import ERROR_REGISTRY, get_registered_error_code
-    from .._errors import DiagnosticModelError
+    from ..errors import DiagnosticModelError
 
     code = get_registered_error_code(DiagnosticModelError)
     assert code.code in ERROR_REGISTRY
@@ -973,7 +973,7 @@ def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> No
     """build_error_envelope must produce a well-formed envelope for DiagnosticModelError."""
 
     from ...core.errors import build_error_envelope
-    from .._errors import DiagnosticModelError
+    from ..errors import DiagnosticModelError
 
     err = DiagnosticModelError("invariant violated")
     envelope = build_error_envelope(err)
@@ -987,7 +987,7 @@ def _assert_validation_error_caused_by_diagnostic_model_error(
 ) -> None:
     """Assert a pydantic ValidationError wraps a DiagnosticModelError with the given message."""
 
-    from .._errors import DiagnosticModelError
+    from ..errors import DiagnosticModelError
 
     val_err = exc_info.value
     assert isinstance(val_err, ValidationError)
@@ -1012,7 +1012,7 @@ def test_diagnostic_check_invariant_errors_raise_diagnostic_model_error() -> Non
 def test_diagnostic_model_error_is_pydantic_validator_value_error() -> None:
     """DiagnosticModelError is a ValueError subclass for Pydantic validator wrapping."""
 
-    from .._errors import DiagnosticModelError
+    from ..errors import DiagnosticModelError
 
     assert issubclass(DiagnosticModelError, ValueError)
 

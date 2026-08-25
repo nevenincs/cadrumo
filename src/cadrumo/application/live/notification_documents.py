@@ -57,19 +57,19 @@ from ...domain.attachments import (
     add_attachment,
 )
 from ...domain.notifications import SancionLiquidacion
-from ._errors import (
+from .errors import (
     LiveApplicationInputError,
     LiveReadPrecondition,
     live_read_no_recovery_verdict,
 )
-from ._notification_ports import (
+from .notification_ports import (
     NotificationContentGuard,
     NotificationDocumentFetcher,
     NotificationDocumentProtocol,
     NotificationDocumentReaderProtocol,
     NotificationRowProtocol,
 )
-from ._snapshot_base import SnapshotNotFoundError, SnapshotRepository
+from .snapshot_base import SnapshotNotFoundError, SnapshotRepository
 
 log = get_logger(__name__)
 

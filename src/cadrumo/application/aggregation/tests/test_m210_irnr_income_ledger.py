@@ -22,8 +22,8 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.env_scope import ready_clave_settings
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
-from ...ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
+from ...ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...modelo import (
     ModeloAggregationBindingError,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,

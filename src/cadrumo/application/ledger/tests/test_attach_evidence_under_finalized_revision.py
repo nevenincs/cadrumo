@@ -36,9 +36,18 @@ from ....domain.transactions import (
     derive_transaction_id,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ..models import LedgerRemovalBlocker, ManualLedgerTransactionCommand, ManualLedgerTransactionPatch, ManualLedgerTransactionResult
-from ..actions_manual import attach_manual_transaction_evidence, create_manual_transaction, update_manual_transaction_fields
+from ..actions_manual import (
+    attach_manual_transaction_evidence,
+    create_manual_transaction,
+    update_manual_transaction_fields,
+)
 from ..evidence import PurchaseInvoiceEvidenceService
+from ..models import (
+    LedgerRemovalBlocker,
+    ManualLedgerTransactionCommand,
+    ManualLedgerTransactionPatch,
+    ManualLedgerTransactionResult,
+)
 from ._remove_draft_revision_support import _seed_revision_citing_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

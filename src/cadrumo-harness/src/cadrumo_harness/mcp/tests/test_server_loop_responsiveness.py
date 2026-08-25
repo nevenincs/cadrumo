@@ -65,7 +65,7 @@ from .._profile_secret_channel import clear_profile_secret, load_profile_secret_
 from .._server import build_server
 from .._tools import build_tool_descriptors
 from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS, verify_recovery_handover
-from ._session import connected_server_and_client_session as connect
+from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

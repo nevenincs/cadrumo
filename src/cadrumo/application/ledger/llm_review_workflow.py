@@ -39,7 +39,14 @@ from ...domain.transactions import (
     TransactionCatalogueRepositoryProtocol,
     TransactionValidationError,
 )
-from ...llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSplitApplyResult, LLMSplitSuggestion, LLMSuggestionRejectionResult, OperatorIvaDerivationResult
+from ...llm.suggestions import (
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
+)
 from .evidence_draft import InvoiceDraft
 from .extraction_draft_store import ExtractionDraftDocument, write_extraction_draft
 from .llm_classification import (

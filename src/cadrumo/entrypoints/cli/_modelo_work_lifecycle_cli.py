@@ -80,7 +80,7 @@ def _validate_filing_year(year: int) -> None:
 
 
 def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> None:
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     refusal = modelo_work_create_applicability_refusal(modelo, allow_not_applicable=allow_not_applicable)
     if refusal is None:
@@ -92,7 +92,7 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
 
 
 def guard_unsupported_work_modelo(modelo: str) -> None:
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     modelo_code = modelo.strip()
     locale_key = modelo_work_create_refusal_locale_key(modelo_code)

@@ -53,7 +53,7 @@ from .. import (
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
 )
-from .._errors import AggregationValidationError
+from ..errors import AggregationValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

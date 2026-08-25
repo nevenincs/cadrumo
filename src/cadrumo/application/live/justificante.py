@@ -27,7 +27,7 @@ See Also:
     :mod:`cadrumo.application.live`
         Public read-only live facade that orchestrates capture and reports
         :class:`~cadrumo.application.live.JustificanteCaptureOutcome`.
-    :func:`cadrumo.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
+    :func:`cadrumo.application.live.filed_observation_persistence.enroll_filed_justificante_evidence`
         Filed-history path that performs the same metadata registration and
         current-record evidence stamping from declaration-register artefacts.
     :mod:`cadrumo.application.overview`
@@ -47,6 +47,7 @@ from __future__ import annotations
 import base64
 import binascii
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, override
 
@@ -59,6 +60,12 @@ if TYPE_CHECKING:
     from ..modelo import ModeloReconciliationReport
 
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
+from ...adapters.outbound.aeat.sede import (
+    capture_justificante,
+    open_declarations_register,
+    shared_playwright,
+    walk_expedientes_tree,
+)
 from ...adapters.persistence.storage import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE as JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE,
 )
@@ -72,18 +79,20 @@ from ...core import Modelo, Period, normalise_aeat_csv
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import AeatCsv, AeatExpedienteId, BucketId, ContentDigest, SnapshotId, tax_id_identity_token
+from ...core.time import now
 from ..calculations import ObservationSourceKind
-from ._errors import (
+from .errors import (
     LiveApplicationInputError,
     LiveReadPrecondition,
     live_read_no_recovery_verdict,
 )
-from ._snapshot_base import (
+from .snapshot_base import (
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotService,
     enforce_snapshot_state_invariants,
 )
+from .session import active_verified_session
 
 JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.namespace
 _JUSTIFICANTE_CAPTURE_SNAPSHOT_VERSION = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.schema_version
@@ -943,6 +952,84 @@ def stamp_capture_evidence_if_filed(snapshot: JustificanteCaptureSnapshot) -> Mo
         return None
 
 
+@dataclass(frozen=True, slots=True)
+class JustificanteCaptureOutcome:
+    """Outcome of one live justificante capture and local evidence enrolment."""
+
+    snapshot: JustificanteCaptureSnapshot
+    justificante: Justificante | None
+    filing_record: ModeloRecord | None
+
+    @property
+    def justificante_metadata_registered(self) -> bool:
+        """Return whether the captured receipt yielded stored justificante metadata."""
+        return self.justificante is not None
+
+    @property
+    def filing_evidence_stamped(self) -> bool:
+        """Return whether the receipt matched an existing local filing record."""
+        return self.filing_record is not None
+
+    @property
+    def filing_record_id(self) -> str | None:
+        """Return the local filing-record identifier when capture stamped one."""
+        return self.filing_record.filing_record_id if self.filing_record is not None else None
+
+
+async def capture_justificante_snapshot(
+    *,
+    bucket_id: str,
+    modelo: str,
+    year: int,
+    period: Period,
+) -> JustificanteCaptureSnapshot:
+    """Capture and persist the official justificante for one filed work unit."""
+    outcome = await capture_justificante_snapshot_outcome(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+    )
+    return outcome.snapshot
+
+
+async def capture_justificante_snapshot_outcome(
+    *,
+    bucket_id: str,
+    modelo: str,
+    year: int,
+    period: Period,
+) -> JustificanteCaptureOutcome:
+    """Capture a justificante and report the separate metadata and filing-evidence outcomes."""
+    session, settings = await active_verified_session(operation="live-justificante-read")
+    async with (
+        shared_playwright(session) as playwright,
+        open_declarations_register(session, settings=settings, playwright=playwright) as register,
+    ):
+        declarations = tuple(await register.walk(modelo=modelo, ejercicio=year))
+    expedientes = await walk_expedientes_tree(session, modelo=modelo, settings=settings)
+    expediente = resolve_period_expediente(
+        declarations=declarations,
+        expedientes=expedientes,
+        modelo=modelo,
+        period=period,
+    )
+    capture = await capture_justificante(session, expediente, settings=settings)
+    persisted = JustificanteCaptureSnapshotService(bucket_id=bucket_id).capture(
+        modelo=modelo,
+        filing_year=year,
+        period=period,
+        expediente_id=capture.expediente.expediente_id,
+        csv=capture.ref.csv,
+        pdf_bytes=capture.pdf_bytes,
+        pdf_sha256=capture.pdf_sha256,
+        captured_at=now(),
+    )
+    justificante = register_capture_justificante_metadata(snapshot=persisted)
+    filing_record = stamp_capture_evidence_if_filed(persisted)
+    return JustificanteCaptureOutcome(snapshot=persisted, justificante=justificante, filing_record=filing_record)
+
+
 __all__ = [
     "JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
     "JUSTIFICANTE_CAPTURE_SOURCE_KIND",
@@ -950,6 +1037,9 @@ __all__ = [
     "JustificanteCaptureSnapshotNotFoundError",
     "JustificanteCaptureSnapshotRepository",
     "JustificanteCaptureSnapshotService",
+    "JustificanteCaptureOutcome",
+    "capture_justificante_snapshot",
+    "capture_justificante_snapshot_outcome",
     "derive_justificante_capture_snapshot_id",
     "justificante_capture_snapshot_object_key",
     "parse_capture_to_justificante",

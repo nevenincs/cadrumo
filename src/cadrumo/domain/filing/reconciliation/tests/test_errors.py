@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.errors import CadrumoError
-from .._errors import (
+from ..errors import (
     ReconciliationDeclaracionParseError,
     ReconciliationDriftError,
     ReconciliationError,

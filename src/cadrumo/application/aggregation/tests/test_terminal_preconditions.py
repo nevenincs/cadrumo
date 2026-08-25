@@ -29,7 +29,7 @@ from ....domain.iva import (
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import _modelo_bindings as modelo_bindings_module
 from .. import _service as service_module
-from .._errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
+from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver, _raise_if_screened_invoice_iva_would_be_silent
 from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .._retencion_observations_repository import RetencionObservationRepository
@@ -259,7 +259,7 @@ def test_aggregation_terminal_attachment_totality_is_exact_and_mutation_sensitiv
 def test_aggregation_preconditions_use_the_shared_mixin_and_single_canonical_constructor() -> None:
     assert issubclass(AggregationError, TerminalPreconditionErrorMixin)
     preconditions_module = __import__("cadrumo.application.aggregation._preconditions", fromlist=["*"])
-    errors_module = __import__("cadrumo.application.aggregation._errors", fromlist=["*"])
+    errors_module = __import__("cadrumo.application.aggregation.errors", fromlist=["*"])
     modules = (*_ATTACHMENT_MODULES, preconditions_module, errors_module)
     for module in modules:
         tree = ast.parse(inspect.getsource(module))

@@ -17,8 +17,8 @@ from .. import (
     filed_data_capture_failure_row,
     list_filed_data_bulk,
 )
-from .._errors import LiveIvaSurfaceTimeoutError
-from .._filed_data_capture import _await_filed_register_walk, _walk_or_failure_row
+from ..errors import LiveIvaSurfaceTimeoutError
+from ..filed_data_capture import _await_filed_register_walk, _walk_or_failure_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

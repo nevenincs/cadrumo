@@ -53,7 +53,7 @@ _COVERED_BY_REFUSAL_TABLE: dict[str, str] = {
     "src/cadrumo/adapters/persistence/profile/_secure_model_document.py": "profile_assets",
     "src/cadrumo/adapters/persistence/storage/attachment.py": "attachment",
     "src/cadrumo/adapters/persistence/storage/envelope/_secure_repository.py": "justificante",
-    "src/cadrumo/adapters/outbound/aeat/auth/_session_store.py": "auth_session",
+    "src/cadrumo/adapters/outbound/aeat/auth/session_store.py": "auth_session",
     "src/cadrumo/adapters/outbound/aeat/sede/_observation_store.py": "observation",
     "src/cadrumo/adapters/outbound/google/_session_store.py": "google_oauth_token",
     "src/cadrumo/adapters/outbound/llm/_cache.py": "llm_cache_stats",
@@ -63,7 +63,7 @@ _COVERED_BY_REFUSAL_TABLE: dict[str, str] = {
     "src/cadrumo/application/auth/_diagnostics.py": "auth_diagnostics",
     "src/cadrumo/application/workflow/_persistence.py": "workflow_state",
     "src/cadrumo/application/modelo/_review_package_recipient_registry.py": "review_recipient_registry",
-    "src/cadrumo/application/modelo/_review_package_recipient_replay_guard.py": "review_recipient_replay_guard",
+    "src/cadrumo/adapters/persistence/profile/recipient_replay_guard.py": "review_recipient_replay_guard",
 }
 
 #: Resolver consumers the refusal table does NOT reach, each with the reason.

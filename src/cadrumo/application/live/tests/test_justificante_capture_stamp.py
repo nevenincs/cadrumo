@@ -21,9 +21,9 @@ from ....domain.modelos import (
     ExternalEvidenceKind,
 )
 from ....domain.user_profile.values import UserProfileFact
-from .._justificante import register_capture_as_filing_evidence
-from .._snapshot_base import SnapshotLifecycleState
-from ._justificante_reconcile_support import (
+from ..justificante import register_capture_as_filing_evidence
+from ..snapshot_base import SnapshotLifecycleState
+from .justificante_reconcile_support import (
     MODELO_130_FIXTURE,
     _active_bucket_id,
     _persist_capture,
@@ -110,7 +110,7 @@ def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -
 
 def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
     """Direct live capture must not replace a different official evidence reference."""
-    from .._errors import LiveApplicationInputError
+    from ..errors import LiveApplicationInputError
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     _seed_unverified_filing(
@@ -157,7 +157,7 @@ def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
 
 def test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt() -> None:
     """Snapshot metadata cannot replace the CSV parsed from the official receipt bytes."""
-    from .._errors import LiveApplicationInputError
+    from ..errors import LiveApplicationInputError
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
@@ -229,7 +229,7 @@ def test_stamp_accepts_a_capture_whose_expediente_is_not_the_receipt_presentatio
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> None:
     """A capture cannot stamp a filing when the parsed receipt targets another modelo."""
-    from .._errors import LiveApplicationInputError
+    from ..errors import LiveApplicationInputError
 
     work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="303", filing_year=2026, period="1T")
@@ -264,7 +264,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> Non
 
 def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
     """Only the current ACTIVE live capture may become filing evidence."""
-    from .._errors import LiveApplicationInputError
+    from ..errors import LiveApplicationInputError
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
@@ -305,7 +305,7 @@ def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
     """A capture cannot stamp a filing when the parsed receipt targets another year."""
-    from .._errors import LiveApplicationInputError
+    from ..errors import LiveApplicationInputError
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2025, period="1T")
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2025, period="1T")
@@ -340,7 +340,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_period() -> None:
     """A capture cannot stamp a filing when the parsed receipt targets another period."""
-    from .._errors import LiveApplicationInputError
+    from ..errors import LiveApplicationInputError
 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="2T")
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="2T")
@@ -375,7 +375,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_period() -> Non
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> None:
     """A live-captured receipt cannot stamp a filing for a different taxpayer profile."""
-    from .._errors import LiveApplicationInputError
+    from ..errors import LiveApplicationInputError
 
     set_active_test_profile_facts(
         (UserProfileFact(path="identity.tax_id", value="12345678Z"),),
@@ -413,7 +413,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
 
 def test_stamp_refuses_when_no_current_filing_exists() -> None:
     """Stamping refuses when the captured period has no filing record yet."""
-    from .._errors import LiveApplicationInputError
+    from ..errors import LiveApplicationInputError
 
     _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     snapshot = _persist_capture(

@@ -28,7 +28,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 
-from ._errors import TransactionError
+from .errors import TransactionError
 
 
 class ModelTier(IntEnum):

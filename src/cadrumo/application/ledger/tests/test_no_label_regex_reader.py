@@ -9,7 +9,7 @@ it, and a deletion is only real if re-introduction reddens.
 
 Two properties, and the second is what makes the first trustworthy:
 
-**Scoped.** The check binds to ``_evidence_draft.py`` alone. Two working AEAT
+**Scoped.** The check binds to ``evidence_draft.py`` alone. Two working AEAT
 parsers legitimately carry their own compiled label patterns -- the justificante
 extractor and the declaracion parser read fixed AEAT-published layouts, where a
 pattern is the correct instrument and no model belongs. A tree-wide sweep for

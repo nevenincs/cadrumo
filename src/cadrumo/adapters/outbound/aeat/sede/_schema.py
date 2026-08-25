@@ -78,7 +78,7 @@ from .....core import CasillaId, CasillaValueKind, FiledHistoryDiscoverySignal, 
 from .....core.decimal import coerce_decimal_strict
 from .....core.identity import AeatCsv, AeatExpedienteId, ContentDigest, RegistrySnapshotId
 from .....core.time import UtcInstant
-from ._errors import SedeValidationError
+from .errors import SedeValidationError
 
 
 class Expediente(BaseModel):

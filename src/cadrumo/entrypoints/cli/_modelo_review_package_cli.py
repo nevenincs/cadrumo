@@ -63,6 +63,12 @@ from pathlib import Path
 
 import typer
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+
+from ...adapters.persistence.profile.recipient_replay_guard import (
+    RecipientPackageReplayedError,
+    RecipientReplayGuardRepository,
+)
 from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -115,11 +121,6 @@ from ...application.modelo import (
     verify_review_package,
     verify_review_package_signature,
 )
-from ...adapters.persistence.profile.recipient_replay_guard import (
-    RecipientPackageReplayedError,
-    RecipientReplayGuardRepository,
-)
-from cadrumo.application.workflow.persistence import workflow_state_repository
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr

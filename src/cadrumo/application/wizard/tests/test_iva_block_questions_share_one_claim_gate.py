@@ -16,8 +16,8 @@ from ....domain.deadlines import (
     MODELO_IVA_BLOCK_CLAIMING_PATHS,
     MODELO_IVA_BLOCK_REQUIRED_PATHS,
 )
-from .._catalogue import _IVA_BLOCK_CLAIMED, SETUP_FLOW
-from .._models import WizardQuestion
+from ..catalogue import _IVA_BLOCK_CLAIMED, SETUP_FLOW
+from ..models import WizardQuestion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

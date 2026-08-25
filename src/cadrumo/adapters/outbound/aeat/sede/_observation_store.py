@@ -58,7 +58,7 @@ from ....persistence.storage import (
     SecureObjectRowIdentityError,
     secure_object_repository_for_active_bucket,
 )
-from ._errors import ExpedienteNotFoundError, SedeValidationError
+from .errors import ExpedienteNotFoundError, SedeValidationError
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 
 _SAFE_SEGMENT_RE = re.compile(r"[^0-9A-Za-z_.-]+")
@@ -130,7 +130,7 @@ class FiledDeclaracionObservationRepository(SecureBoundRepository[FiledDeclaraci
     The natural key is the SHA-256 grammar
     :func:`filed_declaracion_observation_object_key` computes from a
     declaration's identity fields; a row whose decrypted payload rebuilds a
-    different key surfaces as :class:`~._errors.SedeValidationError` (the
+    different key surfaces as :class:`~.errors.SedeValidationError` (the
     ``load`` path only -- see the module docstring for why enumeration is
     handled separately).
     """

@@ -33,9 +33,19 @@ from ....domain.transactions import (
     TransactionLifecycleState,
     TransactionValidationError,
 )
-from ....llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSplitApplyResult, LLMSplitSuggestion
+from ....llm.suggestions import (
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitSuggestion,
+)
 from ....tests.secure_sql import isolated_runtime_profile
-from ..llm_classification import apply_evidence_split, apply_llm_classification, saturate_llm_classification, suggest_evidence_split
+from ..llm_classification import (
+    apply_evidence_split,
+    apply_llm_classification,
+    saturate_llm_classification,
+    suggest_evidence_split,
+)
 from ..llm_review_workflow import (
     LlmReviewDecision,
     LlmReviewInvocationOrigin,

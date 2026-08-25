@@ -289,7 +289,7 @@ def test_capture_filed_declaration_empty_nif_carries_translated_message() -> Non
         Declaracion,
         capture_filed_declaration_observation,
     )
-    from .._errors import SedeNavigationError
+    from ..errors import SedeNavigationError
 
     session = _whitespace_nif_session()
     declaration = Declaracion(

@@ -84,7 +84,7 @@ from ._enums import (
     TransactionLifecycleState,
     is_classified,
 )
-from ._errors import (
+from .errors import (
     LedgerNoActiveBucketError,
     LedgerStorageError,
     StoredTransactionDriftError,

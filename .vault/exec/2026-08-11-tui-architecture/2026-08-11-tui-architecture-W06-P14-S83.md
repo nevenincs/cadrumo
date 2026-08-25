@@ -33,4 +33,3 @@ Independent review approved the row. Focused Ruff passed; the global TUI policy 
 ## Notes
 
 Five broader combined-wizard failures occur in unrelated Modelo 303 external-filing fixture setup before this handler is reached; they do not alter the focused green evidence.
-

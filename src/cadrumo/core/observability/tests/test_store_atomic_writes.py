@@ -41,7 +41,7 @@ from .. import (
     save_envelope,
     save_trace,
 )
-from .._errors import RunTracePersistenceError
+from ..errors import RunTracePersistenceError
 from .._store import ENVELOPE_FILENAME, TRACE_FILENAME, runs_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

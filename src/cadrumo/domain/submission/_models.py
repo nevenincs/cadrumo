@@ -35,7 +35,7 @@ from ...core import Modelo, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import AeatCsv, SubjectTaxId
 from ...core.time import validate_utc_aware
-from ._errors import SubmissionValidationError
+from .errors import SubmissionValidationError
 
 _SUBMISSION_ID_LENGTH = 16
 

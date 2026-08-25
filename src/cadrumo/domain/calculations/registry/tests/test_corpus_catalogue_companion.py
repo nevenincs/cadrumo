@@ -23,7 +23,7 @@ from .._corpus_catalogue import (
     verify_source_catalogue,
     verify_source_file,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import SourceReference
 from ._registry_schema_support import _committed_registry_tree
 

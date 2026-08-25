@@ -28,7 +28,7 @@ import pytest
 
 from ....domain.invoices import numeric_iva_rate_percentages
 from .._edit import InvoiceEditSpec
-from .._errors import EditParseError
+from ..errors import EditParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

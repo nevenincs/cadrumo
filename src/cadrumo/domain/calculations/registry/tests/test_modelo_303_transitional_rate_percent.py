@@ -63,7 +63,7 @@ from .. import (
     resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

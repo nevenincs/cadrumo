@@ -13,7 +13,7 @@ import pytest
 
 from cadrumo.application.user_profile.filing_baseline import _profile_path_flag, missing_filing_baseline_flags
 
-from ...wizard import SETUP_OPTION_INFOS
+from ...wizard.commands import SETUP_OPTION_INFOS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -25,10 +25,10 @@ import pytest
 from cadrumo.application.user_profile.overview import MASKED_PLACEHOLDER, build_profile_overview
 
 from ....core.config import override_settings
+from ....domain.user_profile.labels import profile_field_label_key
+from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.schema import ProfileFieldType
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....domain.user_profile.loader import load_user_profile_schema
-from ....domain.user_profile.labels import profile_field_label_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

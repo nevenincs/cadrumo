@@ -39,7 +39,7 @@ import pytest
 from ....core import scan_directory
 from ....core.config import override_settings
 from ....core.i18n import tr
-from .._errors import AggregationConfigError, AggregationValidationError, t
+from ..errors import AggregationConfigError, AggregationValidationError, t
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

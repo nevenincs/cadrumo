@@ -38,7 +38,7 @@ from ...core.time import now
 from ...domain.deadlines import TaxpayerProfile
 from ..operations.owner import OperationEventEmitter, OperationExecutorContext
 from ..storage.sync_runs import SyncRunRecordRepositoryProtocol
-from ._filed_data_capture import (
+from .filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     FILED_HISTORY_DECLARATION_REFUSAL_CODE,
     FILED_HISTORY_DISCOVERY_REFUSAL_CODE,
@@ -112,7 +112,7 @@ def _resolve_active_filed_history_profile() -> TaxpayerProfile | None:
     """Load the selected profile through its canonical internal projection."""
     from cadrumo.application.workflow.persistence import workflow_state_repository
 
-    from ..wizard import WizardStatusError, load_active_taxpayer_profile
+    from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
 
     try:
         return load_active_taxpayer_profile(workflow_state_repository().load())

@@ -53,7 +53,7 @@ class FincaRepository:
 
     def __init__(self, session: Session) -> None:
         """Bind the repository to an open ORM ``session``."""
-        self._session = session
+        self.session = session
 
     def list_all(self) -> list[Finca]:
         """Return every record in the table, ordered by surrogate id.
@@ -63,7 +63,7 @@ class FincaRepository:
         """
         from ..storage.sql import _orm
 
-        rows = self._session.execute(select(_orm.FincaRow).order_by(_orm.FincaRow.id)).scalars().all()
+        rows = self.session.execute(select(_orm.FincaRow).order_by(_orm.FincaRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def get(self, record_id: int) -> Finca:
@@ -81,7 +81,7 @@ class FincaRepository:
         from ..storage import RepositoryError
         from ..storage.sql import _orm
 
-        row = self._session.get(_orm.FincaRow, record_id)
+        row = self.session.get(_orm.FincaRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_finca id={record_id} not found")
         return self._to_record(row)
@@ -94,7 +94,7 @@ class FincaRepository:
         """
         from ..storage.sql import _orm
 
-        row = self._session.execute(
+        row = self.session.execute(
             select(_orm.FincaRow).where(_orm.FincaRow.identifier == identifier),
         ).scalar_one_or_none()
         return None if row is None else self._to_record(row)
@@ -110,11 +110,11 @@ class FincaRepository:
 
         row: _orm.FincaRow | None = None
         if record.id is not None:
-            row = self._session.get(_orm.FincaRow, record.id)
+            row = self.session.get(_orm.FincaRow, record.id)
             if row is None:
                 raise RepositoryError(f"rental_finca id={record.id} not found for update")
         else:
-            row = self._session.execute(
+            row = self.session.execute(
                 select(_orm.FincaRow).where(
                     _orm.FincaRow.identifier == record.identifier,
                 ),
@@ -135,7 +135,7 @@ class FincaRepository:
                 is_stressed_area=record.is_stressed_area,
                 schema_version=record.schema_version,
             )
-            self._session.add(row)
+            self.session.add(row)
         else:
             _log.debug("rental_finca: updating finca id=%s identifier=%s", record.id, record.identifier)
             row.identifier = record.identifier
@@ -150,7 +150,7 @@ class FincaRepository:
             row.use_type = record.use_type.value
             row.is_stressed_area = record.is_stressed_area
             row.schema_version = record.schema_version
-        _flush_or_wrap(self._session, "rental_finca")
+        _flush_or_wrap(self.session, "rental_finca")
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
@@ -158,12 +158,12 @@ class FincaRepository:
         from ..storage import RepositoryError
         from ..storage.sql import _orm
 
-        row = self._session.get(_orm.FincaRow, record_id)
+        row = self.session.get(_orm.FincaRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_finca id={record_id} not found")
         _log.debug("rental_finca: deleting id=%d", record_id)
-        self._session.delete(row)
-        _flush_or_wrap(self._session, "rental_finca")
+        self.session.delete(row)
+        _flush_or_wrap(self.session, "rental_finca")
 
     @staticmethod
     def _to_record(row: _orm.FincaRow) -> Finca:
@@ -203,13 +203,13 @@ class ArrendamientoRepository:
 
     def __init__(self, session: Session) -> None:
         """Bind the repository to an open ORM ``session``."""
-        self._session = session
+        self.session = session
 
     def list_all(self) -> list[Arrendamiento]:
         """Return every :class:`Arrendamiento` record in the table, ordered by surrogate id."""
         from ..storage.sql import _orm
 
-        rows = self._session.execute(select(_orm.ArrendamientoRow).order_by(_orm.ArrendamientoRow.id)).scalars().all()
+        rows = self.session.execute(select(_orm.ArrendamientoRow).order_by(_orm.ArrendamientoRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def list_for_finca(self, finca_id: int) -> list[Arrendamiento]:
@@ -217,7 +217,7 @@ class ArrendamientoRepository:
         from ..storage.sql import _orm
 
         rows = (
-            self._session.execute(
+            self.session.execute(
                 select(_orm.ArrendamientoRow)
                 .where(_orm.ArrendamientoRow.finca_id == finca_id)
                 .order_by(_orm.ArrendamientoRow.contract_celebration_date),
@@ -242,7 +242,7 @@ class ArrendamientoRepository:
         from ..storage import RepositoryError
         from ..storage.sql import _orm
 
-        row = self._session.get(_orm.ArrendamientoRow, record_id)
+        row = self.session.get(_orm.ArrendamientoRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_contract id={record_id} not found")
         return self._to_record(row)
@@ -254,16 +254,16 @@ class ArrendamientoRepository:
 
         row: _orm.ArrendamientoRow | None = None
         if record.id is not None:
-            row = self._session.get(_orm.ArrendamientoRow, record.id)
+            row = self.session.get(_orm.ArrendamientoRow, record.id)
             if row is None:
                 raise RepositoryError(f"rental_contract id={record.id} not found for update")
         if row is None:
             row = _orm.ArrendamientoRow(**self._row_kwargs(record))
-            self._session.add(row)
+            self.session.add(row)
         else:
             for attr, value in self._row_kwargs(record).items():
                 setattr(row, attr, value)
-        _flush_or_wrap(self._session, "rental_contract")
+        _flush_or_wrap(self.session, "rental_contract")
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
@@ -271,11 +271,11 @@ class ArrendamientoRepository:
         from ..storage import RepositoryError
         from ..storage.sql import _orm
 
-        row = self._session.get(_orm.ArrendamientoRow, record_id)
+        row = self.session.get(_orm.ArrendamientoRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_contract id={record_id} not found")
-        self._session.delete(row)
-        _flush_or_wrap(self._session, "rental_contract")
+        self.session.delete(row)
+        _flush_or_wrap(self.session, "rental_contract")
 
     @staticmethod
     def _row_kwargs(record: Arrendamiento) -> dict[str, object]:
@@ -330,7 +330,7 @@ class FincaRendimientoRepository:
 
     def __init__(self, session: Session) -> None:
         """Bind the repository to an open ORM ``session``."""
-        self._session = session
+        self.session = session
 
     def list_for_period(self, period_year: int) -> list[FincaRendimientoRecord]:
         """Return every record whose period overlaps the supplied window.
@@ -341,7 +341,7 @@ class FincaRendimientoRepository:
         from ..storage.sql import _orm
 
         rows = (
-            self._session.execute(
+            self.session.execute(
                 select(_orm.FincaRendimientoRecordRow)
                 .where(_orm.FincaRendimientoRecordRow.period_year == period_year)
                 .order_by(_orm.FincaRendimientoRecordRow.id),
@@ -359,7 +359,7 @@ class FincaRendimientoRepository:
         """Return the :class:`FincaRendimientoRecord` for ``contract_id`` matching ``period``, or ``None``."""
         from ..storage.sql import _orm
 
-        row = self._session.execute(
+        row = self.session.execute(
             select(_orm.FincaRendimientoRecordRow).where(
                 _orm.FincaRendimientoRecordRow.contract_id == contract_id,
                 _orm.FincaRendimientoRecordRow.period_year == period_year,
@@ -374,11 +374,11 @@ class FincaRendimientoRepository:
 
         row: _orm.FincaRendimientoRecordRow | None = None
         if record.id is not None:
-            row = self._session.get(_orm.FincaRendimientoRecordRow, record.id)
+            row = self.session.get(_orm.FincaRendimientoRecordRow, record.id)
             if row is None:
                 raise RepositoryError(f"rental_income_record id={record.id} not found for update")
         else:
-            row = self._session.execute(
+            row = self.session.execute(
                 select(_orm.FincaRendimientoRecordRow).where(
                     _orm.FincaRendimientoRecordRow.contract_id == record.contract_id,
                     _orm.FincaRendimientoRecordRow.period_year == record.period_year,
@@ -392,12 +392,12 @@ class FincaRendimientoRepository:
                 dias_alquilados=record.dias_alquilados,
                 schema_version=record.schema_version,
             )
-            self._session.add(row)
+            self.session.add(row)
         else:
             row.gross_rent_received = record.gross_rent_received
             row.dias_alquilados = record.dias_alquilados
             row.schema_version = record.schema_version
-        _flush_or_wrap(self._session, "rental_income_record")
+        _flush_or_wrap(self.session, "rental_income_record")
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
@@ -405,11 +405,11 @@ class FincaRendimientoRepository:
         from ..storage import RepositoryError
         from ..storage.sql import _orm
 
-        row = self._session.get(_orm.FincaRendimientoRecordRow, record_id)
+        row = self.session.get(_orm.FincaRendimientoRecordRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_income_record id={record_id} not found")
-        self._session.delete(row)
-        _flush_or_wrap(self._session, "rental_income_record")
+        self.session.delete(row)
+        _flush_or_wrap(self.session, "rental_income_record")
 
     @staticmethod
     def _to_record(row: _orm.FincaRendimientoRecordRow) -> FincaRendimientoRecord:
@@ -428,14 +428,14 @@ class FincaGastoRepository:
 
     def __init__(self, session: Session) -> None:
         """Bind the repository to an open ORM ``session``."""
-        self._session = session
+        self.session = session
 
     def list_for_finca_period(self, finca_id: int, period_year: int) -> list[FincaGasto]:
         """Return every :class:`FincaGasto` record attached to ``finca_id`` within the period window."""
         from ..storage.sql import _orm
 
         rows = (
-            self._session.execute(
+            self.session.execute(
                 select(_orm.FincaGastoRow)
                 .where(
                     _orm.FincaGastoRow.finca_id == finca_id,
@@ -464,8 +464,8 @@ class FincaGastoRepository:
             amount=record.amount,
             schema_version=record.schema_version,
         )
-        self._session.add(row)
-        _flush_or_wrap(self._session, "rental_expense")
+        self.session.add(row)
+        _flush_or_wrap(self.session, "rental_expense")
         return self._to_record(row)
 
     def upsert(self, record: FincaGasto) -> FincaGasto:
@@ -479,7 +479,7 @@ class FincaGastoRepository:
 
         if record.id is None:
             return self.add(record)
-        row = self._session.get(_orm.FincaGastoRow, record.id)
+        row = self.session.get(_orm.FincaGastoRow, record.id)
         if row is None:
             raise RepositoryError(f"rental_expense id={record.id} not found for update")
         row.finca_id = record.finca_id
@@ -487,7 +487,7 @@ class FincaGastoRepository:
         row.category = record.category.value
         row.amount = record.amount
         row.schema_version = record.schema_version
-        _flush_or_wrap(self._session, "rental_expense")
+        _flush_or_wrap(self.session, "rental_expense")
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
@@ -495,11 +495,11 @@ class FincaGastoRepository:
         from ..storage import RepositoryError
         from ..storage.sql import _orm
 
-        row = self._session.get(_orm.FincaGastoRow, record_id)
+        row = self.session.get(_orm.FincaGastoRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_expense id={record_id} not found")
-        self._session.delete(row)
-        _flush_or_wrap(self._session, "rental_expense")
+        self.session.delete(row)
+        _flush_or_wrap(self.session, "rental_expense")
 
     @staticmethod
     def _to_record(row: _orm.FincaGastoRow) -> FincaGasto:
@@ -532,7 +532,7 @@ class FincaAmortizacionLedgerRepository:
 
     def __init__(self, session: Session) -> None:
         """Bind the repository to an open ORM ``session``."""
-        self._session = session
+        self.session = session
 
     def list_for_finca(self, finca_id: int) -> list[FincaAmortizacionLedgerEntry]:
         """Return every record attached to the supplied finca.
@@ -543,7 +543,7 @@ class FincaAmortizacionLedgerRepository:
         from ..storage.sql import _orm
 
         rows = (
-            self._session.execute(
+            self.session.execute(
                 select(_orm.FincaAmortizacionLedgerRow)
                 .where(_orm.FincaAmortizacionLedgerRow.finca_id == finca_id)
                 .order_by(_orm.FincaAmortizacionLedgerRow.period_year),
@@ -565,7 +565,7 @@ class FincaAmortizacionLedgerRepository:
         """
         from ..storage.sql import _orm
 
-        row = self._session.execute(
+        row = self.session.execute(
             select(_orm.FincaAmortizacionLedgerRow).where(
                 _orm.FincaAmortizacionLedgerRow.finca_id == finca_id,
                 _orm.FincaAmortizacionLedgerRow.period_year == period_year,
@@ -580,13 +580,13 @@ class FincaAmortizacionLedgerRepository:
 
         row: _orm.FincaAmortizacionLedgerRow | None = None
         if record.id is not None:
-            row = self._session.get(_orm.FincaAmortizacionLedgerRow, record.id)
+            row = self.session.get(_orm.FincaAmortizacionLedgerRow, record.id)
             if row is None:
                 raise RepositoryError(
                     f"rental_amortization_ledger id={record.id} not found for update",
                 )
         else:
-            row = self._session.execute(
+            row = self.session.execute(
                 select(_orm.FincaAmortizacionLedgerRow).where(
                     _orm.FincaAmortizacionLedgerRow.finca_id == record.finca_id,
                     _orm.FincaAmortizacionLedgerRow.period_year == record.period_year,
@@ -602,14 +602,14 @@ class FincaAmortizacionLedgerRepository:
                 cumulative_amortization_through_year=record.cumulative_amortization_through_year,
                 schema_version=record.schema_version,
             )
-            self._session.add(row)
+            self.session.add(row)
         else:
             row.dias_alquilados = record.dias_alquilados
             row.basis_used = record.basis_used
             row.amortization_amount = record.amortization_amount
             row.cumulative_amortization_through_year = record.cumulative_amortization_through_year
             row.schema_version = record.schema_version
-        _flush_or_wrap(self._session, "rental_amortization_ledger")
+        _flush_or_wrap(self.session, "rental_amortization_ledger")
         return self._to_record(row)
 
     def delete(self, record_id: int) -> None:
@@ -617,11 +617,11 @@ class FincaAmortizacionLedgerRepository:
         from ..storage import RepositoryError
         from ..storage.sql import _orm
 
-        row = self._session.get(_orm.FincaAmortizacionLedgerRow, record_id)
+        row = self.session.get(_orm.FincaAmortizacionLedgerRow, record_id)
         if row is None:
             raise RepositoryError(f"rental_amortization_ledger id={record_id} not found")
-        self._session.delete(row)
-        _flush_or_wrap(self._session, "rental_amortization_ledger")
+        self.session.delete(row)
+        _flush_or_wrap(self.session, "rental_amortization_ledger")
 
     @staticmethod
     def _to_record(row: _orm.FincaAmortizacionLedgerRow) -> FincaAmortizacionLedgerEntry:

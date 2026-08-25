@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.storage import PROFILE_ASSETS_LEDGER_NAMESPACE
+from .....core import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.contribuyente.assets import AssetClass, AssetRecord, AssetsLedgerDocument
 from .....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from .._secure_model_document import ProfileBareModelSecurePersistence
@@ -16,19 +17,23 @@ from .._secure_model_document import ProfileBareModelSecurePersistence
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-def test_kernel_roundtrips_a_strict_document_as_encrypted_registry_governed_bytes(tmp_path: Path) -> None:
-    """The shared kernel never creates a plaintext model or an ungoverned row."""
-    document = AssetsLedgerDocument(
+def _document(identifier: str) -> AssetsLedgerDocument:
+    """Build a non-default bare singleton payload for one observation test."""
+    return AssetsLedgerDocument(
         assets=(
             AssetRecord(
-                identifier="kernel-canary",
-                description="KERNEL-SECRET-ASSET",
+                identifier=identifier,
+                description=f"KERNEL-SECRET-{identifier}",
                 asset_class=AssetClass.ELECTRONICA_INFORMATICA,
                 acquisition_date=date(2025, 1, 1),
                 cost_basis=Decimal("100.00"),
             ),
         ),
     )
+
+def test_kernel_roundtrips_a_strict_document_as_encrypted_registry_governed_bytes(tmp_path: Path) -> None:
+    """The shared kernel never creates a plaintext model or an ungoverned row."""
+    document = _document("kernel-canary")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="a0e10fc6-03c5-4290-832a-fcb4c7654fe4") as profile:
         persistence = ProfileBareModelSecurePersistence(
             objects=profile.repository,
@@ -48,3 +53,73 @@ def test_kernel_roundtrips_a_strict_document_as_encrypted_registry_governed_byte
     assert write.schema_version == PROFILE_ASSETS_LEDGER_NAMESPACE.schema_version
     assert b"KERNEL-SECRET-ASSET" not in at_rest
     assert b"kernel-canary" not in at_rest
+
+
+def test_load_revisioned_returns_one_bare_secure_object_record_across_an_interleaving(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """One real encrypted-SQL read cannot pair a first payload with a later revision."""
+    first = _document("first")
+    second = _document("second")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="ae1c1f6a-dde4-4dda-a3d5-4ef005b70129") as profile:
+        persistence = ProfileBareModelSecurePersistence(
+            objects=profile.repository,
+            definition=PROFILE_ASSETS_LEDGER_NAMESPACE,
+            model_type=AssetsLedgerDocument,
+            empty_document=AssetsLedgerDocument,
+        )
+        persistence.save(first)
+        expected_revision_id = profile.repository.load(
+            PROFILE_ASSETS_LEDGER_NAMESPACE.namespace,
+            PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key(),
+            expected_class=PROFILE_ASSETS_LEDGER_NAMESPACE.sensitivity,
+            max_supported_version=PROFILE_ASSETS_LEDGER_NAMESPACE.schema_version,
+        )
+        assert expected_revision_id is not None
+
+        original_load = profile.repository.load
+        calls = 0
+
+        def interleave_after_first_record(*args: object, **kwargs: object):
+            nonlocal calls
+            record = original_load(*args, **kwargs)
+            calls += 1
+            if calls == 1:
+                persistence.save(second)
+            return record
+
+        monkeypatch.setattr(profile.repository, "load", interleave_after_first_record)
+        observed, revision_id = persistence.load_revisioned()
+
+    assert calls == 1
+    assert observed == first
+    assert revision_id == expected_revision_id.revision_id
+
+
+def test_load_revisioned_observes_an_absent_bare_singleton_with_one_select(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The absent singleton outcome also comes from exactly one encrypted-SQL read."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="04ff919d-3023-4ea3-b177-1b4e9fca0f40") as profile:
+        persistence = ProfileBareModelSecurePersistence(
+            objects=profile.repository,
+            definition=PROFILE_ASSETS_LEDGER_NAMESPACE,
+            model_type=AssetsLedgerDocument,
+            empty_document=AssetsLedgerDocument,
+        )
+        original_load = profile.repository.load
+        calls = 0
+
+        def count_select(*args: object, **kwargs: object):
+            nonlocal calls
+            calls += 1
+            return original_load(*args, **kwargs)
+
+        monkeypatch.setattr(profile.repository, "load", count_select)
+        observed, revision_id = persistence.load_revisioned()
+
+    assert calls == 1
+    assert observed == AssetsLedgerDocument()
+    assert revision_id == ABSENT_SECURE_OBJECT_REVISION_ID

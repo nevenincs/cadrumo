@@ -251,7 +251,7 @@ class ProfileRecordRepository:
     """Read exactly one encrypted current record through an authenticated session."""
 
     def __init__(self, *, session: ProfileRecordSession, root: Path | None = None) -> None:
-        self._session = session
+        self.session = session
         self._root = effective_storage_root(root)
 
     @classmethod
@@ -260,13 +260,13 @@ class ProfileRecordRepository:
 
     @property
     def profile_id(self) -> UUID:
-        return self._session.profile_id
+        return self.session.profile_id
 
     def load(self, profile_id: str | UUID) -> UserProfileRecord:
         identity = UUID(str(profile_id))
-        if identity != self._session.profile_id:
+        if identity != self.session.profile_id:
             raise ProfileNotFoundError("profile record session does not serve the requested UUID")
-        return ProfileRecordStore(session=self._session, root=self._root).load().record
+        return ProfileRecordStore(session=self.session, root=self._root).load().record
 
     def complete_setup(
         self,
@@ -303,7 +303,7 @@ class ProfileRecordRepository:
         from .validation import reject_invalid_profile_facts
 
         identity = UUID(str(profile_id))
-        if identity != self._session.profile_id:
+        if identity != self.session.profile_id:
             raise ProfileNotFoundError("profile record session does not serve the requested UUID")
         current = self.load(identity)
         if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
@@ -330,7 +330,7 @@ class ProfileRecordRepository:
         # this explicit command owner is its sole cross-class caller.
         ProfileCapsuleLifecycle(root=self._root)._replace_record_for_profile_command(  # pyright: ignore[reportPrivateUsage]
             profile_id=identity,
-            record_session=self._session,
+            record_session=self.session,
             replacement=replacement,
             event=ProfileRecordCommandEvent(
                 event_type=BucketEventType.PROFILE_SETUP_COMPLETED,
@@ -375,7 +375,7 @@ class ProfileRecordRepository:
         # witness below now declares the closed member itself and would refuse
         # too, but only after the load and the compare-and-swap have run.
         event = BucketEventType(event_type)
-        if identity != self._session.profile_id:
+        if identity != self.session.profile_id:
             raise ProfileNotFoundError("profile record session does not serve the requested UUID")
         current = self.load(identity)
         if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
@@ -399,7 +399,7 @@ class ProfileRecordRepository:
         # this explicit command owner is its sole cross-class caller.
         ProfileCapsuleLifecycle(root=self._root)._replace_record_for_profile_command(  # pyright: ignore[reportPrivateUsage]
             profile_id=identity,
-            record_session=self._session,
+            record_session=self.session,
             replacement=replacement,
             event=ProfileRecordCommandEvent(
                 event_type=event,

@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from ....application.operator_actions import no_action_precondition_verdict
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
-from ._errors import OutboundStorageIntegrityError
+from .errors import OutboundStorageIntegrityError
 
 _SHA256_PREFIX = "sha256-"
 _SHA256_HEX_LENGTH = 64

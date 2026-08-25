@@ -32,7 +32,7 @@ from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId, LegalRefId, ModeloId, SourceRefId
 from ._observation_fold import fold_sum_or_copy
 from ._period_offset_math import apply_period_offset, same_ejercicio_prior_quarter_anchors

@@ -10,7 +10,7 @@ from pydantic import Field, model_validator
 
 from ....core.identity import ContentDigest
 from ....domain.iva import IaeEpigrafe
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import SourceRefId
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,

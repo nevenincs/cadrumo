@@ -1013,6 +1013,7 @@ def _active_filer_tax_id() -> str | None:
     # filer-fact reader reaches the user-profile package which reaches back. The
     # sanctioned cycle breaks, read as if written at module scope.
     from cadrumo.application.workflow.persistence import workflow_state_repository
+
     from .filer_establishment import resolve_filer_tax_id
 
     try:
@@ -1879,9 +1880,10 @@ def _refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
         PurchaseInvoiceEvidenceInputError: When the identifier is the filer's
             own.
     """
-    from ..invoices import counterparty_is_the_filer
-    from ..wizard import WizardStatusError, load_active_taxpayer_profile
     from cadrumo.application.workflow.persistence import workflow_state_repository
+
+    from ..invoices import counterparty_is_the_filer
+    from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
 
     try:
         profile = load_active_taxpayer_profile(workflow_state_repository().load())
@@ -2008,9 +2010,10 @@ def _refuse_an_issued_document_the_filer_did_not_issue(
     if kind is not InvoiceKind.ISSUED or extracted_supplier_tax_id is None:
         return
 
-    from ..invoices import counterparty_is_the_filer
-    from ..wizard import WizardStatusError, load_active_taxpayer_profile
     from cadrumo.application.workflow.persistence import workflow_state_repository
+
+    from ..invoices import counterparty_is_the_filer
+    from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
 
     try:
         profile = load_active_taxpayer_profile(workflow_state_repository().load())

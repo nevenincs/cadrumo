@@ -167,7 +167,7 @@ from ._diff import (
     RenumberedCasilla,
     diff_registry_revisions,
 )
-from ._errors import (
+from .errors import (
     RegistryApplicationError,
     RegistryApplicationInputError,
     RegistryPreconditionCondition,

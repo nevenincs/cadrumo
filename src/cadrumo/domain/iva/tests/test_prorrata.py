@@ -25,7 +25,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import scan_directory
-from .._errors import ProrrataInputError, ProrrataSectorError
+from ..errors import ProrrataInputError, ProrrataSectorError
 from .._prorrata import (
     InputClassification,
     ProrrataInputDeduction,

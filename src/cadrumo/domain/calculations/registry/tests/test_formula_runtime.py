@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from .._bindings import CasillaObservation
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._formula_initial_values import materialise_observations
 from .._formula_runtime import RegistryCalculationEntry, calculate_registry_snapshot
 from .._schema import RegistrySnapshot

@@ -16,7 +16,7 @@ from ....core import BindingSourceKind, Period
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...calculations import RowSourceIdentity
 from ...calculations.registry import RegistrySnapshotRef
-from .._errors import FilingValidationError
+from ..errors import FilingValidationError
 from .._schema import (
     ModeloBindingValue,
     ModeloDraft,

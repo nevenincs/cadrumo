@@ -20,7 +20,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, field_validator,
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
-from ._errors import CategoryValidationError
+from .errors import CategoryValidationError
 
 #: The only scheme a citation may cite. Every AEAT and BOE surface the
 #: shipped profiles reference publishes over TLS, so a non-``https``

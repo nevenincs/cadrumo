@@ -48,8 +48,8 @@ from ....adapters.persistence.storage.custody import (
     unlock_profile_custody,
 )
 from ....domain.user_profile.errors import ProfileSchemaValidationError
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.loader import load_user_profile_schema
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import complete_profile_facts
 

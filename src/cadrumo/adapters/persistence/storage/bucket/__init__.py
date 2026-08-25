@@ -38,7 +38,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._errors import (
+from .errors import (
     BucketAlreadyPresentError,
     BucketBusyError,
     BucketError,

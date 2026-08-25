@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources import bundled_path
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import LegalReference, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from .._snapshot import _SUBSTANTIVE_LAW_KINDS, build_snapshot, collect_snapshot_ref_ids
 from .._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow

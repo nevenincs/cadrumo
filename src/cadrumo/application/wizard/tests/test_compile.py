@@ -16,10 +16,10 @@ import pytest
 from ....core.i18n import Translatable as tr
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.contribuyente import ProfileKeyRequirement
-from .._catalogue import WIZARD_FLOWS
-from .._compiler import compile_profile_keys
-from .._errors import WizardCompileError
-from .._models import (
+from ..catalogue import WIZARD_FLOWS
+from ..compiler import compile_profile_keys
+from ..errors import WizardCompileError
+from ..models import (
     WizardChoice,
     WizardCondition,
     WizardFlow,

@@ -53,7 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # bundled_path() resolves to src/cadrumo/_data; the fixture tree lives one level
 # up at src/cadrumo/tests/fixtures/justificantes — mirror the derivation in
-# RegistryValidator._justificante_corpus_root.
+# RegistryValidator.justificante_corpus_root.
 _FIXTURE_ROOT = bundled_path().resolve().parents[0] / "tests" / "fixtures" / "justificantes"
 
 _TAG_TO_PROVENANCE = {

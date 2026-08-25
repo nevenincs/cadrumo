@@ -45,7 +45,7 @@ from ....core import (
 )
 from ....core.config import load_settings
 from ....core.resources import bundled_path
-from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
+from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
 from ._ids import RevisionId
 from ._toml_helpers import as_toml_table as _as_toml_table
 

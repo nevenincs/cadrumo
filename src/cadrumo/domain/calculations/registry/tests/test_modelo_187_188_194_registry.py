@@ -25,7 +25,7 @@ from .....core import CasillaId, validated_casilla_id
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
 from .._corpus_catalogue import resolve_record_design_binary
-from .._errors import NoRevisionForPeriodError, RegistryValidationError
+from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from .._temporal import select_revision
 from .._validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo

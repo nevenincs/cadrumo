@@ -35,7 +35,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, VerificationReportId
 from ...core.time import validate_utc_aware
 from ..calculations.registry import LegalRefId, SourceRefId, VerificationExpectationId
-from ._errors import ModeloValidationError
+from .errors import ModeloValidationError
 
 ModeloActorLabel = Annotated[
     str,

@@ -29,7 +29,7 @@ from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.profile_capsule import forge_colliding_capsule_label
 from ....tests.user_profile import register_cli_profile
 from .._common import cli_policy_refusal_projection
-from .._errors import CliRefusedBoundaryError, error_boundary_under_test
+from ..errors import CliRefusedBoundaryError, error_boundary_under_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

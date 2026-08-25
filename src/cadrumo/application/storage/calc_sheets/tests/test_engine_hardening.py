@@ -18,7 +18,7 @@ from .....domain.calculations.registry import (
 from .....domain.calculations.registry.tests import build_snapshot
 from .....tests.registry_tree import bundled_registry_tree
 from .._engine import _rounding_rule_for, build_export_plan
-from .._errors import CalcSheetsEngineError
+from ..errors import CalcSheetsEngineError
 from .._records import RelationValues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -203,6 +203,7 @@ def _residue_signature(report: FilingExportConformanceEnrollmentReport) -> tuple
     )
 
 
+@pytest.mark.timeout(600)
 def test_static_projection_matches_validated_classification_for_every_selected_revision() -> None:
     """The immutable diagnostic projection preserves every strict disposition."""
     registry = bundled_authority()

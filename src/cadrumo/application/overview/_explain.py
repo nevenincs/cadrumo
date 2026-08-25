@@ -46,7 +46,7 @@ from ...domain.deadlines import (
     twelve_month_anniversary,
 )
 from ...domain.retention import TAX_RECORD_RETENTION_FLOOR_YEARS, add_prescription_years
-from ._errors import OverviewExplainError
+from .errors import OverviewExplainError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import DeadlineWindowDefinition, ModeloRevision

@@ -11,9 +11,6 @@ related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
 
-
-
-
 # Prove components contain presentation mechanics only and import no feature, application-private, adapter, CLI, or repository modules
 
 ## Scope

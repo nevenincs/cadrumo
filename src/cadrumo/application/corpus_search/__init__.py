@@ -21,7 +21,7 @@ documentation, never a runtime the product carries.
 from __future__ import annotations
 
 from ._citation_lookup import CitationLookup, bundled_citation_lookup
-from ._errors import (
+from .errors import (
     CorpusSearchError,
     CorpusSearchInputError,
 )

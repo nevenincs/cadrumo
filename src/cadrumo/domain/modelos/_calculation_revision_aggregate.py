@@ -18,7 +18,7 @@ from ._calculation_revision_amendment import (
     m303_rectificativa_motive_is_applicable,
 )
 from ._calculation_revision_m303_handoff import M303FilingInstanceEvidence
-from ._errors import ModeloValidationError
+from .errors import ModeloValidationError
 from ._filing_record import ModeloRecordCatalogue, is_justificante_backed_external_evidence
 from ._work_unit import WorkUnit, WorkUnitCatalogue
 

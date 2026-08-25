@@ -22,8 +22,8 @@ from pathlib import Path
 
 from ...core import scan_directory
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from ._catalogue import WIZARD_FLOWS
-from ._models import WizardFlow, WizardQuestion
+from .catalogue import WIZARD_FLOWS
+from .models import WizardFlow, WizardQuestion
 
 _FIXED_RUNTIME_KEYS: tuple[str, ...] = ("wizard.setup.errors.missing_required_flags",)
 

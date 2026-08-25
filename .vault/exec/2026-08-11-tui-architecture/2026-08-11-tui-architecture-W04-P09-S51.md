@@ -11,9 +11,6 @@ related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
 
-
-
-
 # Relocate status and busy presentation so it renders supplied operation state rather than owning timers or work
 
 ## Scope

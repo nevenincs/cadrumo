@@ -22,7 +22,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE, SensitivityClass
-from ....core import Period
+from ....core import ABSENT_SECURE_OBJECT_REVISION_ID, Period
 from ....tests.secure_sql import isolated_runtime_profile
 from .._codes import ModeloCode
 from .._repository import WorkUnitPersistenceError
@@ -136,6 +136,68 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
     assert loaded_unit.discarded_by == "cli/aeat"
     assert loaded_unit.discard_reason is not None
     assert "superseded" in loaded_unit.discard_reason
+
+
+def test_load_revisioned_returns_one_enveloped_secure_object_record_across_an_interleaving(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """One encrypted-SQL read keeps the envelope payload and revision inseparable."""
+    first_unit = _populated_work_unit(name_suffix="first")
+    second_unit = _populated_work_unit(name_suffix="second")
+    first = WorkUnitCatalogue(work_units={first_unit.work_unit_id: first_unit})
+    second = WorkUnitCatalogue(work_units={second_unit.work_unit_id: second_unit})
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        repository.save(first)
+        expected_record = profile.repository.load(
+            _WORK_UNIT_NAMESPACE,
+            _WORK_UNIT_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_WORK_UNIT_CATALOGUE_VERSION,
+        )
+        assert expected_record is not None
+
+        original_load = profile.repository.load
+        calls = 0
+
+        def interleave_after_first_record(*args: object, **kwargs: object):
+            nonlocal calls
+            record = original_load(*args, **kwargs)
+            calls += 1
+            if calls == 1:
+                WorkUnitCatalogueRepository(objects=profile.repository).save(second)
+            return record
+
+        monkeypatch.setattr(profile.repository, "load", interleave_after_first_record)
+        observed, revision_id = repository.load_revisioned()
+
+    assert calls == 1
+    assert observed == first
+    assert revision_id == expected_record.revision_id
+
+
+def test_load_revisioned_observes_an_absent_enveloped_singleton_with_one_select(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The absent enveloped singleton outcome also uses exactly one encrypted-SQL read."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        original_load = profile.repository.load
+        calls = 0
+
+        def count_select(*args: object, **kwargs: object):
+            nonlocal calls
+            calls += 1
+            return original_load(*args, **kwargs)
+
+        monkeypatch.setattr(profile.repository, "load", count_select)
+        observed, revision_id = repository.load_revisioned()
+
+    assert calls == 1
+    assert observed == WorkUnitCatalogue()
+    assert revision_id == ABSENT_SECURE_OBJECT_REVISION_ID
 
 
 def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(

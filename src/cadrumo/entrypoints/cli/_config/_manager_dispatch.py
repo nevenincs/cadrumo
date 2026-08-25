@@ -34,7 +34,7 @@ from typer._click.core import Context as _TyperClickContext
 from ....core.i18n import tr
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._common import activate_subcommand_output_language
-from .._errors import command_error_boundary as _command_error_boundary
+from ..errors import command_error_boundary as _command_error_boundary
 
 if TYPE_CHECKING:
     from typing import Literal

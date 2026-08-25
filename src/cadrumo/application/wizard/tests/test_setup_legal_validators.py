@@ -36,8 +36,8 @@ from .. import (
     attach_setup_legal_validators,
     validate_unidad_familiar_conjunta,
 )
-from .._catalogue import SETUP_FLOW
-from .._commands import _SETUP_CHECKPOINT
+from ..catalogue import SETUP_FLOW
+from ..commands import _SETUP_CHECKPOINT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

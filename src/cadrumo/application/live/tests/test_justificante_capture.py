@@ -22,8 +22,8 @@ import pytest
 
 from ....core import Modelo, Period
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from .._errors import LiveApplicationInputError
-from .._justificante import (
+from ..errors import LiveApplicationInputError
+from ..justificante import (
     JustificanteCaptureSnapshot,
     JustificanteCaptureSnapshotRepository,
     JustificanteCaptureSnapshotService,
@@ -192,7 +192,7 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ....adapters.persistence.storage.sql import SecureObjectRow
-    from .._justificante import (
+    from ..justificante import (
         JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
         justificante_capture_snapshot_object_key,
     )

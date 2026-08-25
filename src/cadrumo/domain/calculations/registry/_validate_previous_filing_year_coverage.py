@@ -53,7 +53,7 @@ from dataclasses import dataclass
 
 from ....core import BindingSourceKind, Modelo
 from ._bindings_previous_filing import previous_filing_source_reference
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId, ModeloId
 from ._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
 

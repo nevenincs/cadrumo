@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....tests.aeat_literal_fixtures import AEAT_NONCANONICAL_HTTP_MANUAL_URL_CANARY
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._legal import verify_legal_reference
 from .._schema_references import LegalReference, SourceReference
 

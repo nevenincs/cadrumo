@@ -122,7 +122,7 @@ from ._dt12_reduccion import (
     compute_dt12_reduccion_plan_pensiones,
     dt12_regime_window_eligibility,
 )
-from ._errors import (
+from .errors import (
     Modelo036LifecycleError,
     Modelo036PriorAltaRequiredError,
     Modelo036TerminalStateError,

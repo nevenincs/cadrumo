@@ -30,8 +30,9 @@ from __future__ import annotations
 
 import pytest
 
+import cadrumo.application.ledger.deterministic_findings as deterministic_findings_module
+
 from ....tests.attribute_scope import scoped_attribute
-import cadrumo.application.ledger.deterministic_findings.deterministic_findings as deterministic_findings_module
 from ..deterministic_findings import (
     DETERMINISTIC_CHECKS,
     DeterministicCheck,

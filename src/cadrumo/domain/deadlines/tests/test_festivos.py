@@ -39,7 +39,7 @@ from .. import (
     next_business_day,
     shift_deadline,
 )
-from .._errors import DeadlineValidationError
+from ..errors import DeadlineValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

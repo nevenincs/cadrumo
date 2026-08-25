@@ -29,7 +29,7 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .._adapter_utils import is_aeat_auth_gate_redirect
-from .._errors import SedeNavigationError
+from ..errors import SedeNavigationError
 from .._nif_iva_check import (
     _READ_GUARD_POLICY,
     DEFAULT_NIF_IVA_TIMEOUT_MS,

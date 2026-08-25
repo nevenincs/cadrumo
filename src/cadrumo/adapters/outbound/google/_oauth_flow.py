@@ -36,7 +36,7 @@ from ....core.config import SecretStoreBackend, load_settings
 from ....core.time import now
 from ....core.tty import stdin_is_tty
 from ....domain.user_profile.errors import ProfileNotFoundError
-from ._errors import (
+from .errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthLoopbackBindError,
     GoogleAuthNetworkError,
@@ -142,9 +142,10 @@ def resolve_active_tax_id(profile_id: str) -> str:
             When the profile bucket manifest or canonical profile-record
             session cannot be resolved.
     """
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+
     from ....application.user_profile.profile_record_repository import ProfileRecordRepository
     from ....application.user_profile.projections import record_to_path_values
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     pointer = read_profile_bucket_by_id(profile_id)
     if pointer is None:
@@ -210,7 +211,7 @@ def credentials_to_records(
         A 2-tuple of (:class:`adapters.outbound.google.OAuthToken`,
         :class:`adapters.outbound.google.OAuthMetadata`) ready for
         :class:`adapters.persistence.storage.SecureObjectRepository`
-        persistence through :mod:`adapters.outbound.google._session_store`.
+        persistence through :mod:`adapters.outbound.google.session_store`.
         Both records validate strict pydantic invariants; metadata refuses
         granted-scope tuples missing any
         :data:`adapters.outbound.google.REQUIRED_SCOPES` member.

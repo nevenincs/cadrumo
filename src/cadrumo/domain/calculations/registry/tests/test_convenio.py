@@ -26,7 +26,7 @@ from .._convenio import (
     load_convenio_authority,
     validate_convenio_legal_refs,
 )
-from .._errors import RegistryLoadError, RegistryValidationError
+from ..errors import RegistryLoadError, RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

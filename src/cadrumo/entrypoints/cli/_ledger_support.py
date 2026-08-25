@@ -351,7 +351,7 @@ def _ledger_invoice_validation_no_recovery(
     if isinstance(error, InvoiceValidationError):
         terminal_error: CadrumoError = error
     elif _is_pydantic_invoice_validation(error):
-        from ._errors import CliValidationBoundaryError
+        from .errors import CliValidationBoundaryError
 
         terminal_error = CliValidationBoundaryError(error)
     else:

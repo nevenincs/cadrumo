@@ -22,8 +22,8 @@ from ...core.resources import resources
 from ...domain.calculations.registry import AtributionMemberObservation, resolve_atribucion_binding_row_values
 from ...domain.modelos import Modelo184MemberRow
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from ...domain.user_profile.schema import numeric_value_refusal
+from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ._source_mesh import (
     CalculationSourceContext,

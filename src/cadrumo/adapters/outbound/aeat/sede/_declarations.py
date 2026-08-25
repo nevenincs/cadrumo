@@ -105,7 +105,7 @@ from ._declarations_observations import (
 )
 from ._declarations_remote import extract_csv_from_url as _extract_csv_from_url
 from ._declarations_schema import Declaracion
-from ._errors import (
+from .errors import (
     JustificanteFetchError,
     SedeFailureMode,
     SedeNavigationError,
@@ -436,7 +436,7 @@ class DeclaracionesRegisterSession:
     """Reusable read-only session for AEAT's filed-declarations register."""
 
     def __init__(self, session: AeatSession, page: Page, context: BrowserContext) -> None:
-        self._session = session
+        self.session = session
         self._page = page
         self._context = context
 
@@ -496,7 +496,7 @@ class DeclaracionesRegisterSession:
             expediente_id=declaration.expediente_id,
         )
         return await _capture_filed_declaration_observation_from_row(
-            self._session,
+            self.session,
             declaration,
             row_locator=row_locator,
             page=self._page,

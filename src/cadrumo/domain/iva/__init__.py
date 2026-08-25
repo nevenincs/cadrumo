@@ -83,7 +83,7 @@ from ._deduction_facts import (
     required_deduction_evidence_authority,
     validate_iva_deduction_fact,
 )
-from ._errors import (
+from .errors import (
     IvaCatalogueError,
     IvaCategoryNotFoundError,
     IvaClassificationError,
@@ -261,7 +261,7 @@ from ._supply_nature import (
     supply_nature_implied_by_category,
     supply_nature_is_required,
 )
-from ._verify import verify_catalogue
+from .verify import verify_catalogue
 
 __all__ = [
     "CUOTA_LESS_M303_IVA_CATEGORIES",

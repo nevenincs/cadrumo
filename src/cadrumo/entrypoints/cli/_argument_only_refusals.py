@@ -57,7 +57,7 @@ def refuse_on_arguments_alone(spec: CommandSpec, arguments: Mapping[str, object]
         CliRefusedBoundaryError: When the arguments alone settle the refusal.
     """
     from ...application.modelo import modelo_work_create_refusal_locale_key
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     if (spec.result_schema.identity or spec.key) != _WORK_CREATE_IDENTITY:
         return

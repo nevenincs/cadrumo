@@ -21,7 +21,7 @@ from ...errors import (
     SecretStoreError,
     StorageValidationError,
 )
-from .._errors import MasterKeyReentrantError
+from ..errors import MasterKeyReentrantError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

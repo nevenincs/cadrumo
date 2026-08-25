@@ -19,8 +19,8 @@ from ...domain.contribuyente import (
     ProfileKey,
     ProfileKeyRequirement,
 )
-from ._errors import WizardCompileError
-from ._models import WizardCondition, WizardFlow, WizardQuestion, WizardVisibility
+from .errors import WizardCompileError
+from .models import WizardCondition, WizardFlow, WizardQuestion, WizardVisibility
 
 
 def compile_profile_keys(flows: Sequence[WizardFlow]) -> tuple[ProfileKey, ...]:
@@ -126,7 +126,7 @@ def ensure_profile_keys_registered() -> None:
     process-global and the domain layer may not pull upward to seed itself:
     a host that never imports this package would otherwise read an
     empty registry and raise
-    :class:`~domain.contribuyente._errors.ProfileKeysRegistrationError`.
+    :class:`~domain.contribuyente.errors.ProfileKeysRegistrationError`.
 
     Repeat calls are no-ops:
     :func:`~cadrumo.domain.contribuyente._keys.register_profile_keys` returns
@@ -134,11 +134,11 @@ def ensure_profile_keys_registered() -> None:
     may call this unconditionally without ordering knowledge.
     """
     from ...domain.contribuyente import register_profile_keys
-    from ._catalogue import WIZARD_FLOWS
+    from .catalogue import WIZARD_FLOWS
 
     register_profile_keys(compile_profile_keys(WIZARD_FLOWS))
 
 
 ensure_profile_keys_registered()
 
-__all__ = ["compile_profile_keys"]
+__all__ = ["compile_profile_keys", "ensure_profile_keys_registered"]

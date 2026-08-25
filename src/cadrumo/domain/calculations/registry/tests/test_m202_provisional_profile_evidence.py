@@ -8,7 +8,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import RegistryCatalogues, RegistryValidator
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import ExtractionProfileDefinition, ExtractionTargetDefinition, ModeloDefinition
 from ._registry_schema_support import _committed_modelo
 

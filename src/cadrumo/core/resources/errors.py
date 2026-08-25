@@ -1,4 +1,4 @@
-"""Typed error hierarchy for the resource-management API.
+"""Canonical typed error hierarchy for resource management.
 
 Three top-level error classes give consumers a uniform catch
 surface across all twelve :class:`ResourceRepository`

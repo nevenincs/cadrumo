@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from .....core import Period
 from .....core.resources import bundled_path
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import (
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,

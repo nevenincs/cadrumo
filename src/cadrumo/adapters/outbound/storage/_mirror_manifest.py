@@ -21,7 +21,7 @@ from ....application.operator_actions import no_action_precondition_verdict
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.hashing import sha256_hex
 from ...persistence.storage.sql.secure_objects import SecureObjectRawRow
-from ._errors import OutboundStorageIntegrityError, OutboundStorageNotFoundError, OutboundStorageValidationError
+from .errors import OutboundStorageIntegrityError, OutboundStorageNotFoundError, OutboundStorageValidationError
 from ._protocol import StorageProvider
 from ._records import (
     ProviderObjectMetadata,

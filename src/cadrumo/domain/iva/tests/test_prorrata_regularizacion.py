@@ -17,7 +17,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 
-from .._errors import ProrrataInputError
+from ..errors import ProrrataInputError
 from .._prorrata import (
     ProrrataInputs,
     ProrrataKind,

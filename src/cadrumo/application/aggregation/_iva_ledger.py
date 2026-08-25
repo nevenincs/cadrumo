@@ -103,7 +103,7 @@ from ...domain.transactions import (
 )
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
-from ._errors import AggregationValidationError, t
+from .errors import AggregationValidationError, t
 from ._invoice_kind import invoice_kind_for_direction
 
 _LedgerId = Annotated[

@@ -17,7 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from .._errors import DeadlineValidationError
+from ..errors import DeadlineValidationError
 from .._models import Recovery
 from .._recargo import (
     build_recovery_for_overdue,

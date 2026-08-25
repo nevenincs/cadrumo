@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from .._errors import RegistryLoadError
+from ..errors import RegistryLoadError
 from .._loader import load_legal_parameters_only, load_modelo_directory, load_registry_tree
 from .._loader_cache import discover_modelo_sources
 

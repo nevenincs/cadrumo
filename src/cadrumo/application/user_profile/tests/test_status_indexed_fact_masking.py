@@ -24,10 +24,17 @@ from __future__ import annotations
 import pytest
 
 from ....core.classification import SensitivityClass
-from ....domain.user_profile.schema import ProfileFieldDefinition, ProfileFieldType, ProfileRemovePolicy, ProfileSchemaDefinition, ProfileSectionDefinition, ProfileSnapshotPolicy
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord, section_field_key
-from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.labels import profile_field_label
+from ....domain.user_profile.loader import load_user_profile_schema
+from ....domain.user_profile.schema import (
+    ProfileFieldDefinition,
+    ProfileFieldType,
+    ProfileRemovePolicy,
+    ProfileSchemaDefinition,
+    ProfileSectionDefinition,
+    ProfileSnapshotPolicy,
+)
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord, section_field_key
 from ..status_projection import _build_fact_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -48,7 +48,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
 )
 from ...domain.calculations.registry import select_revision_for_year as _select_revision_for_year
-from ._errors import RegistryPreconditionCondition, registry_terminal_refusal
+from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 
 __all__ = [
     "BindingDiff",

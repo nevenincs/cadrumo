@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .._errors import RegistryLoadError
+from ..errors import RegistryLoadError
 from .._loader import (
     _revision_section_fragment_paths,
     load_modelo_directory,

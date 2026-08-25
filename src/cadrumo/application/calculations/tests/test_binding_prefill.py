@@ -51,7 +51,7 @@ from .._binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
-from .._errors import BindingPrefillTypeError
+from ..errors import BindingPrefillTypeError
 from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
 from .._iva_compensation_history import IvaCompensationHistoryRepository
 from .._observations_repository import CalculationObservationRepository, ResultDispositionProjection

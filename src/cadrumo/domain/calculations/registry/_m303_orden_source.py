@@ -30,7 +30,7 @@ from ....core import (
     render_corpus_sidecar_text,
     sha256_hex,
 )
-from ._errors import RegistryLoadError, RegistryValidationError
+from .errors import RegistryLoadError, RegistryValidationError
 from ._m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
     EXPECTED_MODULE_DISTRIBUTION,

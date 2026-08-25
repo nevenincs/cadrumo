@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from .....core.config import Settings
 from .._citation_blocklist import KnownBadCitation, _fold_diacritics, find_known_bad, known_bad_citations
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._legal import assert_legal_ref_ids_resolve, verify_legal_catalogue
 from .._schema import LegalReference, RegistryCatalogues, SourceCitation, SourceReference
 from .._validate import RegistryValidator

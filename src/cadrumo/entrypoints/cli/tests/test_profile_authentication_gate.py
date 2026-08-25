@@ -19,7 +19,7 @@ from .._config._secure_input import (
     ProfileSecretChannel,
     ProfileSecretSelection,
 )
-from .._errors import CliRefusedBoundaryError, render_error_payload
+from ..errors import CliRefusedBoundaryError, render_error_payload
 from .._profile_authentication_gate import _preflight_sources
 from .._profile_authentication_notice import (
     drain_profile_authentication_notices,

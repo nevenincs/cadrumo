@@ -7,7 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
 
-from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
+from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
 from ._loader_cache import toml_file_fingerprint
 
 type RegistryPathFingerprint = tuple[str, int, int, str]

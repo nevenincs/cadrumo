@@ -19,7 +19,7 @@ from decimal import Decimal
 import pytest
 
 from .. import ExportEncoding, ExportFieldDefinition, parse_fixed_width_export_field, xml_dictionary_entries
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._export_parse import (
     _local_name,
     _parse_dictionary_casilla_id,

@@ -19,7 +19,7 @@ from ......core import AuthProviderKind, Modelo, Period
 from ......core.config import Settings, load_settings
 from ......core.errors import CadrumoError
 from ......tests.live_gate import requires_live_enabled
-from .._errors import SedeError
+from ..errors import SedeError
 from .._iva_compensation_wallet import (
     PRE303_PRESENTATION_SERVICE_URL,
     fetch_iva_compensation_wallet,

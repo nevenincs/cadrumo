@@ -31,7 +31,7 @@ _LEDGER = Path("src/cadrumo/application/ledger")
 #: The one module where a ``MediaKind`` comparison is still correct: it maps the
 #: kind onto the attachment manifest's own taxonomy at WRITE time, which is a
 #: storage classification rather than a reading decision.
-_STORAGE_SIDE_MODULES = {"_evidence.py"}
+_STORAGE_SIDE_MODULES = {"evidence.py"}
 
 
 def _media_kind_comparisons(tree: ast.AST) -> list[int]:
@@ -98,7 +98,7 @@ def test_the_storage_side_comparison_is_still_present_and_deliberate() -> None:
     removed, this test fails and the carve-out gets deleted with it instead of
     lingering as dead permission.
     """
-    storage = _LEDGER / "_evidence.py"
+    storage = _LEDGER / "evidence.py"
     tree = ast.parse(storage.read_text(encoding="utf-8"), filename=str(storage))
 
     assert _media_kind_comparisons(tree), (

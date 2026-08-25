@@ -55,7 +55,7 @@ from ..state_projection import (
 from ..user_profile.profile_record_repository import close_active_profile_record_session
 from ..user_profile.login_session_port import profile_bind_bucket_session
 from ..user_profile.registration import register_profile_with_credentials
-from ..wizard import WIZARD_FLOWS
+from ..wizard.catalogue import WIZARD_FLOWS
 from cadrumo.application.workflow.state_models import WorkflowState
 from cadrumo.application.workflow.persistence import workflow_state_repository
 

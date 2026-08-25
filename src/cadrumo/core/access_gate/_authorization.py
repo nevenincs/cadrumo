@@ -43,7 +43,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, scan_directory
 from .. import NON_REGISTRY_MODELOS, Modelo, read_toml
-from ._errors import AuthorizationManifestError
+from .errors import AuthorizationManifestError
 
 #: Minimum number of distinct renta (annual) years an enrolling test must
 #: exercise before a modelo may be authorized. The owner mandate is two

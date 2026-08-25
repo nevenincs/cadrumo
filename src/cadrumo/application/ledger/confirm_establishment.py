@@ -380,8 +380,9 @@ def resolve_confirmed_establishment(
     # Call-time imports: the side selector and the refusal type live in the
     # draft module, which imports this one's neighbours; the workflow reach is
     # deferred for the same reason the confirm path defers its own.
-    from ..wizard import WizardStatusError, load_active_taxpayer_profile
     from cadrumo.application.workflow.persistence import workflow_state_repository
+
+    from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
     from .evidence_draft import counterparty_draft_side
 
     counterparty = resolve_draft_counterparty_establishment(

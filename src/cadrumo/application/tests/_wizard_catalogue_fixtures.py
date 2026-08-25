@@ -2,7 +2,7 @@
 
 import pytest
 
-from ..wizard import _catalogue
+from ..wizard import catalogue as _catalogue
 
 
 @pytest.fixture(autouse=True, scope="session")

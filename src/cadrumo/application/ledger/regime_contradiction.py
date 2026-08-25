@@ -31,7 +31,7 @@ See Also:
         The axis whose contradicted outcome this enrols.
     :data:`~application.ledger.confirmation_gate.BLOCKING_REASON_BY_DISCREPANCY_KIND`
         Where the finding's kind becomes a review-gate refusal.
-    :func:`~application.ledger.closure_findings.closure_findings`
+    :func:`~application.ledger.closure_findings`
         The arithmetic siblings this finding sits beside, and is not one of.
 """
 

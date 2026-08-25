@@ -10,6 +10,16 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.application.workflow.abort import WorkflowAbortReason
+from cadrumo.application.workflow.persistence import list_runs, load_run, save_run
+from cadrumo.application.workflow.run_models import (
+    WorkflowFailureDetails,
+    WorkflowObligationFacts,
+    WorkflowResult,
+    WorkflowStage,
+    WorkflowStep,
+)
+
 from ....application.modelo import create_work_unit, workflow_period_for_work_unit
 from ....application.operator_actions import (
     ActionArgumentBinding,
@@ -17,10 +27,14 @@ from ....application.operator_actions import (
     ConditionEvidence,
     PreconditionVerdict,
 )
-from cadrumo.application.workflow.abort import WorkflowAbortReason
-from cadrumo.application.workflow.run_models import WorkflowFailureDetails, WorkflowObligationFacts, WorkflowResult, WorkflowStage, WorkflowStep
-from cadrumo.application.workflow.persistence import list_runs, load_run, save_run
-from ....core import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance, Modelo, NoRecoveryOutcome, Period
+from ....core import (
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+    Period,
+)
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.deadlines import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord

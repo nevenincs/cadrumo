@@ -53,7 +53,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.resources import bundled_path
-from ._errors import TransactionValidationError
+from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Mapping

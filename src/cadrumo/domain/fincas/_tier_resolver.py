@@ -40,7 +40,7 @@ from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.logging import get_logger
 from ..calculations.registry import LegalRefId
 from ._enums import ReduccionTier, UseType
-from ._errors import TierResolutionError
+from .errors import TierResolutionError
 from ._models import Arrendamiento, Finca
 
 _logger = get_logger(__name__)

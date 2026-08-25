@@ -27,7 +27,7 @@ from pathlib import Path
 from pydantic import Field, field_validator, model_validator
 
 from ....core import ConvenioOverrideKind, TipoRentaIrnr, freeze_toml, read_toml, scan_directory
-from ._errors import RegistryLoadError, RegistryValidationError
+from .errors import RegistryLoadError, RegistryValidationError
 from ._ids import LegalRefId
 from ._loader_cache import toml_file_fingerprint
 from ._schema_base import RegistryModel

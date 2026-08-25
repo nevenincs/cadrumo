@@ -29,7 +29,7 @@ from ....core import (
 from ....core.i18n import output_language
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import boolean_binding_encoded_values
-from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
+from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from ._ids import BindingId, RelationId
 from ._period_selector_match import registry_period_for_request, selector_token_for_request
 from ._query_reports import (

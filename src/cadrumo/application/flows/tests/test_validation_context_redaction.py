@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.redaction import redact_validation_context
-from ...wizard._widgets import _redact_validation_context
+from ...wizard.widgets import _redact_validation_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

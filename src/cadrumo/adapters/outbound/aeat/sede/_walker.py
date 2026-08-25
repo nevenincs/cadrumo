@@ -42,7 +42,7 @@ from ._browser_constants import (
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
-from ._errors import (
+from .errors import (
     ExpedienteNotFoundError,
     SedeFailureMode,
     SedeNavigationError,

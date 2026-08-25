@@ -37,7 +37,7 @@ from ...pdf import (
     sha256_file,
     source_pdf_reference_path,
 )
-from .._errors import BorradorParseError
+from ..errors import BorradorParseError
 from .._parsers import extract_pages_text
 from .._schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation
 

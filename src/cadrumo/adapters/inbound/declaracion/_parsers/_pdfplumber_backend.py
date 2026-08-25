@@ -7,7 +7,7 @@ and
 which return one stripped text string per page. Errors from the underlying
 library and pathological inputs (missing file, scan-only PDF without an OCR
 layer) are translated into
-:class:`~adapters.inbound.declaracion._errors.DeclaracionParseError`.
+:class:`~adapters.inbound.declaracion.errors.DeclaracionParseError`.
 
 A pypdfium2 fast path is consulted before the canonical pdfplumber primitive.
 The fast path only commits its output when at least one declaration-content
@@ -32,7 +32,7 @@ from ...pdf import (
     extract_pages_text_with_fast_path as _extract_pages_text_with_fast_path_impl,
 )
 from ...pdf import sha256_file
-from .._errors import DeclaracionParseError
+from ..errors import DeclaracionParseError
 
 _logger = get_logger(__name__)
 _INPUT_PDF_SOURCE_LABEL = "<input-pdf>"

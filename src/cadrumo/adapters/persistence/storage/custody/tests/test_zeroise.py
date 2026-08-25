@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._errors import WipeTypeError
+from ..errors import WipeTypeError
 from .._zeroise import zeroise
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

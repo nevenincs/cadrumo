@@ -16,7 +16,7 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import ValidationError
 
-from .._errors import (
+from ..errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthClientNotRegisteredError,
     GoogleAuthClientRevokedError,

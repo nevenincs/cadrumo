@@ -30,7 +30,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.iva import InvoiceKind
-from .._errors import FilterParseError
+from ..errors import FilterParseError
 from .._filter import (
     FilterClause,
     InvoiceReviewFilterKey,

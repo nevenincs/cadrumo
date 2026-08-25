@@ -21,7 +21,7 @@ from .....core.hashing import (
     reject_json_constant,
 )
 from ..crypto import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
-from ._errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
+from .errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 
 PROFILE_CUSTODY_ENVELOPE_SCHEMA_VERSION: Final = 1
 #: The password envelope's name inside a capsule's ``custody/`` directory.

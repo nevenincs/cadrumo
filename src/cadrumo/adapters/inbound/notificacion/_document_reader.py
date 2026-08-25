@@ -5,7 +5,7 @@ from __future__ import annotations
 from ....application.live import NotificationDocumentProtocol
 from ....domain.notifications import SancionLiquidacion
 from ..pdf import extract_pages_text_from_bytes
-from ._errors import NotificacionParseError, SancionParseError
+from .errors import NotificacionParseError, SancionParseError
 from ._sancion import parse_sancion_document
 
 

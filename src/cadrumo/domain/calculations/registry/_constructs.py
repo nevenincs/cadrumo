@@ -11,7 +11,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from ._errors import RegistrySnapshotError
+from .errors import RegistrySnapshotError
 from ._modelo_localization import resolve_modelo_localization
 from ._schema import ModeloRevision
 from ._schema_base import LegalRefs, RegistryModel, SourceRefs

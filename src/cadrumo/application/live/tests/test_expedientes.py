@@ -7,9 +7,9 @@ bucket-local secure-object storage. It also verifies lookup refusals, object-key
 validation, bucket isolation, and absence of AEAT-side write verbs.
 
 See Also:
-    :mod:`~application.live._expedientes`
+    :mod:`~application.live.expedientes`
         Service, payload, object-key, and not-found contracts under test.
-    :mod:`~application.live._snapshot_base`
+    :mod:`~application.live.snapshot_base`
         Shared secure snapshot repository and stateless snapshot lifecycle.
     :data:`~adapters.persistence.storage.LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE`
         Registered namespace, sensitivity, schema-version, and object-key
@@ -37,8 +37,8 @@ from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
 from .. import LIVE_EXPEDIENTES_READ_OPERATION
-from .._errors import LiveApplicationInputError
-from .._expedientes import (
+from ..errors import LiveApplicationInputError
+from ..expedientes import (
     ExpedientesCapture,
     ExpedientesService,
     ExpedientesSnapshotNotFoundError,

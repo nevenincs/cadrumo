@@ -60,7 +60,7 @@ from ...core import BindingSourceKind
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import InvoiceId
 from ...domain.iva import IvaRetencionRole, category_components
-from ._errors import AggregationValidationError, t
+from .errors import AggregationValidationError, t
 from ._retenciones import RetencionObservation, RetencionScheme
 
 if TYPE_CHECKING:

@@ -13,7 +13,7 @@ from .._checker_oracle_flow import (
     observed_verdict,
     replay_parse_operation,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

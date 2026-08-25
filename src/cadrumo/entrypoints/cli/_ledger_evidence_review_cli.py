@@ -19,7 +19,7 @@ from typing import Final
 import typer
 
 from ...application.ledger.confirmation_gate import ConfirmationBlocker, FindingResolution, confirmation_blockers
-from ...application.ledger.country_vocabulary_advisory.country_vocabulary_advisory import CountryVocabularyAdvisory, country_vocabulary_advisory
+from ...application.ledger.country_vocabulary_advisory import CountryVocabularyAdvisory, country_vocabulary_advisory
 from ...application.ledger.extraction_draft_store import ExtractionDraftDocument, StoredExtractionDraft, load_extraction_drafts
 from ...application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
 from ...application.ledger.party_attribution import PartyAttributionAdvisory, party_attribution_advisory

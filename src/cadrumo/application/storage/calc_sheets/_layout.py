@@ -59,7 +59,7 @@ from ....domain.calculations.registry import (
     expression_parameter_refs,
     expression_relation_refs,
 )
-from ._errors import CalcSheetsEngineError
+from .errors import CalcSheetsEngineError
 from ._records import (
     ParameterCell,
     SheetCellAddress,

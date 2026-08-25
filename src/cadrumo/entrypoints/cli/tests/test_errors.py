@@ -1,8 +1,8 @@
 """Real-behaviour tests for CLI error-boundary cast narrowing.
 
 These tests pin the memoised wrapper branch in
-:func:`~entrypoints.cli._errors.command_error_boundary` and the
-:func:`~entrypoints.cli._errors._is_memoised_wrapper` TypeGuard used to recover
+:func:`~entrypoints.cli.errors.command_error_boundary` and the
+:func:`~entrypoints.cli.errors._is_memoised_wrapper` TypeGuard used to recover
 the callback's original callable type. The coverage is intentionally
 identity- and behaviour-based: wrapping the same callback twice must return the
 same object, and the wrapper must still behave like the original callback.
@@ -10,7 +10,7 @@ same object, and the wrapper must still behave like the original callback.
 No mocks, skips, expected-fail markers, or tautological assertions are used.
 
 See Also:
-    :mod:`~entrypoints.cli._errors`
+    :mod:`~entrypoints.cli.errors`
         Shared CLI error-emission boundary that owns callback wrapping,
         memoisation, and typed stderr emission.
     :class:`~core.errors.CadrumoError`
@@ -27,7 +27,7 @@ from collections.abc import Callable
 
 import pytest
 
-from .._errors import _is_memoised_wrapper, command_error_boundary
+from ..errors import _is_memoised_wrapper, command_error_boundary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

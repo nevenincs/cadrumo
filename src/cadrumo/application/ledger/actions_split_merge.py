@@ -40,40 +40,18 @@ from ...domain.transactions import (
     derive_split_group_id,
 )
 from .actions_common import (
-    blocking_modelo_references,
-)
-from .actions_common import (
     _bucket_event_repository,
-)
-from .actions_common import (
     _build_bucket_event,
-)
-from .actions_common import (
     _invoice_repository,
-)
-from .actions_common import (
     _normalise_timestamp,
-)
-from .actions_common import (
     _raise_finalized_modelo_blocked,
-)
-from .actions_common import (
     _require_actor,
-)
-from .actions_common import (
     _require_source_command,
-)
-from .actions_common import (
     _require_transaction,
-)
-from .actions_common import (
     _save_transaction_catalogue_and_events,
-)
-from .actions_common import (
     _transaction_modelo_source_ids,
-)
-from .actions_common import (
     _transaction_repository,
+    blocking_modelo_references,
 )
 from .actions_manual import (
     command_from_patch as _command_from_patch,

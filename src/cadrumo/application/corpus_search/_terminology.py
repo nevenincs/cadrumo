@@ -47,7 +47,7 @@ from ...core import (
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
-from ._errors import CorpusSearchInputError
+from .errors import CorpusSearchInputError
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 

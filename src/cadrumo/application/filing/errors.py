@@ -9,7 +9,7 @@ the established catch boundary without making the domain import application or
 CLI authority.
 
 See Also:
-    :mod:`domain.filing._errors`
+    :mod:`domain.filing.errors`
         Domain filing error hierarchy raised by draft, import, export, and
         amendment records.
     :mod:`application.filing._calculate`

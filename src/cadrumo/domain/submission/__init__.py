@@ -69,7 +69,7 @@ from __future__ import annotations
 
 from .._identifiers import ModeloIdentifier
 from ._engine import SubmissionEngine
-from ._errors import SubmissionError, SubmissionPreflightError
+from .errors import SubmissionError, SubmissionPreflightError
 from ._models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 from ._preflight import Preflight
 from ._protocols import (

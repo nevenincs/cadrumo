@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from .. import SpendingCategory, load_category_profiles_from_manual, resolve_category_profiles
-from .._errors import CategoryValidationError
+from ..errors import CategoryValidationError
 from .._proportionality import ProportionalityKind
 from .._registry import load_category_profile_file
 

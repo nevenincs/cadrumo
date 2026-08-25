@@ -35,8 +35,9 @@ from typing import Final
 
 import pytest
 
-from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
 from cadrumo.application.workflow.persistence import workflow_state_repository
+
+from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
 from ._ledger_validation_fixtures import bucket

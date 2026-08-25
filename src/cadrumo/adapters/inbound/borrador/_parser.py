@@ -20,7 +20,7 @@ from pathlib import Path
 
 from ....core.logging import get_logger
 from ._detect import detect_artefact_kind
-from ._errors import BorradorParseError
+from .errors import BorradorParseError
 from ._extractors import get_extractor
 from ._schema import (
     ArtefactKind,

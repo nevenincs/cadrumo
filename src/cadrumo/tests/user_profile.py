@@ -14,9 +14,9 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ..application.user_profile.validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
-from ..application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from ..application.user_profile.completeness import conditional_profile_missing_required
+from ..application.user_profile.lifecycle import ProfileCapsuleLifecycle
+from ..application.user_profile.validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
 from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ..core.hashing import sha256_hex
 from ..core.identity import nif_check_letter

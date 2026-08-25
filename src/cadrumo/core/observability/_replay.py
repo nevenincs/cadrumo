@@ -17,7 +17,7 @@ from collections.abc import Callable
 
 from ..config import Settings
 from ..product_identity import PRODUCT_IDENTITY
-from ._errors import AeatCorpusDriftError, CadrumoObservabilityError
+from .errors import AeatCorpusDriftError, CadrumoObservabilityError
 from ._fingerprint import compute_corpus_sha256
 from ._models import ArgumentRecord, ArgumentSource, RunTrace
 from ._store import load_trace

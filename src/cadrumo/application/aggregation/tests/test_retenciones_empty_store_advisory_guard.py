@@ -18,7 +18,7 @@ from ....core import NoRecoveryOutcome, Period
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, PeriodSelector
 from ....tests.secure_sql import isolated_runtime_profile
-from .._errors import AggregationValidationError
+from ..errors import AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition
 from .._source_mesh import CalculationSourceContext

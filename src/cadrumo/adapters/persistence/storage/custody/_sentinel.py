@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Final
 
 from ..crypto import GCM_TAG_SIZE, encrypt_record
-from ._errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 from ._records import ProfileCustodyEnvelope
 from ._sentinel_contract import (
     ProfileCustodySentinelRecord,

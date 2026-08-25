@@ -37,7 +37,7 @@ _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
 
 
 def _refuse(key: str) -> None:
-    error = import_module("cadrumo.entrypoints.cli._errors").CliRefusedBoundaryError
+    error = import_module("cadrumo.entrypoints.cli.errors").CliRefusedBoundaryError
     raise error(translated_message=f"cli.config.custody.errors.{key}")
 
 
@@ -118,15 +118,16 @@ def _resolve_login_target_or_refuse(raw: str):
     after that fix, and it did not carry the conversion, so the escape returned
     on `config profile show <label>` and `config profile validate <label>`.
     """
+    from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
+
     from ...application.profile_preconditions import (
         ProfileSelectionFailure,
         profile_selection_failure_verdict,
     )
     from ...application.user_profile.login_session import resolve_login_target
-    from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ._common import attach_cli_policy_verdict
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     try:
         return resolve_login_target(raw)
@@ -223,6 +224,7 @@ def preflight_parsed_leaf(
 
     if spec.allow_unregistered_profile_diagnostic:
         from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+
         from ...core.bucket_pointer import resolve_active_bucket_id
 
         active = resolve_active_bucket_id()

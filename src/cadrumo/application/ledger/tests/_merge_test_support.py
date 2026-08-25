@@ -9,9 +9,9 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.transactions import TransactionDirection
-from ..models import ManualLedgerTransactionCommand, SplitChildCommand
 from ..actions_manual import create_manual_transaction
 from ..actions_split_merge import split_transaction
+from ..models import ManualLedgerTransactionCommand, SplitChildCommand
 
 _BUCKET_ID = "25252525-2525-4525-8525-252525252525"
 

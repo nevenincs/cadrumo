@@ -20,7 +20,7 @@ import pytest
 from pydantic import ValidationError
 
 from .._detail_record_bindings import foreign_asset_binding_row_field
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -22,7 +22,7 @@ from ...core.time import UtcInstant
 from ...domain.calculations.registry import LegalRefId
 from ._aggregator import ReviewQueue
 from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
-from ._errors import ReviewError
+from .errors import ReviewError
 from ._models import InvoiceReviewItem, ReviewItem, TransactionReviewItem
 
 

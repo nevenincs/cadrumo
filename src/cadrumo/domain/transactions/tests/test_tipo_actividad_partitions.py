@@ -18,7 +18,7 @@ import pytest
 
 from ....core import IAE_SUBJECT_TIPOS_ACTIVIDAD, NON_IAE_SUBJECT_TIPOS_ACTIVIDAD, TipoActividad
 from ...deadlines import IrpfActivityKind
-from .._errors import TransactionValidationError
+from ..errors import TransactionValidationError
 from .._tipo_actividad_partitions import (
     _ART_95_SELECTORS,
     _code_set,

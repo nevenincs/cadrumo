@@ -21,7 +21,7 @@ from collections import Counter
 from collections.abc import Iterable
 
 from ....core import CasillaId
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema import CasillaDefinition, ModeloRevision
 
 

@@ -38,7 +38,7 @@ import pytest
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.resources import bundled_path
 from .._binding_selector_utils import selector_as_dict
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
 from .._legal import verify_legal_catalogue
 from .._schema import ParameterDefinition

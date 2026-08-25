@@ -20,7 +20,7 @@ from ....domain.iva_compensation import (
     IvaCompensationExpiryReviewState,
 )
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
-from .._iva_remote_state import _carry_forward_lot_row, _taxpayer_ref
+from ..iva_remote_state import _carry_forward_lot_row, _taxpayer_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

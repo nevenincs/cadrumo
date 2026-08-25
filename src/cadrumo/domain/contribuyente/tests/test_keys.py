@@ -14,7 +14,7 @@ from .. import (
     optional_profile_keys,
     required_profile_keys,
 )
-from .._errors import ProfileKeysRegistrationError
+from ..errors import ProfileKeysRegistrationError
 from .._keys import register_profile_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

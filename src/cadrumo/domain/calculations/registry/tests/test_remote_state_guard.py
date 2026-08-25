@@ -21,7 +21,7 @@ from .....tests.aeat_literal_fixtures import (
 )
 from .. import ModeloDefinition, RegistryCatalogues, build_snapshot
 from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from .._errors import RegistrySnapshotError, RegistryValidationError
+from ..errors import RegistrySnapshotError, RegistryValidationError
 from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .._live_parity import LiveParityCatalogue, OracleEnvironment
 from .._remote_state_guard import (

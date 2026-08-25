@@ -15,7 +15,7 @@ from itertools import pairwise
 import pytest
 
 from .. import EUMemberState, IvaRateKind, load_iva_rate_table, lookup_rate, rate_kinds_for_declared_rate
-from .._errors import IvaRateNotFoundError, IvaRateOverlapError
+from ..errors import IvaRateNotFoundError, IvaRateOverlapError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

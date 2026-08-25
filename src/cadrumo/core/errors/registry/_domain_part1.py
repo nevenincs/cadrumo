@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.domain.buckets._errors.BucketsError",
+        "cadrumo.domain.buckets.errors.BucketsError",
         ErrorCode(
             code="ERROR_DOMAIN_BUCKETS",
             category=ErrorCategory.ERROR,
@@ -18,7 +18,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.buckets._errors.BucketEventValidationError",
+        "cadrumo.domain.buckets.errors.BucketEventValidationError",
         ErrorCode(
             code="INTEGRITY_DOMAIN_BUCKET_EVENT_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -28,7 +28,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.buckets._errors.BucketMaintenanceError",
+        "cadrumo.domain.buckets.errors.BucketMaintenanceError",
         ErrorCode(
             code="ERROR_DOMAIN_BUCKET_MAINTENANCE",
             category=ErrorCategory.ERROR,
@@ -38,7 +38,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.buckets._errors.BucketBrowseError",
+        "cadrumo.domain.buckets.errors.BucketBrowseError",
         ErrorCode(
             code="FAIL_DOMAIN_BUCKET_BROWSE",
             category=ErrorCategory.FAIL,
@@ -48,7 +48,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.buckets._errors.BucketExportError",
+        "cadrumo.domain.buckets.errors.BucketExportError",
         ErrorCode(
             code="FAIL_DOMAIN_BUCKET_EXPORT",
             category=ErrorCategory.FAIL,
@@ -58,7 +58,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.buckets._errors.BucketImportError",
+        "cadrumo.domain.buckets.errors.BucketImportError",
         ErrorCode(
             code="REFUSED_DOMAIN_BUCKET_IMPORT",
             category=ErrorCategory.REFUSED,
@@ -68,7 +68,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.buckets._errors.BucketRenameError",
+        "cadrumo.domain.buckets.errors.BucketRenameError",
         ErrorCode(
             code="REFUSED_DOMAIN_BUCKET_RENAME",
             category=ErrorCategory.REFUSED,
@@ -78,7 +78,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.buckets._errors.BucketDeleteRefusedError",
+        "cadrumo.domain.buckets.errors.BucketDeleteRefusedError",
         ErrorCode(
             code="REFUSED_DOMAIN_BUCKET_DELETE",
             category=ErrorCategory.REFUSED,
@@ -88,7 +88,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.buckets._errors.BucketArchiveRefusedError",
+        "cadrumo.domain.buckets.errors.BucketArchiveRefusedError",
         ErrorCode(
             code="REFUSED_DOMAIN_BUCKET_ARCHIVE",
             category=ErrorCategory.REFUSED,
@@ -98,7 +98,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.buckets._errors.BucketRestoreRefusedError",
+        "cadrumo.domain.buckets.errors.BucketRestoreRefusedError",
         ErrorCode(
             code="REFUSED_DOMAIN_BUCKET_RESTORE",
             category=ErrorCategory.REFUSED,
@@ -108,7 +108,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.retention._errors.RetentionError",
+        "cadrumo.domain.retention.errors.RetentionError",
         ErrorCode(
             code="ERROR_DOMAIN_RETENTION",
             category=ErrorCategory.ERROR,
@@ -118,7 +118,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.retention._errors.RetentionFloorError",
+        "cadrumo.domain.retention.errors.RetentionFloorError",
         ErrorCode(
             code="REFUSED_DOMAIN_RETENTION_FLOOR",
             category=ErrorCategory.REFUSED,
@@ -178,7 +178,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._notifications.NotificationsSnapshotNotFoundError",
+        "cadrumo.application.live.notifications.NotificationsSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_NOTIFICATIONS_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -188,7 +188,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._notification_documents.NotificationDocumentNotFoundError",
+        "cadrumo.application.live.notification_documents.NotificationDocumentNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_NOTIFICATION_DOCUMENT_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -198,7 +198,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._expedientes.ExpedientesSnapshotNotFoundError",
+        "cadrumo.application.live.expedientes.ExpedientesSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_EXPEDIENTES_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -208,7 +208,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._deudas.DeudasSnapshotNotFoundError",
+        "cadrumo.application.live.deudas.DeudasSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_DEUDAS_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -218,7 +218,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._borrador_100.BorradorSnapshotNotFoundError",
+        "cadrumo.application.live.borrador_100.BorradorSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_BORRADOR_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._justificante.JustificanteCaptureSnapshotNotFoundError",
+        "cadrumo.application.live.justificante.JustificanteCaptureSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -238,7 +238,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._verify.VerifyObservationNotFoundError",
+        "cadrumo.application.live.verify.VerifyObservationNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_VERIFY_OBSERVATION_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -258,7 +258,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.justificante._errors.PdfModeloImportError",
+        "cadrumo.domain.justificante.errors.PdfModeloImportError",
         ErrorCode(
             code="ERROR_PDF_IMPORT_PDF_MODELO_IMPORT",
             category=ErrorCategory.ERROR,
@@ -268,7 +268,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.deadlines._errors.DeadlineError",
+        "cadrumo.domain.deadlines.errors.DeadlineError",
         ErrorCode(
             code="ERROR_DEADLINES_DEADLINE",
             category=ErrorCategory.ERROR,
@@ -278,7 +278,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.deadlines._errors.ProfileError",
+        "cadrumo.domain.deadlines.errors.ProfileError",
         ErrorCode(
             code="ERROR_DEADLINES_PROFILE",
             category=ErrorCategory.ERROR,
@@ -288,7 +288,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.deadlines._errors.ScheduleComputationError",
+        "cadrumo.domain.deadlines.errors.ScheduleComputationError",
         ErrorCode(
             code="ERROR_DEADLINES_SCHEDULE_COMPUTATION",
             category=ErrorCategory.ERROR,
@@ -298,7 +298,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.deadlines._errors.NoDeadlineWindowsError",
+        "cadrumo.domain.deadlines.errors.NoDeadlineWindowsError",
         ErrorCode(
             code="ERROR_DEADLINES_MISSING_WINDOWS",
             category=ErrorCategory.ERROR,
@@ -308,7 +308,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing._errors.ModeloAmendmentError",
+        "cadrumo.domain.filing.errors.ModeloAmendmentError",
         ErrorCode(
             code="ERROR_FILING_AMENDMENT",
             category=ErrorCategory.ERROR,
@@ -318,7 +318,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing._errors.ModeloAmendmentValidationError",
+        "cadrumo.domain.filing.errors.ModeloAmendmentValidationError",
         ErrorCode(
             code="INTEGRITY_FILING_AMENDMENT_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -328,7 +328,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing._errors.ModeloBuilderError",
+        "cadrumo.domain.filing.errors.ModeloBuilderError",
         ErrorCode(
             code="ERROR_FILING_BUILDER",
             category=ErrorCategory.ERROR,
@@ -338,7 +338,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing._errors.ModeloComputationError",
+        "cadrumo.domain.filing.errors.ModeloComputationError",
         ErrorCode(
             code="ERROR_FILING_COMPUTATION",
             category=ErrorCategory.ERROR,
@@ -348,7 +348,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing._errors.ModeloDraftError",
+        "cadrumo.domain.filing.errors.ModeloDraftError",
         ErrorCode(
             code="ERROR_FILING_DRAFT",
             category=ErrorCategory.ERROR,
@@ -358,7 +358,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing._errors.ModeloImportError",
+        "cadrumo.domain.filing.errors.ModeloImportError",
         ErrorCode(
             code="FAIL_FILING_IMPORT",
             category=ErrorCategory.FAIL,
@@ -368,7 +368,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.filing._errors.FilingValidationError",
+        "cadrumo.domain.filing.errors.FilingValidationError",
         ErrorCode(
             code="INTEGRITY_FILING_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -378,7 +378,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.attachments._errors.AttachmentError",
+        "cadrumo.domain.attachments.errors.AttachmentError",
         ErrorCode(
             code="ERROR_FINANCIAL_ATTACHMENTS_ATTACHMENT",
             category=ErrorCategory.ERROR,
@@ -388,7 +388,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.attachments._errors.AttachmentNotFoundError",
+        "cadrumo.domain.attachments.errors.AttachmentNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_ATTACHMENTS_ATTACHMENT_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -398,7 +398,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.attachments._errors.AttachmentPersistenceError",
+        "cadrumo.domain.attachments.errors.AttachmentPersistenceError",
         ErrorCode(
             code="FAIL_FINANCIAL_ATTACHMENTS_ATTACHMENT_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -408,7 +408,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.attachments._errors.AttachmentValidationError",
+        "cadrumo.domain.attachments.errors.AttachmentValidationError",
         ErrorCode(
             code="INTEGRITY_FINANCIAL_ATTACHMENTS_ATTACHMENT_VALIDATION",
             category=ErrorCategory.INTEGRITY,
@@ -418,7 +418,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.invoices._errors.InvoiceCatalogueError",
+        "cadrumo.domain.invoices.errors.InvoiceCatalogueError",
         ErrorCode(
             code="ERROR_FINANCIAL_INVOICES_INVOICE_CATALOGUE",
             category=ErrorCategory.ERROR,
@@ -428,7 +428,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.invoices._errors.InvoiceError",
+        "cadrumo.domain.invoices.errors.InvoiceError",
         ErrorCode(
             code="ERROR_FINANCIAL_INVOICES_INVOICE",
             category=ErrorCategory.ERROR,
@@ -438,7 +438,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.invoices._errors.InvoiceLinkError",
+        "cadrumo.domain.invoices.errors.InvoiceLinkError",
         ErrorCode(
             code="ERROR_FINANCIAL_INVOICES_INVOICE_LINK",
             category=ErrorCategory.ERROR,
@@ -448,7 +448,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.invoices._errors.InvoiceNotFoundError",
+        "cadrumo.domain.invoices.errors.InvoiceNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_INVOICES_INVOICE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -458,7 +458,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.invoices._errors.InvoicePersistenceError",
+        "cadrumo.domain.invoices.errors.InvoicePersistenceError",
         ErrorCode(
             code="FAIL_FINANCIAL_INVOICES_INVOICE_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -468,7 +468,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.transactions._errors.TransactionError",
+        "cadrumo.domain.transactions.errors.TransactionError",
         ErrorCode(
             code="ERROR_FINANCIAL_TRANSACTIONS_TRANSACTION",
             category=ErrorCategory.ERROR,
@@ -478,7 +478,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.transactions._errors.LedgerStorageError",
+        "cadrumo.domain.transactions.errors.LedgerStorageError",
         ErrorCode(
             code="FAIL_FINANCIAL_LEDGER_STORAGE",
             category=ErrorCategory.FAIL,
@@ -578,7 +578,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.inventory._errors.InventoryServiceInputError",
+        "cadrumo.application.inventory.errors.InventoryServiceInputError",
         ErrorCode(
             code="REFUSED_INVENTORY_SERVICE_INPUT",
             category=ErrorCategory.REFUSED,
@@ -588,7 +588,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.inventory._errors.InventoryActividadNotFoundError",
+        "cadrumo.application.inventory.errors.InventoryActividadNotFoundError",
         ErrorCode(
             code="REFUSED_INVENTORY_ACTIVIDAD_NOT_FOUND",
             category=ErrorCategory.REFUSED,
@@ -598,7 +598,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.inventory._errors.InventoryActividadConflictError",
+        "cadrumo.application.inventory.errors.InventoryActividadConflictError",
         ErrorCode(
             code="REFUSED_INVENTORY_ACTIVIDAD_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -658,7 +658,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.transactions._errors.TransactionIdPrefixError",
+        "cadrumo.domain.transactions.errors.TransactionIdPrefixError",
         ErrorCode(
             code="REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
             category=ErrorCategory.REFUSED,
@@ -668,7 +668,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.transactions._errors.LedgerNoActiveBucketError",
+        "cadrumo.domain.transactions.errors.LedgerNoActiveBucketError",
         ErrorCode(
             code="REFUSED_FINANCIAL_LEDGER_NO_ACTIVE_BUCKET",
             category=ErrorCategory.REFUSED,
@@ -678,7 +678,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.usage_ratios._errors.UsageRatioError",
+        "cadrumo.domain.usage_ratios.errors.UsageRatioError",
         ErrorCode(
             code="ERROR_FINANCIAL_USAGE_RATIOS_USAGE_RATIO",
             category=ErrorCategory.ERROR,
@@ -688,7 +688,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.usage_ratios._errors.UsageRatioPersistenceError",
+        "cadrumo.domain.usage_ratios.errors.UsageRatioPersistenceError",
         ErrorCode(
             code="FAIL_FINANCIAL_USAGE_RATIOS_USAGE_RATIO_PERSISTENCE",
             category=ErrorCategory.FAIL,
@@ -698,7 +698,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.usage_ratios._errors.CensoRatioMismatchError",
+        "cadrumo.domain.usage_ratios.errors.CensoRatioMismatchError",
         ErrorCode(
             code="REFUSED_FINANCIAL_USAGE_RATIOS_CENSO_MISMATCH",
             category=ErrorCategory.REFUSED,
@@ -708,7 +708,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva._errors.IvaCatalogueError",
+        "cadrumo.domain.iva.errors.IvaCatalogueError",
         ErrorCode(
             code="ERROR_FINANCIAL_IVA_CATALOGUE",
             category=ErrorCategory.ERROR,
@@ -718,7 +718,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva._errors.IvaCategoryNotFoundError",
+        "cadrumo.domain.iva.errors.IvaCategoryNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_IVA_CATEGORY_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -728,7 +728,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva._errors.IvaClassificationError",
+        "cadrumo.domain.iva.errors.IvaClassificationError",
         ErrorCode(
             code="ERROR_FINANCIAL_IVA_CLASSIFICATION",
             category=ErrorCategory.ERROR,
@@ -738,7 +738,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva._errors.IvaError",
+        "cadrumo.domain.iva.errors.IvaError",
         ErrorCode(
             code="ERROR_FINANCIAL_IVA",
             category=ErrorCategory.ERROR,
@@ -748,7 +748,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva._errors.IvaRateNotFoundError",
+        "cadrumo.domain.iva.errors.IvaRateNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_IVA_RATE_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -758,7 +758,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva._errors.IvaRateOverlapError",
+        "cadrumo.domain.iva.errors.IvaRateOverlapError",
         ErrorCode(
             code="ERROR_FINANCIAL_IVA_RATE_OVERLAP",
             category=ErrorCategory.ERROR,
@@ -768,7 +768,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.justificante._errors.JustificanteCsvNotFoundError",
+        "cadrumo.domain.justificante.errors.JustificanteCsvNotFoundError",
         ErrorCode(
             code="ERROR_JUSTIFICANTE_CSV_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -798,7 +798,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.justificante._errors.JustificanteError",
+        "cadrumo.domain.justificante.errors.JustificanteError",
         ErrorCode(
             code="ERROR_JUSTIFICANTE",
             category=ErrorCategory.ERROR,
@@ -808,7 +808,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.justificante._errors.JustificanteParseError",
+        "cadrumo.domain.justificante.errors.JustificanteParseError",
         ErrorCode(
             code="FAIL_JUSTIFICANTE_PARSE",
             category=ErrorCategory.FAIL,
@@ -818,7 +818,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.justificante._errors.JustificanteVerificationError",
+        "cadrumo.domain.justificante.errors.JustificanteVerificationError",
         ErrorCode(
             code="INTEGRITY_JUSTIFICANTE_VERIFICATION",
             category=ErrorCategory.INTEGRITY,
@@ -828,7 +828,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.manuals._errors.ManifestError",
+        "cadrumo.domain.manuals.errors.ManifestError",
         ErrorCode(
             code="INTEGRITY_MANUALS_MANIFEST",
             category=ErrorCategory.INTEGRITY,
@@ -838,7 +838,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.manuals._errors.ManualError",
+        "cadrumo.domain.manuals.errors.ManualError",
         ErrorCode(
             code="ERROR_MANUALS_MANUAL",
             category=ErrorCategory.ERROR,
@@ -848,7 +848,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.manuals._errors.ManualNotFoundError",
+        "cadrumo.domain.manuals.errors.ManualNotFoundError",
         ErrorCode(
             code="ERROR_MANUALS_MANUAL_NOT_FOUND",
             category=ErrorCategory.ERROR,
@@ -858,7 +858,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.manuals._errors.ManualParseError",
+        "cadrumo.domain.manuals.errors.ManualParseError",
         ErrorCode(
             code="FAIL_MANUALS_MANUAL_PARSE",
             category=ErrorCategory.FAIL,
@@ -868,7 +868,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.manuals._errors.ManualReviewRequiredError",
+        "cadrumo.domain.manuals.errors.ManualReviewRequiredError",
         ErrorCode(
             code="ERROR_MANUALS_MANUAL_REVIEW_REQUIRED",
             category=ErrorCategory.ERROR,
@@ -878,7 +878,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.manuals._errors.RuleExtractionError",
+        "cadrumo.domain.manuals.errors.RuleExtractionError",
         ErrorCode(
             code="ERROR_MANUALS_RULE_EXTRACTION",
             category=ErrorCategory.ERROR,
@@ -888,7 +888,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.portals._errors.PortalIntegrityError",
+        "cadrumo.domain.portals.errors.PortalIntegrityError",
         ErrorCode(
             code="INTEGRITY_PORTALS_PORTAL_INTEGRITY",
             category=ErrorCategory.INTEGRITY,
@@ -898,7 +898,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.portals._errors.PortalRegistryError",
+        "cadrumo.domain.portals.errors.PortalRegistryError",
         ErrorCode(
             code="ERROR_PORTALS_PORTAL_REGISTRY",
             category=ErrorCategory.ERROR,

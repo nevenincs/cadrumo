@@ -11,9 +11,6 @@ related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
 
-
-
-
 # Implement safe error and bounded log renderers without accepting raw exceptions or retaining lifecycle authority
 
 ## Scope

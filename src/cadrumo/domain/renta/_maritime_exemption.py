@@ -50,7 +50,7 @@ from typing import Literal
 from ...core import CasillaId, validated_casilla_id
 from ...core.external_constants import ART_7P_EXEMPTION_CAP_EUR, REBECA_MARITIME_EXEMPTION_FRACTION
 from ..calculations.registry import CasillaObservation, LegalRefId, SourceRefId
-from ._errors import RentaError, RentaValidationError
+from .errors import RentaError, RentaValidationError
 
 # Casilla in Modelo 100 that receives exempt income (renta exenta section).
 # Art. 7.p) and REBECA both flow through the existing renta exenta casilla

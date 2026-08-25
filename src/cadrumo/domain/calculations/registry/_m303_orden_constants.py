@@ -5,7 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Protocol
 
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import RevisionId, SourceRefId
 
 EXPECTED_ACTIVITY_COUNT = 49

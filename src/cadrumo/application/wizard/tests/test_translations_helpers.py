@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from ....core.i18n import Translatable as tr
-from .._models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
+from ..models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from .._translations import (
     _FIXED_RUNTIME_KEYS,
     _resolves_in,

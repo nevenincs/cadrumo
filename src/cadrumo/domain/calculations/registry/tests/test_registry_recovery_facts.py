@@ -9,7 +9,7 @@ import pytest
 
 from .....core.resources import resources
 from .._applicability_modelo202 import Modelo202Modality, modelo_202_modality_from_inputs
-from .._errors import RegistryFailureCondition, RegistryValidationError
+from ..errors import RegistryFailureCondition, RegistryValidationError
 from .._queries import RegistryQueryService, _casilla_detail_report
 from .._snapshot import _check_snapshot_filing_capability
 

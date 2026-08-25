@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ._corpus_catalogue import verify_source_catalogue
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._legal import verify_legal_catalogue_grounding
 from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ._source_evidence_fingerprint import (
@@ -106,13 +106,13 @@ class RegistryValidator:
         # checkout -- a question a tax-filing product has no business asking.
         # Unsupplied means the gate does not run, which is the correct and only
         # outcome for every installed run.
-        self._justificante_corpus_root: Path | None = justificante_corpus_root
+        self.justificante_corpus_root: Path | None = justificante_corpus_root
         self._source_evidence_fingerprint = (
             source_evidence_fingerprint
             if source_evidence_fingerprint is not None
             else collect_source_evidence_fingerprints(
                 self._source_root,
-                justificante_corpus_root=self._justificante_corpus_root,
+                justificante_corpus_root=self.justificante_corpus_root,
             )
         )
 
@@ -131,15 +131,15 @@ class RegistryValidator:
 
     @property
     def justificante_corpus_root(self) -> Path | None:
-        return self._justificante_corpus_root
+        return self.justificante_corpus_root
 
     def _source_root_key(self) -> str | None:
         return str(self._source_root.expanduser().resolve()) if self._source_root is not None else None
 
     def _corpus_root_key(self) -> str | None:
         return (
-            str(self._justificante_corpus_root.expanduser().resolve())
-            if self._justificante_corpus_root is not None
+            str(self.justificante_corpus_root.expanduser().resolve())
+            if self.justificante_corpus_root is not None
             else None
         )
 
@@ -287,7 +287,7 @@ class RegistryValidator:
             source_refs=self._sources,
             evidence=self._evidence,
             source_root=self._source_root,
-            justificante_corpus_root=self._justificante_corpus_root,
+            justificante_corpus_root=self.justificante_corpus_root,
         )
         for failure in validate_producer_inventory(prefix, revision):
             if failure not in failures:

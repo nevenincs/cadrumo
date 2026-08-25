@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, FilingPeriodCode, Period
 from ._bindings import CasillaObservation, RegistryModeloObservation
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._formula_runtime import RegistryCalculationResult
 from ._ids import FormulaId, LegalRefId, ModeloId, SourceRefId
 

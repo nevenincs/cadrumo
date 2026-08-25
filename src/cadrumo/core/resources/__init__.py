@@ -27,7 +27,7 @@ from ._boundary import (
     resolve_companion_binary,
     resolve_corpus_binary,
 )
-from ._errors import (
+from .errors import (
     ResourceBackendError,
     ResourceLoadError,
     ResourceNotFoundError,

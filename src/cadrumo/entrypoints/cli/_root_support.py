@@ -123,7 +123,7 @@ def _normalize_root_active_profile(ctx: typer.Context) -> None:
             former_product_state_verdict,
         )
         from ...core import FormerProductStateError
-        from ._errors import CliRefusedBoundaryError
+        from .errors import CliRefusedBoundaryError
 
         try:
             _normalize_active_profile_label_to_uuid(ctx)
@@ -201,7 +201,7 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
     from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
     from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
     from ...core.config import override_settings
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     requested = profile.strip()
     if not requested:
@@ -278,7 +278,7 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config import override_settings
     from ...core.errors import CadrumoError
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     active = resolve_active_bucket_id()
     if active is None:

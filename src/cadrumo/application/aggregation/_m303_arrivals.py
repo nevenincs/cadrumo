@@ -28,7 +28,7 @@ from ...domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
 )
-from ._errors import AggregationValidationError, t
+from .errors import AggregationValidationError, t
 from ._iva_ledger import IvaLedgerAggregation
 
 # Modelo 303's 2026 record design, DP30301 Note 6: the option and revocation

@@ -63,7 +63,7 @@ from ..browser import BrowserSession, DefaultBrowserSession, default_browser_ses
 from ._adapter_utils import assert_read_http_for
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
-from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._walker import assert_landed_url_readable
 
 if TYPE_CHECKING:

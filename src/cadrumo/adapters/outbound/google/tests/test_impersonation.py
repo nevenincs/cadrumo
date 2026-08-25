@@ -35,7 +35,7 @@ from pydantic import ValidationError
 
 from .....core import GoogleCredentialSourceKind
 from .....tests.env_scope import scoped_env_var
-from .._errors import GoogleAuthError
+from ..errors import GoogleAuthError
 from .._impersonation import (
     GoogleAuthAdcStaleError,
     GoogleAuthAdcUnavailableError,

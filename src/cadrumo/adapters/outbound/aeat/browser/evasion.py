@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 from .....core import NoRecoveryOutcome
 from .....core.logging import get_logger
-from ._errors import (
+from .errors import (
     BrowserEvasionError,
     BrowserFailureMode,
     BrowserPreconditionCondition,

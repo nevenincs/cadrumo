@@ -149,7 +149,7 @@ def _ensure_profile_keys_registered() -> None:
     import graph, which is exactly why a graph-based check will keep declaring
     the hoist safe.
     """
-    from ..wizard import WIZARD_FLOWS
+    from ..wizard.catalogue import WIZARD_FLOWS
 
     _ = WIZARD_FLOWS
 

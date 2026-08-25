@@ -22,7 +22,7 @@ from .. import (
     verify_fetched_pdf,
     write_manifest,
 )
-from .._errors import ManifestError
+from ..errors import ManifestError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -14,7 +14,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from ._errors import ArtefactNotRecognisedError
+from .errors import ArtefactNotRecognisedError
 from ._parsers import extract_pages_text
 from ._schema import ArtefactKind
 

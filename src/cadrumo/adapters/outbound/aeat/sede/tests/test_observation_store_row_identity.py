@@ -33,7 +33,7 @@ from pydantic import AnyHttpUrl
 from ......core import Period
 from ......core.config import Settings
 from ......tests.secure_sql import isolated_runtime_profile
-from .._errors import SedeValidationError
+from ..errors import SedeValidationError
 from .._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from .._observation_store import FiledDeclaracionObservationStore
 from .._schema import (

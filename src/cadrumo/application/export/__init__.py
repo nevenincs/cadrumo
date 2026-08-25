@@ -15,8 +15,8 @@ Major declarations:
   :class:`application.export.TabularExportResult`.
 * :class:`application.export.ExportSerializationFormat` — the closed set
   of supported output formats.
-* :class:`application.export._errors.ExportFieldError` and
-  :class:`application.export._errors.ExportFormatError` — typed
+* :class:`application.export.errors.ExportFieldError` and
+  :class:`application.export.errors.ExportFormatError` — typed
   validation failures for export callers.
 
 See Also:

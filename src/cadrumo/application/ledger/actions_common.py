@@ -222,6 +222,7 @@ def blocking_modelo_references(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
 ) -> tuple[LedgerRemovalBlocker, ...]:
+    """Return finalized modelo revisions that still depend on these transactions."""
     if not transaction_ids:
         return ()
     wanted = set(transaction_ids)

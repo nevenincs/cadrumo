@@ -17,7 +17,7 @@ def enforce_tui_request(ctx: typer.Context, *, spec: CommandSpec) -> bool:
     if not tui_was_requested(ctx):
         return False
     if spec.tui_capability is TuiCapability.NOT_IMPLEMENTED:
-        from ._errors import CliTuiNotImplementedError
+        from .errors import CliTuiNotImplementedError
 
         identity = spec.result_schema.identity or ".".join(spec.path[1:]) or "root"
         raise CliTuiNotImplementedError(command=identity)

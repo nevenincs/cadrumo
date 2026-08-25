@@ -26,7 +26,7 @@ from ....core import (
     scan_directory,
 )
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
-from ._errors import (
+from .errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
     RegistryLoadError,

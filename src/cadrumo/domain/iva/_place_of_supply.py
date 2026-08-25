@@ -56,7 +56,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core import STRICT_FROZEN_CONFIG, read_toml, scan_directory
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
-from ._errors import IvaCatalogueError
+from .errors import IvaCatalogueError
 from ._grounding import verify_table_legal_refs
 from ._supply_nature import SupplyNature
 

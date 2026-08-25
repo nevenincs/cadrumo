@@ -14,6 +14,8 @@ from enum import StrEnum
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+
 from ...application.filing import FilingRetentionAuthority
 from ...core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.hashing import CONTENT_DIGEST_PREFIX
@@ -24,7 +26,6 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from ..operator_actions import PreconditionVerdict, no_action_precondition_verdict
 from ..user_profile.custody_ports import default_profile_bucket_storage, inventory_committed_profile_custody
-from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ._contracts import (
     AssessBucketDeletionCommand,
     BucketDeletionAssessment,

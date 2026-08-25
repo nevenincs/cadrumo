@@ -32,7 +32,7 @@ from pathlib import Path
 
 from ...core import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
 from ...domain.calculations.registry import LegalReference, bundled_authority
-from ._errors import CorpusSearchInputError
+from .errors import CorpusSearchInputError
 from ._models import CitationResolution
 
 

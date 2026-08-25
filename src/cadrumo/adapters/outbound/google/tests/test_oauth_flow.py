@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from .....application.user_profile.capsule_record import ProfileRecordIntegrityError
 from .....core.config import override_settings
 from .....tests.secure_sql import isolated_runtime_profile, reset_secure_object_store
-from .._errors import (
+from ..errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthNetworkError,
     GoogleAuthNonInteractiveError,
@@ -138,7 +138,7 @@ _LOGIN_PROBE = textwrap.dedent(
     import sys
 
     from cadrumo.adapters.outbound.google._oauth_flow import require_interactive_terminal
-    from cadrumo.adapters.outbound.google._errors import GoogleAuthNonInteractiveError
+    from cadrumo.adapters.outbound.google.errors import GoogleAuthNonInteractiveError
 
     if sys.stdin.isatty():
         print("UNEXPECTED_TTY")

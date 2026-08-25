@@ -49,7 +49,7 @@ from ...core.errors import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import now, validate_utc_aware
-from ._errors import LiveApplicationInputError
+from .errors import LiveApplicationInputError
 
 VerifyVerdict = Literal["valid", "invalid", "unknown"]
 

@@ -61,8 +61,8 @@ from ....tests.offline_aeat_register import (
     rendered_register_rows,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._filed_data_capture import capture_filed_data_bulk
-from .._remote_state_models import BulkFiledDataCaptureReport
+from ..filed_data_capture import capture_filed_data_bulk
+from ..remote_state_models import BulkFiledDataCaptureReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

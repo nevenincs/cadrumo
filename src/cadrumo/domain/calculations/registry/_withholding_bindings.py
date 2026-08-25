@@ -25,7 +25,7 @@ from ._binding_selector_utils import (
 from ._binding_selector_utils import (
     selector_as_dict as _selector_as_dict,
 )
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId
 from ._schema import DataBindingDefinition, ModeloRevision
 

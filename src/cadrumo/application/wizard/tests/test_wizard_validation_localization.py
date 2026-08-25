@@ -30,8 +30,8 @@ from ....core.config import override_settings
 from ....core.i18n import tr
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
-from .._catalogue import SETUP_FLOW
-from .._commands import build_wizard_command
+from ..catalogue import SETUP_FLOW
+from ..commands import build_wizard_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

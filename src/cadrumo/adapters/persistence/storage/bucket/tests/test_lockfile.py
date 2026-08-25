@@ -23,7 +23,7 @@ import pytest
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.bucket_layout import provision_bucket_directory
-from .._errors import BucketBusyError, BucketValidationError
+from ..errors import BucketBusyError, BucketValidationError
 from .._layout import (
     BucketPaths,
     bucket_paths,

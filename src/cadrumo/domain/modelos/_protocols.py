@@ -5,11 +5,11 @@ filing records, calculation results, or verification reports depends on these
 Protocols, not on the concrete adapter-backed repository classes. This keeps
 the domain layer free of adapter imports while still providing typed port surfaces.
 
-The work-unit, calculation-revision, filing-record, and verification-report
-protocols return :class:`WorkUnitCatalogue`,
-:class:`CalculationRevisionCatalogue`, :class:`ModeloRecordCatalogue`, and
-:class:`VerificationReportCatalogue` instances while keeping application code
-independent of concrete storage adapters.
+The calculation-revision, filing-record, and verification-report protocols
+return :class:`CalculationRevisionCatalogue`, :class:`ModeloRecordCatalogue`,
+and :class:`VerificationReportCatalogue` instances while keeping application
+code independent of concrete storage adapters. The work-unit port is defined
+directly in :mod:`~domain.modelos.work_unit_repository`.
 """
 
 from __future__ import annotations

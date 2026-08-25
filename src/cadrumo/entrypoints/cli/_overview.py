@@ -88,12 +88,13 @@ from ._overview_rendering import (
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from ...application.overview import CalendarWarning
-    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from cadrumo.application.workflow.state_models import WorkflowState
+
+    from ...application.overview import CalendarWarning
+    from ...application.user_profile.profile_record_repository import ProfileRecordRepository
     from ...domain.deadlines import TaxpayerProfile
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
 logger = get_logger(__name__)
 
@@ -141,7 +142,7 @@ def _incomplete_profile_refusal(warnings: Sequence[CalendarWarning]) -> CliRefus
         cli_exception_no_recovery_verdict,
     )
     from ._common import attach_cli_policy_verdict
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     return attach_cli_policy_verdict(
         CliRefusedBoundaryError(
@@ -184,7 +185,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
     from ...domain.calculations.registry import build_profile_grounding_index
     from ...domain.deadlines import EntityType
     from ._common import attach_cli_policy_verdict
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     missing: list[str] = []
     if profile.entity_type is None:
@@ -611,6 +612,7 @@ def _overview_calendar_all_profiles(
     ``overview.calendar``.
     """
     from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
+
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     today = today_madrid()

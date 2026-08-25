@@ -18,14 +18,15 @@ from typing import cast
 
 import pytest
 
+from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+
 from ....core.errors import CoreValidationError
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_storage_root_fixture import profile_storage_root_fixture
 from ...user_profile.registration import register_profile_with_credentials
-from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-from .._commands import _resolve_profile_id_for_mode
-from .._errors import WizardMissingFlagError
-from .._models import WizardFlow
+from ..commands import _resolve_profile_id_for_mode
+from ..errors import WizardMissingFlagError
+from ..models import WizardFlow
 
 __all__ = ["profile_storage_root_fixture"]
 

@@ -9,7 +9,6 @@ import sys
 import textwrap
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from types import ModuleType
 
 import pytest
 
@@ -39,23 +38,7 @@ from ....core import (
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....tests.offline_aeat_register import aeat_sede_fixture, open_routed_declarations_register
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
-    FILED_HISTORY_OPERATION_DEFINITION_ID as PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID,
-)
-from .. import (
-    FiledHistoryOnboardingRun as PublicFiledHistoryOnboardingRun,
-)
-from .. import (
-    FiledHistoryOperationRequest as PublicFiledHistoryOperationRequest,
-)
-from .. import __all__ as public_names
-from .. import (
-    build_filed_history_operation_definition as public_build_filed_history_operation_definition,
-)
-from .. import (
-    build_filed_history_operation_registration as public_build_filed_history_operation_registration,
-)
-from .._filed_data_capture import (
+from ..filed_data_capture import (
     FILED_HISTORY_DECLARATION_PROGRESS_UNIT,
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
@@ -66,7 +49,7 @@ from .._filed_data_capture import (
     filed_history_discovery_report,
     pull_filed_history,
 )
-from .._filed_history_operation import (
+from ..filed_history_operation import (
     FILED_HISTORY_IVA_WALLET_REFUSAL_CODE,
     FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE,
     FILED_HISTORY_OPERATION_DEFINITION_ID,
@@ -83,6 +66,7 @@ from .._filed_history_operation import (
     FiledHistoryOperationRequest,
     _settled_effect,
     build_filed_history_operation_definition,
+    build_filed_history_operation_registration,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -160,7 +144,7 @@ def _registered_filed_history_definition(definition):
     """Enroll the live definition through its public registration contract."""
     return OperationRegistry(
         definitions=(definition,),
-        public_registrations=(public_build_filed_history_operation_registration(definition),),
+        public_registrations=(build_filed_history_operation_registration(definition),),
     )
 
 
@@ -545,35 +529,35 @@ def test_settled_effect_classifies_only_committed_units(
     assert _settled_effect(run) is expected
 
 
-def test_filed_history_operation_contract_resolves_from_the_public_facade() -> None:
-    """The facade exposes the request contract and composed definition factory."""
-    live = importlib.import_module("..", package=__package__)
-    definition = public_build_filed_history_operation_definition(
+def test_filed_history_operation_contract_has_one_public_defining_module() -> None:
+    """The operation contract resolves identically from its one public owner."""
+    operation = importlib.import_module("..filed_history_operation", package=__package__)
+    definition = build_filed_history_operation_definition(
         sync_run_repository_factory=SyncRunRecordRepository,
     )
 
-    assert PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID == "live.filed-history.pull"
-    assert definition.definition_id == PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID
-    assert definition.request_type is PublicFiledHistoryOperationRequest
-    assert definition.result_type is PublicFiledHistoryOnboardingRun
-    assert definition.executor_factory.request_type is PublicFiledHistoryOperationRequest
-    assert definition.executor_factory.executor_type.__module__.endswith("._filed_history_operation")
-    assert definition.executor_factory.build().__class__.__module__.endswith("._filed_history_operation")
-    assert public_build_filed_history_operation_definition.__module__.endswith("._filed_history_operation")
-    assert PublicFiledHistoryOperationRequest.__module__.endswith("._filed_history_operation")
-    assert live.FILED_HISTORY_OPERATION_DEFINITION_ID is PUBLIC_FILED_HISTORY_OPERATION_DEFINITION_ID
-    assert live.FiledHistoryOperationRequest is PublicFiledHistoryOperationRequest
-    assert live.build_filed_history_operation_definition is public_build_filed_history_operation_definition
-    assert live.build_filed_history_operation_registration is public_build_filed_history_operation_registration
+    assert FILED_HISTORY_OPERATION_DEFINITION_ID == "live.filed-history.pull"
+    assert definition.definition_id == FILED_HISTORY_OPERATION_DEFINITION_ID
+    assert definition.request_type is FiledHistoryOperationRequest
+    assert definition.result_type is FiledHistoryOnboardingRun
+    assert definition.executor_factory.request_type is FiledHistoryOperationRequest
+    assert definition.executor_factory.executor_type.__module__.endswith(".filed_history_operation")
+    assert definition.executor_factory.build().__class__.__module__.endswith(".filed_history_operation")
+    assert build_filed_history_operation_definition.__module__.endswith(".filed_history_operation")
+    assert FiledHistoryOperationRequest.__module__.endswith(".filed_history_operation")
+    assert operation.FILED_HISTORY_OPERATION_DEFINITION_ID is FILED_HISTORY_OPERATION_DEFINITION_ID
+    assert operation.FiledHistoryOperationRequest is FiledHistoryOperationRequest
+    assert operation.build_filed_history_operation_definition is build_filed_history_operation_definition
+    assert operation.build_filed_history_operation_registration is build_filed_history_operation_registration
 
 
 def test_public_registration_uses_a_strict_profile_free_request_schema(tmp_path: Path) -> None:
     """The public request resolves taxpayer facts from the active subject, not JSON."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        definition = public_build_filed_history_operation_definition(
+        definition = build_filed_history_operation_definition(
             sync_run_repository_factory=SyncRunRecordRepository,
         )
-        registration = public_build_filed_history_operation_registration(definition)
+        registration = build_filed_history_operation_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
     request_schema = registration.schema_bindings[0].model_type.model_json_schema(mode="validation")
@@ -585,7 +569,7 @@ def test_public_registration_uses_a_strict_profile_free_request_schema(tmp_path:
 
 def test_active_profile_resolution_uses_the_workflow_persistence_definition() -> None:
     """The live operation imports the repository from its defining module."""
-    module = importlib.import_module(".._filed_history_operation", package=__package__)
+    module = importlib.import_module("..filed_history_operation", package=__package__)
     module_file = module.__file__
     assert module_file is not None
     source = Path(module_file).read_text(encoding="utf-8")
@@ -594,38 +578,23 @@ def test_active_profile_resolution_uses_the_workflow_persistence_definition() ->
     assert "from ..workflow import workflow_state_repository" not in source
 
 
-def test_filed_history_operation_facade_does_not_publish_executor_or_phase_internals() -> None:
-    """The executable implementation and phase codes remain owner-private."""
-    live = importlib.import_module("..", package=__package__)
+def test_live_package_is_inert_and_public_leaves_have_no_private_remnants() -> None:
+    """The package owns no facade contract and its source tree names no retired leaf."""
+    root = Path(__file__).resolve().parents[5]
+    live_root = root / "src" / "cadrumo" / "application" / "live"
 
-    assert "FiledHistoryOperationExecutor" not in public_names
-    assert "FiledHistoryPull" not in public_names
-    assert "FILED_HISTORY_PHASE_EXECUTION" not in public_names
-    assert not hasattr(live, "FiledHistoryOperationExecutor")
-    assert not hasattr(live, "FiledHistoryPull")
-    assert not hasattr(live, "FILED_HISTORY_PHASE_EXECUTION")
-
-
-def test_filed_history_operation_public_names_are_unique_and_resolvable() -> None:
-    """Every promised facade member resolves to a value rather than a module."""
-    live = importlib.import_module("..", package=__package__)
-
-    assert len(public_names) == len(set(public_names))
-    assert all(not name.startswith("_") for name in public_names)
-    assert all(hasattr(live, name) for name in public_names)
-    assert all(not isinstance(getattr(live, name), ModuleType) for name in public_names)
-
-    operation_names = [
-        "FILED_HISTORY_OPERATION_DEFINITION_ID",
-        "FiledHistoryOperationRequest",
-        "build_filed_history_operation_definition",
-        "build_filed_history_operation_registration",
-    ]
-    assert operation_names == sorted(operation_names)
+    assert not tuple(live_root.glob("_*.py"))
+    for source_path in (root / "src").rglob("*.py"):
+        source = source_path.read_text(encoding="utf-8")
+        assert "cadrumo.application.live._" not in source, source_path
+        assert "from cadrumo.application.live import" not in source, source_path
+        assert "from ...application.live import" not in source, source_path
+        assert "from ....application.live import" not in source, source_path
+        assert "from .....application.live import" not in source, source_path
 
 
-def test_importing_live_keeps_filed_history_operation_lazy() -> None:
-    """Importing the live facade does not load the operation implementation."""
+def test_importing_live_keeps_the_package_boundary_inert() -> None:
+    """Importing only the package binds neither a facade nor a public leaf."""
     completed = subprocess.run(  # noqa: S603 - fixed interpreter and inline code under test
         [
             sys.executable,
@@ -635,7 +604,8 @@ def test_importing_live_keeps_filed_history_operation_lazy() -> None:
                 import sys
                 import cadrumo.application.live
 
-                assert "cadrumo.application.live._filed_history_operation" not in sys.modules
+                assert "cadrumo.application.live.filed_history_operation" not in sys.modules
+                assert cadrumo.application.live.__all__ == ()
                 """,
             ),
         ],

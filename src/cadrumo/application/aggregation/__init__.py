@@ -83,7 +83,7 @@ from ._counterpart import (
     declarable_counterparty_nifs_347,
     declarable_for_347,
 )
-from ._errors import (
+from .errors import (
     AggregationCategoryCoverageError,
     AggregationConfigError,
     AggregationError,

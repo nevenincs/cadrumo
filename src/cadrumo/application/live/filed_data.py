@@ -9,8 +9,8 @@ caller limit before any artefact is downloaded.
 
 The helpers do not authenticate, open browser sessions, persist observations,
 or stamp filing records. Those effects belong to
-:mod:`cadrumo.application.live._filed_data_capture` and
-:mod:`cadrumo.application.live._filed_observation_persistence` after the
+:mod:`cadrumo.application.live.filed_data_capture` and
+:mod:`cadrumo.application.live.filed_observation_persistence` after the
 live-read gate and registry checks have run.
 """
 
@@ -23,8 +23,8 @@ from pydantic import BaseModel, ConfigDict
 from ...adapters.outbound.aeat.sede import Declaracion
 from ...core import Period
 from ...core.identity import AeatExpedienteId
-from ._errors import LiveApplicationInputError
-from ._remote_state_models import FiledDataCaptureFailureRow
+from .errors import LiveApplicationInputError
+from .remote_state_models import FiledDataCaptureFailureRow
 
 
 class FiledDataListingRow(BaseModel):

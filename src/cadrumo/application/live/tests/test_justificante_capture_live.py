@@ -22,8 +22,8 @@ from .. import (
     capture_expedientes,
     capture_justificante_snapshot,
 )
-from .._errors import LiveApplicationInputError
-from .._justificante import (
+from ..errors import LiveApplicationInputError
+from ..justificante import (
     JustificanteCaptureSnapshotService,
     SnapshotLifecycleState,
 )

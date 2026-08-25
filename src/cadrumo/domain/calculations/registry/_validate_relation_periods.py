@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import ModeloId, RelationId
 from ._period_offset_math import apply_period_offset
 from ._schema import ModeloDefinition, ModeloRevision, PeriodSelector, RelationDefinition, RelationRevisionSelector

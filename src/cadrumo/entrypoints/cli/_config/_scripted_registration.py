@@ -37,7 +37,7 @@ from pydantic import SecretStr
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from .._common import emit_envelope
-from .._errors import CliRefusedBoundaryError
+from ..errors import CliRefusedBoundaryError
 from ._secure_input import MachineSecretPayload
 
 if TYPE_CHECKING:

@@ -31,7 +31,7 @@ real taxpayer's identifier over another's by accident.
 See Also:
     :class:`~application.ledger.evidence_draft.InvoiceDraft`
         The proposal this gate guards.
-    :func:`~application.ledger.closure_findings.closure_findings`
+    :func:`~application.ledger.closure_findings`
         Where the arithmetic blockers come from.
     :class:`~application.ledger.confirmation_record.InvoiceConfirmationRecord`
         What the resolutions are persisted into once the confirm succeeds.
@@ -90,7 +90,7 @@ the check's own existence rather than hidden in this table.
 
 A deterministic condition the product decides NOT to block on is therefore not
 represented here at all. It is reported through the non-blocking advisory channel
-instead -- :func:`~application.ledger.country_vocabulary_advisory.country_vocabulary_advisory` and
+instead -- :func:`~application.ledger.country_vocabulary_advisory` and
 :func:`~application.ledger.party_attribution.party_attribution_advisory` are the two -- which the
 review surface projects onto the envelope's typed notices. An exemption row in
 this table would be the worse shape: the reader could no longer tell a blocking

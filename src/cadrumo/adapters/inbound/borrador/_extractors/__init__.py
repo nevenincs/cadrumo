@@ -24,7 +24,7 @@ See Also:
 
 from __future__ import annotations
 
-from .._errors import BorradorParseError as _BorradorParseError
+from ..errors import BorradorParseError as _BorradorParseError
 from .._schema import ArtefactKind
 from .modelo_100_summary_v2025 import Modelo100ObservedV2025Extractor as _Modelo100ObservedV2025Extractor
 

@@ -30,7 +30,7 @@ from .._bindings import (
 )
 from .._detail_record_bindings import _build_related_party_rows
 from .._donativo_bindings import _build_donativo_rows
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._withholding_bindings import (
     WithholdingObservation,
     _build_withholding_rows,

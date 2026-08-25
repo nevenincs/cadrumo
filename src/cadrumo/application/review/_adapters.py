@@ -37,7 +37,7 @@ from ...domain.transactions import (
     is_classified,
 )
 from ._enums import ReviewSeverity
-from ._errors import ReviewSourceLoadError
+from .errors import ReviewSourceLoadError
 from ._models import (
     FindingReviewItem,
     InvoiceReviewItem,

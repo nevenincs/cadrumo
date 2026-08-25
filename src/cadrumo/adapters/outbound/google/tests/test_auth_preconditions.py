@@ -22,7 +22,7 @@ from .. import _active_profile as active_profile_module
 from .. import _impersonation as impersonation_module
 from .. import _oauth_flow as oauth_flow_module
 from .._active_profile import resolve_active_profile
-from .._errors import GoogleAuthError, GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError
+from ..errors import GoogleAuthError, GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError
 from .._impersonation import GoogleAuthAdcUnavailableError, GoogleImpersonationConfig, resolve_impersonated_credentials
 from .._oauth_flow import (
     _decode_email_from_id_token,
@@ -313,7 +313,7 @@ def test_google_auth_failure_totality_uses_one_canonical_no_action_projection() 
 
 def test_google_auth_modules_never_construct_verdict_or_evidence_locally() -> None:
     """Google auth delegates terminal construction to application.operator_actions."""
-    for module in (*_AUTH_PRODUCER_MODULES, __import__("cadrumo.adapters.outbound.google._errors", fromlist=["*"])):
+    for module in (*_AUTH_PRODUCER_MODULES, __import__("cadrumo.adapters.outbound.google.errors", fromlist=["*"])):
         tree = ast.parse(inspect.getsource(module))
         constructed = {
             _call_name(node.func)

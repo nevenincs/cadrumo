@@ -117,7 +117,7 @@ def _transport_error_envelope(
     That is a constraint rather than an observation, because the surface is
     otherwise safe only by accident of its current content. The MCP transport has
     no writer-level redaction the way the CLI does — the CLI funnels inside
-    :func:`~entrypoints.cli._errors.write_stderr`, so everything it emits is
+    :func:`~entrypoints.cli.errors.write_stderr`, so everything it emits is
     filtered on the way out, and this builder has no equivalent chokepoint.
 
     APPLICATION errors never arrive here. Both MCP transports capture the CLI's

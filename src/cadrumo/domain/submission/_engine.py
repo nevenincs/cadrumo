@@ -29,7 +29,7 @@ from datetime import date
 
 from ...core.config import Settings
 from ...core.logging import get_logger
-from ._errors import SubmissionError
+from .errors import SubmissionError
 from ._models import ModeloPresentado, SubmissionStatus
 from ._preflight import Preflight
 from ._protocols import (

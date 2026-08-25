@@ -163,7 +163,7 @@ async def test_navigation_failure_redacts_redirect_payload_from_assertion_and_lo
                 friendly_name=None,
             ),
         )
-        caplog.set_level(logging.DEBUG, logger=authenticator.__name__)
+        caplog.set_level(logging.DEBUG, logger=AeatAuthenticator.__module__)
         try:
             assertion = await authenticator._run_login_probe(context, _certificate_session())
         finally:

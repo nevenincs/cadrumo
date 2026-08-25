@@ -48,7 +48,7 @@ def test_applicability_window_single_year_when_no_following_periods() -> None:
 
 
 def test_applicability_window_rejects_negative_following_periods() -> None:
-    from .._errors import ProfileValidationError
+    from ..errors import ProfileValidationError
 
     with pytest.raises(ProfileValidationError):
         within_multi_year_applicability_window(2025, 2025, following_periods=-1)

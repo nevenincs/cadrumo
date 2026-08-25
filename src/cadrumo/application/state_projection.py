@@ -1154,9 +1154,9 @@ def _assemble_operator_state_projection(
 
 def _ensure_profile_key_registry_registered() -> None:
     """Import the wizard package before projection code reads profile-key metadata."""
-    from . import wizard as _wizard
+    from .wizard.compiler import ensure_profile_keys_registered
 
-    _ = _wizard
+    ensure_profile_keys_registered()
 
 
 __all__ = [

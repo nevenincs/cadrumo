@@ -29,7 +29,7 @@ import pytest
 
 from .....core import corpus_redaction_marks, normalise_corpus_text, resolve_anchored_extracted_unit
 from .....core.resources import bundled_path
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._legal import verify_legal_reference, verify_legal_reference_grounding
 from .._schema import LegalReference
 from ._catalogue_verification_support import _registry_tree

@@ -134,6 +134,11 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             raise ClassificationError(
                 f"{self.namespace}/{self.object_key} has classification {envelope.classification}; "
                 f"consumer expected {self._definition.sensitivity}",
+                context={
+                    "reason": "classification_mismatch",
+                    "expected_classification": self._definition.sensitivity.value,
+                    "actual_classification": envelope.classification.value,
+                },
             )
         if not inner_envelope_version_is_current(envelope.schema_version, self._definition.schema_version):
             from ..storage import EnvelopeVersionError
@@ -141,6 +146,11 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
             raise EnvelopeVersionError(
                 f"{self.namespace}/{self.object_key} is at version {envelope.schema_version}; "
                 f"consumer supports up to {self._definition.schema_version}",
+                context={
+                    "reason": "unsupported_envelope_version",
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": self._definition.schema_version,
+                },
             )
         if not isinstance(envelope.payload, self._model_type):
             raise TypeError(f"{self.namespace}/{self.object_key} envelope payload has an unexpected type")

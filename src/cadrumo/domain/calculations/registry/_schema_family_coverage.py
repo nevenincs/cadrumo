@@ -22,7 +22,7 @@ from ....core import (
     UNRESOLVED_SCHEMA_FAMILY_DISPOSITIONS,
     RegistrySchemaFamilyDisposition,
 )
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import LegalRefId, SourceRefId
 from ._schema import REVISION_SCHEMA_FAMILY_FIELDS, ModeloRevision
 

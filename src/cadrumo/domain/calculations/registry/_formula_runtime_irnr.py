@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING, NoReturn
 from ....core import CasillaId, ConvenioOverrideKind, TipoRentaIrnr
 from ...contribuyente import UE_EEA_COUNTRY_CODES
 from ._convenio import ConvenioOverride
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
     UnresolvedFormulaOutcomeError,

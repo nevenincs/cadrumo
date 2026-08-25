@@ -29,7 +29,7 @@ from ..contribuyente import (
     UE_EEA_COUNTRY_CODES,
     FiscalResidency,
 )
-from ._errors import DeadlineValidationError
+from .errors import DeadlineValidationError
 
 
 class IVARegime(StrEnum):

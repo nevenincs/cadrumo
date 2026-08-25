@@ -20,15 +20,15 @@ module never creates a remote submission or mutates AEAT state; filing-record
 stamping is local evidence enrollment against an existing current record.
 
 See Also:
-    :func:`cadrumo.application.live._session.active_verified_session`
+    :func:`cadrumo.application.live.session.active_verified_session`
         Enforces the read-only live gate before the register walker is opened.
-    :func:`cadrumo.application.live._filed_capture_finalizer.finalize_filed_capture`
+    :func:`cadrumo.application.live.filed_capture_finalizer.finalize_filed_capture`
         Persists the latest captured filed observations as calculation-history
         evidence, and is the function this module actually calls. Each
         registry-enrollment refusal becomes a typed
         :class:`~application.live.FiledDataCaptureFailureRow`, raised under
         ``FAIL_FAST`` and reported under ``BEST_EFFORT``.
-    :func:`cadrumo.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
+    :func:`cadrumo.application.live.filed_observation_persistence.enroll_filed_justificante_evidence`
         Persists matching justificante metadata and stamps current filing
         records when the receipt matches.
 """
@@ -86,28 +86,28 @@ from ..storage.sync_runs import (
     record_sync_run,
     sync_run_record_key,
 )
-from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
-from ._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
-from ._filed_data import (
+from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
+from .filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
+from .filed_data import (
     BulkFiledDataListingReport,
     FiledDataListingReport,
     FiledDataListingRow,
     filed_data_listing_row,
     select_declarations_for_capture,
 )
-from ._filed_observation_persistence import (
+from .filed_observation_persistence import (
     enroll_filed_justificante_evidence,
     filed_observation_identity_key,
     import_complete_filed_observation_baseline,
 )
-from ._remote_state_models import (
+from .remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
     FiledDataCaptureReport,
     SourceFiledDataCaptureReport,
 )
-from ._remote_state_outcomes import bounded_context_text
-from ._session import active_verified_session
+from .remote_state_outcomes import bounded_context_text
+from .session import active_verified_session
 
 if TYPE_CHECKING:
     from datetime import date
@@ -2108,7 +2108,7 @@ async def _capture_filed_history_iva_wallet(
 ) -> _FiledHistoryIvaWalletStage:
     """Capture the independent IVA wallet stage, retaining its typed partial-failure boundary."""
     try:
-        from ._iva_remote_state import capture_iva_compensation_wallet
+        from .iva_remote_state import capture_iva_compensation_wallet
 
         wallet = await capture_iva_compensation_wallet(
             target_year=resolved_today.year,

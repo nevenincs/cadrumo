@@ -25,7 +25,7 @@ The documents are copies of the in-repo corpus invoice, edited in ``tmp_path``.
 The corpus tree itself is never written to.
 
 See Also:
-    :func:`~application.ledger.deterministic_findings.deterministic_findings`
+    :func:`~application.ledger.deterministic_findings`
         The shared list both readers now run.
     :func:`~application.ledger.evidence_draft.extract_invoice_draft_from_evidence`
         The real entry point these cases drive.

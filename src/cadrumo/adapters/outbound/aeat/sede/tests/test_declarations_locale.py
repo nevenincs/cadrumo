@@ -13,7 +13,7 @@ import pytest
 
 from ......core.i18n import tr
 from .._declarations import _parse_listbox
-from .._errors import SedeNavigationError, SedeParseError
+from ..errors import SedeNavigationError, SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ....core import Modelo, scan_directory
-from ._errors import RegistryLoadError, RegistryValidationError
+from .errors import RegistryLoadError, RegistryValidationError
 from ._ids import LegalRefId, SourceRefId
 from ._loader_cache import toml_file_fingerprint
 from ._m303_orden_census_artefact import (

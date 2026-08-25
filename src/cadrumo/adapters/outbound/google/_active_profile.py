@@ -2,7 +2,7 @@
 
 Every ``aeat config google ...`` command and every secure-store read or write
 performed by :mod:`adapters.outbound.google._oauth_flow` and
-:mod:`adapters.outbound.google._session_store` is scoped to one AEAT
+:mod:`adapters.outbound.google.session_store` is scoped to one AEAT
 profile. :func:`adapters.outbound.google.resolve_active_profile` obtains
 that profile's immutable bucket UUID through
 :func:`core.bucket_pointer.resolve_active_bucket_id`, the operator-facing precedence
@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.bucket_pointer import resolve_active_bucket_id
-from ._errors import GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError, google_auth_no_action_verdict
+from .errors import GoogleAuthPreconditionCondition, GoogleAuthProfileUnboundError, google_auth_no_action_verdict
 
 
 def resolve_active_profile() -> str:

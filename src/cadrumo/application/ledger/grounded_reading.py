@@ -26,13 +26,13 @@ against itself, which is the failure this whole apparatus is arranged against.
 
 Two further stages run here because they need the whole draft rather than one
 field: the arithmetic identities
-(:func:`~application.ledger.closure_findings.closure_findings`) and, when the caller supplies the
+(:func:`~application.ledger.closure_findings`) and, when the caller supplies the
 filer's own identifier, counterparty role resolution.
 
 See Also:
     :func:`~application.ledger.grounding_anchor.evaluate_anchor`
         The per-field check this module applies across a draft.
-    :func:`~application.ledger.closure_findings.closure_findings`
+    :func:`~application.ledger.closure_findings`
         The arithmetic identities appended as discrepancies.
     :func:`~application.ledger.identity_roles.resolve_counterparty_identity`
         Role resolution, run only when the filer's identity is known.

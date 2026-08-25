@@ -423,7 +423,7 @@ def load_default_filing_profile(
         ModeloBuilderError: When no profile is active in the workflow
             state.
     """
-    from ..wizard import (
+    from ..wizard.status import (
         WizardStatusError,
         load_active_taxpayer_profile,
     )

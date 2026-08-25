@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from .....core import CasillaId, Modelo, validated_casilla_id
 from .....core.resources import resources
 from .. import relations_by_target_binding
-from .._errors import NoRevisionForPeriodError, RegistryValidationError
+from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from .._queries import (
     BindingSelectorQueryProjection,
     ModeloFormulaRow,

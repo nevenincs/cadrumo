@@ -23,7 +23,7 @@ from ._binding_selector_utils import (
     validate_rectification_fields,
 )
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId
 from ._ledger_binding_resolution import independent_quantity_facts
 from ._m347_threshold import m347_declarable_party_ids

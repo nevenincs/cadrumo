@@ -24,7 +24,7 @@ import pytest
 from ....core import Period, validated_casilla_id
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._errors import ObservationEvidenceDisplacementError
+from ..errors import ObservationEvidenceDisplacementError
 from .._observations_repository import CalculationObservationRepository
 
 if TYPE_CHECKING:

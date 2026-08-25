@@ -76,18 +76,25 @@ from ...domain.transactions import (
     prompt_spec_with_saturation_fields,
     set_classification,
 )
-from ...llm.suggestions import LLMClassificationSuggestion, LLMSaturatedSuggestion, LLMSplitApplyResult, LLMSplitChildSuggestion, LLMSplitSuggestion, LLMSuggestionRejectionResult, OperatorIvaDerivationResult
-from ...llm import LocalTextLLMClassifier, LocalVisionLLMClassifier, MultimodalImageInput, rasterise_pdf_pages_to_base64_png
+from ...llm import (
+    LocalTextLLMClassifier,
+    LocalVisionLLMClassifier,
+    MultimodalImageInput,
+    rasterise_pdf_pages_to_base64_png,
+)
+from ...llm.suggestions import (
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitChildSuggestion,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
+)
 from .actions_common import (
     _build_bucket_event,
-)
-from .actions_common import (
     _result,
-)
-from .actions_common import (
     _save_transaction_catalogue_and_events,
-)
-from .actions_common import (
     _transaction_repository,
 )
 from .actions_manual import update_manual_transaction_fields
@@ -1552,11 +1559,11 @@ def reject_llm_suggestion(
 
 __all__ = [
     "ResolvedEvidence",
-    "classify_with_evidence",
     "apply_evidence_classification",
     "apply_evidence_split",
     "apply_llm_classification",
     "apply_saturated_llm_classification",
+    "classify_with_evidence",
     "derive_operator_iva_substrate",
     "reject_llm_suggestion",
     "saturate_llm_classification",

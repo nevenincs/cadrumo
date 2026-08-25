@@ -347,8 +347,8 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
         f"auth.provider must project an unmasked row; labels: {sorted(row.label for row in rows)}"
     )
     assert provider_row.masked is False, "auth.provider is declared identity and must render in the clear"
-    from ....domain.user_profile.loader import load_user_profile_schema
     from ....domain.user_profile.labels import profile_field_label
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     soporte_section = _AUTH_SOPORTE_PATH.split(".", 1)[0]
     soporte_label = profile_field_label(soporte_section, load_user_profile_schema().field(_AUTH_SOPORTE_PATH))
@@ -446,9 +446,9 @@ def test_an_indexed_row_uses_the_schema_label_and_a_visible_row_marker() -> None
     an indexed fact, and this is a real ``UserProfileRecord`` read by the
     production builder against the real shipped schema.
     """
-    from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-    from ....domain.user_profile.loader import load_user_profile_schema
     from ....domain.user_profile.labels import profile_field_label
+    from ....domain.user_profile.loader import load_user_profile_schema
+    from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
     from ....domain.user_profile.values import UserProfileRecord as _Record
 
     first_path = "attribution_entity_socios.0.nif"

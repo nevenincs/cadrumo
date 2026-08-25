@@ -63,7 +63,7 @@ from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
 from ._command_specs import COMMAND_GRAPH as _COMMAND_GRAPH
 from ._common import attach_cli_policy_verdict, current_operator_surface_reconciliation, resolve_cli_precondition_action
-from ._errors import decorate_typer_app as _decorate_typer_app
+from .errors import decorate_typer_app as _decorate_typer_app
 from ._framework_localisation import (
     localise_help_section_headers as _localise_help_section_headers,
 )
@@ -260,7 +260,7 @@ def _refuse_former_product_state_at_startup() -> None:
     from ...core import FormerProductStateError
     from ...core.config import Settings
     from ...core.errors import ActiveProfilePointerError
-    from ._errors import CliRefusedBoundaryError, _emit_error_and_exit, project_cli_boundary_error
+    from .errors import CliRefusedBoundaryError, _emit_error_and_exit, project_cli_boundary_error
 
     try:
         Settings()

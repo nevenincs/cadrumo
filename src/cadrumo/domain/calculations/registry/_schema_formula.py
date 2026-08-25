@@ -11,7 +11,7 @@ from typing import Literal
 from pydantic import ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 from ....core import CasillaId
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._formula_operator_contracts import require_formula_operator_arity
 from ._ids import BindingId, ParameterId, RelationId
 from ._schema_base import DateAxis, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs

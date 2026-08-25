@@ -40,7 +40,7 @@ for the plainer reason. Those two are exactly the parties whose postal code was
 load-bearing, and exactly the ones this reports.
 
 See Also:
-    :func:`~application.ledger.deterministic_findings.deterministic_findings`
+    :func:`~application.ledger.deterministic_findings`
         The one list this check is enrolled in, which both readers call.
     :func:`~domain.iva.territorial_scope_for_spanish_postal_code`
         The authority on whether a printed code can be read at all.

@@ -123,7 +123,7 @@ def _lineage_handles(transaction: Transaction) -> tuple[str, ...]:
     ``previous_transaction_id`` recorded in its
     :class:`cadrumo.domain.transactions.TransactionEditLineageEntry` chain.
     """
-    return transaction_modelo_source_ids(transaction)
+    return _transaction_modelo_source_ids(transaction)
 
 
 def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue) -> str:

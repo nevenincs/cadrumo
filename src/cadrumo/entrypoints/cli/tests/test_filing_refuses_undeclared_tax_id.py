@@ -28,7 +28,7 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
 from .._common import _declared_tax_id, cli_policy_refusal_projection
-from .._errors import CliRefusedBoundaryError, error_boundary_under_test
+from ..errors import CliRefusedBoundaryError, error_boundary_under_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

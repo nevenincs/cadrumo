@@ -124,7 +124,7 @@ from typing import Final
 from ....core import ExportLayoutFormat
 from ....core.resources import resolve_corpus_binary
 from .._export_field_kind import CasillaFieldKind
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._record_design import _naturaleza_or_none, extract_record_design
 from ._record_design_schema import RecordDesignField, RecordDesignSheet

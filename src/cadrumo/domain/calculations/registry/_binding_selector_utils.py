@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ._binding_aggregation import binding_aggregation_op
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ExportFieldDataType, ModeloRevision, OneBasedExportOffset
 
 __all__ = [

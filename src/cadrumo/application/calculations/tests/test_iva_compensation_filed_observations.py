@@ -20,7 +20,7 @@ from ....domain.iva_compensation import (
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._errors import IvaCompensationModeloError
+from ..errors import IvaCompensationModeloError
 from .._iva_compensation_history import (
     IvaCompensationHistoryRepository,
     iva_compensation_annual_summary_from_filed_observation,

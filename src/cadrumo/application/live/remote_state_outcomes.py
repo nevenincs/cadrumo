@@ -18,8 +18,8 @@ from ...core.redaction import (
     normalise_redaction_key,
     redact,
 )
-from ._errors import LiveIvaAcquisitionFailureMode, classify_live_iva_acquisition_failure
-from ._remote_state_models import (
+from .errors import LiveIvaAcquisitionFailureMode, classify_live_iva_acquisition_failure
+from .remote_state_models import (
     IvaCompensationHistoryCaptureReport,
     IvaWalletCaptureReport,
     LiveIvaAuthOutcome,

@@ -39,7 +39,7 @@ from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ....core.paths import path_stat_fingerprint
 from ....core.tabular import coerce_cell_text
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._record_design_coverage import (
     DerivedDisenoCasilla,
     DisenoCoverageReport,

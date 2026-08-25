@@ -15,7 +15,7 @@ See Also:
     :mod:`~adapters.outbound.google._oauth_flow`
         Desktop OAuth flow surface whose legacy predecessors remain outside
         the allowed module list.
-    :mod:`~adapters.outbound.google._session_store`
+    :mod:`~adapters.outbound.google.session_store`
         Secure per-profile OAuth session persistence enrolled as a deliberate
         package module.
 """

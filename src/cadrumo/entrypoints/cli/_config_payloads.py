@@ -21,6 +21,12 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
+from cadrumo.application.user_profile.bundle_export_contracts import (
+    ProfileBundleExportPurpose,
+    ProfileBundleExportTransport,
+)
+from cadrumo.application.workflow.profile_health import ProfileHealthStatus, ProfileSource
+
 from ...application.auth.catalogue import AuthProviderListing
 from ...application.auth.diagnostics import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from ...application.auth.operator_results import AuthLoginResult, AuthStatusResult, AuthTestResult
@@ -31,9 +37,7 @@ from ...application.config_reset import (
     ConfigResetPauseReason,
     ConfigResetTargetPhase,
 )
-from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
-from cadrumo.application.workflow.profile_health import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64, Period
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId

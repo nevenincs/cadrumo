@@ -30,7 +30,7 @@ from pathlib import Path
 import pytest
 
 from ....core import NoRecoveryOutcome, scan_directory
-from .._errors import (
+from ..errors import (
     BindingPrefillTypeError,
     CalculationRefusalPrecondition,
     ObservationCasillaReferenceError,

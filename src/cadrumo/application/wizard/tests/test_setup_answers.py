@@ -7,7 +7,7 @@ identifies the rejected field/type contract.
 
 Since :class:`SetupAnswers` is now canonical in :mod:`cadrumo.core.setup_answers`, its
 validators raise :class:`~cadrumo.core.errors.ProfileAnswerTypeError` directly.
-:class:`~cadrumo.application.wizard._errors.WizardAnswerTypeError` is a subclass
+:class:`~cadrumo.application.wizard.errors.WizardAnswerTypeError` is a subclass
 of ``ProfileAnswerTypeError`` — the registry / envelope tests below verify that
 the application-layer subclass still resolves correctly.
 """
@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.setup_answers import SetupAnswers
-from .._errors import WizardAnswerTypeError
+from ..errors import WizardAnswerTypeError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

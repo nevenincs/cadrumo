@@ -16,7 +16,7 @@ its default object key is the singleton ``catalogue`` row.
 
 from __future__ import annotations
 
-from ._errors import ModeloError
+from .errors import ModeloError
 from ._work_unit import WorkUnit, WorkUnitCatalogue
 
 

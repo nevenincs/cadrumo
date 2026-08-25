@@ -42,7 +42,7 @@ from .._declarations import (
     _listing_url_for,
     _origin_of,
 )
-from .._errors import SedeNavigationError
+from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

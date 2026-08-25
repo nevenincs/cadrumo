@@ -28,16 +28,20 @@ from typing import override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.outbound.aeat.sede import Declaracion
+from ...adapters.outbound.aeat.sede import Declaracion, open_declarations_register, shared_playwright
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE, secure_object_repository_for_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, SnapshotId
+from ...core.resources import resources
 from ...core.time import now
-from ._errors import LiveApplicationInputError
-from ._snapshot_base import (
+from .errors import LiveApplicationInputError
+from .remote_state_models import ExpedientesBulkCaptureFailureRow, ExpedientesBulkCaptureReport
+from .remote_state_outcomes import bounded_context_text
+from .session import active_verified_session
+from .snapshot_base import (
     SnapshotNotFoundError,
     StatelessSnapshotService,
 )
@@ -182,10 +186,97 @@ class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot, 
         )
 
 
+LIVE_EXPEDIENTES_READ_OPERATION = "live-expedientes-read"
+
+
+async def capture_expedientes(*, bucket_id: str, modelo: str, year: int) -> PersistedExpedientesSnapshot:
+    """Capture the selected declaration-register view as encrypted local evidence."""
+    session, settings = await active_verified_session(operation=LIVE_EXPEDIENTES_READ_OPERATION)
+    async with (
+        shared_playwright(session) as playwright,
+        open_declarations_register(session, settings=settings, playwright=playwright) as register,
+    ):
+        declarations = await register.walk(modelo=modelo, ejercicio=year)
+    capture = ExpedientesCapture(
+        declarations=tuple(declarations),
+        captured_at=now(),
+        source_url=f"declarations:modelo={modelo}:ejercicio={year}",
+        authenticated_identity=session.identity_nif,
+    )
+    return ExpedientesService(settings=settings).capture(bucket_id=bucket_id, capture=capture)
+
+
+async def capture_expedientes_bulk(
+    *,
+    bucket_id: str,
+    year_from: int,
+    year_to: int,
+    modelos: tuple[str, ...] | None = None,
+) -> ExpedientesBulkCaptureReport:
+    """Capture each requested declaration-register view while reporting isolated failures."""
+    if year_from > year_to:
+        raise LiveApplicationInputError(
+            message="from-year must be less than or equal to to-year",
+            translated_message="live.errors.year_range_invalid",
+        )
+
+    resolved_modelos = modelos if modelos is not None else tuple(str(modelo.id) for modelo in resources().modelos.all())
+    session, settings = await active_verified_session(operation=LIVE_EXPEDIENTES_READ_OPERATION)
+    service = ExpedientesService(settings=settings)
+    snapshot_ids: list[str] = []
+    failures: list[ExpedientesBulkCaptureFailureRow] = []
+    declarations_for_snapshot: list[Declaracion] = []
+    successful_query_count = 0
+
+    async with (
+        shared_playwright(session) as playwright,
+        open_declarations_register(session, settings=settings, playwright=playwright) as register,
+    ):
+        for code in resolved_modelos:
+            for year in range(year_to, year_from - 1, -1):
+                try:
+                    declarations = await register.walk(modelo=code, ejercicio=year)
+                except Exception as exc:
+                    failures.append(
+                        ExpedientesBulkCaptureFailureRow(
+                            modelo=code,
+                            year=year,
+                            error_type=exc.__class__.__name__,
+                            message=bounded_context_text(exc),
+                        ),
+                    )
+                    continue
+                successful_query_count += 1
+                declarations_for_snapshot.extend(declarations)
+
+    if successful_query_count:
+        capture = ExpedientesCapture(
+            declarations=tuple(declarations_for_snapshot),
+            captured_at=now(),
+            source_url=(f"declarations:bulk:modelos={','.join(resolved_modelos)}:ejercicios={year_from}-{year_to}"),
+            authenticated_identity=session.identity_nif,
+        )
+        snapshot_ids.append(service.capture(bucket_id=bucket_id, capture=capture).snapshot_id)
+
+    return ExpedientesBulkCaptureReport(
+        bucket_id=bucket_id,
+        modelos=tuple(resolved_modelos),
+        year_from=year_from,
+        year_to=year_to,
+        captured_snapshot_count=len(snapshot_ids),
+        declaration_count=len(declarations_for_snapshot),
+        snapshot_ids=tuple(snapshot_ids),
+        failures=tuple(failures),
+    )
+
+
 __all__ = [
     "ExpedientesCapture",
     "ExpedientesService",
     "ExpedientesSnapshotNotFoundError",
+    "LIVE_EXPEDIENTES_READ_OPERATION",
     "PersistedExpedientesSnapshot",
+    "capture_expedientes",
+    "capture_expedientes_bulk",
     "expedientes_snapshot_object_key",
 ]

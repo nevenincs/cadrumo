@@ -20,7 +20,7 @@ from decimal import Decimal
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-from ._errors import DomainValidationError
+from .errors import DomainValidationError
 
 _MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
 

@@ -34,8 +34,8 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
 )
-from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.errors import UserProfileError
+from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ..flows.definition import FlowDefinition, FlowPage, FlowRepeatingGroup
 
 

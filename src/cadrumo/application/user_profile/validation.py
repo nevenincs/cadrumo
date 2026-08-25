@@ -11,7 +11,14 @@ from collections.abc import Iterable
 from typing import Final
 
 from ...core.errors import BaseSeverity
-from ...domain.user_profile.schema import ProfileFieldDefinition, ProfileSchemaDefinition, ProfileSectionDefinition, ProfileValueRefusalKind, derived_selector_for_path, profile_value_refusal
+from ...domain.user_profile.schema import (
+    ProfileFieldDefinition,
+    ProfileSchemaDefinition,
+    ProfileSectionDefinition,
+    ProfileValueRefusalKind,
+    derived_selector_for_path,
+    profile_value_refusal,
+)
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord, section_field_key
 from .commands import (
     ProfileValidationIssue,

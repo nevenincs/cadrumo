@@ -18,7 +18,7 @@ from ._cross_revision_divergence import (
     iter_cross_revision_casilla_divergences,
     revisions_overlap,
 )
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import RevisionId
 from ._schema import (
     CasillaDefinition,

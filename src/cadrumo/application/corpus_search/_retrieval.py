@@ -22,7 +22,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ._citation_lookup import CitationLookup
-from ._errors import CorpusSearchInputError
+from .errors import CorpusSearchInputError
 from ._lexical_index import search_lexical
 from ._models import RetrievalHit, RetrievalMode, RetrievalResponse
 

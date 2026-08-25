@@ -30,7 +30,7 @@ class EphemeralMasterKeyProvider:
                 f"ephemeral master key must be {KEY_SIZE} bytes; got {len(key)}",
             )
         self._key = key
-        self._session: BucketSession | None = None
+        self.session: BucketSession | None = None
         self._activation_cm: AbstractContextManager[None] | None = None
 
     def get_master_key(self) -> bytes:
@@ -42,7 +42,7 @@ class EphemeralMasterKeyProvider:
         return self._key
 
     def __enter__(self) -> object:
-        if self._session is not None:
+        if self.session is not None:
             raise MasterKeyReentrantError(type(self).__name__)
 
         session = BucketSession.open(
@@ -55,7 +55,7 @@ class EphemeralMasterKeyProvider:
         )
         activation = activate_session(session)
         activation.__enter__()
-        self._session = session
+        self.session = session
         self._activation_cm = activation
         return session
 
@@ -74,7 +74,7 @@ class EphemeralMasterKeyProvider:
         this provider holding a half-torn-down session it would try to reuse.
         """
         activation, self._activation_cm = self._activation_cm, None
-        session, self._session = self._session, None
+        session, self.session = self.session, None
         try:
             if activation is not None:
                 activation.__exit__(exc_type, exc, tb)

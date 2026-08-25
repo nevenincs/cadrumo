@@ -5,7 +5,7 @@ never diverge (a bearer token, a NIF, a credential) has exactly one declaration.
 Each consuming key-name predicate is required to compose from it — this module
 asserts the composition holds for the three production sites that declare one:
 :data:`cadrumo.core.logging.SCRUB_FIELD_PATTERNS`, the two frozensets in
-:mod:`cadrumo.application.live._remote_state_outcomes`, and the profile-overview
+:mod:`cadrumo.application.live.remote_state_outcomes`, and the profile-overview
 mask vocabulary in :mod:`cadrumo.application.user_profile`. A future edit that
 drops the union (redeclaring one site's set as a bare literal again) reds this
 gate; nothing else in the tree would catch that regression.
@@ -25,7 +25,7 @@ import pytest
 from ....application.user_profile.overview import _MASK_KEYWORDS
 from ....core.logging import SCRUB_FIELD_PATTERNS
 from ....core.redaction import ALWAYS_REDACT_KEY_TERMS
-from .._remote_state_outcomes import (
+from ..remote_state_outcomes import (
     _SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS,
     _SENSITIVE_FAILURE_CONTEXT_KEY_PARTS,
 )

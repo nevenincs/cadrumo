@@ -1066,9 +1066,10 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
     if str(work_unit.modelo) != Modelo.M202:
         return None
 
+    from cadrumo.application.workflow.persistence import workflow_state_repository
+
     from ...domain.calculations.registry import derive_modelo_202_modality
     from ..user_profile.projections import projection_for_taxpayer
-    from cadrumo.application.workflow.persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()

@@ -313,7 +313,7 @@ async def test_authenticated_representation_landing_records_phone_acceptance_wit
     assert detail.phone_state_source == "aeat_authenticated_landing"
     assert detail.phone_state_observed_at is not None
     assert detail.phone_state_reported_at is None
-    assert detail.operator_report_commands == ()
+    assert detail.operator_report_verdict is None
 
 
 @pytest.mark.asyncio

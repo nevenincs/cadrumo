@@ -19,9 +19,9 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...domain.deadlines import IVARegime, TaxpayerProfile, taxpayer_profile_from_mapping
+from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord, UserProfileSnapshot
-from ...domain.user_profile.loader import load_user_profile_schema
 
 _WINDOWLESS_SENTINEL = date.min
 """Sort position for a fact carrying no ``valid_from``.
@@ -265,7 +265,7 @@ def projection_for_taxpayer(
     # The deadline-domain projection reads core registration slots populated by
     # the application wizard layer. Import the concrete modules here so service
     # callers outside the CLI startup path get the same canonical projection.
-    from ..wizard import ensure_profile_keys_registered
+    from ..wizard.compiler import ensure_profile_keys_registered
 
     ensure_profile_keys_registered()
 

@@ -109,7 +109,7 @@ def test_prompt_secret_no_echo_refuses_a_character_device_with_no_console() -> N
         import json, os, sys
         sys.stdin = open(os.devnull)
         from cadrumo.entrypoints.cli._config._secure_input import prompt_secret_no_echo
-        from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
+        from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
         try:
             value = prompt_secret_no_echo("secret: ")
             verdict = {"outcome": "returned", "value_length": len(value)}
@@ -149,7 +149,7 @@ def test_prompt_secret_no_echo_refuses_a_plain_redirected_pipe() -> None:
                 """
                 import json, sys
                 from cadrumo.entrypoints.cli._config._secure_input import prompt_secret_no_echo
-                from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
+                from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
                 try:
                     value = prompt_secret_no_echo("secret: ")
                     verdict = {"outcome": "returned", "value_length": len(value)}
@@ -196,7 +196,7 @@ def test_console_less_host_refuses_instead_of_blocking_forever(tmp_path: pathlib
         f"""
         import json, sys
         from cadrumo.entrypoints.cli._config._secure_input import prompt_secret_no_echo
-        from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
+        from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
         try:
             value = prompt_secret_no_echo("secret: ")
             verdict = {{"outcome": "returned", "value_length": len(value)}}
@@ -271,7 +271,7 @@ def test_real_console_with_rebound_stdin_refuses_the_echo_fallback(tmp_path: pat
             _stdin_is_a_real_console,
             prompt_secret_no_echo,
         )
-        from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
+        from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
         verdict = {{
             "is_dunder": sys.stdin is sys.__stdin__,
             "isatty": sys.stdin.isatty(),
@@ -354,7 +354,7 @@ def test_the_predicate_predicts_the_refusal_it_names() -> None:
                     prompt_secret_no_echo,
                     terminal_can_prompt_for_secrets,
                 )
-                from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
+                from cadrumo.entrypoints.cli.errors import CliRefusedBoundaryError
                 verdict = {"predicate": terminal_can_prompt_for_secrets()}
                 try:
                     value = prompt_secret_no_echo("secret: ")

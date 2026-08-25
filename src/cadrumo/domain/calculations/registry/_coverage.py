@@ -51,7 +51,7 @@ from pydantic import Field, PrivateAttr, computed_field, model_validator
 
 from ....core import RegistryAuthorityGrade, RegistrySelectorPeriodCode, RevisionReviewStatus
 from ._authority import ValidatedRegistryAuthority
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
 from ._schema import (
     DataBindingDefinition,

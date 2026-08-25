@@ -54,8 +54,8 @@ from ...domain.modelos import (
     WorkUnit,
 )
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.values import UserProfileFactValue
 from ...domain.user_profile.loader import load_user_profile_schema
+from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ._profile_binding import (
     MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR,

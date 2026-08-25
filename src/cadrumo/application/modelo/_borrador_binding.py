@@ -20,7 +20,7 @@ See Also:
     :class:`cadrumo.application.aggregation._source_mesh.BorradorSourceProvenance`
         Snapshot id and sourced-binding trace persisted onto the calculation
         revision.
-    :class:`cadrumo.application.live._borrador_100.Borrador100SnapshotRepository`
+    :class:`cadrumo.application.live.borrador_100.Borrador100SnapshotRepository`
         Secure snapshot repository used to load the explicitly selected
         borrador capture.
 """

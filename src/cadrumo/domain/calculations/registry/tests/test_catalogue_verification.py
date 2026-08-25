@@ -25,7 +25,7 @@ from .._coverage import (
     audit_registry_model_law_coverage,
     build_model_law_coverage_ledger,
 )
-from .._errors import NoRevisionForPeriodError, RegistryValidationError
+from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from .._legal import verify_legal_catalogue_grounding
 from .._loader import clear_fingerprint_cache
 from .._schema import SourceReference, filing_period_from_scope

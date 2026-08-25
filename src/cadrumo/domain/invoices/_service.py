@@ -26,7 +26,7 @@ from ..transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ._errors import (
+from .errors import (
     InvoiceLinkError,
     InvoiceNotFoundError,
     InvoiceValidationError,

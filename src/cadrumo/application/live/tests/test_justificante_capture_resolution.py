@@ -19,8 +19,8 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....core import Modelo, Period
 from ....core.config import Settings
-from .._errors import LiveApplicationInputError
-from .._justificante import resolve_period_expediente
+from ..errors import LiveApplicationInputError
+from ..justificante import resolve_period_expediente
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

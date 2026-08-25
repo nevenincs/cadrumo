@@ -144,6 +144,7 @@ class LedgerPreflightReport(BaseModel):
     @computed_field
     @property
     def ready(self) -> bool:
+        """Whether the report contains no modelo-readiness issues."""
         return not self.issues
 
 

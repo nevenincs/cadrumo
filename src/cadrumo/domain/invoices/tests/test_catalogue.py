@@ -17,7 +17,7 @@ from .._enums import (
     IvaRate,
     PaymentStatus,
 )
-from .._errors import (
+from ..errors import (
     InvoiceCatalogueError,
     InvoiceLinkError,
     InvoiceNotFoundError,

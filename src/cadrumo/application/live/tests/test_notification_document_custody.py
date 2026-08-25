@@ -42,8 +42,8 @@ from ....core import scan_directory
 from ....core.hashing import sha256_hex
 from ....domain.attachments import AttachmentKind, load_attachment
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from .._errors import LiveApplicationInputError
-from .._notification_documents import (
+from ..errors import LiveApplicationInputError
+from ..notification_documents import (
     NotificationDocumentNotFoundError,
     NotificationDocumentService,
     notification_document_object_key,

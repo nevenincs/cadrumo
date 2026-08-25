@@ -8,7 +8,7 @@ import pytest
 
 from cadrumo.application.workflow.state_models import WorkflowState
 from .. import LedgerReviewRecord, update_ledger_review
-from .._errors import ReviewError
+from ..errors import ReviewError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -4,8 +4,8 @@ The two cross-package private-import checks this module carried
 (``test_extracted_modelo_cli_modules_do_not_import_private_application_modules``
 and ``test_extracted_modelo_cli_modules_do_not_add_untracked_private_domain_imports``,
 the latter's ``_PRIVATE_DOMAIN_IMPORT_EXCEPTIONS`` allowlist covering
-``_modelo_iva_wallet_cli.py`` -> ``domain.iva_compensation._errors`` and
-``_modelo_maritime_cli.py`` -> ``domain.renta._errors``) are superseded by the
+``_modelo_iva_wallet_cli.py`` -> ``domain.iva_compensation.errors`` and
+``_modelo_maritime_cli.py`` -> ``domain.renta.errors``) are superseded by the
 project-wide ratcheting import-hygiene gate,
 ``src/cadrumo/tests/test_import_hygiene_gate.py`` (backed by
 the import-hygiene scanner and its checked-in baseline).

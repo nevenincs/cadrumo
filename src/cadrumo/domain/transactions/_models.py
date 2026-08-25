@@ -46,7 +46,7 @@ from ..iva import (
     IvaExemptionArticle,
 )
 from ._enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ._errors import TransactionValidationError
+from .errors import TransactionValidationError
 from ._irpf_categories import (
     PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
     RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,

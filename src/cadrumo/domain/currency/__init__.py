@@ -40,7 +40,7 @@ See Also:
         unconverted foreign rows instead of silently treating them as EUR.
 """
 
-from ._errors import (
+from .errors import (
     CurrencyError,
     ExchangeRateProviderError,
     MissingExchangeRateError,

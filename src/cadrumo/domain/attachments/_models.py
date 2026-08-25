@@ -21,7 +21,7 @@ from ...core.errors import CoreValidationError
 from ...core.identity import BucketId, ContentDigest
 from ...core.time import parse_iso_datetime, validate_utc_aware
 from ._enums import AttachmentKind, AttachmentSource
-from ._errors import AttachmentValidationError
+from .errors import AttachmentValidationError
 
 _HEX_DIGITS = frozenset("0123456789abcdef")
 _LINK_ONLY_MIME_TYPE = "text/uri-list"

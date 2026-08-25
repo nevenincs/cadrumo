@@ -54,7 +54,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.money import round_to_cents
-from ._errors import IvaRateNotFoundError
+from .errors import IvaRateNotFoundError
 from ._lookup import coexisting_tier_rates, lookup_rate
 from ._schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
 

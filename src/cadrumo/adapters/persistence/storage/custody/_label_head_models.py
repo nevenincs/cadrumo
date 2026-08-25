@@ -11,7 +11,7 @@ from .....core import STRICT_FROZEN_CONFIG
 from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from .....core.identity import PrefixedContentDigest
 from ._capsule_records import ProfileCustodyCapsuleLabel
-from ._errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 
 LABEL_HEAD_MAX_BYTES = 4 * 1024
 """Bounded durable head and pending-advance records share one strict budget."""

@@ -22,7 +22,7 @@ See Also:
 
 from __future__ import annotations
 
-from ._errors import AeatExportFormatError, ExportError
+from .errors import AeatExportFormatError, ExportError
 from ._registry_record_renderer import RegistryFixedWidthRecordRenderer
 
 __all__ = [

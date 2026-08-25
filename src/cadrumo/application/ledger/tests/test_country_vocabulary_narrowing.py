@@ -45,7 +45,7 @@ boundary.
 See Also:
     :func:`~domain.iva.territorial_scope_for_country`
         The authority the narrowing was stated at.
-    :func:`~application.ledger.country_vocabulary_advisory.country_vocabulary_advisory`
+    :func:`~application.ledger.country_vocabulary_advisory`
         The non-blocking channel the operator-facing half is reported on.
 """
 

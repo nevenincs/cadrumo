@@ -44,7 +44,7 @@ from .....core.logging import get_logger
 from .....core.time import now
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..auth.providers import BrowserContextProvisioner
-from ._errors import (
+from .errors import (
     BrowserError,
     BrowserFailureMode,
     BrowserPreconditionCondition,

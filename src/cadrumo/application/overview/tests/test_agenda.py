@@ -8,7 +8,7 @@ import pytest
 
 from ....core import Period
 from .._agenda import OverviewAgenda, build_overview_agenda
-from .._errors import OverviewAgendaError
+from ..errors import OverviewAgendaError
 from .calendar_test_support import profile as _profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

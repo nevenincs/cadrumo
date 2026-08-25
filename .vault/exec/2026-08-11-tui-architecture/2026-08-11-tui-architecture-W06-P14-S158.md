@@ -35,4 +35,3 @@ Independent review approved the row. Eight focused parity and stability nodes pa
 ## Notes
 
 A broader three-module run passed 26 tests and failed one unrelated pre-existing runtime-storage refusal assertion whose expected prose no longer matches the concurrent storage error catalogue.
-

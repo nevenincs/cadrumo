@@ -34,7 +34,7 @@ from decimal import Decimal
 from typing import NamedTuple
 
 from ....core.aggregation import BindingSourceKind
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId
 from ._schema import DataBindingDefinition, ModeloRevision
 

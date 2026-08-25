@@ -30,12 +30,12 @@ from .. import (
     LiveApplicationError,
     LiveApplicationInputError,
 )
-from .._borrador_100 import BorradorSnapshotNotFoundError
-from .._errors import (
+from ..borrador_100 import BorradorSnapshotNotFoundError
+from ..errors import (
     LiveReadPrecondition,
     live_read_no_recovery_verdict,
 )
-from .._snapshot_base import (
+from ..snapshot_base import (
     SnapshotLifecycleState,
     enforce_snapshot_state_invariants,
 )
@@ -174,7 +174,7 @@ def test_snapshot_state_invariant_refusal_renders_as_its_key() -> None:
 
 
 def test_borrador_object_key_refusal_renders_as_its_key() -> None:
-    from .._borrador_100 import borrador_100_snapshot_object_key
+    from ..borrador_100 import borrador_100_snapshot_object_key
 
     with pytest.raises(LiveApplicationInputError) as excinfo:
         borrador_100_snapshot_object_key("  ", "snapshot")

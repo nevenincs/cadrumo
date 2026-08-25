@@ -30,7 +30,7 @@ from .._binding_selector_utils import (
     BindingRowExportSelector,
     binding_export_selector,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._export import (
     _justification_for_binding_data_type,
     _padding_for_binding_data_type,

@@ -1,4 +1,4 @@
-"""Telemetry-package error types.
+"""Canonical telemetry error types.
 
 Declared alongside the schema/consent/emit modules per the project's
 error-taxonomy convention: every :class:`~core.errors.CadrumoError`

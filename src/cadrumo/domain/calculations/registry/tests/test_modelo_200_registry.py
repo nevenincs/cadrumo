@@ -24,7 +24,7 @@ from .. import (
     build_snapshot,
     calculate_registry_snapshot,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
 from .._runtime_graph import expression_casilla_refs
 from .._schema import InputKind

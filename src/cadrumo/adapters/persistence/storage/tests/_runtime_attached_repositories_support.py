@@ -46,7 +46,6 @@ from .....application.live import (
     derive_borrador_100_snapshot_id,
 )
 from .....application.modelo import RecipientFingerprintRegistryRepository
-from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
 from .....application.repair_integrity import (
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
@@ -146,6 +145,7 @@ from ....outbound.google import _session_store as google_session_store
 from ....outbound.llm import EvidenceConsentLedger, LLMCache, LLMRunTelemetryRecorder, UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
+from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from .. import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, AttachmentStore, SensitivityClass, StorageValidationError

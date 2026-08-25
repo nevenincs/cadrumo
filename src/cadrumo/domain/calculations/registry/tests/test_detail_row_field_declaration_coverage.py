@@ -62,7 +62,7 @@ from .._detail_record_bindings import (
     _RelatedPartyRowField,
 )
 from .._donativo_bindings import _DonativoRowField
-from .._errors import NoRevisionForPeriodError, RegistryValidationError
+from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from .._invoice_bindings import _InvoiceRowField
 from .._withholding_bindings import _WithholdingRowField
 

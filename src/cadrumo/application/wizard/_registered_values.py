@@ -38,11 +38,11 @@ from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
 from ...core.parsing import parse_bool
 from ._format_hints import REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY
-from ._models import WizardQuestion
+from .models import WizardQuestion
 
 if TYPE_CHECKING:
     from ...domain.user_profile.values import UserProfileRecord
-    from ._models import WizardFlow
+    from .models import WizardFlow
 
 #: The localized yes/no pair the CONFIRM widget already renders through the
 #: substrate frontend (``flows.confirm.{yes,no}``). Reused here so a boolean

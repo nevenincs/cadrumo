@@ -57,7 +57,7 @@ from ...core.logging import get_logger
 from ...domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry import BindingId, RelationId
 from ._common import active_bucket_id_or_refuse, active_profile_label
-from ._errors import CliRefusedBoundaryError
+from .errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
 
 if TYPE_CHECKING:

@@ -17,7 +17,7 @@ validation.
 Every warn/fail :class:`DiagnosticCheck` carries an application-owned
 ``precondition_verdict`` whose outcome is either a canonical action reference
 or an explicit no-recovery classification. The validator raises
-:class:`~application._errors.DiagnosticModelError` if a row is silent or
+:class:`~application.errors.DiagnosticModelError` if a row is silent or
 ambiguous. Renderers and CLI payloads can therefore treat the repair report as
 a typed contract, not a best-effort text scan.
 
@@ -70,7 +70,7 @@ from ..core.logging import default_log_file_path, get_logger
 from ..core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.resources import bundled_path
 from ..core.time import now
-from ._errors import DiagnosticModelError
+from .errors import DiagnosticModelError
 from .operator_actions import (
     ActionArgumentBinding,
     ActionReference,
@@ -92,7 +92,7 @@ if TYPE_CHECKING:
 
     from ..adapters.outbound.aeat.browser import SiteHealthStatus
     from ..adapters.persistence.storage import SecureObjectNamespaceIntegrity
-    from .wizard import WizardStatusReport
+    from .wizard.status import WizardStatusReport
 
 _log = get_logger(__name__)
 
@@ -179,7 +179,7 @@ class DiagnosticCheck(BaseModel):
     action reference or explicit no-recovery outcome. A row that supplies no
     verdict is a
     :class:`pydantic.ValidationError` at construction time by raising
-    :class:`~application._errors.DiagnosticModelError`. ``ok`` rows MUST
+    :class:`~application.errors.DiagnosticModelError`. ``ok`` rows MUST
     carry neither.
 
     ``findings`` carries the per-cause breakdown: the specific keys that
@@ -354,7 +354,7 @@ def _ensure_models_rebuilt() -> None:
     from ..adapters.persistence.storage import (
         SecureObjectNamespaceIntegrity,
     )
-    from .wizard import WizardStatusReport
+    from .wizard.status import WizardStatusReport
 
     # Keep the lazy model-rebuild namespace imports statically accessed as well.
     _model_rebuild_types = (SecureObjectNamespaceIntegrity, WizardStatusReport)
@@ -495,7 +495,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         from cadrumo.application.workflow.persistence import workflow_state_repository
         from cadrumo.application.workflow.profile_health import assess_active_profile_health
 
-        from .wizard import build_wizard_status
+        from .wizard.status import build_wizard_status
 
         # Read the secure state through whatever session the operator already
         # holds. This probe deliberately opens none of its own: it used to enter

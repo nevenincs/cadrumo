@@ -30,7 +30,7 @@ kind alone would pass while the double-count survived.
 See Also:
     :class:`~domain.invoices.InvoiceComponents`
         The canonical, validator-enforced statement of the identity.
-    :func:`~application.ledger.closure_findings.closure_findings`
+    :func:`~application.ledger.closure_findings`
         The consumer under gate.
 """
 

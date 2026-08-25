@@ -46,7 +46,7 @@ from typing import Protocol, runtime_checkable
 from pydantic import BaseModel
 
 from ...core.errors import CadrumoError
-from ._errors import LiveApplicationInputError
+from .errors import LiveApplicationInputError
 
 
 class SnapshotNotFoundError(CadrumoError, KeyError):
@@ -381,6 +381,7 @@ __all__ = [
     "SnapshotLifecycleState",
     "SnapshotNotFoundError",
     "SnapshotRepository",
+    "SnapshotStateFilter",
     "SnapshotService",
     "StatelessSnapshotService",
     "enforce_snapshot_state_invariants",

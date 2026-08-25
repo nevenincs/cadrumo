@@ -111,7 +111,7 @@ from ...domain.transactions import (
     TransactionPersistenceError,
 )
 from ...domain.usage_ratios import UsageRatioPersistenceError
-from ._errors import AggregationValidationError, t
+from .errors import AggregationValidationError, t
 from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
 from ._invoice_devengo import (
     devengo_proxy_attribution_diagnostics,

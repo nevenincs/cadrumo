@@ -112,7 +112,7 @@ from ._storage_path_grammar import (
 )
 
 if TYPE_CHECKING:
-    from ._justificante_parse_cache import parse_committed_justificante_fixture
+    from .justificante_parse_cache import parse_committed_justificante_fixture
     from .filing_evidence import general_m303_filing_evidence
 
 FIXTURES_DIR: Path = Path(__file__).resolve().parent / "fixtures"
@@ -181,7 +181,7 @@ __all__ = [
 #: :func:`importlib.import_module`). Every row here is a domain-bearing fixture
 #: whose import cost the rest of this facade must not pay.
 _LAZY_EXPORTS: dict[str, str] = {
-    "parse_committed_justificante_fixture": "._justificante_parse_cache",
+    "parse_committed_justificante_fixture": ".justificante_parse_cache",
     "general_m303_filing_evidence": ".filing_evidence",
 }
 

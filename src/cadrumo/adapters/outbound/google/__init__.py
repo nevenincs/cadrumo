@@ -2,7 +2,7 @@
 
 This package boundary exposes OAuth records and scope constants from
 :mod:`adapters.outbound.google._records`, the Google auth error taxonomy from
-:mod:`adapters.outbound.google._errors`, and scoped document-link helpers from
+:mod:`adapters.outbound.google.errors`, and scoped document-link helpers from
 :mod:`adapters.outbound.google._document_link_resolver`. Google Sheets
 remains a one-way export mirror here, never an authority.
 
@@ -98,7 +98,7 @@ from ._document_link_resolver import (
     parse_drive_file_id,
     resolve_document_link,
 )
-from ._errors import (
+from .errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthClientNotRegisteredError,
     GoogleAuthClientRevokedError,
@@ -134,7 +134,7 @@ from ._records import (
     OAuthMetadata,
     OAuthToken,
 )
-from ._session_store import (
+from .session_store import (
     delete_session,
     load_client,
     load_credential_source_selection,

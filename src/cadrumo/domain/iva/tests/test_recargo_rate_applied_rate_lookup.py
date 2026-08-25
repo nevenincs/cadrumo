@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from .._errors import IvaValidationError
+from ..errors import IvaValidationError
 from .._recargo_equivalencia import (
     RecargoRateRecord,
     load_recargo_rate_table,

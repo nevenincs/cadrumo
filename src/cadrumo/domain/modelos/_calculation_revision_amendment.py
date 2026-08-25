@@ -9,7 +9,7 @@ from pydantic import BaseModel, model_validator
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import FilingRecordId
 from ..calculations.registry import RegistrySnapshot, RevisionId, SourceReference
-from ._errors import ModeloValidationError
+from .errors import ModeloValidationError
 
 
 class CalculationRevisionAmendmentKind(StrEnum):

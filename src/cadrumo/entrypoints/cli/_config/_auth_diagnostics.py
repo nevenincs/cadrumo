@@ -8,7 +8,7 @@ from ....application.auth.diagnostics import AuthDiagnosticPhoneState
 from ....core.external_constants import OutputLanguage
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope
-from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 
 def auth_diagnostics_list(

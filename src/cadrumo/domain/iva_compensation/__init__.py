@@ -63,7 +63,7 @@ from ._carry_forward import (
     enforce_iva_compensation_four_year_window,
     iva_compensation_period_sort_key,
 )
-from ._errors import (
+from .errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationCasillaReferenceError,
     IvaCompensationDecimalParseError,

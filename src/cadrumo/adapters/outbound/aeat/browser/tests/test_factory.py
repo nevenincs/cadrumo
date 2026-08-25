@@ -13,7 +13,7 @@ from ......core.config import Settings
 from ...auth.authenticator_types import BrowserSessionLike
 from ...tests import wait_for_process_exit
 from .. import BrowserError, Profile, create_browser_session, opened_browser_page, shared_playwright_runtime
-from .._errors import BrowserPreconditionCondition
+from ..errors import BrowserPreconditionCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -261,17 +261,17 @@ async def test_context_creation_cancellation_reaps_browser_after_real_launch() -
         create_task = asyncio.create_task(session.create_context())
         try:
             deadline = time.monotonic() + 10
-            while session._session._browser is None and not create_task.done():
+            while session.session._browser is None and not create_task.done():
                 if time.monotonic() >= deadline:
                     pytest.fail("real Chromium launch did not reach the retained-owner boundary")
                 await asyncio.sleep(0.01)
-            assert session._session._browser is not None
+            assert session.session._browser is not None
             assert not create_task.done()
 
             create_task.cancel()
             with pytest.raises(asyncio.CancelledError):
                 await create_task
-            assert session._session._browser is None
+            assert session.session._browser is None
         finally:
             if not create_task.done():
                 create_task.cancel()

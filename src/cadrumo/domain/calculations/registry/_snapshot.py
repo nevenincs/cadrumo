@@ -25,7 +25,7 @@ from ....core import (
     RegistryAuthorityGrade,
     RevisionReviewStatus,
 )
-from ._errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
+from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._ids import RevisionId
 from ._legal import verify_legal_reference

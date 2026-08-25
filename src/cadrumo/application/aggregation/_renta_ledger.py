@@ -79,7 +79,7 @@ from ._currency_predicates import (
     effective_eur_taxable_base,
     is_non_eur_without_conversion,
 )
-from ._errors import AggregationPeriodError, AggregationValidationError, t
+from .errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, LedgerAggregationResultBase
 from ._renta_business_eligibility import (
     relies_on_activity_marker,

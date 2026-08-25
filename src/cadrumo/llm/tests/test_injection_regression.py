@@ -38,7 +38,7 @@ travel the client path unmodified) while keeping the gate deterministic.
 See Also:
     :func:`~application.ledger.grounding_anchor.evaluate_anchor`
         The S3 anchor check this boundary rests on.
-    :func:`~application.ledger.closure_findings.closure_findings`
+    :func:`~application.ledger.closure_findings`
         The arithmetic leg that catches a printed-but-wrong figure.
 """
 
@@ -61,7 +61,7 @@ from ...adapters.outbound.llm import LLMCache, UsageRecorder
 from ...application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ...application.ledger.evidence_draft import InvoiceDraft
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceInputError
-from ...application.ledger.closure_findings.closure_findings import closure_findings
+from ...application.ledger.closure_findings import closure_findings
 from ...application.ledger.grounding_anchor import evaluate_anchor
 from ...core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 from ...core.config import LLMProvider, override_settings

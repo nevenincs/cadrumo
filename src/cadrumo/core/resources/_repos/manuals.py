@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, override
 
 from pydantic import field_validator
 
-from .._errors import ResourceValidationError
+from ..errors import ResourceValidationError
 from .._keys import TypedResourceKey
 from .._repository import ResourceCacheRepository
 

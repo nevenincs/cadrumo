@@ -82,7 +82,7 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
 
 
 def _persist_capture(*, pdf_bytes: bytes, modelo: str, filing_year: int, period: str):
-    from .._justificante import JustificanteCaptureSnapshotService
+    from ..justificante import JustificanteCaptureSnapshotService
 
     bucket_id = _active_bucket_id()
     return JustificanteCaptureSnapshotService(bucket_id=bucket_id).capture(

@@ -14,7 +14,7 @@ from .._bindings import (
     previous_filing_source_reference,
     resolve_previous_filing_binding_values,
 )
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._relations import (
     RegistryFoldRequirement,
     relation_source_requirements,

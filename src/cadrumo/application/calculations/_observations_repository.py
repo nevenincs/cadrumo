@@ -73,7 +73,7 @@ from ...domain.calculations.registry import (
     undeclared_casilla_ids,
 )
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
-from ._errors import (
+from .errors import (
     CalculationRefusalPrecondition,
     ObservationCasillaReferenceError,
     ObservationEvidenceDisplacementError,

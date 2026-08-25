@@ -8,7 +8,7 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.application.operator_surface._errors.OperatorSurfaceContractError",
+        "cadrumo.application.operator_surface.errors.OperatorSurfaceContractError",
         ErrorCode(
             code="REFUSED_OPERATOR_SURFACE_CONTRACT",
             category=ErrorCategory.REFUSED,
@@ -18,7 +18,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.registry._errors.RegistryApplicationError",
+        "cadrumo.application.registry.errors.RegistryApplicationError",
         ErrorCode(
             code="ERROR_APPLICATION_REGISTRY",
             category=ErrorCategory.ERROR,
@@ -28,7 +28,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.registry._errors.RegistryApplicationInputError",
+        "cadrumo.application.registry.errors.RegistryApplicationInputError",
         ErrorCode(
             code="REFUSED_APPLICATION_REGISTRY_INPUT",
             category=ErrorCategory.REFUSED,
@@ -38,7 +38,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.corpus_search._errors.CorpusSearchError",
+        "cadrumo.application.corpus_search.errors.CorpusSearchError",
         ErrorCode(
             code="ERROR_CORPUS_SEARCH",
             category=ErrorCategory.ERROR,
@@ -48,7 +48,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.corpus_search._errors.CorpusSearchInputError",
+        "cadrumo.application.corpus_search.errors.CorpusSearchInputError",
         ErrorCode(
             code="REFUSED_CORPUS_SEARCH_INPUT",
             category=ErrorCategory.REFUSED,
@@ -58,7 +58,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._errors.LiveApplicationError",
+        "cadrumo.application.live.errors.LiveApplicationError",
         ErrorCode(
             code="ERROR_APPLICATION_LIVE",
             category=ErrorCategory.ERROR,
@@ -68,7 +68,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._errors.LiveApplicationInputError",
+        "cadrumo.application.live.errors.LiveApplicationInputError",
         ErrorCode(
             code="REFUSED_APPLICATION_LIVE_INPUT",
             category=ErrorCategory.REFUSED,
@@ -78,7 +78,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._errors.LiveIvaSurfaceTimeoutError",
+        "cadrumo.application.live.errors.LiveIvaSurfaceTimeoutError",
         ErrorCode(
             code="ERROR_APPLICATION_LIVE_IVA_SURFACE_TIMEOUT",
             category=ErrorCategory.ERROR,
@@ -358,7 +358,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.aggregation._errors.AggregationConfigError",
+        "cadrumo.application.aggregation.errors.AggregationConfigError",
         ErrorCode(
             code="ERROR_AGGREGATION_CONFIG",
             category=ErrorCategory.ERROR,
@@ -368,7 +368,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.aggregation._errors.AggregationError",
+        "cadrumo.application.aggregation.errors.AggregationError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION",
             category=ErrorCategory.ERROR,
@@ -378,7 +378,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.aggregation._errors.AggregationPeriodError",
+        "cadrumo.application.aggregation.errors.AggregationPeriodError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION_PERIOD",
             category=ErrorCategory.ERROR,
@@ -388,7 +388,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.aggregation._errors.AggregationUnsupportedModeloError",
+        "cadrumo.application.aggregation.errors.AggregationUnsupportedModeloError",
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO",
             category=ErrorCategory.REFUSED,
@@ -398,7 +398,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.aggregation._errors.AggregationMissingClassificationError",
+        "cadrumo.application.aggregation.errors.AggregationMissingClassificationError",
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_MISSING_CLASSIFICATION",
             category=ErrorCategory.REFUSED,
@@ -408,7 +408,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.aggregation._errors.AggregationCategoryCoverageError",
+        "cadrumo.application.aggregation.errors.AggregationCategoryCoverageError",
         ErrorCode(
             code="REFUSED_FINANCIAL_AGGREGATION_CATEGORY_COVERAGE",
             category=ErrorCategory.REFUSED,
@@ -418,7 +418,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.review._errors.ReviewError",
+        "cadrumo.application.review.errors.ReviewError",
         ErrorCode(
             code="ERROR_REVIEW",
             category=ErrorCategory.ERROR,
@@ -428,7 +428,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.review._errors.ReviewKindReservedError",
+        "cadrumo.application.review.errors.ReviewKindReservedError",
         ErrorCode(
             code="REFUSED_REVIEW_KIND_RESERVED",
             category=ErrorCategory.REFUSED,
@@ -438,7 +438,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.review._errors.ReviewSourceLoadError",
+        "cadrumo.application.review.errors.ReviewSourceLoadError",
         ErrorCode(
             code="FAIL_REVIEW_SOURCE_LOAD",
             category=ErrorCategory.FAIL,
@@ -448,7 +448,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.review._errors.FilterParseError",
+        "cadrumo.application.review.errors.FilterParseError",
         ErrorCode(
             code="REFUSED_REVIEW_FILTER_PARSE",
             category=ErrorCategory.REFUSED,
@@ -458,7 +458,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.review._errors.EditParseError",
+        "cadrumo.application.review.errors.EditParseError",
         ErrorCode(
             code="REFUSED_REVIEW_EDIT_PARSE",
             category=ErrorCategory.REFUSED,
@@ -548,7 +548,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live._snapshot_base.SnapshotNotFoundError",
+        "cadrumo.application.live.snapshot_base.SnapshotNotFoundError",
         ErrorCode(
             code="FAIL_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.FAIL,
@@ -658,7 +658,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.aggregation._errors.AggregationValidationError",
+        "cadrumo.application.aggregation.errors.AggregationValidationError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION_VALIDATION",
             category=ErrorCategory.ERROR,
@@ -688,7 +688,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardError",
+        "cadrumo.application.wizard.errors.WizardError",
         ErrorCode(
             code="ERROR_WIZARD",
             category=ErrorCategory.ERROR,
@@ -698,7 +698,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardValidationError",
+        "cadrumo.application.wizard.errors.WizardValidationError",
         ErrorCode(
             code="REFUSED_WIZARD_VALIDATION",
             category=ErrorCategory.REFUSED,
@@ -708,7 +708,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardMissingFlagError",
+        "cadrumo.application.wizard.errors.WizardMissingFlagError",
         ErrorCode(
             code="REFUSED_WIZARD_MISSING_FLAG",
             category=ErrorCategory.REFUSED,
@@ -718,7 +718,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardCompileError",
+        "cadrumo.application.wizard.errors.WizardCompileError",
         ErrorCode(
             code="ERROR_WIZARD_COMPILE",
             category=ErrorCategory.ERROR,
@@ -728,7 +728,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardAnswerTypeError",
+        "cadrumo.application.wizard.errors.WizardAnswerTypeError",
         ErrorCode(
             code="REFUSED_WIZARD_ANSWER_TYPE",
             category=ErrorCategory.REFUSED,
@@ -738,7 +738,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardUnsupportedConsoleError",
+        "cadrumo.application.wizard.errors.WizardUnsupportedConsoleError",
         ErrorCode(
             code="REFUSED_WIZARD_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
@@ -748,7 +748,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.wizard._errors.WizardEditUnsupportedConsoleError",
+        "cadrumo.application.wizard.errors.WizardEditUnsupportedConsoleError",
         ErrorCode(
             code="REFUSED_WIZARD_EDIT_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,

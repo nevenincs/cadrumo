@@ -21,7 +21,7 @@ from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints
 
 from ...core import CasillaId, Hex64Str
 from ..calculations.registry import ModeloId
-from ._errors import ManualValidationError
+from .errors import ManualValidationError
 from ._ids import ManualId, ManualPart
 
 _StableId = Annotated[

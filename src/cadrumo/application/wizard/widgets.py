@@ -25,8 +25,8 @@ from ...core.i18n import tr
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_bool
 from ...core.redaction import redact_validation_context as _redact_validation_context
-from ._errors import WizardValidationError
-from ._models import WizardQuestion, WizardWidget
+from .errors import WizardValidationError
+from .models import WizardQuestion, WizardWidget
 
 _TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
 

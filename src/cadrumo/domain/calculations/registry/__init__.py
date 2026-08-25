@@ -347,7 +347,7 @@ from ._coverage import (
     build_model_law_coverage_ledger,
 )
 from ._cross_revision_divergence import CrossRevisionCasillaDivergence
-from ._errors import (
+from .errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
     RegistryError,

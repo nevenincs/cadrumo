@@ -23,8 +23,8 @@ from ....core.logging import get_logger as _get_logger
 from ....domain.calculations.registry import RevisionId
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope, no_active_profile_refusal
-from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from ._errors import ConfigBoundaryError as _ConfigBoundaryError
+from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from .errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._profile_readiness import (
     _emit_profile_record_missing,
     _emit_profile_record_unreadable,
@@ -36,8 +36,9 @@ _log = _get_logger(__name__)
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from ....application.user_profile.commands import ProfileValidationReport as _ProfileValidationReport
     from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
+
+    from ....application.user_profile.commands import ProfileValidationReport as _ProfileValidationReport
     from ....domain.user_profile.values import UserProfileRecord as _UserProfileRecord
 
 
@@ -125,8 +126,8 @@ def config_profile_show(
         status.
         """
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.user_profile.validation import ProfileValidationService
     from ....application.user_profile.projections import record_to_path_values
+    from ....application.user_profile.validation import ProfileValidationService
     from ....domain.user_profile.loader import load_user_profile_schema
 
     pointer = _resolve_show_pointer(name, ctx=ctx, resolve_active_profile_pointer=resolve_active_profile_pointer)

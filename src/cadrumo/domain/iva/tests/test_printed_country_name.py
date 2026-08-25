@@ -46,7 +46,7 @@ from .. import (
     country_code_for_printed_country_name,
     territorial_scope_for_printed_country_name,
 )
-from .._errors import IvaCatalogueError
+from ..errors import IvaCatalogueError
 from .._establishment import _index_country_names
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

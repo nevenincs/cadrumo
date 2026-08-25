@@ -14,7 +14,7 @@ import pytest
 
 from ......core.errors import ERROR_REGISTRY, build_error_envelope
 from .._adapter_utils import require_playwright_page
-from .._errors import BrowserAdapterTypeError
+from ..errors import BrowserAdapterTypeError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

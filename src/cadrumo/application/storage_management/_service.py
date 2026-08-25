@@ -29,7 +29,7 @@ from ...core import STORAGE_ROOT_MODE, STORAGE_TAXONOMY, StorageArea, StorageCat
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import load_settings
 from ...core.logging import get_logger
-from ._errors import StorageReclaimRefusedError, StorageReclaimUnconfirmedError
+from .errors import StorageReclaimRefusedError, StorageReclaimUnconfirmedError
 from ._models import (
     StorageAreaDisposition,
     StorageAreaInventoryReport,

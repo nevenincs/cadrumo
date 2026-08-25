@@ -31,7 +31,7 @@ clean. One list means adding a check reaches every reader by construction.
 confirmation block reason, so enrolling a check here is deciding the operator
 must answer it individually before confirming. A deterministic condition worth
 reporting but not worth refusing on therefore belongs on the advisory channel
-instead -- :func:`~application.ledger.country_vocabulary_advisory.country_vocabulary_advisory` is the worked
+instead -- :func:`~application.ledger.country_vocabulary_advisory` is the worked
 example, and it left this list for exactly that reason: the bundled country
 vocabulary carries a bounded subset of jurisdictions, so blocking on a code it
 does not carry refuses correct documents for a gap in our own data.
@@ -43,7 +43,7 @@ machine-readable fields rather than proposed by a reader that might be wrong
 about what the page said.
 
 See Also:
-    :func:`~application.ledger.closure_findings.closure_findings`
+    :func:`~application.ledger.closure_findings`
         The arithmetic identities, and the bulk of what runs here.
     :func:`~application.ledger.regime_contradiction.regime_contradiction_finding`
         The declared-regime-versus-charged-tax check.

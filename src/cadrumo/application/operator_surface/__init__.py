@@ -6,7 +6,7 @@ The package collects the application-layer command-shape declarations from
 :mod:`application.operator_surface._help`,
 :mod:`application.operator_surface._crud_contract`,
 :mod:`application.operator_surface._crud_registry`, and
-:mod:`application.operator_surface._errors`. Command adapters consume this
+:mod:`application.operator_surface.errors`. Command adapters consume this
 surface as data and render it; they do not define a second contract.
 
 Root-surface declarations flow through :func:`get_operator_surface_contract`,
@@ -65,7 +65,7 @@ if TYPE_CHECKING:
         event_suffix_for,
     )
     from ._crud_registry import BUILTIN_CRUD_CATALOGUE, get_builtin_catalogue
-    from ._errors import OperatorSurfaceContractError
+    from .errors import OperatorSurfaceContractError
     from ._help import build_help_document, build_root_landing_report, render_help_text, render_root_landing_text
     from ._help_models import HelpDocument, HelpEntry, HelpSection, HelpSurface, RootLandingReport
     from ._manifest import (
@@ -212,7 +212,7 @@ _EXPORT_MODULES = {
         "._crud_contract",
     ),
     **dict.fromkeys(("BUILTIN_CRUD_CATALOGUE", "get_builtin_catalogue"), "._crud_registry"),
-    "OperatorSurfaceContractError": "._errors",
+    "OperatorSurfaceContractError": ".errors",
     **dict.fromkeys(
         ("build_help_document", "build_root_landing_report", "render_help_text", "render_root_landing_text"),
         "._help",

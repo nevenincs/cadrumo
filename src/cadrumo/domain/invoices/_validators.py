@@ -20,7 +20,7 @@ import re
 
 from ...core.identity import nif_iva_format_for_country, normalise_nif_iva
 from ..iva import EUMemberState
-from ._errors import InvoiceValidationError
+from .errors import InvoiceValidationError
 
 __all__ = [
     "EU_MEMBER_STATE_CODES",

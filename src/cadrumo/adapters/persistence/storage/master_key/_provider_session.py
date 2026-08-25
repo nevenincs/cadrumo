@@ -33,9 +33,9 @@ def exit_provider_session(
     captured session is closed; a different current session is never evicted.
     """
     activation = provider._activation_cm
-    session = provider._session
+    session = provider.session
     provider._activation_cm = None
-    provider._session = None
+    provider.session = None
     try:
         if session is not None:
             if current_active_bucket_session() is session:

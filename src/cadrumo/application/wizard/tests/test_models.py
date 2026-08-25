@@ -14,7 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
-from .._models import (
+from ..models import (
     WizardChoice,
     WizardCondition,
     WizardFlow,

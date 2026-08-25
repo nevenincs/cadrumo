@@ -23,7 +23,7 @@ from .._authorization import (
     load_authorization_manifest,
     manifest_dir,
 )
-from .._errors import AuthorizationManifestError
+from ..errors import AuthorizationManifestError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -37,7 +37,7 @@ from ....llm import LLMRequest, PromptDefinition
 from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
-from .._errors import CliRefusedBoundaryError, command_error_boundary
+from ..errors import CliRefusedBoundaryError, command_error_boundary
 from ._english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]

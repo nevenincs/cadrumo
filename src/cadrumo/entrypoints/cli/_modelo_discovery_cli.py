@@ -109,7 +109,7 @@ def guard_ceded_autonomic_modelo(modelo: str) -> None:
     refusal instead, naming the ceded tax and its regional filing route, and is
     a no-op for every registry-backed or genuinely unknown code.
     """
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     modelo_code = modelo.strip()
     locale_key = ceded_autonomic_modelo_locale_key(modelo_code)

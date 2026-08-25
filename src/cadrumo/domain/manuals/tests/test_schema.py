@@ -26,7 +26,7 @@ from .. import (
     SectionSource,
     generate_rule_id,
 )
-from .._errors import ManualValidationError
+from ..errors import ManualValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

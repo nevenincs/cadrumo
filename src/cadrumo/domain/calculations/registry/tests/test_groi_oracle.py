@@ -21,7 +21,7 @@ from pydantic import AnyUrl, ValidationError
 from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY, aeat_host
 from .._checker_oracle_flow import CheckerObservation, CheckerReplayDriver
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._groi_oracle import (
     GROI_ORACLE_ID,
     GroiOracle,

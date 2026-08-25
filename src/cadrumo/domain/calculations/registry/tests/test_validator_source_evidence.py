@@ -8,7 +8,7 @@ import pytest
 
 from .._authority import ValidatedRegistryAuthority, bundled_authority
 from .._coverage import build_construct_evidence_ledger
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

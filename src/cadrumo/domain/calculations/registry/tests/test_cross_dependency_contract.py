@@ -17,7 +17,7 @@ from .. import (
     relation_is_consumed,
 )
 from .._binding_selector_utils import selector_as_dict
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 from .._relation_aggregation import relation_aggregation_op
 from .._relations import relation_source_requirements

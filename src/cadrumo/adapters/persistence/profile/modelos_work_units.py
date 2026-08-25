@@ -10,7 +10,7 @@ by a stable namespace and object key; the underlying column is encrypted so no
 plaintext work-unit metadata lands on disk.
 
 This concrete repository is the persistence adapter behind the read-side
-:class:`~domain.modelos.WorkUnitCatalogueRepositoryProtocol`. It lives in
+:class:`~domain.modelos.work_unit_repository.WorkUnitCatalogueRepositoryProtocol`. It lives in
 the persistence adapter (not in :mod:`~domain.modelos`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
 typed :class:`WorkUnitCatalogue` model and its pure catalogue mutators.
@@ -21,7 +21,7 @@ See Also:
         persistence adapters.
     :class:`~domain.modelos.WorkUnitCatalogue`
         Domain catalogue payload encrypted by this repository.
-    :class:`~domain.modelos.WorkUnitCatalogueRepositoryProtocol`
+    :class:`~domain.modelos.work_unit_repository.WorkUnitCatalogueRepositoryProtocol`
         Domain port this concrete persistence adapter implements.
     :data:`~adapters.persistence.storage.MODELO_WORK_UNIT_CATALOGUE_NAMESPACE`
         Central namespace, sensitivity, schema-version, and singleton-key
@@ -71,7 +71,7 @@ class WorkUnitCatalogueRepository:
     mismatch into :class:`WorkUnitPersistenceError` via
     :func:`~domain.modelos.raise_catalogue_integrity_error`. This class is
     the concrete implementation behind
-    :class:`~domain.modelos.WorkUnitCatalogueRepositoryProtocol`.
+    :class:`~domain.modelos.work_unit_repository.WorkUnitCatalogueRepositoryProtocol`.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
@@ -186,6 +186,19 @@ class WorkUnitCatalogueRepository:
         try:
             catalogue, revision_id = self._storage.load_revisioned()
         except (ClassificationError, EnvelopeVersionError) as exc:
+            context = dict(exc.context)
+            if context.get("reason") in {"classification_mismatch", "unsupported_envelope_version"}:
+                message = (
+                    "work-unit catalogue classification mismatch"
+                    if context["reason"] == "classification_mismatch"
+                    else "work-unit catalogue envelope version unsupported"
+                )
+                _LOGGER.error(message, extra=context)
+                raise WorkUnitPersistenceError(
+                    message,
+                    translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
+                    context=context,
+                ) from exc
             raise_catalogue_integrity_error(
                 exc,
                 error_cls=WorkUnitPersistenceError,

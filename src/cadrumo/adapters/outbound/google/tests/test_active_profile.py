@@ -8,7 +8,7 @@ import pytest
 
 from .....core.config import override_settings
 from .._active_profile import resolve_active_profile
-from .._errors import GoogleAuthProfileUnboundError
+from ..errors import GoogleAuthProfileUnboundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -47,7 +47,7 @@ import pytest
 
 from ....core.resources import bundled_path
 from ...calculations.registry import LegalReference
-from .._errors import IvaCatalogueError
+from ..errors import IvaCatalogueError
 from .._establishment import _excluded_territories_by_prefix
 from .._grounding import registry_catalogues, verify_table_legal_refs
 from .._place_of_supply import load_place_of_supply_rules

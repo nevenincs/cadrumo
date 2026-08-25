@@ -37,7 +37,7 @@ from ...core import Period, PeriodError
 from ...domain.iva import InvoiceKind
 from ...domain.transactions import BusinessClassification, TransactionDirection
 from ..transactions import LedgerImportDiagnosticKind
-from ._errors import FilterParseError
+from .errors import FilterParseError
 
 __all__ = (
     "DeclaracionReviewFilterKey",

@@ -18,12 +18,13 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ...aggregation import IvaLedgerAggregationIssueReason
-from ..preflight import LedgerPreflightIssueReason, preflight_transaction_catalogue
 from ..preflight import (
     _PREFLIGHT_DETAIL_BY_IVA_ISSUE,
     _PREFLIGHT_REASON_BY_IVA_ISSUE,
+    LedgerPreflightIssueReason,
     _preflight_detail_for_iva_issue,
     _preflight_reason_for_iva_issue,
+    preflight_transaction_catalogue,
 )
 from ._preflight_test_support import (
     _AD_HOC_2026,

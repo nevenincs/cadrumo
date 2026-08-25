@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+import cadrumo.application.ledger.evidence_draft as evidence_draft_module
+
 from ....core import (
     LLM_EXTRA,
     LOCAL_TRANSPORT_LABEL,
@@ -34,7 +36,6 @@ from ....core import (
 from ....core.config import load_settings
 from ....llm import LLMProviderError, ground_extracted_fields, parse_invoice_extraction_response
 from ....tests.attribute_scope import scoped_attribute
-import cadrumo.application.ledger.evidence_draft as evidence_draft_module
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence import PurchaseInvoiceEvidenceInputError
 from ..evidence_draft import FieldProvenance, InvoiceDraft
@@ -309,7 +310,7 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
     perform. What is proven here is that the chain is WIRED -- the behavioural
     halves are proven above and in the stage suites.
     """
-    router = Path(__file__).parents[1] / "_evidence_draft.py"
+    router = Path(__file__).parents[1] / "evidence_draft.py"
     source = router.read_text(encoding="utf-8")
 
     assert "transcribe_text_layer(evidence_input)" in source

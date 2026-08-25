@@ -378,7 +378,7 @@ class RecipientEncryptedPackage(BaseModel):
 
     ``envelope_nonce_hex`` is a replay-detection token, independent of the
     AEAD nonce embedded in ``ciphertext``: a caller checks it against
-:class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository` to
+    :class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository` to
     refuse a package presented more than once. ``issued_at`` /
     ``valid_until`` bound the envelope's validity window (``valid_until``
     of ``None`` means the envelope never expires); the deadline is checked
@@ -569,7 +569,7 @@ def decrypt_review_package_for_recipient(
     encrypt/decrypt primitive with no persistence dependency
     (``aeat-architecture-boundaries``). A caller that needs
     replay defence composes
-:class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository` around
+    :class:`~adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardRepository` around
     this call, keyed on ``envelope.envelope_nonce_hex``.
 
     Args:

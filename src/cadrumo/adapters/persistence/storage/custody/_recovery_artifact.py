@@ -25,7 +25,7 @@ from .....core.hashing import (
     reject_json_constant,
     validate_prefixed_digest,
 )
-from ._errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 from ._filesystem_primitives import (
     WindowsDirectoryAnchorErrors,
     windows_directory_anchor,

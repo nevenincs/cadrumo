@@ -28,7 +28,7 @@ from ......core import scan_directory
 from ......core.external_constants import PDF_MIME_TYPE
 from .. import _declarations, _declarations_fetch, _walker
 from .._adapter_utils import assert_pdf_response, response_media_type
-from .._errors import JustificanteFetchError
+from ..errors import JustificanteFetchError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

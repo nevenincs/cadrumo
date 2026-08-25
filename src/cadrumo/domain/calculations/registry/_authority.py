@@ -27,7 +27,7 @@ from ....core.access_gate import (
 )
 from ....core.resources import bundled_path as _bundled_path
 from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
-from ._errors import RegistrySnapshotError, RegistryValidationError
+from .errors import RegistrySnapshotError, RegistryValidationError
 from ._identity import (
     FingerprintTuples,
     RegistryIdentity,

@@ -32,7 +32,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ....core import CasillaId
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._formula_runtime_ops import (
     numeric_casilla_value as _numeric_casilla_value,
 )

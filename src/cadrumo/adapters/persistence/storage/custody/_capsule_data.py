@@ -9,7 +9,7 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from uuid import uuid4
 
 from .....core.hashing import prefixed_digest
-from ._errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 from ._filesystem import (
     PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
     PROFILE_CUSTODY_DATA_MAX_ENTRIES,

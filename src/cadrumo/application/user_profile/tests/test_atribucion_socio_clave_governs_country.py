@@ -28,8 +28,8 @@ from cadrumo.application.user_profile.validation import (
     ProfileValidationService,
 )
 
-from ....domain.user_profile.values import UserProfileFact
 from ....domain.user_profile.loader import load_user_profile_schema
+from ....domain.user_profile.values import UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

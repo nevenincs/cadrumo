@@ -14,7 +14,7 @@ from ....core.errors import ERROR_REGISTRY, build_error_envelope, declared_error
 from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, UTF_8_ENCODING, XLSX_MIME_TYPE
 from ....tests.locale_catalogue import CATALOGUE_LANGUAGES, catalogue_shard_path, shard_payload
 from .. import ExportSerializationFormat, serialize_tabular_rows
-from .._errors import ExportFieldError, ExportFormatError
+from ..errors import ExportFieldError, ExportFormatError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -107,8 +107,8 @@ def test_export_format_error_registry_uses_distinct_application_and_adapter_clas
         if qualname.split(".")[-1].endswith("ExportFormatError")
     ]
     assert export_format_rows == [
-        ("cadrumo.adapters.outbound.aeat.export._errors.AeatExportFormatError", "FAIL_EXPORT_FORMAT"),
-        ("cadrumo.application.export._errors.ExportFormatError", "REFUSED_EXPORT_FORMAT"),
+        ("cadrumo.adapters.outbound.aeat.export.errors.AeatExportFormatError", "FAIL_EXPORT_FORMAT"),
+        ("cadrumo.application.export.errors.ExportFormatError", "REFUSED_EXPORT_FORMAT"),
     ]
 
 

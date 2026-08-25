@@ -186,7 +186,7 @@ class TestTheProductionReadPathSuppliesTheValues:
         import ast
         from pathlib import Path
 
-        router = Path(__file__).parents[1] / "_evidence_draft.py"
+        router = Path(__file__).parents[1] / "evidence_draft.py"
         tree = ast.parse(router.read_text(encoding="utf-8"))
         called = {
             node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
@@ -201,7 +201,7 @@ class TestTheProductionReadPathSuppliesTheValues:
         import ast
         from pathlib import Path
 
-        router = Path(__file__).parents[1] / "_evidence_draft.py"
+        router = Path(__file__).parents[1] / "evidence_draft.py"
         tree = ast.parse(router.read_text(encoding="utf-8"))
         keywords = {keyword.arg for node in ast.walk(tree) if isinstance(node, ast.Call) for keyword in node.keywords}
 

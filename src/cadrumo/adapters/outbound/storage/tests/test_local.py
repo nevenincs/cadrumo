@@ -35,7 +35,7 @@ from .. import (
     StorageCorruptionError,
     StorageProvider,
 )
-from .._errors import OutboundStoragePermissionError
+from ..errors import OutboundStoragePermissionError
 from .._local import LocalFileSystemProvider, _local_failure_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

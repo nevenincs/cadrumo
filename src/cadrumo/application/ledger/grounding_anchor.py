@@ -55,7 +55,7 @@ figure really is on the page.
 
 The guarantee is therefore **the conjunction of two legs, never this one alone**:
 the anchor check establishes presence, and
-:func:`~application.ledger.closure_findings.closure_findings` establishes that the monetary set
+:func:`~application.ledger.closure_findings` establishes that the monetary set
 closes. An injected total that is anchored still reds the arithmetic identity,
 because the other figures on the document do not reach it. A suite that gated
 only the anchor property would imply a guarantee the code does not provide, and

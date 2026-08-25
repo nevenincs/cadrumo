@@ -29,7 +29,7 @@ if TYPE_CHECKING:
         ProfilePredicateDefinition,
     )
 
-from ._errors import (
+from .errors import (
     DeadlineValidationError,
     NoDeadlineWindowsError,
     ScheduleComputationError,

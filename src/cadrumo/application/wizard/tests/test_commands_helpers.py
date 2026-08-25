@@ -1,4 +1,4 @@
-"""Focused unit tests for wizard._commands pure helpers.
+"""Focused unit tests for wizard.commands pure helpers.
 
 `_commands.py` ships several small pure helpers behind the public
 `build_wizard_command` Typer-binding orchestrator. The end-to-end
@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....core.i18n import Translatable as tr
-from .._commands import (
+from ..commands import (
     _CCAA_CHOICE_VALUES,
     _SETUP_OPTION_INFOS,
     _canonical_from_flag_value,
@@ -31,7 +31,7 @@ from .._commands import (
     _missing_required_flags,
     _required_flag_questions,
 )
-from .._models import WizardCondition, WizardFlow, WizardQuestion, WizardSection, WizardWidget
+from ..models import WizardCondition, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from ._support import EmptyAnswersBase
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

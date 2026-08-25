@@ -48,7 +48,7 @@ from ._browser_constants import (
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
 )
-from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._iva_compensation_wallet_parsing import (
     _EXTERNAL,
     _PRE303,

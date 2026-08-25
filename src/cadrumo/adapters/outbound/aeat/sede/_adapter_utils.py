@@ -43,7 +43,7 @@ from .....domain.calculations.registry import (
     assert_remote_operation_allowed,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ._errors import (
+from .errors import (
     BrowserAdapterTypeError,
     JustificanteFetchError,
     SedeFailureMode,

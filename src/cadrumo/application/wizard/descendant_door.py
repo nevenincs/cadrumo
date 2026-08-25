@@ -51,12 +51,12 @@ from ..flows.definition import CopyRef, FlowDefinition, FlowSection
 from ..flows.engine import FlowState
 from ..flows.resume import resume_flow
 from ._checkpoint_store import descendant_clearing_facts
-from ._descendant_group import (
+from .descendant_group import (
     DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
     DESCENDANT_GROUP,
     DESCENDANTS_COUNT_PAGE,
 )
-from ._persistence import descendant_answers_from_record, descendant_facts_from_answers
+from .persistence import descendant_answers_from_record, descendant_facts_from_answers
 
 if TYPE_CHECKING:
     from prompt_toolkit.input import Input

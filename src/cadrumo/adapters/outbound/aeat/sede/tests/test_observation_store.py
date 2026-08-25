@@ -14,7 +14,7 @@ from ......adapters.persistence.tests.runtime_profile_fixture import bucket_scop
 from ......core import CasillaId, CasillaValueKind, DirectoryEntryKind, Period, scan_directory, validated_casilla_id
 from ......core.config import Settings
 from ......tests.secure_sql import TestRuntimeProfile
-from .._errors import SedeValidationError
+from ..errors import SedeValidationError
 from .._observation_store import FiledDeclaracionObservationStore
 from .._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 

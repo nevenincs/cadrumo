@@ -37,7 +37,7 @@ from ._enums import (
     InvoiceOperationDateRole,
     PaymentStatus,
 )
-from ._errors import InvoiceValidationError
+from .errors import InvoiceValidationError
 
 __all__ = ["normalise_invoice_enum_fields", "normalise_invoice_string_fields"]
 

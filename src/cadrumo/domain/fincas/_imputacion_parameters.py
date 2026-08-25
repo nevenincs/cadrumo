@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.resources import bundled_path
-from ._errors import FincaValidationError
+from .errors import FincaValidationError
 
 
 class LirpfArt85ImputacionParameters(BaseModel):

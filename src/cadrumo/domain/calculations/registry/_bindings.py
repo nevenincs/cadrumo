@@ -106,7 +106,7 @@ from ._donativo_bindings import (
 from ._donativo_bindings import (
     DonativoSelector as _DonativoSelector,
 )
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._gasto193_bindings import (
     Gasto193Observation,
     _Gasto193Selector,

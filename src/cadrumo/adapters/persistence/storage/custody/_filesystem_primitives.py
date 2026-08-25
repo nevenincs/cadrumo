@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Literal
 
-from ._errors import ProfileCustodyRecordError
+from .errors import ProfileCustodyRecordError
 
 PROFILE_CUSTODY_COMMIT_FILENAME: Final = "profile.commit.v1.json"
 

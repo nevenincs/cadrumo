@@ -32,7 +32,7 @@ from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_
 from ....core.json_contract import strict_round_trip
 from ....core.logging import default_log_file_path as _default_log_file_path
 from .._common import emit_envelope, resolve_cli_precondition_action
-from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from ....application.diagnostics import ConfigRepairReport

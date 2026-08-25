@@ -102,7 +102,7 @@ from ._calculation_revision_m303_handoff import (
     M303RegimenSimplificadoAnnualSummaryHandoff,
     M303RegimenSimplificadoFilingEvidence,
 )
-from ._errors import ModeloError, ModeloValidationError
+from .errors import ModeloError, ModeloValidationError
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ._row_models import (
     Modelo210AgrupacionRentaRow,

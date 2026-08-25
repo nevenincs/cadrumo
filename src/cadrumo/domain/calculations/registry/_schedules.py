@@ -12,7 +12,7 @@ from typing import Final
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._schema import ModeloRevision, ModeloScheduleDefinition, ProfilePredicateDefinition
 
 __all__ = [

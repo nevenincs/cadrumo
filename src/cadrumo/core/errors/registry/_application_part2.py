@@ -288,7 +288,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.overview._errors.OverviewError",
+        "cadrumo.application.overview.errors.OverviewError",
         ErrorCode(
             code="FAIL_OVERVIEW",
             category=ErrorCategory.FAIL,
@@ -298,7 +298,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.overview._errors.OverviewCalendarError",
+        "cadrumo.application.overview.errors.OverviewCalendarError",
         ErrorCode(
             code="FAIL_OVERVIEW_CALENDAR",
             category=ErrorCategory.FAIL,
@@ -308,7 +308,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.overview._errors.OverviewAgendaError",
+        "cadrumo.application.overview.errors.OverviewAgendaError",
         ErrorCode(
             code="FAIL_OVERVIEW_AGENDA",
             category=ErrorCategory.FAIL,
@@ -318,7 +318,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.overview._errors.OverviewBacklogError",
+        "cadrumo.application.overview.errors.OverviewBacklogError",
         ErrorCode(
             code="FAIL_OVERVIEW_BACKLOG",
             category=ErrorCategory.FAIL,
@@ -328,7 +328,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.overview._errors.OverviewExplainError",
+        "cadrumo.application.overview.errors.OverviewExplainError",
         ErrorCode(
             code="FAIL_OVERVIEW_EXPLAIN",
             category=ErrorCategory.FAIL,
@@ -503,7 +503,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.modelos._errors.PensionReduccionError",
+        "cadrumo.domain.modelos.errors.PensionReduccionError",
         ErrorCode(
             code="REFUSED_PENSION_REDUCCION_COMPUTATION",
             category=ErrorCategory.REFUSED,
@@ -513,7 +513,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations._errors.IvaCompensationModeloError",
+        "cadrumo.application.calculations.errors.IvaCompensationModeloError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_MODELO",
             category=ErrorCategory.REFUSED,
@@ -523,7 +523,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations._errors.BindingPrefillTypeError",
+        "cadrumo.application.calculations.errors.BindingPrefillTypeError",
         ErrorCode(
             code="REFUSED_BINDING_PREFILL_TYPE",
             category=ErrorCategory.REFUSED,
@@ -533,7 +533,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations._errors.ObservationKeyError",
+        "cadrumo.application.calculations.errors.ObservationKeyError",
         ErrorCode(
             code="ERROR_OBSERVATION_KEY",
             category=ErrorCategory.ERROR,
@@ -543,7 +543,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations._errors.ObservationEvidenceDisplacementError",
+        "cadrumo.application.calculations.errors.ObservationEvidenceDisplacementError",
         ErrorCode(
             code="REFUSED_OBSERVATION_EVIDENCE_DISPLACEMENT",
             category=ErrorCategory.REFUSED,
@@ -553,7 +553,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.calculations._errors.ObservationCasillaReferenceError",
+        "cadrumo.application.calculations.errors.ObservationCasillaReferenceError",
         ErrorCode(
             code="REFUSED_OBSERVATION_CASILLA_REFERENCE",
             category=ErrorCategory.REFUSED,
@@ -624,7 +624,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva_compensation._errors.IvaWalletReconciliationError",
+        "cadrumo.domain.iva_compensation.errors.IvaWalletReconciliationError",
         ErrorCode(
             code="REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT",
             category=ErrorCategory.REFUSED,
@@ -634,7 +634,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva_compensation._errors.IvaCompensationYearRangeError",
+        "cadrumo.domain.iva_compensation.errors.IvaCompensationYearRangeError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_YEAR_RANGE",
             category=ErrorCategory.REFUSED,
@@ -644,7 +644,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva_compensation._errors.IvaCompensationDecimalParseError",
+        "cadrumo.domain.iva_compensation.errors.IvaCompensationDecimalParseError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_DECIMAL_PARSE",
             category=ErrorCategory.REFUSED,
@@ -654,7 +654,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva_compensation._errors.IvaCompensationCasillaReferenceError",
+        "cadrumo.domain.iva_compensation.errors.IvaCompensationCasillaReferenceError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_CASILLA_REFERENCE",
             category=ErrorCategory.REFUSED,
@@ -664,7 +664,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva_compensation._errors.IvaCompensationCarryForwardPolicyError",
+        "cadrumo.domain.iva_compensation.errors.IvaCompensationCarryForwardPolicyError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_CARRY_FORWARD_POLICY",
             category=ErrorCategory.REFUSED,
@@ -674,7 +674,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva_compensation._errors.IvaCompensationSeedConflictError",
+        "cadrumo.domain.iva_compensation.errors.IvaCompensationSeedConflictError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_SEED_CONFLICT",
             category=ErrorCategory.REFUSED,
@@ -684,7 +684,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.iva_compensation._errors.IvaCompensationReconciliationInputError",
+        "cadrumo.domain.iva_compensation.errors.IvaCompensationReconciliationInputError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_RECONCILIATION_INPUT",
             category=ErrorCategory.REFUSED,
@@ -844,7 +844,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application._errors.DiagnosticModelError",
+        "cadrumo.application.errors.DiagnosticModelError",
         ErrorCode(
             code="REFUSED_DIAGNOSTIC_MODEL_INVARIANT",
             category=ErrorCategory.REFUSED,
@@ -854,7 +854,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.export._errors.ExportFormatError",
+        "cadrumo.application.export.errors.ExportFormatError",
         ErrorCode(
             code="REFUSED_EXPORT_FORMAT",
             category=ErrorCategory.REFUSED,
@@ -864,7 +864,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.export._errors.ExportFieldError",
+        "cadrumo.application.export.errors.ExportFieldError",
         ErrorCode(
             code="REFUSED_EXPORT_FIELD",
             category=ErrorCategory.REFUSED,
@@ -874,7 +874,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.storage.calc_sheets._errors.CalcSheetsEngineError",
+        "cadrumo.application.storage.calc_sheets.errors.CalcSheetsEngineError",
         ErrorCode(
             code="ERROR_CALC_SHEETS_ENGINE",
             category=ErrorCategory.ERROR,
@@ -884,7 +884,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.storage.calc_sheets._errors.CalcSheetsRecordError",
+        "cadrumo.application.storage.calc_sheets.errors.CalcSheetsRecordError",
         ErrorCode(
             code="ERROR_CALC_SHEETS_RECORD",
             category=ErrorCategory.ERROR,
@@ -894,7 +894,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.storage.calc_sheets._errors.CalcSheetsParityError",
+        "cadrumo.application.storage.calc_sheets.errors.CalcSheetsParityError",
         ErrorCode(
             code="ERROR_CALC_SHEETS_PARITY",
             category=ErrorCategory.ERROR,
@@ -1124,7 +1124,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.storage_management._errors.StorageManagementError",
+        "cadrumo.application.storage_management.errors.StorageManagementError",
         ErrorCode(
             code="ERROR_STORAGE_MANAGEMENT",
             category=ErrorCategory.ERROR,
@@ -1134,7 +1134,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.storage_management._errors.StorageReclaimRefusedError",
+        "cadrumo.application.storage_management.errors.StorageReclaimRefusedError",
         ErrorCode(
             code="REFUSED_STORAGE_RECLAIM",
             category=ErrorCategory.REFUSED,
@@ -1144,7 +1144,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.storage_management._errors.StorageReclaimUnconfirmedError",
+        "cadrumo.application.storage_management.errors.StorageReclaimUnconfirmedError",
         ErrorCode(
             code="REFUSED_STORAGE_RECLAIM_UNCONFIRMED",
             category=ErrorCategory.REFUSED,

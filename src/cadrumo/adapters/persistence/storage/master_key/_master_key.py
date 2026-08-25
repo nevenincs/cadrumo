@@ -231,8 +231,8 @@ def _provider_enter(
     from ._active_session import activate_session
     from ._bucket_session import BucketSession
 
-    if provider._session is not None:
-        from ._errors import MasterKeyReentrantError
+    if provider.session is not None:
+        from .errors import MasterKeyReentrantError
 
         raise MasterKeyReentrantError(type(provider).__name__)
 
@@ -268,7 +268,7 @@ def _provider_enter(
     )
     activation = activate_session(session)
     activation.__enter__()
-    provider._session = session
+    provider.session = session
     provider._activation_cm = activation
     try:
         if session.unsecured_backend:
@@ -300,7 +300,7 @@ class UnsecuredMasterKeyProvider:
     """
 
     def __init__(self) -> None:
-        self._session: BucketSession | None = None
+        self.session: BucketSession | None = None
         self._activation_cm: AbstractContextManager[None] | None = None
 
     def get_master_key(self) -> bytes:

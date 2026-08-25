@@ -27,7 +27,7 @@ from ....adapters.persistence.storage.master_key import NoActiveBucketSessionErr
 from ....core.errors import CadrumoError, build_error_envelope, render_error_text
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....llm import LLMRequest, PromptDefinition
-from .._errors import (
+from ..errors import (
     CliUnexpectedBoundaryError,
     _unwrap_cadrumo_error,
     command_error_boundary,
@@ -159,7 +159,7 @@ def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
     wrapped = command_error_boundary(_callback)
 
     with (
-        caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli._errors"),
+        caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli.errors"),
         pytest.raises(typer.Exit) as exit_info,
     ):
         wrapped()
@@ -190,7 +190,7 @@ def test_boundary_still_reports_genuine_bug_as_unexpected(
     wrapped = command_error_boundary(_callback)
 
     with (
-        caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli._errors"),
+        caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli.errors"),
         pytest.raises(typer.Exit),
     ):
         wrapped()

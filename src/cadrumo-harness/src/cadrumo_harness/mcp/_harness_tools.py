@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.application.wizard import ensure_profile_keys_registered
+from cadrumo.application.wizard.compiler import ensure_profile_keys_registered
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, assess_active_profile_health
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.i18n import tr

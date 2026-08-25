@@ -18,10 +18,10 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
 )
-from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.errors import UserProfileNotFoundError
-from ...domain.user_profile.values import UserProfileRecord, section_field_key
 from ...domain.user_profile.labels import profile_field_label
+from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.values import UserProfileRecord, section_field_key
 from .commands import (
     ProfilePreflightReport,
     ProfilePreflightRequirement,

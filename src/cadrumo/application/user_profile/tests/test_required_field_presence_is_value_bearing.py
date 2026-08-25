@@ -19,8 +19,8 @@ import pytest
 from cadrumo.application.user_profile.overview import build_profile_overview
 from cadrumo.application.user_profile.validation import ProfileValidationService
 
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....domain.user_profile.loader import load_user_profile_schema
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -29,7 +29,7 @@ from pydantic import BaseModel
 
 from .._binding_selector_utils import BindingExportDataType
 from .._bindings import _ManualInputDataType
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema_exports import ExportFieldDefinition
 from .._schema_formula import ParameterDefinition
 from .._schema_scalars import _REGISTRY_SCALAR_VALUE_TYPES, registry_scalar_value_type

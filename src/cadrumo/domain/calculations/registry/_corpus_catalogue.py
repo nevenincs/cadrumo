@@ -23,7 +23,7 @@ from typing import Final
 
 from ....core.hashing import hash_file
 from ....core.resources import resolve_companion_binary
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._legal import _PROVISION_SUFFIXED_FILENAME
 from ._schema import SourceReference
 from ._static_inspection import GeneratedArtifactSource

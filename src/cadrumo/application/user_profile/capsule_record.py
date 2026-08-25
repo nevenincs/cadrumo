@@ -275,32 +275,32 @@ class ProfileRecordStore:
     """Strict current-record storage over the capsule's canonical secure DB."""
 
     def __init__(self, *, session: ProfileRecordSession, root: Path | None = None) -> None:
-        self._session = session
+        self.session = session
         self._root = effective_storage_root(root)
 
     def load(self) -> LoadedProfileRecord:
         """Return the one authenticated current row and its secure CAS lineage."""
-        with _secure_objects_for_record(self._session, root=self._root) as objects:
+        with _secure_objects_for_record(self.session, root=self._root) as objects:
             return self._load_from_objects(objects)
 
     def history(self) -> tuple[BucketEvent, ...]:
         """Return the append-only authenticated history for this profile record."""
-        with _secure_objects_for_record(self._session, root=self._root) as objects:
+        with _secure_objects_for_record(self.session, root=self._root) as objects:
             return (
                 default_profile_bucket_event_history_repository(objects=objects)
                 .load()
                 .for_object(
                     object_type=BucketEventObjectType.PROFILE,
-                    object_id=str(self._session.profile_id),
+                    object_id=str(self.session.profile_id),
                 )
             )
 
     def create_initial(self, record: UserProfileRecord, *, stage_path: Path) -> None:
         """Write revision one and its creation event before the stage commit marker."""
-        self._session.assert_initial_record(record)
+        self.session.assert_initial_record(record)
         database_file = stage_path / "db" / "cadrumo.db"
         (stage_path / "blobs").mkdir(mode=0o700, exist_ok=False)
-        with _secure_objects_for_record(self._session, root=self._root, database_file=database_file) as objects:
+        with _secure_objects_for_record(self.session, root=self._root, database_file=database_file) as objects:
             self._write_with_event(
                 objects,
                 record=record,
@@ -318,7 +318,7 @@ class ProfileRecordStore:
         database_file = stage_path / "db" / "cadrumo.db"
         if not database_file.is_file() or database_file.is_symlink():
             raise ProfileRecordIntegrityError("restore stage does not contain a regular profile database")
-        with _secure_objects_for_record(self._session, root=self._root, database_file=database_file) as objects:
+        with _secure_objects_for_record(self.session, root=self._root, database_file=database_file) as objects:
             return self._load_from_objects(objects)
 
     def replace(
@@ -330,14 +330,14 @@ class ProfileRecordStore:
         expected_content_digest: str,
     ) -> UserProfileRecord:
         """CAS-replace the sole current row and append its event in one transaction."""
-        with _secure_objects_for_record(self._session, root=self._root) as objects:
+        with _secure_objects_for_record(self.session, root=self._root) as objects:
             current = self._load_from_objects(objects)
             if (
                 current.record.record_revision != expected_revision
                 or current.record.content_digest != expected_content_digest
             ):
                 raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
-            self._session.assert_replacement(current.record, replacement)
+            self.session.assert_replacement(current.record, replacement)
             event_revision = _event_history_revision(objects)
             self._write_with_event(
                 objects,
@@ -380,13 +380,13 @@ class ProfileRecordStore:
         silently. Content is preserved exactly, so the advance records the
         custody change and nothing else.
         """
-        if rotated.profile_id != self._session.profile_id:
+        if rotated.profile_id != self.session.profile_id:
             raise ProfileRecordIntegrityError("rotated record session does not serve this profile")
-        if rotated.dek_epoch != self._session.dek_epoch:
+        if rotated.dek_epoch != self.session.dek_epoch:
             raise ProfileRecordIntegrityError("rotated record session names a different DEK epoch")
-        if rotated.envelope_digest == self._session.envelope_digest:
+        if rotated.envelope_digest == self.session.envelope_digest:
             raise ProfileRecordIntegrityError("rotated record session carries the same envelope as the current one")
-        with _secure_objects_for_record(self._session, root=self._root) as objects:
+        with _secure_objects_for_record(self.session, root=self._root) as objects:
             current = self._load_from_objects(objects)
             replacement = UserProfileRecord(
                 schema_id=current.record.schema_id,
@@ -416,11 +416,11 @@ class ProfileRecordStore:
 
     def _load_from_objects(self, objects: ProfileCustodySecureObjectRepositoryPort) -> LoadedProfileRecord:
         namespace = profile_custody_secure_object_namespace()
-        raw, loaded = _load_profile_record_row(objects, self._session.profile_id, namespace)
+        raw, loaded = _load_profile_record_row(objects, self.session.profile_id, namespace)
         record = _decode_profile_record(loaded)
-        self._session.assert_row_binding(raw, record)
+        self.session.assert_row_binding(raw, record)
         event_id, event = _load_profile_record_event(objects, raw)
-        _assert_event_binding(self._session, record, event_id, event)
+        _assert_event_binding(self.session, record, event_id, event)
         assert raw.revision_id is not None
         return LoadedProfileRecord(
             record=record,
@@ -444,7 +444,7 @@ class ProfileRecordStore:
         # will recompute. Keeping this the single writer is the point --
         # a rotation that assembled its own SecureObjectWrite would be a
         # second write path into the one row this class exists to own.
-        writer = writing_session or self._session
+        writer = writing_session or self.session
         event_value = _build_record_event(writer, record, event)
         events = default_profile_bucket_event_history_repository(objects=objects)
         history, observed_event_revision = events.load_revisioned()

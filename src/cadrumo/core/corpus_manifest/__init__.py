@@ -62,7 +62,7 @@ from ._bundle_signing import (
     sign_corpus_bundle,
     verify_corpus_bundle_signature,
 )
-from ._errors import (
+from .errors import (
     CorpusBundleError,
     CorpusBundleVerificationError,
     CorpusManifestDriftError,

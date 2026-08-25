@@ -29,7 +29,7 @@ class RootAuthenticator(Protocol):
     ) -> None: ...
 
 
-CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli._errors").CliRefusedBoundaryError
+CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli.errors").CliRefusedBoundaryError
 
 _LOGGED_OUT_REFUSALS = frozenset(
     {ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING}

@@ -212,7 +212,7 @@ class ProfileAnswerTypeError(CoreValidationError):
     Lives in :mod:`core.errors` so :class:`core.setup_answers.SetupAnswers`
     can raise a typed error without importing application-layer wizard modules.
     Application-layer wizard code raises the narrower
-    :class:`application.wizard._errors.WizardAnswerTypeError`, which
+    :class:`application.wizard.errors.WizardAnswerTypeError`, which
     inherits from this class, so callers catching either type continue to work.
     """
 
@@ -223,7 +223,7 @@ class CadrumoObservabilityError(CadrumoError):
     Lives in :mod:`core.errors` (rather than the leaf
     :mod:`core.observability` subpackage) so other subpackages can catch it
     without importing observability internals. Concrete subclasses are
-    declared in :mod:`core.observability._errors`.
+    declared in :mod:`core.observability.errors`.
     """
 
 

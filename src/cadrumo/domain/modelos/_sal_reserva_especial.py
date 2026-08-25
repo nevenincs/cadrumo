@@ -13,7 +13,7 @@ from decimal import Decimal
 
 from ...core.external_constants import SAL_RESERVA_CAPITAL_MULTIPLE, SAL_RESERVA_DOTACION_RATE
 from ...core.money import CENT, round_to_cents
-from ._errors import PensionReduccionError
+from .errors import PensionReduccionError
 
 
 def compute_sal_reserva_especial_dotacion(

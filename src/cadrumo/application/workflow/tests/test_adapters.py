@@ -97,4 +97,4 @@ def test_default_engine_leaves_notifications_unwired_without_a_bucket_scoped_cap
     )
 
     assert isinstance(engine, WorkflowEngine)
-    assert engine._notifications_source is None
+    assert engine.notifications_source is None

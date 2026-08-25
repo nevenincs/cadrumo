@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import LLM_EXTRA, require_optional_extra
 from ...core.config import load_settings
-from .._errors import LLMPdfRasterisationError
+from ..errors import LLMPdfRasterisationError
 from .._models import LLMProvider
 from .base import (
     ProviderCompletion,

@@ -18,7 +18,7 @@ from ......core.errors import TerminalPreconditionErrorMixin
 from .. import _factory as factory_module
 from .. import evasion as evasion_module
 from .. import session as session_module
-from .._errors import (
+from ..errors import (
     BrowserError,
     BrowserEvasionError,
     BrowserPreconditionCondition,
@@ -260,7 +260,7 @@ def test_browser_failure_totality_uses_one_canonical_no_action_projection() -> N
 
 def test_browser_producers_have_no_direct_verdict_constructor_or_authored_recovery_command() -> None:
     """The browser boundary delegates construction and carries factual failures only."""
-    errors_module = __import__("cadrumo.adapters.outbound.aeat.browser._errors", fromlist=["*"])
+    errors_module = __import__("cadrumo.adapters.outbound.aeat.browser.errors", fromlist=["*"])
     for module in (*_BROWSER_PRODUCER_MODULES, errors_module):
         source = inspect.getsource(module).lower()
         assert "playwright install" not in source

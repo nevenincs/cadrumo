@@ -17,22 +17,22 @@ from ...user_profile.registration import ProfileRegistrationError
 from cadrumo.application.workflow.state_models import WorkflowState
 from .. import _commands as commands_module
 from .. import _status as status_module
-from .._catalogue import SETUP_FLOW
-from .._commands import (
+from ..catalogue import SETUP_FLOW
+from ..commands import (
     _missing_filing_baseline_flags,
     _require_filing_baseline,
     _require_profile_label_available,
     _require_profile_name,
     _run_full_flow,
 )
-from .._errors import (
+from ..errors import (
     WizardEditUnsupportedConsoleError,
     WizardError,
     WizardMissingFlagError,
     WizardPreconditionCondition,
     WizardValidationError,
 )
-from .._status import (
+from ..status import (
     WizardStatusError,
     _next_wizard_action,
     _require_active_profile_tax_id,
@@ -270,7 +270,7 @@ def test_wizard_terminal_carrier_totality_is_exact_and_mutation_sensitive() -> N
 
 
 def test_wizard_preconditions_delegate_to_one_public_constructor_without_local_command_prose() -> None:
-    errors_module = __import__("cadrumo.application.wizard._errors", fromlist=["*"])
+    errors_module = __import__("cadrumo.application.wizard.errors", fromlist=["*"])
     for module in (*_WIZARD_PRODUCER_MODULES, errors_module):
         tree = ast.parse(inspect.getsource(module))
         constructed = {

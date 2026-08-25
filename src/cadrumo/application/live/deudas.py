@@ -1,7 +1,7 @@
 """Bucket-scoped deudas snapshot service.
 
 Wraps the read-only AEAT debts-consulta boundary record
-(:mod:`cadrumo.adapters.outbound.aeat.sede._deudas`) with bucket-scoped
+(:mod:`cadrumo.adapters.outbound.aeat.sede.deudas`) with bucket-scoped
 persistence. Read-only by construction: no method calls AEAT at all, and none
 mutates deuda state.
 
@@ -42,8 +42,8 @@ from ...core.config import Settings, load_settings
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, SnapshotId
 from ...core.time import now
-from ._errors import LiveApplicationInputError
-from ._snapshot_base import (
+from .errors import LiveApplicationInputError
+from .snapshot_base import (
     SnapshotNotFoundError,
     StatelessSnapshotService,
 )

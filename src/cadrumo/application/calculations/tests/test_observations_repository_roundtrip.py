@@ -41,7 +41,7 @@ from ....tests.secure_sql import (
     mutate_encrypted_secure_object_json,
     read_db_at_rest_bytes,
 )
-from .._errors import ObservationCasillaReferenceError
+from ..errors import ObservationCasillaReferenceError
 from .._observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionEnvelopePayload,

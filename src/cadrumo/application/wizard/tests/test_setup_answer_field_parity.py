@@ -24,9 +24,9 @@ from ....core.setup_answers import (
     SetupAnswers,
     project_setup_answers,
 )
-from .._catalogue import SETUP_FLOW
-from .._models import WizardQuestion
-from .._persistence import project_answers
+from ..catalogue import SETUP_FLOW
+from ..models import WizardQuestion
+from ..persistence import project_answers
 
 pytestmark = [
     pytest.mark.unit,

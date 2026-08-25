@@ -29,7 +29,7 @@ from ......core.config import Settings
 from ......domain.calculations.registry import RentaWebOpenLivePayload
 from ......tests.live_gate import requires_live_enabled
 from ...browser import default_browser_session_factory
-from .._errors import SedeNavigationError
+from ..errors import SedeNavigationError
 from .._renta_web_open_safety import install_page_safety_net
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]

@@ -22,7 +22,7 @@ from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint, path_stat_fingerprint
 from ...core.resources import bundled_path
-from ._errors import CategoryValidationError
+from .errors import CategoryValidationError
 from ._profile import CategoryProfile, IvaDeductibilityHint
 from ._proportionality import (
     CategoryCitation,

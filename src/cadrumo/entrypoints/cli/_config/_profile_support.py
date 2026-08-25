@@ -17,7 +17,7 @@ def profile_state():
 def resolve_profile_by_label(name: str) -> ProfileBucketPointer:
     from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
-    from .._errors import CliRefusedBoundaryError
+    from ..errors import CliRefusedBoundaryError
 
     try:
         pointer = read_profile_bucket(name)

@@ -30,8 +30,12 @@ import typer
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
+from .....application.user_profile.censal_operation import (
+    CensalFieldIntent,
+    CensalReviewFieldProjectionV1,
+    CensalReviewProjectionV1,
+)
 from .....application.user_profile.censo_sync import CENSO_SOURCE_TAG
-from .....application.user_profile.censal_operation import CensalFieldIntent, CensalReviewFieldProjectionV1, CensalReviewProjectionV1
 from .....core.config import Settings
 from .....tests.cli_runner import invoke_cached_cli
 from ... import app as _live_app

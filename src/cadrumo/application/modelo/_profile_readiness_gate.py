@@ -45,11 +45,15 @@ from ...domain.modelos import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from ..user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement, ProfileValidationIssue
-from ..user_profile.preflight import ProfilePreflightService, build_profile_preflight_requirement, format_profile_preflight_requirement
-from ..user_profile.profile_record_repository import ProfileRecordRepository
-from ..user_profile.validation import ProfileValidationService
 from ..user_profile.completeness import missing_required_field_paths
+from ..user_profile.preflight import (
+    ProfilePreflightService,
+    build_profile_preflight_requirement,
+    format_profile_preflight_requirement,
+)
+from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
+from ..user_profile.validation import ProfileValidationService
 from ._action_errors import ModeloProfileReadinessError
 
 _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"

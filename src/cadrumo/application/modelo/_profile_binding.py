@@ -72,10 +72,10 @@ from ...domain.contribuyente import (
 )
 from ...domain.modelos import ModeloError
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
-from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.registry_contract import profile_binding_selectors
+from ...domain.user_profile.schema import ProfileSchemaDefinition, derived_selector_for_path
+from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
 from ..aggregation import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,

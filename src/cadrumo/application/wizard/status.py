@@ -22,8 +22,8 @@ from ..user_profile.completeness import iva_regime_required
 from ..user_profile.keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
 from cadrumo.application.workflow.state_models import WorkflowState
-from ._compiler import ensure_profile_keys_registered
-from ._errors import WizardError, WizardPreconditionCondition, wizard_no_action_verdict
+from .compiler import ensure_profile_keys_registered
+from .errors import WizardError, WizardPreconditionCondition, wizard_no_action_verdict
 
 ensure_profile_keys_registered()
 

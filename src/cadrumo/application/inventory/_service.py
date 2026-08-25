@@ -46,7 +46,7 @@ from ...domain.contribuyente.inventory import (
     compute_inventory_valuation,
     parse_valuation_method,
 )
-from ._errors import (
+from .errors import (
     InventoryActividadConflictError,
     InventoryActividadNotFoundError,
     InventoryServiceInputError,

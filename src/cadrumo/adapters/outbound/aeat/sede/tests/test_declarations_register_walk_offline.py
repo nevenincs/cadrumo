@@ -38,7 +38,7 @@ from ......tests.offline_aeat_register import (
     rendered_register_rows,
 )
 from .._declarations import Declaracion
-from .._errors import SedeParseError
+from ..errors import SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

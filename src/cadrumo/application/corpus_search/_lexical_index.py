@@ -297,7 +297,7 @@ def search_lexical(
         CorpusSearchInputError: If ``query`` carries no searchable terms or
             ``limit`` is not positive.
     """
-    from ._errors import CorpusSearchInputError
+    from .errors import CorpusSearchInputError
 
     if limit <= 0:
         raise CorpusSearchInputError(

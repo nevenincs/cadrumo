@@ -2,8 +2,8 @@
 
 Rows are rendered through the closed
 :class:`~application.export.ExportSerializationFormat` surface, with
-:class:`~application.export._errors.ExportFieldError` and
-:class:`~application.export._errors.ExportFormatError` preserving
+:class:`~application.export.errors.ExportFieldError` and
+:class:`~application.export.errors.ExportFormatError` preserving
 validation failures as structured application errors.
 
 This module is a pure in-memory serializer. It returns bytes, media type,
@@ -31,7 +31,7 @@ from ...core.external_constants import JSONL_MIME_TYPE as _JSONL_MIME_TYPE
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.external_constants import XLSX_MIME_TYPE as _XLSX_MIME_TYPE
 from ...core.hashing import sha256_hex
-from ._errors import ExportFieldError, ExportFormatError
+from .errors import ExportFieldError, ExportFormatError
 
 
 class ExportSerializationFormat(StrEnum):
@@ -148,7 +148,7 @@ def serialize_tabular_rows(
     Field order follows ``fieldnames`` and row order follows ``rows``.
     Values are coerced to strings, missing fields become empty strings,
     and unknown fields raise
-    :class:`~application.export._errors.ExportFieldError`. Returns a
+    :class:`~application.export.errors.ExportFieldError`. Returns a
     :class:`~application.export.TabularExportResult` with encoded bytes,
     media type, filename extension, row count, field metadata, and payload
     digest.

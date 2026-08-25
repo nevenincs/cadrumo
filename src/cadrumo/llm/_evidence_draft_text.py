@@ -72,7 +72,7 @@ from ..core import LLM_EXTRA, ActionEvidenceProvenance, build_provenance_stamp, 
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._consent import EvidenceConsentToken
-from ._errors import LLMConfigError
+from .errors import LLMConfigError
 from ._invoice_extraction_prompt import (
     CompiledInvoiceExtractionPrompt,
     default_extraction_period,

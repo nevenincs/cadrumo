@@ -33,8 +33,8 @@ from ....tests.offline_aeat_register import (
     open_routed_declarations_register,
     rendered_register_rows,
 )
-from .._filed_data import BulkFiledDataListingReport
-from .._filed_data_capture import list_filed_data_bulk
+from ..filed_data import BulkFiledDataListingReport
+from ..filed_data_capture import list_filed_data_bulk
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

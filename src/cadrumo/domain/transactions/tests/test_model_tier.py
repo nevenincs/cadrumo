@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._errors import TransactionError
+from ..errors import TransactionError
 from .._model_tier import (
     MINIMUM_CLASSIFICATION_TIER,
     ModelCapability,

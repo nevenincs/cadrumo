@@ -33,7 +33,7 @@ from ._calendar_models import (
     OverviewPeriodState,
 )
 from ._coverage import ObligationCoverageReport
-from ._errors import OverviewAgendaError
+from .errors import OverviewAgendaError
 
 _DEFAULT_HORIZON_DAYS = 14
 """Default forward window for `due_soon` partitioning."""

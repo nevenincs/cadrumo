@@ -71,7 +71,7 @@ from ._engine import (
     explain,
     next_deadline,
 )
-from ._errors import (
+from .errors import (
     DeadlineError,
     DeadlineValidationError,
     NoDeadlineWindowsError,

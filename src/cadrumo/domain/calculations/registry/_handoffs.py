@@ -24,7 +24,7 @@ from ....core import (
 from ....core.aggregation import BindingSourceKind, RelationAggregationOp
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import bound_casilla_binding_ids
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
 from ._relation_aggregation import relation_aggregation_op
 from ._relations import RegistryFoldRequirement, relation_source_requirements

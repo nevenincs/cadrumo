@@ -11,7 +11,7 @@ from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from .. import resolve_keyed_bracket
 from .._convenio import load_convenio_authority
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
 from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args
 from .._formula_runtime_ops import RegistryUnresolvedOutcomeReason

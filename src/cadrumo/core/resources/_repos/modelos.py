@@ -14,7 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-from .._errors import ResourceNotFoundError
+from ..errors import ResourceNotFoundError
 from .._repository import ResourceCacheRepository
 
 if TYPE_CHECKING:

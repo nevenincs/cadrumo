@@ -58,7 +58,7 @@ from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core import CasillaId
 from ._aeat_hosts import first_aeat_host
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import (
     CrossReferenceId,
     OracleId,

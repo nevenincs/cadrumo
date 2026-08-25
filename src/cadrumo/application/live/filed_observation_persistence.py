@@ -68,7 +68,7 @@ from ...domain.modelos import (
     is_justificante_backed_external_evidence,
     upsert_filing_record,
 )
-from ._errors import (
+from .errors import (
     LiveApplicationError,
     LiveApplicationInputError,
     LiveReadPrecondition,
@@ -706,7 +706,7 @@ def _filed_justificante_can_stamp_filing(
     observation: FiledDeclaracionObservation,
     filing: ModeloRecord,
 ) -> bool:
-    from ._justificante import expected_tax_id_for_filing_record, justificante_matches_filing_record
+    from .justificante import expected_tax_id_for_filing_record, justificante_matches_filing_record
 
     try:
         expected_tax_id = expected_tax_id_for_filing_record(filing)

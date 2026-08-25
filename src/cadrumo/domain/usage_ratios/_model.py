@@ -23,7 +23,7 @@ from ..categories import (
     SpendingCategory,
     resolve_category_profiles,
 )
-from ._errors import UsageRatioValidationError
+from .errors import UsageRatioValidationError
 
 __all__ = [
     "ELIGIBLE_USAGE_RATIO_CATEGORIES",

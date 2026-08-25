@@ -71,7 +71,7 @@ from ._currency_predicates import (
     effective_eur_taxable_base,
     is_non_eur_without_conversion,
 )
-from ._errors import AggregationValidationError, t
+from .errors import AggregationValidationError, t
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from ._renta_business_eligibility import renta_expense_business_proportion

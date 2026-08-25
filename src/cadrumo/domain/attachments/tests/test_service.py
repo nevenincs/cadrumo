@@ -13,7 +13,7 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import _service as attachment_service
 from .._enums import AttachmentKind, AttachmentSource
-from .._errors import AttachmentNotFoundError
+from ..errors import AttachmentNotFoundError
 from .._models import Attachment
 from .._service import (
     AttachmentBytesContent,

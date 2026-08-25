@@ -21,7 +21,7 @@ from typing import Literal
 import pytest
 
 from .....core import validated_casilla_id
-from .._errors import RegistryValidationError
+from ..errors import RegistryValidationError
 from .._schema_verification import (
     DiscrepancyCause,
     VerificationExpectationDefinition,

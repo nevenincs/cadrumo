@@ -32,7 +32,7 @@ from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.paths import is_windows_long_path_error
 from ....core.time import now, validate_utc_aware
-from ._errors import (
+from .errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,

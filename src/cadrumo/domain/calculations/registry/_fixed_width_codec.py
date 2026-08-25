@@ -13,7 +13,7 @@ from ....core import CasillaId
 from ....core.decimal import coerce_fixed_width_decimal
 from ....core.errors import CadrumoError
 from ....core.money import round_to_cents
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._export_value_policy import (
     ExportValuePolicy,
     ParsedExportPolicyValue,

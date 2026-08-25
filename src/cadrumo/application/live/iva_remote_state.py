@@ -20,7 +20,7 @@ See Also:
     :class:`~cadrumo.application.live.IvaRemoteStateAcquisitionReport`
         Combined read-only acquisition report for filed history and wallet
         surfaces.
-    :func:`~cadrumo.application.live._session.active_verified_session`
+    :func:`~cadrumo.application.live.session.active_verified_session`
         Shared read-only authenticated-session helper used by individual
         capture surfaces.
 """
@@ -84,13 +84,13 @@ from ...domain.iva_compensation import IvaCompensationReconciliationDecision as 
 from ...domain.iva_compensation import (
     build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
 )
-from ._errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
-from ._filed_data_capture import capture_report_path as _capture_report_path
-from ._filed_observation_persistence import latest_declarations_by_period as _latest_declarations_by_period
-from ._filed_observation_persistence import (
+from .errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
+from .filed_data_capture import capture_report_path as _capture_report_path
+from .filed_observation_persistence import latest_declarations_by_period as _latest_declarations_by_period
+from .filed_observation_persistence import (
     persist_iva_compensation_history_observations_strict as _persist_iva_compensation_history_observations_strict,
 )
-from ._remote_state_models import (
+from .remote_state_models import (
     IvaCompensationCarryForwardLotRow,
     IvaCompensationHistoryCaptureReport,
     IvaCompensationHistoryReport,
@@ -106,10 +106,10 @@ from ._remote_state_models import (
     StoredIvaRemoteStateAcquisitionRow,
     StoredIvaWalletObservationRow,
 )
-from ._remote_state_outcomes import auth_outcome as _auth_outcome
-from ._remote_state_outcomes import evidence_ref as _evidence_ref
-from ._remote_state_outcomes import surface_outcome as _surface_outcome
-from ._session import active_verified_session as _active_verified_session
+from .remote_state_outcomes import auth_outcome as _auth_outcome
+from .remote_state_outcomes import evidence_ref as _evidence_ref
+from .remote_state_outcomes import surface_outcome as _surface_outcome
+from .session import active_verified_session as _active_verified_session
 
 # Deliberately not a ``sha256:`` value, so an absent filing subject stays
 # distinguishable from every real pseudonymised one.
@@ -1168,3 +1168,18 @@ def _iva_remote_state_surface_manifest(
         divergence=wallet.divergence if wallet is not None else None,
         blocked=wallet.blocked if wallet is not None else None,
     )
+
+
+__all__ = [
+    "IvaRemoteStateAcquisitionManifestRepository",
+    "build_iva_remote_state_acquisition_report",
+    "capture_iva_compensation_history",
+    "capture_iva_compensation_wallet",
+    "capture_iva_remote_state",
+    "list_iva_compensation_history",
+    "list_iva_remote_state_acquisition_manifests",
+    "load_iva_remote_state",
+    "load_iva_remote_state_acquisition_manifest",
+    "persist_and_reconcile_iva_compensation_wallet",
+    "persist_iva_remote_state_acquisition_report",
+]

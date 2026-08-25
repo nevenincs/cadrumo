@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING, NoReturn
 import click
 
 if TYPE_CHECKING:
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
 from ...core.click_context import argv_requests_json, context_chain_requests_json
 from ...core.errors import (
@@ -309,7 +309,7 @@ def _resolved_command_identifier(exc: BaseException) -> str | None:
     Duck-typed on ``command_path`` for the same reason the sibling resolver is:
     the vendored Typer Context is not a guaranteed subclass of click's.
     """
-    from ._errors import _command_identifier_from_path
+    from .errors import _command_identifier_from_path
 
     context = getattr(exc, "ctx", None)
     command_path = getattr(context, "command_path", None)
@@ -325,7 +325,7 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
 
     authentication_notices = drain_profile_authentication_notices()
     if _json_requested_for(exc):
-        from ._errors import write_stderr
+        from .errors import write_stderr
 
         boundary = _build_parse_time_refusal(exc)
         write_stderr(
@@ -342,7 +342,7 @@ def _emit_click_exception(exc: BaseException) -> NoReturn:
     else:
         if authentication_notices:
             from ._common import notice_lines
-            from ._errors import write_stderr
+            from .errors import write_stderr
 
             write_stderr("\n".join(notice_lines(authentication_notices)) + "\n")
         _render_click_exception_text(exc)
@@ -361,7 +361,7 @@ def _build_parse_time_refusal(exc: BaseException) -> CliRefusedBoundaryError:
     carries a purpose-built localised message, so re-keying it would discard the
     more specific text.
     """
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     format_message = getattr(exc, "format_message", None)
     detail = str(format_message()) if callable(format_message) else str(exc)
@@ -411,7 +411,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
         current_requested_cli_leaf,
         project_cli_policy_refusal,
     )
-    from ._errors import (
+    from .errors import (
         CliUnexpectedBoundaryError,
         boundary_no_recovery_verdict,
         project_cli_boundary_error,

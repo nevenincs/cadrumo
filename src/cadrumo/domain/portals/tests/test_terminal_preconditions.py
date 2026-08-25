@@ -13,7 +13,7 @@ from ....core import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.errors import TerminalPreconditionErrorMixin
 from .. import _errors as errors_module
 from .. import _registry as registry_module
-from .._errors import (
+from ..errors import (
     PortalIntegrityError,
     PortalRegistryError,
     PortalRegistryInvariant,

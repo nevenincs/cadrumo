@@ -316,7 +316,7 @@ def test_an_internal_only_casilla_may_not_also_declare_a_reason(
 
 def test_an_unknown_reason_token_is_refused_at_the_loader_boundary() -> None:
     """An unrecognised TOML token refuses at hydration, naming the accepted set."""
-    from .._errors import RegistryValidationError
+    from ..errors import RegistryValidationError
     from .._schema_export_exemption import _coerce_export_exemption_reason
 
     assert _coerce_export_exemption_reason("not_in_record_design") is ExportExemptionReason.NOT_IN_RECORD_DESIGN

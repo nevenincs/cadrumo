@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from .....core import RegistryAuthorityGrade, scan_directory
-from .._errors import (
+from ..errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
     RegistrySnapshotError,

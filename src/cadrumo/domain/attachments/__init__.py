@@ -68,7 +68,7 @@ See Also:
 from __future__ import annotations
 
 from ._enums import AttachmentKind, AttachmentSource, DocumentLinkSource
-from ._errors import (
+from .errors import (
     AttachmentError,
     AttachmentNotFoundError,
     AttachmentPersistenceError,

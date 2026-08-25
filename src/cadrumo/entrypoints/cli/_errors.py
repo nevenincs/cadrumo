@@ -780,7 +780,7 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
         CliExceptionPrecondition,
         cli_exception_no_recovery_verdict,
     )
-    from ._config._errors import ConfigBoundaryError
+    from ._config.errors import ConfigBoundaryError
     from ._tty import NonTtyRefusedError
 
     if isinstance(error, CliValidationBoundaryError):

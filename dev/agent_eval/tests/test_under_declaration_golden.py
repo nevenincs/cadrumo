@@ -42,8 +42,8 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.modelo_cli import create_modelo_work_unit_via_cli

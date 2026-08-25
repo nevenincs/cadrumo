@@ -1170,7 +1170,7 @@ def _no_active_profile_refusal() -> Exception:
     from cadrumo.application.workflow.profile_bucket_scan import list_profile_buckets
 
     from ...application.profile_preconditions import inspect_active_profile_precondition
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     registered_profile_count = len(list_profile_buckets())
     verdict = inspect_active_profile_precondition(
@@ -1593,7 +1593,7 @@ def _filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
     from ...application.user_profile.preflight import format_profile_selector_requirements
     from ...core.resources import resources
     from ...domain.calculations.registry import build_profile_grounding_index
-    from ._errors import CliRefusedBoundaryError
+    from .errors import CliRefusedBoundaryError
 
     record = state.active_profile_record()
     verdict = inspect_filing_taxpayer_identity_precondition(

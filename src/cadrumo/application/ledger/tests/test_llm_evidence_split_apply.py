@@ -17,9 +17,9 @@ from ....domain.transactions import (
     TransactionValidationError,
 )
 from ....llm.suggestions import LLMSplitApplyResult
-from ..models import ManualLedgerTransactionPatch, SplitChildCommand
-from ..llm_classification import apply_evidence_split, suggest_evidence_split
 from ..actions_split_merge import split_transaction_with_classified_children
+from ..llm_classification import apply_evidence_split, suggest_evidence_split
+from ..models import ManualLedgerTransactionPatch, SplitChildCommand
 from ._llm_evidence_split_support import (
     _BUCKET,
     _NOW,

@@ -153,7 +153,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     will propagate the error with full context rather than a silent empty set.
     """
     from cadrumo.application.storage_management import StorageAreaDisposition, StorageOccupancy
-    from cadrumo.application.wizard import WIZARD_FLOWS
+    from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
     from cadrumo.core import StorageArea
     from cadrumo.core.errors._registry import ErrorCategory
     from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES

@@ -96,13 +96,13 @@ from ._declarations_observations import (
 )
 from ._declarations_remote import extract_csv_from_url
 from ._declarations_schema import Declaracion
-from ._deudas import (
+from .deudas import (
     DEUDAS_READ_SURFACE,
     Deuda,
     assert_deudas_landing,
     deudas_read_path_prefixes,
 )
-from ._errors import (
+from .errors import (
     BrowserAdapterTypeError,
     ExpedienteNotFoundError,
     JustificanteFetchError,
@@ -119,7 +119,7 @@ from ._iva_compensation_wallet import (
     parse_iva_compensation_wallet_html,
 )
 from ._nif_iva_check import NifIvaCheckSedeDriver
-from ._notifications import (
+from .notifications import (
     NotificationDocument,
     NotificationsSnapshot,
     RemoteNotification,

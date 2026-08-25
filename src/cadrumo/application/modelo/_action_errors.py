@@ -3,7 +3,7 @@
 The classes in this module are the stable application-layer errors raised by
 modelo work-unit lifecycle, calculation, verification, filing, amendment,
 external-import, and workflow-gate services. They all inherit from
-:class:`cadrumo.domain.modelos._errors.ModeloError` so CLI and API error
+:class:`cadrumo.domain.modelos.errors.ModeloError` so CLI and API error
 boundaries can route them through the central error-code registry without
 depending on the implementation module that raised them.
 

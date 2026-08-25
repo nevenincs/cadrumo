@@ -53,7 +53,7 @@ from ....domain.calculations.registry import (
     SourceRefId,
 )
 from ....domain.calculations.registry import DecimalValue as _RegistryDecimalValue
-from ._errors import CalcSheetsRecordError
+from .errors import CalcSheetsRecordError
 from ._theme import WORKBOOK_FONT_FAMILY, StyleRole
 
 # `DecimalValue` is the registry's annotated `Decimal` with a

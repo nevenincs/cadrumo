@@ -38,7 +38,7 @@ import pytest
 
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
-from .._errors import AggregationValidationError
+from ..errors import AggregationValidationError
 from .._modelo_bindings import _screened_invoice_line_observations
 from .._oss_ioss import _candidate_for_invoice_line
 

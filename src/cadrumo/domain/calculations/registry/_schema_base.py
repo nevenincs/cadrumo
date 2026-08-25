@@ -18,7 +18,7 @@ from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, LegalReviewStatus, RegistryAuthorityGrade, RevisionReviewStatus
 from ....core.classification import SensitivityClass
-from ._errors import RegistryValidationError
+from .errors import RegistryValidationError
 from ._ids import LegalRefId, SourceRefId
 
 __all__ = [

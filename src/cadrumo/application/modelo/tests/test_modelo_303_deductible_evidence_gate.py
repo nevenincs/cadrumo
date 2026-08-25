@@ -60,8 +60,8 @@ from ...aggregation import (
 )
 from ...calculations import IvaWalletDecisionRepository
 from ...invoices import build_catalogue_invoice, create_catalogue_invoice
-from ...ledger.evidence import PurchaseInvoiceEvidenceService
 from ...ledger.actions_manual import attach_manual_transaction_evidence, link_manual_transaction_invoice
+from ...ledger.evidence import PurchaseInvoiceEvidenceService
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,

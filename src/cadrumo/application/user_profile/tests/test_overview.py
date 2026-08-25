@@ -21,7 +21,14 @@ import pytest
 from cadrumo.application.user_profile.overview import MASKED_PLACEHOLDER, build_profile_overview
 
 from ....core.classification import SensitivityClass
-from ....domain.user_profile.schema import ProfileFieldDefinition, ProfileFieldType, ProfileRemovePolicy, ProfileSchemaDefinition, ProfileSectionDefinition, ProfileSnapshotPolicy
+from ....domain.user_profile.schema import (
+    ProfileFieldDefinition,
+    ProfileFieldType,
+    ProfileRemovePolicy,
+    ProfileSchemaDefinition,
+    ProfileSectionDefinition,
+    ProfileSnapshotPolicy,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
