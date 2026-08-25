@@ -915,10 +915,10 @@ group = "casilla-target-selection"
 
 [[branch]]
 path = "src/cadrumo/domain/modelos/_calculation_revision_aggregate.py"
-enclosing_symbol = "_require_registry_inspection"
+enclosing_symbol = "_require_registry_snapshot"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
-selects = "_require_registry_inspection"
+selects = "_require_registry_snapshot"
 
 [[branch]]
 path = "src/cadrumo/domain/modelos/_calculation_revision_aggregate.py"
@@ -926,6 +926,52 @@ enclosing_symbol = "validate_calculation_revision_aggregate"
 modelo_codes = "M303"
 group = "modelo-scope-guard"
 selects = "validate_calculation_revision_aggregate"
+
+[[branch]]
+path = "src/cadrumo/domain/deadlines/_plazo.py"
+enclosing_symbol = "resolve_filing_window"
+modelo_codes = "M210"
+classification = "orchestration_routing"
+selects = "M210_TIPO_RENTA_CODE_PROJECTION"
+justification = """
+An argument-admissibility guard on a surface that serves every modelo. The
+branch refuses a tipo_renta_code supplied for any modelo other than M210, or one
+outside the canonical projection, and raises rather than deciding anything. It
+reads the closed code set from core instead of restating it, so the regulatory
+content -- which codes are official -- is declared centrally and only referenced
+here. What the branch decides is whether the argument is admissible on this
+call, not what the law says about the plazo it will resolve.
+
+Deliberately NOT the modelo-scope-guard group: that group's claim rests on the
+guarded function being named for the modelo it serves, and resolve_filing_window
+is modelo-neutral. Borrowing it would assert something untrue of this site.
+"""
+
+[[branch]]
+path = "src/cadrumo/domain/deadlines/_plazo.py"
+enclosing_symbol = "_resolve_projected_filing_window"
+modelo_codes = "M210"
+classification = "regulatory_treatment"
+reference = "2026-07-09-m210-plazo-keying-adr"
+justification = """
+The branch decides WHICH PLAZO governs an M210 filing. When an EVENT-N devengo
+coordinate arrives carrying a resultado or a tipo de renta, it resolves against
+the ANNUAL windows matched on (filing_year, resultado_scope, tipo_renta_code)
+and stops matching on the period token altogether. That subordination of the
+period axis to the resultado and tipo-de-renta axes is fixed by Orden
+EHA/3316/2010 art 5, not by this surface.
+
+Classified regulatory rather than routing even though it looks like a match
+strategy, because the registry is where the answer belongs and cannot currently
+hold it: DeadlineWindowDefinition keys a window on (filing_year, period,
+applicability_conditions), and neither axis is expressible in that shape -- the
+resultado is a value the engine COMPUTES and the tipo de renta is declared per
+work unit, so neither is a devengo period token nor a profile-static fact. The
+accepted m210-plazo-keying ADR states exactly that and decides to attach the two
+qualifiers and resolve them after calculation, which is what this branch does.
+The citation is that ADR: it is the record that answers the branch, and the
+branch is its implementation rather than an undeclared judgement.
+"""
 
 [[branch]]
 path = "src/cadrumo/domain/renta/_first_slice_routing_integrity.py"
@@ -975,3 +1021,30 @@ enclosing_symbol = "_modelo_100_obligation_advisory_output"
 modelo_codes = "M100"
 group = "modelo-scope-guard"
 selects = "_modelo_100_obligation_advisory_output"
+
+[[branch]]
+path = "src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py"
+enclosing_symbol = "_m303_motive_page"
+modelo_codes = "M303"
+group = "modelo-scope-guard"
+selects = "_m303_motive_page"
+
+[[branch]]
+path = "dev/registry/analysis/transcribe_structural_family_dispositions.py"
+enclosing_symbol = "compute_dispositions"
+modelo_codes = "M303"
+classification = "orchestration_routing"
+selects = "projection_endpoints_evidence"
+justification = """
+The discriminator is a TYPE in this codebase, not a provision. ``FilingProjectionRef``
+(:mod:`cadrumo.core`) is a closed discriminated union whose seven members are all
+prefixed ``m303_``, so ``ProjectionEndpointDeclaration.projection_ref`` structurally
+cannot name any other modelo. This transcriber derives a not_applicable disposition
+for the projection_endpoints family from exactly that closure, and excludes 303
+because 303 is the one modelo for which the family can be genuinely populated --
+so for 303 there is nothing to auto-derive and the evidence path runs instead.
+The script's own refusal prose says so, citing the union rather than any article.
+No provision states that only modelo 303 has projection endpoints; the union does.
+Widen that union and this branch must be made again, which is why the citation
+names the evidence resolver the branch selects rather than the guard.
+"""
