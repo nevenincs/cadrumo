@@ -39,6 +39,15 @@
         "reason": "White-box test reach: the login screen is composed the way `present_login` composes it, against a real profile that exists but is LOCKED, which is the machine state the login verb exists for. The choice list and the preselection come from the real frontend functions because a hand-built list or a dropped preselection is the identical stand-in shape the defect this enrollment catches actually was. `_login_choices` is module-private with no cross-package production consumer at all -- its callers are its own module, its own package's tests, and the dev-tree TUI surface harness -- so it is an internals-only helper with no promotion candidate, and promoting it would put a private sort-and-assemble step on a public contract. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
       },
       {
+        "importer_path": "src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_ledger.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.llm._providers.base",
+        "imported_names": [
+          "_ProviderAdapter"
+        ],
+        "reason": "White-box test reach: the consent-ledger test subclasses the provider adapter ABC to capture the dispatched ProviderRequest against the REAL client dispatch path rather than a double, so the consent ledger is exercised through actual adapter selection. `_ProviderAdapter` is declared private on purpose -- its docstring names it the private interface every concrete provider adapter implements, and every production implementation lives inside cadrumo.llm._providers. Deliberately NOT promoted: publishing it would advertise an extension point for out-of-package provider adapters, which is a design question for the llm package owner, not a side effect of satisfying an import gate. The normalized contract types the same test needs (ProviderRequest, ProviderCompletion) WERE promoted onto the cadrumo.llm facade, so this entry covers only the private ABC."
+      },
+      {
         "importer_path": "src/cadrumo/adapters/outbound/storage/tests/test_google_drive.py",
         "occurrence": 1,
         "target_mod": "cadrumo.adapters.outbound.google.tests._drive_media_server",
