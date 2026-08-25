@@ -29,7 +29,10 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.modelos import CalculationRevisionCatalogue
+from .....domain.modelos import (
+    CalculationRevisionCatalogue,
+    CalculationRevisionCatalogueRepositoryProtocol,
+)
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import SecureObjectRevisionConflictError
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
@@ -41,6 +44,11 @@ _BUCKET = "2c2c2c2c-2c2c-42c2-8c2c-2c2c2c2c2c2c"
 
 def _repository() -> CalculationRevisionCatalogueRepository:
     return CalculationRevisionCatalogueRepository()
+
+
+def test_repository_satisfies_the_revisioned_catalogue_port(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET):
+        assert isinstance(_repository(), CalculationRevisionCatalogueRepositoryProtocol)
 
 
 def test_a_revisioned_read_reports_the_revision_it_was_read_at(tmp_path: Path) -> None:
