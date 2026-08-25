@@ -21,7 +21,7 @@ into source-mesh output.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, override
+from typing import TYPE_CHECKING, ClassVar, Literal, override
 
 from pydantic import BaseModel, Field
 
@@ -483,8 +483,8 @@ class PreviousFilingSourceResolver:
     than propagated.
     """
 
-    resolver_id = "previous_filing"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.PREVIOUS_FILING,)
+    resolver_id: ClassVar[str] = "previous_filing"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.PREVIOUS_FILING,)
 
     def __init__(
         self,

@@ -26,7 +26,6 @@ __all__ = [
     "MANIFEST_ONLY",
     "SCHEMA_FAMILY",
     "CalculationClass",
-    "ContinuidadId",
     "DateAxis",
     "EvidenceTier",
     "FormulaOperator",
@@ -399,26 +398,6 @@ EvidenceTier = Literal[
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]
 SourceCitationText = Annotated[tuple[str, ...], Field(min_length=1)]
-# A chain id is embedded whole into the shared locale key as one segment,
-# `modelo.schema.<modelo>.casilla.continuidad.<chain-id>.<field>`, and
-# `encode_modelo_locale_segment` passes a plain `[A-Za-z0-9_-]+` segment through
-# verbatim while base32-encoding anything else. A dotted id therefore renders its
-# own continuity key as an opaque `x-...` blob in every catalogue, where a
-# translator sees the blob and never the concept.
-#
-# This pattern used to permit `.` and `:`, so that damage was silent: nothing
-# refused the id, and it surfaced only as unreadable keys after the fact. Eleven
-# Modelo 100 pilots shipped that way before being converted. Restricting the
-# pattern to the segment set the locale key needs makes the class structurally
-# impossible instead — a dotted id now fails registry load.
-ContinuidadId = Annotated[
-    str,
-    Field(
-        min_length=1,
-        max_length=128,
-        pattern=r"^[a-z0-9][a-z0-9_-]*[a-z0-9]$|^[a-z0-9]$",
-    ),
-]
 FormulaOperator = Literal[
     "add",
     "subtract",

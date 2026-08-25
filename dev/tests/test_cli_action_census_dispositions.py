@@ -18,6 +18,7 @@ from ..quality.cli_action_census_dispositions import (
     ExclusionGrounding,
     checked_in_dispositions,
     current_exception_override_observations,
+    load_authored_message_exclusions,
     load_dispositions,
     main,
     render_dispositions,
@@ -166,7 +167,7 @@ def test_loader_rejects_schema_drift_and_unknown_fields_at_every_scope(
     """The ledger version and every TOML scope remain closed against silent drift."""
     document = render_dispositions((_disposition(candidates[0]),))
     document = document.replace("[meta]\n", "unknown_top_level = true\n\n[meta]\n")
-    document = document.replace("schema_version = 2", "schema_version = 3\nunknown_meta = true")
+    document = document.replace("schema_version = 3", "schema_version = 4\nunknown_meta = true")
     document = document.replace(
         'reason = "The current source role was directly observed by the canonical census."',
         'reason = "The current source role was directly observed by the canonical census."\nunknown_row = true',
@@ -179,7 +180,7 @@ def test_loader_rejects_schema_drift_and_unknown_fields_at_every_scope(
     messages = invalid.value.errors
     assert messages == tuple(sorted(messages))
     assert str(invalid.value).splitlines() == list(messages)
-    assert any("schema_version must be 2" in message for message in messages)
+    assert any("schema_version must be 3" in message for message in messages)
     assert any("unrecognized top-level field(s): unknown_top_level" in message for message in messages)
     assert any("[meta]: unrecognized field(s): unknown_meta" in message for message in messages)
     assert any("unrecognized field(s): unknown_row" in message for message in messages)
@@ -187,6 +188,16 @@ def test_loader_rejects_schema_drift_and_unknown_fields_at_every_scope(
     with pytest.raises(DispositionValidationError) as repeated:
         load_dispositions(path)
     assert repeated.value.errors == messages
+
+
+def test_checked_in_authored_message_exclusion_is_an_exact_source_fingerprint() -> None:
+    """The lone non-registry root call is not a broad path exemption."""
+    exclusions = load_authored_message_exclusions(DEFAULT_DISPOSITIONS_PATH)
+
+    assert len(exclusions) == 1
+    (exclusion,) = exclusions
+    assert exclusion.fingerprint.startswith("src/cadrumo/core/errors/__init__.py|CadrumoError.__init__|")
+    assert "unregistered base" in exclusion.reason
 
 
 def test_reconciliation_rejects_duplicate_census_input(

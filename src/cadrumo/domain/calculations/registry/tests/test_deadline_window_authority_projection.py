@@ -86,10 +86,7 @@ def test_fleet_projection_preserves_distinct_qualified_variants() -> None:
     qualified_variants = max(by_base_coordinate.values(), key=len)
     assert len(qualified_variants) > 1, "bundled fleet must exercise qualifier-distinct plazo variants"
     assert len(qualified_variants) == len(
-        {
-            (window.resultado_scope, window.tipo_renta_scope)
-            for _revision, window in qualified_variants
-        },
+        {(window.resultado_scope, window.tipo_renta_scope) for _revision, window in qualified_variants},
     )
     assert len(
         {
@@ -97,7 +94,4 @@ def test_fleet_projection_preserves_distinct_qualified_variants() -> None:
             for _revision, window in qualified_variants
             for coordinate in deadline_window_semantic_coordinates("210", window)
         },
-    ) == sum(
-        len(deadline_window_semantic_coordinates("210", window))
-        for _revision, window in qualified_variants
-    )
+    ) == sum(len(deadline_window_semantic_coordinates("210", window)) for _revision, window in qualified_variants)

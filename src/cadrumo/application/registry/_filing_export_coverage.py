@@ -15,6 +15,8 @@ from pydantic import BaseModel, Field, computed_field, model_validator
 
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES, STRICT_FROZEN_CONFIG, RegistryAuthorityGrade
 from ...domain.calculations.registry import (
+    ModeloRevision,
+    RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
     SourceReference,
@@ -35,6 +37,7 @@ from ._filing_export_authority import (
     FilingExportProofAuthority,
     FilingExportProofConflictError,
 )
+
 __all__ = [
     "FilingExportCoverageReport",
     "compose_filing_export_coverage",
@@ -101,7 +104,7 @@ def _compose_revision_limb(
     authority: ValidatedRegistryAuthority,
     proof_authority: FilingExportProofAuthority | None,
     modelo_id: str,
-    revision,
+    revision: ModeloRevision,
 ) -> RegistryClosureLimb:
     """Build one retained filing-export limb from its declared revision scope."""
     if revision.authority_grade is not RegistryAuthorityGrade.FILING:
@@ -122,7 +125,7 @@ def _compose_revision_limb(
         )
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
-    snapshots = []
+    snapshots: list[RegistrySnapshot] = []
     evidence_by_locator: dict[tuple[str, str], RegistryClosureEvidence] = {}
     expected_layout_ids: tuple[str, ...] | None = None
     for filing_year, period in coordinates:
@@ -166,7 +169,9 @@ def _compose_revision_limb(
                 reason="cross_limb_disagreement",
                 detail=f"{filing_year}/{period}: filing snapshot changed materialised export layout ids",
                 work_item="registry-temporal-coverage:law-selection",
-                reconsideration_condition="Split the revision at the exact layout boundary before asserting one export proof.",
+                reconsideration_condition=(
+                    "Split the revision at the exact layout boundary before asserting one export proof."
+                ),
             )
         expected_layout_ids = layout_ids
         evidence, evidence_failure = _layout_byte_evidence(authority=authority, snapshot=snapshot)
@@ -177,7 +182,9 @@ def _compose_revision_limb(
                 reason=evidence_failure.reason,
                 detail=f"{filing_year}/{period}: {evidence_failure.detail}",
                 work_item="aeat-export-fragment-generator-authority:official-layout-evidence",
-                reconsideration_condition="Restore byte-exact official layout evidence for every emitted filing layout.",
+                reconsideration_condition=(
+                    "Restore byte-exact official layout evidence for every emitted filing layout."
+                ),
             )
         evidence_by_locator.update({(item.authority, item.locator): item for item in evidence})
         snapshots.append(snapshot)
@@ -213,7 +220,7 @@ def _compose_revision_limb(
 def _layout_byte_evidence(
     *,
     authority: ValidatedRegistryAuthority,
-    snapshot,
+    snapshot: RegistrySnapshot,
 ) -> tuple[tuple[RegistryClosureEvidence, ...], _LayoutEvidenceFailure | None]:
     """Recheck every materialised layout's official source bytes.
 
@@ -253,7 +260,7 @@ def _layout_byte_evidence(
 def _filing_export_proof(
     *,
     proof_authority: FilingExportProofAuthority | None,
-    snapshot,
+    snapshot: RegistrySnapshot,
 ) -> tuple[FilingExportProof | None, _LayoutEvidenceFailure | None]:
     """Require one exact canonical-generation and production-emission proof."""
     if proof_authority is None:

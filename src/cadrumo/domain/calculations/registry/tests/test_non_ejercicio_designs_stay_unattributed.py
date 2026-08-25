@@ -134,10 +134,7 @@ def test_only_the_provisional_design_is_left_unregistered() -> None:
 def test_the_bundled_corpus_still_attributes_the_ordinary_designs() -> None:
     """Non-vacuity: attribution works generally, so the empty results above are meaningful."""
     attributed = [
-        path.name
-        for modelo_id in ("303", "347")
-        for path in _design_sources(modelo_id)
-        if _design_coverage_years(path)
+        path.name for modelo_id in ("303", "347") for path in _design_sources(modelo_id) if _design_coverage_years(path)
     ]
 
     assert attributed, "no design in the sample modelos attributes to any year; attribution has broken"

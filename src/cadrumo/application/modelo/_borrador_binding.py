@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -242,8 +242,8 @@ class Modelo100BorradorSourceResolver:
     supplied at construction, the context selects one from the registry authority.
     """
 
-    resolver_id = "modelo_100_borrador"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.BORRADOR,)
+    resolver_id: ClassVar[str] = "modelo_100_borrador"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.BORRADOR,)
 
     def __init__(
         self,

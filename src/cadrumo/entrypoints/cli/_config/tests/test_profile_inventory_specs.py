@@ -32,7 +32,11 @@ def test_profile_inventory_handlers_own_no_typer_registration_metadata(module_na
     source = Path(__file__).parents[1].joinpath(module_name).read_text(encoding="utf-8")
     tree = ast.parse(source)
 
-    assert not any(isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-                   and node.func.attr in {"command", "callback"} for node in ast.walk(tree))
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr in {"command", "callback"}
+        for node in ast.walk(tree)
+    )
     assert "command_execution_policy" not in source
     assert "typer.Option" not in source

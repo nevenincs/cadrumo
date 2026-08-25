@@ -81,9 +81,7 @@ def _current_profile_session(profile_id: str, *, root: Path, label: str) -> Prof
         password_envelope=envelope,
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_PROFILE_DEK),
         data_files={},
-        recovery_envelope=mint_test_profile_recovery_envelope(
-            identity, dek=_PROFILE_DEK, dek_epoch=envelope.dek_epoch
-        ),
+        recovery_envelope=mint_test_profile_recovery_envelope(identity, dek=_PROFILE_DEK, dek_epoch=envelope.dek_epoch),
         initial_record=UserProfileRecord(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=str(identity),

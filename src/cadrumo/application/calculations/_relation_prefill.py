@@ -58,7 +58,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final, NamedTuple, TypedDict
+from typing import TYPE_CHECKING, ClassVar, Final, NamedTuple, TypedDict
 
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
@@ -1073,8 +1073,8 @@ class RelationPrefillSourceResolver:
     :class:`RegistryModeloObservation` filings.
     """
 
-    resolver_id = "relation_prefill"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.RELATION_PREFILL,)
+    resolver_id: ClassVar[str] = "relation_prefill"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.RELATION_PREFILL,)
 
     def __init__(
         self,

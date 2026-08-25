@@ -145,9 +145,7 @@ def test_the_handed_over_key_is_wiped_by_the_time_registration_returns(tmp_path:
         register_profile_with_credentials(
             label=_LABEL,
             passphrase=_PASSPHRASE,
-            recovery_handover=lambda enrollment: (
-                retained.append(enrollment) or enrollment.recovery_key.mnemonic
-            ),
+            recovery_handover=lambda enrollment: retained.append(enrollment) or enrollment.recovery_key.mnemonic,
         )
 
     assert len(retained) == 1

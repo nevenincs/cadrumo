@@ -57,8 +57,7 @@ _SHEETS = (
 def _designs():
     _modelos, catalogues = _committed_registry_tree()
     return {
-        ref: extract_record_design(bundled_path() / catalogues.sources[ref].corpus_path)
-        for ref in (_EARLIER, _LATER)
+        ref: extract_record_design(bundled_path() / catalogues.sources[ref].corpus_path) for ref in (_EARLIER, _LATER)
     }
 
 

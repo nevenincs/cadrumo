@@ -1,0 +1,480 @@
+"""Real-supervisor conformance matrix for every production executor."""
+
+from __future__ import annotations
+
+import asyncio
+from collections.abc import Awaitable, Callable, Generator
+from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import cast
+from uuid import UUID
+
+import pytest
+from pydantic import BaseModel
+
+from ...adapters.persistence.operations import (
+    OperationJournalRepository,
+    OperationLeaseFilesystemRepository,
+    operation_secure_reference_repository,
+)
+from ...adapters.persistence.storage import SecureObjectRepository
+from ...application.auth import build_auth_operation_definitions
+from ...application.export import build_google_sheets_export_operation_definition
+from ...application.operations import (
+    OperationCancellationRefusalV1,
+    OperationCancellationRequestV1,
+    OperationCancellationSuccessV1,
+    OperationComposedServices,
+    OperationDefinition,
+    OperationNoPendingInteractionV1,
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
+    OperationPublicPhaseEventV1,
+    OperationRegistry,
+    OperationRequest,
+    OperationResponseApplyRequestV1,
+    OperationResponseControlRequestV1,
+    OperationResponseMutationSuccessV1,
+    OperationReviewAvailableInteractionV1,
+    OperationReviewProjectionReferenceV1,
+    OperationReviewProjectionRefusalCode,
+    OperationReviewProjectionRefusalV1,
+    OperationReviewProjectionRequestV1,
+    OperationSubmission,
+    compose_operation_services,
+)
+from ...application.user_profile import (
+    CENSAL_ADOPTABLE_PATHS,
+    CensalFieldIntent,
+    CensalObservation,
+    CensalObservationAddress,
+    CensalObservationIdentity,
+    CensalOperationAcquisition,
+    CensalProfileBaseline,
+    CensalReviewedFieldIntent,
+    ProfileBundleExportPurpose,
+    ProfileRecordRepository,
+    build_censal_operation_definition,
+    login_profile,
+    profile_custody_secure_object_repository,
+    register_profile_with_credentials,
+)
+from ...core import AuthProviderKind, OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ...core.time import now
+from ...domain.user_profile import UserProfileFact
+from ...tests.aeat_literal_fixtures import aeat_url
+from ...tests.secure_sql import isolated_profile_storage_root
+from .. import build_production_operation_registry
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_PASSPHRASE = "s45-registered-executor-passphrase"  # noqa: S105 - isolated integration fixture
+_ROTATED_PASSPHRASE = "s45-registered-executor-rotated-passphrase"  # noqa: S105
+_ACTOR = "operator:s45"
+
+
+@dataclass(frozen=True, slots=True)
+class _RegisteredExecutorConformanceCase:
+    definition_id: str
+    succeeds: bool = False
+    expected_terminal: OperationTerminalCondition | None = None
+    expected_effect: OperationEffect | None = None
+
+
+_MATRIX = (
+    _RegisteredExecutorConformanceCase("auth.profile.login", succeeds=True),
+    _RegisteredExecutorConformanceCase("auth.profile.passphrase-rotate", succeeds=True),
+    _RegisteredExecutorConformanceCase("auth.provider.configure"),
+    _RegisteredExecutorConformanceCase("auth.session.acquire"),
+    _RegisteredExecutorConformanceCase("auth.session.logout"),
+    _RegisteredExecutorConformanceCase("auth.session.reset"),
+    _RegisteredExecutorConformanceCase("user-profile.field-mutation", succeeds=True),
+    _RegisteredExecutorConformanceCase("user-profile.repeatable-row-mutation", succeeds=True),
+    _RegisteredExecutorConformanceCase("user-profile.bundle-export", succeeds=True),
+    _RegisteredExecutorConformanceCase("user-profile.logout", succeeds=True),
+    _RegisteredExecutorConformanceCase("live.filed-history.pull"),
+    _RegisteredExecutorConformanceCase(
+        "export.google-sheets",
+        expected_terminal=OperationTerminalCondition.FAILED,
+        expected_effect=OperationEffect.UNKNOWN,
+    ),
+    _RegisteredExecutorConformanceCase("user-profile.censo-review", succeeds=True),
+)
+
+
+@dataclass(slots=True)
+class _CloseWitness:
+    """Observe cleanup owned by the actual CENSO executor."""
+
+    closed: bool = False
+
+    async def close(self) -> None:
+        self.closed = True
+
+
+@dataclass(slots=True)
+class _ExecutionDriver:
+    """Single S45 execution driver over the canonical composed supervisor."""
+
+    services: OperationComposedServices
+
+    async def prepare(self, *, definition_id: str, subject_ref: str, payload: BaseModel, secret: bytes | None = None):
+        submitted = await self.services.submission.submit(
+            OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=payload), actor_ref=_ACTOR
+        )
+        requirement = submitted.receipt.secret_requirement
+        if requirement is not None:
+            assert secret is not None
+            buffer = bytearray(secret)
+            await self.services.submission.submit_secret(requirement, buffer)
+            assert buffer == bytearray(len(secret))
+        else:
+            assert secret is None
+        return submitted
+
+    async def run(self, *, definition_id: str, subject_ref: str, payload: BaseModel, secret: bytes | None = None):
+        submitted = await self.prepare(
+            definition_id=definition_id,
+            subject_ref=subject_ref,
+            payload=payload,
+            secret=secret,
+        )
+        before_start = await self.observe(submitted.receipt.operation_id)
+        cancellation = await self.services.cancellation.request(
+            OperationCancellationRequestV1(
+                operation_id=submitted.receipt.operation_id, expected_revision=before_start.projection.revision
+            )
+        )
+        assert isinstance(cancellation, OperationCancellationRefusalV1)
+        await self.services.submission.start(submitted.receipt.operation_id)
+        return submitted, await self.observe(submitted.receipt.operation_id)
+
+    async def observe(self, operation_id: str) -> OperationObservationSuccessV1:
+        observed = await self.services.observation.observe(
+            OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=256)
+        )
+        assert isinstance(observed, OperationObservationSuccessV1)
+        return observed
+
+    async def respond_apply(self, submitted: OperationSubmission, observed: OperationObservationSuccessV1) -> str:
+        pending = observed.projection.pending_interaction
+        assert isinstance(pending, OperationReviewAvailableInteractionV1)
+        response = await self.services.response(
+            OperationResponseControlRequestV1(
+                operation_id=pending.operation_id,
+                interaction_id=pending.interaction_id,
+                revision=pending.revision,
+                actor_ref=_ACTOR,
+            ),
+            submitted.response_capability,
+        )
+        accepted = await response.apply(
+            OperationResponseApplyRequestV1(
+                operation_id=pending.operation_id,
+                interaction_id=pending.interaction_id,
+                revision=pending.revision,
+                actor_ref=_ACTOR,
+                responded_at=now(),
+            )
+        )
+        assert isinstance(accepted, OperationResponseMutationSuccessV1)
+        return pending.operation_id
+
+    async def apply_review(
+        self, submitted: OperationSubmission, observed: OperationObservationSuccessV1
+    ) -> OperationObservationSuccessV1:
+        operation_id = await self.respond_apply(submitted, observed)
+        for _ in range(100):
+            observed = await self.observe(operation_id)
+            if observed.projection.lifecycle is OperationLifecycle.TERMINAL:
+                return observed
+            await asyncio.sleep(0)
+        raise AssertionError("review continuation did not settle")
+
+    async def review_not_pending(self, *, operation_id: str, revision: int, registry: OperationRegistry) -> None:
+        """Prove the public REVIEW control truthfully refuses an operation without a pending review."""
+        review_contract = registry.lookup_public_contract("user-profile.censo-review")
+        assert review_contract.review_projection_schema is not None
+        result = await self.services.review.resolve(
+            OperationReviewProjectionRequestV1(
+                reference=OperationReviewProjectionReferenceV1(
+                    operation_id=operation_id,
+                    interaction_id="0" * 64,
+                    revision=revision,
+                    review_projection_schema=review_contract.review_projection_schema,
+                    definition_contract_digest=review_contract.definition_contract_digest,
+                    expires_at=None,
+                )
+            )
+        )
+        assert isinstance(result, OperationReviewProjectionRefusalV1)
+        assert result.code is OperationReviewProjectionRefusalCode.REVIEW_NOT_PENDING
+
+
+def _observation() -> CensalObservation:
+    return CensalObservation(
+        identity=CensalObservationIdentity(nif="12345678Z"),
+        domicilio_fiscal=CensalObservationAddress(
+            tipo_via="CALLE",
+            nombre_via="Mayor",
+            numero_casa="7",
+            codigo_postal="28013",
+            referencia_catastral="1234567VK4713C0001AB",
+        ),
+        domicilio_notificacion=CensalObservationAddress(),
+        captured_at=datetime(2026, 8, 24, 18, tzinfo=UTC),
+        source_url=aeat_url("sede", "/censo/consulta"),
+    )
+
+
+def _payload(
+    definition: OperationDefinition, *, profile_id: UUID, tmp_path: Path
+) -> tuple[str, BaseModel, bytes | None]:
+    """Use only the exact request type exported by the registered definition."""
+    values: dict[str, object]
+    secret: bytes | None = None
+    subject_ref = f"profile:{profile_id}"
+    match definition.definition_id:
+        case "auth.profile.login":
+            values = {"profile_id": profile_id}
+            secret = _PASSPHRASE.encode()
+        case "auth.profile.passphrase-rotate":
+            values = {"profile_id": profile_id}
+            secret = (
+                '{"current_passphrase":"'
+                + _PASSPHRASE
+                + '","new_passphrase":"'
+                + _ROTATED_PASSPHRASE
+                + '","new_passphrase_confirmation":"'
+                + _ROTATED_PASSPHRASE
+                + '"}'
+            ).encode()
+        case "auth.provider.configure":
+            values = {"provider": AuthProviderKind.CERTIFICATE}
+        case "auth.session.acquire":
+            values = {}
+        case "auth.session.logout" | "auth.session.reset":
+            values = {"all_providers": True}
+        case "user-profile.field-mutation":
+            values = {"profile_id": profile_id, "path": "preferences.output_language", "value": "es"}
+        case "user-profile.repeatable-row-mutation":
+            values = {
+                "profile_id": profile_id,
+                "section_key": "activities",
+                "values": ({"field_key": "description", "value": "Consultoria"},),
+            }
+        case "user-profile.bundle-export":
+            values = {
+                "profile_id": profile_id,
+                "destination": tmp_path / "profile.bundle",
+                "purpose": ProfileBundleExportPurpose.PORTABLE_TRANSFER,
+            }
+            secret = _PASSPHRASE.encode()
+        case "user-profile.logout":
+            values = {"profile_id": profile_id}
+        case "live.filed-history.pull":
+            subject_ref = str(profile_id)
+            values = {"output_root": tmp_path / "filed-history", "dry_run": True}
+        case "export.google-sheets":
+            values = {"profile_id": profile_id, "modelo": "130", "filing_year": 2025, "period": "1T", "dry_run": False}
+        case "user-profile.censo-review":
+            subject_ref = str(profile_id)
+            record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+            values = {
+                "baseline": CensalProfileBaseline.from_record(record),
+                "field_intents": tuple(
+                    CensalReviewedFieldIntent(path=path, intent=CensalFieldIntent.ADOPT)
+                    for path in CENSAL_ADOPTABLE_PATHS
+                ),
+            }
+        case _:  # pragma: no cover - matrix completeness assertion below prevents this branch.
+            raise AssertionError(f"no S45 public scenario for {definition.definition_id}")
+    return subject_ref, definition.request_type.model_validate(values, strict=True), secret
+
+
+@contextmanager
+def _runtime(
+    tmp_path: Path,
+    *,
+    cleanup: _CloseWitness,
+    before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
+    execution_timeout: timedelta = timedelta(hours=1),
+) -> Generator[tuple[_ExecutionDriver, OperationRegistry, UUID]]:
+    """Fresh production profile, inventory, journal, lease, and operand custody per case."""
+
+    async def acquire_censo() -> CensalOperationAcquisition:
+        return CensalOperationAcquisition(observation=_observation(), resource=cleanup)
+
+    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        enrolled = register_profile_with_credentials(
+            label="S45 registered executor subject",
+            passphrase=_PASSPHRASE,
+            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        )
+        profile_id = UUID(enrolled.profile_id)
+        initial_login = login_profile(name=enrolled.profile_id, passphrase_callback=lambda: _PASSPHRASE)
+        registry = build_production_operation_registry(
+            auth_definitions=build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login),
+            censal_definition=build_censal_operation_definition(
+                acquire=acquire_censo,
+                before_irreversible_section=before_irreversible_section,
+            ),
+            google_export_definition=build_google_sheets_export_operation_definition(),
+        )
+        journal = OperationJournalRepository(storage_root=root / "operations")
+        with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
+            services = compose_operation_services(
+                registry=registry,
+                journal=journal,
+                reader=journal,
+                event_stream=journal,
+                leases=OperationLeaseFilesystemRepository(storage_root=root / "operations"),
+                operands=operation_secure_reference_repository(objects=cast(SecureObjectRepository, objects)),
+                owner_id="1" * 64,
+                lease_token_factory=lambda: "2" * 64,
+                clock=now,
+                lease_duration=timedelta(minutes=10),
+                execution_timeout=execution_timeout,
+                cleanup_timeout=timedelta(minutes=2),
+            )
+            try:
+                yield _ExecutionDriver(services=services), registry, profile_id
+            finally:
+                asyncio.run(services.shutdown())
+
+
+@pytest.mark.parametrize("case", _MATRIX, ids=lambda case: case.definition_id)
+@pytest.mark.timeout(90)
+def test_every_production_registered_executor_runs_through_the_shared_supervisor_matrix(
+    tmp_path: Path, case: _RegisteredExecutorConformanceCase
+) -> None:
+    """Actual execution, effects, settlement, review, cleanup, and truthful control refusal."""
+    assert len({case.definition_id for case in _MATRIX}) == len(_MATRIX)
+    cleanup = _CloseWitness()
+    with _runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id):
+        definitions = {definition.definition_id: definition for definition in registry.definitions}
+        assert set(definitions) == {item.definition_id for item in _MATRIX}
+        definition = definitions[case.definition_id]
+        subject_ref, payload, secret = _payload(
+            definition, profile_id=profile_id, tmp_path=tmp_path / case.definition_id
+        )
+        submitted, observed = asyncio.run(
+            driver.run(definition_id=definition.definition_id, subject_ref=subject_ref, payload=payload, secret=secret)
+        )
+        phases = {
+            event.phase_code for event in observed.event_page.events if isinstance(event, OperationPublicPhaseEventV1)
+        }
+        assert phases & set(definition.phase_codes)
+        if case.definition_id == "user-profile.censo-review":
+            assert observed.projection.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
+            assert isinstance(observed.projection.pending_interaction, OperationReviewAvailableInteractionV1)
+            assert observed.projection.execution_deadline_at is not None
+            assert cleanup.closed is True
+            observed = asyncio.run(driver.apply_review(submitted, observed))
+        assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
+        if case.succeeds:
+            assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, case.definition_id
+            assert observed.projection.effect in {OperationEffect.NONE, OperationEffect.UPDATED}
+        elif case.expected_terminal is not None:
+            assert observed.projection.terminal_condition is case.expected_terminal
+            assert observed.projection.effect is case.expected_effect
+        else:
+            assert observed.projection.terminal_condition in {
+                OperationTerminalCondition.SUCCEEDED,
+                OperationTerminalCondition.REFUSED,
+                OperationTerminalCondition.FAILED,
+            }
+        assert isinstance(observed.projection.pending_interaction, OperationNoPendingInteractionV1)
+        asyncio.run(
+            driver.review_not_pending(
+                operation_id=submitted.receipt.operation_id,
+                revision=observed.projection.revision,
+                registry=registry,
+            )
+        )
+
+
+def test_censo_cooperative_cancellation_is_acknowledged_before_its_irreversible_section(tmp_path: Path) -> None:
+    """Drive the one cooperative cancellation capability through the real public control service."""
+    reached_boundary = asyncio.Event()
+    release_boundary = asyncio.Event()
+
+    async def before_irreversible_section() -> None:
+        reached_boundary.set()
+        await release_boundary.wait()
+
+    cleanup = _CloseWitness()
+    with _runtime(
+        tmp_path / "censo-cancellation",
+        cleanup=cleanup,
+        before_irreversible_section=before_irreversible_section,
+    ) as (driver, registry, profile_id):
+        definition = registry.lookup("user-profile.censo-review")
+        subject_ref, payload, secret = _payload(definition, profile_id=profile_id, tmp_path=tmp_path)
+
+        async def run() -> None:
+            submitted = await driver.prepare(
+                definition_id=definition.definition_id,
+                subject_ref=subject_ref,
+                payload=payload,
+                secret=secret,
+            )
+            await driver.services.submission.start(submitted.receipt.operation_id)
+            waiting = await driver.observe(submitted.receipt.operation_id)
+            operation_id = await driver.respond_apply(submitted, waiting)
+            await reached_boundary.wait()
+            running = await driver.observe(operation_id)
+            requested = await driver.services.cancellation.request(
+                OperationCancellationRequestV1(operation_id=operation_id, expected_revision=running.projection.revision)
+            )
+            assert isinstance(requested, OperationCancellationSuccessV1)
+            assert requested.cancellation_acknowledged is False
+            release_boundary.set()
+            for _ in range(100):
+                observed = await driver.observe(operation_id)
+                if observed.projection.cancellation_acknowledged:
+                    assert observed.projection.effect is OperationEffect.NONE
+                    assert cleanup.closed is True
+                    return
+                await asyncio.sleep(0)
+            raise AssertionError("censo executor did not acknowledge cooperative cancellation")
+
+        asyncio.run(run())
+
+
+def test_censo_execution_deadline_requests_its_actual_cooperative_safe_stop(tmp_path: Path) -> None:
+    """Let the supervisor-owned deadline cancel the production CENSO continuation before apply."""
+    cleanup = _CloseWitness()
+    with _runtime(
+        tmp_path / "censo-deadline",
+        cleanup=cleanup,
+        execution_timeout=timedelta(milliseconds=50),
+    ) as (driver, registry, profile_id):
+        definition = registry.lookup("user-profile.censo-review")
+        subject_ref, payload, secret = _payload(definition, profile_id=profile_id, tmp_path=tmp_path)
+
+        async def run() -> None:
+            submitted, waiting = await driver.run(
+                definition_id=definition.definition_id,
+                subject_ref=subject_ref,
+                payload=payload,
+                secret=secret,
+            )
+            assert waiting.projection.execution_deadline_at is not None
+            await asyncio.sleep(max((waiting.projection.execution_deadline_at - now()).total_seconds(), 0) + 0.01)
+            operation_id = await driver.respond_apply(submitted, waiting)
+            for _ in range(100):
+                observed = await driver.observe(operation_id)
+                if observed.projection.cancellation_acknowledged:
+                    assert observed.projection.cancellation_requested is True
+                    assert observed.projection.cleanup_deadline_at is not None
+                    assert observed.projection.effect is OperationEffect.NONE
+                    assert cleanup.closed is True
+                    return
+                await asyncio.sleep(0)
+            raise AssertionError("CENSO deadline did not reach its cooperative safe stop")
+
+        asyncio.run(run())

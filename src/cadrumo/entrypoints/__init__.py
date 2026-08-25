@@ -21,3 +21,30 @@ See Also:
         Central error envelope and exit-code mapping used at transport
         boundaries.
 """
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ._operation_composition import (
+        build_production_operation_registry as build_production_operation_registry,
+    )
+    from ._operation_composition import (
+        compose_operation_dependencies as compose_operation_dependencies,
+    )
+
+__all__ = ["build_production_operation_registry", "compose_operation_dependencies"]
+
+
+def __getattr__(name: str) -> object:
+    """Resolve the production operation inventory without eager entrypoint loading."""
+    if name == "build_production_operation_registry":
+        from ._operation_composition import build_production_operation_registry
+
+        return build_production_operation_registry
+    if name == "compose_operation_dependencies":
+        from ._operation_composition import compose_operation_dependencies
+
+        return compose_operation_dependencies
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

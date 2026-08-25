@@ -123,9 +123,7 @@ class RegistryFoldRequirement(BaseModel):
         "source_casilla_ids",
         "legal_refs",
         "source_refs",
-    )(
-        unique_tuple("fold requirement tuple")
-    )
+    )(unique_tuple("fold requirement tuple"))
 
     @field_validator("required_source_casilla_ids")
     @classmethod

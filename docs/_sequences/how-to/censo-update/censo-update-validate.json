@@ -9,7 +9,13 @@
         "profile",
         "status"
       ],
-      "captures": [],
+      "captures": [
+        {
+          "json_path": "result.active_profile",
+          "name": "active_profile_name",
+          "value": "docs-sequence-sandbox"
+        }
+      ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "config.profile.status",
@@ -43,7 +49,8 @@
         "json",
         "config",
         "profile",
-        "validate"
+        "validate",
+        "docs-sequence-sandbox"
       ],
       "captures": [],
       "envelope": {
@@ -54,8 +61,8 @@
           "display_name": "docs-sequence-sandbox",
           "issues": [],
           "profile_id": "<profile-id>",
-          "schema_version": 5,
-          "status": "active",
+          "schema_version": 6,
+          "setup_state": "complete",
           "valid": true
         },
         "schema_version": "2",

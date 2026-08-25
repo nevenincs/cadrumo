@@ -8,13 +8,13 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources import bundled_path
+from .._authority import bundled_authority
 from .._coverage import (
     ConstructEvidenceLedger,
     ConstructEvidenceRow,
     audit_registry_construct_evidence,
     build_construct_evidence_ledger,
 )
-from .._authority import bundled_authority
 from .._snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
 

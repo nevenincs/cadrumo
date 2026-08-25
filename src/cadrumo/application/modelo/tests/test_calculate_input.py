@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import resources
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....tests.profile_capsule import open_test_profile_session
@@ -48,7 +48,15 @@ _M200_MANUAL_DECIMAL_CASILLA: CasillaId = validated_casilla_id(
 def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp_path: Path) -> None:
     """A raw ``--casilla`` token must be the canonical ``casilla.id``."""
     period = Period.from_year_and_code(2025, "0A")
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period=period.registry_token)
+    snapshot = resources().modelos.authority.snapshot(
+        "200",
+        filing_year=2025,
+        period=period.registry_token,
+        # These exercise the CALCULATE path, so they need the rung that
+        # computes amounts. The accessor defaults to the strictest rung,
+        # and modelo 200's revision honestly declares calculation.
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
 
     bucket_id = _PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
@@ -128,7 +136,15 @@ _CANONICAL_CASILLA_VALUES = ("140000", "140000.00", "-140000.55", "0", "0.335", 
 def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCalculateInputBundle:
     """Drive the real calculate-input boundary with one manual ``--casilla`` value."""
     period = Period.from_year_and_code(2025, "0A")
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period=period.registry_token)
+    snapshot = resources().modelos.authority.snapshot(
+        "200",
+        filing_year=2025,
+        period=period.registry_token,
+        # These exercise the CALCULATE path, so they need the rung that
+        # computes amounts. The accessor defaults to the strictest rung,
+        # and modelo 200's revision honestly declares calculation.
+        grade=RegistryAuthorityGrade.CALCULATION,
+    )
     bucket_id = _DECIMAL_GRAMMAR_PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
         # Seeded through a detached WorkflowState, never a repository read:

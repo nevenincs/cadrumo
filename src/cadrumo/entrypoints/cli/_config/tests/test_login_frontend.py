@@ -231,10 +231,7 @@ def test_the_gate_reports_no_session_when_no_screen_was_shown(tmp_path) -> None:
         (only_choice,) = _login_choices()
 
         assert (
-            authenticate_profile_for_manager(
-                _context(output_format="text"), bucket_id=only_choice.profile_id
-            )
-            is False
+            authenticate_profile_for_manager(_context(output_format="text"), bucket_id=only_choice.profile_id) is False
         )
 
 
@@ -252,8 +249,12 @@ def test_authenticated_profile_replaces_the_invocations_stale_storage_route(tmp_
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         operator_secret = "routing-handover-operator-secret"  # noqa: S105 - synthetic test fixture
-        first = attempt_registration("First routing subject", operator_secret, "en", lambda enrollment: enrollment.recovery_key.mnemonic)
-        second = attempt_registration("Second routing subject", operator_secret, "en", lambda enrollment: enrollment.recovery_key.mnemonic)
+        first = attempt_registration(
+            "First routing subject", operator_secret, "en", lambda enrollment: enrollment.recovery_key.mnemonic
+        )
+        second = attempt_registration(
+            "Second routing subject", operator_secret, "en", lambda enrollment: enrollment.recovery_key.mnemonic
+        )
         assert first.outcome is not None, first.refusal
         assert second.outcome is not None, second.refusal
 

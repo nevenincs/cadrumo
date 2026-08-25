@@ -166,7 +166,9 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
     else:
         input_key = next(ref for ref in casilla.export_refs if ref != casilla.id)
 
-    with pytest.raises(ModeloBuilderError, match=re.escape("application.filing.build_draft.errors.input_key_noncanonical_casilla")) as exc_info:
+    with pytest.raises(
+        ModeloBuilderError, match=re.escape("application.filing.build_draft.errors.input_key_noncanonical_casilla")
+    ) as exc_info:
         build_draft(
             modelo="303",
             period=period,

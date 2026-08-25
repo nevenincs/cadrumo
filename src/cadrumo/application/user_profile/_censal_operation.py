@@ -463,35 +463,53 @@ async def _ready_for_irreversible_section() -> None:
     """Default non-blocking boundary before irreversible profile apply."""
 
 
-CENSAL_OPERATION_DEFINITION = OperationDefinition(
-    definition_id=CENSAL_OPERATION_DEFINITION_ID,
-    request_type=CensalOperationRequest,
-    result_type=CensalOperationResult,
-    executor_factory=OperationExecutorFactory(
+def build_censal_operation_definition(
+    *,
+    acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
+    apply: Callable[[CensalReviewedOperand], None] | None = None,
+    before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
+) -> OperationDefinition:
+    """Build the one CENSO registration with its outer live authorities bound."""
+
+    def build() -> CensalOperationExecutor:
+        return CensalOperationExecutor(
+            acquire=acquire,
+            apply=apply,
+            before_irreversible_section=before_irreversible_section,
+        )
+
+    return OperationDefinition(
+        definition_id=CENSAL_OPERATION_DEFINITION_ID,
         request_type=CensalOperationRequest,
-        executor_type=CensalOperationExecutor,
-        build=CensalOperationExecutor,
-    ),
-    phase_codes=_CENSAL_PHASES,
-    interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-    capabilities=OperationCapabilities(
-        durability=OperationDurability.RESUMABLE,
-        cancellation=OperationCancellation.COOPERATIVE,
-        deadline=OperationDeadline.COOPERATIVE,
-        replay=OperationReplayPolicy.RESUMABLE,
-        baseline=OperationBaselinePolicy.EXACT_APPROVAL,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    ),
-    reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-    permitted_frontends=frozenset(
-        {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
-    ),
-)
+        result_type=CensalOperationResult,
+        executor_factory=OperationExecutorFactory(
+            request_type=CensalOperationRequest,
+            executor_type=CensalOperationExecutor,
+            build=build,
+        ),
+        phase_codes=_CENSAL_PHASES,
+        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RESUMABLE,
+            cancellation=OperationCancellation.COOPERATIVE,
+            deadline=OperationDeadline.COOPERATIVE,
+            replay=OperationReplayPolicy.RESUMABLE,
+            baseline=OperationBaselinePolicy.EXACT_APPROVAL,
+            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+        permitted_frontends=frozenset(
+            {OperationFrontendProjection.CLI, OperationFrontendProjection.MCP, OperationFrontendProjection.TUI}
+        ),
+    )
+
+
+CENSAL_OPERATION_DEFINITION = build_censal_operation_definition()
 
 
 __all__ = [
@@ -511,5 +529,6 @@ __all__ = [
     "CensalReviewResponse",
     "CensalReviewedFieldIntent",
     "CensalReviewedOperand",
+    "build_censal_operation_definition",
     "build_censal_operation_registration",
 ]

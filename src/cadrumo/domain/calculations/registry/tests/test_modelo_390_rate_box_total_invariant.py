@@ -129,9 +129,7 @@ def test_the_derived_sets_are_populated() -> None:
     for revision_id, revision in _revisions():
         operands = _formula_operand_ids(revision)
         if not revision.formulas:
-            assert not operands, (
-                f"{revision_id}: declares no formulas yet {len(operands)} operand(s) were extracted"
-            )
+            assert not operands, f"{revision_id}: declares no formulas yet {len(operands)} operand(s) were extracted"
             continue
         asserting = _rate_asserting_casilla_ids(revision)
         assert operands, f"{revision_id}: no formula operands were extracted at all"
@@ -139,9 +137,7 @@ def test_the_derived_sets_are_populated() -> None:
             f"{revision_id}: no rate-asserting casilla was found, so the invariant below would hold vacuously"
         )
         measured += 1
-    assert measured, (
-        "no modelo 390 revision declares a formula, so this module measured nothing at all"
-    )
+    assert measured, "no modelo 390 revision declares a formula, so this module measured nothing at all"
 
 
 def test_no_rate_asserting_casilla_is_a_total_operand() -> None:

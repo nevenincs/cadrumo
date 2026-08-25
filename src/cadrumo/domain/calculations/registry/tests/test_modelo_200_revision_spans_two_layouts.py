@@ -68,11 +68,7 @@ def _design(ref: str):
 
 def _records():
     revision, _catalogues = _tree()
-    return {
-        record.id: record
-        for layout in derive_export_layouts_from_bindings(revision)
-        for record in layout.records
-    }
+    return {record.id: record for layout in derive_export_layouts_from_bindings(revision) for record in layout.records}
 
 
 def _sheet_for(record_id: str, design):

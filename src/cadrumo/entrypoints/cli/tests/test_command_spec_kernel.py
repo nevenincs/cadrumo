@@ -158,9 +158,7 @@ def test_value_contract_refuses_competing_choice_authority(field: str) -> None:
         ),
     ],
 )
-def test_graph_rejects_missing_duplicate_and_invalid_edges(
-    specs: tuple[CommandSpec, ...], message: str
-) -> None:
+def test_graph_rejects_missing_duplicate_and_invalid_edges(specs: tuple[CommandSpec, ...], message: str) -> None:
     with pytest.raises(ValueError, match=message):
         CommandSpecGraph(specs)
 
@@ -252,9 +250,7 @@ def test_every_terminal_group_explicitly_classifies_its_behavior() -> None:
 
     assert terminal_groups
     assert all(spec.invocation.terminal_behavior is not None for spec in terminal_groups)
-    assert {
-        spec.key for spec in terminal_groups if spec.invocation.terminal_behavior == "executable"
-    } == {
+    assert {spec.key for spec in terminal_groups if spec.invocation.terminal_behavior == "executable"} == {
         "app_ledger_participation",
         "app_quickfile",
         "config_profile_descendiente",

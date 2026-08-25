@@ -65,9 +65,7 @@ def _cases():
     modelos, catalogues = _committed_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "390")
     for revision_id, revision in sorted(modelo.revisions.items()):
-        design_ref = next(
-            ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"
-        )
+        design_ref = next(ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design")
         design = extract_record_design(bundled_path() / catalogues.sources[design_ref].corpus_path)
         sheets = {sheet.name: sheet for sheet in design.sheets}
         for layout in derive_export_layouts_from_bindings(revision):
@@ -76,11 +74,7 @@ def _cases():
                 if sheet is None:
                     continue
                 design_field = next(
-                    (
-                        field
-                        for field in sheet.fields
-                        if field.offset == _INDICATOR_OFFSET and field.length == 1
-                    ),
+                    (field for field in sheet.fields if field.offset == _INDICATOR_OFFSET and field.length == 1),
                     None,
                 )
                 if design_field is None:
@@ -88,9 +82,7 @@ def _cases():
                 covering = [
                     field
                     for field in record.fields
-                    if field.offset
-                    and field.length
-                    and field.offset <= _INDICATOR_OFFSET < field.offset + field.length
+                    if field.offset and field.length and field.offset <= _INDICATOR_OFFSET < field.offset + field.length
                 ]
                 yield revision_id, record, sheet, design_field, covering
 

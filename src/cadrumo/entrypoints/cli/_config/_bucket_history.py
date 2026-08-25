@@ -79,9 +79,7 @@ def profile_history(
     _emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
 
 
-def _resolve_profile_history_target(
-    profile: str | None, *, ctx: typer.Context | None = None
-) -> tuple[str, str]:
+def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context | None = None) -> tuple[str, str]:
     """Resolve an explicit profile token or the active profile for history reads."""
     from ....application.workflow import ProfileLabelAmbiguousError, resolve_profile_bucket
     from ....core import resolve_active_bucket_id

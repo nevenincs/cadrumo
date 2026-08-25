@@ -58,16 +58,12 @@ def test_every_existing_cli_tui_route_is_enrolled() -> None:
         "app_modelo_work_wizard",
         "app_modelo_work_amend_wizard",
     }
-    available = {
-        key for key, spec in specs.items() if spec.tui_capability is TuiCapability.AVAILABLE
-    }
+    available = {key for key, spec in specs.items() if spec.tui_capability is TuiCapability.AVAILABLE}
     assert available == expected
 
 
 def test_available_tui_route_never_falls_back_on_a_consoleless_host() -> None:
-    result = invoke_cached_cli(
-        ("--language", "en", "--format", "json", "--tui", "config", "profile", "status")
-    )
+    result = invoke_cached_cli(("--language", "en", "--format", "json", "--tui", "config", "profile", "status"))
 
     assert result.exit_code != 0
     document = json.loads(result.stderr)

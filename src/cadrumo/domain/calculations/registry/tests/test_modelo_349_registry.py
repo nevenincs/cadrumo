@@ -359,53 +359,91 @@ def test_committed_modelo_349_deadline_windows_match_official_plazo_rules() -> N
     # holiday shift.  December and 4T use the following physical calendar year.
     expected_closes_by_year = {
         2022: (
-            ("01", date(2022, 2, 21)), ("02", date(2022, 3, 21)),
-            ("03", date(2022, 4, 20)), ("04", date(2022, 5, 20)),
-            ("05", date(2022, 6, 20)), ("06", date(2022, 7, 20)),
-            ("07", date(2022, 9, 20)), ("08", date(2022, 9, 20)),
-            ("09", date(2022, 10, 20)), ("10", date(2022, 11, 21)),
-            ("11", date(2022, 12, 20)), ("12", date(2023, 1, 30)),
-            ("1T", date(2022, 4, 20)), ("2T", date(2022, 7, 20)),
-            ("3T", date(2022, 10, 20)), ("4T", date(2023, 1, 30)),
+            ("01", date(2022, 2, 21)),
+            ("02", date(2022, 3, 21)),
+            ("03", date(2022, 4, 20)),
+            ("04", date(2022, 5, 20)),
+            ("05", date(2022, 6, 20)),
+            ("06", date(2022, 7, 20)),
+            ("07", date(2022, 9, 20)),
+            ("08", date(2022, 9, 20)),
+            ("09", date(2022, 10, 20)),
+            ("10", date(2022, 11, 21)),
+            ("11", date(2022, 12, 20)),
+            ("12", date(2023, 1, 30)),
+            ("1T", date(2022, 4, 20)),
+            ("2T", date(2022, 7, 20)),
+            ("3T", date(2022, 10, 20)),
+            ("4T", date(2023, 1, 30)),
         ),
         2023: (
-            ("01", date(2023, 2, 20)), ("02", date(2023, 3, 20)),
-            ("03", date(2023, 4, 20)), ("04", date(2023, 5, 22)),
-            ("05", date(2023, 6, 20)), ("06", date(2023, 7, 20)),
-            ("07", date(2023, 9, 20)), ("08", date(2023, 9, 20)),
-            ("09", date(2023, 10, 20)), ("10", date(2023, 11, 20)),
-            ("11", date(2023, 12, 20)), ("12", date(2024, 1, 30)),
-            ("1T", date(2023, 4, 20)), ("2T", date(2023, 7, 20)),
-            ("3T", date(2023, 10, 20)), ("4T", date(2024, 1, 30)),
+            ("01", date(2023, 2, 20)),
+            ("02", date(2023, 3, 20)),
+            ("03", date(2023, 4, 20)),
+            ("04", date(2023, 5, 22)),
+            ("05", date(2023, 6, 20)),
+            ("06", date(2023, 7, 20)),
+            ("07", date(2023, 9, 20)),
+            ("08", date(2023, 9, 20)),
+            ("09", date(2023, 10, 20)),
+            ("10", date(2023, 11, 20)),
+            ("11", date(2023, 12, 20)),
+            ("12", date(2024, 1, 30)),
+            ("1T", date(2023, 4, 20)),
+            ("2T", date(2023, 7, 20)),
+            ("3T", date(2023, 10, 20)),
+            ("4T", date(2024, 1, 30)),
         ),
         2024: (
-            ("01", date(2024, 2, 20)), ("02", date(2024, 3, 20)),
-            ("03", date(2024, 4, 22)), ("04", date(2024, 5, 20)),
-            ("05", date(2024, 6, 20)), ("06", date(2024, 7, 22)),
-            ("07", date(2024, 9, 20)), ("08", date(2024, 9, 20)),
-            ("09", date(2024, 10, 21)), ("10", date(2024, 11, 20)),
-            ("11", date(2024, 12, 20)), ("12", date(2025, 1, 30)),
-            ("1T", date(2024, 4, 22)), ("2T", date(2024, 7, 22)),
-            ("3T", date(2024, 10, 21)), ("4T", date(2025, 1, 30)),
+            ("01", date(2024, 2, 20)),
+            ("02", date(2024, 3, 20)),
+            ("03", date(2024, 4, 22)),
+            ("04", date(2024, 5, 20)),
+            ("05", date(2024, 6, 20)),
+            ("06", date(2024, 7, 22)),
+            ("07", date(2024, 9, 20)),
+            ("08", date(2024, 9, 20)),
+            ("09", date(2024, 10, 21)),
+            ("10", date(2024, 11, 20)),
+            ("11", date(2024, 12, 20)),
+            ("12", date(2025, 1, 30)),
+            ("1T", date(2024, 4, 22)),
+            ("2T", date(2024, 7, 22)),
+            ("3T", date(2024, 10, 21)),
+            ("4T", date(2025, 1, 30)),
         ),
         2025: (
-            ("01", date(2025, 2, 20)), ("02", date(2025, 3, 20)),
-            ("03", date(2025, 4, 21)), ("04", date(2025, 5, 20)),
-            ("05", date(2025, 6, 20)), ("06", date(2025, 7, 21)),
-            ("07", date(2025, 9, 22)), ("08", date(2025, 9, 22)),
-            ("09", date(2025, 10, 20)), ("10", date(2025, 11, 20)),
-            ("11", date(2025, 12, 22)), ("12", date(2026, 1, 30)),
-            ("1T", date(2025, 4, 21)), ("2T", date(2025, 7, 21)),
-            ("3T", date(2025, 10, 20)), ("4T", date(2026, 1, 30)),
+            ("01", date(2025, 2, 20)),
+            ("02", date(2025, 3, 20)),
+            ("03", date(2025, 4, 21)),
+            ("04", date(2025, 5, 20)),
+            ("05", date(2025, 6, 20)),
+            ("06", date(2025, 7, 21)),
+            ("07", date(2025, 9, 22)),
+            ("08", date(2025, 9, 22)),
+            ("09", date(2025, 10, 20)),
+            ("10", date(2025, 11, 20)),
+            ("11", date(2025, 12, 22)),
+            ("12", date(2026, 1, 30)),
+            ("1T", date(2025, 4, 21)),
+            ("2T", date(2025, 7, 21)),
+            ("3T", date(2025, 10, 20)),
+            ("4T", date(2026, 1, 30)),
         ),
         2026: (
-            ("01", date(2026, 2, 20)), ("02", date(2026, 3, 20)),
-            ("03", date(2026, 4, 20)), ("04", date(2026, 5, 20)),
-            ("05", date(2026, 6, 22)), ("06", date(2026, 7, 20)),
-            ("07", date(2026, 9, 21)), ("08", date(2026, 9, 21)),
-            ("09", date(2026, 10, 20)), ("10", date(2026, 11, 20)),
+            ("01", date(2026, 2, 20)),
+            ("02", date(2026, 3, 20)),
+            ("03", date(2026, 4, 20)),
+            ("04", date(2026, 5, 20)),
+            ("05", date(2026, 6, 22)),
+            ("06", date(2026, 7, 20)),
+            ("07", date(2026, 9, 21)),
+            ("08", date(2026, 9, 21)),
+            ("09", date(2026, 10, 20)),
+            ("10", date(2026, 11, 20)),
             ("11", date(2026, 12, 21)),
-            ("1T", date(2026, 4, 20)), ("2T", date(2026, 7, 20)),
+            ("1T", date(2026, 4, 20)),
+            ("2T", date(2026, 7, 20)),
             ("3T", date(2026, 10, 20)),
         ),
     }
@@ -421,10 +459,7 @@ def test_committed_modelo_349_deadline_windows_match_official_plazo_rules() -> N
         )
         for year in expected_closes_by_year
     }
-    expected = {
-        year: tuple(sorted(expected_closes))
-        for year, expected_closes in expected_closes_by_year.items()
-    }
+    expected = {year: tuple(sorted(expected_closes)) for year, expected_closes in expected_closes_by_year.items()}
     assert actual == expected
 
 
@@ -440,11 +475,14 @@ def test_committed_modelo_349_deadlines_have_calendar_provenance_and_canonical_p
         assert {window.period.registry_token for window in windows} == expected_periods - expected_missing
 
         for window in windows:
-            assert select_revision(
-                modelo,
-                filing_year=filing_year,
-                period=window.period.registry_token,
-            ).id == revision.id
+            assert (
+                select_revision(
+                    modelo,
+                    filing_year=filing_year,
+                    period=window.period.registry_token,
+                ).id
+                == revision.id
+            )
             if window.closes_on.year <= 2026:
                 assert f"aeat-calendario-contribuyente-{window.closes_on.year}" in window.source_refs
 

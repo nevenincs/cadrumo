@@ -48,8 +48,6 @@ from ...tests.llm_vision_evidence_support import (
     _png_image,
     _run_against_loopback_ollama,
 )
-from ...tests.llm_vision_evidence_support import profile as profile
-from ...tests.secure_sql import TestRuntimeProfile
 from .._evidence_draft_vision import (
     VISION_TRANSCRIPTION_PROMPT,
     LocalVisionDocumentTranscriber,
@@ -68,7 +66,6 @@ from .._invoice_field_grounding import (
 from .._models import MultimodalImageInput
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-__all__ = ["profile"]
 
 # A real Spanish CIF (AEAT-checksum-valid: leading letter B, 7 digits, computed
 # control character), mirroring the fixture used by the text-layer draft tests.
@@ -294,10 +291,8 @@ class TestLocalVisionDocumentTranscriber:
 
     def test_transcribes_a_real_vision_response_into_the_stage_one_artefact(
         self,
-        profile: TestRuntimeProfile,
     ) -> None:
         """Text in, text out, stamped with the reader that produced it."""
-        _ = profile
         images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
 
         def _call() -> DocumentTranscription:
@@ -320,7 +315,6 @@ class TestLocalVisionDocumentTranscriber:
 
     def test_the_prompt_that_rode_the_request_asks_for_no_invoice_field(
         self,
-        profile: TestRuntimeProfile,
     ) -> None:
         """Stage one must not be told what to look for.
 
@@ -330,7 +324,6 @@ class TestLocalVisionDocumentTranscriber:
         transcription steered toward an expected answer is no longer an
         independent reading for the anchor check to run against.
         """
-        _ = profile
         images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
 
         def _call() -> DocumentTranscription:
@@ -349,7 +342,6 @@ class TestLocalVisionDocumentTranscriber:
 
     def test_an_empty_model_reply_refuses_rather_than_reporting_a_blank_document(
         self,
-        profile: TestRuntimeProfile,
     ) -> None:
         """A reader that returned nothing is not a document that says nothing.
 
@@ -357,7 +349,6 @@ class TestLocalVisionDocumentTranscriber:
         document it would honestly report as carrying no fields, converting a
         reader failure into a confident statement about the taxpayer's paper.
         """
-        _ = profile
         images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
 
         def _call() -> DocumentTranscription:

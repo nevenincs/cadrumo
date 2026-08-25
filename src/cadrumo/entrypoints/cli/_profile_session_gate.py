@@ -28,9 +28,8 @@ class RootAuthenticator(Protocol):
         arguments: Mapping[str, object],
     ) -> None: ...
 
-CliRefusedBoundaryError = import_module(
-    "cadrumo.entrypoints.cli._errors"
-).CliRefusedBoundaryError
+
+CliRefusedBoundaryError = import_module("cadrumo.entrypoints.cli._errors").CliRefusedBoundaryError
 
 _LOGGED_OUT_REFUSALS = frozenset(
     {ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING}
@@ -71,9 +70,7 @@ def normalize_ambient_profile(ctx: typer.Context) -> None:
     try:
         pointer = resolve_profile_bucket(active)
     except ProfileLabelAmbiguousError as exc:
-        raise CliRefusedBoundaryError(
-            translated_message="errors.refused.refused_profile_label_ambiguous"
-        ) from exc
+        raise CliRefusedBoundaryError(translated_message="errors.refused.refused_profile_label_ambiguous") from exc
     except CadrumoError:
         return
     if pointer is not None:
@@ -145,9 +142,7 @@ def activate_profile_session(
     ensure_profile_keys_registered()
     if active_bucket_session_serves(bucket_id):
         if root_selection is not None:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.config.custody.errors.profile_secrets_unused"
-            )
+            raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_unused")
         if target_bucket_id is not None:
             bind_profile_target(ctx, bucket_id=bucket_id)
         return
@@ -191,9 +186,7 @@ def _resume_or_authenticate(
         if not active_bucket_session_serves(bucket_id):
             raise RuntimeError("resumed profile session does not serve the requested target")
         if root_selection is not None:
-            raise CliRefusedBoundaryError(
-                translated_message="cli.config.custody.errors.profile_secrets_unused"
-            )
+            raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_unused")
         if bind_exact_target:
             bind_profile_target(ctx, bucket_id=bucket_id)
         return
@@ -220,6 +213,7 @@ def _resume_or_authenticate(
 def _interactive_authentication(ctx: typer.Context, *, bucket_id: str) -> bool:
     from ...adapters.persistence.storage import active_bucket_session_serves
     from ...application.user_profile import bind_resumed_profile_session
+
     login_frontend = import_module("cadrumo.entrypoints.cli._config._login_frontend")
     outcome = login_frontend.offer_login_to_a_gated_verb(ctx, bucket_id=bucket_id)
     if outcome is None or outcome.bucket_id != bucket_id:

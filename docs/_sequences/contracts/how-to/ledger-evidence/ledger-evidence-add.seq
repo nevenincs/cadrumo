@@ -3,5 +3,6 @@ aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf
 @capture evidence_id result.evidence_id
 @step Confirm the stored record carries the details you typed.
 @result aeat --format json app ledger evidence view {evidence_id}
+@expect result.evidence_id == "{evidence_id}"
 @expect result.supplier == "Papelería Sol SL"
 @expect result.invoice_number == "2026-0142"

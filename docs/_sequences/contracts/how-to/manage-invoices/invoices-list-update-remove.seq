@@ -9,5 +9,6 @@ aeat app ledger invoice list --kind issued
 aeat app ledger invoice update {invoice_id} --notes "paid late"
 @step Remove the invoice, confirming with --yes.
 @result aeat --format json app ledger invoice remove {invoice_id} --yes
+@expect result.invoice_id == "{invoice_id}"
 @expect result.notes == "paid late"
 @expect exit_code == 0

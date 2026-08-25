@@ -39,17 +39,15 @@ def _review_lines(result: WorkReviewResult) -> list[str]:
         f"blocker_count\t{len(review.blockers)}",
     ]
     lines.extend(
-
-            "\t".join(
-                (
-                    "blocker",
-                    blocker.axis.value,
-                    blocker.native_code,
-                    json.dumps(dict(blocker.facts), ensure_ascii=False, sort_keys=True, default=str),
-                )
+        "\t".join(
+            (
+                "blocker",
+                blocker.axis.value,
+                blocker.native_code,
+                json.dumps(dict(blocker.facts), ensure_ascii=False, sort_keys=True, default=str),
             )
-            for blocker in review.blockers
-
+        )
+        for blocker in review.blockers
     )
     lines.append(f"row_source_fingerprint_count\t{review.row_source_fingerprint_count}")
     return lines

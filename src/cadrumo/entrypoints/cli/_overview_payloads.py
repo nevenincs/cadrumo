@@ -482,6 +482,7 @@ class OverviewCalendarResult(OutputSchema):
             raise ValueError("single-profile calendar results must include obligation coverage")
         return self
 
+
 class OverviewAgendaResult(OutputSchema):
     """JSON envelope result for ``aeat app overview agenda``.
 

@@ -824,10 +824,7 @@ def _work_units_line(report: OverviewStatusReport) -> str:
         )
     return tr(
         "cli.overview.status.work_units_present",
-        default=(
-            "%{count} modelo work unit(s) are in progress in this local storage "
-            "- your modelo work is saved."
-        ),
+        default=("%{count} modelo work unit(s) are in progress in this local storage - your modelo work is saved."),
         count=report.work_units,
     )
 

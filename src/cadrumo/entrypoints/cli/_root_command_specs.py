@@ -154,9 +154,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ROOT_STATUS,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._root_cli", "root_command")
-        ),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._root_cli", "root_command")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._root_payloads", "RootStatusResult"),
@@ -195,9 +193,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_STATE_FREE,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._root_cli", "app_root")
-        ),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._root_cli", "app_root")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._root_payloads", "AppRootResult"),
@@ -230,9 +226,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_STATE_FREE,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._config._root_cli", "config_root")
-        ),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._config._root_cli", "config_root")),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._config_help_payloads", "ConfigRootResult"),

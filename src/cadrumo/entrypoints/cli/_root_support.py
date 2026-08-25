@@ -94,9 +94,7 @@ def _root_tui_help_lines() -> tuple[str, ...]:
 
     root = _COMMAND_GRAPH.by_key()["root"]
     option = next(
-        parameter
-        for parameter in root.parameters
-        if isinstance(parameter, OptionSpec) and parameter.name == "tui"
+        parameter for parameter in root.parameters if isinstance(parameter, OptionSpec) and parameter.name == "tui"
     )
     if option.help_key is None:
         raise RuntimeError("the root TUI option lacks localised help")
@@ -313,12 +311,6 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
         # profile guard, which emits the canonical no-active-profile refusal.
         return
     ctx.with_resource(override_settings(cadrumo_active_profile=pointer.bucket_id))
-
-
-
-
-
-
 
 
 def _is_introspection_only_invocation(ctx: typer.Context) -> bool:

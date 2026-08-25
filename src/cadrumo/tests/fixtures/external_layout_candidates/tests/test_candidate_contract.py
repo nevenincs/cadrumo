@@ -29,14 +29,9 @@ _EXPECTED_IDENTITIES = frozenset(
     (modelo, kind) for modelo in EXTERNAL_LAYOUT_MODELOS for kind in EXTERNAL_LAYOUT_CANDIDATE_KINDS
 )
 _EXPECTED_CANDIDATE_FILENAMES = frozenset(
-    f"{kind}{suffix}"
-    for kind in EXTERNAL_LAYOUT_CANDIDATE_KINDS
-    for suffix in (".json", ".pdf")
+    f"{kind}{suffix}" for kind in EXTERNAL_LAYOUT_CANDIDATE_KINDS for suffix in (".json", ".pdf")
 )
-_SIDECARS = tuple(
-    _ROOT / modelo / f"{kind}.json"
-    for modelo, kind in sorted(_EXPECTED_IDENTITIES)
-)
+_SIDECARS = tuple(_ROOT / modelo / f"{kind}.json" for modelo, kind in sorted(_EXPECTED_IDENTITIES))
 
 
 def _adjudicated_payload() -> dict[str, object]:
@@ -48,9 +43,7 @@ def test_candidate_inventory_is_exactly_five_modelos_by_two_variants() -> None:
     """Reject surprise paths and either half of an orphaned JSON/PDF pair."""
     root_files = frozenset(path.name for path in _ROOT.iterdir() if path.is_file())
     candidate_directories = frozenset(
-        path.name
-        for path in _ROOT.iterdir()
-        if path.is_dir() and path.name not in {"tests", "__pycache__"}
+        path.name for path in _ROOT.iterdir() if path.is_dir() and path.name not in {"tests", "__pycache__"}
     )
 
     assert root_files == frozenset({"__init__.py"})
@@ -259,9 +252,7 @@ def test_physical_gate_bites_when_counterpart_digest_is_valid_but_wrong(tmp_path
 
     copied_sidecar = candidate_dir / "plain.json"
     payload = json.loads(copied_sidecar.read_text(encoding="utf-8"))
-    payload["authority_adjudication"]["official_base_derivation"]["pair_render"][
-        "counterpart_sha256"
-    ] = "0" * 64
+    payload["authority_adjudication"]["official_base_derivation"]["pair_render"]["counterpart_sha256"] = "0" * 64
     copied_sidecar.write_text(json.dumps(payload), encoding="utf-8")
 
     assert "counterpart content digest" in physical_candidate_mismatches(copied_sidecar)

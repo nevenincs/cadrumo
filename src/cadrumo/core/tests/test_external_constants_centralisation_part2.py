@@ -371,8 +371,7 @@ def test_no_verb_defaults_an_iva_rate_outside_the_core_constant() -> None:
                 offenders.append(f"{key}.{parameter.name} defaults to {literal!r}")
 
     assert not offenders, (
-        "IVA-rate defaults must follow cadrumo.core.external_constants."
-        f"DEFAULT_IVA_GENERAL_RATE_PCT: {offenders}"
+        f"IVA-rate defaults must follow cadrumo.core.external_constants.DEFAULT_IVA_GENERAL_RATE_PCT: {offenders}"
     )
 
 

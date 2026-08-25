@@ -69,9 +69,7 @@ def _create_capsule(
         password_envelope=envelope,
         sentinel=sentinel,
         data_files={"state/payload.bin": b"x"},
-        recovery_envelope=mint_test_profile_recovery_envelope(
-            _PROFILE_ID, dek=_DEK, dek_epoch=envelope.dek_epoch
-        ),
+        recovery_envelope=mint_test_profile_recovery_envelope(_PROFILE_ID, dek=_DEK, dek_epoch=envelope.dek_epoch),
         initial_record=UserProfileRecord(
             profile_id=str(_PROFILE_ID),
             setup_state=ProfileSetupState.INCOMPLETE,

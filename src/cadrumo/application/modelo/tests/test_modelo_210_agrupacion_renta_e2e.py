@@ -248,28 +248,26 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
                 enum_binding_values={},
                 relation_values={},
                 detail_rows=(
-                Modelo210AgrupacionRentaRow(
-                    source_id=f"plazo-{tipo_renta_code}",
-                    tipo_renta_code=tipo_renta_code,
-                    importe=casilla_inputs["rendimientos_integros"],
-                    tipo_gravamen=Decimal("0.24"),
-                    pagador_mode=(
-                        M210PayerMode.MULTIPLE_PAYERS_CODE_35
-                        if tipo_renta_code == "35"
-                        else M210PayerMode.SINGLE_PAYER
+                    Modelo210AgrupacionRentaRow(
+                        source_id=f"plazo-{tipo_renta_code}",
+                        tipo_renta_code=tipo_renta_code,
+                        importe=casilla_inputs["rendimientos_integros"],
+                        tipo_gravamen=Decimal("0.24"),
+                        pagador_mode=(
+                            M210PayerMode.MULTIPLE_PAYERS_CODE_35
+                            if tipo_renta_code == "35"
+                            else M210PayerMode.SINGLE_PAYER
+                        ),
+                        pagador_id=None if tipo_renta_code == "35" else "ES-PAGADOR-1",
+                        deriva_de_bien_derecho=True,
+                        bien_derecho_id="ES-INMUEBLE-1",
                     ),
-                    pagador_id=None if tipo_renta_code == "35" else "ES-PAGADOR-1",
-                    deriva_de_bien_derecho=True,
-                    bien_derecho_id="ES-INMUEBLE-1",
-                ),
                 ),
                 borrador_snapshot_id=None,
             ),
         )
         calculate_notices = tuple(
-            notice
-            for notice in calculation_result.plazo_notices
-            if notice.code == "modelo.work.m210.plazo_resolved"
+            notice for notice in calculation_result.plazo_notices if notice.code == "modelo.work.m210.plazo_resolved"
         )
         verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
@@ -321,9 +319,7 @@ def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_pat
             ),
         )
         calculate_notices = tuple(
-            notice
-            for notice in calculation_result.plazo_notices
-            if notice.code == "modelo.work.m210.plazo_resolved"
+            notice for notice in calculation_result.plazo_notices if notice.code == "modelo.work.m210.plazo_resolved"
         )
         verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 
@@ -366,9 +362,7 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
             ),
         )
         calculate_notices = tuple(
-            notice
-            for notice in calculation_result.plazo_notices
-            if notice.code == "modelo.work.m210.plazo_resolved"
+            notice for notice in calculation_result.plazo_notices if notice.code == "modelo.work.m210.plazo_resolved"
         )
         verify_notices = _verify_plazo_notices(calculation_result.revision.calculation_revision_id)
 

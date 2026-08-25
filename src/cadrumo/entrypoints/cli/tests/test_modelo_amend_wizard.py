@@ -172,9 +172,7 @@ def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", fil
         JustificanteRepository(bucket_id=bucket_id).save(receipt)
 
 
-def _import_external_baseline(
-    work_unit_id: str, *, csv: str = "JUST20251301TAMENDWIZARD", period: str = "1T"
-) -> str:
+def _import_external_baseline(work_unit_id: str, *, csv: str = "JUST20251301TAMENDWIZARD", period: str = "1T") -> str:
     """Import an AEAT-attested M130 baseline filing and return its filing_record_id."""
     _seed_justificante(csv=csv, period=period)
     result = _invoke(

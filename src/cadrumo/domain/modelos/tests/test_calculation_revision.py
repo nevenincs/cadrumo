@@ -6,7 +6,7 @@ import ast
 from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
+from typing import TypedDict, cast
 
 import pytest
 from pydantic import ValidationError
@@ -66,6 +66,15 @@ _NONCANONICAL_CASILLA_KEY = "bad key"
 _WHITESPACE_CASILLA_KEY = " 001 "
 _TEST_LEGAL_REFS = ("ley-58-2003:art-93",)
 _TEST_SOURCE_REFS = ("aeat-dr-303-2025",)
+
+
+class _CommonRevisionIdArgs(TypedDict):
+    """Shared typed keyword payload for source-provenance hash cases."""
+
+    work_unit_id: str
+    input_values_by_casilla_id: dict[CasillaId, str]
+    binding_overrides: dict[str, str]
+    casilla_values: dict[CasillaId, Decimal]
 
 
 def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
@@ -155,11 +164,12 @@ def _base_id() -> str:
 
 def test_row_source_identity_is_hashed_redacted_and_coordinate_checked() -> None:
     created = datetime(2026, 8, 23, tzinfo=UTC)
-    key = ("inventory-operation-0181", 1)
+    key = ("modelo-190-perceptor-row-nif", 1)
     identity = RowSourceIdentity(
-        source_kind=BindingSourceKind.INVENTORY,
-        source_row_identity="opaque-activity-canary",
+        source_kind=BindingSourceKind.WITHHOLDING,
+        source_row_identity="detalle:per_perceptor_clave:row-1",
         fingerprint="a" * 64,
+        row_set_grouping="per_perceptor_clave",
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id="a" * 64,
@@ -183,28 +193,51 @@ def test_row_source_identity_is_hashed_redacted_and_coordinate_checked() -> None
         updated_at=created,
     )
 
-    assert "opaque-activity-canary" not in revision.model_dump_json()
-    secure_payload = revision.model_dump(mode="json", context={"secure_calculation_revision": True})
+    assert "detalle:per_perceptor_clave:row-1" not in revision.model_dump_json()
+    secure_payload = revision.model_dump(mode="python", context={"secure_calculation_revision": True})
     assert secure_payload["row_source_identities"] == [
         {
             "binding_id": key[0],
             "row_index": 1,
-            "source_kind": "inventory",
-            "source_row_identity": "opaque-activity-canary",
+            "source_kind": "withholding",
+            "source_row_identity": "detalle:per_perceptor_clave:row-1",
             "fingerprint": "a" * 64,
+            "row_set_grouping": "per_perceptor_clave",
         },
     ]
+    rehydrated = CalculationRevision.model_validate(
+        secure_payload,
+        context={"secure_calculation_revision": True},
+    )
+    assert rehydrated.row_source_identities[key] == identity
     changed = identity.model_copy(update={"fingerprint": "b" * 64})
-    assert derive_calculation_revision_id(
-        work_unit_id="a" * 64,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        row_binding_values={key[0]: {"1": "10.00"}},
-        row_source_identities={key: changed},
-        casilla_values={},
-        filing_instance_evidence=None,
-        source_provenance=(),
-    ) != revision_id
+    assert (
+        derive_calculation_revision_id(
+            work_unit_id="a" * 64,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            row_binding_values={key[0]: {"1": "10.00"}},
+            row_source_identities={key: changed},
+            casilla_values={},
+            filing_instance_evidence=None,
+            source_provenance=(),
+        )
+        != revision_id
+    )
+    changed_grouping = identity.model_copy(update={"row_set_grouping": "per_perceptor"})
+    assert (
+        derive_calculation_revision_id(
+            work_unit_id="a" * 64,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            row_binding_values={key[0]: {"1": "10.00"}},
+            row_source_identities={key: changed_grouping},
+            casilla_values={},
+            filing_instance_evidence=None,
+            source_provenance=(),
+        )
+        != revision_id
+    )
 
     with pytest.raises(ValidationError, match="has no row binding value"):
         orphan_id = derive_calculation_revision_id(
@@ -718,7 +751,7 @@ def test_revision_id_canonicalizes_complete_source_provenance_and_refuses_identi
         parent_source_ref=None,
         fingerprint="sha256:" + "b" * 64,
     )
-    common = {
+    common: _CommonRevisionIdArgs = {
         "work_unit_id": "a" * 64,
         "input_values_by_casilla_id": {},
         "binding_overrides": {},

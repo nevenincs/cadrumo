@@ -50,16 +50,12 @@ def _modelo_369_cases():
     modelos, catalogues = _committed_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "369")
     for revision_id, revision in modelo.revisions.items():
-        design_ref = next(
-            ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"
-        )
+        design_ref = next(ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design")
         design = extract_record_design(bundled_path() / catalogues.sources[design_ref].corpus_path)
         for layout in derive_export_layouts_from_bindings(revision):
             for record in layout.records:
                 code = _sheet_code(record.record_type)
-                matches = [
-                    sheet for sheet in design.sheets if sheet.name.upper().startswith(f"{code} ")
-                ]
+                matches = [sheet for sheet in design.sheets if sheet.name.upper().startswith(f"{code} ")]
                 assert len(matches) == 1, (
                     f"369/{revision_id} record {record.id} names sheet code {code!r}, which "
                     f"resolves {len(matches)} sheets: {[sheet.name for sheet in matches]}"
@@ -76,11 +72,7 @@ def test_all_three_schemes_contribute_records() -> None:
 
 def test_only_the_envelope_sheet_declares_no_length() -> None:
     """The exemption below is evidenced rather than assumed."""
-    undeclared = {
-        code
-        for _revision_id, _record, sheet, code in _modelo_369_cases()
-        if sheet.total_positions is None
-    }
+    undeclared = {code for _revision_id, _record, sheet, code in _modelo_369_cases() if sheet.total_positions is None}
 
     assert undeclared == {_ENVELOPE_CODE}, (
         f"sheets without a declared length are {sorted(undeclared)}, so the envelope exemption "
@@ -106,9 +98,7 @@ def test_no_record_leaves_a_position_unwritten() -> None:
         for field in record.fields:
             if field.offset and field.length:
                 occupied |= set(range(field.offset, field.offset + field.length))
-        span = sheet.total_positions or max(
-            field.offset + field.length - 1 for field in record.fields if field.offset
-        )
+        span = sheet.total_positions or max(field.offset + field.length - 1 for field in record.fields if field.offset)
         unwritten = sorted(set(range(1, span + 1)) - occupied)
         assert not unwritten, (
             f"369/{revision_id} record {record.id} leaves {len(unwritten)} position(s) unwritten, "

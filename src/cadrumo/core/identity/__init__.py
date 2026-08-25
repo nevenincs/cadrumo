@@ -37,7 +37,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import AfterValidator, BeforeValidator
+from pydantic import AfterValidator, BeforeValidator, Field
 
 from .._hex import Hex64Str as _Hex64Str
 from ._bucket import BucketId, canonical_bucket_id
@@ -153,6 +153,22 @@ by sibling domains (notably :mod:`domain.invoices` for reconciliation
 models), the application ledger service, and the persistence adapters.
 """
 
+ContinuidadId = Annotated[
+    str,
+    Field(
+        min_length=1,
+        max_length=128,
+        pattern=r"^[a-z0-9][a-z0-9_-]*[a-z0-9]$|^[a-z0-9]$",
+    ),
+]
+"""Stable cross-revision casilla-continuity identity.
+
+Continuity chains are consumed by the registry schema and application read
+models, while their segment-safe constraint is independent from either
+producer. The shared identity home prevents a registry facade bridge from
+becoming a second public owner.
+"""
+
 
 def _subject_tax_id_validator(value: str) -> str:
     """Adapt :func:`validate_spanish_tax_id` for pydantic field validation.
@@ -201,6 +217,7 @@ __all__ = [
     "CalculationRevisionId",
     "ContentDigest",
     "ContentDigestOrAbsent",
+    "ContinuidadId",
     "FilingRecordId",
     "IdentityDocument",
     "IdentityError",

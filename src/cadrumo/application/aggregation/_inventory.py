@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
-from typing import Protocol, get_args
+from typing import ClassVar, Protocol, get_args
 
 from pydantic import ValidationError
 
@@ -70,8 +70,8 @@ class InventorySourceResolver:
     or provide a manual fallback.
     """
 
-    resolver_id = "inventory"
-    owned_sources = _OWNED_SOURCES
+    resolver_id: ClassVar[str] = "inventory"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
 
     def __init__(self, *, inventory_repository: InventoryLedgerRepositoryProtocol | None = None) -> None:
         self._inventory_repository = inventory_repository

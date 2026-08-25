@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+from typing import ClassVar
 
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
 from ...domain.bienes_inversion import (
@@ -300,8 +301,8 @@ def build_bienes_inversion_transmision_advisory(
 class BienesInversionRegularizacionSourceResolver:
     """Resolve capital-goods regularizacion bindings from the profile register."""
 
-    resolver_id = _SOURCE_KIND.value
-    owned_sources: tuple[BindingSourceKind, ...] = (_SOURCE_KIND,)
+    resolver_id: ClassVar[str] = _SOURCE_KIND.value
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_SOURCE_KIND,)
 
     def __init__(
         self,

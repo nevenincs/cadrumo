@@ -305,8 +305,7 @@ class TestCompute:
 
             schedule = _engine().compute(profile, filing_year, today=date(filing_year, 1, 1))
             actual = [
-                deadline_semantic_coordinate(item.modelo, item.period, None, None)
-                for item in schedule.obligations
+                deadline_semantic_coordinate(item.modelo, item.period, None, None) for item in schedule.obligations
             ]
 
             _assert_exact_once(actual, expected)

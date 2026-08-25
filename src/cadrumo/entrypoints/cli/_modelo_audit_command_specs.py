@@ -75,9 +75,7 @@ def _leaf(
         invocation=InvocationSpec(context_parameter="ctx"),
         parameters=parameters,
         policy=policy,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._modelo_audit_cli", handler)
-        ),
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._modelo_audit_cli", handler)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli._modelo_payloads", schema_name),

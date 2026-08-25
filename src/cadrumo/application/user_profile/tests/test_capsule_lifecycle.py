@@ -164,9 +164,7 @@ def test_enrollment_publication_requires_a_recovery_envelope_argument(tmp_path) 
                 password_envelope=envelope,
                 sentinel=sentinel,
                 data_files=data_files,
-                initial_record=UserProfileRecord(
-                    profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE
-                ),
+                initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE),
                 record_session=record_session,
             )
     finally:
@@ -188,9 +186,7 @@ def test_enrollment_publication_refuses_explicit_none_without_a_capsule(tmp_path
                 sentinel=sentinel,
                 data_files=data_files,
                 recovery_envelope=None,  # type: ignore[arg-type] - runtime bypass probe
-                initial_record=UserProfileRecord(
-                    profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE
-                ),
+                initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE),
                 record_session=record_session,
             )
     finally:

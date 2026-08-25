@@ -38,8 +38,22 @@ class ProrrataRegisterRepositoryProtocol(Protocol):
         """
         ...
 
-    def to_secure_object_write(self, register: ProrrataRegister) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` for ``register`` without committing it."""
+    def load_revisioned(self) -> tuple[ProrrataRegister, str]:
+        """Return the register together with its current persistence revision."""
+        ...
+
+    def to_secure_object_write(
+        self,
+        register: ProrrataRegister,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Return the guarded :class:`SecureObjectWrite` for ``register`` without committing it.
+
+        ``expected_revision_id`` must be the revision returned by
+        :meth:`load_revisioned` whenever the singleton register was rebuilt
+        from a read.
+        """
         ...
 
 

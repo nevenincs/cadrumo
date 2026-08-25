@@ -36,9 +36,7 @@ def _schema(name: str, identity: str) -> ResultSchemaSpec:
 
 
 def _handler(name: str) -> LazyBinding:
-    return LazyBinding.available(
-        DeferredTarget("cadrumo.entrypoints.cli._config._storage_cli", name)
-    )
+    return LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli._config._storage_cli", name))
 
 
 CONFIG_STORAGE_COMMAND_SPECS = (

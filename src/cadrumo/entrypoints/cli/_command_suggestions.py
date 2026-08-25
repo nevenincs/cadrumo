@@ -77,7 +77,6 @@ _COMMAND_SYNONYMS: dict[str, dict[str, str]] = {
 }
 
 
-
 @dataclass(frozen=True, slots=True)
 class LazyOptionalDependencyProvider:
     """Deferred access to the canonical optional-dependency inventory."""

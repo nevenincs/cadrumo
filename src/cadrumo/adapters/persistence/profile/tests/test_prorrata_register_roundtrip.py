@@ -49,6 +49,7 @@ from .....domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
+    ProrrataRegisterRepositoryProtocol,
     SectorDefinition,
 )
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
@@ -57,6 +58,11 @@ from ....persistence.storage.sql.engine import get_engine
 from ..prorrata_register import ProrrataRegisterRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def test_repository_satisfies_the_revisioned_prorrata_port(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f94fc4e1-79ec-42f4-9941-b33bbf22f9ee"):
+        assert isinstance(ProrrataRegisterRepository(), ProrrataRegisterRepositoryProtocol)
 
 
 def _populated_register() -> ProrrataRegister:

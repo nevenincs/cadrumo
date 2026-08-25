@@ -92,9 +92,7 @@ def compute_verdict_key(
     hasher = hashlib.sha256()
     hasher.update(package_version.encode("utf-8"))
     code_fingerprint = (
-        loader_code_fingerprint()
-        if loader_code_fingerprint_override is None
-        else loader_code_fingerprint_override
+        loader_code_fingerprint() if loader_code_fingerprint_override is None else loader_code_fingerprint_override
     )
     hasher.update(b"registry-code")
     hasher.update(code_fingerprint.encode("utf-8"))
@@ -130,9 +128,7 @@ def compute_shipped_verdict_key(
     hasher.update(b"shipped-registry-verdict")
     hasher.update(package_version.encode("utf-8"))
     code_fingerprint = (
-        loader_code_fingerprint()
-        if loader_code_fingerprint_override is None
-        else loader_code_fingerprint_override
+        loader_code_fingerprint() if loader_code_fingerprint_override is None else loader_code_fingerprint_override
     )
     hasher.update(code_fingerprint.encode("utf-8"))
     hasher.update(identity_digest.encode("utf-8"))

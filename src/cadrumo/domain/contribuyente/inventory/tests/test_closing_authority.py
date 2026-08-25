@@ -187,7 +187,9 @@ def test_authority_decision_requires_closed_observation_identity_and_evidence() 
 
 def test_authority_decision_fingerprint_is_mutation_sensitive() -> None:
     decision = _decision(authority=InventoryClosingAuthority.MOVEMENT_DERIVED)
-    assert _decision(authority=decision.authority, reason=f"{decision.reason} amended").fingerprint != decision.fingerprint
+    assert (
+        _decision(authority=decision.authority, reason=f"{decision.reason} amended").fingerprint != decision.fingerprint
+    )
     assert _decision(authority=decision.authority, actor="other-reviewer").fingerprint != decision.fingerprint
     assert (
         _decision(authority=decision.authority, decided_at=datetime(2026, 1, 4, tzinfo=UTC)).fingerprint

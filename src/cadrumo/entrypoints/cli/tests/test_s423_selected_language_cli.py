@@ -86,9 +86,7 @@ def _run_cli(
 #: `config profile create` mints a custody envelope, so it needs the operator
 #: passphrase AND its confirmation. A subprocess is not a terminal, so the only
 #: channel it accepts is the bounded strict-JSON one on stdin.
-_CREATE_SECRETS = json.dumps(
-    {"passphrase": _OPERATOR_PASSPHRASE, "passphrase_confirmation": _OPERATOR_PASSPHRASE}
-)
+_CREATE_SECRETS = json.dumps({"passphrase": _OPERATOR_PASSPHRASE, "passphrase_confirmation": _OPERATOR_PASSPHRASE})
 
 
 def _combined_output(result: subprocess.CompletedProcess[str]) -> str:

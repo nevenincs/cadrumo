@@ -159,9 +159,12 @@ class TestCanonicaliseAndMask:
         assert differing_paths(a, b) == frozenset({"result.y"})
 
     def test_profile_delete_masks_only_its_fingerprint_digest_path(self) -> None:
-        assert frozenset(
-            {("config.profile.delete", "result.fingerprint.digest")},
-        ) == GOLDEN_MASK_PATHS
+        assert (
+            frozenset(
+                {("config.profile.delete", "result.fingerprint.digest")},
+            )
+            == GOLDEN_MASK_PATHS
+        )
         delete = {
             "command": "config.profile.delete",
             "digest": "visible-top-level",

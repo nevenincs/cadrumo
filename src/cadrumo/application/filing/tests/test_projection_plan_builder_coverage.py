@@ -76,5 +76,7 @@ def test_every_modelo_with_projection_fields_has_a_plan_builder() -> None:
         "them, so _projection_field_value raises 'requires a snapshot-owned render context' and "
         "the modelo CANNOT EXPORT AT ALL. It fails closed rather than emitting wrong bytes, but "
         "it does not file and until now nothing said so.\n"
-        + "\n".join(f"  modelo {modelo}: {count} projection field(s), no plan builder" for modelo, count in uncovered.items())
+        + "\n".join(
+            f"  modelo {modelo}: {count} projection field(s), no plan builder" for modelo, count in uncovered.items()
+        )
     )

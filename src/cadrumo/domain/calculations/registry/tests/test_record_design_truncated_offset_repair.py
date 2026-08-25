@@ -37,7 +37,11 @@ from .._record_design import _repair_truncated_offset_rows
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DESIGN = bundled_path(
-    "corpus", "aeat_official", "disenos_registro", "modelo_200", "files",
+    "corpus",
+    "aeat_official",
+    "disenos_registro",
+    "modelo_200",
+    "files",
     "03-200-ejercicio-2011-522-kb-pdf.pdf",
 )
 
@@ -57,9 +61,7 @@ def test_the_recovered_record_carries_the_row_at_its_true_position() -> None:
     assert field.ordinal == "18"
     assert field.length == 17
 
-    assert not [f for f in sheet.fields if f.offset == 21], (
-        "the row is still also claiming the truncated position 21"
-    )
+    assert not [f for f in sheet.fields if f.offset == 21], "the row is still also claiming the truncated position 21"
 
 
 def test_the_recovered_record_tiles_without_a_hole() -> None:

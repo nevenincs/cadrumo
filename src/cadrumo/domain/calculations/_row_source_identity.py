@@ -15,13 +15,20 @@ OpaqueSourceRowIdentity = Annotated[str, StringConstraints(min_length=1, max_len
 
 
 class RowSourceIdentity(BaseModel):
-    """Opaque, fingerprinted identity of a source row."""
+    """Opaque, fingerprinted identity of a source row.
+
+    ``row_set_grouping`` retains the exact registry selector that supplied a
+    worksheet row when the identity originates at the row-set ingress.  It is
+    optional because non-worksheet sources (such as inventory activities) do
+    not have a row-set selector.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     source_kind: BindingSourceKind
     source_row_identity: OpaqueSourceRowIdentity = Field(repr=False)
     fingerprint: ContentDigest
+    row_set_grouping: str | None = Field(default=None, min_length=1, max_length=128, repr=False)
 
     @field_validator("source_kind", mode="before")
     @classmethod
@@ -38,6 +45,15 @@ class RowSourceIdentity(BaseModel):
     def _identity_is_canonical(cls, value: str) -> str:
         if value != value.strip() or any(ord(character) < 32 for character in value):
             raise ValueError("row source identity is not canonical")
+        return value
+
+    @field_validator("row_set_grouping")
+    @classmethod
+    def _row_set_grouping_is_canonical(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if value != value.strip() or any(ord(character) < 32 for character in value):
+            raise ValueError("row set grouping is not canonical")
         return value
 
 

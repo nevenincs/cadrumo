@@ -28,6 +28,7 @@ from ..application.live import (
 )
 from ..application.operations import (
     OperationComposedServices,
+    OperationDefinition,
     OperationRegistry,
     compose_operation_services,
 )
@@ -107,6 +108,56 @@ def compose_google_sheets_export_service(
     return build_google_sheets_export_service(export_port=_google_sheets_export_port(settings=resolved_settings))
 
 
+def build_production_operation_registry(
+    *,
+    settings: Settings | None = None,
+    auth_definitions: tuple[OperationDefinition, ...] | None = None,
+    censal_definition: OperationDefinition | None = None,
+    google_export_definition: OperationDefinition | None = None,
+) -> OperationRegistry:
+    """Build the sole immutable production inventory from the owner facades."""
+    resolved_settings = settings or load_settings()
+    resolved_auth_definitions = auth_definitions if auth_definitions is not None else build_auth_operation_definitions()
+    profile_definitions = build_user_profile_operation_definitions()
+    resolved_google_export_definition = (
+        google_export_definition
+        if google_export_definition is not None
+        else build_google_sheets_export_operation_definition(
+            export_port=_google_sheets_export_port(settings=resolved_settings)
+        )
+    )
+    filed_history_definition = build_filed_history_operation_definition(
+        sync_run_repository_factory=SyncRunRecordRepository
+    )
+    definitions = tuple(
+        sorted(
+            (
+                *resolved_auth_definitions,
+                *profile_definitions,
+                CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition,
+                filed_history_definition,
+                resolved_google_export_definition,
+            ),
+            key=lambda item: item.definition_id,
+        )
+    )
+    registrations = tuple(
+        sorted(
+            (
+                *build_auth_operation_registrations(resolved_auth_definitions),
+                *build_user_profile_operation_registrations(profile_definitions),
+                build_censal_operation_registration(
+                    CENSAL_OPERATION_DEFINITION if censal_definition is None else censal_definition
+                ),
+                build_filed_history_operation_registration(filed_history_definition),
+                build_google_sheets_export_operation_registration(resolved_google_export_definition),
+            ),
+            key=lambda item: item.contract.definition_id,
+        )
+    )
+    return OperationRegistry(definitions=definitions, public_registrations=registrations)
+
+
 def compose_operation_dependencies(
     *,
     settings: Settings | None = None,
@@ -120,39 +171,7 @@ def compose_operation_dependencies(
     """
     resolved_settings = settings or load_settings()
     storage_root = effective_storage_root(settings=resolved_settings)
-    auth_definitions = build_auth_operation_definitions()
-    profile_definitions = build_user_profile_operation_definitions()
-    google_export_definition = build_google_sheets_export_operation_definition(
-        export_port=_google_sheets_export_port(settings=resolved_settings)
-    )
-    filed_history_definition = build_filed_history_operation_definition(
-        sync_run_repository_factory=SyncRunRecordRepository
-    )
-    definitions = tuple(
-        sorted(
-            (
-                *auth_definitions,
-                *profile_definitions,
-                CENSAL_OPERATION_DEFINITION,
-                filed_history_definition,
-                google_export_definition,
-            ),
-            key=lambda item: item.definition_id,
-        )
-    )
-    registrations = tuple(
-        sorted(
-            (
-                *build_auth_operation_registrations(auth_definitions),
-                *build_user_profile_operation_registrations(profile_definitions),
-                build_censal_operation_registration(CENSAL_OPERATION_DEFINITION),
-                build_filed_history_operation_registration(filed_history_definition),
-                build_google_sheets_export_operation_registration(google_export_definition),
-            ),
-            key=lambda item: item.contract.definition_id,
-        )
-    )
-    registry = OperationRegistry(definitions=definitions, public_registrations=registrations)
+    registry = build_production_operation_registry(settings=resolved_settings)
     journal = OperationJournalRepository(storage_root=storage_root)
     leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
     operands = operation_secure_reference_repository()
@@ -172,4 +191,8 @@ def compose_operation_dependencies(
     )
 
 
-__all__ = ["compose_google_sheets_export_service", "compose_operation_dependencies"]
+__all__ = [
+    "build_production_operation_registry",
+    "compose_google_sheets_export_service",
+    "compose_operation_dependencies",
+]

@@ -13,6 +13,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from typing import ClassVar
 
 from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import content_hash_hex
@@ -55,8 +56,8 @@ class _AtribucionSocioProjection:
 class AtribucionMemberSourceResolver:
     """Resolve M184 member rows from the active attribution-entity profile."""
 
-    resolver_id = "atribucion_member_profile"
-    owned_sources = _OWNED_SOURCES
+    resolver_id: ClassVar[str] = "atribucion_member_profile"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
 
     def __init__(self, *, profile_record: UserProfileRecord | None = None) -> None:
         self._profile_record = profile_record

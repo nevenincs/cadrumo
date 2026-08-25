@@ -120,9 +120,7 @@ class _ProducerSnapshot:
 
 def _profile(family: _Family, count: int) -> Modelo296ProfileFacts:
     """A declarante carrying ``count`` distinguishable rows of one family."""
-    rows = tuple(
-        family.row(**{family.distinguishing_field.value: f"ROW{index:05d}"}) for index in range(1, count + 1)
-    )
+    rows = tuple(family.row(**{family.distinguishing_field.value: f"ROW{index:05d}"}) for index in range(1, count + 1))
     return Modelo296ProfileFacts(
         ejercicio="2024",
         nif_del_declarante="B12345678",

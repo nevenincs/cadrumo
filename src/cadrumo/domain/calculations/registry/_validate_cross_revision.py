@@ -89,11 +89,7 @@ def declared_cross_revision_continuity_semantic_linkage_failures(
             ):
                 continue
 
-            missing_roles = [
-                (revision, casilla)
-                for revision, casilla in occurrences
-                if casilla.semantic_role is None
-            ]
+            missing_roles = [(revision, casilla) for revision, casilla in occurrences if casilla.semantic_role is None]
             for revision, casilla in missing_roles:
                 failures.append(
                     "cross-revision continuity semantic linkage missing: "

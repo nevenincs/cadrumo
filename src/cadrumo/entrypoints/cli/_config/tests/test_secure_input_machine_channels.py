@@ -37,13 +37,7 @@ class _ProbeSecrets(MachineSecretPayload):
 
 
 def _payload(*, secret: str = _SUPPLIED_VALUE) -> bytes:
-    return (
-        '{"passphrase":"'
-        + secret
-        + '","passphrase_confirmation":"'
-        + secret
-        + '"}'
-    ).encode()
+    return ('{"passphrase":"' + secret + '","passphrase_confirmation":"' + secret + '"}').encode()
 
 
 def _pipe_with(payload: bytes) -> int:

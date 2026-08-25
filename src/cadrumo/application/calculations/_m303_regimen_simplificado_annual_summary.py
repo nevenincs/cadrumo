@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+from typing import ClassVar
 
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period
 from ...core.errors import CoreValidationError
@@ -57,8 +58,8 @@ class M303RegimenSimplificadoAnnualSummaryHandoffError(CoreValidationError):
 class M303RegimenSimplificadoAnnualSummarySourceResolver:
     """Resolve the one immutable filed-current 303/4T annual-summary source."""
 
-    resolver_id = _SOURCE_KIND.value
-    owned_sources: tuple[BindingSourceKind, ...] = (_SOURCE_KIND,)
+    resolver_id: ClassVar[str] = _SOURCE_KIND.value
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_SOURCE_KIND,)
 
     def __init__(
         self,

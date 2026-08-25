@@ -1937,8 +1937,7 @@ def _membership_only_design_pairs() -> tuple[tuple[str, Path, Path], ...]:
                 continue
             before_occupancy, after_occupancy = _occupancy(earlier), _occupancy(later)
             if any(
-                before_occupancy[slot] != after_occupancy[slot]
-                for slot in set(before_occupancy) & set(after_occupancy)
+                before_occupancy[slot] != after_occupancy[slot] for slot in set(before_occupancy) & set(after_occupancy)
             ):
                 continue
             found.append((str(modelo.id), earlier, later))
@@ -3311,9 +3310,7 @@ def test_every_open_bounded_era_declaration_is_still_earned() -> None:
     assert _OPEN_BOUNDED_ERA_DESIGNS, "the declaration is empty; this audit would be vacuous"
 
     overlap = sorted(set(_OPEN_BOUNDED_ERA_DESIGNS) & set(_NON_EJERCICIO_COVERAGE_AXIS))
-    assert not overlap, (
-        f"these designs are declared under BOTH classifications, so one of them is wrong: {overlap}"
-    )
+    assert not overlap, f"these designs are declared under BOTH classifications, so one of them is wrong: {overlap}"
 
     missing = sorted(key for key in _OPEN_BOUNDED_ERA_DESIGNS if key not in on_disk)
     assert not missing, (
@@ -3321,9 +3318,7 @@ def test_every_open_bounded_era_declaration_is_still_earned() -> None:
         f"so the declaration excuses nothing: {missing}"
     )
 
-    now_attributable = sorted(
-        key for key in _OPEN_BOUNDED_ERA_DESIGNS if _design_coverage_years(on_disk[key])
-    )
+    now_attributable = sorted(key for key in _OPEN_BOUNDED_ERA_DESIGNS if _design_coverage_years(on_disk[key]))
     assert not now_attributable, (
         "these designs now yield ejercicio coverage, so the declaration is suppressing a design "
         f"the module can measure -- remove the entry: {now_attributable}"

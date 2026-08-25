@@ -269,13 +269,17 @@ class TestValidateSemanticRoleConsistency:
             cid=validated_casilla_id("historical-cnae", surface="semantic-role-width-test"),
             semantic_role="m303_prorrata_actividad_fila_1_cnae",
             data_type="text",
-            constraints=CasillaConstraints(min_length=3, max_length=3, legal_refs=legal, source_refs=("aeat-dr-303-2025",)),
+            constraints=CasillaConstraints(
+                min_length=3, max_length=3, legal_refs=legal, source_refs=("aeat-dr-303-2025",)
+            ),
         )
         widened = _casilla(
             cid=validated_casilla_id("widened-cnae", surface="semantic-role-width-test"),
             semantic_role="m303_prorrata_actividad_fila_1_cnae",
             data_type="text",
-            constraints=CasillaConstraints(min_length=4, max_length=4, legal_refs=legal, source_refs=("aeat-dr-303-2026",)),
+            constraints=CasillaConstraints(
+                min_length=4, max_length=4, legal_refs=legal, source_refs=("aeat-dr-303-2026",)
+            ),
         )
 
         failures = _validate_semantic_role_consistency(

@@ -582,10 +582,13 @@ class DeadlineWindowDefinition(RegistryModel):
     payment_cutoff_on: date | None = None
     applicability_condition_mode: Literal["all", "any"] = "all"
     applicability_conditions: tuple[ProfilePredicateDefinition, ...] = ()
-    resultado_scope: Annotated[
-        ResultDisposition,
-        BeforeValidator(lambda value: ResultDisposition(value) if isinstance(value, str) else value),
-    ] | None = None
+    resultado_scope: (
+        Annotated[
+            ResultDisposition,
+            BeforeValidator(lambda value: ResultDisposition(value) if isinstance(value, str) else value),
+        ]
+        | None
+    ) = None
     tipo_renta_scope: tuple[str, ...] | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs

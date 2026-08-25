@@ -103,13 +103,9 @@ def test_the_registry_models_that_concept_with_a_casilla_all_the_same() -> None:
     This is the step the withdrawn measure got wrong: it read the missing tag as
     a missing casilla.
     """
-    revision = next(
-        m for m in bundled_authority().modelos if m.id == "840"
-    ).revisions["2003-y-siguientes"]
+    revision = next(m for m in bundled_authority().modelos if m.id == "840").revisions["2003-y-siguientes"]
 
-    municipio = [
-        c for c in revision.casillas if str(c.id) == "sujeto.domicilio-municipio"
-    ]
+    municipio = [c for c in revision.casillas if str(c.id) == "sujeto.domicilio-municipio"]
 
     assert municipio, [str(c.id) for c in revision.casillas][:10]
     assert municipio[0].number == "10"

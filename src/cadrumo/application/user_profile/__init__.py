@@ -272,6 +272,9 @@ if TYPE_CHECKING:
         CensalFieldIntent as CensalFieldIntent,
     )
     from ._censal_operation import (
+        CensalOperationAcquisition as CensalOperationAcquisition,
+    )
+    from ._censal_operation import (
         CensalOperationOutcome as CensalOperationOutcome,
     )
     from ._censal_operation import (
@@ -287,6 +290,7 @@ if TYPE_CHECKING:
         CensalReviewedFieldIntent as CensalReviewedFieldIntent,
     )
     from ._censal_operation import CensalReviewResponse as CensalReviewResponse
+    from ._censal_operation import build_censal_operation_definition as build_censal_operation_definition
     from ._censo_errors import (
         CensoSyncError as CensoSyncError,
     )
@@ -886,12 +890,14 @@ _LAZY_EXPORTS: dict[str, str] = {
     "CENSAL_OPERATION_DEFINITION_ID": "._censal_operation",
     "CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING": "._censal_operation",
     "CensalFieldIntent": "._censal_operation",
+    "CensalOperationAcquisition": "._censal_operation",
     "CensalOperationOutcome": "._censal_operation",
     "CensalOperationRequest": "._censal_operation",
     "CensalOperationResult": "._censal_operation",
     "CensalProfileBaseline": "._censal_operation",
     "CensalReviewedFieldIntent": "._censal_operation",
     "CensalReviewResponse": "._censal_operation",
+    "build_censal_operation_definition": "._censal_operation",
     "build_censal_operation_registration": "._censal_operation",
     "build_user_profile_operation_definitions": "._operation_definitions",
     "build_user_profile_operation_registrations": "._operation_definitions",
@@ -1122,6 +1128,7 @@ __all__ = [
     "CensalObservation",
     "CensalObservationAddress",
     "CensalObservationIdentity",
+    "CensalOperationAcquisition",
     "CensalOperationOutcome",
     "CensalOperationRequest",
     "CensalOperationResult",
@@ -1224,6 +1231,7 @@ __all__ = [
     "apply_profile_fact_changes",
     "bind_resumed_profile_session",
     "bound_profile_record_session",
+    "build_censal_operation_definition",
     "build_censal_operation_registration",
     "build_profile_overview",
     "build_profile_preflight_requirement",

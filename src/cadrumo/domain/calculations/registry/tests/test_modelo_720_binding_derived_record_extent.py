@@ -42,9 +42,7 @@ def _modelo_720_cases():
     modelos, catalogues = _committed_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "720")
     for revision_id, revision in modelo.revisions.items():
-        design_ref = next(
-            ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design"
-        )
+        design_ref = next(ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design")
         design = extract_record_design(bundled_path() / catalogues.sources[design_ref].corpus_path)
         sheets = {sheet.name: sheet for sheet in design.sheets}
         for layout in derive_export_layouts_from_bindings(revision):

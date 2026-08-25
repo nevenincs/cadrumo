@@ -22,13 +22,12 @@ from ....core.config import Settings
 from ....domain.transactions import prompt_spec_with_saturation_fields
 from ....domain.user_profile import ProfileSetupState
 from ....llm import LocalVisionLLMClassifier, MultimodalImageInput
-from ....tests.llm_vision_evidence_support import (
+from ....tests.llm_vision_evidence_support import _png_image, _transaction
+from ....tests.persistence_vision_evidence_support import (
     _add_evidence,
-    _png_image,
     _scan_only_pdf,
-    _transaction,
 )
-from ....tests.llm_vision_evidence_support import (
+from ....tests.persistence_vision_evidence_support import (
     profile as profile,
 )
 from ....tests.secure_sql import TestRuntimeProfile

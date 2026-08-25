@@ -15,9 +15,11 @@ from ..quality.cli_action_census import (
     DiscoveryTriggerKind,
     FixedPointNotClosedError,
     FixedPointSources,
+    RegisteredErrorCode,
     UnknownCluster,
     admit_alias,
     admit_discoveries,
+    authored_error_message_join,
     census,
     close_fixed_point,
     dump_fixed_point_state,
@@ -52,6 +54,23 @@ def test_census_records_are_stably_ordered_and_keyed_to_source_symbols(
     assert all(record.path.startswith("src/cadrumo/") for record in first)
     assert all(record.enclosing_symbol for record in first)
     assert all(record.role and record.alias and record.action_identity for record in first)
+
+
+def test_authored_message_join_retains_duplicate_site_ordinal_without_using_line_as_identity(tmp_path) -> None:
+    """A copied same-shape message call stays two physical join rows after a source move."""
+    source = tmp_path / "src/cadrumo/demo.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "class DemoError(Exception):\n    pass\n\ndef emit() -> None:\n    DemoError('same')\n    DemoError('same')\n",
+        encoding="utf-8",
+    )
+    codes = (RegisteredErrorCode("cadrumo.demo.DemoError", "REFUSED_DEMO"),)
+
+    join = authored_error_message_join(root=tmp_path, codes=codes)
+
+    assert len(join.singly_owned_sites) == 2
+    assert tuple(site.ordinal for site in join.singly_owned_sites) == (1, 2)
+    assert len({site.fingerprint for site in join.singly_owned_sites}) == 2
 
 
 def test_census_observes_real_definition_producer_and_command_literal_sites(

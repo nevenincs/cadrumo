@@ -66,9 +66,21 @@ def _acquisition() -> InventoryAcquisitionCost:
                 "consideration_deductible_iva_ratio": "1.00",
                 "attributable_cost_components": [],
                 "evidence": [
-                    {"reference": {"reference": "invoice"}, "evidence_kind": "purchase_invoice", "content_digest": "a" * 64},
-                    {"reference": {"reference": "cost-review"}, "evidence_kind": "attributable_cost_review", "content_digest": "b" * 64},
-                    {"reference": {"reference": "iva-review"}, "evidence_kind": "iva_recoverability_review", "content_digest": "c" * 64},
+                    {
+                        "reference": {"reference": "invoice"},
+                        "evidence_kind": "purchase_invoice",
+                        "content_digest": "a" * 64,
+                    },
+                    {
+                        "reference": {"reference": "cost-review"},
+                        "evidence_kind": "attributable_cost_review",
+                        "content_digest": "b" * 64,
+                    },
+                    {
+                        "reference": {"reference": "iva-review"},
+                        "evidence_kind": "iva_recoverability_review",
+                        "content_digest": "c" * 64,
+                    },
                 ],
                 "completeness": {
                     "consideration_evidence": {"reference": "invoice"},

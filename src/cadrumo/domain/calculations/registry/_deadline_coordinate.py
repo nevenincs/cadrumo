@@ -59,9 +59,7 @@ def deadline_window_semantic_coordinates(
     enum and official M210 code projection; it owns no vocabulary of its own.
     """
     resultados: tuple[ResultDisposition | None, ...] = (
-        (None, *tuple(ResultDisposition))
-        if window.resultado_scope is None
-        else (window.resultado_scope,)
+        (None, *tuple(ResultDisposition)) if window.resultado_scope is None else (window.resultado_scope,)
     )
 
     tipos: tuple[str | None, ...]

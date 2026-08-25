@@ -27,7 +27,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, ClassVar
 
 from pydantic import BaseModel, Field, StringConstraints
 
@@ -502,8 +502,8 @@ def aggregate_oss_ioss_from_repositories(
 class OssIossLedgerSourceResolver:
     """Source mesh resolver for Modelo 369 OSS / IOSS ledger candidates."""
 
-    resolver_id = "ledger_oss_aggregation"
-    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_OSS_AGGREGATION,)
+    resolver_id: ClassVar[str] = "ledger_oss_aggregation"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.LEDGER_OSS_AGGREGATION,)
 
     def __init__(
         self,

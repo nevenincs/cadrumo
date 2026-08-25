@@ -90,12 +90,6 @@ _M200_M202_PAGOS_RELATION_IDS: frozenset[str] = frozenset(
 )
 
 
-
-
-
-
-
-
 def work_compare_taxation(
     ctx: typer.Context,
     work_unit_id: str | None = None,
@@ -223,10 +217,6 @@ def work_compare_taxation(
     )
 
 
-
-
-
-
 def work_history(
     ctx: typer.Context,
     work_unit_id: str | None = None,
@@ -297,10 +287,6 @@ def work_history(
     )
     next_step = resolve_lifecycle_continuation_notice(lifecycle_continuation_for_work_history(unit))
     _emit_envelope(ctx, command="modelo.work.history", result=result, lines=lines, notices=[next_step])
-
-
-
-
 
 
 def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
@@ -450,8 +436,6 @@ def work_amend(
     ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
     _emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
-
-
 
 
 # ─────────────────────────────────────────────────────────────────────────

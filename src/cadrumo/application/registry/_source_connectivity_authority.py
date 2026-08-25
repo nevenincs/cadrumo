@@ -30,6 +30,7 @@ from ..modelo import (
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
     MANUAL_INPUT_RESOLVER_ID,
+    CalculationRouteManualOwnership,
 )
 from ..operator_surface import SupportedModeloCalculationWorkflowCatalogue
 
@@ -68,27 +69,30 @@ def _canonical_route_source_ownership() -> tuple[
     resolver_rows: list[CalculationRouteResolverSourceOwnership] = []
     manual_rows: list[CalculationRouteManualSourceOwnership] = []
     for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP:
+        if isinstance(owner, CalculationRouteManualOwnership):
+            source_kind = owner.owned_sources[0]
+            if CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind] is not BindingSourceDisposition.ENROLLED:
+                raise RuntimeError(f"calculation route owns non-enrolled source {source_kind.value!r}")
+            manual_rows.append(
+                CalculationRouteManualSourceOwnership(
+                    route_id=CALCULATION_ROUTE_ID,
+                    stage="manual",
+                    source_kind=source_kind,
+                    owner_id=MANUAL_INPUT_RESOLVER_ID,
+                ),
+            )
+            continue
         for source_kind in owner.owned_sources:
             if CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind] is not BindingSourceDisposition.ENROLLED:
                 raise RuntimeError(f"calculation route owns non-enrolled source {source_kind.value!r}")
-            if owner.resolver_type is None:
-                manual_rows.append(
-                    CalculationRouteManualSourceOwnership(
-                        route_id=CALCULATION_ROUTE_ID,
-                        stage="manual",
-                        source_kind=source_kind,
-                        owner_id=MANUAL_INPUT_RESOLVER_ID,
-                    ),
-                )
-            else:
-                resolver_rows.append(
-                    CalculationRouteResolverSourceOwnership(
-                        route_id=CALCULATION_ROUTE_ID,
-                        stage=owner.stage,
-                        source_kind=source_kind,
-                        resolver_id=owner.resolver_id,
-                    ),
-                )
+            resolver_rows.append(
+                CalculationRouteResolverSourceOwnership(
+                    route_id=CALCULATION_ROUTE_ID,
+                    stage=owner.stage,
+                    source_kind=source_kind,
+                    resolver_id=owner.resolver_id,
+                ),
+            )
     if len(manual_rows) != 1:
         raise RuntimeError("calculation route requires exactly one manual-input pseudo-owner")
     return tuple(sorted(resolver_rows, key=lambda row: row.source_kind.value)), manual_rows[0]

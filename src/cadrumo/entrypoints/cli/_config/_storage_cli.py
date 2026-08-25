@@ -53,6 +53,7 @@ Named in the relocation advisory because the advisory's whole job is to hand the
 operator the one control that does relocate, having refused to do it for them.
 """
 
+
 def config_storage_list(
     ctx: typer.Context,
     output_language: _OutputLanguage | None = None,

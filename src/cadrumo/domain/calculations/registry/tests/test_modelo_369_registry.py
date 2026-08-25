@@ -332,11 +332,7 @@ def test_modelo_369_deadline_coordinates_are_complete_exact_and_canonically_owne
         }
 
         for revision_id, periods in expected_periods.items():
-            assert {
-                period
-                for owner, period in projected_by_coordinate
-                if owner == revision_id
-            } == set(periods)
+            assert {period for owner, period in projected_by_coordinate if owner == revision_id} == set(periods)
             for period in periods:
                 window = projected_by_coordinate[(revision_id, period)]
                 if period.endswith("T"):
@@ -385,9 +381,7 @@ def test_modelo_369_deadline_materialisation_has_no_unpublished_filing_year() ->
     """Materialisation stops at the shared presently supported filing-year edge."""
     modelo, _ = _load_modelo_369()
     assert {
-        window.filing_year
-        for revision in modelo.revisions.values()
-        for window in revision.deadline_windows
+        window.filing_year for revision in modelo.revisions.values() for window in revision.deadline_windows
     } == set(range(2022, 2027))
 
 

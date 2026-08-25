@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import inspect
 import json
 from datetime import date
 from pathlib import Path
@@ -13,15 +15,22 @@ from .....core import RECORD_DESIGN_EPOCH_RE
 from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSM_EXTENSION, XLSX_EXTENSION
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
+from .._authority import ValidatedRegistryAuthority, bundled_authority
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
-from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage, build_model_law_coverage_ledger
-from .._authority import bundled_authority
+from .._coverage import (
+    EvidenceTierCoverageGate,
+    _snapshot_filing_review_proof,
+    audit_registry_model_law_coverage,
+    build_model_law_coverage_ledger,
+)
 from .._legal import verify_legal_catalogue_grounding
+from .._loader import clear_fingerprint_cache
 from .._schema import filing_period_from_scope
-from .._snapshot import build_snapshot
+from .._snapshot import build_snapshot, check_snapshot_filing_review_tier
 from .._temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
 from .._validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
+from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -240,7 +249,8 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     modelo_038 = next(
         ledger
         for ledger in audit.ledgers
-        if (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period) == ("038", "2002-y-siguientes", 2002, "01")
+        if (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period)
+        == ("038", "2002-y-siguientes", 2002, "01")
     )
     assert modelo_038.revision == "2002-y-siguientes"
     assert modelo_038.authority_scope == "inspection_only"
@@ -271,13 +281,193 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
             assessment_horizon=assessment_horizon,
         )
     }
-    actual_coordinates = {(ledger.modelo, ledger.revision, ledger.filing_year, ledger.period) for ledger in audit.ledgers}
+    actual_coordinates = {
+        (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period) for ledger in audit.ledgers
+    }
     assert actual_coordinates == expected_coordinates
     for ledger in audit.ledgers:
         gates = {gate.tier: gate for gate in ledger.gates}
         assert gates["legal_authority"].status == "satisfied", ledger
         assert gates["official_source_guidance"].status == "satisfied", ledger
         assert gates["layout_authority"].status == "satisfied", ledger
+
+
+def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryAuthority:
+    """Build the smallest validator-backed reviewed corpus with no layout evidence."""
+    registry_root = tmp_path / "registry" / "aeat"
+    legal_dir = registry_root / "legal"
+    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025-2026"
+    legal_dir.mkdir(parents=True)
+    revision_dir.mkdir(parents=True)
+
+    corpus_dir = tmp_path / "corpus" / "test"
+    corpus_dir.mkdir(parents=True)
+    legal_corpus = corpus_dir / "synthetic-orden.html"
+    legal_corpus.write_text("<html>synthetic provision text</html>", encoding="utf-8")
+    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="synthetic provision text")
+    guidance_bytes = b"synthetic official guidance"
+    parity_bytes = b"synthetic executable parity"
+    (corpus_dir / "synthetic-guidance.pdf").write_bytes(guidance_bytes)
+    (corpus_dir / "synthetic-parity.pdf").write_bytes(parity_bytes)
+
+    legal_dir.joinpath("catalogue.toml").write_text(
+        "\n".join(
+            (
+                "[supported_filing_years]",
+                "years = [2025, 2026]",
+                "",
+                '[legal."orden-test-0001:art-1"]',
+                'evidence_tier = "legal_authority"',
+                'authority = "boe"',
+                'kind = "orden"',
+                'corpus_ref = "corpus/test/synthetic-orden.html#a1"',
+                'document_id = "BOE-A-2025-00001"',
+                'article = "1"',
+                'permalink = "https://example.com/synthetic-orden"',
+                "effective_from = 2025-01-01",
+                'review_status = "operator_reviewed"',
+                "reviewed_at = 2026-08-25",
+                'reviewed_by = "synthetic corpus reviewer"',
+                'required_text = ["synthetic provision text"]',
+                "",
+                '[sources."test-source-guidance"]',
+                'evidence_tier = "official_source_guidance"',
+                'authority = "aeat"',
+                'kind = "instructions"',
+                'corpus_path = "corpus/test/synthetic-guidance.pdf"',
+                f'sha256 = "{hashlib.sha256(guidance_bytes).hexdigest()}"',
+                f"bytes = {len(guidance_bytes)}",
+                "retrieved_at = 2026-08-25",
+                'source_url = "https://example.com/synthetic-guidance"',
+                'review_status = "reviewed"',
+                "",
+                '[sources."test-source-parity"]',
+                'evidence_tier = "executable_parity_evidence"',
+                'authority = "aeat"',
+                'kind = "instructions"',
+                'corpus_path = "corpus/test/synthetic-parity.pdf"',
+                f'sha256 = "{hashlib.sha256(parity_bytes).hexdigest()}"',
+                f"bytes = {len(parity_bytes)}",
+                "retrieved_at = 2026-08-25",
+                'source_url = "https://example.com/synthetic-parity"',
+                'review_status = "reviewed"',
+                "",
+            ),
+        ),
+        encoding="utf-8",
+    )
+    registry_root.joinpath("modelos", "999", "manifest.toml").write_text(
+        "\n".join(
+            (
+                "[modelo]",
+                'id = "999"',
+                'tax_domain = "iva"',
+                'cadence = "annual"',
+                'jurisdiction = "ES-AEAT"',
+                'legal_refs = ["orden-test-0001:art-1"]',
+                'source_refs = ["test-source-guidance"]',
+                "",
+            ),
+        ),
+        encoding="utf-8",
+    )
+    write_fragmented_revision(
+        revision_dir,
+        """\
+[revisions."2025-2026"]
+valid_from = 2025-01-01
+period_selector = { years = [2025, 2026], periods = ["0A"] }
+authority_grade = "applicability"
+review_status = "agent_reviewed"
+reviewed_by = "synthetic corpus reviewer"
+reviewed_at = 2026-08-25
+legal_refs = ["orden-test-0001:art-1"]
+source_refs = ["test-source-guidance"]
+orden_aplicabilidad = ["orden-test-0001:art-1"]
+
+[[revisions."2025-2026".application_links]]
+id = "synthetic-coverage-filing"
+surface = "filing"
+consumer = "synthetic.coverage"
+requires_snapshot = true
+legal_refs = ["orden-test-0001:art-1"]
+source_refs = ["test-source-guidance"]
+
+[[revisions."2025-2026".casillas]]
+id = "01"
+number = "01"
+section = ["synthetic"]
+data_type = "integer"
+legal_refs = ["orden-test-0001:art-1"]
+source_refs = ["test-source-guidance"]
+
+[[revisions."2025-2026".workbook_parity_refs]]
+id = "synthetic-coverage-parity"
+workbook_source = "test-source-parity"
+fixture_id = "synthetic-coverage-fixture"
+formula_coverage = "formula_form"
+runner_required = true
+output_cells = { result = "Synthetic!A1" }
+tolerance = "0.00"
+legal_refs = ["orden-test-0001:art-1"]
+source_refs = ["test-source-parity"]
+""",
+    )
+    clear_fingerprint_cache()
+    return ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+
+
+def test_model_law_matrix_reports_a_non_vacuous_gap_from_a_synthetic_reviewed_corpus(tmp_path: Path) -> None:
+    """A validator-backed reviewed corpus produces each derived missing-layout cell."""
+    authority = _synthetic_reviewed_coverage_authority(tmp_path)
+    modelo = authority.modelo("999")
+    revision = modelo.revisions["2025-2026"]
+    inspection = authority.inspect_revision("999", filing_year=2025, period="0A")
+    assert {source.evidence_tier for source in inspection.sources.values()} == {
+        "official_source_guidance",
+        "executable_parity_evidence",
+    }
+    assert not any(source.evidence_tier == "layout_authority" for source in inspection.sources.values())
+
+    audit = audit_registry_model_law_coverage(authority)
+    expected_coordinates = set(
+        revision_selection_coordinates(
+            revision,
+            assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+        ),
+    )
+    layout_gaps = [
+        ledger
+        for ledger in audit.ledgers
+        if next(gate for gate in ledger.gates if gate.tier == "layout_authority").status == "gap"
+    ]
+
+    assert len(expected_coordinates) > 1
+    ledgers = [ledger for ledger in audit.ledgers if ledger.revision == revision.id]
+    assert {(ledger.filing_year, ledger.period) for ledger in ledgers} == expected_coordinates
+    assert all(ledger.authority_scope == "inspection_only" for ledger in ledgers)
+    assert {(ledger.filing_year, ledger.period) for ledger in layout_gaps} == expected_coordinates
+    assert audit.required_gate_failures
+
+
+def test_coverage_filing_review_proof_delegates_to_snapshot_owned_check(tmp_path: Path) -> None:
+    """Coverage classification obtains review status from the snapshot boundary."""
+    authority = _synthetic_reviewed_coverage_authority(tmp_path)
+    modelo = authority.modelo("999")
+    revision = modelo.revisions["2025-2026"]
+    inspection = authority.inspect_revision(modelo.id, filing_year=2025, period="0A")
+
+    snapshot_tier = check_snapshot_filing_review_tier(
+        modelo,
+        revision,
+        authority.catalogues,
+        set(inspection.legal_ref_ids),
+    )
+    proof = _snapshot_filing_review_proof(modelo, revision, authority, inspection)
+
+    assert "check_snapshot_filing_review_tier(" in inspect.getsource(_snapshot_filing_review_proof)
+    assert proof is not None
+    assert proof.review_tier is snapshot_tier
 
 
 def test_coverage_gate_rejects_satisfied_without_evidence_refs() -> None:

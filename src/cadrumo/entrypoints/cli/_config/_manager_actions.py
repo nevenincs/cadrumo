@@ -1121,9 +1121,9 @@ def _run_add_row() -> ManagerActionOutcome:
 
     return ManagerActionOutcome(
         message=tr(
-                "flows.manager.action.add_row_done",
-                section=profile_section_title(section),
-                index=mutation.row_index,
+            "flows.manager.action.add_row_done",
+            section=profile_section_title(section),
+            index=mutation.row_index,
         ),
         overview=build_active_profile_overview(),
     )

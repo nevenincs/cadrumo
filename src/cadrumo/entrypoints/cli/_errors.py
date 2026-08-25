@@ -1056,9 +1056,7 @@ def _active_profile_pointer_error_verdict(error: ActiveProfilePointerError) -> P
     return corrupt_active_profile_pointer_verdict(path=path)
 
 
-_STORAGE_SESSION_NO_ACTIONS: Final[
-    Mapping[str, tuple[CliExceptionPrecondition, Mapping[str, str | bool]]]
-] = {
+_STORAGE_SESSION_NO_ACTIONS: Final[Mapping[str, tuple[CliExceptionPrecondition, Mapping[str, str | bool]]]] = {
     "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION": (
         CliExceptionPrecondition.ACTIVE_BUCKET_SESSION_AVAILABLE,
         {"active_bucket_session_available": False},

@@ -166,7 +166,9 @@ def test_export_draft_itself_refuses_a_real_renderer_parser_disagreement(tmp_pat
     )
     output_path = tmp_path / "incompatible-modelo-131.txt"
 
-    with pytest.raises(FilingExportError, match=re.escape("application.filing.export.errors.post_write_verification_refused")):
+    with pytest.raises(
+        FilingExportError, match=re.escape("application.filing.export.errors.post_write_verification_refused")
+    ):
         export_draft(
             _approved_modelo_131_historical_registry_draft(),
             output_path=output_path,
@@ -187,7 +189,9 @@ def test_post_write_tripwire_types_an_unreadable_existing_path_as_missing(tmp_pa
     verification = verify_export(draft, file_path=incompatible_path, schema_provider=provider)
     assert verification.verdict is DeclaracionVerifyVerdict.MISSING
 
-    with pytest.raises(FilingExportError, match=re.escape("application.filing.export.errors.post_write_verification_refused")):
+    with pytest.raises(
+        FilingExportError, match=re.escape("application.filing.export.errors.post_write_verification_refused")
+    ):
         _verify_written_export(draft, file_path=incompatible_path, schema_provider=provider)
 
     assert incompatible_path.is_dir()

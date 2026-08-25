@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Literal, Protocol
+from typing import Literal
 
 from ...core import BindingSourceKind, ModeloCalculationRouteId
 from ..aggregation import (
@@ -18,6 +18,7 @@ from ..aggregation import (
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
+    ModeloSourceResolver,
     OssIossLedgerSourceResolver,
     ProfileSourceResolver,
     RetencionesAggregationSourceResolver,
@@ -36,30 +37,41 @@ from ..calculations import (
 from ..invoices import InvoiceCatalogueSourceResolver
 from ._borrador_binding import Modelo100BorradorSourceResolver
 
-type CalculationRouteStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh", "manual"]
+type CalculationRouteResolverStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh"]
+type CalculationRouteStage = CalculationRouteResolverStage | Literal["manual"]
 CALCULATION_ROUTE_ID = ModeloCalculationRouteId.MODELO_WORK_CALCULATION
 MANUAL_INPUT_RESOLVER_ID = "manual_input"
-
-
-class _ResolverClass(Protocol):
-    resolver_id: str
-    owned_sources: tuple[BindingSourceKind, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class CalculationRouteResolverOwnership:
     """One class-owned resolver identity at its production route stage."""
 
-    stage: CalculationRouteStage
-    resolver_type: type[_ResolverClass] | None
+    stage: CalculationRouteResolverStage
+    resolver_type: type[ModeloSourceResolver]
     resolver_id: str
     owned_sources: tuple[BindingSourceKind, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class CalculationRouteManualOwnership:
+    """The sole manual-input pseudo-owner on the production route."""
+
+    stage: Literal["manual"]
+    resolver_type: Literal[None]
+    resolver_id: Literal["manual_input"]
+    owned_sources: tuple[Literal[BindingSourceKind.MANUAL_INPUT]]
+
+
+type CalculationRouteOwnership = CalculationRouteResolverOwnership | CalculationRouteManualOwnership
+
+
 def _resolver_ownership(
     stage: CalculationRouteStage,
-    resolver_type: type[_ResolverClass],
+    resolver_type: type[ModeloSourceResolver],
 ) -> CalculationRouteResolverOwnership:
+    if stage == "manual":
+        raise RuntimeError("manual input is not a class-owned resolver")
     return CalculationRouteResolverOwnership(
         stage=stage,
         resolver_type=resolver_type,
@@ -68,7 +80,7 @@ def _resolver_ownership(
     )
 
 
-_CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteStage, type[_ResolverClass]], ...] = (
+_CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteStage, type[ModeloSourceResolver]], ...] = (
     ("pre_mesh", ProfileSourceResolver),
     ("pre_mesh", Modelo100BorradorSourceResolver),
     ("pre_mesh", IvaWalletDecisionSourceResolver),
@@ -92,21 +104,21 @@ _CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteStage, type[_ResolverCla
     ("post_mesh", ProrrataRegularizacionSourceResolver),
     ("post_mesh", BienesInversionRegularizacionSourceResolver),
 )
-_MANUAL_INPUT_OWNER = CalculationRouteResolverOwnership(
+_MANUAL_INPUT_OWNER = CalculationRouteManualOwnership(
     stage="manual",
     resolver_type=None,
     resolver_id=MANUAL_INPUT_RESOLVER_ID,
     owned_sources=(BindingSourceKind.MANUAL_INPUT,),
 )
 
-CALCULATION_ROUTE_RESOLVER_OWNERSHIP: tuple[CalculationRouteResolverOwnership, ...] = (
+CALCULATION_ROUTE_RESOLVER_OWNERSHIP: tuple[CalculationRouteOwnership, ...] = (
     *(_resolver_ownership(stage, resolver_type) for stage, resolver_type in _CANONICAL_RESOLVER_STAGES),
     _MANUAL_INPUT_OWNER,
 )
 
 
 def validate_calculation_route_resolver_ownership(
-    ownership: tuple[CalculationRouteResolverOwnership, ...],
+    ownership: tuple[CalculationRouteOwnership, ...],
 ) -> None:
     """Refuse identity, stage, pseudo-owner, and source-disposition drift."""
     canonical_stages = {resolver_type: stage for stage, resolver_type in _CANONICAL_RESOLVER_STAGES}
@@ -117,7 +129,7 @@ def validate_calculation_route_resolver_ownership(
         raise RuntimeError("calculation route resolver ids must be unique")
     source_owners: dict[BindingSourceKind, str] = {}
     for row in ownership:
-        if row.resolver_type is None:
+        if isinstance(row, CalculationRouteManualOwnership):
             if row != _MANUAL_INPUT_OWNER:
                 raise RuntimeError("calculation route permits only the canonical manual-input pseudo-owner")
         else:
@@ -192,6 +204,7 @@ __all__ = [
     "CALCULATION_ROUTE_RESOLVER_OWNERSHIP",
     "CALCULATION_ROUTE_SOURCE_DISPOSITIONS",
     "MANUAL_INPUT_RESOLVER_ID",
+    "CalculationRouteManualOwnership",
     "CalculationRouteResolverOwnership",
     "CalculationRouteStage",
     "require_calculation_route_resolver",

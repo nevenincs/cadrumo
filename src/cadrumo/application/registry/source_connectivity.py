@@ -9,10 +9,10 @@ declarations.
 from __future__ import annotations
 
 import tomllib
-from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date, datetime
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -89,6 +89,23 @@ type CapabilityCoverageSelector = Literal[
 ]
 type RegistryDestinationCandidateKind = Literal["binding_source", "casilla_semantic_role"]
 type RegistryDestinationPeriod = Period | CensoModeloEventKind
+type HydratedTomlValue = (
+    str
+    | int
+    | float
+    | bool
+    | date
+    | datetime
+    | Period
+    | CensoModeloEventKind
+    | BindingSourceKind
+    | ModeloCalculationRouteId
+    | SourceConnectivityDisposition
+    | SourceConnectivityExecutableEvidenceRole
+    | SourceConnectivityGroundingLocatorKind
+    | tuple[HydratedTomlValue, ...]
+    | dict[str, HydratedTomlValue]
+)
 
 
 class RegistryDestinationCandidate(BaseModel):
@@ -132,7 +149,12 @@ class RegistryDestinationCandidate(BaseModel):
     @property
     def identity(self) -> tuple[str, str, str, str, str, str]:
         """Return the canonical typed identity used for one-owner checks."""
-        token = self.semantic_role if self.semantic_role is not None else self.source_kind.value
+        if self.semantic_role is not None:
+            token = self.semantic_role
+        elif self.source_kind is not None:
+            token = self.source_kind.value
+        else:
+            raise ValueError("binding-source destination requires source_kind")
         return (
             self.kind,
             str(self.modelo_id),
@@ -190,9 +212,7 @@ class SourceConnectivityCensusManifest(BaseModel):
         if len(set(candidate_ids)) != len(candidate_ids):
             raise ValueError("source-connectivity census candidate ids must be unique")
         destination_ids = tuple(
-            candidate.identity
-            for row in self.entries
-            for candidate in row.registry_destination_candidates
+            candidate.identity for row in self.entries for candidate in row.registry_destination_candidates
         )
         if len(set(destination_ids)) != len(destination_ids):
             raise ValueError("source-connectivity registry destinations must have one census owner")
@@ -264,6 +284,8 @@ def validate_census_destination_candidates(
                         f"census destination semantic role is absent from {modelo.id}/{revision.id}: "
                         f"{candidate.semantic_role}"
                     )
+            elif candidate.source_kind is None:
+                raise ValueError("binding-source destination requires source_kind")
             elif not any(binding.source is candidate.source_kind for binding in revision.bindings):
                 raise ValueError(
                     f"census destination binding source is absent from {modelo.id}/{revision.id}: "
@@ -304,13 +326,30 @@ def _validate_source_reference_groundings(
             )
 
 
-def _freeze_toml_arrays(value: object) -> object:
+def _is_toml_list(value: object) -> TypeGuard[list[object]]:
+    """Recognise one TOML array before recursively validating its members."""
+    return isinstance(value, list)
+
+
+def _is_toml_table(value: object) -> TypeGuard[dict[object, object]]:
+    """Recognise one TOML table before validating its string keys and values."""
+    return isinstance(value, dict)
+
+
+def _freeze_toml_arrays(value: object) -> HydratedTomlValue:
     """Hydrate TOML arrays into the canonical strict immutable tuple shape."""
-    if isinstance(value, list):
+    if _is_toml_list(value):
         return tuple(_freeze_toml_arrays(item) for item in value)
-    if isinstance(value, Mapping):
-        return {key: _freeze_toml_arrays(item) for key, item in value.items()}
-    return value
+    if _is_toml_table(value):
+        frozen: dict[str, HydratedTomlValue] = {}
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise ValueError("TOML object keys must be strings")
+            frozen[key] = _freeze_toml_arrays(item)
+        return frozen
+    if isinstance(value, str | int | float | bool | date | datetime):
+        return value
+    raise ValueError(f"unsupported TOML value type: {type(value).__name__}")
 
 
 _CENSUS_TOKEN_TYPES = {
@@ -322,7 +361,7 @@ _CENSUS_TOKEN_TYPES = {
 }
 
 
-def _hydrate_census_tokens(value: object, *, field_name: str | None = None) -> object:
+def _hydrate_census_tokens(value: HydratedTomlValue, *, field_name: str | None = None) -> HydratedTomlValue:
     """Hydrate TOML strings into the census contract's strict closed enums."""
     if field_name == "period" and isinstance(value, str):
         try:
@@ -334,7 +373,7 @@ def _hydrate_census_tokens(value: object, *, field_name: str | None = None) -> o
         return token_type(value)
     if isinstance(value, tuple):
         return tuple(_hydrate_census_tokens(item) for item in value)
-    if isinstance(value, Mapping):
+    if isinstance(value, dict):
         return {key: _hydrate_census_tokens(item, field_name=key) for key, item in value.items()}
     return value
 
@@ -433,9 +472,7 @@ def derive_registry_destination_records(snapshot: RegistrySnapshot) -> tuple[Reg
             segmento=casilla.segmento,
             input_kind=casilla.input_kind,
             required=casilla.required,
-            manual_requirement=(
-                "required" if casilla.required else "optional"
-            )
+            manual_requirement=("required" if casilla.required else "optional")
             if casilla.input_kind is InputKind.MANUAL
             else None,
             legal_refs=tuple(casilla.legal_refs),

@@ -93,6 +93,8 @@ def _dev_secret() -> str:
     from ....core.config import load_settings
 
     return load_settings().cadrumo_dev_test_database_password.get_secret_value()
+
+
 def _registered_profile_exists(name: str) -> bool:
     from ....application.workflow import read_profile_bucket
 

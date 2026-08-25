@@ -153,9 +153,7 @@ def test_active_profile_pointer_error_does_not_redeclare_action_or_recovery_pros
     assert "aeat config repair" not in source
     assert "suggestion" not in source
     assert {
-        node.func.id
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
     }.isdisjoint({"ActionReference", "ConditionEvidence", "PreconditionVerdict", "no_action_precondition_verdict"})
 
 

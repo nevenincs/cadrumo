@@ -45,6 +45,7 @@ def _output_language(language: str):
     """
     return override_settings(cadrumo_output_language=language)
 
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 

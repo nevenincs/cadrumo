@@ -24,9 +24,10 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationError, ValidationInfo, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.errors import CoreValidationError as _CoreValidationError
 from ....core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT as _DEFAULT_IVA_GENERAL_RATE_PCT
@@ -869,7 +870,7 @@ class InventoryLedger(BaseModel):
         schema_version: Forward-compatible schema version. ``"3"``.
     """
 
-    model_config = ConfigDict(**{**_STRICT_FROZEN_CONFIG, "hide_input_in_errors": True})
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     actividad_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
@@ -1268,9 +1269,7 @@ def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> Content
                         _canonical_decimal_string(movement.unit_cost) if movement.unit_cost is not None else None
                     ),
                     "taxable_base": (
-                        _canonical_decimal_string(movement.taxable_base)
-                        if movement.taxable_base is not None
-                        else None
+                        _canonical_decimal_string(movement.taxable_base) if movement.taxable_base is not None else None
                     ),
                     "iva_rate": _canonical_decimal_string(movement.iva_rate),
                     "iva_amount": (
@@ -1279,9 +1278,7 @@ def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> Content
                     "deductible_iva_ratio": _canonical_decimal_string(movement.deductible_iva_ratio),
                     "schema_version": movement.schema_version,
                     "acquisition_fingerprint": (
-                        inventory_acquisition_fingerprint(movement)
-                        if movement.kind is MovementKind.PURCHASE
-                        else None
+                        inventory_acquisition_fingerprint(movement) if movement.kind is MovementKind.PURCHASE else None
                     ),
                 }
                 for movement in _sorted_movements(ledger)

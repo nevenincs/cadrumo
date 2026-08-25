@@ -74,9 +74,7 @@ def _numbered_casillas(modelo_id: str, revision_id: str):
 
 
 @pytest.mark.parametrize(("target", "source_ref"), sorted(_AWAITING_LAYOUT.items()))
-def test_every_numbered_casilla_is_printed_by_its_cited_design(
-    target: tuple[str, str], source_ref: str
-) -> None:
+def test_every_numbered_casilla_is_printed_by_its_cited_design(target: tuple[str, str], source_ref: str) -> None:
     """The key, proved total on the modelos where it is total.
 
     If this ever fails, a layout authored on the box number would silently place
@@ -89,9 +87,7 @@ def test_every_numbered_casilla_is_printed_by_its_cited_design(
     assert numbered, f"{modelo_id}/{revision_id} declares no digit-numbered casilla"
     missing = sorted(numbered - printed, key=int)
 
-    assert not missing, (
-        f"{modelo_id}/{revision_id} declares box number(s) its design does not print: {missing[:12]}"
-    )
+    assert not missing, f"{modelo_id}/{revision_id} declares box number(s) its design does not print: {missing[:12]}"
 
 
 def test_modelo_036_misses_exactly_the_untagged_sucesor_fields() -> None:
@@ -112,13 +108,9 @@ def test_modelo_036_misses_exactly_the_untagged_sucesor_fields() -> None:
     assert printed >= _SUCESOR_TAGGED, sorted(_SUCESOR_TAGGED - printed)
 
     unexplained = [
-        number
-        for number in missing
-        if not any(str(int(number) - offset) in _SUCESOR_TAGGED for offset in (1, 2, 3))
+        number for number in missing if not any(str(int(number) - offset) in _SUCESOR_TAGGED for offset in (1, 2, 3))
     ]
-    assert not unexplained, (
-        f"these inferred box numbers sit beside no printed sucesor N.I.F. box: {unexplained}"
-    )
+    assert not unexplained, f"these inferred box numbers sit beside no printed sucesor N.I.F. box: {unexplained}"
 
 
 def test_the_inferred_numbers_are_all_sucesor_casillas() -> None:
@@ -128,10 +120,7 @@ def test_the_inferred_numbers_are_all_sucesor_casillas() -> None:
     revision = modelo.revisions[revision_id]
     printed = _design_box_numbers(source_ref)
 
-    inferred = [
-        c for c in revision.casillas
-        if c.number and c.number.isdigit() and c.number not in printed
-    ]
+    inferred = [c for c in revision.casillas if c.number and c.number.isdigit() and c.number not in printed]
 
     assert inferred
     for casilla in inferred:

@@ -106,10 +106,7 @@ def mask_document(
     Returns:
         A new dict with the masked leaves replaced.
     """
-    masked = {
-        key: (MASK_SENTINEL if key in fields else _mask_value(item, fields))
-        for key, item in document.items()
-    }
+    masked = {key: (MASK_SENTINEL if key in fields else _mask_value(item, fields)) for key, item in document.items()}
     command = document.get("command")
     if isinstance(command, str):
         for masked_command, path in GOLDEN_MASK_PATHS:

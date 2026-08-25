@@ -40,9 +40,7 @@ def test_repair_handlers_and_schema_targets_resolve_with_exact_defaults() -> Non
         assert spec.handler.target is not None
         handler = getattr(importlib.import_module(spec.handler.target.module), spec.handler.target.qualname)
         signature = inspect.signature(handler)
-        runtime_parameters = tuple(
-            name for name in signature.parameters if name != spec.invocation.context_parameter
-        )
+        runtime_parameters = tuple(name for name in signature.parameters if name != spec.invocation.context_parameter)
         assert runtime_parameters == tuple(parameter.name for parameter in spec.parameters)
         for parameter in spec.parameters:
             runtime_default = signature.parameters[parameter.name].default

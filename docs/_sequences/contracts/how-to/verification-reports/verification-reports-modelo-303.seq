@@ -8,8 +8,17 @@ aeat --format json app modelo work calculate {work_unit_id} --m303-filing-eviden
 @step Verify the draft; the run saves a report you can reopen.
 aeat --format json app modelo work verify {calculation_revision_id}
 @capture verification_report_id result.verification_report_id
+@expect result.calculation_revision_id == "{calculation_revision_id}"
+@expect result.verified_by == "docs-sequence-sandbox"
+@step List the reports persisted for that exact calculation revision.
+aeat --format json app modelo verification-report list --calculation-revision-id {calculation_revision_id}
+@expect result.calculation_revision_id_filter == "{calculation_revision_id}"
+@expect result.reports[0].verification_report_id == "{verification_report_id}"
+@expect result.reports[0].calculation_revision_id == "{calculation_revision_id}"
 @step Open the saved verification report and read its findings.
 @result aeat --format json app modelo verification-report view {verification_report_id}
+@expect result.verification_report_id == "{verification_report_id}"
+@expect result.calculation_revision_id == "{calculation_revision_id}"
 @expect result.granted_verificado_completo == true
 @expect result.completeness_status == "complete"
 @expect exit_code == 0

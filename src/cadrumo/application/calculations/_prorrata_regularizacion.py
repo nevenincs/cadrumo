@@ -40,7 +40,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Final
+from typing import ClassVar, Final
 
 from pydantic import BaseModel
 
@@ -842,8 +842,8 @@ def _modelo_303_target_inputs(
 class ProrrataRegularizacionSourceResolver:
     """Resolve annual prorrata-general regularisation bindings from governed carries."""
 
-    resolver_id = _SOURCE_KIND.value
-    owned_sources: tuple[BindingSourceKind, ...] = (_SOURCE_KIND,)
+    resolver_id: ClassVar[str] = _SOURCE_KIND.value
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_SOURCE_KIND,)
 
     def __init__(
         self,

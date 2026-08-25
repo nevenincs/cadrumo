@@ -125,9 +125,7 @@ def config_status(
     try:
         projection = project_answers(get_setup_flow(), values)
     except ValidationError:
-        get_logger(__name__).debug(
-            "config profile status projection validation failed; reporting profile incomplete"
-        )
+        get_logger(__name__).debug("config profile status projection validation failed; reporting profile incomplete")
         result = ConfigStatusResult(
             active_profile=active_profile,
             profile_id=active_uuid,

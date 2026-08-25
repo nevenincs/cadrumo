@@ -16,7 +16,6 @@ from pydantic import BaseModel, Field, computed_field, model_validator
 from ...core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade, RegistrySelectorPeriodCode
 from ...domain.calculations.registry import (
     ModeloId,
-    ModeloRevision,
     RegistrySnapshotError,
     RegistryValidationError,
     RevisionId,

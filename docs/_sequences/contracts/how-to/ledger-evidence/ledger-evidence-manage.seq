@@ -9,4 +9,5 @@ aeat app ledger evidence view {evidence_id}
 aeat app ledger evidence update {evidence_id} --supplier "Papelería Central SL"
 @step Confirm the supplier now reads the updated value.
 @result aeat --format json app ledger evidence view {evidence_id}
+@expect result.evidence_id == "{evidence_id}"
 @expect result.supplier == "Papelería Central SL"

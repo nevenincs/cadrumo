@@ -32,17 +32,11 @@ from ...tests.llm_vision_evidence_support import (
     _run_against_loopback_ollama,
     _transaction,
 )
-from ...tests.llm_vision_evidence_support import (
-    profile as profile,
-)
-from ...tests.secure_sql import TestRuntimeProfile
 from .. import LLMClient
 from .._models import MultimodalImageInput
 from .._vision_classifier import LocalVisionLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-__all__ = ["profile"]
 
 
 def _admissible_measured_hardware_profile(model: str) -> HardwareProfile:
@@ -62,9 +56,8 @@ def _admissible_measured_hardware_profile(model: str) -> HardwareProfile:
     )
 
 
-def test_vision_classifier_classifies_from_images(profile: TestRuntimeProfile) -> None:
+def test_vision_classifier_classifies_from_images() -> None:
     """The vision classifier sends the images to the local model and parses the result."""
-    _ = profile
     classification_json = json.dumps(
         {
             "classification": "BUSINESS",
@@ -92,9 +85,8 @@ def test_vision_classifier_classifies_from_images(profile: TestRuntimeProfile) -
     assert user_message["images"] == [image.base64_data for image in images]
 
 
-def test_image_evidence_classifies_with_no_provider(profile: TestRuntimeProfile) -> None:
+def test_image_evidence_classifies_with_no_provider() -> None:
     """Image evidence routes to the vision model even with no --llm provider."""
-    _ = profile
     classification_json = json.dumps(
         {
             "classification": "BUSINESS",
@@ -158,9 +150,8 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
     assert verdict.evidence[0].values["runtime_reachable"] is False
 
 
-def test_vision_connection_error_carries_the_runtime_precondition_verdict(profile: TestRuntimeProfile) -> None:
+def test_vision_connection_error_carries_the_runtime_precondition_verdict() -> None:
     """An unreachable on-host reader carries the canonical provisioning verdict."""
-    _ = profile
     evidence = _ResolvedEvidence(
         reference="ev-1",
         text=None,
@@ -193,9 +184,8 @@ def test_vision_connection_error_carries_the_runtime_precondition_verdict(profil
     assert verdict.evidence[0].values["runtime_reachable"] is False
 
 
-def test_vision_model_override_selects_the_named_model(profile: TestRuntimeProfile) -> None:
+def test_vision_model_override_selects_the_named_model() -> None:
     """--vision-model threads through to the request model and the provenance stamp."""
-    _ = profile
     classification_json = json.dumps(
         {
             "classification": "BUSINESS",

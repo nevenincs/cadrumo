@@ -31,9 +31,7 @@ def test_m100_2025_loads_exact_grounded_inventory_operation_templates() -> None:
         "opening_minus_closing_positive",
     }
     assert {
-        binding.selector.target_casilla_id
-        for binding in bindings
-        if isinstance(binding.selector, InventorySelector)
+        binding.selector.target_casilla_id for binding in bindings if isinstance(binding.selector, InventorySelector)
     } == {"0177", "0181", "0182"}
     assert all(binding.legal_refs == ("ley-35-2006:art-30",) for binding in bindings)
     assert all(binding.source_refs == ("aeat-renta-2025-manual-parte1",) for binding in bindings)

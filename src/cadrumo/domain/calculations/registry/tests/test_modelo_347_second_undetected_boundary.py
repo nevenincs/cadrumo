@@ -56,10 +56,7 @@ _STABLE_SHEET = "Tipo 2 - Registro De Inmueble"
 
 def _designs():
     _modelos, catalogues = _committed_registry_tree()
-    return {
-        ref: extract_record_design(bundled_path() / catalogues.sources[ref].corpus_path)
-        for ref in (_2010, _2011)
-    }
+    return {ref: extract_record_design(bundled_path() / catalogues.sources[ref].corpus_path) for ref in (_2010, _2011)}
 
 
 def _straddles(sheet_name: str) -> list[str]:

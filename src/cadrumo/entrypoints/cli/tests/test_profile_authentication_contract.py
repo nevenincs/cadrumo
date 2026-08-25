@@ -127,7 +127,9 @@ def test_profile_selection_is_distinct_and_conflict_refuses_without_reading() ->
 
 
 def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None:
-    postures = {node.spec.result_schema.identity: profile_authentication_posture(node) for node in COMMAND_GRAPH.nodes()}
+    postures = {
+        node.spec.result_schema.identity: profile_authentication_posture(node) for node in COMMAND_GRAPH.nodes()
+    }
     assert postures["config.passphrase.change"] is ProfileAuthenticationPosture.SELF_AUTHENTICATING
     assert postures["config.login"] is ProfileAuthenticationPosture.NOT_APPLICABLE
     assert postures["config.profile.create"] is ProfileAuthenticationPosture.NOT_APPLICABLE
@@ -139,9 +141,7 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
 
 def test_profile_authentication_metadata_is_public_bounded_and_value_free() -> None:
     contract = command_registration_projection().profile_authentication_contract
-    assert tuple((field.name, field.json_type) for field in contract.fields) == (
-        ("profile_passphrase", "string"),
-    )
+    assert tuple((field.name, field.json_type) for field in contract.fields) == (("profile_passphrase", "string"),)
     assert contract.maximum_bytes == MACHINE_SECRET_MAX_BYTES == 8192
     assert contract.same_scope_exclusive is True
     assert contract.stdin_exclusive_across_scopes is True

@@ -1,6 +1,9 @@
 @step Record the activity description from your Modelo 036 copy.
 aeat --format json config profile edit docs-sequence-sandbox --quiet --activity "consultoria"
+@capture edited_profile_name result.profile_name
+@expect result.status == "updated"
 @step Confirm the edited profile still validates.
-@result aeat --format json config profile validate
+@result aeat --format json config profile validate {edited_profile_name}
+@expect result.display_name == "{edited_profile_name}"
 @expect result.valid == true
 @expect exit_code == 0

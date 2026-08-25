@@ -3,5 +3,6 @@ aeat --format json app ledger invoice add --kind issued --counterparty-nif B1234
 @capture invoice_id result.invoice_id
 @step Confirm it resolved to a collectible invoice.
 @result aeat --format json app ledger invoice view {invoice_id}
+@expect result.invoice_id == "{invoice_id}"
 @expect result.kind == "issued"
 @expect result.grand_total == "1210.00"

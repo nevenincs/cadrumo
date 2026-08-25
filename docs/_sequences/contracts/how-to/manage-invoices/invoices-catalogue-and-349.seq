@@ -6,6 +6,7 @@ aeat --format json app ledger invoice add --kind issued --counterparty-nif DE345
 aeat app ledger invoice list
 @step Inspect one catalogue invoice to confirm its id.
 aeat --format json app ledger invoice view {invoice_id}
+@expect result.invoice_id == "{invoice_id}"
 @expect result.base_total == "2000.00"
 @step Create the Modelo 349 work unit for the period the invoice falls in.
 aeat --format json app modelo work create --modelo 349 --year 2026 --period 02
@@ -13,4 +14,6 @@ aeat --format json app modelo work create --modelo 349 --year 2026 --period 02
 @step Calculate the recapitulative declaration.
 @result aeat --format json app modelo work calculate {work_unit_id}
 @expect result.operation == "modelo.work.calculate"
+@expect result.work_unit_id == "{work_unit_id}"
+@expect result.state == "borrador"
 @expect exit_code == 0

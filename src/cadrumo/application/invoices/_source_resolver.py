@@ -22,6 +22,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
+from typing import ClassVar
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import (
@@ -163,8 +164,8 @@ class InvoiceCatalogueSourceResolver:
     detail rows, linked transaction ids, and stable source provenance.
     """
 
-    resolver_id = "invoice_catalogue"
-    owned_sources = _OWNED_SOURCES
+    resolver_id: ClassVar[str] = "invoice_catalogue"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = _OWNED_SOURCES
 
     def __init__(
         self,

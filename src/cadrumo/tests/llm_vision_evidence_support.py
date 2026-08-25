@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from http import HTTPStatus
@@ -11,11 +11,8 @@ from pathlib import Path
 from queue import Queue
 from typing import ClassVar, override
 
-import pytest
 from PIL import Image
 
-from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ..application.ledger import PurchaseInvoiceEvidenceService
 from ..core import STR_KEYED_MAPPING_ADAPTER
 from ..core.config import override_settings
 from ..domain.transactions import (
@@ -32,9 +29,6 @@ from .loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from .secure_sql import TestRuntimeProfile, isolated_runtime_profile
-
-_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 
 
 def _json_object(value: object) -> dict[str, object]:
@@ -45,19 +39,6 @@ def _json_object(value: object) -> dict[str, object]:
 def _json_array(value: object) -> list[object]:
     assert isinstance(value, list)
     return list(value)
-
-
-@pytest.fixture
-def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        yield runtime
-
-
-def _scan_only_pdf() -> bytes:
-    """A one-page raster, text-layer-free PDF."""
-    buffer = BytesIO()
-    Image.new("RGB", (260, 160), "white").save(buffer, format="PDF")
-    return buffer.getvalue()
 
 
 def _png_image() -> bytes:
@@ -94,16 +75,6 @@ def _transaction(evidence_id: str) -> Transaction:
             "purchase_invoice_evidence_id": evidence_id,
         },
     )
-
-
-def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path, *, name: str, data: bytes) -> str:
-    path = tmp_path / name
-    path.write_bytes(data)
-    service = PurchaseInvoiceEvidenceService(
-        settings=profile.settings,
-        bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
-    )
-    return service.add(bucket_id=_BUCKET_ID, source_path=path).record.evidence_id
 
 
 class _ObservedOllamaRequest(SilentLoopbackHandler):

@@ -188,6 +188,7 @@ if _ORPHANED_CONSENT_VERIFIERS:  # pragma: no cover - the failure is the collect
         "verifier with no declared symbol runs against nothing."
     )
 
+
 def _production_sites_naming(symbols: tuple[str, ...]) -> dict[str, list[str]]:
     """Return, per symbol, every production file naming it.
 
@@ -220,8 +221,6 @@ def test_no_deleted_cloud_symbol_survives_in_production() -> None:
         f"production source: {offenders}. Delete the reference -- do not narrow the pattern above, "
         "which would make this gate report clean without the tree being clean."
     )
-
-
 
 
 def test_the_scanner_finds_a_symbol_that_is_actually_present() -> None:

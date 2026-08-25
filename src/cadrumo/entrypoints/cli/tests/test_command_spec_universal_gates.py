@@ -119,10 +119,8 @@ def _assert_no_forbidden_authority(
             and argument.attr == "callback"
             and ast.dump(argument.value) == ast.dump(target.value)
         )
-    aliases = {
-        name: name
-        for name in ("Typer", "Option", "Argument", "CommandSpec", "getattr", "setattr")
-    }
+
+    aliases = {name: name for name in ("Typer", "Option", "Argument", "CommandSpec", "getattr", "setattr")}
     typer_modules = {"typer"}
     command_spec_modules: set[str] = set()
     for item in ast.walk(tree):
@@ -168,11 +166,7 @@ def _assert_no_forbidden_authority(
                     and value.value.id in command_spec_modules
                 ):
                     canonical = "CommandSpec"
-                elif (
-                    isinstance(value.value, ast.Name)
-                    and value.value.id == "object"
-                    and value.attr == "__setattr__"
-                ):
+                elif isinstance(value.value, ast.Name) and value.value.id == "object" and value.attr == "__setattr__":
                     canonical = "setattr"
             elif (
                 isinstance(value, ast.Call)
@@ -285,19 +279,12 @@ def _assert_no_forbidden_authority(
                 canonical_name = "CommandSpec"
             assert canonical_name not in forbidden_calls
             if canonical_name == "register":
-                positional_names = {
-                    argument.id for argument in node.args if isinstance(argument, ast.Name)
-                }
+                positional_names = {argument.id for argument in node.args if isinstance(argument, ast.Name)}
                 keyword_names = {keyword.arg for keyword in node.keywords if keyword.arg is not None}
-                assert not (positional_names | keyword_names).intersection(
-                    {"app", "typer_app", "command", "commands"}
-                )
+                assert not (positional_names | keyword_names).intersection({"app", "typer_app", "command", "commands"})
             if (
                 (
-                    (
-                        isinstance(node.func, ast.Name)
-                        and aliases.get(node.func.id, node.func.id) == "setattr"
-                    )
+                    (isinstance(node.func, ast.Name) and aliases.get(node.func.id, node.func.id) == "setattr")
                     or (
                         isinstance(node.func, ast.Attribute)
                         and isinstance(node.func.value, ast.Name)
@@ -371,11 +358,7 @@ def _assert_no_forbidden_authority(
                 )
                 for name in names
             )
-            attribute_targets = {
-                target.attr
-                for target in targets
-                if isinstance(target, ast.Attribute)
-            }
+            attribute_targets = {target.attr for target in targets if isinstance(target, ast.Attribute)}
             forbidden_attributes = attribute_targets.intersection(
                 {
                     "callback",
