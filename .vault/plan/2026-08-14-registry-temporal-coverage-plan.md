@@ -4,7 +4,7 @@ tags:
   - '#registry-temporal-coverage'
 date: '2026-08-14'
 modified: '2026-08-25'
-body_hash: 'sha256:f03a043565c72fc405070f1f52f45042c7d4443d1508fc5cb2b25dc9833fb66f'
+body_hash: 'sha256:2ef812514ea89746bf03e8f787bce737a4172493ac2b3e7c1e3021b76cb27d91'
 tier: L3
 related:
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
@@ -77,6 +77,7 @@ Demote the raw loader family from the package facade and make a production raw-l
 - [ ] `W01.P04.S10` - Demote the raw loader family from the package facade __all__, move external consumers to the authority or a purpose-built narrower export, and extend the import-hygiene gate to red a production raw-loader import, proven by a planted import; `src/cadrumo/domain/calculations/registry/__init__.py; dev/import_hygiene_scan.py; src/cadrumo/tests/`.
 - [ ] `W01.P04.S21` - Close the classification of the six validator modules the load traces showed executing in neither regime, recording for each the entry point that does reach it, because the census disproved the premise that they cannot execute: four are reached from the snapshot reference check on the inspection path, one is reached from the cross-revision validator on every cold load, and one publishes caches and defines no callable so it can never appear in an execution set however live it is, leaving the deletion clause of this row empty unless a member is newly shown dead; `src/cadrumo/domain/calculations/registry/tests/; .vault/audit/`.
 - [ ] `W01.P04.S34` - Demote build_snapshot from the package facade and move any consumer to the authority, because it is exported with no production caller outside the package and is the same unguarded-entry-point class as the raw loader family this phase already closes, proven by a planted production import going red; `src/cadrumo/domain/calculations/registry/__init__.py; dev/import_hygiene_scan.py; src/cadrumo/tests/`.
+- [ ] `W01.P04.S52` - Decompose the three validators that exceed the reviewability ratchet, _validate.py, _validate_cross_revision.py, and _validate_revision_rules.py, into existing family-owned validation modules or new single-responsibility family modules without raising baselines, duplicating dispatch, or changing validation order and refusal facts, and prove the reviewability plus full validator gates; `src/cadrumo/domain/calculations/registry/_validate.py, src/cadrumo/domain/calculations/registry/_validate_cross_revision.py, src/cadrumo/domain/calculations/registry/_validate_revision_rules.py, src/cadrumo/domain/calculations/registry/tests/test_registry_reviewability.py`.
 
 ### Phase `W01.P09` - drift census
 

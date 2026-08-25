@@ -110,6 +110,12 @@ owns completing the canonical parser for the partially read Modelo 180 and 349 P
 and `W04.P07.S109` owns registering or evidence-classifying every bundled
 record-design artefact. Neither is expanded into per-file registry-red rows.
 
+The validator reviewability failure is enrolled once under
+registry-temporal-coverage `W01.P04.S52`. It names the three live oversize modules
+and requires decomposition through the existing validation-family dispatch without
+raising the ratchet or changing refusal order, rather than treating three line-count
+failures as three independent registry-red fixes.
+
 ### non-executable-rows | medium | Two checked findings were not plan work
 
 `P03.S19` and `P03.S20` described adjudication findings and explicitly stated that
