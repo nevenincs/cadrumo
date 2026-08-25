@@ -15,6 +15,7 @@ import pytest
 from ....core import (
     ActionConditionality,
     ActionEvidenceProvenance,
+    CasillaId,
     Modelo,
     NoRecoveryOutcome,
     ObservedHeaderFact,
@@ -34,13 +35,14 @@ from ....domain.iva_compensation import (
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
+    M303CompensationAvailableDerivation,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import _errors as errors_module
 from .. import _m303_carry_ingress as m303_module
 from .. import _observations_repository as observations_module
 from .._errors import CalculationRefusalPrecondition, ObservationEvidenceDisplacementError
-from .._m303_carry_ingress import M303CarryIngressError
+from .._m303_carry_ingress import M303CarryIngressError, _resolve_available_compensation_formula_id
 from .._observations_repository import (
     CalculationObservationRepository,
     ObservationSourceKind,
@@ -256,7 +258,7 @@ def _assert_exact_terminal_contract(
     assert dict(evidence.values) == facts
 
 
-def _m303_observation(values: dict[object, Decimal]) -> RegistryModeloObservation:
+def _m303_observation(values: dict[CasillaId, Decimal]) -> RegistryModeloObservation:
     observations = tuple(
         CasillaObservation(
             casilla_id=casilla_id,
@@ -434,10 +436,7 @@ def test_m303_derived_carry_contradiction_has_an_exact_safety_verdict(tmp_path: 
     )
 
 
-def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict() -> None:
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(candidate for candidate in modelos if candidate.id == Modelo.M303.value)
     revision = select_revision(
@@ -446,28 +445,16 @@ def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict(
         period=_PERIOD.registry_token,
     )
     formula = next(item for item in revision.formulas if item.target_casilla_id == M303_COMPENSATION_AVAILABLE_CASILLA)
-    monkeypatch.setattr(m303_module, "expression_casilla_refs", lambda _expression: ())
+    contradictory_derivation = M303CompensationAvailableDerivation(
+        available=Decimal("27.00"),
+        generated=Decimal("20.00"),
+        basis="generated",
+        operand_refs=(M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_RESULTADO_CASILLA),
+        operand_values=(Decimal("7.00"), Decimal("20.00")),
+    )
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repository = CalculationObservationRepository()
-        with pytest.raises(M303CarryIngressError) as raised:
-            repository.prepare_observation_envelope(
-                _m303_observation(
-                    {
-                        M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("7.00"),
-                        M303_COMPENSATION_GENERADA_CASILLA: Decimal("20.00"),
-                        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-20.00"),
-                    }
-                ),
-                source_kind=ObservationSourceKind.APP_FILING,
-                captured_at=_CAPTURED_AT,
-                result_disposition=ResultDispositionProjection(
-                    disposition=ResultDisposition.COMPENSACION,
-                    provenance_kind="app_filing",
-                    provenance_locator="filed-revision:2025:1T",
-                ),
-                normalize_m303_carry=True,
-            )
+    with pytest.raises(M303CarryIngressError) as raised:
+        _resolve_available_compensation_formula_id(revision, contradictory_derivation)
 
     _assert_exact_terminal_contract(
         raised.value,
@@ -475,9 +462,11 @@ def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict(
         facts={
             "formula_id": str(formula.id),
             "derivation_operands": ",".join(
+                (str(M303_COMPENSATION_POSTERIOR_CASILLA), str(M303_COMPENSATION_RESULTADO_CASILLA))
+            ),
+            "registry_operands": ",".join(
                 (str(M303_COMPENSATION_POSTERIOR_CASILLA), str(M303_COMPENSATION_GENERADA_CASILLA))
             ),
-            "registry_operands": "",
         },
     )
 
