@@ -14,7 +14,6 @@ from ...core import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ...core.errors import CadrumoError
 from ...core.identity import ContentDigest
 from ...core.time import validate_utc_aware
 from ._capabilities import OperationRequestStoragePolicy
@@ -199,7 +198,7 @@ class OperationObservationUnknownOperationError(LookupError):
         super().__init__("operation observation requires an existing operation")
 
 
-class OperationObservationCursorAheadError(CadrumoError):
+class OperationObservationCursorAheadError(ValueError):
     """The caller cursor is beyond the authoritative anchor read under the journal lock."""
 
     def __init__(self, *, requested_cursor: OperationEventCursor, anchor_cursor: OperationEventCursor) -> None:
