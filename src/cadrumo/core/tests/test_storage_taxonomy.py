@@ -17,7 +17,6 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
-from ..bucket_pointer import pointer_path
 from .._storage_taxonomy import (
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,
@@ -37,6 +36,7 @@ from .._storage_taxonomy import (
     storage_path,
     storage_tree_targets,
 )
+from ..bucket_pointer import pointer_path
 from ..config import Settings, override_settings
 from ..errors import CoreValidationError
 
