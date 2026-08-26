@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:81f4d6292d45115c89acb473e9231c228131455c9ae66c0455f4d71a0391213c'
+body_hash: 'sha256:13d0ab81eb1de21dd00a256e312ee244e67624959fadc1288de8b9bd216d83a9'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -124,9 +124,9 @@ Open the bounded review and complex read workspace sequentially: C1 consumes the
 
 Register the one bounded review destination over the relocated canonical ModeloWorkReview renderer and close C1 only after its accessibility and current-HEAD receipt proofs pass.
 
-- [ ] `W05.P10.S24` - Register modelo.work.select and the sole C1 modelo.work.review destination over the architecture-relocated view, consuming the exact public ModeloWorkReview without a second producer or legacy route; `src/cadrumo/entrypoints/tui/modelo/view`.
-- [ ] `W05.P10.S25` - Prove C1 review outliers, stable keyboard order, non-colour status, and all four locales, three geometries, and two themes before its route can become callable; `src/cadrumo/entrypoints/tui/modelo/tests/test_c1_bounded_review.py`.
-- [ ] `W05.P10.S38` - Emit and validate ModeloWorkspaceC1ExitReceiptV1 with the accepted-companion prefix, migration evidence, denominator digest, C1 accessibility matrix, production route, and availability fence; `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`.
+- [x] `W05.P10.S24` - Register modelo.work.select and the sole C1 modelo.work.review destination over the architecture-relocated view, consuming the exact public ModeloWorkReview without a second producer or legacy route; `src/cadrumo/entrypoints/tui/modelo/view`.
+- [x] `W05.P10.S25` - Prove C1 review outliers, stable keyboard order, non-colour status, and all four locales, three geometries, and two themes before its route can become callable; `src/cadrumo/entrypoints/tui/modelo/tests/test_c1_bounded_review.py`.
+- [x] `W05.P10.S38` - Emit and validate ModeloWorkspaceC1ExitReceiptV1 with the accepted-companion prefix, migration evidence, denominator digest, C1 accessibility matrix, production route, and availability fence; `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`.
 
 ### Phase `W05.P10a` - Workspace C2 dependency handoff
 

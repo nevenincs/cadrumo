@@ -1618,6 +1618,8 @@ cli:
         sal_reserva_not_decimal: 'Los valores --sal-* deben ser importes decimales;
           se recibió: {value}. Use el punto como separador decimal y sin separador
           de miles, p. ej. 1234.56.'
+        select_help: Lista las unidades de trabajo registradas y, con --tui, permite
+          elegir una para abrir su revisión.
         selector_ambiguous: 'Más de una unidad de trabajo activa coincide con este
           modelo, año y periodo.
 

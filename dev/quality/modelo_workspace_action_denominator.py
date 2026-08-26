@@ -976,6 +976,18 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
         evidence_reference=".vault/audit/2026-08-11-casilla-schema-s23-modelo-work-review-audit.md",
         reopening_condition="never reopens: terminal C1 disposition",
     ),
+    "modelo.work.select": _classification(
+        "modelo.work.select",
+        ModeloWorkspaceActionDisposition.C1_BOUNDED_REVIEW,
+        command_key="app_modelo_work_select",
+        write_route="none",
+        side_effects=("none",),
+        has_action_catalogue_entry=False,
+        owning_authority="tui-interface W05.P10.S24",
+        reason="the sole C1 work-unit picker entrance into modelo.work.review",
+        evidence_reference="src/cadrumo/entrypoints/tui/modelo/view/work_select.py",
+        reopening_condition="never reopens: terminal C1 disposition",
+    ),
     "modelo.work.revision": _classification(
         "modelo.work.revision",
         ModeloWorkspaceActionDisposition.C1_OR_C2_READ_PENDING,

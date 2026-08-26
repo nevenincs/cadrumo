@@ -205,6 +205,15 @@ flows:
       verification_outcome: Resultado de la verificación
       work_unit: Unidad de trabajo
     title: Modelo {modelo} · {filing_year} · {period}
+  modelo_select:
+    column:
+      filing_year: Ejercicio
+      modelo: Modelo
+      name: Nombre
+      period: Periodo
+      state: Estado
+    empty: Todavía no hay unidades de trabajo registradas en este perfil.
+    title: Seleccionar una unidad de trabajo de modelo
   progress:
     current_answer: 'Respuesta actual: {value}'
     current_answer_secret: 'Respuesta actual: (oculta)'

@@ -206,6 +206,15 @@ flows:
       verification_outcome: Ellenőrzés eredménye
       work_unit: Munkamegység
     title: Modelo {modelo} · {filing_year} · {period}
+  modelo_select:
+    column:
+      filing_year: Adóév
+      modelo: Modell
+      name: Név
+      period: Időszak
+      state: Állapot
+    empty: Ehhez a profilhoz még nincs regisztrált munkaegység.
+    title: Modell munkaegység kiválasztása
   progress:
     current_answer: 'Jelenlegi válasz: {value}'
     current_answer_secret: 'Jelenlegi válasz: (rejtett)'

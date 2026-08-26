@@ -206,6 +206,15 @@ flows:
       verification_outcome: Resultat de la verificació
       work_unit: Unitat de treball
     title: Modelo {modelo} · {filing_year} · {period}
+  modelo_select:
+    column:
+      filing_year: Exercici
+      modelo: Model
+      name: Nom
+      period: Període
+      state: Estat
+    empty: Encara no hi ha cap unitat de treball registrada en aquest perfil.
+    title: Seleccionar una unitat de treball de model
   progress:
     current_answer: 'Resposta actual: {value}'
     current_answer_secret: 'Resposta actual: (oculta)'

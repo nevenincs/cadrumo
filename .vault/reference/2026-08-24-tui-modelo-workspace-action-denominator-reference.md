@@ -2,19 +2,19 @@
   "receipt_schema_version": 1,
   "artifact_kind": "modelo_workspace_action_denominator",
   "generator": "dev/quality/modelo_workspace_action_denominator.py",
-  "generated_at_head": "458592d6275f6e9a541b1ba348cac107e3eb8dc9",
+  "generated_at_head": "e79038e7496bbcb0f2763336d586253ff3cc34d4",
   "candidate_source": [
     "cadrumo.entrypoints.cli.command_api.command_spec_nodes",
     "cadrumo.application.operator_actions.OPERATOR_ACTION_CATALOGUE"
   ],
-  "row_count": 78,
-  "rows_digest": "sha256:78760c72a72ce2ea7122c3acaa2584d84cceb9a1ad686fd7c48367637df2b035",
+  "row_count": 79,
+  "rows_digest": "sha256:34e063e2946b1eaa9b4297e127d12f9b87e185ade8c864454968c96294770367",
   "disposition_tally": {
     "c4_mutation_pending": 31,
     "c1_or_c2_read_pending": 43,
     "flow_owned": 2,
     "deferred": 1,
-    "c1_bounded_review": 1
+    "c1_bounded_review": 2
   },
   "rows": [
     {
@@ -1071,6 +1071,20 @@
       "reason": "read-only query, not yet migrated to a C1 or C2 destination",
       "evidence_reference": ".vault/adr/2026-08-24-tui-modelo-workspace-interface-adr.md",
       "reopening_condition": "reopens on migration to a numbered C1/C2 destination in the same commit"
+    },
+    {
+      "action_identity": "modelo.work.select",
+      "disposition": "c1_bounded_review",
+      "command_key": "app_modelo_work_select",
+      "write_route": "none",
+      "side_effects": [
+        "none"
+      ],
+      "has_action_catalogue_entry": false,
+      "owning_authority": "tui-interface W05.P10.S24",
+      "reason": "the sole C1 work-unit picker entrance into modelo.work.review",
+      "evidence_reference": "src/cadrumo/entrypoints/tui/modelo/view/work_select.py",
+      "reopening_condition": "never reopens: terminal C1 disposition"
     },
     {
       "action_identity": "modelo.work.status",
