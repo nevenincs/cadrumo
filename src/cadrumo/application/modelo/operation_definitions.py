@@ -19,6 +19,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING, Annotated
 
@@ -51,14 +52,19 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ._verification_actions import verify_modelo_revision
 from ._work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
 
 if TYPE_CHECKING:
+    from ...domain.deadlines import TaxpayerProfile
+    from ...domain.modelos import VerificationReport
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
 MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
+MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.verify"
+MODELO_WORK_VERIFY_PROGRESS_UNIT = "casilla"
 
 _WORK_UNIT_ID = Annotated[str, Field(min_length=1, max_length=128)]
 _WORK_UNIT_NAME = Annotated[str, Field(min_length=1, max_length=200)]
@@ -248,6 +254,140 @@ def build_modelo_work_discard_registration(
     )
 
 
+type ModeloWorkVerifyProfileResolver = Callable[[], TaxpayerProfile]
+
+
+class ModeloWorkVerifyRequest(CredentialFreeOperationRequest):
+    """The calculation revision to verify.
+
+    The taxpayer profile the gates are evaluated against is deliberately NOT
+    carried here. It is resolved at execution from live state, so a request
+    replayed later cannot verify against a profile the taxpayer has since
+    changed.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+
+
+class ModeloWorkVerifyPublicResultV1(BaseModel):
+    """The settled verification outcome a caller outside this package may see.
+
+    Counts rather than casilla id lists: a result consumer needs to know
+    whether the revision is complete and how much is outstanding, and shipping
+    the resolved ids would put a filing-shaped payload in the operation result
+    where the verification report is the record of truth.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    result_version: int = 1
+    verification_report_id: Annotated[str, Field(min_length=1, max_length=128)]
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    completeness_status: Annotated[str, Field(min_length=1, max_length=64)]
+    granted_verificado_completo: bool
+    finding_count: Annotated[int, Field(ge=0)]
+    missing_required_casilla_count: Annotated[int, Field(ge=0)]
+
+
+def project_modelo_work_verify_result(report: VerificationReport) -> ModeloWorkVerifyPublicResultV1:
+    """Project one persisted report onto the safe public result."""
+    return ModeloWorkVerifyPublicResultV1(
+        verification_report_id=str(report.verification_report_id),
+        calculation_revision_id=str(report.calculation_revision_id),
+        completeness_status=str(report.completeness_status),
+        granted_verificado_completo=report.granted_verificado_completo,
+        finding_count=len(report.findings),
+        missing_required_casilla_count=len(report.missing_required_casilla_ids),
+    )
+
+
+class ModeloWorkVerifyExecutor:
+    """Run the existing verification authority under a recorded identity."""
+
+    def __init__(self, *, actor: str, profile_resolver: ModeloWorkVerifyProfileResolver) -> None:
+        """Bind the actor and the live profile the gates are evaluated against."""
+        self._actor = actor
+        self._profile_resolver = profile_resolver
+
+    async def execute(
+        self,
+        request: OperationRequest[ModeloWorkVerifyRequest],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        """Delegate to the verification authority and return its report id.
+
+        The authority owns the guarded persistence and the events it emits;
+        nothing here writes a report or decides completeness.
+        """
+        del context
+        report = verify_modelo_revision(
+            request.payload.calculation_revision_id,
+            actor=self._actor,
+            workflow_profile=self._profile_resolver(),
+        )
+        return str(report.verification_report_id)
+
+
+def build_modelo_work_verify_definition(
+    *,
+    actor: str,
+    profile_resolver: ModeloWorkVerifyProfileResolver,
+) -> OperationDefinition:
+    """Bind the verification authority to its registered operation contract."""
+
+    def build() -> ModeloWorkVerifyExecutor:
+        return ModeloWorkVerifyExecutor(actor=actor, profile_resolver=profile_resolver)
+
+    return OperationDefinition(
+        definition_id=MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+        request_type=ModeloWorkVerifyRequest,
+        result_type=ModeloWorkVerifyPublicResultV1,
+        executor_factory=OperationExecutorFactory(
+            request_type=ModeloWorkVerifyRequest,
+            executor_type=ModeloWorkVerifyExecutor,
+            build=build,
+        ),
+        phase_codes=("modelo.work.verify.gates", "modelo.work.verify.persist"),
+        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RECORDED,
+            cancellation=OperationCancellation.COOPERATIVE,
+            deadline=OperationDeadline.COOPERATIVE,
+            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+            baseline=OperationBaselinePolicy.REQUEST_BOUND,
+            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset(),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            close_policy=OperationClosePolicy.REQUEST_CANCEL,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def build_modelo_work_verify_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the verify definition to its stable public schemas."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.work.verify.request",
+            schema_version=1,
+            model_type=definition.request_type,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.work.verify.result",
+            schema_version=1,
+            model_type=ModeloWorkVerifyPublicResultV1,
+        ),
+    )
+
+
 def build_modelo_work_rename_definition(*, actor: str) -> OperationDefinition:
     """Bind the rename writer to its registered operation contract."""
 
@@ -305,6 +445,8 @@ def build_modelo_work_rename_registration(
 __all__ = [
     "MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID",
     "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
+    "MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID",
+    "MODELO_WORK_VERIFY_PROGRESS_UNIT",
     "ModeloWorkDiscardApprovalStaleError",
     "ModeloWorkDiscardBaseline",
     "ModeloWorkDiscardExecutor",
@@ -313,8 +455,14 @@ __all__ = [
     "ModeloWorkRenameExecutor",
     "ModeloWorkRenamePublicResultV1",
     "ModeloWorkRenameRequest",
+    "ModeloWorkVerifyExecutor",
+    "ModeloWorkVerifyPublicResultV1",
+    "ModeloWorkVerifyRequest",
     "build_modelo_work_discard_definition",
     "build_modelo_work_discard_registration",
     "build_modelo_work_rename_definition",
     "build_modelo_work_rename_registration",
+    "build_modelo_work_verify_definition",
+    "build_modelo_work_verify_registration",
+    "project_modelo_work_verify_result",
 ]

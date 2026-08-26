@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import OperationDurability, OperationEffect
+from ....core import OperationCancellation, OperationDurability, OperationEffect, OperationInteractionKind
 from ...operations.capabilities import (
     OperationBaselinePolicy,
     OperationConflictScope,
@@ -26,10 +26,15 @@ from ..operation_definitions import (
     ModeloWorkRenameExecutor,
     ModeloWorkRenamePublicResultV1,
     ModeloWorkRenameRequest,
+    ModeloWorkVerifyExecutor,
+    ModeloWorkVerifyPublicResultV1,
+    ModeloWorkVerifyRequest,
     build_modelo_work_discard_definition,
     build_modelo_work_discard_registration,
     build_modelo_work_rename_definition,
     build_modelo_work_rename_registration,
+    build_modelo_work_verify_definition,
+    build_modelo_work_verify_registration,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -168,3 +173,62 @@ def test_the_two_enrolments_are_distinct_registered_subjects() -> None:
 
     assert _definition().definition_id != _discard_definition().definition_id
     assert not (rename_ids & discard_ids)
+
+
+def _verify_definition():
+    return build_modelo_work_verify_definition(actor="operator", profile_resolver=lambda: None)
+
+
+def test_verify_declares_review_and_its_progress_phases() -> None:
+    """Verification is reviewable work with declared phases, not a silent write."""
+    definition = _verify_definition()
+
+    assert OperationInteractionKind.REVIEW in definition.interaction_kinds
+    assert definition.phase_codes == ("modelo.work.verify.gates", "modelo.work.verify.persist")
+    assert definition.capabilities.cancellation is OperationCancellation.COOPERATIVE
+
+
+def test_the_verify_request_never_carries_the_profile_it_is_judged_against() -> None:
+    """A replayed request must not verify against a profile that has since changed."""
+    fields = set(ModeloWorkVerifyRequest.model_fields)
+
+    assert "calculation_revision_id" in fields
+    assert "workflow_profile" not in fields
+    assert not any("profile" in name for name in fields)
+
+
+def test_the_verify_result_reports_counts_not_a_filing_shaped_payload() -> None:
+    """The report is the record of truth; the result says outcome and how much."""
+    fields = set(ModeloWorkVerifyPublicResultV1.model_fields)
+
+    assert "finding_count" in fields
+    assert "missing_required_casilla_count" in fields
+    assert "resolved_casilla_ids" not in fields
+    assert "findings" not in fields
+
+
+def test_the_verify_executor_delegates_and_decides_no_completeness() -> None:
+    """The authority owns guarded persistence, its events and the verdict."""
+    source = inspect.getsource(ModeloWorkVerifyExecutor)
+    tree = ast.parse(textwrap.dedent(source))
+    called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+
+    assert "verify_modelo_revision" in called
+    for forbidden in ("VerificationReportCatalogueRepository", "granted_verificado_completo", "completeness_status"):
+        assert forbidden not in source, f"the executor decides what the authority owns: {forbidden}"
+
+
+def test_every_enrolment_here_targets_a_distinct_subject() -> None:
+    """Three enrolments, three definition ids, no shared schema id."""
+    definitions = [_definition(), _discard_definition(), _verify_definition()]
+    ids = [definition.definition_id for definition in definitions]
+
+    assert len(set(ids)) == 3
+    registrations = [
+        build_modelo_work_rename_registration(definitions[0]),
+        build_modelo_work_discard_registration(definitions[1]),
+        build_modelo_work_verify_registration(definitions[2]),
+    ]
+    schema_ids = [binding.identity.schema_id for reg in registrations for binding in reg.schema_bindings]
+
+    assert len(set(schema_ids)) == len(schema_ids)
