@@ -49,7 +49,16 @@ real cross-module borrow, `WithholdingObservation` reached through `bindings`,
 was repointed to its owner `withholding_bindings`. Removing the export lists let
 ruff remove seventy-two imports that existed only to re-export.
 
-S236 (schema.py, 66) is not yet corrected.
+S236 was corrected too: schema declared eighty-two names, sixty-six borrowed
+from schema_base, schema_surfaces, schema_formula, schema_exports and
+schema_references, reached by twenty-one modules. Each now imports from the
+defining module. Five smaller lists followed, and the registry package now has
+no module exporting a symbol it does not define.
+
+A gate holds the property: `test_no_registry_module_exports_a_symbol_it_does_not_define`
+in `test_public_api_boundaries.py`. It asserts its own denominator, which caught
+a wrong root path while it was being written, and it was proved to bite by
+planting a borrowed name.
 
 ## Lessons
 
