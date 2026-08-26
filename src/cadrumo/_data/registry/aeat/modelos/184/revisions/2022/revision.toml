@@ -1,0 +1,13 @@
+[revisions."2022"]
+authority_grade = "applicability"
+# This epoch has its own BOE design.  Strict parsing detects its first field at
+# position 103, so it cannot safely carry either earlier or later coordinates.
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+period_selector = { year_from = 2022, year_to = 2022, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hap-2250-2015:art-1"]
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
+source_refs = ["boe-dr-184-2022", "boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]
+review_status = "agent_reviewed"
+reviewed_by = "agent: applicability-only historical epoch. The raw BOE-A-2022-20274 record-design PDF is source-pinned, but the canonical strict parser starts its first field at position 103 rather than position 1. No casillas, bindings, export layout, or continuity claim is declared. Reconsider only after a strict parse yields complete record sheets from position 1 and the resulting geometry is independently compared with this exercise."
+reviewed_at = 2026-08-26

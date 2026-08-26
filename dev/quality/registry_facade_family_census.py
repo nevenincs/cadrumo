@@ -195,12 +195,12 @@ def _python_imports(tree: ast.AST) -> tuple[str, ...]:
     return tuple(imports)
 
 
-_CONSUMER_CACHE: dict[str, dict[str, tuple[str, ...]]] | None = None
+_CONSUMER_CACHE: dict[str, dict[str, list[str]]] | None = None
 
 
 def _all_current_consumers(
     candidates: tuple[RelocatedFamily, ...],
-) -> dict[str, dict[str, tuple[str, ...]]]:
+) -> dict[str, dict[str, list[str]]]:
     """Census every fixed family member in one AST walk of the consumer corpus."""
     hits = {candidate.old_path: {category: set() for category in CONSUMER_CATEGORIES} for candidate in candidates}
     direct_modules = {candidate.old_path: set() for candidate in candidates}
@@ -264,12 +264,12 @@ def _all_current_consumers(
             if path.is_file():
                 hits[candidate.old_path]["transitive"].add(path.relative_to(ROOT).as_posix())
     return {
-        old_path: {category: tuple(sorted(paths)) for category, paths in categories.items()}
+        old_path: {category: sorted(paths) for category, paths in categories.items()}
         for old_path, categories in hits.items()
     }
 
 
-def _current_consumers(candidate: RelocatedFamily) -> dict[str, tuple[str, ...]]:
+def _current_consumers(candidate: RelocatedFamily) -> dict[str, list[str]]:
     """Return this exact family member's cached, one-pass consumer census."""
     global _CONSUMER_CACHE
     if _CONSUMER_CACHE is None:
@@ -301,10 +301,11 @@ def generated_rows() -> list[dict[str, object]]:
     """Produce the exact c941 family rows without inventing their adjudications."""
     facade_exports = _historic_facade_exports()
     rows: list[dict[str, object]] = []
-    for candidate in exact_relocation_candidates():
+    for row_number, candidate in enumerate(exact_relocation_candidates(), start=1):
         exported_symbols = facade_exports.get(candidate.old_path, ())
         rows.append(
             {
+                "row_id": f"R{row_number:02d}",
                 "old_path": candidate.old_path,
                 "new_path": candidate.new_path,
                 "rename_similarity": candidate.similarity,
@@ -334,7 +335,8 @@ def matrix_document() -> dict[str, object]:
 
 def _canonical_plan_step_ids() -> frozenset[str]:
     """Read the canonical Step IDs owned by the reviewed TUI architecture plan."""
-    return frozenset(re.findall(r"`(W\d{2}\.P\d{2}\.S\d+)`", PLAN_PATH.read_text(encoding="utf-8")))
+    matches = re.findall(r"`(W\d{2}\.P\d{2}\.S\d+)`", PLAN_PATH.read_text(encoding="utf-8"))
+    return frozenset(str(match) for match in matches)
 
 
 def check_matrix_document(document: dict[str, object]) -> None:
@@ -366,6 +368,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
     steps: set[str] = set()
     disposition_counts = {disposition: 0 for disposition in DISPOSITIONS}
     required_row_fields = {
+        "row_id",
         "old_path",
         "new_path",
         "rename_similarity",
@@ -392,6 +395,8 @@ def check_matrix_document(document: dict[str, object]) -> None:
             raise RuntimeError(f"registry facade row {row.get('old_path')!r} has an incomplete or grouped schema")
         pair = (row["old_path"], row["new_path"])
         generated = next(item for item in expected if (item["old_path"], item["new_path"]) == pair)
+        if row.get("row_id") != generated["row_id"]:
+            raise RuntimeError(f"registry facade row {pair[0]} has a non-canonical row id")
         if (
             row.get("facade_exported_symbols") != generated["facade_exported_symbols"]
             or row.get("current_symbol_locators") != generated["current_symbol_locators"]

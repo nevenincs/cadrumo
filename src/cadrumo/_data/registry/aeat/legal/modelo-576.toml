@@ -1,3 +1,22 @@
+[legal."orden-eha-1981-2005:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1981-2005.html#df-unica"
+document_id = "BOE-A-2005-10950"
+article = "disposicion final unica"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2005-10950#disposicionfinalunica"
+published_at = 2005-06-29
+effective_from = 2005-06-30
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-26
+reviewed_by = "agent-prepared (corpus-grounded against the official BOE-A-2005-10950 final provision; pending operator re-verification)"
+notes = "Orden EHA/1981/2005 final provision: modelo 576 is required for IEDMT operations whose devengo occurs from 1 January 2006. Its annex is graphical form evidence, not a parser-usable fixed-width record design."
+required_text = [
+    "modelo 576 deberá ser utilizado",
+    "a partir del 1 de enero de 2006",
+]
+
 [legal."orden-eha-3851-2007:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -30,20 +49,39 @@ applies_from = 2008-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-22442"
 review_status = "reviewed"
 
-# Re-pointed 2026-08-15: the previous corpus_path (orden-eha-3851-2007.html,
-# 959 bytes) carries no annex section and no record-layout vocabulary. The
-# real Diseño de Registro (65097 bytes) is bundled and was never cited --
-# verified directly: "N° | Posic. | Lon | Tipo | Descripción | Validación |
-# Contenido", the canonical AEAT layout table header, starting with the
-# T57601 start-of-data label at position 1. Fields now point at the bundled
-# file, sourced from its manifest.json (real, observed provenance, not
-# re-fetched). applies_from/record_design_epoch left undeclared: titled
-# "vigente" (currently in force) with no single coverage-start date stated.
-# AEAT states Orden EHA/3851/2007, de 26 de diciembre approved modelo 576 and "includes
-# the physical and logical designs". That orden is already catalogued in this file as
-# orden-eha-3851-2007:art-1 with effective_from 2008-01-01, which is the applicability date
-# used here (the epoch labels that applicability year, not the orden year). The design's own "Ej.Dev.<2008 / >=2008" conditional is consistent with it.
-[sources."enrolled-modelo-576-layout"]
+[sources."boe-modelo-576-2005-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-1981-2005.html"
+sha256 = "013131f9812f28919546da29071cee783004069923c80bcb4d868ae39b139ef5"
+bytes = 1824
+retrieved_at = 2026-08-26
+published_at = 2005-06-29
+applies_from = 2006-01-01
+applies_to = 2007-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2005-10950"
+review_status = "reviewed"
+
+[sources."boe-modelo-576-2005-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-1981-2005.html"
+sha256 = "013131f9812f28919546da29071cee783004069923c80bcb4d868ae39b139ef5"
+bytes = 1824
+retrieved_at = 2026-08-26
+published_at = 2005-06-29
+applies_from = 2006-01-01
+applies_to = 2007-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2005-10950"
+review_status = "reviewed"
+
+# This is the first parser-usable positional design evidence in the local
+# corpus. Its own "Ej.Dev.<2008 / >=2008" branch and the approving orden's
+# effective date bound it to 2008 onward; do not infer a 2007 writer from the
+# graphical BOE annexes that preceded it.
+[sources."aeat-dr-576-2008"]
 record_design_epoch = "2008"
 applies_from = 2008-01-01
 evidence_tier = "layout_authority"

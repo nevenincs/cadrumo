@@ -1,0 +1,38 @@
+[revisions."2007"]
+# The 2005 orden proves that Modelo 576 applies to devengos in 2007. Its
+# graphical annex is not a parser-usable fixed-width record design. The one
+# form-backed declaration-year casilla therefore has no export reference, and
+# this revision has no constructs, export layout, or export application link.
+# The generic filing-capability check is the resulting refusal; no
+# Modelo-576-specific exception is declared.
+authority_grade = "applicability"
+valid_from = 2007-01-01
+valid_to = 2007-12-31
+period_selector = { years = [2007], periods = ["0A"] }
+orden_aplicabilidad = ["orden-eha-1981-2005:df-unica"]
+legal_refs = [
+    "orden-eha-1981-2005:df-unica",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "boe-modelo-576-2005-form",
+    "boe-modelo-576-2005-procedure",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent: the official BOE-A-2005-10950 final provision establishes use of Modelo 576 from 2006, including exercise 2007. Its annex is graphical form evidence only; no fixed-width record geometry, field offsets, casillas, or export claim is copied from the 2008 AEAT design."
+reviewed_at = 2026-08-26
+
+[revisions."2007".family_dispositions.deadline_windows]
+reason = """
+The cited final provision establishes the model's applicability but supplies no recurring calendar presentation window. No deadline window is authored from a non-calendar citation, and no date is fabricated for an event-based filing process."""
+legal_refs = ["orden-eha-1981-2005:df-unica"]
+source_refs = ["boe-modelo-576-2005-procedure"]
+
+[revisions."2007".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+Revision '2007' is the earliest declared Modelo 576 revision. Its only casilla is the form-backed declaration year and has no fixed-width export identity, so it cannot establish a continuity transition to the 2008 positional design. The family is empty by construction rather than omission."""
+legal_refs = [
+    "orden-eha-1981-2005:df-unica",
+    "ley-58-2003:art-93",
+]
+source_refs = ["boe-modelo-576-2005-procedure"]

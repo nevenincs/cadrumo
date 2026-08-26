@@ -1,0 +1,14 @@
+[revisions."2015"]
+authority_grade = "applicability"
+# The 2015 BOE record-design PDF is hash-pinned for its own exercise.  Its
+# first detected field starts at position 160, so it carries no selectable
+# record-design epoch and must not inherit the later 2023-2024 map.
+valid_from = 2015-01-01
+valid_to = 2015-12-31
+period_selector = { year_from = 2015, year_to = 2015, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hap-2250-2015:art-1"]
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
+source_refs = ["boe-dr-184-2015", "boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]
+review_status = "agent_reviewed"
+reviewed_by = "agent: applicability-only historical epoch. The raw BOE-A-2015-11596 record-design PDF is source-pinned, but the canonical strict parser starts its first field at position 160 rather than position 1. No casillas, bindings, export layout, or continuity claim is declared. Reconsider only after a strict parse yields complete record sheets from position 1 and the resulting geometry is independently compared with this exercise."
+reviewed_at = 2026-08-26

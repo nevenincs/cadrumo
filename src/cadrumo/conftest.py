@@ -154,6 +154,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from .adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from .adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from .adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from .adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from .adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
     from .adapters.persistence.workflow import build_workflow_persistence_port
@@ -161,6 +162,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.auth.providers import bind_auth_provider_selector
     from .application.ledger.extracted_document_cache import bind_extracted_document_cache_repository_factory
     from .application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory
+    from .application.ledger.participation_read import bind_transaction_participation_index_repository_factory
     from .application.ledger.rule_repository import bind_ledger_classification_rule_repository_factory
     from .application.ledger.transaction_repository import bind_transaction_catalogue_repository_factory
     from .application.ledger.usage_ratio_repository import bind_usage_ratio_censo_guard_loader
@@ -175,6 +177,7 @@ def compose_runtime_ports() -> Iterator[None]:
         bind_workflow_persistence_port(build_workflow_persistence_port()),
         bind_extraction_draft_repository_factory(ExtractionDraftRepository),
         bind_extracted_document_cache_repository_factory(ExtractedDocumentCacheRepository),
+        bind_transaction_participation_index_repository_factory(TransactionParticipationIndexRepository),
         bind_ledger_classification_rule_repository_factory(LedgerClassificationRuleRepository),
         bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository),
         bind_usage_ratio_censo_guard_loader(load_usage_ratios_with_censo_guard),

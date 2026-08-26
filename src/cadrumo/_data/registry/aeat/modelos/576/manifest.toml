@@ -5,10 +5,13 @@ cadence = "profile_based"
 jurisdiction = "ES-AEAT"
 output_sensitivity = "financial"
 legal_refs = [
+    "orden-eha-1981-2005:df-unica",
     "orden-eha-3851-2007:art-1",
     "ley-58-2003:art-93",
 ]
 source_refs = [
+    "boe-modelo-576-2005-form",
+    "boe-modelo-576-2005-procedure",
     "enrolled-modelo-576-procedure",
-    "enrolled-modelo-576-layout",
+    "aeat-dr-576-2008",
 ]

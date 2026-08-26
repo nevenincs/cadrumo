@@ -1,0 +1,56 @@
+[[revisions."2023-2024".constructs]]
+id = "modelo-184-informative"
+legal_refs = [
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-2",
+    "orden-hap-2250-2015:art-3",
+    "orden-hap-2250-2015:art-4",
+    "orden-hap-2250-2015:art-5",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-87",
+    "ley-35-2006:art-88",
+    "ley-35-2006:art-89",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-184-2023-2024",
+    "aeat-modelo-184-procedure",
+    "boe-modelo-184-2015-form",
+]
+casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
+bindings = [
+    "modelo-184-member-row-nif",
+    "modelo-184-member-row-name",
+    "modelo-184-member-row-share",
+    "modelo-184-member-row-base-assigned",
+]
+extraction_profiles = ["modelo-184-declaracion-pdf"]
+verification_expectations = ["modelo-184-informative-summary-verification"]
+workbook_parity_refs = ["modelo-184-dr-2025"]
+live_cross_references = [
+    "modelo-184-static-documentation",
+    "modelo-184-filed-declarations-read",
+]
+application_links = [
+    "modelo-184-portal",
+    "modelo-184-filing",
+    "modelo-184-extractor",
+    "modelo-184-deadline",
+]
+filing_schedules = ["modelo-184-anual"]
+deadline_windows = [
+    "modelo-184-2018-0a",
+    "modelo-184-2019-0a",
+    "modelo-184-2020-0a",
+    "modelo-184-2021-0a",
+    "modelo-184-2022-0a",
+    "modelo-184-2023-0a",
+    "modelo-184-2024-0a",
+]
+
+# Calculation-completeness manifest for revision 2015-y-siguientes: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.

@@ -1,0 +1,62 @@
+[revisions."2008-y-siguientes"]
+authority_grade = "applicability"
+# The 2008 authority is the first covered fixed-width era. The bundled AEAT
+# design (aeat-dr-576-2008) maps 42 casillas into 60 fields that tile the
+# 1,517-byte record exactly once. Its own '<2008 / >=2008' conditional does
+# not establish a 2007 writer, so the preceding exercise is a separate
+# layoutless applicability revision.
+# Deadline-shape note: art 1 delegates el lugar, plazo y forma to Orden
+# EHA/1981/2005 — la autoliquidación se presenta con carácter PREVIO a la
+# matriculación definitiva del medio de transporte, un plazo POR EVENTO, no una
+# ventana natural fija. This revision therefore carries NO calendar
+# deadline_windows and no deadline application link; a fixed date is not
+# fabricated. The approval + delegation article is grounded verbatim.
+valid_from = 2008-01-01
+period_selector = { year_from = 2008, periods = ["0A"] }
+orden_aplicabilidad = ["orden-eha-3851-2007:art-1"]
+legal_refs = [
+    "orden-eha-3851-2007:art-1",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-576-procedure",
+    "aeat-dr-576-2008",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: applicability-grade review; 60 export fields verified to tile positions 1-1517 \
+exactly once with no gap or overlap; 42 casillas against the bundled diseno. The selected \
+source is aeat-dr-576-2008, whose applies_from date and record_design_epoch both begin in \
+2008. The source is not copied into the preceding 2007 revision: the applicable 2005 \
+orden proves the model's use, but its graphical annex does not supply a parser-usable \
+fixed-width record design. This revision therefore makes no 2007 layout claim."""
+reviewed_at = 2026-08-21
+
+[revisions."2008-y-siguientes".family_dispositions.deadline_windows]
+reason = """\
+Orden EHA/3851/2007 art. 1 approves the modelo and then delegates the timing in full: el \
+lugar, plazo y forma de presentacion del modelo 576, asi como su ingreso, se regiran por \
+lo dispuesto en la Orden EHA/1981/2005, de 21 de junio. The IEDMT autoliquidacion is \
+triggered by the matriculacion or the first definitive use of the medio de transporte, so \
+its plazo is anchored to that EVENT rather than to the calendar and no recurring window \
+exists to declare. Orden EHA/1981/2005 is not bundled in this corpus, so the concrete \
+period is cited by delegation through the bundled article rather than reproduced here; \
+declaring windows would require inventing dates this registry cannot evidence."""
+legal_refs = [
+    "orden-eha-3851-2007:art-1",
+]
+source_refs = [
+    "enrolled-modelo-576-procedure",
+]
+
+[revisions."2008-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+CasillaContinuidadEvolutionDefinition records a transition between distinct revisions of the same modelo and is authored on the revision where that transition lands. The preceding 2007 revision contains no casillas because no fixed-width design has been acquired for that exercise. There is consequently no evidence-backed casilla identity to carry into 2008-y-siguientes, and the family is empty by construction rather than omission."""
+legal_refs = [
+    "orden-eha-3851-2007:art-1",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-576-procedure",
+    "aeat-dr-576-2008",
+]

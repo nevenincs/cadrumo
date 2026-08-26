@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-temporal-coverage'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:a8a1db39c0eb2aca1713a15aea10e6d9a0ef9fa25a6babcf4b555f089c649796'
+body_hash: 'sha256:8925a52f0d62225f22cc9aa3290ed45d1566cf4f4d8d1f308e324eaaae999364'
 step_id: 'S51'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -126,3 +126,30 @@ layout authority. S51 remains open. The whole claimed-year gate was also
 unrunnable in the shared worktree because the concurrent Modelo 200 partition
 lane currently declares duplicate `modelo-200-2025-0a` deadline ids; that
 independent loader refusal does not alter this M181 result.
+
+## M341 historical-layout correction (2026-08-26)
+
+The canonical `resolve_record_design_binary` and generator intermediate were
+re-read before authoring. No resolver, selector, validator, producer enum, or
+other Python authority was redeclared. The generic strict parser reads the
+historical PDF completely as one 619-position record with twenty contiguous
+fields, and the generic export-layout coverage validator accepts the authored
+record with no gaps.
+
+Modelo 341 now has two selectable layout eras: the bounded `2005-2015`
+revision cites only `aeat-dr-341-2005-2015`, while `2016-y-siguientes` cites
+only `aeat-dr-341-2016` and retains its materially different variable envelope
+plus 800-position page. Filing years 2000-2004 select no revision because no
+positional design has been acquired; no later design is backdated to make those
+years appear supported. Both revisions remain applicability grade and
+agent-reviewed, so the byte/layout proof does not claim filing eligibility or
+operator review.
+
+Five focused tests prove the exact historical offsets, hash and source window;
+the unsupported 2004 refusal and both real selector boundaries; complete
+generic byte coverage; a widened-selector ambiguity mutation; and an offset
+mutation that reopens the official `@24+13` position. Modelo 341 passes its
+focused `RegistryValidator.validate_modelo` gate. The whole-tree claimed-year
+test remains independently blocked by the concurrent Modelo 200 partition's
+registry validation failures. This bounded result does not alter that tree and
+does not close S51, whose row still owns the other modelos.

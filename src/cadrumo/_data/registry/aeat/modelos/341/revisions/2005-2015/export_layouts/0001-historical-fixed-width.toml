@@ -1,0 +1,299 @@
+# Exact 619-position Modelo 341 record for exercises 2005-2015, transcribed
+# from the complete twenty-field official design aeat-dr-341-2005-2015.
+# This is byte/layout authority only and does not promote filing eligibility.
+
+[[revisions."2005-2015".export_layouts]]
+id = "modelo-341-fichero-2005-2015"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records]]
+id = "modelo-341-historical-record"
+record_type = "historical_fixed_width"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-modelo"
+offset = 1
+length = 3
+kind = "literal"
+literal = "341"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-tipo-declaracion"
+offset = 4
+length = 1
+kind = "literal"
+literal = "D"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-nif"
+offset = 5
+length = 9
+kind = "header"
+producer_key = "taxpayer.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-letras-etiqueta"
+offset = 14
+length = 4
+kind = "casilla"
+casilla_id = "wire.letras-etiqueta"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-ejercicio"
+offset = 18
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-periodo"
+offset = 22
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-importe-operaciones-01"
+offset = 24
+length = 13
+kind = "casilla"
+casilla_id = "01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-importe-operaciones-02"
+offset = 37
+length = 13
+kind = "casilla"
+casilla_id = "02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-importe-operaciones-03"
+offset = 50
+length = 13
+kind = "casilla"
+casilla_id = "03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-porcentaje-compensacion-04"
+offset = 63
+length = 5
+kind = "casilla"
+casilla_id = "04"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-porcentaje-compensacion-05"
+offset = 68
+length = 5
+kind = "casilla"
+casilla_id = "05"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-porcentaje-compensacion-06"
+offset = 73
+length = 5
+kind = "casilla"
+casilla_id = "06"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-importe-compensacion-07"
+offset = 78
+length = 13
+kind = "casilla"
+casilla_id = "07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-importe-compensacion-08"
+offset = 91
+length = 13
+kind = "casilla"
+casilla_id = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-importe-compensacion-09"
+offset = 104
+length = 13
+kind = "casilla"
+casilla_id = "09"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-importe-total-10"
+offset = 117
+length = 13
+kind = "casilla"
+casilla_id = "10"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-codigo-cuenta-cliente"
+offset = 130
+length = 20
+kind = "casilla"
+casilla_id = "wire.codigo-cuenta-cliente"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-contacto-nombre"
+offset = 150
+length = 100
+kind = "header"
+producer_key = "contact_person.full_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-contacto-telefono"
+offset = 250
+length = 20
+kind = "header"
+producer_key = "contact_person.phone"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+
+[[revisions."2005-2015".export_layouts.records.fields]]
+id = "modelo-341-historical-observaciones"
+offset = 270
+length = 350
+kind = "casilla"
+casilla_id = "wire.observaciones"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2005-2015"]
+

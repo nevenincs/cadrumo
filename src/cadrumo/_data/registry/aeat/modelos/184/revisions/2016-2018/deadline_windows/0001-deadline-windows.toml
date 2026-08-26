@@ -1,0 +1,9 @@
+[[revisions."2016-2018".deadline_windows]]
+id = "modelo-184-2018-0a"
+filing_year = 2018
+period = "2018 0A"
+period_kind = "annual"
+opens_on = 2019-02-01
+closes_on = 2019-02-28
+legal_refs = ["orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]

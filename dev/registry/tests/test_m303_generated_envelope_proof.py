@@ -9,14 +9,16 @@ from __future__ import annotations
 
 import shutil
 from decimal import Decimal
+from hashlib import sha256
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.application.aggregation import IvaDifferentiatedDeductionContribution
 from cadrumo.application.calculations import calculate_m303_regimen_simplificado_result
-from cadrumo.application.filing import FilingEnvelopeRenderRequest, render_filing_envelope
+from cadrumo.application.filing import FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult, render_filing_envelope
 from cadrumo.application.filing._projection import _project_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
 from cadrumo.application.filing.tests.test_producer_snapshot import _m303_exonerado_evidence
@@ -35,6 +37,7 @@ from cadrumo.core import (
     SectorDiferenciadoLetra,
 )
 from cadrumo.core.resources import bundled_path
+from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory, load_registry_tree
@@ -324,6 +327,53 @@ def _m303_2026_committed_snapshot(tmp_path: Path):
     return snapshot, catalogues
 
 
+@pytest.fixture(scope="module")
+def _m303_2026_real_envelope():
+    """Render one isolated, source-owned M303 filing instance for envelope assertions."""
+    with TemporaryDirectory(prefix="s16-m303-envelope-", dir=Path.cwd()) as temporary:
+        snapshot, catalogues = _m303_2026_committed_snapshot(Path(temporary))
+        snapshot, producer = _m303_2026_prorrata_and_differentiated_producer(
+            snapshot=snapshot,
+            catalogues=catalogues,
+        )
+        (layout,) = snapshot.revision.export_layouts
+        request = FilingEnvelopeRenderRequest(
+            registry_snapshot=snapshot,
+            layout=layout,
+            draft=m303_did._draft(),
+            producer_snapshot=producer,
+            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            product_software_identity=m303_did._product_software_identity(),
+        )
+        yield request, render_filing_envelope(request)
+
+
+def _request_model_payload(request: FilingEnvelopeRenderRequest) -> dict[str, object]:
+    """Keep the selected layout's identity while exercising public request validation."""
+    return {
+        "registry_snapshot": request.registry_snapshot,
+        "layout": request.layout,
+        "draft": request.draft,
+        "producer_snapshot": request.producer_snapshot,
+        "prior_domiciliation_election": request.prior_domiciliation_election,
+        "product_software_identity": request.product_software_identity,
+    }
+
+
+def _result_payload_with_occurrences(
+    rendered: FilingEnvelopeRenderResult,
+    occurrences: tuple[dict[str, object], ...],
+) -> dict[str, object]:
+    """Re-derive result evidence so occurrence-order validation remains the failing boundary."""
+    payload = rendered.model_dump(mode="python")
+    payload["occurrences"] = occurrences
+    emitted = rendered.prefix + b"".join(item["payload"] for item in occurrences) + rendered.closer
+    payload["payload"] = emitted
+    payload["payload_sha256"] = sha256(emitted).hexdigest()
+    payload["total_length"] = len(emitted)
+    return payload
+
+
 def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutating() -> None:
     """The real target is reproducible in two disjoint Y: roots and check-mode only observes it."""
     tree = _m303_2026_tree()
@@ -445,29 +495,151 @@ def test_m303_dp30305_composes_its_two_declared_projection_families_once(tmp_pat
         )
 
 
-def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(tmp_path: Path) -> None:
-    """The committed generated layout receives the official 691.9 IAE wire value untruncated."""
-    snapshot, catalogues = _m303_2026_committed_snapshot(tmp_path)
-    snapshot, producer = _m303_2026_prorrata_and_differentiated_producer(snapshot=snapshot, catalogues=catalogues)
-    (layout,) = snapshot.revision.export_layouts
-
-    rendered = render_filing_envelope(
-        FilingEnvelopeRenderRequest(
-            registry_snapshot=snapshot,
-            layout=layout,
-            draft=m303_did._draft(),
-            producer_snapshot=producer,
-            prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-            product_software_identity=m303_did._product_software_identity(),
-        ),
-    )
-
+def test_m303_2026_untouched_generated_layout_renders_official_6919_f022(
+    _m303_2026_real_envelope,
+) -> None:
+    """The committed layout emits every reviewed kind through one coherent envelope."""
+    request, rendered = _m303_2026_real_envelope
+    layout = request.layout
     regimen_record = next(record for record in layout.records if record.id == "m303-regimen-simplificado")
     f022 = next(field for field in regimen_record.fields if field.id.endswith(".f022"))
     regimen_occurrences = tuple(item for item in rendered.occurrences if item.record_id == regimen_record.id)
+
+    assert tuple((item.record_id, item.occurrence) for item in rendered.occurrences) == (
+        ("m303-declaration", 1),
+        ("m303-regimen-simplificado", 1),
+        ("m303-resultados", 1),
+        ("m303-exonerado-390", 1),
+        ("m303-prorrata-deducciones", 1),
+        ("m303-domiciliacion", 1),
+    )
+    assert rendered.prefix == (
+        b"<T303020261T0000><AUX>"
+        + (b" " * 70)
+        + b"C303"
+        + (b" " * 4)
+        + b"Y0000001S"
+        + (b" " * 213)
+        + b"</AUX>"
+    )
+    assert rendered.closer == b"</T303020261T0000>"
+    assert len(rendered.prefix) == layout.filing_envelope.prefix_extent
     assert tuple(item.occurrence for item in regimen_occurrences) == (1,)
     assert all(item.payload[f022.offset - 1 : f022.offset - 1 + f022.length] == b"6919" for item in regimen_occurrences)
+    emitted_slices: dict[CasillaFieldKind, list[bytes]] = {}
+    records = {record.id: record for record in layout.records}
+    for occurrence in rendered.occurrences:
+        for field in records[occurrence.record_id].fields:
+            emitted_slices.setdefault(field.kind, []).append(
+                occurrence.payload[field.offset - 1 : field.offset - 1 + field.length],
+            )
+    admitted_kinds = {field.kind for record in layout.records for field in record.fields}
+    assert set(emitted_slices) == admitted_kinds
+    assert all(emitted_slices[kind] for kind in admitted_kinds)
+    assert any(slice_ == b"6919" for slice_ in emitted_slices[CasillaFieldKind.PROJECTION])
+    assert all(
+        slice_ == (b" " * len(slice_)) for slice_ in emitted_slices[CasillaFieldKind.FILLER]
+    )
+    assert all(item.payload_sha256 == sha256(item.payload).hexdigest() for item in rendered.occurrences)
     assert (
         rendered.payload == rendered.prefix + b"".join(item.payload for item in rendered.occurrences) + rendered.closer
     )
+    assert rendered.payload_sha256 == sha256(rendered.payload).hexdigest()
     assert rendered.total_length == len(rendered.payload)
+
+
+@pytest.mark.parametrize(
+    ("case", "mutation", "refusal"),
+    (
+        (
+            "cross-snapshot",
+            lambda request: {"registry_snapshot": request.registry_snapshot.model_copy(deep=True)},
+            "filing-envelope layout must be owned by the selected registry snapshot",
+        ),
+        (
+            "cross-period",
+            lambda request: {
+                "draft": request.draft.model_copy(update={"period": Period.from_year_and_code(2026, "2T")}),
+            },
+            "filing-envelope draft period must match the selected registry snapshot",
+        ),
+        ("opaque-bytes", lambda _request: {"opaque_bytes": b"not-an-envelope"}, "Extra inputs are not permitted"),
+        ("open-map", lambda _request: {"open_map": {}}, "Extra inputs are not permitted"),
+        ("injected-plan", lambda _request: {"injected_plan": {}}, "Extra inputs are not permitted"),
+        ("casilla-only", lambda _request: {"casilla_only": {}}, "Extra inputs are not permitted"),
+        ("default", lambda _request: {"default_values": {}}, "Extra inputs are not permitted"),
+        ("fake", lambda _request: {"fake_input": {}}, "Extra inputs are not permitted"),
+        ("legacy", lambda _request: {"legacy_input": {}}, "Extra inputs are not permitted"),
+    ),
+)
+def test_m303_2026_envelope_request_rejects_cross_authority_and_forbidden_spellings(
+    _m303_2026_real_envelope,
+    _case: str,
+    mutation,
+    refusal: str,
+) -> None:
+    """The closed public request carries one selected authority, never caller-owned export material."""
+    request, _rendered = _m303_2026_real_envelope
+    payload = _request_model_payload(request)
+    payload.update(mutation(request))
+
+    with pytest.raises(ValidationError, match=refusal):
+        FilingEnvelopeRenderRequest.model_validate(payload)
+
+
+def _reordered_occurrences(rendered: FilingEnvelopeRenderResult) -> dict[str, object]:
+    occurrences = rendered.model_dump(mode="python")["occurrences"]
+    return _result_payload_with_occurrences(rendered, (occurrences[1], occurrences[0], *occurrences[2:]))
+
+
+def _dropped_occurrence(rendered: FilingEnvelopeRenderResult) -> dict[str, object]:
+    payload = rendered.model_dump(mode="python")
+    payload["occurrences"] = payload["occurrences"][1:]
+    return payload
+
+
+def _duplicated_occurrence(rendered: FilingEnvelopeRenderResult) -> dict[str, object]:
+    occurrences = rendered.model_dump(mode="python")["occurrences"]
+    return _result_payload_with_occurrences(rendered, (occurrences[0], occurrences[0], *occurrences[1:]))
+
+
+def _extra_occurrence(rendered: FilingEnvelopeRenderResult) -> dict[str, object]:
+    occurrences = rendered.model_dump(mode="python")["occurrences"]
+    payload = b"unreviewed"
+    extra = {
+        "record_id": "m303-unreviewed-extra",
+        "occurrence": 1,
+        "payload": payload,
+        "payload_sha256": sha256(payload).hexdigest(),
+    }
+    return _result_payload_with_occurrences(rendered, (*occurrences, extra))
+
+
+@pytest.mark.parametrize(
+    ("case", "mutation", "refusal"),
+    (
+        ("reorder", _reordered_occurrences, "filing-envelope occurrences must retain reviewed record-family order"),
+        (
+            "drop",
+            _dropped_occurrence,
+            "filing-envelope payload must be the exact prefix, occurrences, and closer bytes",
+        ),
+        (
+            "duplicate",
+            _duplicated_occurrence,
+            "must be positive, contiguous, and uncollapsed",
+        ),
+        ("extra", _extra_occurrence, "filing envelope emitted an undeclared record family"),
+    ),
+)
+def test_m303_2026_envelope_result_rejects_tampered_occurrence_evidence(
+    _m303_2026_real_envelope,
+    _case: str,
+    mutation,
+    refusal: str,
+) -> None:
+    """Result evidence cannot lose, reorder, duplicate, or add an emitted record occurrence."""
+    _request, rendered = _m303_2026_real_envelope
+
+    with pytest.raises(ValidationError, match=refusal):
+        FilingEnvelopeRenderResult.model_validate(mutation(rendered))

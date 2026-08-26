@@ -1,0 +1,7 @@
+[[revisions."2023-2024".applicability]]
+id = "m184-seed"
+applicable_entity_types = ["attribution_entity"]
+applicable_reason = "Modelo 184 (declaración informativa de entidades en régimen de atribución de rentas): la entidad declara las rentas obtenidas y las atribuibles a cada socio, comunero o partícipe en el ejercicio. Es la obligación propia de la entidad; la tributación de la renta corresponde a cada miembro."
+not_applicable_reason = "Modelo 184 no aplica: la declaración informativa de atribución de rentas solo corresponde a las entidades en régimen de atribución de rentas (comunidades de bienes, sociedades civiles sin objeto mercantil). El tipo de contribuyente declarado no es una entidad de esta clase."
+cuota_bearing = false
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-2", "orden-hap-2250-2015:art-4"]

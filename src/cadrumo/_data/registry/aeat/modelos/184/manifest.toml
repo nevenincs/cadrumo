@@ -17,5 +17,10 @@ source_refs = [
     "aeat-dr-184-2023-2024",
     "aeat-dr-184-2025",
     "aeat-modelo-184-procedure",
+    "boe-dr-184-2015",
+    "boe-dr-184-2016-2018",
+    "boe-dr-184-2019-2021",
+    "boe-dr-184-2022",
+    "boe-dr-184-2023-2024",
     "boe-modelo-184-2015-form",
 ]
