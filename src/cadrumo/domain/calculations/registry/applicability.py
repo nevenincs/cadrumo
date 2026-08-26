@@ -110,12 +110,6 @@ from ...deadlines import (
     TaxpayerProfile,
 )
 from ._applicability_labels import PAYER_FACT_INCOMPLETE_LABELS as _PAYER_FACT_INCOMPLETE_LABELS
-from .applicability_modelo202 import (
-    Modelo202Modality,
-    Modelo202ModalityVerdict,
-    derive_modelo_202_modality,
-    modelo_202_modality_from_inputs,
-)
 from .applicability_payer_facts import PayerFact, payer_fact_holds
 from .applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
 from .applicability_routes import TaxRoute
@@ -1150,19 +1144,13 @@ def derive_not_applicable_source_modelos(profile: TaxpayerProfile, modelos: Iter
 
 __all__ = [
     "ApplicabilityVerdict",
-    "Modelo202Modality",
-    "Modelo202ModalityVerdict",
     "ModeloApplicability",
     "ModeloApplicabilityRule",
-    "PayerFact",
-    "TaxRoute",
-    "derive_modelo_202_modality",
     "derive_modelo_applicability",
     "derive_not_applicable_source_modelos",
     "derive_tax_route",
     "derive_taxpayer_files_economic_activity",
     "has_applicability_rule",
     "iter_modelo_applicability_rules",
-    "modelo_202_modality_from_inputs",
     "taxpayer_model_is_declared",
 ]

@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:c9aae08b3ac9c5b12d94cd49f9dde167344fdeb0931b257925a6998d5e13a59b'
+body_hash: 'sha256:c6d9b864364bbcccf965a1328a144a1588f8a8f98e9149c2f1f84b76d07b075a'
 ---
 
 # `tui-architecture` plan
@@ -187,7 +187,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [ ] `W03.P20.S131` - Implement the sole ModeloWorkspaceC2DependencyReceiptV1 validator with current-HEAD, accepted-authority, closed-predecessor, public-schema, native-owner surface inventory, native/S126 seam-conformance digest, producer inventory, field denominator, process-incarnation refusal, conformance, no-legacy, and semantic redeclaration evidence checks while leaving receipt minting to the C1 handoff phase; `src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py`.
 - [x] `W03.P20.S176` - Hard-move the remote-read host authority to the core defining module and eliminate the registry aeat_hosts surface; `src/cadrumo/domain/calculations/registry/aeat_hosts.py and src/cadrumo/core/remote_authority.py`.
 - [x] `W03.P20.S177` - Prove aeat_nif_iva_oracle remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/aeat_nif_iva_oracle.py`.
-- [ ] `W03.P20.S178` - Retain applicability as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/applicability.py`.
+- [x] `W03.P20.S178` - Retain applicability as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/applicability.py`.
 - [x] `W03.P20.S179` - Prove authority remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [ ] `W03.P20.S180` - Prove binding_selector_utils remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/binding_selector_utils.py`.
 - [ ] `W03.P20.S181` - Retain bindings as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/bindings.py`.
