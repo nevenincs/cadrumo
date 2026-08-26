@@ -35,6 +35,7 @@ from cadrumo.core import (
     SectorDiferenciadoLetra,
 )
 from cadrumo.core.resources import bundled_path
+from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory, load_registry_tree
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -296,7 +297,21 @@ def _m303_2026_committed_snapshot(tmp_path: Path):
     committed_revision = committed_modelo.revisions[tree.revision]
     assert isolated_modelo_revision.id == committed_revision.id == tree.revision
     assert isolated_modelo_revision.source_refs == committed_revision.source_refs
-    _modelos, catalogues = load_registry_tree(registry_root)
+    modelos, catalogues = load_registry_tree(registry_root)
+    assert catalogues.supported_filing_years is not None
+    supplementary_ordenes = compile_supplementary_ordenes(
+        registry_root,
+        source_root=bundled_path(),
+        modelos=modelos,
+        sources=catalogues.sources,
+        supported_filing_years=catalogues.supported_filing_years.years,
+    )
+    catalogues = catalogues.model_copy(
+        update={
+            "legal": {**catalogues.legal, **supplementary_ordenes.legal},
+            "supplementary_ordenes": supplementary_ordenes.authorities,
+        },
+    )
     snapshot = build_snapshot(
         committed_modelo,
         catalogues,

@@ -60,6 +60,7 @@ def root_command(
     from ...adapters.outbound.aeat.auth.session_store import build_session_store
     from ...adapters.persistence.profile.extracted_document_cache import ExtractedDocumentCacheRepository
     from ...adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
+    from ...adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -70,6 +71,7 @@ def root_command(
     from ...application.auth.providers import bind_auth_provider_selector
     from ...application.ledger.extracted_document_cache import bind_extracted_document_cache_repository_factory
     from ...application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory
+    from ...application.ledger.rule_repository import bind_ledger_classification_rule_repository_factory
     from ...application.ledger.transaction_repository import bind_transaction_catalogue_repository_factory
     from ...application.modelo.calculation_repository import bind_calculation_revision_catalogue_repository_factory
     from ...application.modelo.filing_repository import bind_modelo_record_catalogue_repository_factory
@@ -84,6 +86,7 @@ def root_command(
     ctx.with_resource(bind_workflow_persistence_port(build_workflow_persistence_port()))
     ctx.with_resource(bind_extraction_draft_repository_factory(ExtractionDraftRepository))
     ctx.with_resource(bind_extracted_document_cache_repository_factory(ExtractedDocumentCacheRepository))
+    ctx.with_resource(bind_ledger_classification_rule_repository_factory(LedgerClassificationRuleRepository))
     ctx.with_resource(bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository))
     ctx.with_resource(bind_calculation_revision_catalogue_repository_factory(CalculationRevisionCatalogueRepository))
     ctx.with_resource(bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository))

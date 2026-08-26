@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import typer
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger.models import ApplyRulesResult
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.i18n import tr
@@ -121,11 +120,12 @@ def _rule_apply_dry_run_matches(
     bucket_id: str,
     reaffirm: bool,
 ) -> list[dict[str, object]]:
-    from ...application.ledger.rule_repository import LedgerClassificationRuleRepository
+    from ...application.ledger.rule_repository import ledger_classification_rule_repository
+    from ...application.ledger.transaction_repository import transaction_catalogue_repository
 
-    rule_repo = LedgerClassificationRuleRepository()
+    rule_repo = ledger_classification_rule_repository(bucket_id=bucket_id)
     rules = rule_repo.list_rules()
-    tx_repo = TransactionCatalogueRepository(bucket_id=bucket_id)
+    tx_repo = transaction_catalogue_repository(bucket_id=bucket_id)
     catalogue = tx_repo.load()
     would_match: list[dict[str, object]] = []
     for transaction in catalogue.transactions.values():
@@ -238,10 +238,10 @@ def rule_apply(
 
 def rule_list(ctx: typer.Context) -> None:
     """List all stored ledger classification rules (priority ascending)."""
-    from ...application.ledger.rule_repository import LedgerClassificationRuleRepository
+    from ...application.ledger.rule_repository import ledger_classification_rule_repository
 
-    _rule_bucket_id()
-    rules = LedgerClassificationRuleRepository().list_rules()
+    bucket_id = _rule_bucket_id()
+    rules = ledger_classification_rule_repository(bucket_id=bucket_id).list_rules()
     payload = {
         "rules": [
             {

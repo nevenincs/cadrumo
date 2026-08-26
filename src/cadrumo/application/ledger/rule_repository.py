@@ -1,63 +1,77 @@
-"""Profile-scoped encrypted repository for ledger classification rules.
+"""Application-owned persistence contract for ledger classification rules.
 
-:class:`LedgerClassificationRule` records are stored through
-:class:`~cadrumo.adapters.persistence.storage.SecureBoundRepository` at the
-:class:`~cadrumo.adapters.persistence.storage.SensitivityClass` declared by
-:data:`cadrumo.adapters.persistence.storage.LEDGER_CLASSIFICATION_RULES_NAMESPACE`.
-The bound repository serialises each rule through an
-:class:`~cadrumo.adapters.persistence.storage.Envelope`, so the stored rule
-pattern, actor, category, and classification stay encrypted at rest.
-
-See Also:
-    :class:`LedgerClassificationRule`
-        Content-addressed payload model persisted by this repository.
-    :func:`cadrumo.application.ledger.actions_classification.add_classification_rule`
-        Application entry point that creates and saves a rule.
-    :func:`cadrumo.application.ledger.actions_classification.apply_classification_rules`
-        Application entry point that evaluates persisted rules over active
-        ledger transactions.
+Rule creation, priority ordering, and first-match policy belong to the ledger
+application surface. Encrypting those rules and selecting a concrete profile
+store belong to the persistence adapter. This module therefore owns only the
+repository operations the policy needs, their explicit bucket-scoped lifetime,
+and the rule's natural object key.
 """
 
 from __future__ import annotations
 
-from typing import ClassVar, override
+from collections.abc import Generator
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Protocol
 
-from pydantic import BaseModel
-
-from ...adapters.persistence.storage import (
-    LEDGER_CLASSIFICATION_RULES_NAMESPACE,
-    SecureBoundRepository,
-    SensitivityClass,
-)
 from ...domain.transactions import LedgerClassificationRule
 
 
-class LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificationRule]):
-    """Encrypted profile-local store of :class:`LedgerClassificationRule` payloads.
+def ledger_classification_rule_object_key(rule: LedgerClassificationRule) -> str:
+    """Return the canonical natural key for one classification rule."""
+    return rule.rule_id
 
-    The namespace, sensitivity, schema version, and object-key contract come
-    from
-    :data:`cadrumo.adapters.persistence.storage.LEDGER_CLASSIFICATION_RULES_NAMESPACE`.
-    Rules are sorted by ``(priority, created_at)`` ascending so that
-    lower-priority-number rules (higher precedence) are evaluated first.
-    Among same-priority rules the earliest-created rule wins.
-    """
 
-    namespace: ClassVar[str] = LEDGER_CLASSIFICATION_RULES_NAMESPACE.namespace
-    sensitivity: ClassVar[SensitivityClass] = LEDGER_CLASSIFICATION_RULES_NAMESPACE.sensitivity
-    schema_version: ClassVar[int] = LEDGER_CLASSIFICATION_RULES_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = LedgerClassificationRule
+class LedgerClassificationRuleRepositoryProtocol(Protocol):
+    """Persistence operations required by classification-rule policy."""
 
-    @override
-    def extract_identifier(self, payload: LedgerClassificationRule) -> str:
-        return payload.rule_id
+    def save(self, payload: LedgerClassificationRule) -> None:
+        """Persist one rule under its content-addressed identity."""
+        ...
 
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
-        """Return all stored rules in application order: (priority asc, created_at asc).
-
-        Each element is a :class:`LedgerClassificationRule`.
-        """
-        return tuple(sorted(self.iter_records(), key=lambda r: (r.priority, r.created_at)))
+        """Return rules in application precedence order."""
+        ...
 
 
-__all__ = ["LedgerClassificationRuleRepository"]
+class LedgerClassificationRuleRepositoryFactory(Protocol):
+    """Construct a classification-rule repository for one profile bucket."""
+
+    def __call__(self, *, bucket_id: str) -> LedgerClassificationRuleRepositoryProtocol:
+        """Return the encrypted repository bound to ``bucket_id``."""
+        ...
+
+
+_BOUND_LEDGER_CLASSIFICATION_RULE_REPOSITORY_FACTORY: ContextVar[LedgerClassificationRuleRepositoryFactory] = (
+    ContextVar("cadrumo_ledger_classification_rule_repository_factory")
+)
+
+
+@contextmanager
+def bind_ledger_classification_rule_repository_factory(
+    factory: LedgerClassificationRuleRepositoryFactory,
+) -> Generator[LedgerClassificationRuleRepositoryFactory]:
+    """Bind one outward-composed classification-rule repository factory."""
+    token = _BOUND_LEDGER_CLASSIFICATION_RULE_REPOSITORY_FACTORY.set(factory)
+    try:
+        yield factory
+    finally:
+        _BOUND_LEDGER_CLASSIFICATION_RULE_REPOSITORY_FACTORY.reset(token)
+
+
+def ledger_classification_rule_repository(*, bucket_id: str) -> LedgerClassificationRuleRepositoryProtocol:
+    """Resolve the explicitly composed repository for ``bucket_id``."""
+    try:
+        factory = _BOUND_LEDGER_CLASSIFICATION_RULE_REPOSITORY_FACTORY.get()
+    except LookupError as error:
+        raise RuntimeError("ledger classification-rule persistence has not been composed") from error
+    return factory(bucket_id=bucket_id)
+
+
+__all__ = [
+    "LedgerClassificationRuleRepositoryFactory",
+    "LedgerClassificationRuleRepositoryProtocol",
+    "bind_ledger_classification_rule_repository_factory",
+    "ledger_classification_rule_object_key",
+    "ledger_classification_rule_repository",
+]

@@ -27,7 +27,7 @@ from ....application.ledger.extracted_document_cache import (
     extracted_document_cache_object_key,
 )
 from ....application.ledger.extraction_draft_store import ExtractionDraftDocument, extraction_draft_object_key
-from ....application.ledger.rule_repository import LedgerClassificationRuleRepository
+from ....application.ledger.rule_repository import ledger_classification_rule_object_key
 from ....application.live.borrador_100 import Borrador100Snapshot, borrador_100_snapshot_object_key
 from ....application.live.deudas import PersistedDeudasSnapshot, deudas_snapshot_object_key
 from ....application.live.expedientes import PersistedExpedientesSnapshot, expedientes_snapshot_object_key
@@ -47,6 +47,7 @@ from ....core import SecureObjectWrite, StorageCustodyProfile
 from ....core.external_constants import UTF_8_ENCODING as _UTF_8
 from ....core.hashing import canonical_json_bytes, sha256_hex
 from ....domain.evidence_consent import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
+from ....domain.transactions import LedgerClassificationRule
 from ....domain.user_profile.errors import ProfileExportError
 from ....domain.user_profile.portable_export import CarriedSecureObject
 from ....domain.user_profile.values import UserProfileSnapshot
@@ -255,10 +256,11 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         _purchase_invoice_evidence_repo,
     )
 
-    def _classification_rule_repo() -> LedgerClassificationRuleRepository:
-        return LedgerClassificationRuleRepository()
+    def _classification_rule_key(record: SecureObjectRecord, _bucket_id: str) -> str:
+        rule = _envelope_payload(record, LedgerClassificationRule)
+        return ledger_classification_rule_object_key(rule)
 
-    resolvers["cadrumo.ledger.classification.rules"] = _bound_resolver(_classification_rule_repo)
+    resolvers["cadrumo.ledger.classification.rules"] = _classification_rule_key
 
     def _submission_repo() -> SubmissionRepository:
         return SubmissionRepository()

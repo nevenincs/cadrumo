@@ -101,6 +101,7 @@ from .._export import (
     _m303_complementaria_marker,
     _m303_no_activity_marker,
 )
+from .._export_producer import m303_profile_lexicals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -559,6 +560,35 @@ def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
     assert values[FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED] == "2"
     assert values[FilingProducerKey.M303_EXONERADO_390_APPLICABLE] == "2"
     assert values[FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED] == "0"
+
+
+@pytest.mark.parametrize(
+    ("period_code", "entitled", "expected"),
+    (
+        ("1T", False, "0"),
+        ("1T", True, "0"),
+        ("02", False, "2"),
+        ("02", True, "1"),
+    ),
+)
+def test_modelo_303_hydrocarbon_entitlement_uses_the_official_period_and_yes_no_codes(
+    period_code: str,
+    entitled: bool,
+    expected: str,
+) -> None:
+    """DP30301 Nota 8/9 reserves ``0`` and maps the applicable decision to 1/2.
+
+    The 2026 official design writes ``0`` for quarterly/01 filings and admits
+    the typed entitlement only from period 02.  This test mutates the boolean
+    itself so true and false cannot silently collapse into a numeric default.
+    """
+    profile = _m303_profile().model_copy(
+        update={"hydrocarbon_deposit_advance_payment_deduction_entitled": entitled},
+    )
+
+    lexical = m303_profile_lexicals(profile, _m303_filing_facts(period_code=period_code))
+
+    assert lexical.hydrocarbon_deposit_advance_payment_deduction_entitled == expected
 
 
 def test_modelo_303_annual_volume_marker_requires_explicit_evidence() -> None:

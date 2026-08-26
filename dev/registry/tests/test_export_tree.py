@@ -28,6 +28,10 @@ from cadrumo.domain.calculations.registry.export_value_policy import ExportValue
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
+from cadrumo.domain.calculations.registry.static_inspection import (
+    StaticGeneratedArtifactInspection,
+    StaticGeneratedArtifactSource,
+)
 
 from ..pipeline import _export_tree
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
@@ -296,6 +300,33 @@ def _blank_integer_profile() -> RenderProfile:
 
 def _joined(snapshot, *, numeric_content: str | None = "2 enteros y 2 decimales"):
     return join_record_design_semantics(_semantic_map(), _intermediate(numeric_content=numeric_content), snapshot)
+
+
+def _synthetic_static_inspection() -> StaticGeneratedArtifactInspection:
+    """Return the narrow, non-filing source authority for parser-derivation bites."""
+    source_ref = "aeat-dr-130-2019-v12"
+    return StaticGeneratedArtifactInspection(
+        modelo_id="130",
+        revision_id="2019",
+        revision_source_refs=(source_ref,),
+        sources={
+            source_ref: StaticGeneratedArtifactSource(
+                id=source_ref,
+                kind="record_design",
+                corpus_path="aeat_official/disenos_registro/modelo_130/files/synthetic.xlsx",
+                sha256="5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
+                bytes=1,
+                applies_from=None,
+                applies_to=None,
+                record_design_epoch="2019",
+                corpus_tier="full_consolidated",
+            ),
+        },
+        legal_ref_ids=frozenset(("rd-439-2007:art-110",)),
+        casilla_ids=frozenset(),
+        binding_ids=frozenset(),
+        projection_endpoints=(),
+    )
 
 
 def _oversized_authorities(snapshot, *, field_count: int = 245) -> tuple[SemanticMap, JoinedRecordDesign]:
@@ -1243,6 +1274,39 @@ def test_renderer_refuses_unstructured_quoted_numeric_prose(m130_inspection_snap
         )
 
     assert not target.exists()
+
+
+def test_note_annotated_numeric_enumeration_defers_its_conditional_domain_to_the_typed_owner() -> None:
+    """A source note can add a period-specific wire token beyond the printed pair.
+
+    The annotation is the mutation: without it the two printed values remain a
+    closed enum; with it, the generator preserves only the source-stated integer
+    shape.  The canonical owner then chooses the period-specific token rather
+    than an incomplete row-local enumeration refusing a real official value.
+    """
+    annotated = _joined(
+        _synthetic_static_inspection(),
+        numeric_content='"0001" SI, "0002" NO. Nota 8',
+    ).records[1].fields[1]
+    unannotated = _joined(
+        _synthetic_static_inspection(),
+        numeric_content='"0001" SI, "0002" NO',
+    ).records[1].fields[1]
+
+    annotated_derivation = _export_tree._numeric_derivation(
+        annotated,
+        export_record_id="generated-record-type-2",
+    )
+    unannotated_derivation = _export_tree._numeric_derivation(
+        unannotated,
+        export_record_id="generated-record-type-2",
+    )
+
+    assert annotated_derivation.field.value_policy is None
+    assert annotated_derivation.field.allowed_values is None
+    assert annotated_derivation.derivation_code == "numeric-integer-v1"
+    assert unannotated_derivation.field.value_policy is ExportValuePolicy.ENUMERATED_DIGITS
+    assert unannotated_derivation.field.allowed_values == ("1", "2")
 
 
 def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(

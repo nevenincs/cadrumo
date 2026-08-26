@@ -2,7 +2,18 @@
 
 from __future__ import annotations
 
-from dev.quality.registry_facade_family_census import exact_relocation_candidates, generated_rows
+import json
+
+import pytest
+
+from dev.quality.registry_facade_family_census import (
+    MATRIX_PATH,
+    check_matrix_document,
+    exact_relocation_candidates,
+    generated_rows,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_c941_registry_relocation_family_is_the_fixed_78_row_set() -> None:
@@ -21,3 +32,8 @@ def test_generated_rows_preserve_one_row_per_exact_c941_candidate() -> None:
     assert len(rows) == 78
     assert len({(row["old_path"], row["new_path"]) for row in rows}) == 78
     assert all(set(row["consumers"]) >= {"production", "test", "documentation", "tooling"} for row in rows)
+
+
+def test_reviewed_matrix_passes_its_exact_census_and_canonical_step_gate() -> None:
+    """The checked-in adjudication remains complete and linked to real plan Steps."""
+    check_matrix_document(json.loads(MATRIX_PATH.read_text(encoding="utf-8")))
