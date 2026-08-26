@@ -1,0 +1,10 @@
+[[revisions."2019-y-siguientes".workbook_parity_refs]]
+id = "modelo-308-dr-2019"
+workbook_source = "aeat-dr-308-2019"
+fixture_id = "modelo-308-2019-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019"]
+

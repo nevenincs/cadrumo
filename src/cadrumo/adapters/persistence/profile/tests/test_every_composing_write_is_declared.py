@@ -140,8 +140,8 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "the communication record arrives as a parameter and is a per-record row rather than a catalogue; "
     "its event side goes through the guarded composer",
     (
-        "src/cadrumo/application/modelo/_reconcile.py",
-        "_finalise_reconciliation",
+        "src/cadrumo/adapters/persistence/profile/modelo_reconciliation.py",
+        "persist_with_event",
     ): "the reconciliation record is freshly built; the event catalogue beside it IS guarded",
     (
         "src/cadrumo/application/calculations/_iva_compensation_history.py",

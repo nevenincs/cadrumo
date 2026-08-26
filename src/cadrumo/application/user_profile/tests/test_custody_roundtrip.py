@@ -184,7 +184,7 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
 
 def _seed_reconciliation_record(bucket_id: str) -> str:
     """Persist one grounded reconciliation record in the active bucket."""
-    from ...modelo._reconciliation_records import (
+    from ...modelo.reconciliation_records import (
         ModeloReconciliationAdvisory,
         ModeloReconciliationDiff,
         ModeloReconciliationDiffKind,
@@ -244,7 +244,7 @@ def test_reconciliation_records_survive_the_custody_carry_with_grounding(tmp_pat
     the composite key is no obstacle.
     """
     from ....core import StorageCustodyProfile
-    from ...modelo._reconciliation_records import (
+    from ...modelo.reconciliation_records import (
         ModeloReconciliationRecordRepository,
         list_modelo_reconciliations,
     )

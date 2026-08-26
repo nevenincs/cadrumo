@@ -12,5 +12,6 @@ legal_refs = [
 ]
 source_refs = [
     "enrolled-modelo-270-procedure",
-    "enrolled-modelo-270-layout",
+    "boe-dr-270-2013-2022",
+    "aeat-dr-270-2023",
 ]

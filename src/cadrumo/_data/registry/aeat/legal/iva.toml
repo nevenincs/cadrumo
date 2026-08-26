@@ -122,6 +122,26 @@ required_text = [
     "treinta primeros días naturales del mes de enero",
 ]
 
+[legal."orden-hfp-1245-2022:art-unico"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1245-2022.html#articulo-unico"
+document_id = "BOE-A-2022-21458"
+article = "unico"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21458"
+published_at = 2022-12-19
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-26
+reviewed_by = "agent-reviewed-against-bundled-boe-source"
+notes = "Orden HFP/1245/2022 articulo unico: sustituye el anexo I de la Orden HAC/3625/2003. Su disposicion final unica fija la entrada en vigor el 1 de enero de 2023 y su aplicacion a los ejercicios 2023 y siguientes."
+required_text = [
+    "El anexo I de la Orden HAC/3625/2003",
+    "se sustituye por el anexo de esta orden",
+    "modelo 309",
+]
+
 [sources."aeat-dr-309-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -561,6 +581,25 @@ required_text = [
     "20 días naturales del mes siguiente",
 ]
 
+[legal."orden-eha-1033-2011:disposicion-final-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1033-2011.html#disposicion-final-unica"
+document_id = "BOE-A-2011-7479"
+article = "disposición final única"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2011-7479"
+published_at = 2011-04-27
+effective_from = 2011-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-26
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Disposición final única de la Orden EHA/1033/2011: sustituye el anexo II de la Orden EHA/3786/2008 y establece la entrada en vigor el 1 de julio de 2011. Corrobora la frontera intranual entre los diseños de registro del modelo 308."
+required_text = [
+    "Se sustituye el anexo II",
+    "La presente Orden entrará en vigor el día 1 de julio de 2011.",
+]
+
 [sources."aeat-dr-308-2019"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -574,20 +613,17 @@ applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/dr308e16v13.xls"
 review_status = "reviewed"
 
-# AEAT's historical index identifies a July-2011 change within an AD-HOC
-# filing year.  The present selector contract is year-based, so registering an
-# epoch/window or attaching either source to 2009-y-siguientes would falsely
-# claim a selector that the registry cannot yet express.  These exact source
-# bytes are acquisition evidence only until the canonical revision split can
-# represent that boundary.
 [sources."aeat-dr-308-2009"]
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2009"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_308/files/02-308-orden-eha-1033-2011-ejercicios-2009-a-2011-julio.xls"
 sha256 = "e6a67ab3fccb72adba80c0297cc9ff565af0a83b34e86cafb9f5da68bf118367"
 bytes = 147456
 retrieved_at = 2026-08-26
+applies_from = 2009-01-01
+applies_to = 2011-06-30
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308.xls"
 review_status = "reviewed"
 
@@ -595,10 +631,13 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2011-julio"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_308/files/03-308-orden-eha-1033-2011-ejercicios-2011-julio-a-2015.pdf"
 sha256 = "0d02c1477f291502203422342faed99035e8d52de775fe9f2f259b00ce226467"
 bytes = 32183
 retrieved_at = 2026-08-26
+applies_from = 2011-07-01
+applies_to = 2015-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308_2011.pdf"
 review_status = "reviewed"
 
@@ -606,10 +645,13 @@ review_status = "reviewed"
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
+record_design_epoch = "2016"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_308/files/04-308-orden-eha-1033-2011-ejercicios-2016-hasta-2018.xls"
 sha256 = "658e37957ebc2f888167cafd0a24b089b8868654d601102b82cc6d4c8ae66654"
 bytes = 176640
 retrieved_at = 2026-08-26
+applies_from = 2016-01-01
+applies_to = 2018-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr308e16v12.xls"
 review_status = "reviewed"
 

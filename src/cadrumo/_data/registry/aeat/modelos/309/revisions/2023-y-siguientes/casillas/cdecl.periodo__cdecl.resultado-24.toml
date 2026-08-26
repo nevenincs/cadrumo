@@ -1,0 +1,791 @@
+# Modelo 309 casillas: the AD-HOC liquidacion's operator values, plus the
+# design's own computed totals ([22] and [24]).
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.periodo"
+number = "11-12"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "declaracion_periodo_309"
+export_refs = ["modelo-309-p0-periodo", "modelo-309-p1-devengo-periodo"]
+# The settlement period code (PP), AD-HOC.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+number = "13"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "declaracion_tipo_309"
+export_refs = ["modelo-309-p1-tipo-declaracion"]
+# Design tipo de declaracion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.nombre"
+number = "83-102"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "declarante_nombre_309"
+export_refs = ["modelo-309-p1-nombre"]
+# The person declarante's given name.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.transmitente-nif"
+number = "109-117"
+section = ["declarante", "liquidacion"]
+data_type = "nif"
+semantic_role = "transmitente_nif"
+export_refs = ["modelo-309-p1-transmitente-nif"]
+# Design transmitente NIF.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.transmitente-apellidos"
+number = "118-177"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "transmitente_apellidos"
+export_refs = ["modelo-309-p1-transmitente-apellidos"]
+# Design transmitente apellidos o denominacion social.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.transmitente-nombre"
+number = "178-197"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "transmitente_nombre"
+export_refs = ["modelo-309-p1-transmitente-nombre"]
+# Design transmitente nombre.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.transmitente-pais"
+number = "198-199"
+section = ["declarante", "liquidacion"]
+data_type = "country_code"
+semantic_role = "transmitente_pais"
+export_refs = ["modelo-309-p1-transmitente-pais"]
+# Design transmitente pais.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.situacion-tributaria"
+number = "200"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "situacion_tributaria"
+export_refs = ["modelo-309-p1-situacion-tributaria"]
+# Design situacion tributaria (5).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.hecho-imponible"
+number = "201"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "hecho_imponible"
+export_refs = ["modelo-309-p1-hecho-imponible"]
+# Design hecho imponible (6).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.vehiculo-marca"
+number = "202-241"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "vehiculo_marca"
+export_refs = ["modelo-309-p1-vehiculo-marca"]
+# Design vehiculo marca.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.vehiculo-tipo"
+number = "242-281"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "vehiculo_tipo"
+export_refs = ["modelo-309-p1-vehiculo-tipo"]
+# Design vehiculo tipo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.vehiculo-modelo"
+number = "282-321"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "vehiculo_modelo"
+export_refs = ["modelo-309-p1-vehiculo-modelo"]
+# Design vehiculo modelo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.vehiculo-bastidor"
+number = "322-343"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "vehiculo_bastidor"
+export_refs = ["modelo-309-p1-vehiculo-bastidor"]
+# Design vehiculo bastidor.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.vehiculo-clasificacion"
+number = "344-349"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "vehiculo_clasificacion"
+export_refs = ["modelo-309-p1-vehiculo-clasificacion"]
+# Design vehiculo clasificacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.embarcacion-fabricante"
+number = "350-389"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "embarcacion_fabricante"
+export_refs = ["modelo-309-p1-embarcacion-fabricante"]
+# Design embarcacion fabricante.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.embarcacion-tipo"
+number = "390-469"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "embarcacion_tipo"
+export_refs = ["modelo-309-p1-embarcacion-tipo"]
+# Design embarcacion tipo-modelo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.embarcacion-identificacion"
+number = "470-491"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_embarcacion_identificacion"
+export_refs = ["modelo-309-p1-embarcacion-identificacion"]
+# Design embarcacion numero de construccion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.embarcacion-eslora"
+number = "492-496"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "embarcacion_eslora"
+export_refs = ["modelo-309-p1-embarcacion-eslora"]
+# Design embarcacion eslora maxima.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.aeronave-fabricante"
+number = "497-536"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "aeronave_fabricante"
+export_refs = ["modelo-309-p1-aeronave-fabricante"]
+# Design aeronave fabricante.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.aeronave-marca"
+number = "537-616"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "aeronave_marca"
+export_refs = ["modelo-309-p1-aeronave-marca"]
+# Design aeronave marca-tipo-modelo.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.aeronave-serie"
+number = "617-638"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "aeronave_serie"
+export_refs = ["modelo-309-p1-aeronave-serie"]
+# Design aeronave numero de serie.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.aeronave-ano"
+number = "639-642"
+section = ["declarante", "liquidacion"]
+data_type = "year"
+semantic_role = "aeronave_ano"
+export_refs = ["modelo-309-p1-aeronave-ano"]
+# Design aeronave ano de fabricacion.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.aeronave-peso"
+number = "643-652"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "aeronave_peso"
+export_refs = ["modelo-309-p1-aeronave-peso"]
+# Design aeronave peso maximo despegue.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.complementaria"
+number = "1016"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "declaracion_complementaria"
+export_refs = ["modelo-309-p1-complementaria"]
+# Design declaracion complementaria (9).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.justificante-anterior"
+number = "1017-1029"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "justificante_anterior"
+export_refs = ["modelo-309-p1-justificante-anterior"]
+# Design numero de justificante de la declaracion anterior (9).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.iban"
+number = "1030-1063"
+section = ["declarante", "liquidacion"]
+data_type = "iban"
+semantic_role = "devolucion_iban_309"
+export_refs = ["modelo-309-p1-iban"]
+# Design IBAN (10).
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.transmitente-nif-iva"
+number = "1064-1078"
+section = ["declarante", "liquidacion"]
+data_type = "nif_iva"
+semantic_role = "transmitente_nif_iva"
+export_refs = ["modelo-309-p1-transmitente-nif-iva"]
+# Design transmitente NIF-IVA.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.adjudicatario-nif"
+number = "1079-1087"
+section = ["declarante", "liquidacion"]
+data_type = "nif"
+semantic_role = "adjudicatario_nif"
+export_refs = ["modelo-309-p1-adjudicatario-nif"]
+# Design adjudicatario NIF.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.adjudicatario-apellidos"
+number = "1088-1147"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "adjudicatario_apellidos"
+export_refs = ["modelo-309-p1-adjudicatario-apellidos"]
+# Design adjudicatario apellidos o denominacion social.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.adjudicatario-nombre"
+number = "1148-1167"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "adjudicatario_nombre"
+export_refs = ["modelo-309-p1-adjudicatario-nombre"]
+# Design adjudicatario nombre.
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-base-01"
+number = "653-669"
+form_number = "01"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "rg_base_01"
+export_refs = ["modelo-309-p1-rg-base-01"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design regimen general base imponible [01].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-tipo-02"
+number = "670-674"
+form_number = "02"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "rg_tipo_02"
+export_refs = ["modelo-309-p1-rg-tipo-02"]
+# Design regimen general tipo % [02].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-cuota-03"
+number = "675-691"
+form_number = "03"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "rg_cuota_03"
+export_refs = ["modelo-309-p1-rg-cuota-03"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design regimen general cuota [03].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-base-25"
+number = "692-708"
+form_number = "25"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "rg_base_25"
+export_refs = ["modelo-309-p1-rg-base-25"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design regimen general base imponible [25].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-tipo-26"
+number = "709-713"
+form_number = "26"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "rg_tipo_26"
+export_refs = ["modelo-309-p1-rg-tipo-26"]
+# Design regimen general tipo % [26].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-cuota-27"
+number = "714-730"
+form_number = "27"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "rg_cuota_27"
+export_refs = ["modelo-309-p1-rg-cuota-27"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design regimen general cuota [27].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-base-04"
+number = "731-747"
+form_number = "04"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "rg_base_04"
+export_refs = ["modelo-309-p1-rg-base-04"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design regimen general base imponible [04].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-tipo-05"
+number = "748-752"
+form_number = "05"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "rg_tipo_05"
+export_refs = ["modelo-309-p1-rg-tipo-05"]
+# Design regimen general tipo % [05].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-cuota-06"
+number = "753-769"
+form_number = "06"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "rg_cuota_06"
+export_refs = ["modelo-309-p1-rg-cuota-06"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design regimen general cuota [06].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-base-07"
+number = "770-786"
+form_number = "07"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "rg_base_07"
+export_refs = ["modelo-309-p1-rg-base-07"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design regimen general base imponible [07].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-tipo-08"
+number = "787-791"
+form_number = "08"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "rg_tipo_08"
+export_refs = ["modelo-309-p1-rg-tipo-08"]
+# Design regimen general tipo % [08].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.rg-cuota-09"
+number = "792-808"
+form_number = "09"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "rg_cuota_09"
+export_refs = ["modelo-309-p1-rg-cuota-09"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design regimen general cuota [09].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-base-10"
+number = "809-825"
+form_number = "10"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "re_base_10"
+export_refs = ["modelo-309-p1-re-base-10"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design recargo equivalencia base imponible [10].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-tipo-11"
+number = "826-830"
+form_number = "11"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "re_tipo_11"
+export_refs = ["modelo-309-p1-re-tipo-11"]
+# Design recargo equivalencia tipo % [11].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-cuota-12"
+number = "831-847"
+form_number = "12"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "re_cuota_12"
+export_refs = ["modelo-309-p1-re-cuota-12"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design recargo equivalencia cuota [12].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-base-13"
+number = "848-864"
+form_number = "13"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "re_base_13"
+export_refs = ["modelo-309-p1-re-base-13"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design recargo equivalencia base imponible [13].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-tipo-14"
+number = "865-869"
+form_number = "14"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "re_tipo_14"
+export_refs = ["modelo-309-p1-re-tipo-14"]
+# Design recargo equivalencia tipo % [14].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-cuota-15"
+number = "870-886"
+form_number = "15"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "re_cuota_15"
+export_refs = ["modelo-309-p1-re-cuota-15"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design recargo equivalencia cuota [15].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-base-16"
+number = "887-903"
+form_number = "16"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "re_base_16"
+export_refs = ["modelo-309-p1-re-base-16"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design recargo equivalencia base imponible [16].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-tipo-17"
+number = "904-908"
+form_number = "17"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "re_tipo_17"
+export_refs = ["modelo-309-p1-re-tipo-17"]
+# Design recargo equivalencia tipo % [17].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-cuota-18"
+number = "909-925"
+form_number = "18"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "re_cuota_18"
+export_refs = ["modelo-309-p1-re-cuota-18"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design recargo equivalencia cuota [18].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-base-19"
+number = "926-942"
+form_number = "19"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "re_base_19"
+export_refs = ["modelo-309-p1-re-base-19"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design recargo equivalencia base imponible [19].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-tipo-20"
+number = "943-947"
+form_number = "20"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "re_tipo_20"
+export_refs = ["modelo-309-p1-re-tipo-20"]
+# Design recargo equivalencia tipo % [20].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.re-cuota-21"
+number = "948-964"
+form_number = "21"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "re_cuota_21"
+export_refs = ["modelo-309-p1-re-cuota-21"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design recargo equivalencia cuota [21].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.cuota-devengada-22"
+number = "965-981"
+form_number = "22"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "cuota_devengada_22"
+export_refs = ["modelo-309-p1-cuota-devengada-22"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design total cuota devengada [22]: the design's own sum of the eight cuota casillas.
+required = true
+input_kind = "computed"
+formula = "modelo-309-cuota-devengada-total"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.a-deducir-23"
+number = "982-998"
+form_number = "23"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "a_deducir_23"
+export_refs = ["modelo-309-p1-a-deducir-23"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design a deducir [23].
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "decl.resultado-24"
+number = "999-1015"
+form_number = "24"
+section = ["declarante", "liquidacion"]
+data_type = "money"
+semantic_role = "resultado_24"
+export_refs = ["modelo-309-p1-resultado-24"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2023"] }
+# Design resultado a ingresar [24]: the design's own [22]-[23].
+required = true
+input_kind = "computed"
+formula = "modelo-309-resultado"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2023"]

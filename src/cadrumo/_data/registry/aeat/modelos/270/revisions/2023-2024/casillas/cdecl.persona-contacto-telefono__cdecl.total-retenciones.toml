@@ -1,0 +1,156 @@
+# Modelo 270 registro de declarante (tipo 1) resumen casillas.
+#
+# Transcribed position-by-position from the bundled AEAT Diseño de Registro
+# aeat-dr-270-2023 (corpus/aeat_official/disenos_registro/modelo_270/files/
+# 01-270-diseno-de-registro-actualizado-en-2023.pdf, sha256
+# d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92), record
+# "Tipo 1 - Registro de Declarante", campos 12 a 15. `number` carries the
+# design's own inclusive position range, which is how this modelo's record
+# addresses its data -- the diseño numbers no boxes on the printed form.
+#
+# All four are input_kind = "manual": Modelo 270 declares the withholding an
+# entity practised on lottery prizes it paid out, and this application holds
+# no ledger source for that population, so no binding or formula can honestly
+# populate them. The design's own totalling rules ("la suma total de las
+# cantidades reflejadas en el campo ... correspondientes a los registros del
+# perceptor") are stated here as prose rather than authored as a formula,
+# because the perceptor detail rows are not themselves modelled as a
+# repeating record in this revision.
+
+# Design campo 7, "PERSONA CON QUIEN RELACIONARSE" @59+49, subdivided by AEAT's
+# own prose into 59-67 TELÉFONO and 68-107 APELLIDOS Y NOMBRE. Declared as the
+# two data AEAT names rather than as one 49-byte slot: the coverage gate
+# measures byte extent, so the design's grouping and the layout's need not
+# agree, and two operator-supplied facts are what the record actually carries.
+[[revisions."2023-2024".casillas]]
+id = "decl.persona-contacto-telefono"
+number = "59-67"
+section = ["declarante", "contacto"]
+data_type = "text"
+semantic_role = "m270_persona_contacto_telefono"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-270-decl-persona-contacto-telefono"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-2024".casillas]]
+id = "decl.persona-contacto-nombre"
+number = "68-107"
+section = ["declarante", "contacto"]
+data_type = "name"
+semantic_role = "m270_persona_contacto_nombre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-270-decl-persona-contacto-nombre"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+# Design campo 8. A sequential number the filer assigns, whose first three
+# digits are the código 270. It is not derivable from the draft, so it is the
+# operator's datum rather than a producer's.
+[[revisions."2023-2024".casillas]]
+id = "decl.numero-identificativo"
+number = "108-120"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m270_numero_identificativo"
+required = true
+input_kind = "manual"
+export_refs = ["modelo-270-decl-numero-identificativo"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+# Design campo 9 @121+2, subdivided by AEAT into 121 DECLARACIÓN COMPLEMENTARIA
+# ("C") and 122 DECLARACIÓN SUSTITUTIVA ("S"). Two independent single-byte
+# claves with different meanings, so two casillas rather than one two-byte slot.
+# These are NOT the application's amendment_evidence boolean: that renders the
+# canonical "X", which this design does not admit here.
+[[revisions."2023-2024".casillas]]
+id = "decl.complementaria"
+number = "121"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m270_declaracion_complementaria"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-270-decl-complementaria"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-2024".casillas]]
+id = "decl.sustitutiva"
+number = "122"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m270_declaracion_sustitutiva"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-270-decl-sustitutiva"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+# Design campo 10. Written when campo 9 carries "C" or "S"; the design states
+# "en cualquier otro caso deberá rellenarse a CEROS".
+[[revisions."2023-2024".casillas]]
+id = "decl.numero-identificativo-anterior"
+number = "123-135"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m270_numero_identificativo_anterior"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-270-decl-numero-identificativo-anterior"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-2024".casillas]]
+id = "decl.total-perceptores"
+number = "138-146"
+section = ["declarante", "resumen"]
+data_type = "integer"
+semantic_role = "total_perceptores_count"
+required = true
+input_kind = "manual"
+export_refs = ["modelo-270-decl-total-perceptores"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-2024".casillas]]
+id = "decl.total-importe-premios"
+number = "147-163"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "m270_total_importe_premios"
+required = true
+input_kind = "manual"
+export_refs = ["modelo-270-decl-total-importe-premios"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
+
+[[revisions."2023-2024".casillas]]
+id = "decl.total-base-retencion"
+number = "164-180"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "base_retenciones_ingresos_a_cuenta"
+required = true
+input_kind = "manual"
+export_refs = ["modelo-270-decl-total-base-retencion"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }
+
+[[revisions."2023-2024".casillas]]
+id = "decl.total-retenciones"
+number = "181-197"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+required = true
+input_kind = "manual"
+export_refs = ["modelo-270-decl-total-retenciones"]
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+constraints = { sign = "non_negative", legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"], source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"] }

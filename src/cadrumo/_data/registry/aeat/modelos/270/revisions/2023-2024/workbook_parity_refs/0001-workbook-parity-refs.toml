@@ -1,0 +1,14 @@
+# Modelo 270 record-design parity anchor. The bundled 2023 Diseño de Registro
+# is the authoritative current design; it supersedes the previous 1043-byte
+# form-spec excerpt, which carried no layout content. runner_required stays
+# false pending a verified byte-position parity run against the design.
+
+[[revisions."2023-2024".workbook_parity_refs]]
+id = "modelo-270-orden-static-layout"
+workbook_source = "aeat-dr-270-2023"
+fixture_id = "modelo-270-orden-hap-2368-2013-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023"]

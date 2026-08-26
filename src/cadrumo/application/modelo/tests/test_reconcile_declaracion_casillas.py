@@ -4,7 +4,7 @@ These lock the ``reconcile-declaration-casillas`` contract: a filed declaración
 PDF is compared casilla-by-casilla against the
 persisted computed :class:`~cadrumo.domain.modelos.CalculationRevision`, not only
 at the header / total level. Modelo 130 is the first modelo enrolled in
-:data:`cadrumo.application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`
+:data:`cadrumo.application.modelo.reconciliation._DECLARATION_CASILLA_RECONCILE_MODELOS`
 because its ``declaracion_pdf`` extraction profile targets registry casilla ids
 ``"01"``..``"19"`` directly.
 
@@ -50,11 +50,11 @@ from ....domain.modelos import (
 )
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.registry_observations import registry_grounded_observations
-from .._reconcile import (
+from ..reconciliation import (
     ReconciliationDeclaracionSourceUnsupportedError,
     _reconcile_parsed_declaracion,
 )
-from .._reconciliation_records import (
+from ..reconciliation_records import (
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,

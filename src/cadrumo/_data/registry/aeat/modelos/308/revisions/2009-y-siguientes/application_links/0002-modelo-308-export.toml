@@ -1,7 +1,0 @@
-[[revisions."2009-y-siguientes".application_links]]
-id = "modelo-308-export"
-surface = "export"
-consumer = "cadrumo.application.filing.export_draft"
-requires_snapshot = true
-legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "ley-37-1992:art-161"]
-source_refs = ["aeat-dr-308-2019"]

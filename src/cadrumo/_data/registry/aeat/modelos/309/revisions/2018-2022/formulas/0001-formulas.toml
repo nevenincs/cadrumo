@@ -1,0 +1,55 @@
+# The design's own arithmetic: [22] is the sum of the eight cuota
+# casillas, and [24] is [22] minus the a-deducir casilla.
+[[revisions."2018-2022".formulas]]
+id = "modelo-309-cuota-devengada-total"
+target_casilla_id = "decl.cuota-devengada-22"
+expression.op = "add"
+expression.args = [
+    { casilla_id = "decl.rg-cuota-03" },
+    { casilla_id = "decl.rg-cuota-27" },
+    { casilla_id = "decl.rg-cuota-06" },
+    { casilla_id = "decl.rg-cuota-09" },
+    { casilla_id = "decl.re-cuota-12" },
+    { casilla_id = "decl.re-cuota-15" },
+    { casilla_id = "decl.re-cuota-18" },
+    { casilla_id = "decl.re-cuota-21" },
+]
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
+
+[[revisions."2018-2022".formulas.source_citations]]
+source_ref = "aeat-modelo-309-instructions"
+required_text = ["modelo 309", "autoliquidacion no periodica", "cuotas resultantes"]
+
+[[revisions."2018-2022".formulas]]
+id = "modelo-309-resultado"
+target_casilla_id = "decl.resultado-24"
+expression.op = "subtract"
+expression.args = [
+    { casilla_id = "decl.cuota-devengada-22" },
+    { casilla_id = "decl.a-deducir-23" },
+]
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
+
+[[revisions."2018-2022".formulas.source_citations]]
+source_ref = "aeat-modelo-309-instructions"
+required_text = ["modelo 309", "cuota"]
+
+[[revisions."2018-2022".formulas]]
+id = "modelo-309-iva-cuota-no-periodica-total"
+target_casilla_id = "iva.cuota-no-periodica-total"
+expression.op = "add"
+expression.args = [
+    { casilla_id = "iva.autorepercutido.intracomunitaria" },
+    { casilla_id = "iva.soportado.recargo-equivalencia" },
+]
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2018", "aeat-modelo-309-instructions", "aeat-modelo-309-procedure"]
+
+[[revisions."2018-2022".formulas.source_citations]]
+source_ref = "aeat-modelo-309-instructions"
+required_text = ["modelo 309", "cuota"]

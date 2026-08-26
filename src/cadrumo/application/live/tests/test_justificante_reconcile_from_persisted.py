@@ -13,8 +13,8 @@ __all__ = ["_isolated_backend"]
 
 from ....core import Modelo
 from ....core.directory_scan import scan_directory
-from ...modelo._reconcile import ReconciliationEvidenceInvalidError
-from ...modelo._reconciliation_records import (
+from ...modelo.reconciliation import ReconciliationEvidenceInvalidError
+from ...modelo.reconciliation_records import (
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
 )

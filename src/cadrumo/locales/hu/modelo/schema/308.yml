@@ -5,7 +5,52 @@ modelo:
         official_name: null
         title: null
       revision:
-        2009-y-siguientes:
+        2009-2011-junio:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A kérelem vonatkozási éve
+            x-chim6r1ee1in4qbfchng:
+              help: A 308-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Esedékesség. Időszak
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: null
+          field:
+            label: null
+        2011-julio-2015:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A kérelem vonatkozási éve
+            x-chim6r1ee1in4qbfchng:
+              help: A 308-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Esedékesség. Időszak
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: null
+          field:
+            label: null
+        2016-2018:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: A kérelem vonatkozási éve
+            x-chim6r1ee1in4qbfchng:
+              help: A 308-es modelón bevallott adat, a hivatalos nyomtatványtervből
+                véve.
+              label: Esedékesség. Időszak
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: null
+          field:
+            label: null
+        2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
               help: A 308-es modelo 966-976. rovata, 2009. adóév.

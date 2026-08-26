@@ -34,11 +34,11 @@ from ....domain.modelos import (
 )
 from ....tests import FIXTURES_DIR
 from cadrumo.application.workflow.persistence import workflow_state_repository
-from .._reconcile import (
+from ..reconciliation import (
     ModeloReconciliationCommand,
     modelo_reconcile,
 )
-from .._reconciliation_records import (
+from ..reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
     ModeloReconciliationVerdict,

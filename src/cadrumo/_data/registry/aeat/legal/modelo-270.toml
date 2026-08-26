@@ -49,22 +49,19 @@ applies_from = 2013-12-14
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228"
 review_status = "reviewed"
 
-# Retiered 2026-08-15: this 1043-byte orden excerpt carries no annex section
-# and no record-layout vocabulary, so it was never layout authority -- the
-# real Diseño de Registro is aeat-dr-270-2023 below. The excerpt remains a
-# genuine official_source_guidance citation (the orden that approves the
-# form), just not the layout's home.
-[sources."enrolled-modelo-270-layout"]
-evidence_tier = "official_source_guidance"
+[sources."boe-dr-270-2013-2022"]
+evidence_tier = "layout_authority"
 authority = "boe"
-kind = "form_spec"
-corpus_path = "corpus/normatives/html/orden-hap-2368-2013.html"
-sha256 = "624811727a1832c92a796d8465e25b26b5fe7e9fabe5eab0b91b84b781a5abe9"
-bytes = 1043
-retrieved_at = 2026-07-04
-published_at = 2013-12-13
-applies_from = 2013-12-14
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228"
+kind = "record_design"
+record_design_epoch = "2013"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_270/files/02-270-orden-hap-2368-2013-boe-a-2013-13228.pdf"
+sha256 = "97dfc0a9640f2bdd32c97b89702427ba708c858fe173ab31a68d179f247c3b69"
+bytes = 867947
+retrieved_at = 2026-08-26
+published_at = 2013-12-18
+applies_from = 2013-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/boe/dias/2013/12/18/pdfs/BOE-A-2013-13228.pdf"
 review_status = "reviewed"
 
 [sources."aeat-dr-270-2023"]
@@ -77,5 +74,6 @@ sha256 = "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92"
 bytes = 111633
 retrieved_at = 2026-07-21
 applies_from = 2023-01-01
+applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos/270_HAP_2368_2013.pdf"
 review_status = "reviewed"

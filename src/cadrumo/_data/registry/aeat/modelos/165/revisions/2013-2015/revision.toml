@@ -1,0 +1,42 @@
+[revisions."2013-2015"]
+authority_grade = "applicability"
+# The original 2013 source establishes this legal era, but its type-2 table
+# leaves positions 102-103 unread. It may select applicability; it cannot
+# support an authored fixed-width layout.
+valid_from = 2013-01-01
+valid_to = 2015-12-31
+period_selector = { year_from = 2013, year_to = 2015, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hap-2455-2013:art-1"]
+legal_refs = [
+    "orden-hap-2455-2013:art-1",
+    "orden-hap-2455-2013:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-165-procedure",
+    "enrolled-modelo-165-layout",
+    "aeat-dr-165-2013-2015",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent: 2013 source is hash-pinned but strict parsing refuses its type-2 102-103 hole; legal selection retained without a layout claim"
+reviewed_at = 2026-08-26
+
+[revisions."2013-2015".family_dispositions.deadline_windows]
+reason = """
+Orden HAP/2455/2013 establishes a January presentation month, but the bundled
+sources carry no exercise-specific 2013-2015 calendar windows. A recurring
+month does not license inventing their opens_on or closes_on dates."""
+legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
+
+[revisions."2013-2015".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+This is Modelo 165's earliest registered revision. Its two declaration-header
+facts are legal/applicability facts rather than a complete wire identity, so
+there is no predecessor transition to author."""
+legal_refs = [
+    "orden-hap-2455-2013:art-1",
+    "orden-hap-2455-2013:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2013-2015"]

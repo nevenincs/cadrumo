@@ -390,7 +390,7 @@ def test_reconcile_file_kind_declaration_catches_casilla_divergence(
 # dots-placeholder template on the receipt copy, not a filled value); those
 # three modelos are enrolled further below in this file, unblocked by the
 # work-unit-context override forwarding now landed in `modelo_reconcile`'s
-# declaración branch (`application/modelo/_reconcile.py`).
+# declaración branch (`application/modelo/reconciliation.py`).
 
 MODELO_130_DECLARACION_FIXTURE = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
 """Synthetic-generated M130 declaración PDF for ejercicio 2024, 1T. Extraction
@@ -484,7 +484,7 @@ def test_reconcile_file_kind_declaration_m130_catches_casilla_divergence(
 # stamp `parse_declaracion`'s auto-detector requires. `modelo_reconcile`'s
 # declaración branch now forwards the addressed work unit's own known
 # modelo/filing_year/period as `parse_declaracion` overrides (see
-# `application/modelo/_reconcile.py`), which lets this fixture parse without
+# `application/modelo/reconciliation.py`), which lets this fixture parse without
 # requiring a detectable header -- while a genuinely wrong-modelo PDF (a
 # detectable template that conflicts with the override) still refuses; see
 # `test_reconcile_file_kind_declaration_override_still_catches_wrong_modelo_pdf`.

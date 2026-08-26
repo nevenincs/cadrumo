@@ -58,6 +58,7 @@ def root_command(
         return
     from ...adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ...adapters.outbound.aeat.auth.session_store import build_session_store
+    from ...adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
     from ...adapters.persistence.profile.extracted_document_cache import ExtractedDocumentCacheRepository
     from ...adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
     from ...adapters.persistence.profile.justificante import JustificanteRepository
@@ -65,6 +66,7 @@ def root_command(
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ...adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationPersistence
     from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
@@ -81,6 +83,8 @@ def root_command(
     from ...application.modelo.calculation_repository import bind_calculation_revision_catalogue_repository_factory
     from ...application.modelo.filing_repository import bind_modelo_record_catalogue_repository_factory
     from ...application.modelo.justificante_repository import bind_justificante_repository_factory
+    from ...application.modelo.reconciliation_parsing import bind_reconciliation_evidence_parser
+    from ...application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from ...application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from ...application.user_profile.custody_ports import bind_profile_custody_port
     from ...application.user_profile.language_resolver import register_language_resolver
@@ -100,6 +104,8 @@ def root_command(
     ctx.with_resource(bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository))
     ctx.with_resource(bind_justificante_repository_factory(JustificanteRepository))
     ctx.with_resource(bind_work_unit_catalogue_repository_factory(WorkUnitCatalogueRepository))
+    ctx.with_resource(bind_reconciliation_evidence_parser(InboundReconciliationEvidenceParser()))
+    ctx.with_resource(bind_modelo_reconciliation_persistence_factory(ModeloReconciliationPersistence))
     ctx.with_resource(bind_auth_provider_selector(select_outbound_auth_provider))
     ctx.with_resource(bind_session_store(build_session_store()))
     register_language_resolver()

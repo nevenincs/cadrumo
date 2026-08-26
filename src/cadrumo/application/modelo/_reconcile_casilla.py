@@ -1,7 +1,7 @@
 """Casilla-level divergence detection between a computed revision and a filed declaration.
 
 ``detect_casilla_divergences`` is the typed, pure comparison primitive this
-module contributes to :mod:`~application.modelo._reconcile`: given the
+module contributes to :mod:`~application.modelo.reconciliation`: given the
 canonical ``revision.casilla_values`` a work unit already persisted (the same
 values the calculate path, the result summary, and the export surface render,
 per ``aeat-calculation-aggregation``) and the per-casilla values a
@@ -22,7 +22,7 @@ mappings plus a tolerance, so it can be tested and reused without a persisted
 work unit, a registry snapshot, or a parsed declaración.
 
 See Also:
-    :mod:`~application.modelo._reconcile`
+    :mod:`~application.modelo.reconciliation`
         Reconciliation workflow that loads work-unit state and delegates
         casilla comparison to this pure primitive.
     :class:`~domain.modelos.CalculationRevision`

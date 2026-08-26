@@ -5,7 +5,49 @@ modelo:
         official_name: null
         title: null
       revision:
-        2009-y-siguientes:
+        2009-2011-junio:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the request relates
+            x-chim6r1ee1in4qbfchng:
+              help: Field declared on modelo 308, taken from the official record design.
+              label: Accrual. Period
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: null
+          field:
+            label: null
+        2011-julio-2015:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the request relates
+            x-chim6r1ee1in4qbfchng:
+              help: Field declared on modelo 308, taken from the official record design.
+              label: Accrual. Period
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: null
+          field:
+            label: null
+        2016-2018:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: Filing year to which the request relates
+            x-chim6r1ee1in4qbfchng:
+              help: Field declared on modelo 308, taken from the official record design.
+              label: Accrual. Period
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: null
+          field:
+            label: null
+        2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
               help: Box 966-976 of modelo 308, tax year 2009.

@@ -1,0 +1,378 @@
+# Exact operator-entered positions of the one-record 2004–15 Diseño de Registro.
+# This applicability-grade revision preserves geometry and does not expose a filing-capable writer.
+
+[[revisions."2004-2015".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+
+[[revisions."2004-2015".casillas]]
+id = "decl.periodo"
+number = "7"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "declaracion_periodo_309"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-periodo"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "wire.letras-etiqueta"
+number = "5"
+section = ["presentacion","identificacion"]
+data_type = "text"
+semantic_role = "letras_etiqueta_persona_fisica"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-letras-etiqueta"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.transmitente-nif"
+number = "25"
+section = ["declarante","liquidacion"]
+data_type = "nif"
+semantic_role = "transmitente_nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-transmitente-nif"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.transmitente-apellidos"
+number = "34"
+section = ["declarante","liquidacion"]
+data_type = "name"
+semantic_role = "transmitente_apellidos"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-transmitente-apellidos"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.transmitente-pais"
+number = "74"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "transmitente_pais"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-transmitente-pais"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.situacion-tributaria-agricola"
+number = "88"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "situacion_tributaria_agricola"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-situacion-tributaria-agricola"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.situacion-tributaria-recargo-equivalencia"
+number = "89"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "situacion_tributaria_recargo_equivalencia"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-situacion-tributaria-recargo-equivalencia"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.situacion-tributaria-sin-derecho-deduccion"
+number = "90"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "situacion_tributaria_sin_derecho_deduccion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-situacion-tributaria-sin-derecho-deduccion"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.situacion-tributaria-persona-juridica-no-empresario"
+number = "91"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "situacion_tributaria_persona_juridica_no_empresario"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-situacion-tributaria-persona-juridica-no-empresario"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.situacion-tributaria-persona-fisica-no-empresario"
+number = "92"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "situacion_tributaria_persona_fisica_no_empresario"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-situacion-tributaria-persona-fisica-no-empresario"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.situacion-tributaria-otras"
+number = "93"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "situacion_tributaria_otras"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-situacion-tributaria-otras"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.hecho-imponible-adquisicion-intracomunitaria"
+number = "94"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "hecho_imponible_adquisicion_intracomunitaria"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-hecho-imponible-adquisicion-intracomunitaria"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.hecho-imponible-medios-transporte-nuevos"
+number = "95"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "hecho_imponible_medios_transporte_nuevos"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-hecho-imponible-medios-transporte-nuevos"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.hecho-imponible-inversion-sujeto-pasivo"
+number = "96"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "hecho_imponible_inversion_sujeto_pasivo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-hecho-imponible-inversion-sujeto-pasivo"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.hecho-imponible-entrega-inversion-inmobiliaria"
+number = "97"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "hecho_imponible_entrega_inversion_inmobiliaria"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-hecho-imponible-entrega-inversion-inmobiliaria"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.hecho-imponible-procedimiento-administrativo-judicial"
+number = "98"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "hecho_imponible_procedimiento_administrativo_judicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-hecho-imponible-procedimiento-administrativo-judicial"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.hecho-imponible-otros"
+number = "99"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "hecho_imponible_otros"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-hecho-imponible-otros"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.vehiculo-marca"
+number = "100"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "vehiculo_marca"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-vehiculo-marca"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.vehiculo-tipo"
+number = "140"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "vehiculo_tipo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-vehiculo-tipo"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.vehiculo-modelo"
+number = "180"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "vehiculo_modelo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-vehiculo-modelo"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.vehiculo-bastidor"
+number = "220"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "vehiculo_bastidor"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-vehiculo-bastidor"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.vehiculo-clasificacion"
+number = "260"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "vehiculo_clasificacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-vehiculo-clasificacion"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.embarcacion-fabricante"
+number = "300"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "embarcacion_fabricante"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-embarcacion-fabricante"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.embarcacion-tipo"
+number = "340"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "embarcacion_tipo"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-embarcacion-tipo"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.embarcacion-identificacion"
+number = "380"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "mtn_embarcacion_identificacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-embarcacion-identificacion"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.embarcacion-eslora"
+number = "420"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "embarcacion_eslora"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-embarcacion-eslora"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.aeronave-fabricante"
+number = "426"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "aeronave_fabricante"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-aeronave-fabricante"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.aeronave-marca"
+number = "466"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "aeronave_marca"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-aeronave-marca"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.aeronave-serie"
+number = "506"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "aeronave_serie"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-aeronave-serie"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.aeronave-ano"
+number = "546"
+section = ["declarante","liquidacion"]
+data_type = "year"
+semantic_role = "aeronave_ano"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-aeronave-ano"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.aeronave-peso"
+number = "550"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "aeronave_peso"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-aeronave-peso"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "decl.justificante-anterior"
+number = "61"
+section = ["declarante","liquidacion"]
+data_type = "text"
+semantic_role = "justificante_anterior"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-justificante-anterior"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+[[revisions."2004-2015".casillas]]
+id = "wire.observaciones"
+number = "64"
+section = ["presentacion"]
+data_type = "text"
+semantic_role = "observaciones_presentacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-309-historical-observaciones"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+

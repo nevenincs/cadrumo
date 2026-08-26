@@ -40,7 +40,7 @@ from ....application.modelo._m145_communication_records import (
     M145CommunicationRecord,
     m145_communication_record_object_key,
 )
-from ....application.modelo._reconciliation_records import ModeloReconciliationRecordRepository
+from ..profile.modelo_reconciliation import ModeloReconciliationRecordRepository
 from ....application.user_profile.custody_ports import ProfileCustodyCarryMaterial
 from ....application.user_profile.repository import user_profile_snapshot_object_key
 from ....core import SecureObjectWrite, StorageCustodyProfile

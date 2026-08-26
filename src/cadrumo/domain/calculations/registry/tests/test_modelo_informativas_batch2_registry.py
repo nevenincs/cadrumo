@@ -4,9 +4,10 @@ Modelos 165, 233, 156 (annual, January plazo) and 038, 185, 186 (monthly plazo)
 were promoted from :data:`~core.UNMODELED_OBLIGATIONS` to registry-loadable definitions.
 Each is approved by a bundled orden whose approval (art 1) and plazo (art 4 or 6)
 articles are cross-checked against the bundled BOE corpus at build. These
-revisions are scheduling/applicability-grade (declaration-header casillas only).
-Modelo 038's official design is bundled but remains geometry-recovered, so no
-numbered form casilla is fabricated from it.
+Several remain scheduling/applicability-grade (declaration-header casillas
+only). Modelo 165's filing geometry is explicitly bounded to the two complete
+official design eras; Modelo 038's official design is bundled but remains
+geometry-recovered, so no numbered form casilla is fabricated from it.
 
 See Also:
     :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
@@ -46,7 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MODELOS = [
     (
         "165",
-        "2013-y-siguientes",
+        "2023-2025",
         "orden-hap-2455-2013:art-1",
         "orden-hap-2455-2013:art-4",
         "BOE-A-2013-13798",

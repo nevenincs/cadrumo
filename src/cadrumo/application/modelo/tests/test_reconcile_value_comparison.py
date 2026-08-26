@@ -43,10 +43,10 @@ from ....domain.modelos import (
 )
 from ....tests import FIXTURES_DIR
 from ....tests.registry_observations import registry_grounded_observations
-from .._reconcile import (
+from ..reconciliation import (
     _reconcile_parsed_justificante,
 )
-from .._reconciliation_records import (
+from ..reconciliation_records import (
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,

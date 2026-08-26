@@ -1,8 +1,0 @@
-[[revisions."2009-y-siguientes".filing_schedules]]
-id = "modelo-308-ad-hoc"
-period_kind = "ad_hoc"
-periods = ["AD-HOC"]
-profile_condition_mode = "all"
-legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
-source_refs = ["boe-modelo-308-2008-form", "aeat-modelo-308-procedure"]
-

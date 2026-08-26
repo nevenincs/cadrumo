@@ -18,7 +18,7 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
-from ....application.modelo._reconciliation_records import (
+from ....application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )

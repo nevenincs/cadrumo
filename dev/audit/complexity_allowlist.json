@@ -198,7 +198,7 @@
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/application/modelo/_reconcile.py::_reconcile_declaracion_casillas": {
+      "src/cadrumo/application/modelo/reconciliation.py::_reconcile_declaracion_casillas": {
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 12
       },

@@ -1,0 +1,23 @@
+[[revisions."2011-julio-2015".application_links]]
+id = "modelo-308-portal"
+surface = "portal"
+consumer = "portal_m308_iva_solicitud_devolucion"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-2", "orden-eha-1033-2011:disposicion-final-unica"]
+source_refs = ["aeat-modelo-308-procedure"]
+
+[[revisions."2011-julio-2015".application_links]]
+id = "modelo-308-extractor"
+surface = "extractor"
+consumer = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-2", "orden-eha-1033-2011:disposicion-final-unica"]
+source_refs = ["aeat-modelo-308-procedure"]
+
+[[revisions."2011-julio-2015".application_links]]
+id = "modelo-308-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-11", "orden-eha-1033-2011:disposicion-final-unica"]
+source_refs = ["boe-modelo-308-2008-form", "aeat-modelo-308-procedure"]

@@ -6,7 +6,5 @@ casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
 application_links = ["modelo-165-filing", "modelo-165-deadline"]
 workbook_parity_refs = ["modelo-165-orden-static-layout"]
 deadline_windows = [
-    "modelo-165-2024-0a",
-    "modelo-165-2025-0a",
     "modelo-165-2026-0a",
 ]

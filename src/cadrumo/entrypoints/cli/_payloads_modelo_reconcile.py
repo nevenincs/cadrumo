@@ -20,7 +20,7 @@ from typing import Annotated
 
 from pydantic import Field
 
-from ...application.modelo._reconciliation_records import (
+from ...application.modelo.reconciliation_records import (
     ModeloReconciliationDiffKind,
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,

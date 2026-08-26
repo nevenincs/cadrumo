@@ -1,0 +1,20 @@
+[revisions."2004-2015"]
+authority_grade = "applicability"
+# The complete archived PDF proves a single 1,300-position record only. This
+# revision remains applicability-grade, so the normal two-record writer cannot
+# be selected for historical filing.
+valid_from = 2004-01-01
+valid_to = 2015-12-31
+period_selector = { year_from = 2004, year_to = 2015, periods = ["AD-HOC"] }
+orden_aplicabilidad = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-26
+
+[revisions."2004-2015".family_dispositions.casilla_continuidad_evolutions]
+reason = "The archived 2004–15 design proves its own one-record coordinates but does not establish continuity from an unevidenced earlier wire era."
+legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004"]
+

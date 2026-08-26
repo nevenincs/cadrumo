@@ -1,0 +1,28 @@
+[[revisions."2019-y-siguientes".constructs]]
+id = "modelo-308-iva-solicitud-devolucion"
+legal_refs = [
+    "ley-37-1992:art-21",
+    "rd-1624-1992:art-30-bis",
+    "orden-eha-3786-2008:art-2",
+    "orden-eha-3786-2008:art-11",
+    "ley-37-1992:art-161",
+]
+source_refs = [
+    "aeat-dr-308-2019",
+    "aeat-modelo-308-procedure",
+    "boe-modelo-308-2008-form",
+]
+casilla_ids = ["decl.ejercicio", "decl.tipo-solicitud"]
+workbook_parity_refs = ["modelo-308-dr-2019"]
+live_cross_references = [
+    "modelo-308-static-documentation",
+    "modelo-308-filed-declarations-read",
+]
+application_links = [
+    "modelo-308-portal",
+    "modelo-308-filing",
+    "modelo-308-extractor",
+    "modelo-308-deadline",
+]
+filing_schedules = ["modelo-308-ad-hoc"]
+deadline_windows = []

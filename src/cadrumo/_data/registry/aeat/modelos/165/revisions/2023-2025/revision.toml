@@ -1,0 +1,30 @@
+[revisions."2023-2025"]
+authority_grade = "applicability"
+# The next bundled positional artefact is headed Ejercicio 2026. Its filename
+# says it was updated in 2023, but that is not an applicability declaration for
+# 2023-2025, so this interval stays legal/applicability-only.
+valid_from = 2023-01-01
+valid_to = 2025-12-31
+period_selector = { year_from = 2023, year_to = 2025, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hap-2455-2013:art-1"]
+legal_refs = [
+    "orden-hap-2455-2013:art-1",
+    "orden-hap-2455-2013:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout"]
+review_status = "agent_reviewed"
+reviewed_by = "agent: 2023-2025 legal selection retained; no positional source whose own heading covers this interval is bundled"
+reviewed_at = 2026-08-26
+
+[revisions."2023-2025".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+No exact 2023-2025 positional design is bundled. This revision consequently
+declares only the legal declaration header and no wire identity from which an
+evolution could be grounded."""
+legal_refs = [
+    "orden-hap-2455-2013:art-1",
+    "orden-hap-2455-2013:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = ["enrolled-modelo-165-procedure"]

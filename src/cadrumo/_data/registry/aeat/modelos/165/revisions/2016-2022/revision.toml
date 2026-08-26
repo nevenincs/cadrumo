@@ -17,9 +17,18 @@ source_refs = [
     "enrolled-modelo-165-layout",
     "aeat-dr-165-2016-2022",
 ]
+
 review_status = "agent_reviewed"
 reviewed_by = "agent: complete 2016 AEAT design measured against the distinct two-record 500-byte layout; no 2023-era field is backdated"
 reviewed_at = 2026-08-26
+
+[revisions."2016-2022".family_dispositions.deadline_windows]
+reason = """
+The cited Orden establishes January presentation, but no exercise-specific
+calendar windows for 2016-2022 are bundled. A date is not inferred from a
+recurring legal month; this revision therefore declares none."""
+legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
 
 [revisions."2016-2022".family_dispositions.casilla_continuidad_evolutions]
 reason = """

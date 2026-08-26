@@ -1,0 +1,9 @@
+[[revisions."2011-julio-2015".workbook_parity_refs]]
+id = "modelo-308-dr-2011-julio-2015-static-layout"
+workbook_source = "aeat-dr-308-2011-july"
+fixture_id = "modelo-308-2011-julio-2015-record-design"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]
+source_refs = ["aeat-dr-308-2011-july"]

@@ -1,11 +1,12 @@
 {
-  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "source": "Agencia Tributaria Sede Electronica and BOE - Disenos de registro",
   "modelo": "270",
-  "retrieved_at": "2026-07-21",
+  "retrieved_at": "2026-08-26",
   "source_pages": [
-    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html"
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://www.boe.es/boe/dias/2013/12/18/pdfs/BOE-A-2013-13228.pdf"
   ],
-  "artefact_count": 1,
+  "artefact_count": 2,
   "artefacts": [
     {
       "modelo": "270",
@@ -18,6 +19,18 @@
       "bytes": 111633,
       "sha256": "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92",
       "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "270",
+      "title": "Orden HAP/2368/2013, BOE-A-2013-13228",
+      "source_page": "https://www.boe.es/boe/dias/2013/12/18/pdfs/BOE-A-2013-13228.pdf",
+      "url": "https://www.boe.es/boe/dias/2013/12/18/pdfs/BOE-A-2013-13228.pdf",
+      "stored_path": "files/02-270-orden-hap-2368-2013-boe-a-2013-13228.pdf",
+      "original_filename": "BOE-A-2013-13228.pdf",
+      "content_type": "application/pdf",
+      "bytes": 867947,
+      "sha256": "97dfc0a9640f2bdd32c97b89702427ba708c858fe173ab31a68d179f247c3b69",
+      "retrieved_at": "2026-08-26"
     }
   ]
 }

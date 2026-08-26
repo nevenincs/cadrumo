@@ -888,7 +888,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._reconcile.ReconciliationEvidenceInvalidError",
+        "cadrumo.application.modelo.reconciliation.ReconciliationEvidenceInvalidError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_EVIDENCE_INVALID",
             category=ErrorCategory.REFUSED,
@@ -898,7 +898,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo._reconcile.ReconciliationDeclaracionSourceUnsupportedError",
+        "cadrumo.application.modelo.reconciliation.ReconciliationDeclaracionSourceUnsupportedError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED",
             category=ErrorCategory.REFUSED,

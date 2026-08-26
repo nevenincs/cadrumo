@@ -9,7 +9,7 @@
   contacts AEAT. ``--kind`` selects the evidence document's KIND, orthogonal to
   the pull/file transport axis: ``justificante`` (the default, every modelo) or
   ``declaration`` (a filed declaración PDF, casilla-level reconcile, enrolled
-  modelos only -- see :data:`application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`).
+  modelos only -- see :data:`application.modelo.reconciliation._DECLARATION_CASILLA_RECONCILE_MODELOS`).
 * ``reconcile history`` lists past reconciliations.
 """
 
@@ -20,8 +20,8 @@ from pathlib import Path
 
 import typer
 
-from ...application.modelo._reconcile import ModeloReconciliationReport
-from ...application.modelo._reconciliation_records import ModeloReconciliationEvidenceKind
+from ...application.modelo.reconciliation import ModeloReconciliationReport
+from ...application.modelo.reconciliation_records import ModeloReconciliationEvidenceKind
 from ...core.i18n import tr
 from ...domain.modelos import WorkUnit
 from ._common import active_bucket_id_or_refuse, emit_envelope
@@ -154,7 +154,7 @@ def reconcile_file_verb(
     kind: ModeloReconciliationEvidenceKind | None = None,
 ) -> None:
     """Reconcile a work unit against a local justificante or declaración PDF file."""
-    from ...application.modelo._reconcile import (
+    from ...application.modelo.reconciliation import (
         ModeloReconciliationCommand,
         modelo_reconcile,
     )
@@ -175,7 +175,7 @@ def reconcile_file_verb(
 
 def reconcile_history_verb(ctx: typer.Context, work_unit_id: str | None = None) -> None:
     """List past reconciliations recorded in the active profile."""
-    from ...application.modelo._reconciliation_records import list_modelo_reconciliations
+    from ...application.modelo.reconciliation_records import list_modelo_reconciliations
     from ._modelo_payloads_m036 import ModeloReconciliationHistoryResult, ModeloReconciliationHistoryRowPayload
 
     _require_profile()

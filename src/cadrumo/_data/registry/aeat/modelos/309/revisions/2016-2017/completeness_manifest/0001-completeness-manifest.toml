@@ -1,0 +1,62 @@
+# Calculation-completeness manifest for revision 2016-2017: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.
+[revisions."2016-2017".completeness_manifest]
+source_ref = "aeat-dr-309-2016"
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-84", "ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-309-2016"]
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "iva.soportado.recargo-equivalencia"
+number = "iva.soportado.recargo-equivalencia"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-03"
+number = "675-691"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-27"
+number = "714-730"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-06"
+number = "753-769"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.rg-cuota-09"
+number = "792-808"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-12"
+number = "831-847"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-15"
+number = "870-886"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-18"
+number = "909-925"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.re-cuota-21"
+number = "948-964"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.cuota-devengada-22"
+number = "965-981"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.a-deducir-23"
+number = "982-998"
+
+[[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.resultado-24"
+number = "999-1015"
