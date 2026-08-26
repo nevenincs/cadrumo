@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from functools import cache
 
 import pytest
@@ -113,11 +114,40 @@ def test_modelo_309_2004_typed_slots_preserve_the_official_historical_meanings()
         "decl.re-tipo-20",
     )
     assert all(casillas[casilla_id].data_type == "ratio" for casilla_id in type_ids)
+
+    unsigned_numeric_ids = (
+        "decl.rg-base-01",
+        "decl.rg-cuota-03",
+        "decl.rg-base-04",
+        "decl.rg-cuota-06",
+        "decl.rg-base-07",
+        "decl.rg-cuota-09",
+        "decl.re-base-10",
+        "decl.re-cuota-12",
+        "decl.re-base-13",
+        "decl.re-cuota-15",
+        "decl.re-base-16",
+        "decl.re-cuota-18",
+        "decl.re-base-19",
+        "decl.re-cuota-21",
+        "decl.cuota-devengada-22",
+        "decl.a-deducir-23",
+        "decl.resultado-24",
+    )
+    for casilla_id in unsigned_numeric_ids:
+        numeric = casillas[casilla_id]
+        assert numeric.data_type == "money"
+        assert numeric.constraints is not None
+        assert numeric.constraints.sign == "non_negative"
+        assert numeric.constraints.violates(Decimal("-0.01")) == "value -0.01 violates sign=non_negative"
+
     for revision_id in ("2016-2017", "2018-2022", "2023-y-siguientes"):
         later_casillas = {casilla.id: casilla for casilla in modelo.revisions[revision_id].casillas}
         assert later_casillas["decl.transmitente-pais"].data_type == "country_code"
         assert later_casillas["decl.transmitente-pais"].semantic_role == "transmitente_pais"
         assert all(later_casillas[casilla_id].data_type == "ratio" for casilla_id in type_ids)
+
+    assert semantic_role_consistency_failures((modelo,)) == ()
 
 
 def test_modelo_309_2004_country_role_mutation_reopens_typed_semantic_drift() -> None:

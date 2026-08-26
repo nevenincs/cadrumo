@@ -8,6 +8,7 @@ semantic_role = "rg_base_01"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-rg-base-01"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -30,6 +31,7 @@ semantic_role = "rg_cuota_03"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-rg-cuota-03"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -41,6 +43,7 @@ semantic_role = "rg_base_04"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-rg-base-04"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -63,6 +66,7 @@ semantic_role = "rg_cuota_06"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-rg-cuota-06"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -74,6 +78,7 @@ semantic_role = "rg_base_07"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-rg-base-07"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -96,6 +101,7 @@ semantic_role = "rg_cuota_09"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-rg-cuota-09"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -107,6 +113,7 @@ semantic_role = "re_base_10"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-re-base-10"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -129,6 +136,7 @@ semantic_role = "re_cuota_12"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-re-cuota-12"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -140,6 +148,7 @@ semantic_role = "re_base_13"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-re-base-13"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -162,6 +171,7 @@ semantic_role = "re_cuota_15"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-re-cuota-15"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -173,6 +183,7 @@ semantic_role = "re_base_16"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-re-base-16"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -195,6 +206,7 @@ semantic_role = "re_cuota_18"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-re-cuota-18"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -206,6 +218,7 @@ semantic_role = "re_base_19"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-re-base-19"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -228,6 +241,7 @@ semantic_role = "re_cuota_21"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-re-cuota-21"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -239,6 +253,7 @@ semantic_role = "cuota_devengada_22"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-cuota-devengada-22"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -250,6 +265,7 @@ semantic_role = "a_deducir_23"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-a-deducir-23"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -261,5 +277,6 @@ semantic_role = "resultado_24"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-resultado-24"]
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
