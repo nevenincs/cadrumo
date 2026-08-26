@@ -18,7 +18,6 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.identity import BucketId
 from ...domain.categories import (
@@ -36,6 +35,7 @@ from ...domain.usage_ratios import (
     UsageRatioValidationError,
     usage_ratio_bucket_lock,
 )
+from .usage_ratio_repository import load_usage_ratio_profile, save_usage_ratio_profile
 
 _HOME_OFFICE_FAMILIES = frozenset(
     {
@@ -186,7 +186,7 @@ def list_eligible_ratios_for_bucket(*, bucket_id: str) -> tuple[EligibleCategory
     Each element is an :class:`EligibleCategoryRow` describing one
     spending category's eligibility and configured ratio.
     """
-    profile = load_usage_ratios(bucket_id=bucket_id)
+    profile = load_usage_ratio_profile(bucket_id=bucket_id)
     return eligible_ratio_categories(profile)
 
 
@@ -196,7 +196,7 @@ def validate_ratios_for_bucket(
     require_overrides_for: tuple[SpendingCategory, ...] = (),
 ) -> RatiosValidationReport:
     """Load the bucket's profile, run validation, and return a :class:`RatiosValidationReport`."""
-    profile = load_usage_ratios(bucket_id=bucket_id)
+    profile = load_usage_ratio_profile(bucket_id=bucket_id)
     return validate_ratios_profile(
         bucket_id=bucket_id,
         profile=profile,
@@ -219,9 +219,9 @@ def set_usage_ratio(*, bucket_id: str, category: SpendingCategory, ratio: Decima
     writers cannot read the same snapshot and lose one another's override.
     """
     with usage_ratio_bucket_lock(bucket_id):
-        profile = load_usage_ratios(bucket_id=bucket_id)
+        profile = load_usage_ratio_profile(bucket_id=bucket_id)
         prior = profile.ratios.get(category)
-        save_usage_ratios(profile.with_ratio(category, ratio), bucket_id=bucket_id)
+        save_usage_ratio_profile(profile.with_ratio(category, ratio), bucket_id=bucket_id)
         return prior
 
 
@@ -238,13 +238,13 @@ def unset_usage_ratio(*, bucket_id: str, category: SpendingCategory) -> Decimal 
     ``set`` on a sibling category cannot be lost by this clear.
     """
     with usage_ratio_bucket_lock(bucket_id):
-        profile = load_usage_ratios(bucket_id=bucket_id)
+        profile = load_usage_ratio_profile(bucket_id=bucket_id)
         prior = profile.ratios.get(category)
         if prior is None:
             raise UsageRatioValidationError(
                 f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}",
             )
-        save_usage_ratios(profile.without_ratio(category), bucket_id=bucket_id)
+        save_usage_ratio_profile(profile.without_ratio(category), bucket_id=bucket_id)
         return prior
 
 

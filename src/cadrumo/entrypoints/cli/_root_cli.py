@@ -70,7 +70,11 @@ def root_command(
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
+    from ...adapters.persistence.profile.usage_ratios import (
+        load_usage_ratios,
+        load_usage_ratios_with_censo_guard,
+        save_usage_ratios,
+    )
     from ...adapters.persistence.storage import build_profile_custody_port, build_profile_login_session_port
     from ...adapters.persistence.workflow import build_workflow_persistence_port
     from ...application.auth.protocols import bind_session_store
@@ -81,7 +85,10 @@ def root_command(
     from ...application.ledger.participation_read import bind_transaction_participation_index_repository_factory
     from ...application.ledger.rule_repository import bind_ledger_classification_rule_repository_factory
     from ...application.ledger.transaction_repository import bind_transaction_catalogue_repository_factory
-    from ...application.ledger.usage_ratio_repository import bind_usage_ratio_censo_guard_loader
+    from ...application.ledger.usage_ratio_repository import (
+        bind_usage_ratio_censo_guard_loader,
+        bind_usage_ratio_profile_persistence,
+    )
     from ...application.modelo.calculation_repository import bind_calculation_revision_catalogue_repository_factory
     from ...application.modelo.filing_repository import bind_modelo_record_catalogue_repository_factory
     from ...application.modelo.justificante_repository import bind_justificante_repository_factory
@@ -102,6 +109,7 @@ def root_command(
     ctx.with_resource(bind_transaction_participation_index_repository_factory(TransactionParticipationIndexRepository))
     ctx.with_resource(bind_ledger_classification_rule_repository_factory(LedgerClassificationRuleRepository))
     ctx.with_resource(bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository))
+    ctx.with_resource(bind_usage_ratio_profile_persistence(loader=load_usage_ratios, saver=save_usage_ratios))
     ctx.with_resource(bind_usage_ratio_censo_guard_loader(load_usage_ratios_with_censo_guard))
     ctx.with_resource(bind_calculation_revision_catalogue_repository_factory(CalculationRevisionCatalogueRepository))
     ctx.with_resource(bind_modelo_record_catalogue_repository_factory(ModeloRecordCatalogueRepository))
