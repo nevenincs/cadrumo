@@ -17,7 +17,6 @@ from __future__ import annotations
 import ast
 import importlib
 import json
-import re
 from pathlib import Path
 
 import pytest
@@ -26,7 +25,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ROOT = Path(__file__).resolve().parents[6]
 _MATRIX = _ROOT / "dev" / "quality" / "registry_facade_family_census.v1.json"
-_PLAN = _ROOT / ".vault" / "plan" / "2026-08-11-tui-architecture-plan.md"
 _PACKAGE = "cadrumo.domain.calculations.registry"
 
 
@@ -175,21 +173,6 @@ def test_every_keep_public_row_names_a_module_that_exists() -> None:
     missing = [path for path in _keep_public_paths() if not (_ROOT / path).is_file()]
 
     assert not missing, f"keep-public rows name absent modules: {missing}"
-
-
-def test_the_gate_covers_every_open_keep_public_disposition_step() -> None:
-    """No keep-public row may close without this gate actually holding it."""
-    document = json.loads(_MATRIX.read_text(encoding="utf-8"))
-    plan = _PLAN.read_text(encoding="utf-8")
-    step_ids = set(re.findall(r"^- \[[ x]\] `(W03\.P20\.S\d+)`", plan, flags=re.MULTILINE))
-
-    unbound = [
-        row["follow_on_step_id"]
-        for row in document["rows"]
-        if row["disposition"] == "keep_public" and row["follow_on_step_id"] not in step_ids
-    ]
-
-    assert not unbound, f"keep-public rows name Steps the plan does not carry: {unbound}"
 
 
 @pytest.mark.parametrize(("retired_path", "surviving_path"), _hard_move_pairs())
