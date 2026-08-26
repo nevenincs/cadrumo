@@ -1171,6 +1171,7 @@ class TestSignedCuotaResultadoRoles:
             ("100", "2024", "0700", "resultado_ingresar_o_devolver_irpf", "decimal"),
             ("100", "2025", "0700", "resultado_ingresar_o_devolver_irpf", "decimal"),
             ("200", "2024", "DP200014B:00599", "is_resultado_ingresar_o_devolver", "money"),
+            ("200", "2025-y-siguientes", "DP200014B:00599", "is_resultado_ingresar_o_devolver", "money"),
         }
 
         stale_is_role_members = [item for item in signed_roles if item[3] == "resultado_ingresar_o_devolver_is"]
