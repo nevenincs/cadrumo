@@ -11,8 +11,8 @@ authority_grade = "applicability"
 # landing.
 #
 # This revision is bounded to the exact source era of aeat-dr-341-2016. The
-# materially different 619-position predecessor is authored separately, and
-# 2000-2004 remains applicability-only because no positional design is bundled.
+# materially different 619-position predecessor is authored separately. Filing
+# years 2000-2004 resolve to no revision because no positional design is bundled.
 valid_from = 2016-01-01
 period_selector = { year_from = 2016, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-min-2000-12-15-m341:art-1"]

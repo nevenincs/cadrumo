@@ -10,15 +10,63 @@ declared".
 
 from __future__ import annotations
 
-from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ...domain.modelos import TransactionRevisionParticipationIndex
+from collections.abc import Generator
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Protocol
+
+from ...domain.modelos import (
+    TransactionParticipationIndexRepositoryProtocol,
+    TransactionRevisionParticipationIndex,
+)
+
+
+class TransactionParticipationIndexRepositoryFactory(Protocol):
+    """Construct the participation-index repository port for one bucket."""
+
+    def __call__(
+        self,
+        *,
+        bucket_id: str | None = None,
+    ) -> TransactionParticipationIndexRepositoryProtocol:
+        """Return the repository resolved for ``bucket_id``."""
+        ...
+
+
+_BOUND_TRANSACTION_PARTICIPATION_INDEX_REPOSITORY_FACTORY: ContextVar[
+    TransactionParticipationIndexRepositoryFactory
+] = ContextVar("cadrumo_transaction_participation_index_repository_factory")
+
+
+@contextmanager
+def bind_transaction_participation_index_repository_factory(
+    factory: TransactionParticipationIndexRepositoryFactory,
+) -> Generator[TransactionParticipationIndexRepositoryFactory]:
+    """Bind one outward-composed participation-index repository factory."""
+    token = _BOUND_TRANSACTION_PARTICIPATION_INDEX_REPOSITORY_FACTORY.set(factory)
+    try:
+        yield factory
+    finally:
+        _BOUND_TRANSACTION_PARTICIPATION_INDEX_REPOSITORY_FACTORY.reset(token)
+
+
+def transaction_participation_index_repository(
+    *,
+    bucket_id: str | None = None,
+) -> TransactionParticipationIndexRepositoryProtocol:
+    """Resolve the explicitly composed participation repository."""
+    try:
+        factory = _BOUND_TRANSACTION_PARTICIPATION_INDEX_REPOSITORY_FACTORY.get()
+    except LookupError as error:
+        raise RuntimeError("transaction participation-index persistence has not been composed") from error
+    return factory(bucket_id=bucket_id)
 
 
 def get_transaction_participation(
     *,
     transaction_id: str,
     bucket_id: str | None = None,
-    participation_index_repository: TransactionParticipationIndexRepository | None = None,
+    participation_index_repository: TransactionParticipationIndexRepositoryProtocol | None = None,
 ) -> TransactionRevisionParticipationIndex:
     """Return the finalized-revision participation index for one ledger transaction.
 
@@ -32,8 +80,17 @@ def get_transaction_participation(
             when omitted.
         participation_index_repository: Optional repository override (tests).
     """
-    repository = participation_index_repository or TransactionParticipationIndexRepository(bucket_id=bucket_id)
+    repository = (
+        participation_index_repository
+        if participation_index_repository is not None
+        else transaction_participation_index_repository(bucket_id=bucket_id)
+    )
     return repository.load(transaction_id)
 
 
-__all__ = ["get_transaction_participation"]
+__all__ = [
+    "TransactionParticipationIndexRepositoryFactory",
+    "bind_transaction_participation_index_repository_factory",
+    "get_transaction_participation",
+    "transaction_participation_index_repository",
+]

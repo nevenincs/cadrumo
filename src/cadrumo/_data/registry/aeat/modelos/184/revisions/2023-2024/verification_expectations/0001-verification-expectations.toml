@@ -1,0 +1,16 @@
+[[revisions."2023-2024".verification_expectations]]
+id = "modelo-184-informative-summary-verification"
+computed_casilla_ids = [
+    "decl.ejercicio",
+    "decl.tipo-declaracion",
+    "tipo2.clave",
+    "tipo2.subclave",
+    "tipo2.renta-atribuible-importe",
+]
+tolerance = "0.00"
+rounding = "none"
+min_coverage = "1.0"
+discrepancy_causes = ["extraction_unreliable"]
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+

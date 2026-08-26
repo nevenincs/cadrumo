@@ -125,6 +125,76 @@ applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_184_2023.pdf"
 review_status = "reviewed"
 
+[sources."boe-dr-184-2015"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_184/files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf"
+sha256 = "41c988f6a84a10894bc0e6e9d78d1b39a091a7a3c857e63904596b03c82dcfca"
+bytes = 678695
+retrieved_at = 2026-08-26
+published_at = 2015-10-29
+applies_from = 2015-01-01
+applies_to = 2015-12-31
+source_url = "https://www.boe.es/boe/dias/2015/10/29/pdfs/BOE-A-2015-11596.pdf"
+review_status = "reviewed"
+
+[sources."boe-dr-184-2016-2018"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_184/files/04-184-orden-hfp-1923-2016-boe-a-2016-12114.pdf"
+sha256 = "77596fc2d501863cb19449e32e85ba210929a05adf91a5fd2d13f676af495bf3"
+bytes = 649429
+retrieved_at = 2026-08-26
+published_at = 2016-12-21
+applies_from = 2016-01-01
+applies_to = 2018-12-31
+source_url = "https://www.boe.es/boe/dias/2016/12/21/pdfs/BOE-A-2016-12114.pdf"
+review_status = "reviewed"
+
+[sources."boe-dr-184-2019-2021"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_184/files/05-184-orden-hac-1276-2019-boe-a-2019-18752.pdf"
+sha256 = "3f66efc11faabad7978b6f9621a7deddc907ff3aa3b2113fceddd2f2d15c2cd4"
+bytes = 548755
+retrieved_at = 2026-08-26
+published_at = 2019-12-31
+applies_from = 2019-01-01
+applies_to = 2021-12-31
+source_url = "https://www.boe.es/boe/dias/2019/12/31/pdfs/BOE-A-2019-18752.pdf"
+review_status = "reviewed"
+
+[sources."boe-dr-184-2022"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_184/files/06-184-orden-hfp-1192-2022-boe-a-2022-20274.pdf"
+sha256 = "b55302da129600c623a6717cd825db6c920bd3d22f2c00ed771ed351f34d16dc"
+bytes = 416151
+retrieved_at = 2026-08-26
+published_at = 2022-12-03
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/boe/dias/2022/12/03/pdfs/BOE-A-2022-20274.pdf"
+review_status = "reviewed"
+
+[sources."boe-dr-184-2023-2024"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_184/files/07-184-orden-hfp-1284-2023-boe-a-2023-24412.pdf"
+sha256 = "f451fba9f7681dc675cff472bc1ca6c1d8b479e46fc4862a99153f5dd84036d4"
+bytes = 1149564
+retrieved_at = 2026-08-26
+published_at = 2023-11-30
+applies_from = 2023-01-01
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/boe/dias/2023/11/30/pdfs/BOE-A-2023-24412.pdf"
+review_status = "reviewed"
+
 [sources."aeat-modelo-184-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

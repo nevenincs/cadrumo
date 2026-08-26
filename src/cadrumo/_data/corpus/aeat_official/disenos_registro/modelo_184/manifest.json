@@ -1,12 +1,17 @@
 {
-  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "source": "Agencia Tributaria Sede Electronica and BOE - Disenos de registro",
   "modelo": "184",
-  "retrieved_at": "2026-07-21",
+  "retrieved_at": "2026-08-26",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
-    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html"
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://www.boe.es/boe/dias/2015/10/29/pdfs/BOE-A-2015-11596.pdf",
+    "https://www.boe.es/boe/dias/2016/12/21/pdfs/BOE-A-2016-12114.pdf",
+    "https://www.boe.es/boe/dias/2019/12/31/pdfs/BOE-A-2019-18752.pdf",
+    "https://www.boe.es/boe/dias/2022/12/03/pdfs/BOE-A-2022-20274.pdf",
+    "https://www.boe.es/boe/dias/2023/11/30/pdfs/BOE-A-2023-24412.pdf"
   ],
-  "artefact_count": 2,
+  "artefact_count": 7,
   "artefacts": [
     {
       "modelo": "184",
@@ -31,6 +36,66 @@
       "bytes": 268429,
       "sha256": "c96f23aa7ddf0f48b5388d69a397140135e8a4a8b2cd0568658cafad495f8aee",
       "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "184",
+      "title": "Orden HAP/2250/2015, BOE-A-2015-11596",
+      "source_page": "https://www.boe.es/boe/dias/2015/10/29/pdfs/BOE-A-2015-11596.pdf",
+      "url": "https://www.boe.es/boe/dias/2015/10/29/pdfs/BOE-A-2015-11596.pdf",
+      "stored_path": "files/03-184-orden-hap-2250-2015-boe-a-2015-11596.pdf",
+      "original_filename": "BOE-A-2015-11596.pdf",
+      "content_type": "application/pdf",
+      "bytes": 678695,
+      "sha256": "41c988f6a84a10894bc0e6e9d78d1b39a091a7a3c857e63904596b03c82dcfca",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "184",
+      "title": "Orden HFP/1923/2016, BOE-A-2016-12114",
+      "source_page": "https://www.boe.es/boe/dias/2016/12/21/pdfs/BOE-A-2016-12114.pdf",
+      "url": "https://www.boe.es/boe/dias/2016/12/21/pdfs/BOE-A-2016-12114.pdf",
+      "stored_path": "files/04-184-orden-hfp-1923-2016-boe-a-2016-12114.pdf",
+      "original_filename": "BOE-A-2016-12114.pdf",
+      "content_type": "application/pdf",
+      "bytes": 649429,
+      "sha256": "77596fc2d501863cb19449e32e85ba210929a05adf91a5fd2d13f676af495bf3",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "184",
+      "title": "Orden HAC/1276/2019, BOE-A-2019-18752",
+      "source_page": "https://www.boe.es/boe/dias/2019/12/31/pdfs/BOE-A-2019-18752.pdf",
+      "url": "https://www.boe.es/boe/dias/2019/12/31/pdfs/BOE-A-2019-18752.pdf",
+      "stored_path": "files/05-184-orden-hac-1276-2019-boe-a-2019-18752.pdf",
+      "original_filename": "BOE-A-2019-18752.pdf",
+      "content_type": "application/pdf",
+      "bytes": 548755,
+      "sha256": "3f66efc11faabad7978b6f9621a7deddc907ff3aa3b2113fceddd2f2d15c2cd4",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "184",
+      "title": "Orden HFP/1192/2022, BOE-A-2022-20274",
+      "source_page": "https://www.boe.es/boe/dias/2022/12/03/pdfs/BOE-A-2022-20274.pdf",
+      "url": "https://www.boe.es/boe/dias/2022/12/03/pdfs/BOE-A-2022-20274.pdf",
+      "stored_path": "files/06-184-orden-hfp-1192-2022-boe-a-2022-20274.pdf",
+      "original_filename": "BOE-A-2022-20274.pdf",
+      "content_type": "application/pdf",
+      "bytes": 416151,
+      "sha256": "b55302da129600c623a6717cd825db6c920bd3d22f2c00ed771ed351f34d16dc",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "184",
+      "title": "Orden HFP/1284/2023, BOE-A-2023-24412",
+      "source_page": "https://www.boe.es/boe/dias/2023/11/30/pdfs/BOE-A-2023-24412.pdf",
+      "url": "https://www.boe.es/boe/dias/2023/11/30/pdfs/BOE-A-2023-24412.pdf",
+      "stored_path": "files/07-184-orden-hfp-1284-2023-boe-a-2023-24412.pdf",
+      "original_filename": "BOE-A-2023-24412.pdf",
+      "content_type": "application/pdf",
+      "bytes": 1149564,
+      "sha256": "f451fba9f7681dc675cff472bc1ca6c1d8b479e46fc4862a99153f5dd84036d4",
+      "retrieved_at": "2026-08-26"
     }
   ]
 }

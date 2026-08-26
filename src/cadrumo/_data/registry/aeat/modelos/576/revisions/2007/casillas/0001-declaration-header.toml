@@ -1,0 +1,13 @@
+# The official 2005 BOE graphical form establishes the declaration's devengo
+# year, but not a fixed-width byte position. This is a form fact only: it has
+# no export reference and cannot make a writer claim.
+[[revisions."2007".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-1981-2005:df-unica", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-576-2005-procedure"]

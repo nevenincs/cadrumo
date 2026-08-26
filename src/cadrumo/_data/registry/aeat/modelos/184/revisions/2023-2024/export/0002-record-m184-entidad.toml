@@ -1,0 +1,1381 @@
+[[revisions.2023-2024.export_layouts]]
+id = 'generated-modelo-184-2023-2024-fichero'
+
+[[revisions.2023-2024.export_layouts.records]]
+id = 'm184-entidad'
+record_type = 'entidad'
+order = 1
+encoding = 'latin-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f001'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f002'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '184'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f003'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f004'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f005'
+offset = 18
+length = 9
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f006'
+offset = 27
+length = 9
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f007'
+offset = 36
+length = 40
+kind = 'header'
+producer_key = 'taxpayer.surnames_or_legal_name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f008'
+offset = 76
+length = 1
+kind = 'casilla'
+casilla_id = 'tipo2.tipo-hoja'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f009'
+offset = 77
+length = 1
+kind = 'casilla'
+casilla_id = 'tipo2.clave'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f010'
+offset = 78
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.subclave'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f011'
+offset = 80
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.clave-pais'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f012'
+offset = 82
+length = 1
+kind = 'casilla'
+casilla_id = 'tipo2.regimen-determinacion-rendimientos'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f013'
+offset = 83
+length = 1
+kind = 'casilla'
+casilla_id = 'tipo2.tipo-actividad'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f014'
+offset = 84
+length = 4
+kind = 'casilla'
+casilla_id = 'tipo2.epigrafe-iae'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f015'
+offset = 88
+length = 9
+kind = 'casilla'
+casilla_id = 'tipo2.cesionario-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f016'
+offset = 97
+length = 20
+kind = 'casilla'
+casilla_id = 'tipo2.cesionario-denominacion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f017'
+offset = 117
+length = 4
+kind = 'casilla'
+casilla_id = 'tipo2.fecha-adquisicion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f018'
+offset = 121
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.fecha-adquisicion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'two-digit-month'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f019'
+offset = 123
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.fecha-adquisicion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'two-digit-day'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f020'
+offset = 125
+length = 11
+kind = 'casilla'
+casilla_id = 'tipo2.valor-liquidativo'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f021'
+offset = 136
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.valor-liquidativo'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f022'
+offset = 138
+length = 11
+kind = 'casilla'
+casilla_id = 'tipo2.valor-adquisicion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f023'
+offset = 149
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.valor-adquisicion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f024'
+offset = 151
+length = 14
+kind = 'casilla'
+casilla_id = 'tipo2.ingresos-integros'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f025'
+offset = 165
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f026'
+offset = 175
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f027'
+offset = 177
+length = 14
+kind = 'casilla'
+casilla_id = 'tipo2.renta-atribuible-importe'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f028'
+offset = 191
+length = 3
+kind = 'casilla'
+casilla_id = 'tipo2.porcentaje-reduccion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f029'
+offset = 194
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.porcentaje-reduccion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f030'
+offset = 196
+length = 12
+kind = 'casilla'
+casilla_id = 'tipo2.renta-atribuible-con-reduccion'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f031'
+offset = 208
+length = 11
+kind = 'casilla'
+casilla_id = 'tipo2.ganancias-perdidas'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f032'
+offset = 219
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.ganancias-perdidas'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f033'
+offset = 221
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.base-deduccion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f034'
+offset = 231
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.base-deduccion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f035'
+offset = 233
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.retenciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f036'
+offset = 243
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.retenciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f037'
+offset = 245
+length = 1
+kind = 'casilla'
+casilla_id = 'tipo2.situacion-inmueble'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f038'
+offset = 246
+length = 20
+kind = 'casilla'
+casilla_id = 'tipo2.referencia-catastral'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f039'
+offset = 266
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.gastos-personal'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f040'
+offset = 276
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.gastos-personal'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f041'
+offset = 278
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.consumos-explotacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f042'
+offset = 288
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.consumos-explotacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f043'
+offset = 290
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.tributos-deducibles'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f044'
+offset = 300
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.tributos-deducibles'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f045'
+offset = 302
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.arrendamientos-canones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f046'
+offset = 312
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.arrendamientos-canones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f047'
+offset = 314
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.reparaciones-conservacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f048'
+offset = 324
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.reparaciones-conservacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f049'
+offset = 326
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.servicios-profesionales'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f050'
+offset = 336
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.servicios-profesionales'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f051'
+offset = 338
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.suministros'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f052'
+offset = 348
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.suministros'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f053'
+offset = 350
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.gastos-financieros'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f054'
+offset = 360
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.gastos-financieros'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f055'
+offset = 362
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.amortizaciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f056'
+offset = 372
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.amortizaciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f057'
+offset = 374
+length = 10
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.provisiones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f058'
+offset = 384
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.provisiones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f059'
+offset = 386
+length = 8
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.otros-gastos-deducibles'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f060'
+offset = 394
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-actividad.otros-gastos-deducibles'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f061'
+offset = 396
+length = 1
+kind = 'casilla'
+casilla_id = 'tipo2.criterio-cobros-pagos'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'digit-string'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f062'
+offset = 397
+length = 9
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.intereses-financiacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f063'
+offset = 406
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.intereses-financiacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f064'
+offset = 408
+length = 9
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.conservacion-reparacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f065'
+offset = 417
+length = 2
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.conservacion-reparacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[[revisions.2023-2024.export_layouts.records.fields]]
+id = 'm184-2023.entidad.f066'
+offset = 419
+length = 9
+kind = 'casilla'
+casilla_id = 'tipo2.gastos-inmobiliario.intereses-gastos-reparacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-184-2023-2024']
+
+[revisions.2023-2024.export_layouts.records.row_field_casilla_ids]

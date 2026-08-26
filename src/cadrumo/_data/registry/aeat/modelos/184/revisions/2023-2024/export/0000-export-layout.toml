@@ -1,0 +1,12 @@
+[[revisions.2023-2024.export_layouts]]
+id = 'generated-modelo-184-2023-2024-fichero'
+format = 'fixed_width'
+source_refs = ['aeat-dr-184-2023-2024']
+legal_refs = [
+    'ley-35-2006:art-86',
+    'ley-35-2006:art-88',
+    'ley-58-2003:art-93',
+    'orden-hap-2250-2015:art-1',
+    'orden-hap-2250-2015:art-3',
+]
+dictionary_path_overrides = []

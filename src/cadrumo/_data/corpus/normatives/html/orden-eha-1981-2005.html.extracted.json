@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-1981-2005.html",
+  "source_sha256": "013131f9812f28919546da29071cee783004069923c80bcb4d868ae39b139ef5",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/doc.php?id=BOE-A-2005-10950",
+  "units": [
+    {
+      "text": "La presente Orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado».\nEl modelo 576 deberá ser utilizado para efectuar la declaración-liquidación del Impuesto Especial sobre Determinados Medios de Transporte respecto de aquellas operaciones cuyo devengo se produzca a partir del 1 de enero de 2006. No obstante, podrá ser utilizado para efectuar la declaración-liquidación del impuesto correspondiente a operaciones cuyo devengo se produzca a partir del 1 de octubre de 2005.\nANEXO I. Modelo 576\nEl BOE publica el anexo del modelo 576 como formulario gráfico. La imagen oficial del anexo está disponible en https://www.boe.es/datos/imagenes/disp/2005/153/10950_17129049_image1.png. Esta evidencia apoya la forma del modelo, pero no contiene una tabla parser-usable de posiciones ni autoriza un diseño de registro de ancho fijo.\nProvenance: excerpt transcribed from the official BOE document (https://www.boe.es/buscar/doc.php?id=BOE-A-2005-10950) during the registry temporal-coverage campaign. The linked BOE annex image is the official graphical form evidence; it is deliberately not represented as a fixed-width record design. Pending operator re-verification.",
+      "title": "Disposición final única. Entrada en vigor.",
+      "section": "Disposición final única. Entrada en vigor.",
+      "anchor": "#df-unica"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+[[revisions."2007".application_links]]
+id = "modelo-576-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-eha-1981-2005:df-unica", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-576-2005-procedure"]

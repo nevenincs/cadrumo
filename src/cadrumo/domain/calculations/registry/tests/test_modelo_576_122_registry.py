@@ -1,14 +1,11 @@
 """Registry foundations for the final UNMODELED tail: 576, 122.
 
-576 (IEDMT por matriculacion, Orden EHA/3851/2007) and 122 (regularizacion de la
-deduccion por familia numerosa/discapacidad, Orden HFP/105/2017). Neither orden
-was bundled: their
-corpus excerpts were authored from the BOE fetch during this pass, so each legal
-entry carries honest "pending operator re-verification" provenance. Both are
-grounded WINDOWLESS: 576's plazo is per-matriculacion (delegated to Orden
-EHA/1981/2005) and 122 remits to the annual IRPF campaign - none a fixed
-calendar window, so no date is fabricated. Scheduling/applicability-grade:
-declaration-header casillas only, no bundled diseno de registro.
+576 (IEDMT por matriculacion) now carries a bounded 2007 BOE-form revision and
+a separate 2008-onward AEAT fixed-width design revision; its 2007 legal form
+does not establish byte geometry. 122 (regularizacion de la deduccion por
+familia numerosa/discapacidad) remains the sibling applicability case. Both
+have windowless, event/campaign-driven timing rather than fabricated recurring
+calendar windows.
 
 See Also:
     :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
@@ -27,10 +24,14 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
-from .....core import TaxDomain
+from .....core import RegistryAuthorityGrade, RevisionReviewStatus, TaxDomain
 from .....core.resources import bundled_path
+from ..errors import RegistryValidationError
+from ..snapshot import build_snapshot, build_validated_snapshot
 from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo
 
@@ -40,7 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MODELOS = [
     (
         "576",
-        "2007-y-siguientes",
+        "2008-y-siguientes",
         "orden-eha-3851-2007:art-1",
         "orden-eha-3851-2007:art-1",
         "BOE-A-2007-22442",
@@ -73,3 +74,67 @@ def test_committed_definition_legal_authority_and_windowless_plazo(
         assert entry.document_id == doc
 
     assert modelo.revisions[rev].deadline_windows == ()
+
+
+def test_modelo_576_selects_the_2007_form_only_revision_before_the_2008_record_design() -> None:
+    """The proven legal form year never acquires the later fixed-width writer."""
+    modelo, catalogues = _committed_modelo("576")
+
+    historical = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2007,
+        period="0A",
+        grade=RegistryAuthorityGrade.APPLICABILITY,
+    )
+    design_era = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2008,
+        period="0A",
+        grade=RegistryAuthorityGrade.APPLICABILITY,
+    )
+
+    assert historical.revision.id == "2007"
+    assert historical.revision.export_layouts == ()
+    assert historical.revision.casillas[0].id == "decl.ejercicio"
+    assert set(historical.revision.source_refs) == {
+        "boe-modelo-576-2005-form",
+        "boe-modelo-576-2005-procedure",
+    }
+
+    assert design_era.revision.id == "2008-y-siguientes"
+    layout = design_era.revision.export_layouts[0]
+    fields = layout.records[0].fields
+    assert layout.source_refs == ("aeat-dr-576-2008",)
+    assert len(fields) == 60
+    assert max(field.offset + field.length - 1 for field in fields) == 1517
+
+
+def test_modelo_576_2007_filing_mutation_reaches_the_generic_no_layout_refusal() -> None:
+    """Even a hypothetical filing-grade promotion cannot manufacture a 2007 writer."""
+    modelo, catalogues = _committed_modelo("576")
+    historical = modelo.revisions["2007"]
+    promoted = historical.model_copy(
+        update={
+            "authority_grade": RegistryAuthorityGrade.FILING,
+            "review_status": RevisionReviewStatus.OPERATOR_REVIEWED,
+            "reviewed_by": "operator",
+            "reviewed_at": date(2026, 8, 26),
+        },
+    )
+    mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, promoted.id: promoted}})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"modelo 576 revision 2007 declares no export layout",
+    ):
+        build_validated_snapshot(
+            mutated,
+            catalogues,
+            filing_year=2007,
+            period="0A",
+            revision_id="2007",
+        )

@@ -1,8 +1,0 @@
-[[revisions."2015-2024".filing_schedules]]
-id = "modelo-184-anual"
-period_kind = "annual"
-periods = ["0A"]
-profile_condition_mode = "all"
-legal_refs = ["orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]
-

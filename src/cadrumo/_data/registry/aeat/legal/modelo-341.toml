@@ -83,9 +83,9 @@ review_status = "reviewed"
 # The historical AEAT index publishes this parser-readable design as the 2004
 # Orden's layout for exercises through 2015. BOE-A-2004-17306's final provision
 # makes its electronic presentation available from the first period after
-# 2005-02-01. It is catalogue evidence only: the 2000-y-siguientes revision's
-# current export layout has not yet been compared to its 619-position geometry,
-# and its pre-2005 claimed years remain unevidenced.
+# 2005-02-01. Its complete twenty-field, 619-position geometry is attached only
+# to the bounded 2005-2015 revision. Pre-2005 filing coordinates remain
+# unselected because no positional design has been acquired for that era.
 [sources."aeat-dr-341-2005-2015"]
 evidence_tier = "layout_authority"
 authority = "aeat"

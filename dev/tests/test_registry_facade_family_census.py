@@ -31,9 +31,7 @@ def test_mechanical_delta_pairs_are_the_checked_matrix_denominator() -> None:
     """The matrix denominator is c941 history, not a current filename scan."""
     document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
 
-    assert mechanical_relocation_pairs() == tuple(
-        (row["old_path"], row["new_path"]) for row in document["rows"]
-    )
+    assert mechanical_relocation_pairs() == tuple((row["old_path"], row["new_path"]) for row in document["rows"])
 
 
 def test_generated_rows_preserve_one_row_per_exact_c941_candidate() -> None:
@@ -41,9 +39,18 @@ def test_generated_rows_preserve_one_row_per_exact_c941_candidate() -> None:
     rows = generated_rows()
 
     assert len(rows) == 78
+    assert [row["row_id"] for row in rows] == [f"R{number:02d}" for number in range(1, 79)]
     assert len({(row["old_path"], row["new_path"]) for row in rows}) == 78
-    assert all(set(row["consumers"]) >= {"production", "test", "documentation", "tooling"} for row in rows)
-    assert all(set(row["current_symbol_locators"]) == set(row["facade_exported_symbols"]) for row in rows)
+    for row in rows:
+        consumers = row["consumers"]
+        locators = row["current_symbol_locators"]
+        exported_symbols = row["facade_exported_symbols"]
+
+        assert isinstance(consumers, dict)
+        assert isinstance(locators, dict)
+        assert isinstance(exported_symbols, list)
+        assert set(consumers) >= {"production", "test", "documentation", "tooling"}
+        assert set(locators) == set(exported_symbols)
 
 
 def test_reviewed_matrix_passes_its_exact_census_and_canonical_step_gate() -> None:
