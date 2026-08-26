@@ -47,7 +47,6 @@ _DICTIONARY_LINE_RE = re.compile(
 )
 _DICTIONARY_NUMERIC_CASILLA_ID_RE = re.compile(r"^\d+$")
 _DICTIONARY_LETTER_CASILLA_ID_RE = re.compile(r"^[A-Z]$")
-_M100_LETTER_CASILLA_ID_FIRST_YEAR = 2024
 
 
 class ParsedExportFieldValue(RegistryModel):
@@ -218,9 +217,7 @@ def _parse_xml_dictionary_line(
         return None
     casilla_id = _parse_dictionary_casilla_id(
         match["casilla"],
-        allow_letter_id=(
-            source.applies_from is not None and source.applies_from.year >= _M100_LETTER_CASILLA_ID_FIRST_YEAR
-        ),
+        allow_letter_id=source.supports_single_uppercase_letter_casilla_ids,
     )
     field_id = match["field"].strip()
     return XmlDictionaryEntry(
@@ -296,12 +293,12 @@ def _read_dictionary_text_cached(path: str, byte_count: int, modified_ns: int) -
 def _parse_dictionary_casilla_id(value: str, *, allow_letter_id: bool = False) -> CasillaId | None:
     """Return the exact official casilla identifier a dictionary row declares.
 
-    Official dictionaries print decimal box numbers, and Modelo 100's 2024 and
-    2025 dictionaries additionally print one-uppercase-letter annex boxes.
-    ``###`` and ``*`` rows are explicit non-casilla placeholders. The letter
-    form is admitted only for a source whose ``applies_from`` year is grounded
-    in a bundled dictionary that publishes it, so an older source cannot smuggle
-    an unevidenced identifier in.
+    Official dictionaries print decimal box numbers, and some reviewed sources
+    additionally publish one-uppercase-letter annex boxes. ``###`` and ``*``
+    rows are explicit non-casilla placeholders. The source's typed grammar
+    capability, declared alongside its digest-pinned corpus identity and
+    temporal applicability, is the one authority that admits the extension; a
+    numeric-only source cannot smuggle an unevidenced identifier in.
 
     The parser preserves the published spelling: it does not fold case,
     normalize arbitrary alphanumeric labels, or manufacture an identifier from a
