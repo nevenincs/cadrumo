@@ -8,16 +8,20 @@ refuses with ``stale_edit_baseline``, writes nothing, and settles the domain
 effect as ``NONE``. It never silently rebases, merges, or promotes a green
 preflight into authority.
 
-V1 scope: the ``CALCULATE`` mutation family with ``SET_TYPED_VALUE`` scalar
-intents only, because those are the only intents the shared calculation
-boundary (:func:`~._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`)
-has an input shape for today. Every other syntactically admitted intent
-refuses with a typed, enumerated :class:`~._edit_models.ModeloEditUnsupportedIntentReason`
-naming the specific intent kind, not a generic bucket -- extending the shared
-calculation boundary's own input surface, or materialising repeatable rows
-inside this executor, are out of this Step's scope (they would either widen
-the live calculate path's blast radius or re-implement the write path it
-already owns).
+V1 scope: the ``CALCULATE`` mutation family with ``SET_TYPED_VALUE`` and
+``CLEAR_DECLARED_VALUE`` scalar intents, because those are the only intents
+the shared calculation boundary
+(:func:`~._calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`)
+has an input shape for today -- a set value and an explicit clear, the latter
+via its own ``cleared_casilla_ids`` identity axis so a cleared casilla stays
+provably distinguishable from one never declared. Every other syntactically
+admitted intent refuses with a typed, enumerated
+:class:`~._edit_models.ModeloEditUnsupportedIntentReason` naming the specific
+intent kind, not a generic bucket -- extending the shared calculation
+boundary's own input surface further, or materialising repeatable rows inside
+this executor, are out of this Step's scope (they would either widen the live
+calculate path's blast radius or re-implement the write path it already
+owns).
 """
 
 from __future__ import annotations
@@ -27,6 +31,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditReceiptRepository
+from ...core import CasillaId
 from ...core.hashing import content_hash_hex
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos import CalculationRevisionCatalogueRepositoryProtocol
@@ -61,9 +66,6 @@ _ROW_UNSUPPORTED_REASON: dict[ModeloEditRowIntentKind, ModeloEditUnsupportedInte
 }
 
 _SCALAR_UNSUPPORTED_REASON: dict[ModeloEditScalarIntentKind, ModeloEditUnsupportedIntentReason] = {
-    ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE: (
-        ModeloEditUnsupportedIntentReason.CLEAR_DECLARED_VALUE_NOT_YET_WIRED
-    ),
     ModeloEditScalarIntentKind.REMOVE_OVERRIDE: ModeloEditUnsupportedIntentReason.REMOVE_OVERRIDE_NOT_YET_WIRED,
 }
 
@@ -85,8 +87,14 @@ def _unsupported_intent_refusal(
 
 def _reachable_scalar_inputs(
     submission: ModeloEditSubmissionV1,
-) -> tuple[dict[str, Decimal], dict[str, str]] | ModeloEditExecutionNoEffectV1:
-    """Translate SET_TYPED_VALUE scalar intents into the calculate boundary's own input shape.
+) -> tuple[dict[str, Decimal], dict[str, str], tuple[CasillaId, ...]] | ModeloEditExecutionNoEffectV1:
+    """Translate SET_TYPED_VALUE and CLEAR_DECLARED_VALUE scalar intents into the calculate boundary's own input shape.
+
+    A ``CLEAR_DECLARED_VALUE`` intent contributes no entry to either casilla
+    input dict; it contributes its address to the returned cleared-casilla
+    tuple instead, which the caller threads into the calculate boundary's own
+    ``cleared_casilla_ids`` identity axis so the clear is provably
+    distinguishable from a casilla simply never supplied.
 
     Every other intent kind this V1 executor cannot yet reach refuses here,
     before any catalogue read, naming the exact unreachable intent kind
@@ -99,7 +107,11 @@ def _reachable_scalar_inputs(
     baseline = submission.baseline
     casilla_inputs: dict[str, Decimal] = {}
     text_casilla_inputs: dict[str, str] = {}
+    cleared_casilla_ids: list[CasillaId] = []
     for intent in submission.scalar_intents:
+        if intent.kind is ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE:
+            cleared_casilla_ids.append(intent.address.casilla_id)
+            continue
         unsupported_reason = _SCALAR_UNSUPPORTED_REASON.get(intent.kind)
         if unsupported_reason is not None:
             return _unsupported_intent_refusal(unsupported_reason, address=intent.address)
@@ -109,7 +121,7 @@ def _reachable_scalar_inputs(
             casilla_inputs[intent.address.casilla_id] = Decimal(str(intent.value))
         else:
             text_casilla_inputs[intent.address.casilla_id] = str(intent.value)
-    return casilla_inputs, text_casilla_inputs
+    return casilla_inputs, text_casilla_inputs, tuple(cleared_casilla_ids)
 
 
 def apply_modelo_edit(
@@ -138,7 +150,7 @@ def apply_modelo_edit(
     reachable = _reachable_scalar_inputs(submission)
     if isinstance(reachable, ModeloEditExecutionNoEffectV1):
         return reachable
-    casilla_inputs, text_casilla_inputs = reachable
+    casilla_inputs, text_casilla_inputs, cleared_casilla_ids = reachable
 
     for intent in submission.scalar_intents:
         refusal = _validate_scalar_intent(baseline, intent.address, intent.kind)
@@ -189,6 +201,7 @@ def apply_modelo_edit(
         actor=_RESPONSIBLE_OWNER,
         casilla_inputs=casilla_inputs or None,
         text_casilla_inputs=text_casilla_inputs or None,
+        cleared_casilla_ids=cleared_casilla_ids,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         bucket_event_repository=bucket_event_repository,

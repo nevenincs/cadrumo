@@ -291,6 +291,24 @@ def _base_revision_id_payload(
     }
 
 
+def _cleared_casillas_revision_id_payload(
+    cleared_casilla_ids: Sequence[CasillaId],
+) -> dict[str, object]:
+    """Build the optional explicit-clear payload key.
+
+    An explicitly cleared casilla participates in identity as its own axis so
+    that clearing a previously declared value is structurally distinguishable
+    from a casilla that was simply never supplied: both are absent from
+    ``input_values_by_casilla_id``, but only the cleared one appears here.
+    """
+    canonical_cleared = tuple(
+        sorted(_validated_casilla_id(item, surface="cleared_casilla_ids") for item in cleared_casilla_ids)
+    )
+    if canonical_cleared:
+        return {"cleared_casilla_ids": canonical_cleared}
+    return {}
+
+
 def _m210_revision_id_payload(
     m210_official_tipo_renta_code: str | None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
@@ -414,6 +432,7 @@ class CalculationRevisionIdentityInputs(TypedDict):
     filing_instance_evidence: FilingInstanceEvidence | None
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None
     amendment_identity: CalculationRevisionAmendmentIdentity | None
+    cleared_casilla_ids: Sequence[CasillaId]
 
 
 def calculation_revision_identity_inputs(
@@ -438,6 +457,7 @@ def calculation_revision_identity_inputs(
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
+    cleared_casilla_ids: Sequence[CasillaId] = (),
 ) -> CalculationRevisionIdentityInputs:
     """Build the one complete target-id-free calculation-revision identity input.
 
@@ -467,6 +487,7 @@ def calculation_revision_identity_inputs(
         "filing_instance_evidence": filing_instance_evidence,
         "m303_regimen_simplificado_annual_summary_handoff": (m303_regimen_simplificado_annual_summary_handoff),
         "amendment_identity": amendment_identity,
+        "cleared_casilla_ids": cleared_casilla_ids,
     }
 
 
@@ -492,6 +513,7 @@ def derive_calculation_revision_id(
     filing_instance_evidence: FilingInstanceEvidence | None,
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None,
     amendment_identity: CalculationRevisionAmendmentIdentity | None = None,
+    cleared_casilla_ids: Sequence[CasillaId] = (),
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt."""
     return _derive_calculation_revision_id_from_identity_inputs(
@@ -516,6 +538,7 @@ def derive_calculation_revision_id(
             filing_instance_evidence=filing_instance_evidence,
             m303_regimen_simplificado_annual_summary_handoff=(m303_regimen_simplificado_annual_summary_handoff),
             amendment_identity=amendment_identity,
+            cleared_casilla_ids=cleared_casilla_ids,
         ),
     )
 
@@ -568,6 +591,7 @@ def _derive_calculation_revision_id_from_identity_inputs(
         "m303_regimen_simplificado_annual_summary_handoff"
     ]
     amendment_identity = identity_inputs["amendment_identity"]
+    cleared_casilla_ids = identity_inputs["cleared_casilla_ids"]
     payload: dict[str, object] = _base_revision_id_payload(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -619,6 +643,7 @@ def _derive_calculation_revision_id_from_identity_inputs(
     )
     if amendment_identity is not None:
         payload["amendment_identity"] = amendment_identity.model_dump(mode="json")
+    payload.update(_cleared_casillas_revision_id_payload(cleared_casilla_ids))
     return content_hash_hex(payload)
 
 
@@ -979,6 +1004,10 @@ class CalculationRevision(BaseModel):
             It remains distinct from the conceptual ``tipo_renta`` token used
             by the formula rate path, so an audit can distinguish official
             codes that share one rate concept.
+        cleared_casilla_ids: Casillas the caller explicitly withdrew a
+            previously declared MANUAL value from. Structurally distinct
+            from a casilla that was simply never supplied, even though
+            both are absent from ``input_values_by_casilla_id``.
         casilla_values: Mapping of computed casilla values (decimal
             output). The values that would be exported to AEAT if
             this revision were filed.
@@ -1028,6 +1057,13 @@ class CalculationRevision(BaseModel):
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
     borrador_snapshot_id: SnapshotId | None = None
     bindings_sourced_from_borrador: tuple[BindingId, ...] = Field(default_factory=tuple)
+    # Casillas the caller explicitly withdrew a previously declared MANUAL value
+    # from. Kept as its own identity axis, separate from
+    # ``input_values_by_casilla_id``, so an explicit clear is structurally
+    # distinguishable from a casilla that was simply never supplied: both are
+    # absent from ``input_values_by_casilla_id``, but only the cleared one
+    # appears here.
+    cleared_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
     casilla_values: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     # Typed envelope carrying formula provenance for every computed
     # casilla. Revisions with output values must populate this from the
@@ -1401,6 +1437,7 @@ def calculation_revision_identity_inputs_from_revision(
         filing_instance_evidence=revision.filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=(revision.m303_regimen_simplificado_annual_summary_handoff),
         amendment_identity=revision.amendment_identity,
+        cleared_casilla_ids=revision.cleared_casilla_ids,
     )
 
 

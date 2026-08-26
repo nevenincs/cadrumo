@@ -509,7 +509,6 @@ class ModeloEditUnsupportedIntentReason(StrEnum):
     Step Record that implements each reason, never the reverse.
     """
 
-    CLEAR_DECLARED_VALUE_NOT_YET_WIRED = "clear_declared_value_not_yet_wired"
     REMOVE_OVERRIDE_NOT_YET_WIRED = "remove_override_not_yet_wired"
     ADD_ROW_NOT_YET_WIRED = "add_row_not_yet_wired"
     UPDATE_ROW_NOT_YET_WIRED = "update_row_not_yet_wired"
