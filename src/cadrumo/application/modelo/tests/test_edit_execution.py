@@ -111,7 +111,9 @@ def _period() -> Period:
 
 def _work_unit() -> WorkUnit:
     period = _period()
-    revision_id = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=period.registry_token).revision.id
+    revision_id = (
+        bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=period.registry_token).revision.id
+    )
     now = datetime(2026, 1, 10, tzinfo=UTC)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
@@ -160,7 +162,9 @@ def test_apply_persists_a_set_typed_value_edit_and_co_commits_the_receipt(tmp_pa
         work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
         admitted = _admit(work_unit, work_catalogue=work_unit_repository.load())
         baseline = admitted.baseline
-        scalar_entry = next(e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1))
+        scalar_entry = next(
+            e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)
+        )
 
         submission = ModeloEditSubmissionV1(
             baseline=baseline,
@@ -205,7 +209,9 @@ def test_apply_persists_a_clear_declared_value_edit_and_co_commits_the_receipt(t
         work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
         admitted = _admit(work_unit, work_catalogue=work_unit_repository.load())
         baseline = admitted.baseline
-        scalar_entry = next(e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1))
+        scalar_entry = next(
+            e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)
+        )
 
         submission = ModeloEditSubmissionV1(
             baseline=baseline,
@@ -253,7 +259,9 @@ def test_an_explicit_clear_produces_a_distinct_revision_from_one_never_declared(
         work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
         admitted = _admit(work_unit, work_catalogue=work_unit_repository.load())
         baseline = admitted.baseline
-        scalar_entries = [e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)]
+        scalar_entries = [
+            e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)
+        ]
         entry_a, entry_b = scalar_entries[0], scalar_entries[1]
 
         def _apply(*, clear_b: bool) -> ModeloEditExecutionUpdatedV1:
@@ -453,7 +461,9 @@ def test_apply_refuses_a_real_conflicting_write_at_the_guarded_commit_point(tmp_
         work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
         admitted = _admit(work_unit, work_catalogue=work_unit_repository.load())
         baseline = admitted.baseline
-        scalar_entry = next(e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1))
+        scalar_entry = next(
+            e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)
+        )
 
         # A REAL second writer commits after admission, before the executor's
         # own commit-point recheck runs.

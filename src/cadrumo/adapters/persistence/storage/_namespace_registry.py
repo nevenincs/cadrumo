@@ -503,7 +503,7 @@ MODELO_RECONCILIATION_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     # N records per work unit, never one that overwrites: reconciliation is
-    # repeatable and `reconcile history` is a shipped verb, so a key that
+    # repeatable and `reconcile list` is a shipped verb, so a key that
     # collapsed runs would destroy the history this store exists to hold. The
     # trailing segment is the content-addressed id of the MODELO_RECONCILED
     # bucket event this record is co-written with, which already folds the

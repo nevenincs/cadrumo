@@ -1,7 +1,7 @@
 """Parity tests: aeat config profile create/show/status read one profile bucket.
 
 Pins the contract that ``aeat config profile create``, ``aeat config
-profile show`` and ``aeat config profile status`` share the active
+profile view`` and ``aeat config profile status`` share the active
 profile bucket selected by ``WorkflowState``.
 """
 
@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_config_create_then_config_show_round_trips_iva_regime(
     tmp_path: Path,
 ) -> None:
-    """A value written during profile create is readable via profile show."""
+    """A value written during profile create is readable via profile view."""
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         created = invoke_cached_cli(
@@ -48,7 +48,7 @@ def test_config_create_then_config_show_round_trips_iva_regime(
         )
         assert created.exit_code == 0, created.output
 
-        show_via_config = invoke_cached_cli(["--format", "json", "config", "profile", "show", "default"])
+        show_via_config = invoke_cached_cli(["--format", "json", "config", "profile", "view", "default"])
         assert show_via_config.exit_code == 0, show_via_config.output
         _show_payload = json.loads(show_via_config.output)
         assert isinstance(_show_payload, dict)

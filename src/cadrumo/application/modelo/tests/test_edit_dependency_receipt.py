@@ -136,7 +136,9 @@ def _period() -> Period:
 
 def _work_unit() -> WorkUnit:
     period = _period()
-    revision_id = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=period.registry_token).revision.id
+    revision_id = (
+        bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=period.registry_token).revision.id
+    )
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID, modelo=_MODELO, filing_year=_FILING_YEAR, period=period, revision_id=revision_id
@@ -227,11 +229,17 @@ def validate_modelo_edit_contract_c3_dependency_receipt() -> ModeloEditContractC
         assert config.get("strict") is True, model.__name__
         assert config.get("frozen") is True, model.__name__
         assert config.get("extra") == "forbid", model.__name__
-    contract_schema = ModeloEditC3PassedProofV1(evidence="ModeloEditBaselineV1/CompatibilityTupleV1/ReceiptV1 strict+frozen")
+    contract_schema = ModeloEditC3PassedProofV1(
+        evidence="ModeloEditBaselineV1/CompatibilityTupleV1/ReceiptV1 strict+frozen"
+    )
 
     admitted = _admitted_baseline()
-    scalar_entries = [e for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)]
-    row_entries = [e for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)]
+    scalar_entries = [
+        e for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1)
+    ]
+    row_entries = [
+        e for e in admitted.baseline.permitted_surface if isinstance(e, ModeloEditWritableRowGroupSurfaceEntryV1)
+    ]
     # No modelo 131 manual_input binding is a real row set; the
     # writable-row-group axis is correctly empty for every registry revision
     # today, so only the scalar axis is asserted non-empty here.
@@ -261,9 +269,7 @@ def validate_modelo_edit_contract_c3_dependency_receipt() -> ModeloEditContractC
     )
 
     revision = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_period().registry_token).revision
-    manual_scalars = sum(
-        1 for casilla in revision.casillas if getattr(casilla, "input_kind", None) is InputKind.MANUAL
-    )
+    manual_scalars = sum(1 for casilla in revision.casillas if getattr(casilla, "input_kind", None) is InputKind.MANUAL)
     manual_rows = sum(1 for binding in revision.bindings if binding.source is BindingSourceKind.MANUAL_INPUT)
     assert manual_scalars > 0 and manual_rows > 0
     conformance = ModeloEditC3PassedProofV1(

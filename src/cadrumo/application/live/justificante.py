@@ -651,7 +651,7 @@ def reconcile_capture(
     existing local-only reconciler; the reconciler never contacts AEAT and never
     writes the plaintext receipt to disk. This is the live-sourced equivalent of
     the operator hand-passing a downloaded justificante via the local
-    ``reconcile file --file PATH`` surface.
+    ``reconcile import --file PATH`` surface.
 
     Returns:
         A :class:`ModeloReconciliationReport` for the in-memory receipt comparison.

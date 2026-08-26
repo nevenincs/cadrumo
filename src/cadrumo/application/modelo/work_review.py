@@ -721,8 +721,6 @@ def build_modelo_work_review(
     )
 
 
-
-
 _WORK_REVIEW_CAPTURE_MAX_ATTEMPTS = 8
 _work_review_capture_process_pid = os.getpid()
 _work_review_capture_process_nonce = token_bytes(32)
@@ -928,6 +926,7 @@ def capture_modelo_work_review(
         translated_message="errors.refused.modelo_work_review_capture_not_current",
         context={"reason": "contended", "attempts": _WORK_REVIEW_CAPTURE_MAX_ATTEMPTS},
     )
+
 
 __all__ = [
     "BlockerRef",

@@ -87,11 +87,11 @@ from ...domain.calculations.registry.legal import verify_legal_catalogue as _ver
 from ...domain.calculations.registry.relations import (
     resolve_relation_values_from_observations as _resolve_relation_values_from_observations,
 )
-from ...domain.calculations.registry.schema import CasillaDefinition as _CasillaDefinition
 from ...domain.calculations.registry.schema import DataBindingDefinition as _DataBindingDefinition
 from ...domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
 from ...domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind as _InputKind
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition as _CasillaDefinition
 from ...domain.calculations.registry.verification_tolerance import (
     verification_tolerance_or_exact as _verification_tolerance_or_exact,
 )

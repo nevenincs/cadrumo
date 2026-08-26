@@ -15,8 +15,6 @@ See Also:
 
 from __future__ import annotations
 
-from ..m145_communication_period import M145CommunicationPeriod
-
 from pathlib import Path
 
 import pytest
@@ -35,6 +33,7 @@ from .._m145_communication_records import (
     m145_communication_record_object_key,
     read_m145_communication_record,
 )
+from ..m145_communication_period import M145CommunicationPeriod
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

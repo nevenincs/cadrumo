@@ -115,7 +115,9 @@ def _period() -> Period:
 
 def _work_unit() -> WorkUnit:
     period = _period()
-    revision_id = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=period.registry_token).revision.id
+    revision_id = (
+        bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=period.registry_token).revision.id
+    )
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID, modelo=_MODELO, filing_year=_FILING_YEAR, period=period, revision_id=revision_id
@@ -143,7 +145,9 @@ def _admit(
     work_catalogue: WorkUnitCatalogue,
     calculation_catalogue: CalculationRevisionCatalogue | None = None,
 ) -> ModeloEditAdmittedV1:
-    calculation_catalogue = calculation_catalogue if calculation_catalogue is not None else CalculationRevisionCatalogue()
+    calculation_catalogue = (
+        calculation_catalogue if calculation_catalogue is not None else CalculationRevisionCatalogue()
+    )
     result = admit_modelo_edit(
         ModeloEditAdmissionRequestV1(target=_target_for(work_unit), mutation_family=ModeloEditMutationFamily.CALCULATE),
         bucket_id=_BUCKET_ID,
