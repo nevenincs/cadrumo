@@ -31,7 +31,7 @@ from ...domain.calculations.registry.schema import FormulaDefinition
 from ...domain.calculations.registry.schema_formula import FormulaExpression
 from ...domain.calculations.registry.schema_surfaces import RelationDefinition
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from ...domain.modelos import CalculationRevision, CalculationSourceRef, ModeloCode
+from ...domain.modelos import CalculationRevision, CalculationRevisionState, CalculationSourceRef, ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..ledger.preflight import LedgerPreflightIssue
 from ..state_projection import ProjectionModeloReadiness
@@ -512,6 +512,98 @@ def static_inspection_modelo_workspace_capabilities(
     )
 
 
+def graded_snapshot_modelo_workspace_capabilities(
+    resolved_target: ModeloWorkspaceResolvedTargetV1,
+    *,
+    calculation_revision: CalculationRevision | None,
+) -> tuple[ModeloWorkspaceCapabilityV1, ...]:
+    """Return the complete GRADED_SNAPSHOT capability denominator.
+
+    S287: ``available`` requires reading what a canonical producer WROTE,
+    never deriving a verdict from downstream state. Per capability:
+
+    - ``SCHEMA_INSPECTION`` is ``AVAILABLE`` unconditionally, same as
+      STATIC_INSPECTION -- a deterministic generated denominator, not a
+      producer-verdict question.
+    - ``CALCULATION_MATERIALIZATION`` is ``AVAILABLE`` when a
+      :class:`CalculationRevision` exists for the target's EXACT coordinate
+      (``calculation_revision.work_unit_id == resolved_target.work_unit_id``,
+      which is itself content-addressed on bucket/modelo/year/period/revision) --
+      reading the calculate producer's own persisted object, never deriving
+      "materialized" from e.g. non-empty ``casilla_values``.
+    - ``VERIFICATION_READINESS`` is ``AVAILABLE`` when that same revision's
+      ``state`` is ``VERIFICADO_COMPLETO``, a state the model itself only
+      reaches with required ``verified_at``/``verified_by`` present -- a
+      genuine separately-stamped verdict from the canonical verify producer.
+    - ``FILING_DRAFT_READINESS`` is PERMANENTLY ``UNMEASURED``.
+      :func:`~cadrumo.application.filing.build_draft` is pure and stateless:
+      it persists nothing, emits no event, stamps no revision field. There is
+      no producer to read a verdict FROM, and calling it to see whether it
+      raises would be exactly the derivation this rule forbids. This is a
+      structural finding, not a placeholder pending future wiring here -- see
+      the S287 ADR amendment.
+    - ``FILING_EXPORT_READINESS`` is ``UNMEASURED`` pending a producer port:
+      the approved stamp is a ``MODELO_EXPORTED`` bucket event carrying the
+      exact revision id, but no S126 contributor currently reads bucket event
+      history, so this capability cannot yet cite a captured, epoch-safe
+      projection the way the other four do. Wiring a ninth contributor is out
+      of this change's scope; see the S287 ADR amendment.
+    """
+    calculation_available = (
+        calculation_revision is not None and calculation_revision.work_unit_id == resolved_target.work_unit_id
+    )
+    verification_available = (
+        calculation_available
+        and calculation_revision is not None
+        and (calculation_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO)
+    )
+    dispositions: tuple[
+        tuple[ModeloWorkspaceCapabilityName, ModeloWorkspaceProducerContractV1, ModeloWorkspaceCapabilityDisposition],
+        ...,
+    ] = (
+        (
+            ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION,
+            MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
+            ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        ),
+        (
+            ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION,
+            MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
+            ModeloWorkspaceCapabilityDisposition.AVAILABLE
+            if calculation_available
+            else ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+        ),
+        (
+            ModeloWorkspaceCapabilityName.VERIFICATION_READINESS,
+            MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
+            ModeloWorkspaceCapabilityDisposition.AVAILABLE
+            if verification_available
+            else ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+        ),
+        (
+            ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS,
+            MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
+            ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+        ),
+        (
+            ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS,
+            MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1,
+            ModeloWorkspaceCapabilityDisposition.UNMEASURED,
+        ),
+    )
+    return tuple(
+        ModeloWorkspaceCapabilityV1(
+            capability=capability,
+            disposition=disposition,
+            target=resolved_target,
+            selected_revision_id=resolved_target.law_selected_revision_id,
+            producer_owner=contract.contributor.owner,
+            producer=contract.contributor.producer,
+        )
+        for capability, contract, disposition in dispositions
+    )
+
+
 __all__ = [
     "STATIC_INSPECTION_WORK_REVIEW_FACET",
     "ModeloWorkspaceRevisionAxes",
@@ -522,6 +614,7 @@ __all__ = [
     "formula_expression_operand_references",
     "formula_operand_references_for_casilla",
     "graded_snapshot_materialization_facet",
+    "graded_snapshot_modelo_workspace_capabilities",
     "graded_snapshot_provenance_facet",
     "graded_snapshot_readiness",
     "modelo_work_selector_request_for_target",

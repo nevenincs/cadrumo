@@ -26,6 +26,7 @@ from ..workspace import (
     capture_modelo_workspace_target_captures,
     formula_operand_references_for_casilla,
     graded_snapshot_materialization_facet,
+    graded_snapshot_modelo_workspace_capabilities,
     graded_snapshot_provenance_facet,
     graded_snapshot_readiness,
     modelo_work_selector_request_for_target,
@@ -1359,3 +1360,152 @@ def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_marks_u
     assert subjects == {linked_casilla, second_linked_casilla}
     assert all(record.calculation_source is linked_ref for record in linked_records)
     assert unlinked_records[0].calculation_source is unlinked_ref
+
+
+def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = "2022"):
+    from ....core import RevisionReviewStatus
+    from ....domain.modelos import WorkUnitState
+    from ..workspace_models import (
+        ModeloWorkspaceResolvedTargetV1,
+        ModeloWorkspaceRevisionAssertionV1,
+    )
+
+    return ModeloWorkspaceResolvedTargetV1(
+        bucket_id="test-bucket-0000-0000-0000-000000000000",
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        law_selected_revision_id=revision_id,
+        review_status=RevisionReviewStatus.PENDING_REVIEW,
+        requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
+        ),
+        stored_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.STORED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
+        ),
+        work_unit_id=work_unit_id,
+        work_state=WorkUnitState.BORRADOR,
+    )
+
+
+def _minimal_calculation_revision(*, work_unit_id: str, state):
+    from ....domain.modelos import (
+        CalculationRevision,
+        CalculationRevisionState,
+        derive_calculation_revision_id,
+    )
+
+    now = datetime(2026, 7, 4, 14, 0, tzinfo=UTC)
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        source_provenance=(),
+        filing_instance_evidence=None,
+    )
+    verified_at = now if state is CalculationRevisionState.VERIFICADO_COMPLETO else None
+    verified_by = "test-operator" if state is CalculationRevisionState.VERIFICADO_COMPLETO else None
+    return CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=state,
+        casilla_values={},
+        observations=(),
+        source_provenance=(),
+        created_at=now,
+        updated_at=now,
+        filing_instance_evidence=None,
+        verified_at=verified_at,
+        verified_by=verified_by,
+    )
+
+
+def test_graded_snapshot_capabilities_reads_producer_stamps_not_derivations() -> None:
+    """S287: CALCULATION_MATERIALIZATION and VERIFICATION_READINESS read what the calculate/verify producer wrote."""
+    from ....domain.modelos import CalculationRevisionState, WorkUnitState
+    from ..workspace_models import ModeloWorkspaceCapabilityDisposition, ModeloWorkspaceCapabilityName
+
+    work_unit_id = "f" * 64
+    target = _resolved_target_with_work_unit(work_unit_id=work_unit_id)
+
+    # No calculation revision at all -> both calculation-derived capabilities unmeasured.
+    none_capabilities = {
+        c.capability: c.disposition
+        for c in graded_snapshot_modelo_workspace_capabilities(target, calculation_revision=None)
+    }
+    assert (
+        none_capabilities[ModeloWorkspaceCapabilityName.SCHEMA_INSPECTION]
+        == ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    )
+    assert (
+        none_capabilities[ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+    assert (
+        none_capabilities[ModeloWorkspaceCapabilityName.VERIFICATION_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+    assert (
+        none_capabilities[ModeloWorkspaceCapabilityName.FILING_DRAFT_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+    assert (
+        none_capabilities[ModeloWorkspaceCapabilityName.FILING_EXPORT_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+
+    # A BORRADOR revision exists for the exact coordinate -> materialization available, verification not yet.
+    borrador_revision = _minimal_calculation_revision(
+        work_unit_id=work_unit_id, state=CalculationRevisionState.BORRADOR
+    )
+    borrador_capabilities = {
+        c.capability: c.disposition
+        for c in graded_snapshot_modelo_workspace_capabilities(target, calculation_revision=borrador_revision)
+    }
+    assert (
+        borrador_capabilities[ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION]
+        == ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    )
+    assert (
+        borrador_capabilities[ModeloWorkspaceCapabilityName.VERIFICATION_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+
+    # A VERIFICADO_COMPLETO revision -> both available.
+    verified_revision = _minimal_calculation_revision(
+        work_unit_id=work_unit_id, state=CalculationRevisionState.VERIFICADO_COMPLETO
+    )
+    verified_capabilities = {
+        c.capability: c.disposition
+        for c in graded_snapshot_modelo_workspace_capabilities(target, calculation_revision=verified_revision)
+    }
+    assert (
+        verified_capabilities[ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION]
+        == ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    )
+    assert (
+        verified_capabilities[ModeloWorkspaceCapabilityName.VERIFICATION_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.AVAILABLE
+    )
+
+    # A revision for a DIFFERENT work unit must never count -- exact coordinate, not merely "some revision exists".
+    other_revision = _minimal_calculation_revision(
+        work_unit_id="e" * 64, state=CalculationRevisionState.VERIFICADO_COMPLETO
+    )
+    mismatched_capabilities = {
+        c.capability: c.disposition
+        for c in graded_snapshot_modelo_workspace_capabilities(target, calculation_revision=other_revision)
+    }
+    assert (
+        mismatched_capabilities[ModeloWorkspaceCapabilityName.CALCULATION_MATERIALIZATION]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )
+    assert (
+        mismatched_capabilities[ModeloWorkspaceCapabilityName.VERIFICATION_READINESS]
+        == ModeloWorkspaceCapabilityDisposition.UNMEASURED
+    )

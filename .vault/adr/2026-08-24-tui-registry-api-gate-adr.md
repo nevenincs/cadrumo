@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:a15386b170711621330fff053886845c9f01ef962e4e629ed53f0882f91230af'
+body_hash: 'sha256:da59b0803ece511a43c3112495032ca5efdbdd259840bb86120f0c5f860d69cd'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -1020,3 +1020,74 @@ given a fabricated or inferred subject. An audit reader sees every
 contributing source, attributed or not, and can distinguish "unattributed"
 from "record never surfaced" — the same distinction an under-declaration
 review depends on everywhere else in this codebase.
+
+## Amendment (S287): the capability verdict is a named field, not a property, ruled per capability
+
+The prior text required "a separately stamped, explicit verdict from the
+canonical producer" without naming which field on which producer satisfies
+it for any of the five capabilities, so the requirement could not be checked
+against code. Ruled per capability, each verified against the actual
+producer before ruling:
+
+- **`SCHEMA_INSPECTION`** — `AVAILABLE` unconditionally. It answers from a
+  deterministic generated denominator (the S278 field-classification
+  manifest), never from a producer verdict about a specific target; there is
+  nothing to stamp.
+- **`CALCULATION_MATERIALIZATION`** — `AVAILABLE` when a persisted
+  `CalculationRevision` exists for the target's EXACT coordinate
+  (`revision.work_unit_id == resolved_target.work_unit_id`, itself
+  content-addressed on bucket/modelo/filing_year/period/revision_id). The
+  revision's mere existence is the calculate producer's own stamp — reading
+  it is not a derivation, unlike inferring "materialized" from
+  `casilla_values` being non-empty.
+- **`VERIFICATION_READINESS`** — `AVAILABLE` when that same revision's
+  `state` is `VERIFICADO_COMPLETO`, a state `CalculationRevision`'s own
+  lifecycle-field validator (`_require_revision_fields`,
+  `domain/modelos/_calculation_revision.py`) only reaches with `verified_at`
+  and `verified_by` both required and present — a genuine, separately
+  stamped verdict from the canonical verify producer, not an aggregate
+  `ready` flag or an assessment count.
+- **`FILING_EXPORT_READINESS`** — the correct stamp is a `MODELO_EXPORTED`
+  bucket event (`BucketEventType.MODELO_EXPORTED`,
+  `application/modelo/_export.py`) whose `object_id` equals the exact
+  revision id — keyed on the revision, not merely the target, so a stale
+  export of a superseded revision does not read as available. **Not yet
+  wired**: none of the eight existing S126 contributor ports read bucket
+  event history, so this capability has no epoch-safe, ABA-proven capture
+  path to cite today the way the other four do. The disposition stays
+  `UNMEASURED` until a ninth contributor (a bucket-event-history port) is
+  built with the same capture/epoch discipline as the other eight; that is
+  future work, out of this amendment's scope, not a defect in it. The
+  registry closure report's own `filing_export` limb answers a different,
+  structural question — "can this modelo/revision be filed at all" — and
+  must not be substituted for "has THIS revision actually been exported".
+- **`FILING_DRAFT_READINESS`** — **permanently `UNMEASURED`, and this is a
+  finding, not merely a disposition.** `CalculationRevisionState.BORRADOR`
+  and a filing draft are distinct concepts that do not collapse: `BORRADOR`
+  is the calculation revision's own lifecycle state (calculated, not yet
+  verified); a filing draft is the export-shaped rendering
+  `build_draft` (`application/filing/__init__.py:272`) produces from a
+  registry snapshot plus inputs. A revision can sit in `BORRADOR` with no
+  filing draft ever attempted; collapsing the two would let the workspace
+  report a draft ready on the strength of a calculation existing, exactly
+  the cross-capability inference this record forbids. Traced `build_draft`
+  itself: it is pure and stateless, persists nothing, emits no event, stamps
+  no revision field. There is nothing to read a verdict FROM, and calling it
+  to see whether it raises would be both the forbidden derivation and
+  performing the work merely to report on it. **This is the fourth instance
+  this campaign has found of a contract declaring something nothing can
+  reach** (alongside an unreachable compatibility refusal, a row category
+  with no rows, and an override intent addressing a store no casilla has).
+  The `FILING_DRAFT_READINESS` member stays in
+  `ModeloWorkspaceCapabilityName` and always reports `UNMEASURED` by
+  construction; whoever owns the filing surface should decide whether
+  `build_draft` ought to stamp something durable, or whether this capability
+  member should not exist, and this record is the place that decision is
+  now visible rather than silently absorbed into a permanent `unmeasured`.
+
+`graded_snapshot_modelo_workspace_capabilities` implements the four
+answerable dispositions (`SCHEMA_INSPECTION`, `CALCULATION_MATERIALIZATION`,
+`VERIFICATION_READINESS` computed from a captured `CalculationRevision`;
+`FILING_DRAFT_READINESS` and `FILING_EXPORT_READINESS` both `UNMEASURED` for
+the reasons above), mirroring the existing STATIC_INSPECTION capability
+table's shape.
