@@ -20,6 +20,9 @@ from ...operations.capabilities import (
 from ...operations.models import CredentialFreeOperationRequest
 from ..operation_definitions import (
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
+    ModeloExportExecutor,
+    ModeloExportPublicResultV1,
+    ModeloExportRequest,
     ModeloWorkDiscardBaseline,
     ModeloWorkDiscardExecutor,
     ModeloWorkDiscardPublicResultV1,
@@ -33,6 +36,7 @@ from ..operation_definitions import (
     ModeloWorkVerifyExecutor,
     ModeloWorkVerifyPublicResultV1,
     ModeloWorkVerifyRequest,
+    build_modelo_export_definition,
     build_modelo_work_discard_definition,
     build_modelo_work_discard_registration,
     build_modelo_work_file_definition,
@@ -299,3 +303,46 @@ def test_the_filing_request_carries_elections_the_operator_declared() -> None:
     fields = set(ModeloWorkFileRequest.model_fields)
 
     assert {"approval", "refund_election", "payment_election", "notes"} <= fields
+
+
+def _export_definition():
+    return build_modelo_export_definition(
+        profile_resolver=lambda: None,
+        command_builder=lambda revision, path: None,
+    )
+
+
+def test_the_export_result_fingerprints_the_artefact_and_carries_no_bytes() -> None:
+    """Custody of the artefact is the operator's; the result only proves which bytes."""
+    fields = set(ModeloExportPublicResultV1.model_fields)
+
+    assert {"output_path", "byte_size", "file_sha256"} <= fields
+    for carrier in ("bytes", "content", "payload", "document"):
+        assert not any(carrier in name for name in fields), f"the export result carries material: {carrier}"
+
+
+def test_the_export_executor_reaches_no_remote_surface() -> None:
+    """An exported artefact reaches AEAT only when a human carries it there."""
+    source = inspect.getsource(ModeloExportExecutor)
+    tree = ast.parse(textwrap.dedent(source))
+    called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+    reached = (
+        {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)}
+        | called
+        | {alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names}
+    )
+
+    assert "export_modelo_revision" in called
+    for forbidden in ("submit", "httpx", "requests", "post", "presentar", "upload"):
+        assert not any(forbidden in name.lower() for name in reached), (
+            f"the export executor reaches a remote surface: {forbidden}"
+        )
+
+
+def test_the_export_identity_is_resolved_not_replayed() -> None:
+    """A replayed export must not stamp an artefact with a stale identity."""
+    fields = set(ModeloExportRequest.model_fields)
+
+    assert {"calculation_revision_id", "output_path"} <= fields
+    for identity in ("presenter", "taxpayer_identity", "product_software_identity", "actor"):
+        assert identity not in fields, f"the request pins an identity that should be resolved: {identity}"

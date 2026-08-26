@@ -54,6 +54,7 @@ from ..operations.registry import (
     OperationReconciliationPolicy,
     OperationSchemaBindingV1,
 )
+from ._export import export_modelo_revision
 from ._filing_actions import file_modelo_revision
 from ._verification_actions import verify_modelo_revision
 from ._work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
@@ -63,11 +64,13 @@ if TYPE_CHECKING:
     from ...domain.modelos import VerificationReport
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
+    from ._export import ModeloExportCommand, ModeloExportResult
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
 MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
 MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.verify"
 MODELO_WORK_FILE_OPERATION_DEFINITION_ID = "modelo.work.file"
+MODELO_EXPORT_OPERATION_DEFINITION_ID = "modelo.export"
 MODELO_WORK_VERIFY_PROGRESS_UNIT = "casilla"
 
 _WORK_UNIT_ID = Annotated[str, Field(min_length=1, max_length=128)]
@@ -529,6 +532,146 @@ def build_modelo_work_file_registration(
     )
 
 
+type ModeloExportCommandBuilder = Callable[[str, str], ModeloExportCommand]
+
+
+class ModeloExportRequest(CredentialFreeOperationRequest):
+    """The revision to export and where the operator wants the artefact.
+
+    The path is the operator's chosen destination, journalled because it is a
+    location rather than content. The exported bytes never enter the request
+    or the result.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    output_path: Annotated[str, Field(min_length=1, max_length=4096)]
+
+
+class ModeloExportPublicResultV1(BaseModel):
+    """Evidence that one export happened, without the exported material.
+
+    Custody of the artefact is the operator's from the moment it lands: this
+    result names the file and fingerprints it so a later reader can prove which
+    bytes were produced, and carries none of them.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    result_version: int = 1
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    output_path: Annotated[str, Field(min_length=1, max_length=4096)]
+    byte_size: Annotated[int, Field(ge=0)]
+    file_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
+    export_format: Annotated[str, Field(min_length=1, max_length=64)]
+    handoff_required: bool = True
+
+
+def project_modelo_export_result(result: ModeloExportResult) -> ModeloExportPublicResultV1:
+    """Project one export outcome onto the safe public result."""
+    return ModeloExportPublicResultV1(
+        calculation_revision_id=str(result.calculation_revision_id),
+        output_path=str(result.output_path),
+        byte_size=result.byte_size,
+        file_sha256=str(result.file_sha256),
+        export_format=str(result.format),
+    )
+
+
+class ModeloExportExecutor:
+    """Export one revision through the existing authority, locally only.
+
+    The authority is local by construction and never contacts AEAT; this
+    enrolment adds no transport of its own, so an exported artefact reaches
+    the tax authority only when a human carries it there.
+    """
+
+    def __init__(
+        self,
+        *,
+        profile_resolver: ModeloWorkVerifyProfileResolver,
+        command_builder: ModeloExportCommandBuilder,
+    ) -> None:
+        """Bind the live profile and the identity-bearing command builder."""
+        self._profile_resolver = profile_resolver
+        self._command_builder = command_builder
+
+    async def execute(
+        self,
+        request: OperationRequest[ModeloExportRequest],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        """Delegate to the export authority and return the artefact digest.
+
+        Presenter, taxpayer and product identities come from the injected
+        builder rather than the request, so an operation replayed later cannot
+        stamp an artefact with an identity that has since changed.
+        """
+        del context
+        command = self._command_builder(request.payload.calculation_revision_id, request.payload.output_path)
+        result = export_modelo_revision(command, workflow_profile=self._profile_resolver())
+        return str(result.file_sha256)
+
+
+def build_modelo_export_definition(
+    *,
+    profile_resolver: ModeloWorkVerifyProfileResolver,
+    command_builder: ModeloExportCommandBuilder,
+) -> OperationDefinition:
+    """Bind the export authority to its registered operation contract."""
+
+    def build() -> ModeloExportExecutor:
+        return ModeloExportExecutor(profile_resolver=profile_resolver, command_builder=command_builder)
+
+    return OperationDefinition(
+        definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
+        request_type=ModeloExportRequest,
+        result_type=ModeloExportPublicResultV1,
+        executor_factory=OperationExecutorFactory(
+            request_type=ModeloExportRequest,
+            executor_type=ModeloExportExecutor,
+            build=build,
+        ),
+        phase_codes=("modelo.export.preconditions", "modelo.export.render"),
+        interaction_kinds=frozenset[OperationInteractionKind](),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RECORDED,
+            cancellation=OperationCancellation.UNSUPPORTED,
+            deadline=OperationDeadline.ABSENT,
+            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+            baseline=OperationBaselinePolicy.REQUEST_BOUND,
+            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset(),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def build_modelo_export_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the export definition to its stable public schemas."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.export.request",
+            schema_version=1,
+            model_type=definition.request_type,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.export.result",
+            schema_version=1,
+            model_type=ModeloExportPublicResultV1,
+        ),
+    )
+
+
 def build_modelo_work_rename_definition(*, actor: str) -> OperationDefinition:
     """Bind the rename writer to its registered operation contract."""
 
@@ -584,11 +727,15 @@ def build_modelo_work_rename_registration(
 
 
 __all__ = [
+    "MODELO_EXPORT_OPERATION_DEFINITION_ID",
     "MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID",
     "MODELO_WORK_FILE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
     "MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID",
     "MODELO_WORK_VERIFY_PROGRESS_UNIT",
+    "ModeloExportExecutor",
+    "ModeloExportPublicResultV1",
+    "ModeloExportRequest",
     "ModeloWorkDiscardApprovalStaleError",
     "ModeloWorkDiscardBaseline",
     "ModeloWorkDiscardExecutor",
@@ -604,6 +751,8 @@ __all__ = [
     "ModeloWorkVerifyExecutor",
     "ModeloWorkVerifyPublicResultV1",
     "ModeloWorkVerifyRequest",
+    "build_modelo_export_definition",
+    "build_modelo_export_registration",
     "build_modelo_work_discard_definition",
     "build_modelo_work_discard_registration",
     "build_modelo_work_file_definition",
@@ -612,5 +761,6 @@ __all__ = [
     "build_modelo_work_rename_registration",
     "build_modelo_work_verify_definition",
     "build_modelo_work_verify_registration",
+    "project_modelo_export_result",
     "project_modelo_work_verify_result",
 ]
