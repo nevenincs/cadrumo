@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:edc3859f15c19824c96309d16601222f7f357633988217362f0097c944449a80'
+body_hash: 'sha256:cf7c1de6cdb892b9f9f2c84048ee92529ce793fa179ca3b92dea2761b22e6543'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -96,6 +96,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P20-S257]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S258]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S259]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S260]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S274]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S277]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S278]]'
@@ -131,6 +132,7 @@ related:
   - '[[2026-08-11-tui-architecture-W05-P23-S142]]'
   - '[[2026-08-11-tui-architecture-W05-P23-S143]]'
   - '[[2026-08-11-tui-architecture-W05-P23-S146]]'
+  - '[[2026-08-11-tui-architecture-W06-P15-S91]]'
   - '[[2026-08-11-tui-architecture-W06-P24-S150]]'
   - '[[2026-08-11-tui-architecture-W06-P24-S151]]'
   - '[[2026-08-11-tui-architecture-W06-P24-S152]]'
@@ -435,6 +437,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P20-S257` - Retire the 2 binding_aggregation re-export(s) from the registry bindings dispatch module by direct-importing binding_aggregation_op, default_binding_aggregation_op from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.
 - `2026-08-11-tui-architecture-W03-P20-S258` - Retire the 4 bindings_previous_filing re-export(s) from the registry bindings dispatch module by direct-importing previous_filing_binding_source_casilla_ids, previous_filing_observation_requirements, previous_filing_source_reference, resolve_previous_filing_binding_values from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.
 - `2026-08-11-tui-architecture-W03-P20-S259` - Retire the 4 core.aggregation re-export(s) from the registry bindings dispatch module by direct-importing BindingAggregationOp, CounterpartSourceKind, INVOICE_BINDING_SOURCE_KINDS, LEDGER_BINDING_SOURCE_KINDS from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols. This is a CROSS-LAYER facade: a core symbol republished through a registry module, so the direct import must reach core.
+- `2026-08-11-tui-architecture-W03-P20-S260` - Retire the 5 counterpart_bindings re-export(s) from the registry bindings dispatch module by direct-importing CounterpartAggregationObservation, CounterpartObservationRequirement, counterpart_binding_requirements, resolve_counterpart_binding_row_values, resolve_counterpart_binding_values from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.
 - `2026-08-11-tui-architecture-W03-P20-S274` - Correct the Workspace producer projection fingerprint so it identifies the contract a consumer actually receives instead of demanding that a model's input and output shapes coincide: derive the fingerprint from the serialization schema alone, replace the validation-equals-serialization equality with a real round-trip property proving a dumped projection re-validates, and prove the fingerprint admits a Decimal-bearing domain model while still refusing a genuine schema drift; amend the governing decision record in the same change
 - `2026-08-11-tui-architecture-W03-P20-S277` - Decide and record the per-casilla join semantics the Workspace schema record requires, deriving each edge from the registry's own declared direction rather than from field-name inference: whether a casilla row lists formulas whose output it is or formulas whose expression references it as an operand, which side of a relation a casilla row claims, and which casilla owns a multi-casilla applicability or constraint rule; amend the governing registry-api-gate decision record in the same change and prove each join against a real revision carrying both edge directions
 - `2026-08-11-tui-architecture-W03-P20-S278` - Decide and record what the field manifest means for the static-inspection admission, which the governing decision record lists as capturing field_manifest while the only generator walks the snapshot-rooted type universe a static inspection never loads: either root a second generator at the inspection's own type universe, or define the snapshot-rooted manifest as the single universe with per-admission availability, and rule out the third reading of a degraded result presented as a complete one; amend the governing registry-api-gate decision record in the same change and prove the chosen manifest digest is stable and admission-honest
@@ -470,6 +473,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W05-P23-S142` - Persist only non-sensitive custody checkpoints and serialize awaiting_submission to bound to delivery_started to delivery_acknowledged to released transitions with expiry, cancellation, terminal settlement, crash classification, restart reconciliation, and exactly-once release across racing supervisor paths
 - `2026-08-11-tui-architecture-W05-P23-S143` - Extend registered operation definitions with validated transient-financial-operand declarations and an effect-receipt resolver that narrows recorded mutation, interruption, and uncertain-effect claims from committed application evidence without exposing financial operand material
 - `2026-08-11-tui-architecture-W05-P23-S146` - Implement the sole TuiOperationFinancialOperandDependencyReceiptV1 validator with accepted-authority, protocol-schema, custody-transition, crash, effect, production-composition, non-retention, current-only, no-legacy, and duplicate-authority evidence checks
+- `2026-08-11-tui-architecture-W06-P15-S91` - Prove zero production or shared-test imports of the TUI, zero Textual outside its root, and a fully importable canonical package
 - `2026-08-11-tui-architecture-W06-P24-S150` - Enroll modelo.work.rename through the existing rename_work_unit single writer with exact approval and capability rules, declared atomic write set, safe effect and result receipt, and typed Workspace refresh target without recreating lifecycle policy
 - `2026-08-11-tui-architecture-W06-P24-S151` - Enroll modelo.work.discard through the existing discard_work_unit single writer with exact destructive approval, no-effect refusal, declared atomic write set, safe effect receipt, and typed selection refresh target without recreating lifecycle policy
 - `2026-08-11-tui-architecture-W06-P24-S152` - Enroll modelo.work.verify through the existing verify_modelo_revision authority with exact capability evidence, progress and REVIEW declarations, guarded persistence and event effects, safe result receipt, and typed Workspace refresh target
