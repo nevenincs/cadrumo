@@ -10,7 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import Period, RegistrySchemaFamilyDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -41,6 +41,8 @@ from ..workspace import (
     static_inspection_parameter_schema_records,
     static_inspection_relation_schema_records,
     static_inspection_schema_records,
+    static_inspection_family_dispositions,
+    resolve_static_inspection_result,
 )
 from ..workspace_models import (
     ModeloVisibleFilingTarget,
@@ -981,3 +983,79 @@ def _minimal_resolved_target(inspection):
             asserted_revision_id=None,
         ),
     )
+
+
+def test_static_inspection_family_dispositions_reports_only_declared_not_applicable_families() -> None:
+    inspection = _real_303_inspection()
+
+    dispositions = static_inspection_family_dispositions(inspection)
+
+    assert len(dispositions) == len(inspection.family_dispositions)
+    by_family = {d.family: d for d in dispositions}
+    assert "applicability" in by_family
+    assert by_family["applicability"].disposition == RegistrySchemaFamilyDisposition.NOT_APPLICABLE
+    assert by_family["applicability"].legal_refs == inspection.family_dispositions["applicability"].legal_refs
+    # A family the inspection has no data for at all (e.g. "constructs") is
+    # never reported here -- reporting nothing is honest, guessing is not.
+    assert "constructs" not in by_family
+
+
+def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    from ....core import OutputLanguage
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    result = resolve_static_inspection_result(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+        output_language=OutputLanguage.ES,
+    )
+
+    projection = result.projection
+    assert projection.target.modelo == "130"
+    assert projection.target.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+    assert projection.schema_facet.records  # a real, non-empty schema facet
+    assert projection.work_review is STATIC_INSPECTION_WORK_REVIEW_FACET
+    assert len(projection.capabilities) == len(ModeloWorkspaceCapabilityName)
+    assert projection.materialization_facet is None
+    assert projection.provenance_facet is None
+
+    # Round-trip through JSON must reproduce the identical result.
+    from ..workspace_models import ModeloWorkspaceStaticInspectionResultV1
+
+    reloaded = ModeloWorkspaceStaticInspectionResultV1.model_validate_json(result.model_dump_json())
+    assert reloaded == result
+
+
+def test_resolve_static_inspection_result_never_re_reads_the_work_catalogue(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A single encrypted-SQL work-catalogue read must back the entire assembled result."""
+    import logging
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    from ....core import OutputLanguage
+
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.modelos_work_units"):
+        result = resolve_static_inspection_result(
+            _visible_target(bucket_id),
+            bucket_id=bucket_id,
+            catalogue_repository=repository,
+            authority=authority,
+            output_language=OutputLanguage.ES,
+        )
+
+    assert result.projection.target.modelo == "130"
+    load_log_lines = [record for record in caplog.records if "loaded work-unit catalogue" in record.message]
+    assert len(load_log_lines) == 1

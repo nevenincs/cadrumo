@@ -51,6 +51,7 @@ from .workspace_models import (
     ModeloWorkspaceEvidenceHorizonV1,
     ModeloWorkspaceExactWorkUnitTargetV1,
     ModeloWorkspaceFacetName,
+    ModeloWorkspaceFamilyDispositionV1,
     ModeloWorkspaceFormulaReferenceV1,
     ModeloWorkspaceFormulaBindingOperandReferenceV1,
     ModeloWorkspaceFormulaCasillaOperandReferenceV1,
@@ -67,9 +68,12 @@ from .workspace_models import (
     ModeloWorkspaceRelationReferenceV1,
     ModeloWorkspaceRelationSourceEndpointReferenceV1,
     ModeloWorkspaceRelationTargetEndpointReferenceV1,
+    ModeloWorkspaceProjectionV1,
     ModeloWorkspaceResolvedTargetV1,
     ModeloWorkspaceSchemaClassification,
     ModeloWorkspaceSchemaIdentityV1,
+    ModeloWorkspaceStaticInspectionResultV1,
+    ModeloWorkspaceStaticInspectionScopeV1,
     ModeloWorkspaceTechnicalLabelV1,
     ModeloWorkspaceSchemaRecordV1,
     ModeloWorkspaceWorkReviewFacetV1,
@@ -518,6 +522,8 @@ __all__ = [
     "static_inspection_relation_schema_records",
     "static_inspection_parameter_schema_records",
     "static_inspection_schema_records",
+    "static_inspection_family_dispositions",
+    "resolve_static_inspection_result",
 ]
 
 
@@ -1020,3 +1026,143 @@ def paginate_static_inspection_schema_facet(
         next_cursor=next_cursor,
         has_more=has_more,
     )
+
+
+def static_inspection_family_dispositions(
+    inspection: RegistryRevisionInspection,
+) -> tuple[ModeloWorkspaceFamilyDispositionV1, ...]:
+    """Project only the family dispositions the inspection can honestly attest to.
+
+    ``inspection.family_dispositions`` carries exactly the families the
+    revision has explicitly declared NOT_APPLICABLE, each grounded with its
+    own reason/legal_refs/source_refs -- a substantive claim the registry
+    itself made. A family absent from that mapping is not reported here at
+    all: the inspection carries no data for most schema families (it strips
+    everything but casilla/binding/formula/relation/parameter/projection-endpoint/
+    workbook-parity/live-cross-reference identifiers), so silently
+    defaulting an unreported family to POPULATED or BLOCKED_PENDING_EVIDENCE
+    would assert a fact the inspection has no basis for. Reporting nothing is
+    honest; guessing is not.
+    """
+    return tuple(
+        sorted(
+            (
+                ModeloWorkspaceFamilyDispositionV1(
+                    family=family,
+                    disposition=RegistrySchemaFamilyDisposition.NOT_APPLICABLE,
+                    legal_refs=tuple(declaration.legal_refs),
+                    source_refs=tuple(declaration.source_refs),
+                )
+                for family, declaration in inspection.family_dispositions.items()
+            ),
+            key=lambda item: item.family,
+        )
+    )
+
+
+def resolve_static_inspection_result(
+    target: ModeloWorkspaceTargetV1,
+    *,
+    bucket_id: str,
+    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
+    authority: ValidatedRegistryAuthority,
+    output_language: OutputLanguage,
+    page_size: int = 200,
+) -> ModeloWorkspaceStaticInspectionResultV1:
+    """Assemble the complete, single-page STATIC_INSPECTION result for one target.
+
+    ``page_size`` defaults to 200, the schema facet's own maximum page size
+    (``ModeloWorkspaceBoundedFacetV1``'s ``_MAX_FACET_PAGE_SIZE``), so a
+    revision whose schema fits within that bound returns in one page; a
+    caller working through a larger schema paginates via ``next_cursor``
+    exactly as :func:`paginate_static_inspection_schema_facet` proves.
+
+    Captures WORK then REGISTRY exactly once each (the ordering-critical
+    core), then builds every remaining piece from that one REGISTRY
+    capture's inspection: schema identity, locale summary, evidence horizon,
+    family dispositions, contributors, baseline, the five-kind schema_facet,
+    the fixed work_review facet, and the capability denominator. No second
+    registry or work read occurs anywhere in this function.
+    """
+    work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+        target,
+        bucket_id=bucket_id,
+        catalogue_repository=catalogue_repository,
+        authority=authority,
+    )
+    resolution = work_capture.projection
+    registry_projection = registry_capture.projection
+    inspection = registry_projection.inspection
+    assert inspection is not None
+
+    work_unit = resolution.work_unit
+    assert resolution.modelo is not None
+    assert resolution.filing_year is not None
+    assert resolution.period is not None
+    resolved_target = ModeloWorkspaceResolvedTargetV1(
+        bucket_id=resolution.bucket_id,
+        modelo=resolution.modelo,
+        filing_year=resolution.filing_year,
+        period=resolution.period,
+        law_selected_revision_id=axes.law_selected_revision_id,
+        review_status=registry_projection.review_status,
+        requested_revision_assertion=axes.requested_revision_assertion,
+        stored_revision_assertion=axes.stored_revision_assertion,
+        work_unit_id=work_unit.work_unit_id if work_unit is not None else None,
+        work_state=work_unit.state if work_unit is not None else None,
+    )
+
+    schema_identity = resolve_static_inspection_schema_identity(inspection)
+    locale = capture_modelo_workspace_locale_summary(resolved_target, output_language=output_language)
+    locale_key = revision_locale_key(resolved_target.modelo, resolved_target.law_selected_revision_id)
+    locale_capture = ModeloWorkspaceLocaleCataloguePortV1(
+        translation_key=locale_key,
+        locale=output_language.value,
+    ).capture_projection_with_epoch()
+    field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=inspection)
+    field_manifest_capture = field_manifest_port.capture_projection_with_epoch()
+
+    baseline = resolve_static_inspection_baseline(
+        resolved_target,
+        schema_identity=schema_identity,
+        locale=locale,
+        work_stamp=work_capture.stamp,
+        work_epoch=work_capture.epoch,
+        registry_stamp=registry_capture.stamp,
+        registry_epoch=registry_capture.epoch,
+        locale_stamp=locale_capture.stamp,
+        locale_epoch=locale_capture.epoch,
+        field_manifest_stamp=field_manifest_capture.stamp,
+        field_manifest_epoch=field_manifest_capture.epoch,
+    )
+    contributors = static_inspection_contributors()
+
+    records = static_inspection_schema_records(inspection, resolved_target, output_language=output_language)
+    schema_facet = paginate_static_inspection_schema_facet(
+        records,
+        target=resolved_target,
+        schema_identity=schema_identity,
+        baseline=baseline,
+        contributors=contributors,
+        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
+        page_size=page_size,
+    )
+
+    evidence_horizon = static_inspection_evidence_horizon(inspection)
+    family_dispositions = static_inspection_family_dispositions(inspection)
+    capabilities = static_inspection_modelo_workspace_capabilities(resolved_target)
+
+    projection = ModeloWorkspaceProjectionV1(
+        admission=ModeloWorkspaceStaticInspectionScopeV1(),
+        target=resolved_target,
+        schema_identity=schema_identity,
+        locale=locale,
+        evidence_horizon=evidence_horizon,
+        family_dispositions=family_dispositions,
+        contributors=contributors,
+        baseline=baseline,
+        schema_facet=schema_facet,
+        work_review=STATIC_INSPECTION_WORK_REVIEW_FACET,
+        capabilities=capabilities,
+    )
+    return ModeloWorkspaceStaticInspectionResultV1(projection=projection)
