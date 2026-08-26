@@ -94,6 +94,11 @@ class ModeloWorkRenameRequest(CredentialFreeOperationRequest):
     work_unit_id: _WORK_UNIT_ID
     new_name: _WORK_UNIT_NAME
 
+    #: The operator this invocation acts as. The platform binds an actor at
+    #: submission, never at composition, so baking one into a definition would
+    #: make the production registry per-actor.
+    actor: Annotated[str, Field(min_length=1, max_length=128)]
+
 
 class ModeloWorkRenamePublicResultV1(BaseModel):
     """The settled rename, as a caller outside this package may see it.
@@ -113,10 +118,6 @@ class ModeloWorkRenamePublicResultV1(BaseModel):
 class ModeloWorkRenameExecutor:
     """Run the existing rename writer under one recorded operation identity."""
 
-    def __init__(self, *, actor: str) -> None:
-        """Bind the actor whose rename event this operation will emit."""
-        self._actor = actor
-
     async def execute(
         self,
         request: OperationRequest[ModeloWorkRenameRequest],
@@ -132,7 +133,7 @@ class ModeloWorkRenameExecutor:
         renamed = rename_work_unit(
             request.payload.work_unit_id,
             request.payload.new_name,
-            actor=self._actor,
+            actor=request.payload.actor,
         )
         return renamed.work_unit_id
 
@@ -161,6 +162,11 @@ class ModeloWorkDiscardRequest(CredentialFreeOperationRequest):
     baseline: ModeloWorkDiscardBaseline
     reason: Annotated[str, Field(min_length=1, max_length=500)] | None = None
 
+    #: The operator this invocation acts as. The platform binds an actor at
+    #: submission, never at composition, so baking one into a definition would
+    #: make the production registry per-actor.
+    actor: Annotated[str, Field(min_length=1, max_length=128)]
+
 
 class ModeloWorkDiscardPublicResultV1(BaseModel):
     """The settled discard, as a caller outside this package may see it."""
@@ -179,10 +185,6 @@ class ModeloWorkDiscardApprovalStaleError(CadrumoError, RuntimeError):
 
 class ModeloWorkDiscardExecutor:
     """Run the existing discard writer against an exactly approved unit."""
-
-    def __init__(self, *, actor: str) -> None:
-        """Bind the actor whose discard event this operation will emit."""
-        self._actor = actor
 
     async def execute(
         self,
@@ -206,17 +208,17 @@ class ModeloWorkDiscardExecutor:
             )
         discarded = discard_work_unit(
             baseline.work_unit_id,
-            actor=self._actor,
+            actor=request.payload.actor,
             reason=request.payload.reason,
         )
         return discarded.work_unit_id
 
 
-def build_modelo_work_discard_definition(*, actor: str) -> OperationDefinition:
+def build_modelo_work_discard_definition() -> OperationDefinition:
     """Bind the discard writer to its registered operation contract."""
 
     def build() -> ModeloWorkDiscardExecutor:
-        return ModeloWorkDiscardExecutor(actor=actor)
+        return ModeloWorkDiscardExecutor()
 
     return OperationDefinition(
         definition_id=MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
@@ -282,6 +284,11 @@ class ModeloWorkVerifyRequest(CredentialFreeOperationRequest):
 
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
 
+    #: The operator this invocation acts as. The platform binds an actor at
+    #: submission, never at composition, so baking one into a definition would
+    #: make the production registry per-actor.
+    actor: Annotated[str, Field(min_length=1, max_length=128)]
+
 
 class ModeloWorkVerifyPublicResultV1(BaseModel):
     """The settled verification outcome a caller outside this package may see.
@@ -318,9 +325,8 @@ def project_modelo_work_verify_result(report: VerificationReport) -> ModeloWorkV
 class ModeloWorkVerifyExecutor:
     """Run the existing verification authority under a recorded identity."""
 
-    def __init__(self, *, actor: str, profile_resolver: ModeloWorkVerifyProfileResolver) -> None:
-        """Bind the actor and the live profile the gates are evaluated against."""
-        self._actor = actor
+    def __init__(self, *, profile_resolver: ModeloWorkVerifyProfileResolver) -> None:
+        """Bind the live profile the gates are evaluated against."""
         self._profile_resolver = profile_resolver
 
     async def execute(
@@ -336,7 +342,7 @@ class ModeloWorkVerifyExecutor:
         del context
         report = verify_modelo_revision(
             request.payload.calculation_revision_id,
-            actor=self._actor,
+            actor=request.payload.actor,
             workflow_profile=self._profile_resolver(),
         )
         return str(report.verification_report_id)
@@ -344,13 +350,12 @@ class ModeloWorkVerifyExecutor:
 
 def build_modelo_work_verify_definition(
     *,
-    actor: str,
     profile_resolver: ModeloWorkVerifyProfileResolver,
 ) -> OperationDefinition:
     """Bind the verification authority to its registered operation contract."""
 
     def build() -> ModeloWorkVerifyExecutor:
-        return ModeloWorkVerifyExecutor(actor=actor, profile_resolver=profile_resolver)
+        return ModeloWorkVerifyExecutor(profile_resolver=profile_resolver)
 
     return OperationDefinition(
         definition_id=MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
@@ -425,6 +430,11 @@ class ModeloWorkFileRequest(CredentialFreeOperationRequest):
     payment_election: PaymentElection = PaymentElection.INGRESO
     notes: Annotated[str, Field(min_length=1, max_length=500)] | None = None
 
+    #: The operator this invocation acts as. The platform binds an actor at
+    #: submission, never at composition, so baking one into a definition would
+    #: make the production registry per-actor.
+    actor: Annotated[str, Field(min_length=1, max_length=128)]
+
 
 class ModeloWorkFilePublicResultV1(BaseModel):
     """The recorded local filing, as a caller outside this package may see it.
@@ -451,9 +461,8 @@ class ModeloWorkFileExecutor:
     operation's whole output is a local record plus the operator's handoff.
     """
 
-    def __init__(self, *, actor: str, profile_resolver: ModeloWorkVerifyProfileResolver) -> None:
-        """Bind the actor and the live profile the filing gates are judged against."""
-        self._actor = actor
+    def __init__(self, *, profile_resolver: ModeloWorkVerifyProfileResolver) -> None:
+        """Bind the live profile the filing gates are judged against."""
         self._profile_resolver = profile_resolver
 
     async def execute(
@@ -470,7 +479,7 @@ class ModeloWorkFileExecutor:
         payload = request.payload
         record = file_modelo_revision(
             payload.approval.calculation_revision_id,
-            actor=self._actor,
+            actor=request.payload.actor,
             workflow_profile=self._profile_resolver(),
             notes=payload.notes,
             refund_election=payload.refund_election,
@@ -481,13 +490,12 @@ class ModeloWorkFileExecutor:
 
 def build_modelo_work_file_definition(
     *,
-    actor: str,
     profile_resolver: ModeloWorkVerifyProfileResolver,
 ) -> OperationDefinition:
     """Bind the local filing authority to its registered operation contract."""
 
     def build() -> ModeloWorkFileExecutor:
-        return ModeloWorkFileExecutor(actor=actor, profile_resolver=profile_resolver)
+        return ModeloWorkFileExecutor(profile_resolver=profile_resolver)
 
     return OperationDefinition(
         definition_id=MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
@@ -725,6 +733,11 @@ class ModeloWorkAmendRequest(CredentialFreeOperationRequest):
     reason: Annotated[str, Field(min_length=1, max_length=500)]
     m303_rectificativa_motive: M303RectificativaMotive | None = None
 
+    #: The operator this invocation acts as. The platform binds an actor at
+    #: submission, never at composition, so baking one into a definition would
+    #: make the production registry per-actor.
+    actor: Annotated[str, Field(min_length=1, max_length=128)]
+
 
 class ModeloWorkAmendPublicResultV1(BaseModel):
     """The recorded amendment, as a caller outside this package may see it."""
@@ -746,10 +759,6 @@ class ModeloWorkAmendExecutor:
     recorded here, and the operator submits it themselves.
     """
 
-    def __init__(self, *, actor: str) -> None:
-        """Bind the actor whose amendment this operation records."""
-        self._actor = actor
-
     async def execute(
         self,
         request: OperationRequest[ModeloWorkAmendRequest],
@@ -768,16 +777,16 @@ class ModeloWorkAmendExecutor:
             amendment_kind=payload.amendment_kind,
             m303_rectificativa_motive=payload.m303_rectificativa_motive,
             reason=payload.reason,
-            actor=self._actor,
+            actor=request.payload.actor,
         )
         return str(record.filing_record_id)
 
 
-def build_modelo_work_amend_definition(*, actor: str) -> OperationDefinition:
+def build_modelo_work_amend_definition() -> OperationDefinition:
     """Bind the amendment authority to its registered operation contract."""
 
     def build() -> ModeloWorkAmendExecutor:
-        return ModeloWorkAmendExecutor(actor=actor)
+        return ModeloWorkAmendExecutor()
 
     return OperationDefinition(
         definition_id=MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
@@ -827,11 +836,11 @@ def build_modelo_work_amend_registration(
     )
 
 
-def build_modelo_work_rename_definition(*, actor: str) -> OperationDefinition:
+def build_modelo_work_rename_definition() -> OperationDefinition:
     """Bind the rename writer to its registered operation contract."""
 
     def build() -> ModeloWorkRenameExecutor:
-        return ModeloWorkRenameExecutor(actor=actor)
+        return ModeloWorkRenameExecutor()
 
     return OperationDefinition(
         definition_id=MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,

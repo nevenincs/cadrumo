@@ -57,7 +57,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _definition():
-    return build_modelo_work_rename_definition(actor="operator")
+    return build_modelo_work_rename_definition()
 
 
 def test_the_definition_enrolls_the_declared_lifecycle_subject() -> None:
@@ -139,7 +139,7 @@ def test_the_definition_module_is_public_and_importable_directly() -> None:
 
 
 def _discard_definition():
-    return build_modelo_work_discard_definition(actor="operator")
+    return build_modelo_work_discard_definition()
 
 
 def test_discard_requires_an_exact_approval_baseline() -> None:
@@ -192,7 +192,7 @@ def test_the_two_enrolments_are_distinct_registered_subjects() -> None:
 
 
 def _verify_definition():
-    return build_modelo_work_verify_definition(actor="operator", profile_resolver=lambda: None)
+    return build_modelo_work_verify_definition(profile_resolver=lambda: None)
 
 
 def test_verify_declares_review_and_its_progress_phases() -> None:
@@ -251,7 +251,7 @@ def test_every_enrolment_here_targets_a_distinct_subject() -> None:
 
 
 def _file_definition():
-    return build_modelo_work_file_definition(actor="operator", profile_resolver=lambda: None)
+    return build_modelo_work_file_definition(profile_resolver=lambda: None)
 
 
 def test_filing_approval_names_the_verification_that_justified_it() -> None:
@@ -356,7 +356,7 @@ def test_the_export_identity_is_resolved_not_replayed() -> None:
 
 
 def _amend_definition():
-    return build_modelo_work_amend_definition(actor="operator")
+    return build_modelo_work_amend_definition()
 
 
 def test_an_amendment_is_bound_to_the_filed_baseline_it_corrects() -> None:
