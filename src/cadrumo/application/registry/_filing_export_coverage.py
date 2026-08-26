@@ -18,12 +18,15 @@ from cadrumo.application.filing import (
     FilingExportProof,
     FilingExportProofAssessment,
     FilingExportProofAuthority,
+    FilingExportProofChannel,
     FilingExportProofCoordinate,
+    FilingExportProofRefusalReason,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES, STRICT_FROZEN_CONFIG, RegistryAuthorityGrade
+from ...core.time import UtcInstant, now
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.corpus_catalogue import verify_source_file
 from ...domain.calculations.registry.errors import (
@@ -82,6 +85,7 @@ def compose_filing_export_coverage(
     *,
     authority: ValidatedRegistryAuthority,
     proof_authority: FilingExportProofAuthority | None = None,
+    assessment_at: UtcInstant | None = None,
 ) -> FilingExportCoverageReport:
     """Compose filing-layout evidence from validated law-selected snapshots.
 
@@ -91,10 +95,12 @@ def compose_filing_export_coverage(
     against the byte-exact official layout sources its materialised layouts cite.
     """
     authority.validate_registry()
+    current_assessment_at = now() if assessment_at is None else assessment_at
     limbs = tuple(
         _compose_revision_limb(
             authority=authority,
             proof_authority=proof_authority,
+            assessment_at=current_assessment_at,
             modelo_id=modelo.id,
             revision=revision,
         )
@@ -108,6 +114,7 @@ def _compose_revision_limb(
     *,
     authority: ValidatedRegistryAuthority,
     proof_authority: FilingExportProofAuthority | None,
+    assessment_at: UtcInstant,
     modelo_id: str,
     revision: ModeloRevision,
 ) -> RegistryClosureLimb:
@@ -198,6 +205,7 @@ def _compose_revision_limb(
     proof, proof_failure = _filing_export_proof(
         proof_authority=proof_authority,
         snapshot=snapshot,
+        assessment_at=assessment_at,
     )
     if proof_failure is not None:
         return _refused_limb(
@@ -267,6 +275,7 @@ def _filing_export_proof(
     *,
     proof_authority: FilingExportProofAuthority | None,
     snapshot: RegistrySnapshot,
+    assessment_at: UtcInstant,
 ) -> tuple[FilingExportProof | None, _LayoutEvidenceFailure | None]:
     """Require one exact two-channel assessment at the law-selected coordinate."""
     if proof_authority is None:
@@ -310,7 +319,19 @@ def _filing_export_proof(
             detail=f"two-channel filing export assessment refused: {detail}",
             filing_channels=channel_refusals,
         )
-    return assessment.proof, None
+    proof = assessment.proof
+    if not proof.secure_replay.attested_at <= assessment_at < proof.secure_replay.valid_until:
+        return None, _LayoutEvidenceFailure(
+            reason="stale_evidence",
+            detail="secure replay receipt is not current at the closure assessment instant",
+            filing_channels=(
+                RegistryClosureFilingChannelRefusal(
+                    channel=FilingExportProofChannel.SECURE_REPLAY.value,
+                    reason=FilingExportProofRefusalReason.PROOF_VALIDATION_FAILED.value,
+                ),
+            ),
+        )
+    return proof, None
 
 
 def _proof_evidence(proof: FilingExportProof) -> tuple[RegistryClosureEvidence, ...]:

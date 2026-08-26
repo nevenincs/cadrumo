@@ -423,19 +423,28 @@ def _text_reference_owners(
     *,
     candidates: tuple[RelocatedFamily, ...],
     member_owners: dict[str, str],
+    module_owners: dict[str, str] | None = None,
 ) -> set[str]:
     """Resolve module and package-symbol targets in non-Python evidence."""
-    owners = {
-        candidate.old_path
+    exact_modules = module_owners or {
+        module: candidate.old_path
         for candidate in candidates
-        if candidate.old_module in text or candidate.new_module in text
+        for module in (candidate.old_module, candidate.new_module)
     }
-    package = "cadrumo.domain.calculations.registry"
-    owners.update(
-        old_path
-        for symbol, old_path in member_owners.items()
-        if re.search(rf"(?<![\w.]){re.escape(package)}\.{re.escape(symbol)}(?![\w.])", text)
-    )
+    package = "cadrumo.domain.calculations.registry."
+    valid_owners = frozenset(exact_modules.values())
+    owners: set[str] = set()
+    for reference in re.findall(r"(?<![\w.])cadrumo\.domain\.calculations\.registry(?:\.[A-Za-z_]\w*)+", text):
+        target = reference
+        while target:
+            if owner := exact_modules.get(target):
+                owners.add(owner)
+                break
+            target = target.rpartition(".")[0]
+        if reference.startswith(package) and (
+            owner := member_owners.get(reference.removeprefix(package).split(".", maxsplit=1)[0])
+        ) in valid_owners:
+            owners.add(owner)
     return owners
 
 
@@ -530,6 +539,11 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
     module_paths: dict[str, set[str]] = defaultdict(set)
     by_new_module = {candidate.new_module: candidate for candidate in candidates}
     member_owners = _facade_member_owners(candidates)
+    text_module_owners = {
+        module: candidate.old_path
+        for candidate in candidates
+        for module in (candidate.old_module, candidate.new_module)
+    }
     literal_dynamic: list[dict[str, str]] = []
     unresolved_dynamic: list[dict[str, str]] = []
     relative_import_edges = 0
@@ -542,6 +556,7 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
             text,
             candidates=candidates,
             member_owners=member_owners,
+            module_owners=text_module_owners,
         ):
             hits[old_path][base].add(relative)
         if not relative.endswith(".py"):

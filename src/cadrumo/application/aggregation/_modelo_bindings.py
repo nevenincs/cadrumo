@@ -33,33 +33,6 @@ from datetime import date
 from decimal import Decimal
 from typing import ClassVar
 
-from cadrumo.domain.calculations.registry.irnr_ledger_bindings import (
-    resolve_ledger_irnr_income_aggregation_binding_values,
-    unsupported_ledger_irnr_income_observations,
-)
-from cadrumo.domain.calculations.registry.ledger_bindings import (
-    IvaLedgerObservation,
-    UngroundedRentaIncome,
-    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
-    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
-    resolve_ledger_renta_income_aggregation_binding_values,
-    structurally_unroutable_iva_base_categories,
-    ungrounded_ledger_renta_income_observations,
-    unrouted_ledger_iva_quantities,
-    unrouted_ledger_renta_income_quantities,
-    unsupported_ledger_iva_observations,
-    unsupported_ledger_renta_gastos_estimacion_directa_observations,
-    unsupported_ledger_renta_gastos_pago_fraccionado_observations,
-    unsupported_ledger_renta_income_observations,
-)
-from cadrumo.domain.calculations.registry.ledger_impatriado_bindings import (
-    resolve_ledger_impatriado_income_aggregation_binding_values,
-    unsupported_ledger_impatriado_income_observations,
-)
-from cadrumo.domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
-
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
 from ...adapters.persistence.storage import (
@@ -82,6 +55,32 @@ from ...core import (
 from ...core.money import round_to_cents
 from ...domain.bienes_inversion import BienesInversionIvaRegister
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.irnr_ledger_bindings import (
+    resolve_ledger_irnr_income_aggregation_binding_values,
+    unsupported_ledger_irnr_income_observations,
+)
+from ...domain.calculations.registry.ledger_bindings import (
+    IvaLedgerObservation,
+    UngroundedRentaIncome,
+    resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
+    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
+    resolve_ledger_renta_income_aggregation_binding_values,
+    structurally_unroutable_iva_base_categories,
+    ungrounded_ledger_renta_income_observations,
+    unrouted_ledger_iva_quantities,
+    unrouted_ledger_renta_income_quantities,
+    unsupported_ledger_iva_observations,
+    unsupported_ledger_renta_gastos_estimacion_directa_observations,
+    unsupported_ledger_renta_gastos_pago_fraccionado_observations,
+    unsupported_ledger_renta_income_observations,
+)
+from ...domain.calculations.registry.ledger_impatriado_bindings import (
+    resolve_ledger_impatriado_income_aggregation_binding_values,
+    unsupported_ledger_impatriado_income_observations,
+)
+from ...domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogueRepositoryProtocol,

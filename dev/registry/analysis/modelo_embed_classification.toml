@@ -29,7 +29,7 @@
 schema_version = 1
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_applicability.py"
+path = "src/cadrumo/domain/calculations/registry/applicability.py"
 classification = "regulatory_data_embed"
 justification = """
 The embed is the _MODELO_APPLICABILITY_RULES table and the reason strings it
@@ -49,7 +49,7 @@ destination = "registry applicability fragment family; Spanish verdict prose to 
 tree_ownership = "mixed"
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_applicability_modelo202.py"
+path = "src/cadrumo/domain/calculations/registry/applicability_modelo202.py"
 classification = "regulatory_data_embed"
 justification = """
 The whole module is the Modelo 202 modalidad rule: which pago-fraccionado
@@ -63,7 +63,7 @@ destination = "registry applicability fragment family; Spanish modality prose to
 tree_ownership = "unowned"
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_bindings.py"
+path = "src/cadrumo/domain/calculations/registry/bindings.py"
 classification = "machinery"
 justification = """
 The cross-family binding dispatch table and its re-exports. The modelo-specific
@@ -79,7 +79,7 @@ symbol = "filing_year"
 reason = "pydantic ge/le bounds (2000..2099) on a filing-year field: a structural sanity range on an input, not a claim about which years the corpus covers."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_censo_modelos.py"
+path = "src/cadrumo/domain/calculations/registry/censo_modelos.py"
 classification = "regulatory_data_embed"
 justification = """
 The embed is _CENSO_FOUNDATION_YEAR = 2025. It is a Python-resident filing year
@@ -93,7 +93,19 @@ destination = "registry authoring tree, beside the declared filing-year data"
 tree_ownership = "unowned"
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_counterpart_bindings.py"
+path = "src/cadrumo/domain/calculations/registry/deadline_coordinate.py"
+classification = "machinery"
+justification = """
+The deadline semantic-coordinate projection is generic validation machinery.
+Its Modelo.M210 reference selects the canonical core tipo-renta vocabulary only
+when an otherwise unqualified deadline window needs wildcard expansion; the
+modelo code, period token, and result disposition it returns are all coordinates
+of registry-authored deadline facts. It owns neither a deadline date nor a
+filing-year scope.
+"""
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/counterpart_bindings.py"
 classification = "machinery"
 justification = """
 The counterpart aggregation resolver family: selector model, validator and the
@@ -115,7 +127,7 @@ symbol = ""
 reason = "Decimal('0') accumulator seed for the per-party summation; the sentinel zero the authority-flow rule names as an acceptable literal."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_detail_record_bindings.py"
+path = "src/cadrumo/domain/calculations/registry/detail_record_bindings.py"
 classification = "machinery"
 justification = """
 The detail-record resolver family: per-row observation models and the row
@@ -149,7 +161,7 @@ symbol = "bucket"
 reason = "Decimal('0') accumulator seed for the per-party bucket; a sentinel zero."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_export_parse.py"
+path = "src/cadrumo/domain/calculations/registry/export_parse.py"
 classification = "regulatory_data_embed"
 justification = """
 The embed is _M100_LETTER_CASILLA_ID_FIRST_YEAR = 2024. AEAT changed the Modelo
@@ -165,7 +177,7 @@ destination = "registry export source declaration in the authoring tree"
 tree_ownership = "unowned"
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_formula_runtime.py"
+path = "src/cadrumo/domain/calculations/registry/formula_runtime.py"
 classification = "machinery"
 justification = """
 The formula dispatcher. It routes registry-authored operation graphs to
@@ -254,7 +266,7 @@ symbol = ""
 reason = "Decimal('1') is the truthy value of an advisory boolean flag carried on a numeric casilla channel; a boolean encoding, not a rate."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_invoice_bindings.py"
+path = "src/cadrumo/domain/calculations/registry/invoice_bindings.py"
 classification = "machinery"
 justification = """
 The invoice resolver family: observation models, the per-fact aggregation, and
@@ -325,7 +337,7 @@ symbol = "base_row_total"
 reason = "Decimal('0') accumulator seed for the base-row total; a sentinel zero."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_irnr_ledger_bindings.py"
+path = "src/cadrumo/domain/calculations/registry/irnr_ledger_bindings.py"
 classification = "machinery"
 justification = """
 The IRNR ledger aggregation resolver: which ledger rows feed a Modelo 210
@@ -347,7 +359,22 @@ symbol = ""
 reason = "Decimal('0') comparison sentinel deciding whether an unrouted observation carries a magnitude worth reporting."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_iva_wallet_relation_targets.py"
+path = "src/cadrumo/domain/calculations/registry/inventory_bindings.py"
+classification = "regulatory_data_embed"
+justification = """
+The embed is the 2025 Modelo 100 inventory-selector declaration: its fixed
+filing year and the operation-to-casilla destination map (0181, 0177, 0182).
+Those are revision-owned binding facts; encoding them in a Python selector
+makes a new inventory operation or layout revision a source edit instead of an
+authoring-tree change. The selector parser, strict model, and aggregation-shape
+validation are machinery and survive when the revision-owned binding
+declarations supply these coordinates.
+"""
+destination = "Modelo 100 2025 revision data-binding declarations and their source-casilla coordinates"
+tree_ownership = "unowned"
+
+[[classification]]
+path = "src/cadrumo/domain/calculations/registry/iva_wallet_relation_targets.py"
 classification = "machinery"
 justification = """
 The single declaration of the Modelo 303 compensación relation carve-out from
@@ -358,7 +385,7 @@ tree they already point at would create a second spelling of the same fact.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_ledger_bindings.py"
+path = "src/cadrumo/domain/calculations/registry/ledger_bindings.py"
 classification = "machinery"
 justification = """
 The ledger aggregation resolver family for the IVA, renta and OSS channels:
@@ -447,7 +474,7 @@ symbol = ""
 reason = "Decimal('0') comparison sentinel deciding whether an unrouted observation carries a magnitude worth reporting."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_ledger_impatriado_bindings.py"
+path = "src/cadrumo/domain/calculations/registry/ledger_impatriado_bindings.py"
 classification = "machinery"
 justification = """
 The impatriado ledger aggregation resolver for the Modelo 151 income channel.
@@ -468,7 +495,7 @@ symbol = ""
 reason = "Decimal('0') comparison sentinel deciding whether an impatriado row carries a magnitude."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_differentiated_deduction_projection.py"
+path = "src/cadrumo/domain/calculations/registry/m303_differentiated_deduction_projection.py"
 classification = "machinery"
 justification = """
 Projection of the Modelo 303 differentiated-sector deduction inputs into the
@@ -496,7 +523,7 @@ symbol = ""
 reason = "Decimal('0') zero-difference comparison asserting the sector totals reconcile; a sentinel zero."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_exonerado_390_projection.py"
+path = "src/cadrumo/domain/calculations/registry/m303_exonerado_390_projection.py"
 classification = "machinery"
 justification = """
 Projects whether a Modelo 303 filer is exonerated from the Modelo 390 annual
@@ -554,7 +581,7 @@ destination = "registry legal catalogue for the provision locator; Spanish title
 tree_ownership = "campaign_owned"
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_orden_manifest.py"
+path = "src/cadrumo/domain/calculations/registry/m303_orden_manifest.py"
 classification = "machinery"
 justification = """
 Assembles the annual-orden manifest from the parsed source and hands it to the
@@ -565,7 +592,7 @@ _m303_orden_* parsing modules that survive the embed teardown.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_orden_projection_compiler.py"
+path = "src/cadrumo/domain/calculations/registry/m303_orden_projection_compiler.py"
 classification = "machinery"
 justification = """
 Compiles the parsed raw annual-orden rows into the projection the authority
@@ -574,7 +601,7 @@ _m303_orden_* parsing modules that survive the embed teardown.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_orden_projection_models.py"
+path = "src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py"
 classification = "regulatory_data_embed"
 justification = """
 Mostly machinery, with a specific embed that must come out before the rest can
@@ -593,7 +620,7 @@ destination = "registry authoring tree: the Lorca 2022 reduction percentage and 
 tree_ownership = "campaign_owned"
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_orden_raw_models.py"
+path = "src/cadrumo/domain/calculations/registry/m303_orden_raw_models.py"
 classification = "regulatory_data_embed"
 justification = """
 Mostly machinery, with the same specific embed. _validate_source_lorca_2022_reduction
@@ -609,7 +636,7 @@ destination = "registry authoring tree: the Lorca 2022 reduction percentage and 
 tree_ownership = "campaign_owned"
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_orden_resolution.py"
+path = "src/cadrumo/domain/calculations/registry/m303_orden_resolution.py"
 classification = "machinery"
 justification = """
 Resolves an annual-orden coordinate to the projection that serves it. It states
@@ -618,7 +645,7 @@ the _m303_orden_* parsing modules that survive the embed teardown.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_orden_source.py"
+path = "src/cadrumo/domain/calculations/registry/m303_orden_source.py"
 classification = "machinery"
 justification = """
 Parses the annual-orden HTML source into raw rows. Its numeric literals are
@@ -629,7 +656,7 @@ keeps; deleting it would remove the only reader of the bundled orden source.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_prorrata_activity_projection.py"
+path = "src/cadrumo/domain/calculations/registry/m303_prorrata_activity_projection.py"
 classification = "machinery"
 justification = """
 Projects the Modelo 303 prorrata activity inputs into the shape the calculation
@@ -639,7 +666,7 @@ regulatory value. One of the _m303_* modules that survive the embed teardown.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_regimen_simplificado_projection.py"
+path = "src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py"
 classification = "machinery"
 justification = """
 Projects the Modelo 303 régimen simplificado inputs, including the annual-orden
@@ -663,7 +690,7 @@ an embed should be migrated INTO.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_queries.py"
+path = "src/cadrumo/domain/calculations/registry/queries.py"
 classification = "machinery"
 justification = """
 Generic registry query surface over a loaded snapshot. Its Modelo.M202
@@ -672,7 +699,7 @@ code, and it states no regulatory value.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_record_design_schema.py"
+path = "src/cadrumo/domain/calculations/registry/record_design_schema.py"
 classification = "machinery"
 justification = """
 Fixed-width record design schema and its shape validators. Its modelo-specific
@@ -703,7 +730,7 @@ it states no regulatory value.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_validate_cross_domain_snapshot.py"
+path = "src/cadrumo/domain/calculations/registry/validate_cross_domain_snapshot.py"
 classification = "machinery"
 justification = """
 Registry-build validator for cross-domain snapshot registration. Its
@@ -738,7 +765,7 @@ are decided by the register and the registry TOML this error reports against.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_modelo_localization.py"
+path = "src/cadrumo/domain/calculations/registry/modelo_localization.py"
 classification = "machinery"
 justification = """
 The dotted-key encoder and resolver for modelo localization. The Modelo 303
@@ -750,7 +777,7 @@ the four locale catalogues, which are the single home the locales rule fixes.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_m303_orden_census_artefact.py"
+path = "src/cadrumo/domain/calculations/registry/m303_orden_census_artefact.py"
 classification = "machinery"
 justification = """
 The read/write seam for the build-generated annual-Orden census. The module
@@ -763,7 +790,7 @@ No literal evidence is detected, which agrees with that reading.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_gasto193_bindings.py"
+path = "src/cadrumo/domain/calculations/registry/gasto193_bindings.py"
 classification = "machinery"
 justification = """
 The Modelo 193 gasto binding family: the observation model, its per-contributor
@@ -799,7 +826,7 @@ symbol = ""
 reason = "Decimal('0') as the start value of the sum over available observations; the accumulator seed, the same sentinel zero the sibling families use."
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/_withholding296_bindings.py"
+path = "src/cadrumo/domain/calculations/registry/withholding296_bindings.py"
 classification = "machinery"
 justification = """
 The Modelo 296 withholding binding family: the observation model, its

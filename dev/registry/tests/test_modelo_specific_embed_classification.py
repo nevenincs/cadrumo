@@ -38,12 +38,11 @@ from ..analysis.modelo_embed_classification import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-#: The proven embed the classifier was required to reach independently: this
-#: module's ejercicio set, seasonal index coefficients, difficult-justification
-#: percentage and Lorca 2022 reduction are annual-orden content encoded as
-#: Python literals. Anchoring on it keeps a rename or a weakened detector from
-#: letting this gate pass vacuously.
-ANCHOR_EMBED = "src/cadrumo/domain/calculations/registry/_m303_orden_constants.py"
+#: The proven live embed the classifier must reach independently.  This filing
+#: year selects the censo foundation revision and snapshot cells, so losing its
+#: detected literal would hide a real unowned regulatory-data migration rather
+#: than merely move a campaign-owned M303 implementation detail.
+ANCHOR_EMBED = "src/cadrumo/domain/calculations/registry/censo_modelos.py"
 
 _MODELO_SPECIFIC_BODIES: dict[str, str] = {
     "module_name": '"""A modelo-named module."""\n\nVALUE = 1\n',
@@ -94,7 +93,7 @@ def test_derivation_catches_a_newly_written_module_by_each_signal(
 
 def test_an_unadjudicated_derived_module_refuses() -> None:
     """Dropping one adjudication reds the reconciliation, naming the module."""
-    dropped = adjudicated()[0].path
+    dropped = ANCHOR_EMBED
     failures = reconcile(derived(), tuple(entry for entry in adjudicated() if entry.path != dropped))
 
     assert any(dropped in failure and "carries no classification" in failure for failure in failures)
@@ -148,13 +147,13 @@ def test_an_embed_may_not_misdeclare_the_ownership_of_its_destination_tree() -> 
     misfiled = ClassificationEntry(
         path=anchor.path,
         classification=Classification.REGULATORY_DATA_EMBED,
-        justification="Correctly an embed, wrongly declared unowned.",
+        justification="Correctly an embed, wrongly declared campaign-owned.",
         destination="registry authoring tree",
-        tree_ownership=TreeOwnership.UNOWNED,
+        tree_ownership=TreeOwnership.CAMPAIGN_OWNED,
     )
     failures = reconcile((anchor,), (misfiled,))
 
-    assert any("reach a campaign-owned tree" in failure for failure in failures)
+    assert any("not campaign-owned" in failure for failure in failures)
 
 
 def test_the_detector_still_finds_the_anchor_embed() -> None:
@@ -162,10 +161,8 @@ def test_the_detector_still_finds_the_anchor_embed() -> None:
     anchor = next(record for record in derived() if record.path == ANCHOR_EMBED)
     by_symbol = {(item.symbol, item.kind) for item in anchor.evidence}
 
-    assert ("SUPPORTED_EJERCICIOS", EvidenceKind.FILING_YEAR_LITERAL) in by_symbol
-    assert ("EXPECTED_SEASONAL_INDEXES", EvidenceKind.DECIMAL_LITERAL) in by_symbol
-    assert ("EXPECTED_DIFFICULT_JUSTIFICATION_PCT", EvidenceKind.DECIMAL_LITERAL) in by_symbol
+    assert ("_CENSO_FOUNDATION_YEAR", EvidenceKind.FILING_YEAR_LITERAL) in by_symbol
 
     entry = next(item for item in adjudicated() if item.path == ANCHOR_EMBED)
     assert entry.classification is Classification.REGULATORY_DATA_EMBED
-    assert entry.tree_ownership is TreeOwnership.CAMPAIGN_OWNED
+    assert entry.tree_ownership is TreeOwnership.UNOWNED
