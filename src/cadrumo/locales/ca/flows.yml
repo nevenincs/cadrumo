@@ -215,6 +215,21 @@ flows:
       state: Estat
     empty: Encara no hi ha cap unitat de treball registrada en aquest perfil.
     title: Seleccionar una unitat de treball de model
+  passphrase:
+    cancel_button: Cancel·la
+    change_button: Canvia la contrasenya
+    confirm_label: Confirma la contrasenya nova
+    current_label: Contrasenya actual
+    intro: Això substitueix la contrasenya que protegeix el teu perfil. Les dades
+      que protegeix no es tornen a xifrar, només es reembolcallen.
+    new_hint: Almenys 12 caràcters, combinant lletres, números o símbols.
+    new_label: Contrasenya nova
+    refusal:
+      change_failed: No s'ha pogut canviar la contrasenya.
+      confirmation_mismatch: La confirmació no coincideix amb la contrasenya nova.
+      current_required: Introdueix la teva contrasenya actual.
+    section: Contrasenya
+    title: Canvia la teva contrasenya
   progress:
     current_answer: 'Resposta actual: {value}'
     current_answer_secret: 'Resposta actual: (oculta)'

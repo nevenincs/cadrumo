@@ -215,6 +215,21 @@ flows:
       state: Állapot
     empty: Ehhez a profilhoz még nincs regisztrált munkaegység.
     title: Modell munkaegység kiválasztása
+  passphrase:
+    cancel_button: Mégse
+    change_button: Jelszó módosítása
+    confirm_label: Új jelszó megerősítése
+    current_label: Jelenlegi jelszó
+    intro: Ez lecseréli a profilját védő jelszót. Az általa védett adatok nem kerülnek
+      újratitkosításra, csak újracsomagolásra.
+    new_hint: Legalább 12 karakter, betűk, számok vagy szimbólumok keverékével.
+    new_label: Új jelszó
+    refusal:
+      change_failed: A jelszót nem sikerült módosítani.
+      confirmation_mismatch: A megerősítés nem egyezik az új jelszóval.
+      current_required: Adja meg a jelenlegi jelszavát.
+    section: Jelszó
+    title: Jelszó módosítása
   progress:
     current_answer: 'Jelenlegi válasz: {value}'
     current_answer_secret: 'Jelenlegi válasz: (rejtett)'

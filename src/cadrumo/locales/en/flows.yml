@@ -214,6 +214,21 @@ flows:
       state: State
     empty: No work units are registered on this profile yet.
     title: Select a modelo work unit
+  passphrase:
+    cancel_button: Cancel
+    change_button: Change password
+    confirm_label: Confirm new password
+    current_label: Current password
+    intro: This replaces the password protecting your profile. The data it protects
+      is not re-encrypted, only re-wrapped.
+    new_hint: At least 12 characters, mixing letters, numbers or symbols.
+    new_label: New password
+    refusal:
+      change_failed: The password could not be changed.
+      confirmation_mismatch: The confirmation does not match the new password.
+      current_required: Enter your current password.
+    section: Password
+    title: Change your password
   progress:
     current_answer: 'Current answer: {value}'
     current_answer_secret: 'Current answer: (hidden)'

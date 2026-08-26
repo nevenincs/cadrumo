@@ -214,6 +214,21 @@ flows:
       state: Estado
     empty: Todavía no hay unidades de trabajo registradas en este perfil.
     title: Seleccionar una unidad de trabajo de modelo
+  passphrase:
+    cancel_button: Cancelar
+    change_button: Cambiar contraseña
+    confirm_label: Confirma la contraseña nueva
+    current_label: Contraseña actual
+    intro: Esto sustituye la contraseña que protege tu perfil. Los datos que protege
+      no se vuelven a cifrar, solo se reenvuelven.
+    new_hint: Al menos 12 caracteres, combinando letras, números o símbolos.
+    new_label: Contraseña nueva
+    refusal:
+      change_failed: No se pudo cambiar la contraseña.
+      confirmation_mismatch: La confirmación no coincide con la contraseña nueva.
+      current_required: Introduce tu contraseña actual.
+    section: Contraseña
+    title: Cambiar tu contraseña
   progress:
     current_answer: 'Respuesta actual: {value}'
     current_answer_secret: 'Respuesta actual: (oculta)'
