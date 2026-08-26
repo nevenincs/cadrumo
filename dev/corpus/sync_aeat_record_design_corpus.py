@@ -315,6 +315,26 @@ _REQUIRED = (
         "345", "345 - Diseño de registro actualizado en 2024", "DR_300_399/DR_Modelo_345_2024.pdf", "h300"
     ),
     _RequiredArtifact("353", "353 - Ejercicios 2021 a 2025", "DR_300_399/archivos_17/DR353e21v21.xls", "h300"),
+    _RequiredArtifact("353", "353 - Orden EHA/3434/2007", "ant_300_399/archivos/dr353.pdf", "h300"),
+    _RequiredArtifact("353", "353 - Orden EHA/3786/2008", "ant_300_399/archivos/dr353v13.pdf", "h300"),
+    _RequiredArtifact(
+        "353",
+        "353 - Orden HAP/1222/2014 (Ejercicios 2015 y 2016)",
+        "ant_300_399/archivos/DR353e16v19.xls",
+        "h300",
+    ),
+    _RequiredArtifact(
+        "353",
+        "353 - Orden HAP/1222/2014 (Ejercicios 2017, 2108 y 2019)",
+        "ant_300_399/archivos/DR353e17v20.xlsx",
+        "h300",
+    ),
+    _RequiredArtifact(
+        "353",
+        "353 -Orden EHA/3434/2007 (Ejercicio 2020)",
+        "ant_300_399/archivos/DR353e17v20.xls",
+        "h300",
+    ),
     _RequiredArtifact(
         "341",
         "341 - Orden EHA/3212/2004 (Ejercicios hasta 2015)",

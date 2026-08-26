@@ -53,27 +53,34 @@ class CheckerDriver(Protocol):
     """Execution boundary shared by live and replay checker adapters."""
 
     @property
-    def mode(self) -> Literal["live", "replay"]: ...
+    def mode(self) -> Literal["live", "replay"]:
+        """Return whether this driver executes live operations or replays evidence."""
+        ...
 
     def planned_operations(
         self,
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]: ...
+    ) -> tuple[RemoteOperation, ...]:
+        """Return the operations this driver would execute for the payload."""
+        ...
 
     def collect_observation(
         self,
         payload: bytes,
         *,
         expected: Mapping[str, object],
-    ) -> CheckerObservation: ...
+    ) -> CheckerObservation:
+        """Return the canonical checker observation produced from the payload."""
+        ...
 
 
 class CheckerReplayDriver:
     """Deterministic replay driver parameterised by a surface label and action."""
 
     def __init__(self, *, surface_label: str, replay_action: str) -> None:
+        """Initialize a replay driver with its surface label and local action."""
         self._surface_label = surface_label
         self._replay_action = replay_action
 
@@ -134,6 +141,7 @@ class CheckerOracle:
     expected_blank_message: str
 
     def __init__(self, *, driver: CheckerDriver | None = None) -> None:
+        """Initialize the verifier with an optional live or replay driver."""
         self._driver = driver
 
     @property

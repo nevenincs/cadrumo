@@ -1,7 +1,7 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "353",
-  "retrieved_at": "2026-07-21",
+  "retrieved_at": "2026-08-26",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 2,
+  "artefact_count": 7,
   "artefacts": [
     {
       "modelo": "353",
@@ -39,6 +39,66 @@
       "bytes": 202240,
       "sha256": "37f39224edc2d8aa49403f2a6408ed1b69ae06c2db9d33f59b2a6a54ab82839d",
       "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "353",
+      "title": "353 - Orden EHA/3434/2007",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr353.pdf",
+      "stored_path": "files/03-353-orden-eha-3434-2007.pdf",
+      "original_filename": "dr353.pdf",
+      "content_type": "application/pdf",
+      "bytes": 262730,
+      "sha256": "45098659a378ca489801f45a1e90edb449bd125271b77f3a40a8a0423cd3253a",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "353",
+      "title": "353 - Orden EHA/3786/2008",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr353v13.pdf",
+      "stored_path": "files/04-353-orden-eha-3786-2008.pdf",
+      "original_filename": "dr353v13.pdf",
+      "content_type": "application/pdf",
+      "bytes": 35332,
+      "sha256": "550112cdcde5e2ee1c5ded127744553671b65ba92caced93e19b4ff1aca2e1a2",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "353",
+      "title": "353 - Orden HAP/1222/2014 (Ejercicios 2015 y 2016)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR353e16v19.xls",
+      "stored_path": "files/05-353-orden-hap-1222-2014-ejercicios-2015-y-2016.xls",
+      "original_filename": "DR353e16v19.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 194048,
+      "sha256": "c0c5201b6654b21fadc9c009b762489ac6c75c9ea25e859ef59fcf9149585eca",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "353",
+      "title": "353 - Orden HAP/1222/2014 (Ejercicios 2017, 2108 y 2019)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR353e17v20.xlsx",
+      "stored_path": "files/06-353-orden-hap-1222-2014-ejercicios-2017-2108-y-2019.xlsx",
+      "original_filename": "DR353e17v20.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 82732,
+      "sha256": "0b9eba5e7365ac30358caf6a4c7f14a1345c4a2d8e90069eee43d567e98c335f",
+      "retrieved_at": "2026-08-26"
+    },
+    {
+      "modelo": "353",
+      "title": "353 -Orden EHA/3434/2007 (Ejercicio 2020)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR353e17v20.xls",
+      "stored_path": "files/07-353-orden-eha-3434-2007-ejercicio-2020.xls",
+      "original_filename": "DR353e17v20.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 200704,
+      "sha256": "4c6c641c7b94d99eede01e1a55391869fc13cbc467e23111a99e03b5384e3496",
+      "retrieved_at": "2026-08-26"
     }
   ]
 }

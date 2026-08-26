@@ -285,6 +285,77 @@ applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_17/DR353e21v21.xls"
 review_status = "reviewed"
 
+# AEAT's historical index lists the last three sources below against precise
+# annual windows.  The two older PDF designs are also official record-design
+# evidence, but their index labels do not state a selector-ready span (and the
+# latter is a version-1.3 document dated 2013 despite its 2008 Orden label).
+# Keep all five unjoined from the broad 2008-2025 revision until its canonical
+# selector and export layout can be split by proven geometry; attaching a later
+# design to that whole span would backdate it.
+[sources."aeat-dr-353-2007-orden"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_353/files/03-353-orden-eha-3434-2007.pdf"
+sha256 = "45098659a378ca489801f45a1e90edb449bd125271b77f3a40a8a0423cd3253a"
+bytes = 262730
+retrieved_at = 2026-08-26
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr353.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-353-2008-orden"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_353/files/04-353-orden-eha-3786-2008.pdf"
+sha256 = "550112cdcde5e2ee1c5ded127744553671b65ba92caced93e19b4ff1aca2e1a2"
+bytes = 35332
+retrieved_at = 2026-08-26
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr353v13.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-353-2015-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_353/files/05-353-orden-hap-1222-2014-ejercicios-2015-y-2016.xls"
+sha256 = "c0c5201b6654b21fadc9c009b762489ac6c75c9ea25e859ef59fcf9149585eca"
+bytes = 194048
+retrieved_at = 2026-08-26
+applies_from = 2015-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR353e16v19.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-353-2017-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2017"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_353/files/06-353-orden-hap-1222-2014-ejercicios-2017-2108-y-2019.xlsx"
+sha256 = "0b9eba5e7365ac30358caf6a4c7f14a1345c4a2d8e90069eee43d567e98c335f"
+bytes = 82732
+retrieved_at = 2026-08-26
+applies_from = 2017-01-01
+applies_to = 2019-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR353e17v20.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-353-2020"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2020"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_353/files/07-353-orden-eha-3434-2007-ejercicio-2020.xls"
+sha256 = "4c6c641c7b94d99eede01e1a55391869fc13cbc467e23111a99e03b5384e3496"
+bytes = 200704
+retrieved_at = 2026-08-26
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/DR353e17v20.xls"
+review_status = "reviewed"
+
 [sources."aeat-modelo-353-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

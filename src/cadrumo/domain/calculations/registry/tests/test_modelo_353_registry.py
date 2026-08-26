@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from datetime import date
+from hashlib import sha256
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.validate import RegistryValidator
@@ -44,6 +46,42 @@ def test_modelo_353_metadata_matches_orden_eha_3434_2007() -> None:
     assert "aeat-dr-353-2026" in modelo.source_refs
     assert catalogues.sources["aeat-modelo-353-procedure"].evidence_tier == "official_source_guidance"
     assert catalogues.sources["boe-modelo-353-2007-form"].evidence_tier == "layout_authority"
+
+
+@pytest.mark.parametrize(
+    ("source_id", "epoch", "applies_from", "applies_to"),
+    [
+        ("aeat-dr-353-2007-orden", None, None, None),
+        ("aeat-dr-353-2008-orden", None, None, None),
+        ("aeat-dr-353-2015-2016", "2015", date(2015, 1, 1), date(2016, 12, 31)),
+        ("aeat-dr-353-2017-2019", "2017", date(2017, 1, 1), date(2019, 12, 31)),
+        ("aeat-dr-353-2020", "2020", date(2020, 1, 1), date(2020, 12, 31)),
+    ],
+)
+def test_modelo_353_historical_designs_are_hash_pinned_but_not_backdated(
+    source_id: str,
+    epoch: str | None,
+    applies_from: date | None,
+    applies_to: date | None,
+) -> None:
+    """Historic geometry is source evidence until the 2008--2025 selector splits.
+
+    Load the M353 directory and its IVA source catalogue directly: this precise
+    proof must remain runnable while another modelo's full-tree validation is
+    under repair.
+    """
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "353"))
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+    source = catalogues.sources[source_id]
+    path = bundled_path() / source.corpus_path
+
+    assert source.kind == "record_design"
+    assert source.authority == "aeat"
+    assert source.evidence_tier == "layout_authority"
+    assert source.record_design_epoch == epoch
+    assert (source.applies_from, source.applies_to) == (applies_from, applies_to)
+    assert (path.stat().st_size, sha256(path.read_bytes()).hexdigest()) == (source.bytes, source.sha256)
+    assert source_id not in modelo.revisions["2008-2025"].source_refs
 
 
 def test_modelo_353_revision_is_monthly_from_2008() -> None:

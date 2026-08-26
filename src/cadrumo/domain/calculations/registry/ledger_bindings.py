@@ -672,25 +672,39 @@ class IvaSelectorAxesProtocol(Protocol):
     """
 
     @property
-    def category(self) -> IvaCategory: ...
+    def category(self) -> IvaCategory:
+        """Return the IVA category assigned to the observation."""
+        ...
 
     @property
-    def rate_kind(self) -> IvaRateKind: ...
+    def rate_kind(self) -> IvaRateKind:
+        """Return the IVA rate tier assigned to the observation."""
+        ...
 
     @property
-    def flow_direction(self) -> IvaFlowDirection: ...
+    def flow_direction(self) -> IvaFlowDirection:
+        """Return the observation's IVA flow direction."""
+        ...
 
     @property
-    def cash_accounting_treatment(self) -> IvaCashAccountingTreatment: ...
+    def cash_accounting_treatment(self) -> IvaCashAccountingTreatment:
+        """Return the observation's cash-accounting treatment."""
+        ...
 
     @property
-    def observation_role(self) -> IvaLedgerObservationRole: ...
+    def observation_role(self) -> IvaLedgerObservationRole:
+        """Return the ledger observation role used by the selector."""
+        ...
 
     @property
-    def exemption_article(self) -> IvaExemptionArticle | None: ...
+    def exemption_article(self) -> IvaExemptionArticle | None:
+        """Return the exemption article when the observation is exempt."""
+        ...
 
     @property
-    def applied_rate(self) -> Decimal | None: ...
+    def applied_rate(self) -> Decimal | None:
+        """Return the applied IVA rate as a fraction, when known."""
+        ...
 
 
 class _IvaReachabilityProbeObservation(NamedTuple):
@@ -1153,16 +1167,24 @@ class RentaGastosEstimacionDirectaObservationProtocol(Protocol):
     """
 
     @property
-    def modelo(self) -> str: ...
+    def modelo(self) -> str:
+        """Return the Modelo series associated with the gasto observation."""
+        ...
 
     @property
-    def period(self) -> str: ...
+    def period(self) -> str:
+        """Return the filing period associated with the gasto observation."""
+        ...
 
     @property
-    def target_casilla_id(self) -> CasillaId: ...
+    def target_casilla_id(self) -> CasillaId:
+        """Return the declaration casilla receiving the deductible amount."""
+        ...
 
     @property
-    def deductible_amount(self) -> Decimal: ...
+    def deductible_amount(self) -> Decimal:
+        """Return the deductible amount carried by the observation."""
+        ...
 
 
 class _RentaLedgerGastosEstimacionDirectaSelector(BaseModel):
@@ -1479,19 +1501,29 @@ class RentaIncomeObservationProtocol(Protocol):
         ...
 
     @property
-    def target_casilla_id(self) -> CasillaId: ...
+    def target_casilla_id(self) -> CasillaId:
+        """Return the declaration casilla receiving the income aggregate."""
+        ...
 
     @property
-    def gross_amount(self) -> Decimal: ...
+    def gross_amount(self) -> Decimal:
+        """Return the observation's gross or cash-received amount."""
+        ...
 
     @property
-    def taxable_base_amount(self) -> Decimal | None: ...
+    def taxable_base_amount(self) -> Decimal | None:
+        """Return the declared IVA-exclusive taxable base, when available."""
+        ...
 
     @property
-    def withheld_amount(self) -> Decimal: ...
+    def withheld_amount(self) -> Decimal:
+        """Return the IRPF amount withheld at source for the observation."""
+        ...
 
     @property
-    def grounding(self) -> LedgerIncomeGrounding: ...
+    def grounding(self) -> LedgerIncomeGrounding:
+        """Return the substrate-grounding marker for the income observation."""
+        ...
 
 
 def _renta_income_build_matcher(
@@ -1812,10 +1844,14 @@ class RentaGastosPagoFraccionadoObservationProtocol(Protocol):
     """
 
     @property
-    def target_casilla_id(self) -> CasillaId: ...
+    def target_casilla_id(self) -> CasillaId:
+        """Return the declaration casilla receiving the deductible amount."""
+        ...
 
     @property
-    def deductible_amount(self) -> Decimal: ...
+    def deductible_amount(self) -> Decimal:
+        """Return the deductible amount carried by the observation."""
+        ...
 
 
 class _RentaLedgerGastosPagoFraccionadoSelector(BaseModel):

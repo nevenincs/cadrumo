@@ -88,14 +88,14 @@ def require_persisted_revision_required_bindings_resolved(
         return
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo_definition = next(candidate for candidate in modelos if candidate.id == str(work_unit.modelo))
-    revision = select_revision(
+    registry_revision = select_revision(
         modelo_definition,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
     )
     require_modelo_required_bindings_resolved(
         work_unit=work_unit,
-        registry_revision=revision,
+        registry_revision=registry_revision,
         resolved_binding_ids=_persisted_binding_ids(revision.binding_overrides),
         action=action,
     )
