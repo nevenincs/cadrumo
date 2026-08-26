@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import ast
 import importlib
+import inspect
 import json
 import re
 from pathlib import Path
@@ -93,14 +94,45 @@ def test_a_keep_public_module_advertises_only_what_it_defines(relative_path: str
 
 @pytest.mark.parametrize("relative_path", _keep_public_paths())
 def test_the_registry_package_binds_no_keep_public_symbol(relative_path: str) -> None:
-    """Consumers reach these modules directly, never through the package."""
-    dotted = relative_path.removeprefix("src/").removesuffix(".py").replace("/", ".")
-    module = importlib.import_module(dotted)
-    package = importlib.import_module(_PACKAGE)
+    """Consumers reach these modules directly, never through the package.
 
-    bound = [name for name in getattr(module, "__all__", ()) if hasattr(package, name)]
+    The surface checked is what the module DEFINES publicly, not what it
+    advertises. Keying this on ``__all__`` would assert nothing for the 23
+    modules that declare none, and those are exactly the ones a stray package
+    binding could hide in.
+    """
+    path = _ROOT / relative_path
+    dotted = relative_path.removeprefix("src/").removesuffix(".py").replace("/", ".")
+    package = importlib.import_module(_PACKAGE)
+    defined_public = sorted(name for name in _locally_bound_names(path) if not name.startswith("_"))
+
+    assert defined_public, f"{dotted} defines no public symbol; the keep-public row describes nothing"
+
+    # Importing a submodule sets it as an attribute of its package. That is the
+    # import system, not a re-export, so a name resolving to a module is not a
+    # binding this rule is about.
+    bound = [name for name in defined_public if hasattr(package, name) and not inspect.ismodule(getattr(package, name))]
 
     assert not bound, f"the registry package binds {dotted} symbols: {bound}"
+
+
+@pytest.mark.parametrize("relative_path", _keep_public_paths())
+def test_a_keep_public_module_without_all_advertises_nothing(relative_path: str) -> None:
+    """A module declaring no ``__all__`` must genuinely make no advertisement.
+
+    This is the falsifiable half of the pair: the "advertises only what it
+    defines" check can say nothing about a module with no ``__all__``, so this
+    states the actual claim instead of passing silently.
+    """
+    dotted = relative_path.removeprefix("src/").removesuffix(".py").replace("/", ".")
+    module = importlib.import_module(dotted)
+    advertised = getattr(module, "__all__", None)
+
+    if advertised is None:
+        assert not hasattr(module, "__all__")
+        return
+
+    assert advertised, f"{dotted} declares an empty __all__, which advertises nothing while looking deliberate"
 
 
 def test_every_keep_public_row_names_a_module_that_exists() -> None:
