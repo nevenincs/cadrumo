@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:55c398bac8eb2ea87d073a585ef85a5ca98e3356e1a9f081a0766ef2a8a049f3'
+body_hash: 'sha256:6a6fe50241c19aa1d8216a99bffc01c2a7d009f02fbb474b40800cb076bed687'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -67,6 +67,9 @@ related:
 - `M` `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md` (commit `585e977397`: two-different-reasons clarification)
 - `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `e3b1a1fc8e`: `grade` parameter on the WORK-then-REGISTRY capture core)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (113 passed, 1 pre-existing unrelated failure)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `ce21551ec4`: S296, shared schema_facet builders + graded casilla builder)
+- `M` `.vault/plan/2026-08-11-tui-architecture-plan.md` (commit `4f276841bd`: S296 checked)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (115 passed, 1 pre-existing unrelated failure)
 
 ## Notes
 
@@ -382,6 +385,23 @@ S296: `capture_modelo_workspace_target_captures` gained an optional
 REGISTRY ordering and proven single-read for the graded case the same
 way as static.
 
-S128 stays unchecked pending S296 (the graded schema_facet vertical) and
-the full `resolve_graded_snapshot_result` assembly, which cannot be
-built to completion without S296.
+S296 landed and closed (commits `ce21551ec4`, `4f276841bd`): the graded
+schema_facet vertical exists now. Narrowing four record-builder signatures
+to raw registry-definition tuples (rather than the whole inspection
+object) made `binding_schema_records`, `formula_schema_records`,
+`relation_schema_records`, `parameter_schema_records` genuinely shared
+between STATIC_INSPECTION and GRADED_SNAPSHOT -- proven byte-identical on
+real modelo 303 data, and proven behaviour-identical for STATIC_INSPECTION
+by an unchanged full-suite pass count before and after. Only
+`graded_snapshot_casilla_schema_records` is new, populating `legal_refs`/
+`constraints` from the real `CasillaDefinition` a `RegistrySnapshot`
+carries.
+
+S128 stays unchecked: the full `resolve_graded_snapshot_result` assembly --
+wiring the graded WORK+REGISTRY capture, the CALCULATION/READINESS/CLOSURE
+ports, and all facets (schema, materialization, provenance, readiness,
+capabilities) together into one validated
+`ModeloWorkspaceGradedSnapshotResultV1`, mirroring
+`resolve_static_inspection_result`'s discipline -- has still not been
+built. All prerequisite pieces (S287, S290, S291, S296, the graded capture
+core) are now in place for it.
