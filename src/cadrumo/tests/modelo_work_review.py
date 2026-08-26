@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ..application.modelo.work_review_projection import ModeloWorkReview, build_modelo_work_review
+from ..application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
 from ..core import Period
 from ..domain.modelos import (
     CalculationRevision,

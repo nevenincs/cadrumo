@@ -2,7 +2,7 @@
 
 The application layer owns every join represented here.  This entrypoint projection accepts
 one already-built :class:`ModeloWorkReview` from the defining public
-``application.modelo.work_review_projection`` module and renders it without consulting repositories,
+``application.modelo.work_review`` module and renders it without consulting repositories,
 the registry, CLI payloads, or private application modules.  Consequently the
 screen cannot derive a competing readiness verdict or mutate modelo work.
 
@@ -28,7 +28,7 @@ from textual.widgets import Button, Collapsible, Footer, Label, Select, Static
 from cadrumo.domain.calculations.registry.handoffs import RelationConsumptionChannel
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
-from .....application.modelo.work_review_projection import (
+from .....application.modelo.work_review import (
     BlockerRef,
     ModeloWorkOriginAnomaly,
     ModeloWorkProgressDenominator,
