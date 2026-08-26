@@ -2,7 +2,7 @@
 # los veinte primeros días naturales posteriores a cada trimestre natural (1T-3T),
 # y los treinta primeros días naturales del mes de enero para el 4T.
 
-[[revisions."2000-y-siguientes".deadline_windows]]
+[[revisions."2016-y-siguientes".deadline_windows]]
 id = "modelo-341-2025-1t"
 filing_year = 2025
 period = "2025 1T"
@@ -12,7 +12,7 @@ closes_on = 2025-04-20
 legal_refs = ["orden-min-2000-12-15-m341:art-2"]
 source_refs = ["enrolled-modelo-341-procedure"]
 
-[[revisions."2000-y-siguientes".deadline_windows]]
+[[revisions."2016-y-siguientes".deadline_windows]]
 id = "modelo-341-2025-2t"
 filing_year = 2025
 period = "2025 2T"
@@ -22,7 +22,7 @@ closes_on = 2025-07-20
 legal_refs = ["orden-min-2000-12-15-m341:art-2"]
 source_refs = ["enrolled-modelo-341-procedure"]
 
-[[revisions."2000-y-siguientes".deadline_windows]]
+[[revisions."2016-y-siguientes".deadline_windows]]
 id = "modelo-341-2025-3t"
 filing_year = 2025
 period = "2025 3T"
@@ -32,7 +32,7 @@ closes_on = 2025-10-20
 legal_refs = ["orden-min-2000-12-15-m341:art-2"]
 source_refs = ["enrolled-modelo-341-procedure"]
 
-[[revisions."2000-y-siguientes".deadline_windows]]
+[[revisions."2016-y-siguientes".deadline_windows]]
 id = "modelo-341-2025-4t"
 filing_year = 2025
 period = "2025 4T"
@@ -42,7 +42,7 @@ closes_on = 2026-01-30
 legal_refs = ["orden-min-2000-12-15-m341:art-2"]
 source_refs = ["enrolled-modelo-341-procedure"]
 
-[[revisions."2000-y-siguientes".deadline_windows]]
+[[revisions."2016-y-siguientes".deadline_windows]]
 id = "modelo-341-2026-1t"
 filing_year = 2026
 period = "2026 1T"
@@ -52,7 +52,7 @@ closes_on = 2026-04-20
 legal_refs = ["orden-min-2000-12-15-m341:art-2"]
 source_refs = ["enrolled-modelo-341-procedure"]
 
-[[revisions."2000-y-siguientes".deadline_windows]]
+[[revisions."2016-y-siguientes".deadline_windows]]
 id = "modelo-341-2026-2t"
 filing_year = 2026
 period = "2026 2T"
@@ -62,7 +62,7 @@ closes_on = 2026-07-20
 legal_refs = ["orden-min-2000-12-15-m341:art-2"]
 source_refs = ["enrolled-modelo-341-procedure"]
 
-[[revisions."2000-y-siguientes".deadline_windows]]
+[[revisions."2016-y-siguientes".deadline_windows]]
 id = "modelo-341-2026-3t"
 filing_year = 2026
 period = "2026 3T"
@@ -72,7 +72,7 @@ closes_on = 2026-10-20
 legal_refs = ["orden-min-2000-12-15-m341:art-2"]
 source_refs = ["enrolled-modelo-341-procedure"]
 
-[[revisions."2000-y-siguientes".deadline_windows]]
+[[revisions."2016-y-siguientes".deadline_windows]]
 id = "modelo-341-2026-4t"
 filing_year = 2026
 period = "2026 4T"
@@ -81,3 +81,4 @@ opens_on = 2027-01-01
 closes_on = 2027-01-30
 legal_refs = ["orden-min-2000-12-15-m341:art-2"]
 source_refs = ["enrolled-modelo-341-procedure"]
+

@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-26'
-body_hash: 'sha256:ed76f23ba207f2fe9ff12d926e9fa574b2a39e2330f0383931e42df4bb8c4600'
+body_hash: 'sha256:90ad5bfb03755faa7bbcc461c0b2393c54e093959bba4f74cf5f4c3fd1c64ce3'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -190,6 +190,15 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [ ] `W03.P20.S178` - Retain applicability as the reviewed public semantic owner and prove no registry package binding or re-export reappears; `src/cadrumo/domain/calculations/registry/applicability.py`.
 - [ ] `W03.P20.S179` - Retain authority as the reviewed public semantic owner and prove no registry package binding or re-export reappears; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [ ] `W03.P20.S180` - Record reviewed direct-defining-module hard-move completion for binding_selector_utils with no registry package binding or re-export; `src/cadrumo/domain/calculations/registry/binding_selector_utils.py`.
+- [ ] `W03.P20.S181` - Retain bindings as the reviewed public semantic owner and prove no registry package binding or re-export reappears; `src/cadrumo/domain/calculations/registry/bindings.py`.
+- [ ] `W03.P20.S182` - Record reviewed direct-defining-module hard-move completion for casilla_membership with no registry package binding or re-export; `src/cadrumo/domain/calculations/registry/casilla_membership.py`.
+- [ ] `W03.P20.S183` - Retain censo_modelos as the reviewed public semantic owner and prove no registry package binding or re-export reappears; `src/cadrumo/domain/calculations/registry/censo_modelos.py`.
+- [ ] `W03.P20.S184` - Record reviewed direct-defining-module hard-move completion for classification_coherence with no registry package binding or re-export; `src/cadrumo/domain/calculations/registry/classification_coherence.py`.
+- [ ] `W03.P20.S185` - Record reviewed direct-defining-module hard-move completion for constructs with no registry package binding or re-export; `src/cadrumo/domain/calculations/registry/constructs.py`.
+- [ ] `W03.P20.S186` - Retain convenio as the reviewed public semantic owner and prove no registry package binding or re-export reappears; `src/cadrumo/domain/calculations/registry/convenio.py`.
+- [ ] `W03.P20.S187` - Record reviewed direct-defining-module hard-move completion for corpus_catalogue with no registry package binding or re-export; `src/cadrumo/domain/calculations/registry/corpus_catalogue.py`.
+- [ ] `W03.P20.S188` - Retain coverage as the reviewed public semantic owner and prove no registry package binding or re-export reappears; `src/cadrumo/domain/calculations/registry/coverage.py`.
+- [ ] `W03.P20.S189` - Record reviewed direct-defining-module hard-move completion for cross_revision_divergence with no registry package binding or re-export; `src/cadrumo/domain/calculations/registry/cross_revision_divergence.py`.
 
 ### Phase `W03.P21` - Frontend-neutral Modelo Edit Contract V1
 

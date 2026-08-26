@@ -1,4 +1,4 @@
-[[revisions."2000-y-siguientes".application_links]]
+[[revisions."2016-y-siguientes".application_links]]
 id = "modelo-341-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
@@ -6,10 +6,11 @@ requires_snapshot = true
 legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-341-procedure"]
 
-[[revisions."2000-y-siguientes".application_links]]
+[[revisions."2016-y-siguientes".application_links]]
 id = "modelo-341-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-min-2000-12-15-m341:art-2"]
 source_refs = ["enrolled-modelo-341-procedure"]
+

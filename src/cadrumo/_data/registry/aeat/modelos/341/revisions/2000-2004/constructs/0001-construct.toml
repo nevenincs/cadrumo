@@ -1,0 +1,6 @@
+[[revisions."2000-2004".constructs]]
+id = "modelo-341-autoliquidacion"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-341-procedure"]
+casilla_ids = ["decl.ejercicio", "decl.periodo"]
+application_links = ["modelo-341-deadline"]

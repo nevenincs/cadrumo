@@ -1,0 +1,28 @@
+[revisions."2005-2015"]
+authority_grade = "applicability"
+# Exact 619-position fixed-width era from aeat-dr-341-2005-2015. This layout
+# authority proves byte geometry only; it does not promote the revision to
+# filing grade or claim operator-reviewed filing support.
+valid_from = 2005-02-01
+valid_to = 2015-12-31
+period_selector = { year_from = 2005, year_to = 2015, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-min-2000-12-15-m341:art-1"]
+legal_refs = [
+    "orden-min-2000-12-15-m341:art-1",
+    "orden-min-2000-12-15-m341:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-341-procedure",
+    "aeat-dr-341-2005-2015",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-26
+
+[revisions."2005-2015".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+The historical design proves its own field identities and byte coordinates but
+does not adjudicate continuity from the unevidenced 2000-2004 wire era."""
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2"]
+source_refs = ["aeat-dr-341-2005-2015"]

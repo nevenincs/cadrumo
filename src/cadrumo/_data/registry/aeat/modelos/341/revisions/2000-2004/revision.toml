@@ -1,0 +1,25 @@
+[revisions."2000-2004"]
+authority_grade = "applicability"
+# Legal applicability is retained for the pre-design era, but no positional
+# design has been acquired for 2000-2004. This revision therefore declares no
+# export layout or export application link and cannot supply filing bytes.
+valid_from = 2000-01-01
+valid_to = 2004-12-31
+period_selector = { year_from = 2000, year_to = 2004, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-min-2000-12-15-m341:art-1"]
+legal_refs = [
+    "orden-min-2000-12-15-m341:art-1",
+    "orden-min-2000-12-15-m341:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = ["enrolled-modelo-341-procedure"]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-26
+
+[revisions."2000-2004".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+This is the earliest declared Modelo 341 revision, so it cannot be the landing
+revision of a within-modelo continuity transition."""
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2"]
+source_refs = ["enrolled-modelo-341-procedure"]
