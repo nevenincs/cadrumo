@@ -1,0 +1,24 @@
+# Applicability-only declaration header.  These semantic fields deliberately
+# carry no record positions or export references; the 2015 raw PDF cannot pass
+# the strict geometry parser.
+[[revisions."2015".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["boe-dr-184-2015"]
+
+[[revisions."2015".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["boe-dr-184-2015"]

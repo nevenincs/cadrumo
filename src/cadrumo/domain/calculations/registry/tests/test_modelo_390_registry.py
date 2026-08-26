@@ -8,20 +8,18 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.binding_aggregation import binding_aggregation_op
-from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
-
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
+from ..binding_aggregation import binding_aggregation_op
 from ..binding_selector_utils import selector_as_dict
-from ..bindings import binding_source_modelo
+from ..bindings import binding_source_casilla_ids, binding_source_modelo
+from ..errors import RegistryValidationError
+from ..runtime_graph import expression_casilla_refs
+from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..schema_input_kind import InputKind
+from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -479,7 +477,7 @@ def test_modelo_390_declares_annual_compensation_result_fields(revision_id: str)
     assert "modelo-390-rel-303-compensacion-ultimo-periodo" not in relations
     assert "modelo-390-rel-303-compensacion-generada-ejercicio-no-97" not in relations
 
-    from cadrumo.domain.calculations.registry.bindings import iva_compensation_annual_partition_requirement
+    from ..bindings import iva_compensation_annual_partition_requirement
 
     requirement = iva_compensation_annual_partition_requirement(revision)
     assert requirement is not None
@@ -577,12 +575,11 @@ def test_modelo_390_prorrata_regularizacion_is_in_annual_deducible_formula(revis
 
 @pytest.mark.parametrize("revision_id", _M390_REVISION_IDS)
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations(revision_id: str) -> None:
-    from cadrumo.domain.calculations.registry.ledger_bindings import (
+    from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+    from ..ledger_bindings import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-
-    from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions[revision_id]

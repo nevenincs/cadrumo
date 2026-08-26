@@ -19,7 +19,7 @@ source_refs = [
     "boe-modelo-576-2005-procedure",
 ]
 review_status = "agent_reviewed"
-reviewed_by = "agent: the official BOE-A-2005-10950 final provision establishes use of Modelo 576 from 2006, including exercise 2007. Its annex is graphical form evidence only; no fixed-width record geometry, field offsets, casillas, or export claim is copied from the 2008 AEAT design."
+reviewed_by = "agent: the official BOE-A-2005-10950 final provision establishes use of Modelo 576 from 2006, including exercise 2007. Its annex is graphical form evidence only; no fixed-width record geometry, field offsets, or export claim is copied from the 2008 AEAT design."
 reviewed_at = 2026-08-26
 
 [revisions."2007".family_dispositions.deadline_windows]
