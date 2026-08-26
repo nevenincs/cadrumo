@@ -20,6 +20,10 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
+from .._validate_cross_revision import (
+    declared_cross_revision_continuity_semantic_linkage_failures,
+    validate_cross_revision_casilla_consistency,
+)
 from ..errors import RegistryValidationError
 from ..ids import LegalRefId
 from ..loader import load_modelo_directory
@@ -29,10 +33,6 @@ from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaConstraints, CasillaDefinition
 from ..validate import (
     RegistryValidator,
-)
-from ..validate_cross_revision import (
-    declared_cross_revision_continuity_semantic_linkage_failures,
-    validate_cross_revision_casilla_consistency,
 )
 from ..validate_cross_revision_advisory import (
     summarize_non_overlapping_cross_revision_casilla_drift,

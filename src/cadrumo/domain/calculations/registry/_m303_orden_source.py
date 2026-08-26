@@ -36,8 +36,7 @@ from ._m303_orden_constants import (
     EXPECTED_MODULE_DISTRIBUTION,
     EXTRACTOR_VERSION,
 )
-from .errors import RegistryLoadError, RegistryValidationError
-from .m303_orden_raw_models import (
+from ._m303_orden_raw_models import (
     M303AnnualOrdenRawActivity,
     M303AnnualOrdenRawAgriculturalIndex,
     M303AnnualOrdenRawAgriculturalIngresoACuenta,
@@ -48,6 +47,7 @@ from .m303_orden_raw_models import (
     M303AnnualOrdenRawSeasonalIndex,
     M303AnnualOrdenSourceCensus,
 )
+from .errors import RegistryLoadError, RegistryValidationError
 from .schema_references import SourceReference
 
 _SIDECAR_PREPROCESSOR_ID = "normatives-html"

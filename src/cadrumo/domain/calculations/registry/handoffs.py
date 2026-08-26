@@ -34,11 +34,11 @@ from ....core import (
     RegistrySelectorPeriodCode,
 )
 from ....core.aggregation import BindingSourceKind, RelationAggregationOp
+from ._relation_aggregation import relation_aggregation_op
 from .authority import ValidatedRegistryAuthority
 from .bindings import bound_casilla_binding_ids
 from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
-from .relation_aggregation import relation_aggregation_op
 from .relations import RegistryFoldRequirement, relation_source_requirements
 from .runtime_graph import expression_binding_refs, expression_relation_refs
 from .validate import RegistryValidator

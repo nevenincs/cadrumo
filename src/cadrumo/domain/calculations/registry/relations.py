@@ -10,7 +10,7 @@ See Also:
         Same requirement record reused by direct previous-filing carries.
     :mod:`cadrumo.domain.calculations.registry.observation_fold`
         Observation fold helpers used to gather source casilla values.
-    :mod:`cadrumo.domain.calculations.registry.relation_aggregation`
+    :mod:`cadrumo.domain.calculations.registry._relation_aggregation`
         Canonical relation aggregation resolver used by this module.
 """
 
@@ -28,12 +28,12 @@ from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinit
 
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, Period, RegistrySelectorPeriodCode
 from ....core.aggregation import RelationAggregationOp
+from ._relation_aggregation import relation_aggregation_op
 from .binding_selector_utils import unique_tuple
 from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, RelationId, SourceRefId
 from .observation_fold import gather_observed_requirement_values
 from .period_offset_math import apply_period_offset
-from .relation_aggregation import relation_aggregation_op
 
 if TYPE_CHECKING:
     from .bindings import RegistryModeloObservation

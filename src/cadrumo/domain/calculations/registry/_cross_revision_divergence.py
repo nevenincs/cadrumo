@@ -3,7 +3,7 @@
 Detects field-level divergence when the same casilla id appears in
 multiple :class:`ModeloRevision` records of the same
 :class:`ModeloDefinition`. The strict-validation and advisory-summary
-policies in :mod:`cadrumo.domain.calculations.registry.validate_cross_revision`
+policies in :mod:`cadrumo.domain.calculations.registry._validate_cross_revision`
 consume the divergences this module produces; keeping detection separate
 from policy keeps each module reviewable.
 """

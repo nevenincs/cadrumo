@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from ....core import CasillaId
-from .cross_revision_divergence import (
+from ._cross_revision_divergence import (
     CrossRevisionCasillaDivergence,
     iter_cross_revision_casilla_divergences,
 )
