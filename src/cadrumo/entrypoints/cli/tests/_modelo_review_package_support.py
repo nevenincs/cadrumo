@@ -52,7 +52,7 @@ def seed_exportable_modelo_revision(
         modelo=modelo,
         filing_year=filing_year,
         period=filing_period,
-        registry_revision_id=None,
+        requested_revision_id=None,
     )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,

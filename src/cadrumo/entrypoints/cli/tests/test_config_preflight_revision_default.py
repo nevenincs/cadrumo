@@ -75,7 +75,7 @@ def _active_revision_for(modelo: str, *, filing_year: int, period: str) -> str:
         modelo=modelo,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
-        registry_revision_id=None,
+        requested_revision_id=None,
     )
 
 

@@ -783,6 +783,7 @@ def test_readiness_capture_exposes_no_inferred_capability_beyond_its_reports() -
 
     captured = capture_modelo_readiness(_readiness_requests(), active_profile_id=bucket_id)
 
+    assert captured.reports == _build_modelo_readiness(_readiness_requests(), active_profile_id=bucket_id)
     assert {field.name for field in fields(ProjectionModeloReadinessCapture)} == {
         "reports",
         "comparison_domain",
