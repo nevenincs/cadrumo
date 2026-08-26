@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.schedules module
-======================================================
+=====================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.schedules
    :members:

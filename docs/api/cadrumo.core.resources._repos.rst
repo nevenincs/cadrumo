@@ -18,8 +18,6 @@ Submodules
    cadrumo.core.resources._repos.holiday_calendars
    cadrumo.core.resources._repos.iva_catalogues
    cadrumo.core.resources._repos.iva_rate_tables
-   cadrumo.core.resources._repos.legal_parameters
    cadrumo.core.resources._repos.manuals
-   cadrumo.core.resources._repos.modelos
    cadrumo.core.resources._repos.recargo_bands
    cadrumo.core.resources._repos.topics

@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.checker_oracle_flow module
-================================================================
+===============================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.checker_oracle_flow
    :members:

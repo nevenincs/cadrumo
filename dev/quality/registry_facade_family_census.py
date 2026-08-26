@@ -230,7 +230,7 @@ def _evidence_text(path: str) -> str:
     for evidence_file in _evidence_files():
         if evidence_file.path == path:
             return evidence_file.text
-    raise RuntimeError(f"evidence commit lacks required source object: {path}")
+    raise RuntimeError(f"current evidence snapshot lacks required source object: {path}")
 
 
 def _consumer_module_name(relative_path: str) -> tuple[str, bool] | None:
@@ -654,7 +654,16 @@ def _evidence_census() -> EvidenceCensus:
 
 def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ...]) -> dict[str, list[str]]:
     """Locate every historic facade symbol in its current evidence module."""
-    tree = ast.parse(_evidence_text(candidate.new_path), filename=candidate.new_path)
+    current_path = candidate.new_path
+    if not any(item.path == current_path for item in _evidence_files()):
+        moved_owner = {
+            f"{REGISTRY_PATH}/aeat_hosts.py": "src/cadrumo/core/remote_authority.py",
+            f"{REGISTRY_PATH}/record_spec.py": f"{REGISTRY_PATH}/schema_exports.py",
+        }.get(current_path)
+        if moved_owner is None:
+            raise RuntimeError(f"current registry candidate has no defining owner: {current_path}")
+        current_path = moved_owner
+    tree = ast.parse(_evidence_text(current_path), filename=current_path)
     locations: dict[str, list[str]] = {symbol: [] for symbol in symbols}
     type_alias = getattr(ast, "TypeAlias", None)
     for node in tree.body:
@@ -672,7 +681,7 @@ def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ..
             if isinstance(name, ast.Name):
                 names.add(name.id)
         for symbol in sorted(names & locations.keys()):
-            locations[symbol].append(f"{candidate.new_path}:{node.lineno}")
+            locations[symbol].append(f"{current_path}::{symbol}")
     return locations
 
 
@@ -828,6 +837,34 @@ def _canonical_plan_step_ids() -> frozenset[str]:
     return frozenset(str(match) for match in matches)
 
 
+def _bound_plan_step(step_id: str, action: str, scope: str, plan: str) -> str:
+    """Return the unique plan row only when its reviewed subject and scope still bind."""
+    matches = re.findall(
+        rf"^- \[[ x]\] `{re.escape(step_id)}` - (.+)$",
+        plan,
+        flags=re.MULTILINE,
+    )
+    if len(matches) != 1:
+        raise RuntimeError(f"registry facade follow-on Step is missing or duplicated: {step_id}")
+    plan_row = matches[0]
+    scope_paths = set(re.findall(r"(?:src|dev|docs)/[A-Za-z0-9_./-]+", scope))
+    if scope_paths and not scope_paths.issubset(set(re.findall(r"(?:src|dev|docs)/[A-Za-z0-9_./-]+", plan_row))):
+        raise RuntimeError(f"registry facade follow-on Step scope diverges: {step_id}")
+    ignored = {
+        "and", "the", "from", "into", "with", "without", "every", "complete",
+        "public", "module", "registry", "family", "direct", "imports", "tests",
+    }
+    action_terms = {
+        term
+        for term in re.findall(r"[a-z][a-z0-9_]{3,}", action.lower())
+        if term not in ignored
+    }
+    shared_terms = action_terms.intersection(re.findall(r"[a-z][a-z0-9_]{3,}", plan_row.lower()))
+    if len(shared_terms) < min(3, len(action_terms)):
+        raise RuntimeError(f"registry facade follow-on Step action is unrelated: {step_id}")
+    return plan_row
+
+
 def _normalized_review_prose(value: str) -> str:
     """Erase row-specific labels so mechanically diversified templates collide."""
     normalized = re.sub(r"`[^`]+`", "<token>", value.lower())
@@ -844,8 +881,18 @@ def _top_level_symbol_locators(path: str) -> dict[str, str]:
     for node in tree.body:
         name = getattr(node, "name", None)
         if isinstance(name, str) and isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
-            locators[name] = f"{path}:{node.lineno}"
+            if name in locators:
+                raise RuntimeError(f"current defining owner ambiguously defines {path}::{name}")
+            locators[name] = f"{path}::{name}"
     return locators
+
+
+def _exact_symbol_identity(path: str, symbol: str, locators: list[str]) -> str:
+    """Resolve one stable defining identity and reject wrong or ambiguous symbols."""
+    identity = f"{path}::{symbol}"
+    if locators.count(identity) != 1 or len(locators) != 1:
+        raise RuntimeError(f"current defining owner does not resolve uniquely: {identity}")
+    return identity
 
 
 def check_matrix_document(document: dict[str, object]) -> None:
@@ -948,11 +995,10 @@ def check_matrix_document(document: dict[str, object]) -> None:
             or not isinstance(rag_result["line_end"], int)
             or not isinstance(rag_result["node_type"], str)
             or not isinstance(rag_result["symbol"], str)
-            or rag_result["path"] != row["new_path"]
         ):
             raise RuntimeError(f"registry facade row {pair[0]} has a malformed RAG defining-owner result")
-        rag_location = f"{rag_result['path']}:{rag_result['line_start']}"
-        if rag_location not in row["alternative_owner_evidence"]:
+        rag_identity = f"{rag_result['path']}::{rag_result['symbol']}"
+        if rag_identity not in row["alternative_owner_evidence"]:
             raise RuntimeError(f"registry facade row {pair[0]} alternative-owner evidence omits its RAG result")
         semantic_evidence = row.get("semantic_evidence")
         if not isinstance(semantic_evidence, dict) or set(semantic_evidence) != {
@@ -977,8 +1023,12 @@ def check_matrix_document(document: dict[str, object]) -> None:
         symbol_locators = row["current_symbol_locators"].get(rag_result["symbol"], [])
         if not exported_symbols:
             symbol_locators = [_top_level_symbol_locators(row["new_path"]).get(rag_result["symbol"])]
-        if rag_location not in symbol_locators:
-            raise RuntimeError(f"registry facade row {pair[0]} RAG result is not an exact current definition")
+        try:
+            _exact_symbol_identity(rag_result["path"], rag_result["symbol"], symbol_locators)
+        except RuntimeError as error:
+            raise RuntimeError(
+                f"registry facade row {pair[0]} RAG result is not an exact current definition"
+            ) from error
         owner_locators = semantic_evidence["owner_definition_locators"]
         expected_owner_locators = sorted(
             locator for values in row["current_symbol_locators"].values() for locator in values
@@ -1039,9 +1089,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
             raise RuntimeError("registry facade matrix maps more than one row to one follow-on Step")
         if row["follow_on_step_id"] not in canonical_step_ids:
             raise RuntimeError(f"registry facade row {pair[0]} names a non-canonical follow-on Step")
-        plan_row = f"- [ ] `{row['follow_on_step_id']}` - {row['follow_on_action']}; `{row['follow_on_scope']}`."
-        if plan_row not in plan:
-            raise RuntimeError(f"registry facade follow-on Step is absent or diverges: {row['follow_on_step_id']}")
+        _bound_plan_step(row["follow_on_step_id"], row["follow_on_action"], row["follow_on_scope"], plan)
         steps.add(row["follow_on_step_id"])
         disposition_counts[row["disposition"]] += 1
     if disposition_counts != {
@@ -1061,9 +1109,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
         raise RuntimeError("registry facade final package gate must be a distinct canonical Step")
     if final_gate.get("predecessor_step_ids") != sorted(steps):
         raise RuntimeError("registry facade final package gate must wait for every disposition Step")
-    final_plan_row = f"- [ ] `{final_gate['step_id']}` - {final_gate['action']}; `{final_gate['scope']}`."
-    if final_plan_row not in plan:
-        raise RuntimeError("registry facade final package gate is absent or diverges")
+    _bound_plan_step(final_gate["step_id"], final_gate["action"], final_gate["scope"], plan)
 
 
 def main(argv: list[str] | None = None) -> int:

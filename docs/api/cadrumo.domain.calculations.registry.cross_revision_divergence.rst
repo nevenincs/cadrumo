@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.cross_revision_divergence module
-======================================================================
+=====================================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.cross_revision_divergence
    :members:

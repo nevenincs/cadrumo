@@ -67,3 +67,5 @@ Submodules
    cadrumo.application.ledger.review_advisories
    cadrumo.application.ledger.review_projection
    cadrumo.application.ledger.rule_repository
+   cadrumo.application.ledger.transaction_repository
+   cadrumo.application.ledger.usage_ratio_repository

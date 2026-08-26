@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.corpus_catalogue module
-=============================================================
+============================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.corpus_catalogue
    :members:

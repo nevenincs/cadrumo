@@ -32,16 +32,13 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from typing import Self, override
+from collections.abc import Generator, Mapping, Sequence
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Protocol, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage import (
-    LEDGER_CONFIRMATION_RECORD_NAMESPACE,
-    SecureBoundRepository,
-    secure_object_repository_for_bucket,
-)
 from ...core import STRICT_FROZEN_CONFIG, FieldGroundingOutcome, FieldOrigin
 from ...core.config import Settings
 from ...core.hashing import content_hash_hex
@@ -53,11 +50,14 @@ from .evidence_draft import FieldProvenance, InvoiceDraft
 
 __all__ = [
     "ConfirmationRecordDocument",
-    "ConfirmationRecordRepository",
+    "ConfirmationRecordRepositoryFactory",
+    "ConfirmationRecordRepositoryProtocol",
     "FieldAssertion",
     "InvoiceConfirmationRecord",
     "ResolvedFinding",
+    "bind_confirmation_record_repository_factory",
     "build_confirmation_record",
+    "confirmation_record_object_key",
     "derive_confirmation_id",
     "field_assertions",
     "load_confirmation_records",
@@ -235,26 +235,59 @@ class ConfirmationRecordDocument(BaseModel):
     records: tuple[InvoiceConfirmationRecord, ...] = ()
 
 
-class ConfirmationRecordRepository(SecureBoundRepository[ConfirmationRecordDocument]):
-    """Encrypted store for one bucket's confirmation provenance records.
-
-    A confirmation record names a counterparty's asserted identifiers and the
-    figures a human accepted, so it is derived financial data exactly as the
-    draft it describes was, and it rides the same encrypted substrate.
-    """
-
-    namespace = LEDGER_CONFIRMATION_RECORD_NAMESPACE.namespace
-    sensitivity = LEDGER_CONFIRMATION_RECORD_NAMESPACE.sensitivity
-    schema_version = LEDGER_CONFIRMATION_RECORD_NAMESPACE.schema_version
-    payload_type = ConfirmationRecordDocument
-
-    @override
-    def extract_identifier(self, payload: ConfirmationRecordDocument) -> str:
-        return payload.bucket_id
+def confirmation_record_object_key(document: ConfirmationRecordDocument) -> str:
+    """Return the bucket-scoped natural key for one confirmation document."""
+    return document.bucket_id
 
 
-def _repository(bucket_id: str, settings: Settings | None) -> ConfirmationRecordRepository:
-    return ConfirmationRecordRepository(objects=secure_object_repository_for_bucket(bucket_id, settings))
+class ConfirmationRecordRepositoryProtocol(Protocol):
+    """Persistence operations required by confirmation-record policy."""
+
+    def load(self, identifier: str) -> ConfirmationRecordDocument | None:
+        """Load the document stored under ``identifier``, when present."""
+        ...
+
+    def save(self, payload: ConfirmationRecordDocument) -> None:
+        """Persist one complete confirmation-record document."""
+        ...
+
+
+class ConfirmationRecordRepositoryFactory(Protocol):
+    """Construct a confirmation repository for one bucket and storage configuration."""
+
+    def __call__(
+        self,
+        *,
+        bucket_id: str,
+        settings: Settings | None,
+    ) -> ConfirmationRecordRepositoryProtocol:
+        """Return the encrypted repository bound to ``bucket_id``."""
+        ...
+
+
+_BOUND_CONFIRMATION_RECORD_REPOSITORY_FACTORY: ContextVar[ConfirmationRecordRepositoryFactory] = ContextVar(
+    "cadrumo_confirmation_record_repository_factory"
+)
+
+
+@contextmanager
+def bind_confirmation_record_repository_factory(
+    factory: ConfirmationRecordRepositoryFactory,
+) -> Generator[ConfirmationRecordRepositoryFactory]:
+    """Bind one outward-composed confirmation repository factory."""
+    token = _BOUND_CONFIRMATION_RECORD_REPOSITORY_FACTORY.set(factory)
+    try:
+        yield factory
+    finally:
+        _BOUND_CONFIRMATION_RECORD_REPOSITORY_FACTORY.reset(token)
+
+
+def _repository(bucket_id: str, settings: Settings | None) -> ConfirmationRecordRepositoryProtocol:
+    try:
+        factory = _BOUND_CONFIRMATION_RECORD_REPOSITORY_FACTORY.get()
+    except LookupError as error:
+        raise RuntimeError("confirmation-record persistence has not been composed") from error
+    return factory(bucket_id=bucket_id, settings=settings)
 
 
 def load_confirmation_records(bucket_id: str, settings: Settings | None = None) -> ConfirmationRecordDocument:

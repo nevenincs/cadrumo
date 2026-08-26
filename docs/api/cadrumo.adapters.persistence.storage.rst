@@ -34,6 +34,7 @@ Submodules
    cadrumo.adapters.persistence.storage._namespace_taxonomy
    cadrumo.adapters.persistence.storage._path_safety
    cadrumo.adapters.persistence.storage._profile_custody
+   cadrumo.adapters.persistence.storage._profile_custody_carry
    cadrumo.adapters.persistence.storage._profile_login_session
    cadrumo.adapters.persistence.storage._recovery_key
    cadrumo.adapters.persistence.storage._runtime_readiness

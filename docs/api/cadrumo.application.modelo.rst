@@ -41,7 +41,6 @@ Submodules
    cadrumo.application.modelo._dt12_antiquity_advisory
    cadrumo.application.modelo._export
    cadrumo.application.modelo._export_amendment_evidence
-   cadrumo.application.modelo._external_import_actions
    cadrumo.application.modelo._filed_revision_observation
    cadrumo.application.modelo._filing_actions
    cadrumo.application.modelo._history
@@ -72,7 +71,6 @@ Submodules
    cadrumo.application.modelo._preconditions
    cadrumo.application.modelo._prior_domiciliation
    cadrumo.application.modelo._prior_payment_advisory
-   cadrumo.application.modelo._profile_binding
    cadrumo.application.modelo._profile_export_binding
    cadrumo.application.modelo._profile_readiness_gate
    cadrumo.application.modelo._projection
@@ -80,11 +78,8 @@ Submodules
    cadrumo.application.modelo._pulled_filing_reconcile
    cadrumo.application.modelo._quickfile
    cadrumo.application.modelo._rate_box_advisory
-   cadrumo.application.modelo._reconcile
    cadrumo.application.modelo._reconcile_casilla
    cadrumo.application.modelo._reconcile_population
-   cadrumo.application.modelo._reconciliation_records
-   cadrumo.application.modelo._registry_discovery
    cadrumo.application.modelo._registry_helpers
    cadrumo.application.modelo._registry_resources
    cadrumo.application.modelo._required_binding_gate
@@ -116,7 +111,16 @@ Submodules
    cadrumo.application.modelo._work_plazo
    cadrumo.application.modelo._workflow_gate
    cadrumo.application.modelo._workspace_manifest
+   cadrumo.application.modelo.calculation_repository
    cadrumo.application.modelo.calculation_route
+   cadrumo.application.modelo.external_import_actions
+   cadrumo.application.modelo.filing_repository
+   cadrumo.application.modelo.justificante_repository
+   cadrumo.application.modelo.profile_binding
+   cadrumo.application.modelo.reconciliation
+   cadrumo.application.modelo.reconciliation_parsing
+   cadrumo.application.modelo.reconciliation_records
+   cadrumo.application.modelo.registry_discovery
    cadrumo.application.modelo.work_addressing
    cadrumo.application.modelo.work_review_projection
    cadrumo.application.modelo.work_unit_repository

@@ -13,16 +13,16 @@ from urllib.parse import urlparse
 
 from pydantic import AnyUrl, BaseModel, Field, field_validator, model_validator
 
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
-
-from ....core import STRICT_FROZEN_CONFIG
-from .aeat_hosts import (
+from cadrumo.core.remote_authority import (
     REMOTE_READ_SCHEME,
     canonical_remote_hostname,
     first_aeat_host,
     is_aeat_host,
     is_sanctioned_gov_idp_host,
 )
+from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+
+from ....core import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
 
 CrossReferenceClassification = Literal[
@@ -222,7 +222,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
         idp_entries = tuple(
             entry
             for entry in (*self.allowed_hosts, *self.allowed_host_suffixes)
-            if is_sanctioned_gov_idp_host(entry) and not _is_aeat_host(entry)
+            if is_sanctioned_gov_idp_host(entry) and not is_aeat_host(entry)
         )
         if self.allows_gov_idp_hosts:
             if self.classification != "authenticated_read_surface":
@@ -247,7 +247,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             parsed = urlparse(f"https://{host}")
             if not parsed.hostname or parsed.hostname != host.lower():
                 raise RegistryValidationError(f"invalid allowed host {host!r}")
-            if _is_aeat_host(host):
+            if is_aeat_host(host):
                 continue
             # A sanctioned government-IdP host is syntactically admitted here and
             # gated on the opt-in flag in the model phase (_validate_gov_idp_hosts);
@@ -270,7 +270,7 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             parsed = urlparse(f"https://{suffix}")
             if not parsed.hostname or parsed.hostname != suffix.lower():
                 raise RegistryValidationError(f"invalid allowed host suffix {suffix!r}")
-            if _is_aeat_host(suffix):
+            if is_aeat_host(suffix):
                 continue
             if is_sanctioned_gov_idp_host(suffix):
                 continue
@@ -569,7 +569,3 @@ def _browser_action_patterns_for_decision(decision: LiveCrossReferenceDecision) 
 
         return Settings.external_constants().aeat.live_safety.renta_web_open_browser_action_patterns
     return ()
-
-
-def _is_aeat_host(host: str) -> bool:
-    return is_aeat_host(host)

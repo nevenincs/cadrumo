@@ -19,6 +19,8 @@ Submodules
    cadrumo.adapters.persistence.profile.assets
    cadrumo.adapters.persistence.profile.bienes_inversion
    cadrumo.adapters.persistence.profile.buckets
+   cadrumo.adapters.persistence.profile.extracted_document_cache
+   cadrumo.adapters.persistence.profile.extraction_drafts
    cadrumo.adapters.persistence.profile.filing_amendments
    cadrumo.adapters.persistence.profile.filing_drafts
    cadrumo.adapters.persistence.profile.filing_export_replay
@@ -26,6 +28,8 @@ Submodules
    cadrumo.adapters.persistence.profile.inventory
    cadrumo.adapters.persistence.profile.invoices
    cadrumo.adapters.persistence.profile.justificante
+   cadrumo.adapters.persistence.profile.ledger_classification_rules
+   cadrumo.adapters.persistence.profile.modelo_reconciliation
    cadrumo.adapters.persistence.profile.modelos_calculation
    cadrumo.adapters.persistence.profile.modelos_filing
    cadrumo.adapters.persistence.profile.modelos_verification_reports
