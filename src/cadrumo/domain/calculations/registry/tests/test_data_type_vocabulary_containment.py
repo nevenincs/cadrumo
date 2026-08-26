@@ -28,8 +28,8 @@ import pytest
 from pydantic import BaseModel
 
 from ..binding_selector_utils import BindingExportDataType
-from ..bindings import _ManualInputDataType
 from ..errors import RegistryValidationError
+from ..manual_input_selector import ManualInputDataType
 from ..schema_exports import ExportFieldDefinition
 from ..schema_formula import ParameterDefinition
 from ..schema_scalars import _REGISTRY_SCALAR_VALUE_TYPES, registry_scalar_value_type
@@ -47,7 +47,7 @@ def _declared_members(model: type[BaseModel]) -> frozenset[str]:
 _SCALAR_NARROWINGS: dict[str, frozenset[str]] = {
     "ExportFieldDefinition.data_type": _declared_members(ExportFieldDefinition),
     "BindingExportDataType": frozenset(typing.get_args(BindingExportDataType)),
-    "_ManualInputDataType": frozenset(typing.get_args(_ManualInputDataType)),
+    "ManualInputDataType": frozenset(typing.get_args(ManualInputDataType)),
 }
 
 

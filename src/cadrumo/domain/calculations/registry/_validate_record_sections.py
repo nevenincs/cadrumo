@@ -38,11 +38,11 @@ from ._validate_helpers import missing_refs
 from ._validate_revision_rules import validate_dated_values
 from .binding_selector_utils import selector_as_dict
 from .bindings import (
-    is_layout_binding_selector,
     validate_binding_selector_shape,
     validate_m303_regimen_simplificado_annual_summary_revision,
 )
 from .ids import BindingId
+from .manual_input_selector import is_layout_binding_selector
 
 _CASILLA_METADATA_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
 
