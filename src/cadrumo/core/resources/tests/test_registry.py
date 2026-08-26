@@ -150,7 +150,6 @@ def test_resources_factory_composes_every_repository() -> None:
         "apoderamientos",
         "category_profiles",
         "holiday_calendars",
-        "legal_parameters",
         "manuals",
         "modelos",
         "recargo_bands",

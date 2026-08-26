@@ -121,8 +121,7 @@ def load_imputacion_parameters() -> LirpfArt85ImputacionParameters:
     parameter catalogue and returns the typed
     :class:`LirpfArt85ImputacionParameters` record. Callers that
     want the raw parameter mapping should use
-    :func:`domain.calculations.registry.load_legal_parameters_only`
-    or the ``resources().legal_parameters`` Repository instead.
+    :func:`domain.calculations.registry.loader.load_legal_parameters_only`.
     """
     return _load_parameters()
 
