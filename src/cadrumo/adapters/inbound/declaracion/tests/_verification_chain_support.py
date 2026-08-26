@@ -10,13 +10,15 @@ import pytest
 
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation as CasillaObservation
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation as RegistryModeloObservation
-from cadrumo.domain.calculations.registry.relations import resolve_relation_values_from_observations as resolve_relation_values_from_observations
+from .....domain.calculations.registry.bindings import CasillaObservation as CasillaObservation
+from .....domain.calculations.registry.bindings import RegistryModeloObservation as RegistryModeloObservation
+from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from .....domain.calculations.registry.ids import BindingId, RelationId
+from .....domain.calculations.registry.relations import (
+    resolve_relation_values_from_observations as resolve_relation_values_from_observations,
+)
 from .....domain.period import calculation_filing_date
 from .....tests import FIXTURES_DIR
 from .....tests.registry_observations import registry_grounded_observations
