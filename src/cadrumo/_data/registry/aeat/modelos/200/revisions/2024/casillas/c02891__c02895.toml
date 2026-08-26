@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02891"
 number = "02891"
 section = ["revalorizaciones_contables_art_17_1_lis", "aumento"]
@@ -8,7 +8,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02892"
 number = "02892"
 section = ["revalorizaciones_contables_art_17_1_lis", "aumento"]
@@ -18,7 +18,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02893"
 number = "02893"
 section = ["revalorizaciones_contables_art_17_1_lis", "aumento"]
@@ -28,7 +28,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02894"
 number = "02894"
 section = ["revalorizaciones_contables_art_17_1_lis", "aumento"]
@@ -38,7 +38,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02895"
 number = "02895"
 section = ["revalorizaciones_contables_art_17_1_lis", "aumento"]

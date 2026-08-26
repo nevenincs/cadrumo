@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".constructs]]
+[[revisions."2024".constructs]]
 id = "modelo-200-2024-foundation"
 legal_refs = [
     "ley-27-2014:art-40",
@@ -25,7 +25,6 @@ legal_refs = [
     "ley-27-2014:art-25",
     "ley-27-2014:art-26",
     "ley-27-2014:art-105",
-    "ley-27-2014:dt-44",
     "ley-31-2022:art-39",
     "ley-49-2002:art-6",
     "ley-49-2002:art-7",

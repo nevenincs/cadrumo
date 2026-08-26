@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02792"
 number = "02792"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
@@ -8,7 +8,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02793"
 number = "02793"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
@@ -18,7 +18,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02794"
 number = "02794"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
@@ -28,7 +28,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02795"
 number = "02795"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]

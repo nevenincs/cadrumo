@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".dependency_classifications]]
+[[revisions."2024".dependency_classifications]]
 id = "modelo-200-2024-dep-202-instalments"
 source_modelo = "202"
 treatment = "direct_annual_settlement"
@@ -13,7 +13,7 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 # dotaciones-deterioro saldo final pendiente (01498 no-cumplido / 01499 cumplido
 # → opening 01494 / 01495). One dependency classification per source modelo, so
 # both self-carries share this single source_modelo='200' classification.
-[[revisions."2024-y-siguientes".dependency_classifications]]
+[[revisions."2024".dependency_classifications]]
 id = "modelo-200-2024-dep-self-bin-pendiente"
 source_modelo = "200"
 treatment = "factual_evidence"

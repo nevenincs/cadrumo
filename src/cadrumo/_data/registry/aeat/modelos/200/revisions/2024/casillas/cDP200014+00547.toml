@@ -12,7 +12,7 @@
 # The bare number 00547 also occurs on an unrelated Estado de Cambios en el
 # Patrimonio Neto record (reducciones de capital); the cuota chain MUST use this
 # segment-qualified id, never the bare number.
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "DP200014:00547"
 number = "00547"
 segmento = "DP200014"

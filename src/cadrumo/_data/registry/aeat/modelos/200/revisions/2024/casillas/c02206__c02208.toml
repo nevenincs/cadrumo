@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02206"
 number = "02206"
 section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2020"]
@@ -8,7 +8,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02207"
 number = "02207"
 section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2020"]
@@ -18,7 +18,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "02208"
 number = "02208"
 section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2020"]

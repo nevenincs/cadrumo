@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".applicability]]
+[[revisions."2024".applicability]]
 id = "m200-seed"
 applicable_entity_types = ["legal_entity"]
 applicable_fiscal_residencies = ["resident_irpf"]

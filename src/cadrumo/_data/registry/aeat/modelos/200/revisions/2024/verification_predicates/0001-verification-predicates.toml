@@ -7,7 +7,7 @@
 # with a legitimately zero base (BIN compensation, correcciones) is possible, so
 # this surfaces an operator-facing advisory rather than refusing the draft, until
 # the base imponible is derived directly from resultado contable.
-[[revisions."2024-y-siguientes".verification_predicates]]
+[[revisions."2024".verification_predicates]]
 predicate_id = "modelo-200-base-imponible-determinada-cuando-resultado-positivo"
 expression = 'implies_nonzero(["00501", "DP200014:00552"])'
 finding_kind = "ADVISORY"
@@ -26,7 +26,7 @@ legal_refs = ["ley-27-2014:art-30"]
 # its antecedent. ADVISORY (non-blocking) and the earliest link in the IS-result
 # chain (00500→00501→00552→00562→00592); mirrors the no-silent-under-declaration
 # stance and the 00501→00552 base-determination advisory above.
-[[revisions."2024-y-siguientes".verification_predicates]]
+[[revisions."2024".verification_predicates]]
 predicate_id = "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
 expression = 'implies_nonzero(["00500", "00501"])'
 finding_kind = "ADVISORY"
@@ -38,7 +38,7 @@ legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-30"]
 # ceiling is positive, an applied amount above it is an over-compensation the
 # verify gate refuses; electing LESS than the ceiling is permitted (compensation
 # is a right, not a mandate). cap_le_when_positive holds when the ceiling <= 0.
-[[revisions."2024-y-siguientes".verification_predicates]]
+[[revisions."2024".verification_predicates]]
 predicate_id = "modelo-200-compensacion-bin-no-excede-limite-art-26"
 expression = 'cap_le_when_positive(["DP200014:00547", "DP200014:bin-aplicada-maxima"])'
 finding_kind = "BLOCKING_RULE"
@@ -47,7 +47,7 @@ legal_refs = ["ley-27-2014:art-26"]
 # Stock BLOCKING gate (LIS art. 26): the applied BIN compensation cannot exceed
 # the BIN stock available at the start of the period (casilla 00670). You cannot
 # compensate more negative bases than you hold.
-[[revisions."2024-y-siguientes".verification_predicates]]
+[[revisions."2024".verification_predicates]]
 predicate_id = "modelo-200-compensacion-bin-no-excede-stock-disponible"
 expression = 'cap_le_when_positive(["DP200014:00547", "00670"])'
 finding_kind = "BLOCKING_RULE"
@@ -65,7 +65,7 @@ legal_refs = ["ley-27-2014:art-26"]
 # carries forward via 01499→next-year 01495) — but the silent case is surfaced so
 # the operator confirms rather than overlooks the deductible carry. Mirrors the
 # no-silent-under-declaration advisory stance (positive input, zero dependent).
-[[revisions."2024-y-siguientes".verification_predicates]]
+[[revisions."2024".verification_predicates]]
 predicate_id = "modelo-200-dotaciones-deterioro-cumplido-disponible-integrar"
 expression = 'implies_nonzero(["01495", "01496"])'
 finding_kind = "ADVISORY"
@@ -86,7 +86,7 @@ legal_refs = ["ley-27-2014:art-13"]
 # legitimately-zero closing (all applied, none generated) stays permissible — the
 # guard fires only on a genuine discontinuity, mirroring the M200 base/dotaciones
 # advisories and no-silent-under-declaration.
-[[revisions."2024-y-siguientes".verification_predicates]]
+[[revisions."2024".verification_predicates]]
 predicate_id = "modelo-200-bin-stock-cierre-reconcilia-roll-forward"
 expression = 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])'
 finding_kind = "ADVISORY"

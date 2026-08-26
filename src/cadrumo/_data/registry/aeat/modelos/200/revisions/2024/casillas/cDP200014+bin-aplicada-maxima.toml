@@ -8,7 +8,7 @@
 # OVER-application (00547 > this máxima), never forcing 00547 to the ceiling
 # (art. 26.1: las BIN "PODRÁN ser compensadas ... CON EL LÍMITE del 70 % ...
 # En todo caso ... hasta el importe de 1 millón de euros").
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "DP200014:bin-aplicada-maxima"
 number = "DP200014:bin-aplicada-maxima"
 segmento = "DP200014"

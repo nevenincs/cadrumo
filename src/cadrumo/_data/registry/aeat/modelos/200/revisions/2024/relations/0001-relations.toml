@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".relations]]
+[[revisions."2024".relations]]
 id = "modelo-200-2024-rel-202-pagos-fraccionados"
 kind = "cross_model_output"
 dependency_role = "instalment_to_final_settlement"
@@ -18,7 +18,7 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 # (modalidad cuota, art. 40.2). The two modalidades are mutually exclusive per
 # filing (the non-elected one computes 0), so the cuota-diferencial formula
 # subtracts BOTH — crediting a 40.2 filer's instalments that casilla 34 alone drops.
-[[revisions."2024-y-siguientes".relations]]
+[[revisions."2024".relations]]
 id = "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
 kind = "cross_model_output"
 dependency_role = "instalment_to_final_settlement"
@@ -39,7 +39,7 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 # The strictly-negative delta marks a prior-year historical-filing carry, so
 # the previous_filing observation-coverage rule applies (no modelled 2023
 # revision required; present-or-zero at resolution).
-[[revisions."2024-y-siguientes".relations]]
+[[revisions."2024".relations]]
 id = "modelo-200-2024-rel-self-bin-pendiente-anterior"
 kind = "cross_model_output"
 dependency_role = "direct_calculation"
@@ -61,7 +61,7 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 # carried SEPARATELY because only the cumplido stock may be integrated. These
 # relations register the previous_filing target bindings so the prefill resolves
 # the prior-year saldo final from the observation store (LIS art. 13).
-[[revisions."2024-y-siguientes".relations]]
+[[revisions."2024".relations]]
 id = "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior"
 kind = "cross_model_output"
 dependency_role = "direct_calculation"
@@ -76,7 +76,7 @@ aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]
 source_refs = ["aeat-modelo-200-manual-2024"]
 
-[[revisions."2024-y-siguientes".relations]]
+[[revisions."2024".relations]]
 id = "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior"
 kind = "cross_model_output"
 dependency_role = "direct_calculation"

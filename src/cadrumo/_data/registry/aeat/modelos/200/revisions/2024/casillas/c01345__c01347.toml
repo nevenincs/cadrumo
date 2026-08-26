@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "01345"
 number = "01345"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
@@ -8,7 +8,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "01346"
 number = "01346"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
@@ -18,7 +18,7 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
-[[revisions."2024-y-siguientes".casillas]]
+[[revisions."2024".casillas]]
 id = "01347"
 number = "01347"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]

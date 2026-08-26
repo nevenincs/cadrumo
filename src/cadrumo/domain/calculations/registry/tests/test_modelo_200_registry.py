@@ -110,7 +110,7 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=2024,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -138,7 +138,7 @@ def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=2024,
         period="0A",
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -157,7 +157,7 @@ def test_modelo_200_calendar_year_2024_deadline_matches_boe_order() -> None:
 
 def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_200()
-    revision = modelo.revisions["2024-y-siguientes"]
+    revision = modelo.revisions["2024"]
     legal = {_M200_FORM_ORDER_REF: catalogues.legal[_M200_FORM_ORDER_REF]}
 
     verify_legal_catalogue(legal, source_root=bundled_path())

@@ -1,4 +1,4 @@
-[[revisions."2024-y-siguientes".verification_expectations]]
+[[revisions."2024".verification_expectations]]
 id = "modelo-200-2024-cuota-chain-verification"
 computed_casilla_ids = ["DP200014B:00599"]
 tolerance = "0.01"
