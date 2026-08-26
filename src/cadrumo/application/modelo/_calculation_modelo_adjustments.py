@@ -28,6 +28,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import get_args
 
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core.aggregation import BindingSourceKind
@@ -139,6 +140,26 @@ _ROW_IDENTITY_FIELDS: Mapping[type[ModeloDetailRow], tuple[str, ...]] = {
     Modelo349RectificacionRow: ("nif_comunitario", "clave_operacion", "ejercicio", "periodo"),
     Modelo210AgrupacionRentaRow: ("source_id",),
 }
+
+
+def _uncovered_row_kinds(covered: Mapping[type, tuple[str, ...]]) -> frozenset[type]:
+    """Pure comparison: every ``ModeloDetailRow`` union member absent from ``covered``."""
+    return frozenset(get_args(ModeloDetailRow)) - frozenset(covered)
+
+
+def uncovered_detail_row_kinds() -> frozenset[type]:
+    """Return every concrete ``ModeloDetailRow`` member absent from the identity table.
+
+    Discovered from ``ModeloDetailRow`` itself -- the discriminated union's
+    own member list -- rather than a hand-listed set, so a new row kind
+    added to the union without a matching :data:`_ROW_IDENTITY_FIELDS` entry
+    is caught by construction. Absence from the table is a silent regression
+    of S298's fix: :func:`_row_identity` falls back to an identity-unique
+    key for an uncovered kind, which never wrongly merges two distinct rows
+    (the safe direction) but also never unions a genuine cross-path
+    duplicate for that kind (the fix's whole purpose, silently un-done).
+    """
+    return _uncovered_row_kinds(_ROW_IDENTITY_FIELDS)
 
 
 def _row_identity(row: ModeloDetailRow) -> tuple[object, ...]:

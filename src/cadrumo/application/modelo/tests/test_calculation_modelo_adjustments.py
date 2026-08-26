@@ -11,6 +11,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from .._calculation_modelo_adjustments import (
     _m390_303_reconciliation_targets,
     detail_row_binding_values_for_calculation,
+    uncovered_detail_row_kinds,
     union_detail_rows_by_identity,
 )
 from .._action_errors import ModeloAggregationBindingError
@@ -141,4 +142,22 @@ def test_union_is_a_no_op_for_a_modelo_whose_rows_come_from_one_source_alone() -
     unioned = union_detail_rows_by_identity(resolver_rows=(), caller_rows=caller_rows)
 
     assert unioned == caller_rows
+
+
+def test_every_detail_row_kind_has_an_identity_table_entry() -> None:
+    """Gate: a row kind added to the union without an identity entry regresses S298 silently."""
+    assert uncovered_detail_row_kinds() == frozenset()
+
+
+def test_the_coverage_gate_bites_on_a_kind_missing_from_the_identity_table() -> None:
+    """Prove the gate is real: removing one real kind from the table is detected."""
+    import cadrumo.application.modelo._calculation_modelo_adjustments as adjustments_module
+    from cadrumo.domain.modelos import Modelo184MemberRow
+
+    real_table = adjustments_module._ROW_IDENTITY_FIELDS
+    incomplete_table = {kind: fields for kind, fields in real_table.items() if kind is not Modelo184MemberRow}
+
+    assert adjustments_module._uncovered_row_kinds(incomplete_table) == frozenset({Modelo184MemberRow})
+    # The real table stays fully covered -- this test does not mutate it.
+    assert adjustments_module._uncovered_row_kinds(real_table) == frozenset()
 
