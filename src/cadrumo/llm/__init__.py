@@ -60,6 +60,7 @@ if TYPE_CHECKING:
         ground_extracted_fields,
         parse_invoice_extraction_response,
     )
+    from ._vision_classifier import LocalVisionLLMClassifier
     from .suggestions import (
         ExtractionPayload,
         ExtractionProducer,
@@ -71,7 +72,6 @@ if TYPE_CHECKING:
         LLMSuggestionRejectionResult,
         OperatorIvaDerivationResult,
     )
-    from ._vision_classifier import LocalVisionLLMClassifier
 
 from ._client import (
     LLMClient,
@@ -97,19 +97,6 @@ from ._consent import (
     EvidenceConsentToken,
     cloud_evidence_read_permitted,
     mint_evidence_consent_token,
-)
-from .errors import (
-    LLMBusyError,
-    LLMCacheError,
-    LLMConfigError,
-    LLMConsentError,
-    LLMContentionError,
-    LLMError,
-    LLMPdfRasterisationError,
-    LLMProviderError,
-    LLMRateLimitError,
-    LLMTransientTransportError,
-    LLMValidationError,
 )
 from ._invoice_extraction_prompt import render_invoice_extraction_prompt
 from ._models import (
@@ -139,6 +126,19 @@ from ._supply_nature_proposal import (
     permitted_supply_natures,
 )
 from ._text_classifier import LocalTextLLMClassifier
+from .errors import (
+    LLMBusyError,
+    LLMCacheError,
+    LLMConfigError,
+    LLMConsentError,
+    LLMContentionError,
+    LLMError,
+    LLMPdfRasterisationError,
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMTransientTransportError,
+    LLMValidationError,
+)
 
 __all__ = [
     "COLUMN_ROLE_MAPPING_PROMPT_ID",
