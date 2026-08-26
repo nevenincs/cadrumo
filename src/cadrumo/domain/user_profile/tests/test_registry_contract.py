@@ -9,11 +9,12 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....core import BindingSourceKind
-from ....core.errors import BaseSeverity
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.bindings import ProfileSelector
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+
+from ....core import BindingSourceKind
+from ....core.errors import BaseSeverity
+from ...calculations.registry.authority import bundled_authority
 from ..loader import load_user_profile_schema
 from ..registry_contract import (
     UserProfileRegistryContractIssue,
@@ -82,7 +83,7 @@ def test_anualidades_selector_still_resolves_through_its_derived_pattern() -> No
     up, so this is a second route rather than a hole.
     """
     schema = load_user_profile_schema()
-    model = resources().modelos.authority.modelo("100")
+    model = bundled_authority().modelo("100")
     failures: list[str] = []
 
     for year in _MODELO_100_ANUALIDADES_YEARS:
@@ -101,7 +102,7 @@ def test_missing_modelo_100_anualidades_selector_is_rejected_for_each_year() -> 
     contract: nothing silently excuses an undeclared profile binding selector.
     """
     schema = load_user_profile_schema()
-    model = resources().modelos.authority.modelo("100")
+    model = bundled_authority().modelo("100")
     failures: list[str] = []
 
     for year in _MODELO_100_ANUALIDADES_YEARS:
@@ -337,7 +338,7 @@ def test_a_dropped_profile_selector_field_is_refused_not_silently_missing() -> N
 
 def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema() -> None:
     schema = load_user_profile_schema()
-    modelos = resources().modelos.all()
+    modelos = bundled_authority().modelos
 
     report = validate_user_profile_registry_contract(modelos, schema)
 
@@ -374,7 +375,7 @@ def test_user_profile_defining_modules_import_before_registry_barrel() -> None:
 def _live_profile_binding_selectors() -> frozenset[str]:
     """Every profile-sourced binding selector the committed registry declares."""
     selectors: set[str] = set()
-    for modelo in resources().modelos.all():
+    for modelo in bundled_authority().modelos:
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
                 if binding.source != BindingSourceKind.PROFILE:

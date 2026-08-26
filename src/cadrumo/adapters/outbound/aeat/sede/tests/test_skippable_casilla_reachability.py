@@ -23,10 +23,12 @@ from __future__ import annotations
 
 import pytest
 
-from ......core import CasillaValueKind
-from ......core.resources import bundled_path, resources
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
+
+from ......core import CasillaValueKind
+from ......core.resources import bundled_path
+from ......domain.calculations.registry.authority import bundled_authority
 from .._declarations_observations import _observed_value_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -39,7 +41,7 @@ _SUBJECTS = (("100", 2023, "0A"), ("100", 2024, "0A"), ("100", 2025, "0A"), ("18
 
 
 def _skippable_casilla_ids(modelo: str, year: int, period: str) -> set[str]:
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period)
     skippable: set[str] = set()
     for layout in snapshot.revision.export_layouts:
         if str(layout.format).endswith("xml_dictionary"):
@@ -60,7 +62,7 @@ def _skippable_casilla_ids(modelo: str, year: int, period: str) -> set[str]:
 
 
 def _observation_read_casilla_ids(modelo: str, year: int, period: str) -> set[str]:
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period)
     referenced: set[str] = set()
     for binding in snapshot.revision.bindings:
         if str(binding.source).split(".")[-1] not in _OBSERVATION_READING_SOURCES:

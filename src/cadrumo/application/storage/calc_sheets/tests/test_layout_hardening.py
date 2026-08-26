@@ -10,7 +10,7 @@ from cadrumo.domain.calculations.registry.schema import FormulaDefinition, Model
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .._layout import plan_layout
 from ..errors import CalcSheetsEngineError
 
@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _modelo_130_revision() -> ModeloRevision:
-    return resources().modelos.get("130").revisions["2019-y-siguientes"]
+    return bundled_authority().modelo("130").revisions["2019-y-siguientes"]
 
 
 def test_missing_layout_address_raises_typed_error_without_raw_identifier() -> None:

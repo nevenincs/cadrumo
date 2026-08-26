@@ -6,9 +6,15 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_verification import (
+    ParsedVerificationPredicate,
+    VerificationPredicateDefinition,
+    VerificationPredicateOperator,
+    parse_verification_predicate_expression,
+)
+
 from ....core import CasillaId, Modelo, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema_verification import ParsedVerificationPredicate, VerificationPredicateDefinition, VerificationPredicateOperator, parse_verification_predicate_expression
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import ModeloError, ModeloVerificationFindingKind
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,
@@ -487,7 +493,7 @@ def _shipped_m100_m200_predicates(
 ) -> tuple[tuple[VerificationPredicateDefinition, ParsedVerificationPredicate], ...]:
     matches: list[tuple[VerificationPredicateDefinition, ParsedVerificationPredicate]] = []
     for modelo in (Modelo.M100, Modelo.M200):
-        validated = resources().modelos.authority.validate_modelo(modelo.value)
+        validated = bundled_authority().validate_modelo(modelo.value)
         for revision in validated.revisions.values():
             for predicate in revision.verification_predicates:
                 parsed = parse_verification_predicate_expression(predicate.expression)

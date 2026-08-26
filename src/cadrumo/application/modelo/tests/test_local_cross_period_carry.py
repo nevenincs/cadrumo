@@ -37,14 +37,19 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.iva_wallet_relation_targets import (
+    MODELO_303_IVA_COMPENSATION_BINDING_ID,
+    iva_wallet_owned_binding_ids_for_revision,
+)
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Period, validated_casilla_id
-from cadrumo.domain.calculations.registry.iva_wallet_relation_targets import MODELO_303_IVA_COMPENSATION_BINDING_ID, iva_wallet_owned_binding_ids_for_revision
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
@@ -52,15 +57,15 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution, merge_source_resolutions
 from ...calculations import CalculationObservationRepository
-from .._calculation_actions import calculate_modelo_revision
-from .._filed_revision_observation import APP_FILING_SOURCE_KIND
-from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from .._work_lifecycle import create_work_unit
 from .._calculation_actions import (
     _resolve_bucket_source_mesh,
     _source_resolution_excluding_iva_compensation,
+    calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from .._filed_revision_observation import APP_FILING_SOURCE_KIND
+from .._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from .._work_lifecycle import create_work_unit
 from ._file_flow_support import (
     _DEFAULT_130_BINDING_VALUES,
     _M130_AGRARIAN_VOLUME_CASILLA,
@@ -521,9 +526,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     )
     _persist_prior_303(CalculationObservationRepository())
 
-    from ....core.resources import resources
-
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
     context = CalculationSourceContext(
         bucket_id=work_unit_303.bucket_id,
         modelo="303",
@@ -568,7 +571,6 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
 
 def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repos) -> None:
     """D3: relation-prefill must not bypass the IVA-wallet owner for M303 casilla 110."""
-    from ....core.resources import resources
 
     wu_repo = repos[0]
     _seed_existing_303_activity_profile(repos)
@@ -583,7 +585,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
     )
     _persist_prior_303(CalculationObservationRepository())
 
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
     resolution = _resolve_bucket_source_mesh(
         snapshot,
         work_unit_303,
@@ -599,9 +601,8 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
 
 def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate() -> None:
     """A reused wallet binding id is retained when the validated snapshot is not M303."""
-    from ....core.resources import resources
 
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
     reused_binding_id = MODELO_303_IVA_COMPENSATION_BINDING_ID
     reused_relation_id = "modelo-303-rel-self-compensacion-anteriores"
     resolution = merge_source_resolutions(

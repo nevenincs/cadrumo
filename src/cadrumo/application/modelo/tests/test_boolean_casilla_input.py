@@ -20,11 +20,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from .._registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -41,7 +42,7 @@ _NUMERIC_CASILLA: CasillaId = validated_casilla_id("0003", surface="_NUMERIC_CAS
 
 
 def _snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _calculate(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:

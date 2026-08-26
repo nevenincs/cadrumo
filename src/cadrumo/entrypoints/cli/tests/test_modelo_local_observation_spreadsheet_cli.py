@@ -17,7 +17,7 @@ from openpyxl import Workbook
 
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
@@ -105,7 +105,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
         assert observed.source_kind == "operator_manual"
         assert observed.observation.casilla_values["1391"] == Decimal("0")
 
-        m100_snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+        m100_snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
         m100_prefill = resolve_bindings_from_local_store(m100_snapshot, repository=repository)
         assert m100_prefill.binding_values["renta-2025-base-liquidable-negativa-general-anterior"] == Decimal("0")
 

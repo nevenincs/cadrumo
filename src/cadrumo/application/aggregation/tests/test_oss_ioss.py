@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry.ledger_bindings import OssIossLedgerOb
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ....core.directory_scan import scan_directory
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import (
     EUMemberState,
     InvoiceKind,
@@ -67,7 +67,7 @@ _SUPPLY_DATE = date(2025, 7, 15)
 
 @cache
 def _modelo_369_union_revision() -> ModeloRevision:
-    modelo = resources().modelos.get("369")
+    modelo = bundled_authority().modelo("369")
     return modelo.revisions["esquema-union"]
 
 

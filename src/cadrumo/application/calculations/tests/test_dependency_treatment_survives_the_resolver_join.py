@@ -34,7 +34,7 @@ import pytest
 from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement, relation_source_requirements
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .._binding_prefill import PrefilledBinding, _prefilled_bindings
 from .._relation_prefill import _relation_value_grounding
 
@@ -48,7 +48,7 @@ _EVIDENCE = "factual_evidence"
 
 
 def _m100_2024() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+    return bundled_authority().snapshot("100", filing_year=2024, period="0A")
 
 
 def _requirements_by_relation(snapshot: RegistrySnapshot) -> dict[str, RegistryFoldRequirement]:
@@ -144,7 +144,7 @@ def test_direct_previous_filing_treatment_reaches_the_prefilled_provenance() -> 
     from datetime import UTC, datetime
     from decimal import Decimal
 
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
+    snapshot = bundled_authority().snapshot("303", filing_year=2025, period="1T")
     requirement = next(
         item
         for item in previous_filing_observation_requirements(

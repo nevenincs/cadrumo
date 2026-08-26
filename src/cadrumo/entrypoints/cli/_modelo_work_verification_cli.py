@@ -18,6 +18,10 @@ from typing import Any
 
 import typer
 
+from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -40,14 +44,11 @@ from ...application.modelo._selectors import (
 from ...application.modelo._verification_actions import verify_modelo_revision_with_preconditions
 from ...application.modelo._work_lifecycle import get_work_unit
 from ...application.modelo._work_plazo import calculated_m210_plazo_notice
-from cadrumo.application.workflow.persistence import workflow_state_repository
 from ...core import PaymentElection, PriorDomiciliationElection, RefundElection
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.resources import resources
-from cadrumo.domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos import CalculationRevisionState
 from ._common import _filing_taxpayer_or_refuse, activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli
@@ -293,12 +294,12 @@ def work_dependencies(
         state = workflow_state_repository().load()
         workflow_profile = _filing_taxpayer_or_refuse(state)
         inventory = cross_period_dependency_inventory(
-            resources().modelos.authority, filing_year=year, modelos=(modelo,) if modelo is not None else None
+            bundled_authority(), filing_year=year, modelos=(modelo,) if modelo is not None else None
         )
         clean_state = None
         if modelo is not None and period is not None:
             active_bucket_id = state.active_profile_bucket_id() or ""
-            snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period)
+            snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period)
             clean_state = evaluate_cross_period_clean_state(
                 snapshot,
                 bucket_id=active_bucket_id,

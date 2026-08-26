@@ -16,15 +16,15 @@ from __future__ import annotations
 import pytest
 
 from .....core import M210_TIPO_RENTA_CODE_PROJECTION
-from .....core.resources import resources
 from .. import _validate_revision_rules as rules
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 
 def _m210_definition():
     """Return the loaded, validated M210 :class:`ModeloDefinition`."""
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     return next(modelo for modelo in authority.modelos if modelo.id == "210")
 
 
@@ -62,6 +62,6 @@ def test_core_projected_code_not_declared_fails_build() -> None:
 
 def test_non_m210_modelo_is_a_noop() -> None:
     # A modelo carrying no m210-tipo-renta-code- parameter is never inspected.
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     m303 = next(modelo for modelo in authority.modelos if modelo.id == "303")
     assert rules.validate_m210_tipo_renta_code_projection_parity(m303) == []

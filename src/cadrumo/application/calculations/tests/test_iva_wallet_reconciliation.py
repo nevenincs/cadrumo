@@ -16,7 +16,7 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....core import BindingSourceKind, IvaCompensationStateProvenance, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationDecisionReason,
@@ -109,7 +109,7 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
         local_recurrence_amount=Decimal("1200"),
         decided_at=_NOW,
     )
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
 
     resolution = IvaWalletDecisionSourceResolver(decision).resolve(
         CalculationSourceContext(
@@ -283,7 +283,7 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
                 source_observation_key="303:2026:2T:positive-local-filing",
             ),
         )
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="3T")
+        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="3T")
 
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
@@ -340,7 +340,7 @@ def test_disabled_generic_recurrence_producer_contributes_nothing_to_the_returne
                 source_observation_key="303:2026:2T:positive-local-filing",
             ),
         )
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="3T")
+        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="3T")
 
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
@@ -364,7 +364,7 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
 ) -> None:
     """A wallet decision cannot leave the observation repository's encrypted bucket."""
     with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
         observation_repository = CalculationObservationRepository(objects=runtime.primary.repository)
         foreign_decision_repository = IvaWalletDecisionRepository(objects=runtime.secondary.repository)
 
@@ -404,7 +404,7 @@ def test_modelo_303_reconciliation_persists_explicit_same_bucket_decision_reposi
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         observation_repository = CalculationObservationRepository(objects=profile.repository)
         decision_repository = IvaWalletDecisionRepository(objects=profile.repository)
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
 
         report = reconcile_modelo_303_iva_compensation(
             snapshot,

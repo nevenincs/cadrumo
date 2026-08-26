@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from ....core import Modelo
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ..legal_zone import PageLegalZone, build_flow_legal_zones
 
@@ -63,7 +63,7 @@ def _definition() -> FlowDefinition:
 
 @pytest.fixture(scope="module")
 def zones() -> dict[str, PageLegalZone]:
-    return dict(build_flow_legal_zones(_definition(), resources().modelos.authority))
+    return dict(build_flow_legal_zones(_definition(), bundled_authority()))
 
 
 def test_binding_derived_page_unions_grounding(zones: dict[str, PageLegalZone]) -> None:

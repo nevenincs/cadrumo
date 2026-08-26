@@ -17,7 +17,7 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletRow,
 )
 from ....core import CalculationSourceLineageRole, Period, RegistryAuthorityGrade
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ...calculations import IvaWalletDecisionSourceResolver, reconcile_iva_compensation_wallet
@@ -56,7 +56,7 @@ def bucket_id() -> str:
 
 @cache
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    return bundled_authority().snapshot("100", filing_year=2025, period="0A")
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
@@ -258,7 +258,7 @@ def test_profile_source_resolver_projects_each_registered_modelo_revision(
     # Asking for filing here would refuse 036, which is censal and never filable,
     # and 200, whose filing boundary is deliberately shut while its revision spans
     # two layouts.
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
     )
 
@@ -291,7 +291,7 @@ def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> Non
         local_recurrence_amount=Decimal("1200"),
         decided_at=_CLOCK,
     )
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
 
     resolution = IvaWalletDecisionSourceResolver(decision).resolve(
         CalculationSourceContext(

@@ -26,9 +26,10 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.i18n import tr
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
+from ....core.i18n import tr
+from ....domain.calculations.registry.authority import bundled_authority
 from .._verification_predicates import _advisory_predicate_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -48,7 +49,7 @@ def _capital_mobiliario_predicate_id(year: int) -> str:
 
 
 def _predicate(year: int, predicate_id: str) -> VerificationPredicateDefinition:
-    revision = resources().modelos.authority.snapshot("100", filing_year=year, period="0A").revision
+    revision = bundled_authority().snapshot("100", filing_year=year, period="0A").revision
     for predicate in revision.verification_predicates or ():
         if predicate.predicate_id == predicate_id:
             return predicate

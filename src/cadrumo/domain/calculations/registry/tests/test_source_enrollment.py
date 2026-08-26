@@ -53,13 +53,13 @@ from .....application.aggregation import (
     build_binding_source_dispositions,
 )
 from .....core import BindingSourceKind
-from .....core.resources import resources
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _inventory() -> RegistrySourceInventoryReport:
-    return RegistryQueryService(resources().modelos.authority).source_inventory()
+    return RegistryQueryService(bundled_authority()).source_inventory()
 
 
 def test_source_inventory_is_non_empty_and_well_formed() -> None:

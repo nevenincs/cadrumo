@@ -25,9 +25,9 @@ from ....core import (
 from ....core.directory_scan import (
     scan_directory,
 )
-from ....core.resources import resources
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...calculations import RowSourceIdentity
+from ...calculations.registry.authority import bundled_authority
 from ...filing_evidence import FilingEvidenceReference
 from ...iva import (
     M303RegimenSimplificadoScope,
@@ -86,7 +86,7 @@ def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=resources().modelos.authority.snapshot(
+        registry_snapshot=bundled_authority().snapshot(
             "303",
             filing_year=period.filing_year,
             period="1T",

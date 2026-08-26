@@ -37,8 +37,9 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
 from ....domain.bienes_inversion import BienesInversionIvaRegister
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -62,7 +63,7 @@ _BUCKET_ID = "38383838-3838-4838-8838-383838383838"
 
 
 def _m303_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
+    return bundled_authority().snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
 
 
 def _domestic_zero_sale() -> Transaction:

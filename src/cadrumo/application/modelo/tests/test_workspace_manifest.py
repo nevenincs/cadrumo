@@ -9,9 +9,10 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ....core import BindingSourceKind
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.bindings import selector_model_for_source
+
+from ....core import BindingSourceKind
+from ....domain.calculations.registry.authority import bundled_authority
 from .._workspace_manifest import (
     MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
     ModeloWorkspaceFieldManifestEntryV1,
@@ -38,7 +39,7 @@ class _NestedTraversalModel(BaseModel):
 @cache
 def _snapshot():
     """Use one real, exported authority snapshot with generated export layouts."""
-    return resources().modelos.authority.snapshot("303", filing_year=2025, period="4T")
+    return bundled_authority().snapshot("303", filing_year=2025, period="4T")
 
 
 @cache

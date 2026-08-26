@@ -46,7 +46,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._cross_period_clean_state import evaluate_cross_period_clean_state
@@ -120,7 +120,7 @@ def _prior_m130(period: str, *, casilla_07: Decimal, casilla_16: Decimal | None)
 
 
 def _resolve_casilla_05(obs_repo: CalculationObservationRepository, *, target_period: str) -> Decimal | None:
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=_FILING_YEAR, period=target_period)
+    snapshot = bundled_authority().snapshot("130", filing_year=_FILING_YEAR, period=target_period)
     observations = tuple(
         payload.observation for source_modelo in ("130", "100") for payload in obs_repo.iter_modelo(source_modelo)
     )
@@ -264,7 +264,7 @@ def test_first_filer_2t_alta_clean_state_suppresses_pre_activity_casilla_05_requ
     to a provenance-marked no-prior-obligation zero rather than a missing-observation
     blocker, so the verdict is clean for a genuine first filer.
     """
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=_FILING_YEAR, period="2T")
+    snapshot = bundled_authority().snapshot("130", filing_year=_FILING_YEAR, period="2T")
     # Activity starts mid-2T; the 1T period (ending 2026-03-31) is strictly prior.
     verdict = evaluate_cross_period_clean_state(
         snapshot,

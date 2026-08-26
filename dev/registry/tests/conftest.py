@@ -2,8 +2,7 @@
 
 import pytest
 
-from cadrumo.core.resources import resources
-from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
+from cadrumo.domain.calculations.registry.authority import bundled_authority, bundled_revision_inspection
 
 
 @pytest.fixture(scope="session")
@@ -17,7 +16,7 @@ def registry_authority():
     to this directory -- collection here errored on the missing name instead of
     running the check. Same object, same session scope.
     """
-    return resources().modelos.authority
+    return bundled_authority()
 
 
 @pytest.fixture

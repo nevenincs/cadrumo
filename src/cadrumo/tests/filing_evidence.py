@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from ..application.calculations import calculate_m303_regimen_simplificado_result
-from ..core import Period
-from ..core.resources import resources
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+
+from ..application.calculations import calculate_m303_regimen_simplificado_result
+from ..core import Period
+from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.filing_evidence import FilingEvidenceReference
 from ..domain.iva import (
     M303RegimenSimplificadoScope,
@@ -42,7 +43,7 @@ def regimen_simplificado_filing_evidence(
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=dana_2024_eligibility,
-            catalogues=resources().modelos.authority.catalogues,
+            catalogues=bundled_authority().catalogues,
         ),
     )
 
@@ -52,7 +53,7 @@ def general_m303_filing_evidence(period: Period, *, reference: str) -> FilingIns
     scope = M303RegimenSimplificadoScopeDecision(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         "303",
         filing_year=period.filing_year,
         period=period.registry_token,

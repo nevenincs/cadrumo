@@ -40,12 +40,16 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
-from ....core.resources import resources
+from cadrumo.domain.calculations.registry.bindings import (
+    RegistryModeloObservation,
+    resolve_available_bound_inputs_by_casilla_id,
+)
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values
+
+from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import resolve_bindings_from_local_store
@@ -134,7 +138,7 @@ def _calculate_200(
     resultado contable 00501) merged over the resolved bound inputs; absent
     manual casillas default to zero in formula evaluation.
     """
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         _MODELO_200, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
@@ -167,7 +171,7 @@ def _resolve_and_supply_relations(
     filing_year: int,
     obs_repo: CalculationObservationRepository,
 ) -> dict[RelationId, Decimal]:
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         _MODELO_200, filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     resolved = {

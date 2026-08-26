@@ -7,10 +7,11 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+
 from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
 from ....core.errors import CoreValidationError
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
@@ -134,7 +135,7 @@ def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, D
 
 def _registry_work_unit(*, modelo: str, filing_year: int, period_code: str) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, period_code)
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         modelo,
         filing_year=filing_year,
         period=period.registry_token,

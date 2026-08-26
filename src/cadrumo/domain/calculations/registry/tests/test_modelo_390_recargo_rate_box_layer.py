@@ -47,9 +47,9 @@ from cadrumo.domain.calculations.registry.ledger_bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 
-from .....core.resources import resources
 from ....invoices import IvaRate
 from ....iva import InvoiceKind, invoice_line_to_iva_observation
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -121,7 +121,7 @@ _M390_REVISION_IDS: tuple[str, ...] = ("2022", "2023", "2024", "2025")
 
 def _m390_revision(filing_year: str | int = 2024) -> ModeloRevision:
     """Resolve one filing year's revision through the law-determined selector."""
-    return resources().modelos.authority.snapshot("390", filing_year=int(filing_year), period="0A").revision
+    return bundled_authority().snapshot("390", filing_year=int(filing_year), period="0A").revision
 
 
 def _rated_rows() -> tuple[IvaLedgerObservation, ...]:

@@ -36,8 +36,8 @@ from ....adapters.inbound.pdf import ExtractedCasilla
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period, RegistryAuthorityGrade, validated_casilla_id
-from ....core.resources import resources
 from ....core.time import now
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -94,8 +94,8 @@ def _seed_work_unit(
     # test_reconcile_value_comparison.py) so the snapshot resolver's D1 identity
     # assertion holds and the casilla compare actually runs.
     revision_id = (
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             modelo,
             filing_year=filing_year,
             period=typed_period.registry_token,
@@ -183,7 +183,7 @@ def _synthetic_declaracion(
     the parser would return, with an explicit registry snapshot ref matching
     the seeded work unit's law-determined revision.
     """
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -255,7 +255,7 @@ def test_provisional_extraction_profile_surfaces_non_blocking_advisory() -> None
     bbox-anchored values as verified (no-silent-under-declaration)."""
     work_unit = _seed_work_unit()
     _persist_filed_revision(work_unit, casilla_values={"03": Decimal("5000.00"), "19": Decimal("900.00")})
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,

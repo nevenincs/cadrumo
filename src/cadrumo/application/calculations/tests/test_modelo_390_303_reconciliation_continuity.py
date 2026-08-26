@@ -69,7 +69,7 @@ from ....core import (
     result_disposition_casilla_ids,
     validated_casilla_id,
 )
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
@@ -203,7 +203,7 @@ def _calculate_303_quarter(
     supplies the R2 profile-gap workaround facts and a zero prior-period carry,
     resolves bound casilla inputs, then evaluates the engine.
     """
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         _303_CARRY_BINDING: Decimal("0"),
         _303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0"),
@@ -266,7 +266,7 @@ def _calculate_390_annual(
     describe the same ejercicio, so they must agree. Returns the result plus
     its produced-value count (the enrollment evidence).
     """
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period="0A")
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="0A")
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
     relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values_map, period="0A")

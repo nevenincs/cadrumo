@@ -8,13 +8,13 @@ from cadrumo.domain.calculations.registry.inventory_bindings import InventorySel
 
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregationOp
-from .....core.resources import resources
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_m100_2025_loads_exact_grounded_inventory_operation_templates() -> None:
-    revision = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A").revision
+    revision = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     bindings = tuple(binding for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY)
 
     assert {binding.id for binding in bindings} == {
@@ -39,7 +39,7 @@ def test_m100_2025_loads_exact_grounded_inventory_operation_templates() -> None:
 
 
 def test_inventory_templates_carry_no_taxpayer_activity_identity_or_legacy_shape() -> None:
-    revision = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A").revision
+    revision = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     bindings = tuple(binding for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY)
 
     for binding in bindings:
@@ -52,6 +52,6 @@ def test_inventory_templates_carry_no_taxpayer_activity_identity_or_legacy_shape
 
 
 def test_inventory_templates_are_absent_from_other_m100_revisions() -> None:
-    revision = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A").revision
+    revision = bundled_authority().snapshot("100", filing_year=2024, period="0A").revision
 
     assert not tuple(binding for binding in revision.bindings if binding.source is BindingSourceKind.INVENTORY)

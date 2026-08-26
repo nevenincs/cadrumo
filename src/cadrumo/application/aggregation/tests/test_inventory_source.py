@@ -26,7 +26,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.engine import get_engine
 from ....core import BindingSourceKind, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente.inventory import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
@@ -210,7 +210,7 @@ def _binding(operation: InventoryProjectionOperation, target: str) -> DataBindin
 
 
 def _revision(*, inventory: bool) -> ModeloRevision:
-    base = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A").revision
+    base = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     bindings = (
         (
             _binding("complete_acquisition_cost", "0181"),

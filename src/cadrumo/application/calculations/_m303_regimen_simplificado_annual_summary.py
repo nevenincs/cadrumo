@@ -13,11 +13,12 @@ from typing import ClassVar
 
 from ...core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, Modelo, Period, RegistryAuthorityGrade
 from ...core.errors import CoreValidationError
-from ...core.resources import bundled_path, resources
-from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...core.resources import bundled_path
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.loader import load_registry_tree
-from ...domain.calculations.registry.bindings import m303_regimen_simplificado_annual_summary_requirement
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva import ActividadAgricolaSimplificado
@@ -428,7 +429,7 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
     # a calculation-grade modelo before the registry can answer "this
     # requirement does not apply to you" -- and the check still runs, still
     # reads the requirement, and still raises on a handoff present without one.
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         target_work_unit.modelo,
         filing_year=target_work_unit.filing_year,
         period=target_work_unit.period.registry_token,

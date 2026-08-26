@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from ....core.config import override_settings
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_sessionless_storage_root
 
@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # opens the active-profile bucket database; with no profile every one
 # must produce the same clean translated refusal.
 def _m303_revision_id(*, filing_year: int, period: str) -> str:
-    return str(resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period).revision.id)
+    return str(bundled_authority().snapshot("303", filing_year=filing_year, period=period).revision.id)
 
 
 def _cold_start_verbs() -> tuple[tuple[str, ...], ...]:

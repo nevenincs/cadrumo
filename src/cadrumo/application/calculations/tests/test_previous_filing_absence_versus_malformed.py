@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.bindings_previous_filing import resolv
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ....core import validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import resolve_bindings_from_local_store
@@ -43,7 +43,7 @@ _SOURCE_CASILLAS = ("0224", "1479", "1553", "1577")
 
 
 def _m130_snapshot():
-    return resources().modelos.authority.snapshot("130", filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
+    return bundled_authority().snapshot("130", filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
 
 
 def test_absent_previous_filing_produces_the_same_unsatisfied_result_regardless_of_activity_start(

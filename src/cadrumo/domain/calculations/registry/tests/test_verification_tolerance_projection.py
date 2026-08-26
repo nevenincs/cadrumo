@@ -6,8 +6,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import resources
 from cadrumo.domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
+
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -20,7 +21,7 @@ def test_the_projection_uses_each_real_modelos_published_policy_or_exact_fallbac
     snapshots make a hardcoded tolerance or a permissive missing-policy fallback
     observably wrong.
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
 
     modelo_130 = authority.snapshot("130", filing_year=2026, period="1T")
     modelo_303 = authority.snapshot("303", filing_year=2025, period="1T")

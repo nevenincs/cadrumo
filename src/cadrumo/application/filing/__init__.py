@@ -82,8 +82,8 @@ from ...core import Period as _Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
-from ...core.resources import resources as _resources
 from ...core.time import now as _utc_now
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import bound_casilla_binding_ids as _registry_bound_casilla_binding_ids
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_tokens as _casilla_noncanonical_reference_tokens,
@@ -618,7 +618,7 @@ def _load_registry_snapshot(*, modelo: str, period: _Period) -> _RegistrySnapsho
     """
     filing_year, registry_period = _registry_period(period)
     try:
-        authority = _resources().modelos.authority
+        authority = bundled_authority()
         return authority.snapshot(
             modelo,
             filing_year=filing_year,

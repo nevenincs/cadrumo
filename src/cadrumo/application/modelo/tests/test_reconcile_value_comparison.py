@@ -19,6 +19,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ...tests import isolated_profile_backend as _isolated_backend
 
 __all__ = ["_isolated_backend"]
@@ -29,7 +30,6 @@ from ....adapters.inbound.justificante import parse_justificante
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period, validated_casilla_id
-from ....core.resources import resources
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CalculationRevision,
@@ -69,8 +69,8 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:
     # identity assertion holds (a fabricated pin would divert reconcile into a
     # snapshot_unavailable advisory instead of exercising the value compare).
     revision_id = (
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             modelo,
             filing_year=filing_year,
             period=typed_period.registry_token,

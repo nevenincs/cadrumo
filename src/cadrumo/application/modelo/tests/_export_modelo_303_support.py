@@ -6,6 +6,9 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -14,9 +17,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
 from ....core import Period
 from ....core.config import Settings
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
@@ -44,9 +45,9 @@ from ...calculations import (
     cross_period_dependency_requirements,
 )
 from .._calculation_actions import calculate_modelo_revision
+from .._calculation_helpers import external_filing_observations
 from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
-from .._calculation_helpers import external_filing_observations
 from ._export_test_support import _seed_profile, _synthetic_valid_nif
 from .justificante_metadata import persist_justificante_metadata
 
@@ -168,7 +169,7 @@ def _seed_modelo_303_1t_clean_state(
     # writes below need concrete ones, so resolve the same bucket-local defaults.
     work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
     calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
     source_casilla_ids = sorted(
         {
             casilla_id
@@ -181,7 +182,7 @@ def _seed_modelo_303_1t_clean_state(
     )
     assert source_casilla_ids, "Modelo 303 2T fixture must declare a 1T filed-history dependency"
     values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)}
-    source_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    source_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
     persist_justificante_metadata(
         "JUST30320261T",
         modelo="303",
@@ -339,7 +340,7 @@ def _build_verified_modelo_303_revision(
         tax_id=taxpayer_nif,
         profile_overrides={"identity.surnames": "Test Surnames"},
     )
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
     event_repo = BucketEventHistoryRepository()

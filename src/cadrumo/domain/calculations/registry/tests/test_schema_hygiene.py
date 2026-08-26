@@ -21,8 +21,9 @@ from cadrumo.domain.calculations.registry.validate_revision_identity import revi
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingTypedEnumKind
 from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path, resources
+from .....core.resources import bundled_path
 from ...export_field_kind import CasillaFieldKind
+from ..authority import bundled_authority
 from ..schema import DataBindingDefinition, ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -41,7 +42,7 @@ _FORBIDDEN_XML_ROOT_TOKENS = frozenset(
 
 @cache
 def _all_modelos() -> tuple[ModeloDefinition, ...]:
-    return resources().modelos.all()
+    return bundled_authority().modelos
 
 
 def test_bundled_revisions_produce_no_ambiguous_reference_identity_failures() -> None:

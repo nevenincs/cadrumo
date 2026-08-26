@@ -60,13 +60,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_modelo_observation
@@ -110,7 +111,7 @@ _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 
 def _snapshot(filing_year: int) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
+    return bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
 
 
 def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: CalculationObservationRepository) -> None:

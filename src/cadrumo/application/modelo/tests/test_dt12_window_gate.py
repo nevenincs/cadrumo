@@ -29,13 +29,13 @@ from pathlib import Path
 import pytest
 
 from ....core import Period, RescateType
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .._work_lifecycle import create_work_unit
 from .._calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle
 from .._semantic_role_resolution import casilla_id_for_unique_semantic_role
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,7 +58,7 @@ def _create_m100_work_unit() -> tuple[str, str]:
         ``(work_unit_id, reduccion_casilla_id)`` for the DT 12ª reducción slot.
     """
     period = Period.from_year_and_code(_FILING_YEAR, _ANNUAL_PERIOD)
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=_FILING_YEAR, period=period.registry_token)
+    snapshot = bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period=period.registry_token)
     reduccion_casilla_id = casilla_id_for_unique_semantic_role(snapshot, _REDUCCION_SEMANTIC_ROLE)
     assert reduccion_casilla_id is not None
 

@@ -15,15 +15,16 @@ from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export import resolve_export_layout
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.relations import relation_source_requirements
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
 from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id, validated_casilla_id_map
 from ......core.config import Settings
-from ......core.resources import resources
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from cadrumo.domain.calculations.registry.relations import relation_source_requirements
-from cadrumo.domain.calculations.registry.export import resolve_export_layout
+from ......domain.calculations.registry.authority import bundled_authority
 from ......tests import FIXTURES_DIR
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
@@ -236,7 +237,7 @@ def _declaration_row(
 
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
-    return resources().modelos.authority.snapshot(modelo_id, filing_year=filing_year, period=period)
+    return bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
 
 
 def _modelo_130_snapshot():

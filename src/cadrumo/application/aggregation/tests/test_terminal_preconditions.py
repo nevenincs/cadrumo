@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.schema_references import PeriodSelecto
 
 from ....core import ActionConditionality, ActionEvidenceProvenance, BindingSourceKind, NoRecoveryOutcome, Period
 from ....core.errors import TerminalPreconditionErrorMixin
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import (
     InvoiceKind,
@@ -302,7 +302,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
-        revision=resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision,
+        revision=bundled_authority().snapshot("303", filing_year=2025, period="1T").revision,
     )
     expected_facts: dict[str, str | int | bool | Decimal]
     if refusal == "uncovered_deduction":

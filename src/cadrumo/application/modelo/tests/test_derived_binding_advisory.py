@@ -30,7 +30,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -45,7 +45,7 @@ _ADVISORY_REASON = "unresolved_derived_binding"
 
 @lru_cache
 def _snapshot(year: int) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+    return bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:

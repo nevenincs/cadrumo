@@ -33,7 +33,7 @@ from ....core import (
     Period,
     ResultDisposition,
 )
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     ActividadNoAgricolaSimplificado,
@@ -51,7 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -> None:
     period = Period.from_year_and_code(2026, "1T")
-    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    registry_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
     scope = M303RegimenSimplificadoScopeDecision(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
     )
@@ -105,7 +105,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            catalogues=resources().modelos.authority.catalogues,
+            catalogues=bundled_authority().catalogues,
         ),
     )
 
@@ -193,7 +193,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
 ) -> None:
     """All five live epochs preserve their calculated module endpoint values."""
     period = Period.from_year_and_code(filing_year, period_code)
-    registry_snapshot = resources().modelos.authority.snapshot(
+    registry_snapshot = bundled_authority().snapshot(
         "303",
         filing_year=filing_year,
         period=period_code,
@@ -257,7 +257,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
             rows=rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            catalogues=resources().modelos.authority.catalogues,
+            catalogues=bundled_authority().catalogues,
         ),
     )
     module_refs = tuple(

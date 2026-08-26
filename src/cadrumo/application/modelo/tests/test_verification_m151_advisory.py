@@ -6,9 +6,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -31,7 +32,7 @@ _M151_CUOTA_INTEGRA: CasillaId = validated_casilla_id(
 
 def _m151_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M151 silent-under-declaration advisory from the authority."""
-    revision = resources().modelos.authority.validate_modelo("151").revisions["2015-y-siguientes"]
+    revision = bundled_authority().validate_modelo("151").revisions["2015-y-siguientes"]
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _M151_ADVISORY_PREDICATE_ID)
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == (

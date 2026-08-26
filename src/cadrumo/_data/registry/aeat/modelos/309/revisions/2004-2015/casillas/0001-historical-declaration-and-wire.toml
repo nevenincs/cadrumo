@@ -61,10 +61,14 @@ id = "decl.transmitente-pais"
 number = "74"
 section = ["declarante","liquidacion"]
 data_type = "text"
-semantic_role = "transmitente_pais"
+# The 2004 source gives this as a fourteen-character country description.
+# Later designs carry a two-character country code, so it is not the same
+# typed semantic role despite the shared display label.
+semantic_role = "transmitente_pais_texto_historico"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-transmitente-pais"]
+constraints = { max_length = 14, legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -73,9 +77,12 @@ number = "88"
 section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "situacion_tributaria_agricola"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-situacion-tributaria-agricola"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -84,9 +91,12 @@ number = "89"
 section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "situacion_tributaria_recargo_equivalencia"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-situacion-tributaria-recargo-equivalencia"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -95,9 +105,12 @@ number = "90"
 section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "situacion_tributaria_sin_derecho_deduccion"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-situacion-tributaria-sin-derecho-deduccion"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -106,9 +119,12 @@ number = "91"
 section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "situacion_tributaria_persona_juridica_no_empresario"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-situacion-tributaria-persona-juridica-no-empresario"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -117,9 +133,12 @@ number = "92"
 section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "situacion_tributaria_persona_fisica_no_empresario"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-situacion-tributaria-persona-fisica-no-empresario"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -128,9 +147,12 @@ number = "93"
 section = ["declarante","liquidacion"]
 data_type = "text"
 semantic_role = "situacion_tributaria_otras"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "The 2004 design alone carries this X-or-blank taxpayer-status slot."
 required = false
 input_kind = "manual"
 export_refs = ["modelo-309-historical-situacion-tributaria-otras"]
+constraints = { max_length = 1, enum = ["X", ""], legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"], source_refs = ["aeat-dr-309-2004"] }
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
 [[revisions."2004-2015".casillas]]
@@ -375,4 +397,3 @@ input_kind = "manual"
 export_refs = ["modelo-309-historical-observaciones"]
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["aeat-dr-309-2004"]
-

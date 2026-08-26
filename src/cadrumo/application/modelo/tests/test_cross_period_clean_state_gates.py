@@ -20,7 +20,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
@@ -188,7 +188,7 @@ def _seed_303_cross_period_sources(
     bucket_event_repository: BucketEventHistoryRepository,
     csv_periods: set[str],
 ) -> None:
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
+    snapshot = bundled_authority().snapshot("390", filing_year=2025, period="0A")
     source_casilla_ids_by_period: dict[str, set[CasillaId]] = {}
     for requirement in cross_period_dependency_requirements(snapshot):
         source_casilla_ids_by_period.setdefault(
@@ -203,7 +203,7 @@ def _seed_303_cross_period_sources(
             else ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
         )
         evidence_reference_id = f"AEAT-{period}"
-        source_snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period=period)
+        source_snapshot = bundled_authority().snapshot("303", filing_year=2025, period=period)
         if evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF:
             _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=2025)
         work_unit = create_work_unit(

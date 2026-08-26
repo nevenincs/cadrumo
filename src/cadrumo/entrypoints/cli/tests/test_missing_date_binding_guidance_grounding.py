@@ -11,14 +11,15 @@ from datetime import UTC, datetime
 
 import pytest
 
-from ....application.modelo._data_inventory import profile_requirements_for_binding
-from ....application.user_profile.preflight import build_profile_preflight_requirement
-from ....core import Period, PeriodError
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+
+from ....application.modelo._data_inventory import profile_requirements_for_binding
+from ....application.user_profile.preflight import build_profile_preflight_requirement
+from ....core import Period, PeriodError
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.loader import load_user_profile_schema
 from .._modelo_behavior_support import _date_binding_profile_requirements
@@ -64,7 +65,7 @@ def _an_addressable_profile_binding() -> tuple[WorkUnit, DataBindingDefinition]:
     to actually contain the binding, is what makes the returned pair genuinely
     addressable rather than merely plausible.
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     for model in authority.modelos:
         for revision in model.revisions.values():
             candidates = [b for b in revision.bindings if binding_profile_keys(b)]

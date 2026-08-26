@@ -26,16 +26,17 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ledger_binding_resolution import screened_quantity_families
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_transaction_catalogue_fixture,
 )
 from ....core import Period
-from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.ledger_binding_resolution import screened_quantity_families
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -88,12 +89,12 @@ def _provenance(provider_id: str) -> RawProvenance:
 
 @cache
 def _m303_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision
+    return bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
 
 
 @cache
 def _m130_revision() -> ModeloRevision:
-    return resources().modelos.get("130").revisions["2019-y-siguientes"]
+    return bundled_authority().modelo("130").revisions["2019-y-siguientes"]
 
 
 def _without_fact(revision: ModeloRevision, source: str, fact: str) -> ModeloRevision:

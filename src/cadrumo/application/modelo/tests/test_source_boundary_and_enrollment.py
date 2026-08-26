@@ -28,6 +28,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -35,8 +37,7 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import Modelo184MemberRow
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -184,7 +185,7 @@ def test_s26_assert_no_novel_source_kinds_accepts_enrolled_revision() -> None:
     """A revision whose bindings use only enrolled/deferred sources passes the gate."""
     # M303 uses ledger_iva_aggregation, borrador, previous_filing, profile, manual_input —
     # all enrolled.  Gate must not raise.
-    revision = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision
+    revision = bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
     assert_no_novel_source_kinds(revision)  # no exception
 
 
@@ -202,7 +203,7 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     # is not in the accepted set — exactly what the gate should detect and reject.
     from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
 
-    revision = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision
+    revision = bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
     # Build a synthetic binding with a novel source kind via model_construct (no validators).
     synthetic_binding = DataBindingDefinition.model_construct(
         id="synthetic-test-binding",
@@ -640,5 +641,5 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
 
 @cache
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
-    modelo_def = resources().modelos.get(modelo)
+    modelo_def = bundled_authority().modelo(modelo)
     return modelo_def.revisions[revision_id]

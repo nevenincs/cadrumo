@@ -25,7 +25,7 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     ModeloCode,
     WorkUnit,
@@ -152,7 +152,7 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
         _seed_profile(bucket_id, iva_regime="SIMPLIFICADO", m303_regime_composition="simplified")
         tx_repo = _seed_blocking_transaction(bucket_id)
         work_unit = _build_work_unit(bucket_id)
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
 
         # Must not raise for SIMPLIFICADO even with a blocking transaction.
         _raise_if_ledger_preflight_blocks_calculation(
@@ -173,7 +173,7 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
         _seed_profile(bucket_id, iva_regime="GENERAL", m303_regime_composition="general")
         tx_repo = _seed_blocking_transaction(bucket_id)
         work_unit = _build_work_unit(bucket_id)
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+        snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
 
         with pytest.raises(ModeloAggregationBindingError) as exc_info:
             _raise_if_ledger_preflight_blocks_calculation(

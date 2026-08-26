@@ -49,6 +49,7 @@ from cadrumo.domain.calculations.registry.bindings_previous_filing import previo
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...core import Period as _Period
 from ...core.identity import same_tax_identifier
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import (
@@ -695,10 +696,9 @@ def _registry_snapshot_for_work_unit(
     subject_leaf_key: str,
 ) -> RegistrySnapshot:
     """Resolve the registry snapshot attached to ``work_unit``."""
-    from ...core.resources import resources
 
     try:
-        return resources().modelos.authority.snapshot(
+        return bundled_authority().snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,

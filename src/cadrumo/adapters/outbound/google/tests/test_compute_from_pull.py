@@ -20,10 +20,11 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
 from .....application.storage.calc_sheets import CALC_SHEETS_ENGINE_VERSION
 from .....core import CasillaId, validated_casilla_id
-from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from .....domain.calculations.registry.authority import bundled_authority
 from ...storage import (
     OutboundStorageConflictError,
     OutboundStorageValidationError,
@@ -51,7 +52,7 @@ _M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = validated_casilla_id(
 def _modelo_303_snapshot():
     from datetime import date
 
-    return resources().modelos.authority.snapshot("303", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    return bundled_authority().snapshot("303", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
 def _matching_metadata(snapshot) -> PullMetadata:

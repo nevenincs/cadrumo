@@ -69,6 +69,7 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...core.time import now
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.handoffs import (
@@ -1098,9 +1099,7 @@ class RelationPrefillSourceResolver:
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         snapshot = self._registry_snapshot
         if snapshot is None:
-            from ...core.resources import resources
-
-            snapshot = resources().modelos.authority.snapshot(
+            snapshot = bundled_authority().snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
                 period=context.period.registry_token,

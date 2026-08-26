@@ -40,14 +40,15 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -68,9 +69,9 @@ from .._calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._work_lifecycle import create_work_unit
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
 from .._prior_payment_advisory import collect_prior_payment_not_deducted_diagnostics
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,7 +91,7 @@ _THIRD_TRIMESTRE = "3T"
 
 
 def _m130_revision(period: str) -> ModeloRevision:
-    return resources().modelos.authority.snapshot("130", filing_year=_YEAR, period=period).revision
+    return bundled_authority().snapshot("130", filing_year=_YEAR, period=period).revision
 
 
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")

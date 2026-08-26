@@ -9,16 +9,17 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
 from ....adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (
@@ -68,7 +69,7 @@ def _filing_instance_evidence(period: Period) -> FilingInstanceEvidence:
 
 @cache
 def _snapshot_303(*, filing_year: int = _TARGET_YEAR, period: str = _TARGET_PERIOD) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
+    return bundled_authority().snapshot("303", filing_year=filing_year, period=period)
 
 
 @contextmanager

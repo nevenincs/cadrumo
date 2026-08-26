@@ -42,9 +42,10 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 
@@ -107,7 +108,7 @@ _RETENCIONES_BY_YEAR: dict[int, Decimal] = {
 
 def _calculate_151(*, filing_year: int) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL registry 151 cuota calculation for one renta year."""
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period="0A")
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="0A")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={

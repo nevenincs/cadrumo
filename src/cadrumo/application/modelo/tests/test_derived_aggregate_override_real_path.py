@@ -48,7 +48,7 @@ import pytest
 from cadrumo.domain.calculations.registry.ids import BindingId
 
 from ....core import Period, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.values import UserProfileFact
@@ -127,7 +127,7 @@ _UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = (
 
 def _non_mesh_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100 binding the live bucket mesh does not own."""
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
+    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
     values: dict[BindingId, Decimal] = {
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _MESH_OWNED_SOURCES
     }
@@ -174,7 +174,7 @@ def _calculate_estatal_minimo() -> Decimal:
     Every repository is left to default, so the action resolves the active
     bucket through the same path production takes.
     """
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
+    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
     work_unit = create_work_unit(
         bucket_id=_BUCKET,
         modelo="100",

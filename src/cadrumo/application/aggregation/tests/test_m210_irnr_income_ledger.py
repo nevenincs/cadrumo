@@ -8,13 +8,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import M210GrossIncomeSourceMode, M210PayerMode, Period
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import Modelo210AgrupacionRentaRow
 from ....domain.transactions import BusinessClassification, M210IncomeClassification, TransactionDirection
@@ -162,7 +163,7 @@ def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambien
             work_repository = WorkUnitCatalogueRepository(objects=runtime.repository)
             calculation_repository = CalculationRevisionCatalogueRepository(objects=runtime.repository)
             ambient_event_repository = BucketEventHistoryRepository(objects=runtime.repository)
-            snapshot = resources().modelos.authority.snapshot("210", filing_year=2025, period="0A")
+            snapshot = bundled_authority().snapshot("210", filing_year=2025, period="0A")
             work_unit = create_work_unit(
                 bucket_id=_BUCKET_ID,
                 modelo="210",
@@ -309,7 +310,7 @@ def test_m210_gross_income_source_mode_keeps_manual_and_ledger_authority_exclusi
             transaction_repository=transaction_repository,
             event_repository=event_repository,
         )
-        snapshot = resources().modelos.authority.snapshot("210", filing_year=2025, period="0A")
+        snapshot = bundled_authority().snapshot("210", filing_year=2025, period="0A")
         work_repository = WorkUnitCatalogueRepository()
         calculation_repository = CalculationRevisionCatalogueRepository()
         work_unit = create_work_unit(
@@ -563,7 +564,7 @@ def test_m210_ledger_mode_evidence_bundle_records_no_manual_gross_income(tmp_pat
             transaction_repository=transaction_repository,
             event_repository=event_repository,
         )
-        snapshot = resources().modelos.authority.snapshot("210", filing_year=2025, period="0A")
+        snapshot = bundled_authority().snapshot("210", filing_year=2025, period="0A")
         work_repository = WorkUnitCatalogueRepository()
         calculation_repository = CalculationRevisionCatalogueRepository()
         work_unit = create_work_unit(

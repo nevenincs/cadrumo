@@ -72,7 +72,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import AggregationCaptureKind, BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
@@ -222,7 +222,7 @@ def _calculate_annual(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=_YEAR, period=_ANNUAL_PERIOD)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=_YEAR, period=_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
@@ -253,7 +253,7 @@ def _calculate_periodic(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=_YEAR, period=period)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,

@@ -20,7 +20,8 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import CasillaId, Period, RegistryAuthorityGrade
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
     CalculationRevision,
@@ -162,7 +163,7 @@ def _save_source_observation(
 
 @cache
 def _snapshot_353() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("353", filing_year=_M353_YEAR, period=_M353_PERIOD)
+    return bundled_authority().snapshot("353", filing_year=_M353_YEAR, period=_M353_PERIOD)
 
 
 @cache
@@ -413,8 +414,8 @@ def _seed_official_303_source_filings(
             modelo="303",
             filing_year=_M390_YEAR,
             period=Period.from_year_and_code(_M390_YEAR, period),
-            revision_id=resources()
-            .modelos.authority.snapshot(
+            revision_id=bundled_authority()
+            .snapshot(
                 "303",
                 filing_year=_M390_YEAR,
                 period=period,

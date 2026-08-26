@@ -27,7 +27,7 @@ from .....application.storage.calc_sheets import (
     TabName,
     build_export_plan,
 )
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .._calc_sheets_apply import _occupied_address_ranges, _occupied_addresses_from_response
 from .._calc_sheets_apply_values import (
     _build_evidence_value_data,
@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _m130_plan():
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
     return build_export_plan(snapshot)
 
 

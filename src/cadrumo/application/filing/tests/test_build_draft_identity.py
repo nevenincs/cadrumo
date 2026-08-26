@@ -19,7 +19,7 @@ from typing import cast
 import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing import ModeloBuilderError
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .. import _filing_period_date, build_draft, build_runtime_schema_provider
@@ -110,7 +110,7 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
     assert draft.subject_tax_id == "12345678Z"
     assert draft.subject_tax_id == draft.profile_tax_id
 
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T", on=date(2026, 4, 1))
+    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T", on=date(2026, 4, 1))
 
     assert draft.snapshot_ref is not None
     assert draft.snapshot_ref.modelo == "130"
@@ -158,7 +158,7 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
 ) -> None:
     """Printed numbers and export refs must not be accepted as input casilla references."""
     period = Period.from_year_and_code(2026, "1T")
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
     casilla = next(c for c in snapshot.revision.casillas if c.id == casilla_id)
     if reference_kind == "printed_number":
         input_key = casilla.number

@@ -136,7 +136,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
     # and deliberately refuses the filing rung while it spans two incompatible
     # AEAT layouts, so demanding filing here would be asking for an authority
     # this work does not need and the registry is right to withhold.
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         "200",
         filing_year=2025,
         period="0A",

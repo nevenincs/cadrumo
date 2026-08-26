@@ -42,10 +42,11 @@ from functools import lru_cache
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from .._verification_actions import evaluate_verification_predicates
 from ._verification_substance_support import _workflow_profile
@@ -66,7 +67,7 @@ _PROBE_FILING_YEARS: tuple[int, ...] = (2020, 2024)
 @lru_cache
 def _m303_revisions() -> tuple[tuple[str, ModeloRevision], ...]:
     """Every shipped M303 revision, discovered from the registry rather than listed."""
-    modelo = resources().modelos.authority.validate_modelo("303")
+    modelo = bundled_authority().validate_modelo("303")
     return tuple(sorted(modelo.revisions.items()))
 
 
@@ -102,7 +103,7 @@ def test_the_revision_serving_each_probe_filing_year_carries_the_advisory() -> N
     """
     reached: set[str] = set()
     for filing_year in _PROBE_FILING_YEARS:
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period="4T")
+        snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
         revision = snapshot.revision
         reached.add(revision.id)
         assert _prorrata_predicates(revision), f"{filing_year} resolves to unguarded revision {revision.id}"

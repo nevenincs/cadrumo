@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .._settlement_grade_advisory import (
     SETTLEMENT_SEMANTIC_ROLES,
     collect_settlement_not_computed_diagnostics,
@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _revision(modelo: str, year: int, period: str):
-    return resources().modelos.authority.snapshot(modelo, filing_year=year, period=period).revision
+    return bundled_authority().snapshot(modelo, filing_year=year, period=period).revision
 
 
 @pytest.mark.parametrize("year", [2020, 2023])

@@ -63,7 +63,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.errors import CadrumoError
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import (
@@ -528,8 +528,8 @@ def _calculate_m303_quarter_revision(
         modelo="303",
         filing_year=filing_year,
         period=typed_period,
-        revision_id=resources()
-        .modelos.authority.snapshot("303", filing_year=filing_year, period=typed_period.registry_token)
+        revision_id=bundled_authority()
+        .snapshot("303", filing_year=filing_year, period=typed_period.registry_token)
         .revision.id,
         repository=wu_repo,
         clock=_T0,
@@ -647,7 +647,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_yea
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=filing_year, period="0A")
+    snapshot = bundled_authority().snapshot("390", filing_year=filing_year, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="390",

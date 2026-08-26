@@ -34,7 +34,7 @@ from pathlib import Path
 import pytest
 
 from ....core import BindingSourceKind, Modelo, ProrrataRegisterRegime, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -55,7 +55,7 @@ _CUOTA_DEDUCIBLE_TOTAL_ID = validated_casilla_id("iva.cuota-deducible-total", su
 
 
 def _revision(*, period: str = "4T"):
-    snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=_YEAR, period=period)
+    snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=_YEAR, period=period)
     return snapshot.revision
 
 

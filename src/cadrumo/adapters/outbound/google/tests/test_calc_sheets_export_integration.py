@@ -17,7 +17,7 @@ from datetime import date
 import pytest
 
 from .....application.storage.calc_sheets import build_export_plan
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .._calc_sheets_apply import (
     _build_auto_filter_requests,
     _build_base_font_requests,
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _m130_plan():
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
     return build_export_plan(snapshot)
 
 

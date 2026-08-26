@@ -33,7 +33,8 @@ from typing import cast
 
 import pytest
 
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
+from ...calculations.registry.authority import bundled_authority
 from ...invoices import IvaRate, iva_rate_kind, iva_rate_percentage
 from .. import (
     EUMemberState,
@@ -200,7 +201,7 @@ def test_liva_art_161_recargo_matches_iva_tier_alignment() -> None:
 def test_liva_art_161_missing_recargo_parameter_raises_iva_catalogue_error() -> None:
     from .._recargo_equivalencia import _rates_from_catalogue
 
-    parameters = dict(resources().modelos.authority.catalogues.parameters)
+    parameters = dict(bundled_authority().catalogues.parameters)
     del parameters["liva-art-161:recargo-rate-tabaco"]
 
     with pytest.raises(IvaCatalogueError, match=r"recargo-rate-tabaco"):
@@ -397,7 +398,7 @@ def test_registry_tree_loader_recognises_all_rate_articles() -> None:
     that backs the IVA + IRPF rate substrate. If any article is missing
     from the catalogue, downstream modelo bindings can't reference it
     and validation fails — this test catches the regression upstream."""
-    catalogues = resources().modelos.authority.catalogues
+    catalogues = bundled_authority().catalogues
     assert "ley-37-1992:art-90" in catalogues.legal
     assert "ley-37-1992:art-91" in catalogues.legal
     assert "ley-37-1992:art-161" in catalogues.legal

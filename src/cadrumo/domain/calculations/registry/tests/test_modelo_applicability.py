@@ -17,7 +17,6 @@ from cadrumo.domain.calculations.registry.applicability import (
 )
 from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
 
-from .....core.resources import resources
 from ....deadlines import (
     EntityType,
     FiscalResidency,
@@ -29,6 +28,7 @@ from ....deadlines import (
     TaxpayerProfile,
 )
 from ..applicability import MODELO_APPLICABILITY_RULES
+from ..authority import bundled_authority
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -90,7 +90,7 @@ def test_seed_modelo_applicability_rules_are_registry_owned() -> None:
 def test_seed_modelo_applicability_legal_refs_resolve_in_registry() -> None:
     """Every seed applicability rule carries real scoped legal refs."""
 
-    registered_legal_ids = set(resources().modelos.authority.catalogues.legal)
+    registered_legal_ids = set(bundled_authority().catalogues.legal)
     assert registered_legal_ids
 
     for rule in iter_modelo_applicability_rules():
@@ -504,7 +504,7 @@ def test_impatriado_in_window_routes_annual_irpf_to_modelo_151() -> None:
     assert m151.verdict is ApplicabilityVerdict.APPLICABLE
     assert m151.applicable is True
     assert "Modelo 151" in m151.reason
-    assert set(m151.legal_refs).issubset(resources().modelos.authority.catalogues.legal)
+    assert set(m151.legal_refs).issubset(bundled_authority().catalogues.legal)
 
 
 def test_impatriado_year_seven_restores_m100_m720_and_suppresses_m151() -> None:

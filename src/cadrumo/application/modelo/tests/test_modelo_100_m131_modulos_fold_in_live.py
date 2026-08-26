@@ -32,22 +32,23 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
-from .._work_lifecycle import create_work_unit
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -174,7 +175,7 @@ def _seed_m131_quarters(objects: SecureObjectRepository) -> None:
 
 
 def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
+    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -200,7 +201,7 @@ def _calculate_m100_annual(objects: SecureObjectRepository, *, estimation_regime
     cr_repo = CalculationRevisionCatalogueRepository(objects=objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
+    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",

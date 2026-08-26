@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregationOp
-from .....core.resources import resources
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -28,7 +28,7 @@ _LINKS = {
 
 
 def test_inventory_row_templates_link_bidirectionally_to_exact_casillas() -> None:
-    revision = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A").revision
+    revision = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     bindings = {binding.id: binding for binding in revision.bindings}
     reverse = casillas_by_binding(revision)
@@ -48,7 +48,7 @@ def test_inventory_row_templates_link_bidirectionally_to_exact_casillas() -> Non
 
 
 def test_inventory_bindings_have_one_claim_and_no_cross_or_legacy_link() -> None:
-    revision = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A").revision
+    revision = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     claims = {
         binding_id: tuple(
             casilla.id for casilla in revision.casillas if binding_id in bound_casilla_binding_ids(casilla)
@@ -62,7 +62,7 @@ def test_inventory_bindings_have_one_claim_and_no_cross_or_legacy_link() -> None
 
 
 def test_rows_linkage_does_not_fold_row_values_into_scalar_formula_inputs() -> None:
-    revision = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A").revision
+    revision = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
 
     for binding_id, casilla_id in _LINKS.items():
@@ -82,7 +82,7 @@ def test_rows_linkage_does_not_fold_row_values_into_scalar_formula_inputs() -> N
 
 
 def test_inventory_casilla_links_are_absent_from_other_m100_revisions() -> None:
-    revision = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A").revision
+    revision = bundled_authority().snapshot("100", filing_year=2024, period="0A").revision
     linked = {binding_id for casilla in revision.casillas for binding_id in bound_casilla_binding_ids(casilla)}
 
     assert not linked.intersection(_LINKS)

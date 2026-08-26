@@ -44,7 +44,8 @@ from cadrumo.domain.calculations.registry.applicability_routes import TaxRoute
 from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 
 from ....core import Modelo
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
@@ -697,7 +698,7 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     law-only slug would fail loudly here.
     """
 
-    registered_legal_ids = set(resources().modelos.authority.catalogues.legal)
+    registered_legal_ids = set(bundled_authority().catalogues.legal)
     assert registered_legal_ids, "registry legal catalogue is empty"
 
     seed_refs: set[str] = set()
@@ -719,5 +720,5 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     for ref in sorted(seed_refs):
         assert ":" in ref, f"seed legal_ref is not in scoped article form: {ref!r}"
 
-    legal_refs = {ref: resources().modelos.authority.catalogues.legal[ref] for ref in sorted(seed_refs)}
+    legal_refs = {ref: bundled_authority().catalogues.legal[ref] for ref in sorted(seed_refs)}
     verify_legal_catalogue(legal_refs, source_root=bundled_path())

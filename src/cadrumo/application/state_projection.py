@@ -98,6 +98,7 @@ from ..core.errors import CadrumoError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
 from ..core.time import today_madrid
+from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.deadlines import (
     DeadlineEngine,
     ObligationStatus,
@@ -677,7 +678,6 @@ def _build_modelo_readiness(
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
 
     from ..core.i18n import tr
-    from ..core.resources import resources
     from ..domain.user_profile.values import ProfileSetupState
     from .modelo._profile_readiness_gate import (
         modelo_applicability_refusal,
@@ -703,7 +703,7 @@ def _build_modelo_readiness(
             period=readiness_period,
             revision=revision,
             resolve_revision_when_missing=registry_resolution.snapshot is not None,
-            authority=resources().modelos.authority,
+            authority=bundled_authority(),
         )
         profile_refusal = (
             tr("application.modelo.errors.profile_readiness_setup_incomplete")
@@ -828,11 +828,9 @@ def _resolve_modelo_readiness_registry(
     """
     from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 
-    from ..core.resources import resources
-
     period_token = period.registry_token
     try:
-        snapshot = resources().modelos.authority.snapshot(
+        snapshot = bundled_authority().snapshot(
             request.modelo,
             filing_year=request.filing_year,
             period=period_token,

@@ -13,7 +13,8 @@ from cadrumo.application.registry.source_connectivity import (
     validate_census_destination_candidates,
 )
 from cadrumo.core import BindingSourceKind, Modelo, Period, SourceConnectivityGroundingLocatorKind
-from cadrumo.core.resources import bundled_path, resources
+from cadrumo.core.resources import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from cadrumo.domain.calculations.registry.temporal import select_revision
@@ -93,9 +94,7 @@ def test_inventory_census_tracks_only_the_live_connection_gap() -> None:
 
 def test_asset_amortization_census_retains_the_unimplemented_ingress_boundary() -> None:
     manifest = load_source_connectivity_census()
-    amortization = next(
-        entry for entry in manifest.entries if entry.candidate_id == "assets.amortization-ledger"
-    )
+    amortization = next(entry for entry in manifest.entries if entry.candidate_id == "assets.amortization-ledger")
 
     assert amortization.disposition.value == "ingress_blocked"
     assert amortization.expires_on == date(2026, 12, 31)
@@ -316,13 +315,13 @@ def test_s115_freezes_reviewed_s112_helper_set_by_secondary_count() -> None:
 def test_registry_destination_candidates_resolve_against_live_authority() -> None:
     manifest = load_source_connectivity_census()
 
-    validate_census_destination_candidates(manifest, resources().modelos.authority)
+    validate_census_destination_candidates(manifest, bundled_authority())
 
 
 def test_manual_source_reference_grounding_must_resolve_from_catalogue_and_selected_revision() -> None:
     """Terminal M036 evidence cannot carry an invented or another revision's source."""
     manifest = load_source_connectivity_census()
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     entry = next(item for item in manifest.entries if item.candidate_id == "censo.modelo-036-profile-status")
     grounding = next(
         item for item in entry.grounding if item.locator_kind is SourceConnectivityGroundingLocatorKind.SOURCE_REFERENCE
@@ -385,7 +384,7 @@ def test_absent_registry_destination_candidate_is_rejected() -> None:
     )
 
     with pytest.raises(ValueError, match="semantic role is absent"):
-        validate_census_destination_candidates(changed, resources().modelos.authority)
+        validate_census_destination_candidates(changed, bundled_authority())
 
 
 def test_ambiguous_registry_destination_candidate_is_rejected() -> None:
@@ -407,7 +406,7 @@ def test_ambiguous_registry_destination_candidate_is_rejected() -> None:
     )
 
     with pytest.raises(ValueError, match="semantic role is ambiguous"):
-        validate_census_destination_candidates(changed, resources().modelos.authority)
+        validate_census_destination_candidates(changed, bundled_authority())
 
 
 def test_registry_destination_revision_must_match_its_law_selected_coordinate() -> None:
@@ -419,7 +418,7 @@ def test_registry_destination_revision_must_match_its_law_selected_coordinate() 
     changed = manifest.model_copy(update={"entries": (changed_entry, *manifest.entries[1:])})
 
     with pytest.raises(ValueError, match="revision does not match its law-selected filing coordinate"):
-        validate_census_destination_candidates(changed, resources().modelos.authority)
+        validate_census_destination_candidates(changed, bundled_authority())
 
 
 def test_registry_destination_period_must_be_law_selectable() -> None:
@@ -431,4 +430,4 @@ def test_registry_destination_period_must_be_law_selectable() -> None:
     changed = manifest.model_copy(update={"entries": (changed_entry, *manifest.entries[1:])})
 
     with pytest.raises(ValueError, match="filing coordinate is not law-selectable"):
-        validate_census_destination_candidates(changed, resources().modelos.authority)
+        validate_census_destination_candidates(changed, bundled_authority())

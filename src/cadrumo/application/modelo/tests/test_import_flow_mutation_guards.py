@@ -12,7 +12,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -118,7 +118,7 @@ def test_import_refuses_unknown_work_unit(repos: _Repos) -> None:
 def test_external_import_refuses_m303_without_complete_filing_evidence(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     period = Period.from_year_and_code(2026, "1T")
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
     work_unit = create_work_unit(
         bucket_id=_PROFILE_ID,
         modelo="303",

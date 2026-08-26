@@ -7,9 +7,10 @@ from functools import lru_cache
 
 import pytest
 
-from ....core import CasillaId
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
+from ....core import CasillaId
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -31,7 +32,7 @@ _M131_REVISION_IDS = tuple(sorted(_M131_ADVISORY_PREDICATE_IDS))
 @lru_cache
 def _m131_advisory_predicate(revision_id: str) -> VerificationPredicateDefinition:
     """Load the shipped M131 silent-under-declaration advisory from the authority."""
-    revision = resources().modelos.authority.validate_modelo("131").revisions[revision_id]
+    revision = bundled_authority().validate_modelo("131").revisions[revision_id]
     predicate_id = _M131_ADVISORY_PREDICATE_IDS[revision_id]
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
     assert predicate.finding_kind == "ADVISORY"

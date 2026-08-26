@@ -85,15 +85,15 @@ def test_modelo_353_historical_designs_are_hash_pinned_but_not_backdated(
 
 
 @pytest.mark.parametrize(
-    ("source_id", "expected_records"),
+    ("source_id", "expected_sheets"),
     [
-        ("aeat-dr-353-2015-2016", (("35300", None), ("35301", 1800))),
-        ("aeat-dr-353-2017-2019", (("35300", None), ("35301", 1500))),
-        ("aeat-dr-353-2020", (("35300", None), ("35301", 1500))),
+        ("aeat-dr-353-2015-2016", (("35300", 13, None), ("35301", 146, 1800))),
+        ("aeat-dr-353-2017-2019", (("35300", 13, None), ("35301", 132, 1500))),
+        ("aeat-dr-353-2020", (("35300", 13, None), ("35301", 132, 1500))),
     ],
 )
 def test_modelo_353_historic_complete_geometry_is_explicitly_below_filing(
-    source_id: str, expected_records: tuple[tuple[str, int | None], ...]
+    source_id: str, expected_sheets: tuple[tuple[str, int, int | None], ...]
 ) -> None:
     """A complete parser result without a semantic map must not become a writer."""
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "353"))
@@ -101,7 +101,7 @@ def test_modelo_353_historic_complete_geometry_is_explicitly_below_filing(
     source = catalogues.sources[source_id]
     extraction = extract_record_design(bundled_path() / source.corpus_path).require_complete()
 
-    assert tuple((sheet.record_identity, sheet.record_length) for sheet in extraction.sheets) == expected_records
+    assert tuple((sheet.name, len(sheet.fields), sheet.total_positions) for sheet in extraction) == expected_sheets
     assert all(source_id not in revision.source_refs for revision in modelo.revisions.values())
 
 

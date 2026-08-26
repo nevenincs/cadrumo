@@ -11,6 +11,7 @@ from .....core import RegistryAuthorityGrade
 from .....core.hashing import hash_file
 from .....core.resources import bundled_path
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage
+from .._validate_semantic_roles import semantic_role_consistency_failures
 from ..errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError, RegistryValidationError
 from ..loader import _load_shared_catalogue_files, load_modelo_directory
 from ..record_design import extract_record_design
@@ -34,7 +35,11 @@ _SOURCES = {
     "2004-2015": ("aeat-dr-309-2004", 44858, "7a855ce41e9b2363a5275b7e88a9587616cfb13db2c2e541c2665ece1815e7b6"),
     "2016-2017": ("aeat-dr-309-2016", 177152, "a54467bf47a3a8b16be42e770c174347fea14ca4315cc1b35c10d81f85c159c5"),
     "2018-2022": ("aeat-dr-309-2018", 185856, "7f46a0301f27345c19530a6a12acfa976ab5b60a67e563afa68277c12f2b07a8"),
-    "2023-y-siguientes": ("aeat-dr-309-2023", 192000, "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5"),
+    "2023-y-siguientes": (
+        "aeat-dr-309-2023",
+        192000,
+        "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5",
+    ),
 }
 
 
@@ -55,7 +60,90 @@ def test_modelo_309_exact_source_bytes_and_complete_extractions_are_pinned() -> 
         assert source.authority == "aeat"
         assert source.kind == "record_design"
         assert hash_file(path) == (expected_sha256, expected_bytes)
-        assert tuple((sheet.name, len(sheet.fields), sheet.total_positions) for sheet in extract_record_design(path).require_complete()) == expected_sheets[source_ref]
+        assert (
+            tuple(
+                (sheet.name, len(sheet.fields), sheet.total_positions)
+                for sheet in extract_record_design(path).require_complete()
+            )
+            == expected_sheets[source_ref]
+        )
+
+
+def test_modelo_309_2004_typed_slots_preserve_the_official_historical_meanings() -> None:
+    """The 2004 design distinguishes text country, X flags, and percentage values."""
+    modelo, _catalogues = _modelo_309()
+    revision = modelo.revisions["2004-2015"]
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+
+    country = casillas["decl.transmitente-pais"]
+    assert country.data_type == "text"
+    assert country.semantic_role == "transmitente_pais_texto_historico"
+    assert country.constraints is not None
+    assert country.constraints.max_length == 14
+    assert country.constraints.violates_text("P" * 14) is None
+    assert country.constraints.violates_text("P" * 15) == "value length 15 above max_length 14"
+
+    historical_status_ids = (
+        "decl.situacion-tributaria-agricola",
+        "decl.situacion-tributaria-recargo-equivalencia",
+        "decl.situacion-tributaria-sin-derecho-deduccion",
+        "decl.situacion-tributaria-persona-juridica-no-empresario",
+        "decl.situacion-tributaria-persona-fisica-no-empresario",
+        "decl.situacion-tributaria-otras",
+    )
+    for casilla_id in historical_status_ids:
+        status = casillas[casilla_id]
+        assert status.semantic_role_cardinality == "intentional_singleton"
+        assert status.semantic_role_cardinality_reason
+        assert status.constraints is not None
+        assert status.constraints.enum == ("X", "")
+        assert status.constraints.max_length == 1
+        assert status.constraints.violates_text("X") is None
+        assert status.constraints.violates_text("") is None
+        assert status.constraints.violates_text("Y") == "value 'Y' not in enum ('X', '')"
+        assert status.constraints.violates_text("XX") == "value length 2 above max_length 1"
+
+    type_ids = (
+        "decl.rg-tipo-02",
+        "decl.rg-tipo-05",
+        "decl.rg-tipo-08",
+        "decl.re-tipo-11",
+        "decl.re-tipo-14",
+        "decl.re-tipo-17",
+        "decl.re-tipo-20",
+    )
+    assert all(casillas[casilla_id].data_type == "ratio" for casilla_id in type_ids)
+    for revision_id in ("2016-2017", "2018-2022", "2023-y-siguientes"):
+        later_casillas = {casilla.id: casilla for casilla in modelo.revisions[revision_id].casillas}
+        assert later_casillas["decl.transmitente-pais"].data_type == "country_code"
+        assert later_casillas["decl.transmitente-pais"].semantic_role == "transmitente_pais"
+        assert all(later_casillas[casilla_id].data_type == "ratio" for casilla_id in type_ids)
+
+
+def test_modelo_309_2004_country_role_mutation_reopens_typed_semantic_drift() -> None:
+    """A historical 14-character country description cannot reuse the later code role."""
+    modelo, _catalogues = _modelo_309()
+    historical = modelo.revisions["2004-2015"]
+    mutated_casillas = tuple(
+        casilla.model_copy(update={"semantic_role": "transmitente_pais"})
+        if casilla.id == "decl.transmitente-pais"
+        else casilla
+        for casilla in historical.casillas
+    )
+    mutated = modelo.model_copy(
+        update={
+            "revisions": {
+                **modelo.revisions,
+                historical.id: historical.model_copy(update={"casillas": mutated_casillas}),
+            }
+        },
+    )
+
+    failures = semantic_role_consistency_failures((mutated,))
+
+    assert any(
+        "semantic_role 'transmitente_pais'" in failure and "data_type 'country_code'" in failure for failure in failures
+    )
 
 
 def test_modelo_309_selects_four_non_overlapping_epochs_and_refuses_pre_design_years() -> None:
@@ -65,7 +153,16 @@ def test_modelo_309_selects_four_non_overlapping_epochs_and_refuses_pre_design_y
     with pytest.raises(NoRevisionForPeriodError):
         select_revision(modelo, filing_year=2003, period="AD-HOC", on=date(2003, 12, 31))
 
-    for filing_year, expected_revision in ((2004, "2004-2015"), (2015, "2004-2015"), (2016, "2016-2017"), (2017, "2016-2017"), (2018, "2018-2022"), (2022, "2018-2022"), (2023, "2023-y-siguientes"), (2026, "2023-y-siguientes")):
+    for filing_year, expected_revision in (
+        (2004, "2004-2015"),
+        (2015, "2004-2015"),
+        (2016, "2016-2017"),
+        (2017, "2016-2017"),
+        (2018, "2018-2022"),
+        (2022, "2018-2022"),
+        (2023, "2023-y-siguientes"),
+        (2026, "2023-y-siguientes"),
+    ):
         selected = select_revision(modelo, filing_year=filing_year, period="AD-HOC", on=date(filing_year, 12, 31))
         assert selected.id == expected_revision
 
@@ -92,11 +189,14 @@ def test_modelo_309_layouts_cover_every_proven_source_coordinate() -> None:
     for revision_id, (source_ref, _bytes, _sha256) in _SOURCES.items():
         revision = modelo.revisions[revision_id]
         assert {ref for layout in revision.export_layouts for ref in layout.source_refs} == {source_ref}
-        assert validate_export_layout_record_coverage(
-            prefix=f"modelo 309 revision {revision_id}",
-            revision=revision,
-            source_refs=catalogues.sources,
-        ) == []
+        assert (
+            validate_export_layout_record_coverage(
+                prefix=f"modelo 309 revision {revision_id}",
+                revision=revision,
+                source_refs=catalogues.sources,
+            )
+            == []
+        )
 
 
 def test_modelo_309_2004_single_record_does_not_reuse_the_modern_two_record_shape() -> None:
@@ -117,7 +217,9 @@ def test_modelo_309_selector_boundary_mutation_is_refused() -> None:
     """Moving the 2018 upper boundary into 2023 creates a detectable overlap."""
     modelo, _catalogues = _modelo_309()
     historical = modelo.revisions["2018-2022"]
-    widened = historical.model_copy(update={"period_selector": historical.period_selector.model_copy(update={"year_to": 2023})})
+    widened = historical.model_copy(
+        update={"period_selector": historical.period_selector.model_copy(update={"year_to": 2023})}
+    )
     mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, historical.id: widened}})
 
     with pytest.raises(AmbiguousRevisionSelectionError):
@@ -134,7 +236,9 @@ def test_modelo_309_2004_offset_mutation_reopens_the_official_source_slot() -> N
     fields = list(record.fields)
     fields[index] = fields[index].model_copy(update={"offset": 24})
     wounded_record = record.model_copy(update={"fields": tuple(fields)})
-    wounded_revision = revision.model_copy(update={"export_layouts": (layout.model_copy(update={"records": (wounded_record,)}),)})
+    wounded_revision = revision.model_copy(
+        update={"export_layouts": (layout.model_copy(update={"records": (wounded_record,)}),)}
+    )
 
     failures = validate_export_layout_record_coverage(
         prefix="modelo 309 revision 2004-2015",

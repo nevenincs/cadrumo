@@ -29,9 +29,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
@@ -61,7 +62,7 @@ _TIPO_RENTA: CasillaId = validated_casilla_id(
 
 def _m210_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M210 base-imponible silent-under-declaration advisory."""
-    revision = resources().modelos.authority.validate_modelo("210").revisions["2025"]
+    revision = bundled_authority().validate_modelo("210").revisions["2025"]
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _PREDICATE_ID)
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == 'implies_nonzero(["rendimientos_integros", "base_imponible"])'
@@ -70,7 +71,7 @@ def _m210_advisory_predicate() -> VerificationPredicateDefinition:
 
 def test_m210_representante_fiscal_predicate_is_preserved_alongside_advisory() -> None:
     """The pre-existing BLOCKING_RULE representante-fiscal predicate stays untouched."""
-    revision = resources().modelos.authority.validate_modelo("210").revisions["2025"]
+    revision = bundled_authority().validate_modelo("210").revisions["2025"]
     representante_fiscal = next(
         p for p in revision.verification_predicates if p.predicate_id == "m210-representante-fiscal-required"
     )
@@ -136,7 +137,7 @@ def test_m210_advisory_silent_when_no_rendimientos() -> None:
 
 def _m210_inmobiliaria_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M210 inmobiliaria-branch categorical-conditional advisory."""
-    revision = resources().modelos.authority.validate_modelo("210").revisions["2025"]
+    revision = bundled_authority().validate_modelo("210").revisions["2025"]
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _INMOBILIARIA_PREDICATE_ID)
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == ('casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "base_imponible"])')
@@ -212,7 +213,7 @@ def _eea_irnr_profile() -> TaxpayerProfile:
 
 def _m210_ue_residente_advisory_predicate() -> VerificationPredicateDefinition:
     """Load the shipped M210 ue_residente / EU-EEE residence cross-check advisory."""
-    revision = resources().modelos.authority.validate_modelo("210").revisions["2025"]
+    revision = bundled_authority().validate_modelo("210").revisions["2025"]
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _UE_RESIDENTE_PREDICATE_ID)
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == (

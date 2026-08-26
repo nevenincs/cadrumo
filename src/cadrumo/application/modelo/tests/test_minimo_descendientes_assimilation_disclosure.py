@@ -31,9 +31,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, DescendantRelacion, Modelo
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from ....core import CasillaId, DescendantRelacion, Modelo
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
@@ -58,7 +59,7 @@ def bucket_id() -> str:
 
 
 def _revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
+    return bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
 
 
 def _write(*descendants: DescendantInfo) -> None:

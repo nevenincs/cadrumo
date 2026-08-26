@@ -21,8 +21,8 @@ from .....adapters.outbound.storage import OutboundStorageValidationError
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....core import SyncSurface
-from .....core.resources import resources
 from .....domain.buckets import BucketEventType
+from .....domain.calculations.registry.authority import bundled_authority
 from .....tests.secure_sql import isolated_runtime_profile
 from .._engine import build_export_plan
 from .._export_service import _export_scope_description, _SingleExportCoverage, export_modelo_to_sheets
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _m130_plan():
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
     return build_export_plan(snapshot)
 
 

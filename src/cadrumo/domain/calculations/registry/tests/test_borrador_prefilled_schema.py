@@ -6,7 +6,7 @@ from functools import cache
 
 import pytest
 
-from .....core.resources import resources
+from ..authority import bundled_authority
 from ..ids import BindingId
 from ..schema import DataBindingDefinition
 
@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @cache
 def _modelo_100_bindings() -> dict[BindingId, DataBindingDefinition]:
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     snapshot = authority.snapshot("100", filing_year=2025, period="0A")
     return {binding.id: binding for binding in snapshot.revision.bindings}
 

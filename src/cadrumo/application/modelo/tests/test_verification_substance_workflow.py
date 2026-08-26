@@ -9,13 +9,17 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema_verification import (
+    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
+    parse_verification_predicate_expression,
+)
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema_verification import KNOWN_VERIFICATION_PREDICATE_OPERATORS, parse_verification_predicate_expression
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     ModeloValidationError,
@@ -82,7 +86,7 @@ def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repo
     """
     wu_repo, cr_repo, vr_repo, bv_repo = repos
 
-    snap = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    snap = bundled_authority().snapshot("130", filing_year=2026, period="1T")
     casilla_02 = next((c for c in snap.revision.casillas if c.id == _CASILLA_02), None)
     assert casilla_02 is not None, "M130 must have casilla 02 in registry"
     assert str(casilla_02.input_kind) == "bound", "M130 casilla 02 must be ledger-bound (H1 fix)"
@@ -470,6 +474,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
     # layer against raw storage corruption that bypasses pydantic. We bypass
     # model_validator here via model_construct to simulate that scenario.
     from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+
     from .._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 
     target_obs = revision.observations[0]
@@ -519,7 +524,7 @@ def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
     """
     from .._verification_actions import missing_required_casilla_finding
 
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
     casilla_02 = next(c for c in snapshot.revision.casillas if c.id == _CASILLA_02)
     expected_legal_refs = frozenset(str(r) for r in casilla_02.legal_refs)
     expected_source_refs = frozenset(str(r) for r in casilla_02.source_refs)

@@ -22,7 +22,7 @@ from cadrumo.domain.calculations.registry.withholding_bindings import Withholdin
 from ....application.aggregation import WithholdingSourceResolver, persist_percepcion_observations
 from ....core import Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 
@@ -57,7 +57,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
                 _obs("22222222J", RetencionClave.A),
             ],
         )
-        snapshot = resources().modelos.authority.snapshot("190", filing_year=2024, period="0A")
+        snapshot = bundled_authority().snapshot("190", filing_year=2024, period="0A")
         resolution = WithholdingSourceResolver().resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,

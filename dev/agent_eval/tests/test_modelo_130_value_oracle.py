@@ -29,7 +29,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.resources import resources
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
@@ -53,7 +53,7 @@ _BINDINGS = {
 
 
 def _calculate_m130(*, ingresos: Decimal, gastos: Decimal):
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={"01": ingresos, "02": gastos},

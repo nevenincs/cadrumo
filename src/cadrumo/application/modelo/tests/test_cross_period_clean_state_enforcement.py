@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
@@ -18,7 +19,6 @@ from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservat
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
 from ....domain.deadlines import (
     CrossPeriodGroupMemberRoster,
     EntityType,
@@ -217,7 +217,7 @@ def _seed_verified_revision(
     period: str,
 ) -> str:
     _seed_ready_profile(bucket_id, modelo=modelo)
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
     binding_overrides = _verified_revision_binding_overrides(
         modelo=modelo,
         filing_year=filing_year,
@@ -304,7 +304,7 @@ def _seed_draft_revision(
     casilla_values: dict[CasillaId, Decimal] | None = None,
 ) -> str:
     _seed_ready_profile(bucket_id, modelo=modelo)
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
     work_period = Period.from_year_and_code(filing_year, period)
     work_unit = create_work_unit(
         bucket_id=bucket_id,
@@ -526,7 +526,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
     retenciones_trabajo_amount = Decimal("4200.00")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SALARIED_M100_ZERO_BIN_PROFILE_ID) as profile:
         _seed_m100_profile_facts(profile.bucket_id, profile.repository)
-        snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+        snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
         work_unit = create_work_unit(
             bucket_id=profile.bucket_id,
             modelo="100",
@@ -594,7 +594,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
 def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_390_IMPORTED_PROFILE_ID) as profile:
         _seed_ready_profile(profile.bucket_id, profile.repository, modelo="390")
-        target_snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
+        target_snapshot = bundled_authority().snapshot("390", filing_year=2025, period="0A")
         observations = CalculationObservationRepository()
         requirements_by_source: dict[tuple[str, int, str], set[CasillaId]] = {}
         for requirement in cross_period_dependency_requirements(target_snapshot):
@@ -604,7 +604,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
             ).update(requirement.source_casilla_ids)
 
         for (source_modelo, filing_year, period), source_casilla_ids in sorted(requirements_by_source.items()):
-            source_snapshot = resources().modelos.authority.snapshot(
+            source_snapshot = bundled_authority().snapshot(
                 source_modelo,
                 filing_year=filing_year,
                 period=period,
@@ -749,7 +749,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
 
 def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_353_PROFILE_ID) as profile:
-        snapshot = resources().modelos.authority.snapshot("353", filing_year=2026, period="12")
+        snapshot = bundled_authority().snapshot("353", filing_year=2026, period="12")
         requirement = next(
             item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
         )
@@ -806,7 +806,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
 
 def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_353_ROSTER_PROFILE_ID) as profile:
-        snapshot = resources().modelos.authority.snapshot("353", filing_year=2026, period="12")
+        snapshot = bundled_authority().snapshot("353", filing_year=2026, period="12")
         requirement = next(
             item for item in cross_period_dependency_requirements(snapshot) if item.requires_member_fan_in
         )

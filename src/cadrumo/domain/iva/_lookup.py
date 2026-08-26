@@ -13,9 +13,9 @@ from datetime import date
 from decimal import Decimal
 
 from ._catalogue import resolve_catalogue
-from .errors import IvaCatalogueError, IvaCategoryNotFoundError, IvaRateNotFoundError
 from ._rates import load_iva_rate_table
 from ._schema import EUMemberState, IvaCatalogue, IvaCategory, IvaRateKind, IvaRateRecord
+from .errors import IvaCatalogueError, IvaCategoryNotFoundError, IvaRateNotFoundError
 
 
 def lookup_rate(
@@ -203,6 +203,8 @@ def cite(
 
 
 def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:
+    from ..calculations.registry.authority import bundled_authority
+
     regulation = catalogue.get(category)
     if regulation is None:
         raise IvaCategoryNotFoundError(
@@ -215,9 +217,8 @@ def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:
             context={"iva_category": category.value, "citation_count": 0},
         )
     citation = regulation.citations[0]
-    from ...core.resources import resources
 
-    reference = resources().modelos.authority.catalogues.legal.get(citation.legal_reference)
+    reference = bundled_authority().catalogues.legal.get(citation.legal_reference)
     if reference is None:
         raise IvaCatalogueError(
             translated_message="errors.iva.citation_legal_reference_absent",

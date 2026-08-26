@@ -51,8 +51,8 @@ from cadrumo.domain.calculations.registry.runtime_graph import expression_casill
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from .....core.directory_scan import scan_directory
-from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
+from ..authority import bundled_authority
 from ..ledger_bindings import iva_ledger_selector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -92,7 +92,7 @@ _SERVICE_SUPPLY_BASE = Decimal("6100.00")
 
 
 def _m390_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("390", filing_year=2024, period="0A").revision
+    return bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _official_fields(path: Path) -> tuple[tuple[str, str], ...]:
@@ -281,7 +281,7 @@ def test_the_volumen_boxes_select_what_the_quarterly_return_selects() -> None:
     taxpayer and the same year.
     """
     annual = {binding.id: binding for binding in _m390_revision().bindings}
-    quarterly_revision = resources().modelos.authority.snapshot("303", filing_year=2024, period="4T").revision
+    quarterly_revision = bundled_authority().snapshot("303", filing_year=2024, period="4T").revision
     quarterly = {binding.id: binding for binding in quarterly_revision.bindings}
     pairs = (
         ("modelo-390-volumen-entregas-intracomunitarias-base", "modelo-303-casilla-59-entregas-intracomunitarias-base"),

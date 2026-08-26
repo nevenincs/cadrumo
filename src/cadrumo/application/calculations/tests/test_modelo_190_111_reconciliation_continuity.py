@@ -63,7 +63,7 @@ from cadrumo.domain.calculations.registry.withholding_bindings import (
 
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
@@ -293,7 +293,7 @@ def _calculate_111(
     casilla_inputs: dict[CasillaId, Decimal],
 ) -> RegistryCalculationResult:
     """Run the REAL 111 quarterly calculation and return the engine result."""
-    snapshot = resources().modelos.authority.snapshot(_MODELO_111, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(_MODELO_111, filing_year=filing_year, period=period)
     retenciones = aggregate_retenciones_111(
         _retencion_observations_for_111_inputs(
             filing_year=filing_year,
@@ -336,7 +336,7 @@ def _calculate_190(
     withholding_observations: tuple[WithholdingObservation, ...],
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL 190 annual calculation from relations + withholding detail."""
-    snapshot = resources().modelos.authority.snapshot(_MODELO_190, filing_year=filing_year, period="0A")
+    snapshot = bundled_authority().snapshot(_MODELO_190, filing_year=filing_year, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     withholding_binding_values = resolve_withholding_binding_values(snapshot.revision, withholding_observations)
     binding_values = {**relation_binding_values, **withholding_binding_values}
@@ -414,7 +414,7 @@ def test_modelo_190_relation_prefill_aggregates_111_quarters(tmp_path: Path) -> 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
         expected = _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
-        snapshot_190 = resources().modelos.authority.snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
+        snapshot_190 = bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_190, repository=obs_repo)
         relation_ids = {relation.id for relation in snapshot_190.revision.relations}
         binding_ids = {binding.id for binding in snapshot_190.revision.bindings}
@@ -447,7 +447,7 @@ def test_modelo_190_year_isolation_ignores_prior_year_observations(tmp_path: Pat
         obs_repo = CalculationObservationRepository()
         _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
         expected_n1 = _compute_year_111_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
-        snapshot_190_n1 = resources().modelos.authority.snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
+        snapshot_190_n1 = bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_190_n1, repository=obs_repo)
 
     resolved: dict[RelationId, Decimal] = {
@@ -495,7 +495,7 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         _q1_result = _calculate_111(filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"])
         recorder_111.record_calculation_year(filing_year=_YEAR_N, produced_value_count=len(_q1_result.values))
 
-        snapshot_190_n = resources().modelos.authority.snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
+        snapshot_190_n = bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
         prefill_n = resolve_relations_from_local_store(snapshot_190_n, repository=obs_repo)
         resolved_n = {item.relation: item.value for item in prefill_n.values if item.value is not None}
         withholding_n = resolve_withholding_binding_values(
@@ -519,7 +519,7 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         )
         recorder_111.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=len(_q1_result_n1.values))
 
-        snapshot_190_n1 = resources().modelos.authority.snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
+        snapshot_190_n1 = bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill_n1 = resolve_relations_from_local_store(snapshot_190_n1, repository=obs_repo)
         resolved_n1 = {item.relation: item.value for item in prefill_n1.values if item.value is not None}
         withholding_n1 = resolve_withholding_binding_values(

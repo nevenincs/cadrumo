@@ -35,7 +35,7 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import build_recovery_for_overdue, resolve_filing_closes_on
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from .._work_plazo import modelo_work_deadline_posture
@@ -58,9 +58,7 @@ def _quarter_year_cases():
 
 def _work_unit_for(quarter: str, filing_year: int) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, quarter)
-    revision_id = (
-        resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period.registry_token).revision.id
-    )
+    revision_id = bundled_authority().snapshot("303", filing_year=filing_year, period=period.registry_token).revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",

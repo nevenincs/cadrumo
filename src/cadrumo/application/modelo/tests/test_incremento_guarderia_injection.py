@@ -21,7 +21,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list, parse_guarderia_mensual
 from ..profile_binding import (
     _declared_profile_selectors,
@@ -36,7 +36,7 @@ _KEY = f"renta_family.incremento_guarderia_{_YEAR}"
 
 
 def _snapshot(year: int = _YEAR) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+    return bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _facts(child: DescendantInfo) -> dict[str, Any]:

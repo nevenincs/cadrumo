@@ -24,12 +24,13 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -51,7 +52,7 @@ _PERIOD = "0A"
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _engine_result(snapshot: RegistrySnapshot) -> RegistryCalculationResult:

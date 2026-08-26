@@ -18,9 +18,10 @@ from functools import cache
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
-from .....core.resources import resources
 from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement
+
+from .....core import CasillaId, validated_casilla_id
+from ..authority import bundled_authority
 from ..bindings_previous_filing import (
     previous_filing_observation_requirements,
 )
@@ -35,7 +36,7 @@ _MINORACION_CASILLA: CasillaId = validated_casilla_id("16", surface="_MINORACION
 
 @cache
 def _casilla_05_requirements(period: str) -> tuple[RegistryFoldRequirement, ...]:
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=_FILING_YEAR, period=period)
+    snapshot = bundled_authority().snapshot("130", filing_year=_FILING_YEAR, period=period)
     return tuple(
         requirement
         for requirement in previous_filing_observation_requirements(

@@ -50,12 +50,12 @@ from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_
 from cadrumo.domain.calculations.registry.schema_rounding import RegistryRoundingCode
 
 from .....core import CasillaId, validated_casilla_id
-from .....core.resources import resources
 from ....iva import (
     ProrrataInputs,
     ProrrataKind,
     compute_prorrata_general,
 )
+from ..authority import bundled_authority
 from ..formula_runtime_ops import apply_rounding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -119,7 +119,7 @@ def _domain_percentage(con_derecho: Decimal, total: Decimal) -> Decimal:
 
 def _registry_percentage(filing_year: int, con_derecho: Decimal, total: Decimal) -> Decimal:
     """The same legal quantity via the real registry snapshot and formula runtime."""
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period="4T")
+    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
     declared = {binding.id for binding in snapshot.revision.bindings}
     binding_values: dict[str, Decimal] = {
         binding_id: Decimal("100") if binding_id.endswith("state-attribution-ratio") else Decimal("0")
@@ -193,7 +193,7 @@ def test_selected_ratios_discriminate_between_the_two_roundings() -> None:
 @pytest.mark.parametrize("filing_year", _LIVE_FILING_YEARS)
 def test_both_live_m303_revisions_declare_the_round_up_code(filing_year: int) -> None:
     """Both live revisions must carry ``integer-ceiling`` on the prorrata percentage."""
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period="4T")
+    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
     formula = next(entry for entry in snapshot.revision.formulas if entry.id == _FORMULA_ID)
 
     assert formula.rounding == RegistryRoundingCode.INTEGER_CEILING, (

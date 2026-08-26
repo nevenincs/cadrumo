@@ -16,9 +16,9 @@ from cadrumo.application.user_profile.preflight import (
     format_profile_path_requirements,
     format_profile_selector_requirements,
 )
-
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys
+
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -57,7 +57,7 @@ def _a_binding_key_naming_a_schema_field() -> str:
     """Return one committed binding's profile key that names a real field."""
     schema = _schema()
     schema_paths = frozenset(schema.field_paths)
-    for model in resources().modelos.authority.modelos:
+    for model in bundled_authority().modelos:
         for revision in model.revisions.values():
             for binding in revision.bindings:
                 for key in binding_profile_keys(binding):

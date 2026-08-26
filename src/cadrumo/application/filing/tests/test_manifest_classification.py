@@ -30,8 +30,9 @@ from typing import Any
 
 import pytest
 
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
+from ....domain.calculations.registry.authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -55,7 +56,7 @@ _MANIFEST_MODELOS = [
 
 
 def _manifest_and_casillas(modelo: str, year: int, period: str, on: date) -> tuple[Any, dict[str, Any]]:
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period, on=on)
     revision = snapshot.revision
     manifest = revision.completeness_manifest
     assert manifest is not None, f"modelo {modelo} must declare a completeness manifest"

@@ -32,7 +32,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices import InvoiceCatalogue, InvoicePersistenceError
 from .._modelo_bindings import (
     CalculationSourceContext,
@@ -70,7 +70,7 @@ class _UnreadableInvoiceCatalogue:
 
 
 def _context() -> CalculationSourceContext:
-    revision = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=_PERIOD_CODE).revision
+    revision = bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD_CODE).revision
     return CalculationSourceContext(
         bucket_id=_UnreadableInvoiceCatalogue.bucket_id,
         modelo="303",

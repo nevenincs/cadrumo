@@ -13,10 +13,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from ...core.logging import get_logger
-from ...core.resources import resources
-from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistrySnapshotError
+from cadrumo.domain.calculations.registry.ids import RevisionId
+
+from ...core.logging import get_logger
+from ..calculations.registry.authority import bundled_authority
 from ..modelos import ModeloCode, ModeloValidationError
 from ._categories import PortalCategory
 from ._codes import Portal
@@ -63,13 +64,13 @@ from ._entries import (
     portal_renta_web_borrador,
     portal_sede_root,
 )
+from ._metadata import PortalMetadata
 from .errors import (
     PortalRegistryInvariant,
     UnknownPortalError,
     portal_integrity_error,
     unknown_modelo_error,
 )
-from ._metadata import PortalMetadata
 
 _LOG = get_logger(__name__)
 
@@ -285,7 +286,7 @@ def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
     """Return portal ids bound to ``code`` by validated registry data."""
     try:
         try:
-            modelo = resources().modelos.authority.validate_modelo(str(code))
+            modelo = bundled_authority().validate_modelo(str(code))
         except RegistrySnapshotError:
             _LOG.debug(
                 "portals: registry snapshot unavailable for modelo %s; no portal bindings",

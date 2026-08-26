@@ -10,7 +10,7 @@ from cadrumo.application.modelo.calculation_route import (
 from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.core import BindingSourceKind, RegistryAuthorityGrade
-from cadrumo.core.resources import resources
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..check import SourceConnectivityCheckError, check_census_governance
@@ -47,9 +47,7 @@ def test_m193_deferred_source_preserves_manual_gasto_casillas_without_connected_
     candidate_id = "rows.gasto193-contributor"
     census = load_source_connectivity_census()
     entry = next(item for item in census.entries if item.candidate_id == candidate_id)
-    snapshot = resources().modelos.authority.snapshot(
-        "193", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.FILING
-    )
+    snapshot = bundled_authority().snapshot("193", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.FILING)
 
     assert {str(casilla.id) for casilla in snapshot.revision.casillas if casilla.input_kind is InputKind.MANUAL} >= {
         "gasto.nif",
@@ -77,7 +75,7 @@ def test_m193_deferred_source_preserves_manual_gasto_casillas_without_connected_
     assert any(BindingSourceKind.WITHHOLDING in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
 
     coverage = compose_source_connectivity_coverage(
-        authority=resources().modelos.authority, census=census, as_of=date(2026, 8, 25)
+        authority=bundled_authority(), census=census, as_of=date(2026, 8, 25)
     )
     limb = next(item for item in coverage.limbs if item.modelo == "193" and item.revision == "2025-y-siguientes")
     assert limb.outcome == "refused"

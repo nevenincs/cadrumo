@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -37,8 +39,7 @@ from ....core import (
     ProrrataRegisterRegime,
     validated_casilla_id,
 )
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -91,9 +92,7 @@ def _seed_verified_m303_revision(
 ) -> tuple[CalculationRevision, WorkUnit]:
     values = dict(_SETTLEMENT_VALUES if casilla_values is None else casilla_values)
     period = Period.from_year_and_code(2026, period_code)
-    revision_id = (
-        resources().modelos.authority.snapshot("303", filing_year=2026, period=period.registry_token).revision.id
-    )
+    revision_id = bundled_authority().snapshot("303", filing_year=2026, period=period.registry_token).revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",

@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 
 from .....core.directory_scan import scan_directory
-from .....core.resources import resources
 from .....tests import SRC_CADRUMO, package_python_files, repo_relative
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -170,7 +170,7 @@ def _m303_selector_redeclaration_locations(paths: Iterable[Path], *, revision_id
 def test_m303_retired_revision_is_refused_and_cannot_reenter_source_surfaces() -> None:
     """The deleted revision has no runtime, fixture, locale, alias, or selector path."""
     retired_identifier = _retired_identifier_from_single_refusal_assertion()
-    modelo = resources().modelos.authority.modelo("303")
+    modelo = bundled_authority().modelo("303")
     assert "2023-y-siguientes" not in modelo.revisions
 
     surface_files = _cutover_surface_files()

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:d4a1979d294f8875667af18524610da7d5decdb35c470fcb828c8abc83f711f7'
+body_hash: 'sha256:897bfdf375bd9cde8df5f4efb26a9da18c6293299bfb4fe91b6b11be3b69e114'
 step_id: 'S51'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -186,7 +186,6 @@ focused `RegistryValidator.validate_modelo` gate. The whole-tree claimed-year
 test remains independently blocked by the concurrent Modelo 200 partition's
 registry validation failures. This bounded result does not alter that tree and
 does not close S51, whose row still owns the other modelos.
-
 
 ## Whole-registry reconciliation (2026-08-26)
 

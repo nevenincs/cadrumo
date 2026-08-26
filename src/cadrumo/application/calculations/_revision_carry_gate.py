@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...core.resources import resources
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
 
 
@@ -77,7 +77,7 @@ def revision_carry_outcome(
         plus the refusal reason when the stamp diverges or cannot be re-confirmed.
     """
     try:
-        inspection = resources().modelos.authority.inspect_revision(
+        inspection = bundled_authority().inspect_revision(
             source_modelo,
             filing_year=source_filing_year,
             period=source_period,

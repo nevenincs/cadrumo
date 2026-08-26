@@ -37,10 +37,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -334,7 +335,7 @@ def test_compare_delta_rows_carry_provenance() -> None:
 
     Authority: AEAT DR 130 Instrucciones; IRPF Art. 99 (BOE-A-2006-20764).
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     snap = authority.snapshot("130", filing_year=2026, period="1T")
     engine_result = calculate_registry_snapshot(
         snap,

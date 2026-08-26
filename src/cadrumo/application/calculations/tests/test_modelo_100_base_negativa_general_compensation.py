@@ -24,13 +24,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
@@ -173,7 +174,7 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
 
 
 def _snapshot():
-    return resources().modelos.authority.snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD)
+    return bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD)
 
 
 def _v(revision: CalculationRevision, casilla: CasillaId) -> Decimal:
@@ -208,7 +209,7 @@ def test_base_liquidable_negative_compensation_surfaces_cite_art50_not_art48_or_
 
 @pytest.mark.parametrize("filing_year", [2024, 2025])
 def test_opening_and_applied_base_liquidable_casillas_cite_art50(filing_year: int) -> None:
-    revision = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=_PERIOD).revision
+    revision = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD).revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
 
     for casilla_id in (_PENDIENTE_INICIO, _APLICADO):

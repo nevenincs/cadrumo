@@ -20,14 +20,14 @@ from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
 
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregation
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .. import collect_row_sets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _modelo_349_revision():
-    return resources().modelos.get("349").revisions["2020-y-siguientes"]
+    return bundled_authority().modelo("349").revisions["2020-y-siguientes"]
 
 
 def test_collect_row_sets_groups_modelo_349_bindings_by_grouping() -> None:
@@ -92,13 +92,13 @@ def test_collect_row_sets_returns_empty_for_revision_without_row_producers() -> 
     """Modelos without any `aggregation.op = "rows"` bindings emit no row-sets."""
 
     # Modelo 130 (IRPF pago fraccionado) has no row-producer bindings.
-    revision = resources().modelos.get("130").revisions["2019-y-siguientes"]
+    revision = bundled_authority().modelo("130").revisions["2019-y-siguientes"]
 
     assert collect_row_sets(revision) == ()
 
 
 def test_collect_row_sets_rejects_rows_binding_without_row_set_projection() -> None:
-    revision = resources().modelos.get("130").revisions["2019-y-siguientes"]
+    revision = bundled_authority().modelo("130").revisions["2019-y-siguientes"]
     malformed_row_binding = DataBindingDefinition(
         id="synthetic-row-without-grouping",
         source=BindingSourceKind.COLLECTIBLE_INVOICE,

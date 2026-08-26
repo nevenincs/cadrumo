@@ -32,7 +32,7 @@ from .....application.storage.calc_sheets import (
     build_export_plan,
     serialize_offline_workbook,
 )
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .._calc_sheets_apply import (
     _build_protected_range_requests,
     _build_styled_range_requests,
@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _plan() -> SheetExportPlan:
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
     return build_export_plan(snapshot)
 
 

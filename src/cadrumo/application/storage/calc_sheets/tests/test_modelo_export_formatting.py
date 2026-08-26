@@ -15,14 +15,14 @@ from io import BytesIO
 import pytest
 from openpyxl import load_workbook
 
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .. import TabName, build_export_plan, serialize_offline_workbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _m130_plan():
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
     return build_export_plan(snapshot)
 
 

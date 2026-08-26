@@ -9,10 +9,12 @@ from pathlib import Path
 
 import pytest
 
-from .....core.directory_scan import scan_directory
-from .....core.resources import bundled_path, resources
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
 from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+
+from .....core.directory_scan import scan_directory
+from .....core.resources import bundled_path
+from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_catalogue
 from ..schema import ModeloDefinition, RegistryCatalogues
 
@@ -27,7 +29,7 @@ _LEGAL_REF_LITERAL_RE = re.compile(
 
 @pytest.fixture(scope="module")
 def committed_registry() -> tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues]:
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     return authority.root, authority.modelos, authority.catalogues
 
 

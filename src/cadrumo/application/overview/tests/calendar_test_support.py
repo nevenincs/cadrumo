@@ -10,14 +10,15 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+
 from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
 )
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import (
     DeadlineEngine,
     EntityType,
@@ -72,9 +73,7 @@ def observed_revision_id() -> str:
     that only wanted the shared taxpayer persona.
     """
     return str(
-        resources()
-        .modelos.authority.inspect_revision("303", filing_year=2025, period=PERIOD_2025_1T.registry_token)
-        .revision_id,
+        bundled_authority().inspect_revision("303", filing_year=2025, period=PERIOD_2025_1T.registry_token).revision_id,
     )
 
 

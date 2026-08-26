@@ -40,7 +40,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
 from ....domain.modelos import (
@@ -97,7 +97,7 @@ _PROFILE_LABEL = "M130 verification test"
 
 def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
     """Read required manual casillas from the real registry — no duplication."""
-    snap = resources().modelos.authority.snapshot(_M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
+    snap = bundled_authority().snapshot(_M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
     return tuple(c.id for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
@@ -185,7 +185,7 @@ def _seed_clean_cross_period_sources_for_m130(
     filing_repository: ModeloRecordCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
 ) -> CalculationObservationRepository:
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -193,7 +193,7 @@ def _seed_clean_cross_period_sources_for_m130(
     observation_repository = CalculationObservationRepository()
     for requirement in cross_period_dependency_requirements(snapshot):
         values = {casilla_id: Decimal("0") for casilla_id in requirement.source_casilla_ids}
-        source_snapshot = resources().modelos.authority.snapshot(
+        source_snapshot = bundled_authority().snapshot(
             requirement.source_modelo,
             filing_year=requirement.filing_year,
             period=requirement.period.registry_token,

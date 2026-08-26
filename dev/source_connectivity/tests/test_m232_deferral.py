@@ -11,8 +11,8 @@ from cadrumo.application.modelo.calculation_route import (
 from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.core import BindingSourceKind
-from cadrumo.core.resources import resources
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ..check import SourceConnectivityCheckError, check_capability_locators, check_census_governance
 from ..discovery import discovered_source_capability_evidence
@@ -81,7 +81,7 @@ def test_m232_deferred_source_has_no_connected_downstream_lifecycle() -> None:
     candidate_id = "rows.related-party-operation"
     census = load_source_connectivity_census()
     entry = next(item for item in census.entries if item.candidate_id == candidate_id)
-    snapshot = resources().modelos.authority.snapshot("232", filing_year=2025, period="0A")
+    snapshot = bundled_authority().snapshot("232", filing_year=2025, period="0A")
 
     assert any(binding.source is source_kind for binding in snapshot.revision.bindings)
     assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind].value == "deferred"
@@ -102,7 +102,7 @@ def test_m232_deferred_source_has_no_connected_downstream_lifecycle() -> None:
     assert all(fixture.candidate_id != candidate_id for fixture in CONNECTED_PROOF_FIXTURES)
 
     coverage = compose_source_connectivity_coverage(
-        authority=resources().modelos.authority,
+        authority=bundled_authority(),
         census=census,
         as_of=date(2026, 8, 25),
     )

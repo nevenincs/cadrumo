@@ -24,9 +24,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+
+from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
 from .._observations_repository import (
@@ -71,7 +72,7 @@ def _minimal_observation(modelo: str = _MODELO, year: int = _YEAR, period: str =
 
 def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _PERIOD) -> str:
     """Return the law-determined revision id for (modelo, year, period) from the live registry."""
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period)
     return str(snapshot.revision.id)
 
 
@@ -273,7 +274,7 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
             )
         )
 
-        snapshot = resources().modelos.authority.snapshot(
+        snapshot = bundled_authority().snapshot(
             "303",
             filing_year=_M303_CARRY_YEAR,
             period=_M303_CARRY_TARGET_PERIOD,
@@ -310,7 +311,7 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
             )
         )
 
-        snapshot = resources().modelos.authority.snapshot(
+        snapshot = bundled_authority().snapshot(
             "303",
             filing_year=_M303_CARRY_YEAR,
             period=_M303_CARRY_TARGET_PERIOD,

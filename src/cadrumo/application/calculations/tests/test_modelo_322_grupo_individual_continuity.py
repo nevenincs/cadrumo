@@ -49,7 +49,7 @@ from cadrumo.domain.calculations.registry.ledger_bindings import (
 )
 
 from ....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
@@ -140,7 +140,7 @@ def _calculate_322(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
     IVA ledger lines, resolves bound casilla inputs, and evaluates the engine.
     Returns the result plus its produced-value count (the enrollment evidence).
     """
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
     binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, _year_ledger(filing_year))
     inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(

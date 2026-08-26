@@ -37,8 +37,9 @@ from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.i18n import tr
-from .....core.resources import bundled_path, resources
+from .....core.resources import bundled_path
 from .....core.time import now
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.errors import (
     RegistrySnapshotError,
@@ -763,7 +764,7 @@ def _m303_compensation_source_metadata(
     derivation: M303CompensationAvailableDerivation,
 ) -> tuple[Literal["derived_registry_formula", "derived_carry_policy"], str]:
     if derivation.basis == "generated":
-        snapshot = resources().modelos.authority.snapshot(
+        snapshot = bundled_authority().snapshot(
             Modelo.M303.value,
             filing_year=observation.ejercicio,
             period=observation.period.registry_token,

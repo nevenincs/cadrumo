@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _modelos_by_id() -> dict[str, ModeloDefinition]:
-    return {modelo.id: modelo for modelo in resources().modelos.authority.modelos}
+    return {modelo.id: modelo for modelo in bundled_authority().modelos}
 
 
 def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:

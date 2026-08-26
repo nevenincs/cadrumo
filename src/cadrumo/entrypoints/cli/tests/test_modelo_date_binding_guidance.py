@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.runtime_graph import revision_date_binding_ids
+
+from ....domain.calculations.registry.authority import bundled_authority
 from .._modelo_behavior_support import _date_binding_profile_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -14,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 def test_missing_date_binding_fallback_is_a_fact_not_a_cli_recovery() -> None:
     """An unresolved date binding names only its registry fact, never a command."""
 
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
     binding_id = "renta-2025-profile-taxpayer-birth-date"
     assert binding_id in revision_date_binding_ids(snapshot.revision)
 

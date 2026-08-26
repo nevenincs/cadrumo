@@ -62,7 +62,7 @@ from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import IvaCategory, IvaRateKind
 from ....domain.transactions import (
     BusinessClassification,
@@ -114,7 +114,7 @@ _EXPECTED_TIER = {
 
 
 def _m390_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("390", filing_year=2024, period="0A").revision
+    return bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _sale(

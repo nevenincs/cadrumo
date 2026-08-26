@@ -53,7 +53,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import CalculationRevision
 from ....domain.transactions import (
@@ -262,7 +262,7 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
         modelo="303",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
-        revision_id=resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=period).revision.id,
+        revision_id=bundled_authority().snapshot("303", filing_year=_YEAR, period=period).revision.id,
         repository=wu_repo,
         clock=_T0,
     )

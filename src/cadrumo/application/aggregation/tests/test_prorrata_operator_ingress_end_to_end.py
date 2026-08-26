@@ -34,6 +34,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
@@ -45,9 +47,8 @@ from ....core import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
 from ....domain.prorrata_register import ProrrataRegisterEntry, SectorDefinition
 from ....domain.transactions import (
@@ -136,7 +137,7 @@ def _save_txns(
 
 
 def _deducible_cuota(tx_repo: TransactionCatalogueRepository) -> Decimal:
-    revision = resources().modelos.get("303").revisions[_REVISION]
+    revision = bundled_authority().modelo("303").revisions[_REVISION]
     aggregation = aggregate_iva_ledger_observations_from_repositories(
         bucket_id=_BUCKET_ID,
         period=_PERIOD,

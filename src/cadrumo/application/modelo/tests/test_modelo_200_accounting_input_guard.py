@@ -23,7 +23,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.errors import resolve_error_message
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -173,7 +173,7 @@ def _seed_reviewed_business_ledger(tx_repo: TransactionCatalogueRepository) -> N
 
 
 def _create_m200_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         _M200,
         filing_year=_FILING_YEAR,
         period="0A",

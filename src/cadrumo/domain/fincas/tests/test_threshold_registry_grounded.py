@@ -26,7 +26,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime_ops import read_parameter
 from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
 
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
+from ...calculations.registry.authority import bundled_authority
 from .._enums import ReduccionTier
 from .._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
@@ -68,7 +69,7 @@ def _read_rental_parameter(year: int, suffix: str) -> Decimal:
 
 
 def test_resolver_legal_refs_resolve_against_catalogue_and_bundled_corpus() -> None:
-    catalogues = resources().modelos.authority.catalogues
+    catalogues = bundled_authority().catalogues
     missing = sorted(ref for ref in _RESOLVER_LEGAL_REFS if ref not in catalogues.legal)
 
     assert missing == []

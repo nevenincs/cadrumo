@@ -46,7 +46,7 @@ from cadrumo.domain.calculations.registry.schema_extraction import (
 )
 
 from .....core import validated_casilla_id
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .._parser import _numeric_casilla_anchors
 from ..errors import DeclaracionParseError
 
@@ -54,7 +54,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 def _revision(modelo: str, filing_year: int, period: str):
-    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period).revision
+    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period).revision
 
 
 def _numeric_profile(casilla_id: str) -> ExtractionProfileDefinition:

@@ -39,6 +39,7 @@ import ast
 import pytest
 
 from ...application.calculations import assert_enrollment_matches_manifest
+from ...domain.calculations.registry.authority import bundled_authority
 from ...tests import repo_path
 from ..access_gate import (
     CANONICAL_MODELO_FLEET,
@@ -46,7 +47,6 @@ from ..access_gate import (
     MIN_DISTINCT_RENTA_YEARS,
     AuthorizationState,
 )
-from ..resources import resources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -95,7 +95,7 @@ def _ast_has_call_to(source: str, func_name: str) -> bool:
 
 
 def _authority():
-    return resources().modelos.authority
+    return bundled_authority()
 
 
 def test_canonical_fleet_is_seventy_three_distinct_modelos() -> None:

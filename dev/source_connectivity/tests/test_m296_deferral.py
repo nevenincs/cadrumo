@@ -10,7 +10,7 @@ from cadrumo.application.modelo.calculation_route import (
 from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.core import BindingSourceKind
-from cadrumo.core.resources import resources
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ..check import SourceConnectivityCheckError, check_census_governance
 from ..live_proof import CONNECTED_PROOF_FIXTURES, canonical_live_connected_proof_authority, connected_candidate_ids
@@ -31,7 +31,7 @@ def test_m296_registry_blocked_refusal_is_bounded_and_unconnected() -> None:
     source = BindingSourceKind.WITHHOLDING296
     assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source].value == "deferred"
     assert all(source not in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
-    modelo_296 = next(modelo for modelo in resources().modelos.all() if str(modelo.id) == "296")
+    modelo_296 = next(modelo for modelo in bundled_authority().modelos if str(modelo.id) == "296")
     assert all(
         all(binding.source is not source for binding in revision.bindings) for revision in modelo_296.revisions.values()
     )
@@ -45,10 +45,10 @@ def test_m296_registry_blocked_refusal_is_bounded_and_unconnected() -> None:
     assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[retenciones].value == "enrolled"
     assert any(retenciones in owner.owned_sources for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
     for modelo_id in ("180", "193"):
-        revision = resources().modelos.authority.snapshot(modelo_id, filing_year=2025, period="0A").revision
+        revision = bundled_authority().snapshot(modelo_id, filing_year=2025, period="0A").revision
         assert any(binding.source is retenciones for binding in revision.bindings)
     coverage = compose_source_connectivity_coverage(
-        authority=resources().modelos.authority, census=load_source_connectivity_census(), as_of=date(2026, 8, 25)
+        authority=bundled_authority(), census=load_source_connectivity_census(), as_of=date(2026, 8, 25)
     )
     limb = next(item for item in coverage.limbs if item.modelo == "296")
     assert limb.outcome == "unmeasured"

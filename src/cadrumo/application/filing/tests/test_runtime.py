@@ -17,11 +17,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, Period, TaxDomain, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.ids import FormulaId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
+
+from ....core import CasillaId, Period, TaxDomain, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing import ModeloBuilderError
 from ..runtime import (
     RegistryCasillaCollection,
@@ -43,7 +44,7 @@ _MISSING_INPUT_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MI
 
 def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
     """Return {casilla_id: legal_refs} from the authoritative CasillaDefinition."""
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -53,7 +54,7 @@ def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
 
 def _source_casilla_source_refs() -> dict[CasillaId, tuple[str, ...]]:
     """Return {casilla_id: source_refs} from the authoritative CasillaDefinition."""
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -93,7 +94,7 @@ def test_refs_survive_projection(
 
 def test_complete_constraints_survive_projection() -> None:
     """Filing schemas carry the registry's complete constraint contract verbatim."""
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -109,7 +110,7 @@ def test_complete_constraints_survive_projection() -> None:
 
 def test_subview_catalogue_ref_ids_survive_projection() -> None:
     """RegistryModeloSubview must carry the same catalogue refs as the source snapshot."""
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -411,7 +412,7 @@ def _revision_validation_years(revision: ModeloRevision) -> tuple[int, ...]:
 
 
 def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_schema_coordinate() -> None:
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     expected: list[str] = []
     projected: list[str] = []
     offences: list[str] = []

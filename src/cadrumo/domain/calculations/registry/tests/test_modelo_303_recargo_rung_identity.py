@@ -47,7 +47,7 @@ import pytest
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from .....core.resources import resources
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -68,7 +68,7 @@ _TABACO_CUOTA_BOX = "158"
 
 
 def _revision() -> ModeloRevision:
-    return resources().modelos.authority.modelo("303").revisions[_REVISION]
+    return bundled_authority().modelo("303").revisions[_REVISION]
 
 
 def _casillas_by_number() -> dict[str, CasillaDefinition]:

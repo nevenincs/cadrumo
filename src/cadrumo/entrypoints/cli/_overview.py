@@ -43,6 +43,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, strict_round_trip
 from ...core.logging import get_logger
 from ...core.time import today_madrid
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos import WorkUnit
 from ._common import (
     _bad,
@@ -115,14 +116,13 @@ def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
     from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
 
     from ...application.user_profile.preflight import format_profile_selector_requirements
-    from ...core.resources import resources
     from ...domain.user_profile.loader import load_user_profile_schema
 
     return ", ".join(
         format_profile_selector_requirements(
             (warning.code for warning in warnings),
             schema=load_user_profile_schema(),
-            grounding_index=build_profile_grounding_index(resources().modelos.authority),
+            grounding_index=build_profile_grounding_index(bundled_authority()),
         ),
     )
 
@@ -185,7 +185,6 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
         cli_exception_no_recovery_verdict,
     )
     from ...application.user_profile.preflight import format_profile_selector_requirements
-    from ...core.resources import resources
     from ...domain.deadlines import EntityType
     from ...domain.user_profile.loader import load_user_profile_schema
     from ._common import attach_cli_policy_verdict
@@ -204,7 +203,7 @@ def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBo
                     format_profile_selector_requirements(
                         missing,
                         schema=load_user_profile_schema(),
-                        grounding_index=build_profile_grounding_index(resources().modelos.authority),
+                        grounding_index=build_profile_grounding_index(bundled_authority()),
                     ),
                 ),
             },

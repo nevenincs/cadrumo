@@ -24,7 +24,7 @@ from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
 
 from ....core import BindingSourceKind
 from ....core.aggregation import BindingAggregation
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .._row_set_assembly import _row_field_lookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -65,7 +65,7 @@ def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> Non
     detection keeps it.
     """
 
-    revision = resources().modelos.get("720").revisions["2013-y-siguientes"]
+    revision = bundled_authority().modelo("720").revisions["2013-y-siguientes"]
     revision_with_default = revision.model_copy(update={"bindings": (_rows_default_detail_binding(),)})
 
     lookup = _row_field_lookup(revision_with_default)
@@ -74,7 +74,7 @@ def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> Non
 
 
 def test_row_field_lookup_rejects_rows_binding_without_row_set_projection() -> None:
-    revision = resources().modelos.get("720").revisions["2013-y-siguientes"]
+    revision = bundled_authority().modelo("720").revisions["2013-y-siguientes"]
     malformed_row_binding = DataBindingDefinition.model_validate(
         {
             "id": "synthetic-row-without-grouping",

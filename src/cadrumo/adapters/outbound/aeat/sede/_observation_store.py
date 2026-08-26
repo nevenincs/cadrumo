@@ -46,10 +46,10 @@ from typing import override
 from .....core import Period
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex
-from .....core.resources import resources
 from .....core.time import now
-from .....domain.calculations.registry.errors import RegistrySnapshotError
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.casilla_membership import undeclared_casilla_ids
+from .....domain.calculations.registry.errors import RegistrySnapshotError
 from ....persistence.storage import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -59,8 +59,8 @@ from ....persistence.storage import (
     SecureObjectRowIdentityError,
     secure_object_repository_for_active_bucket,
 )
-from .errors import ExpedienteNotFoundError, SedeValidationError
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
+from .errors import ExpedienteNotFoundError, SedeValidationError
 
 _SAFE_SEGMENT_RE = re.compile(r"[^0-9A-Za-z_.-]+")
 _ARTEFACT_NAMESPACE = AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.namespace
@@ -425,7 +425,7 @@ def _validate_observation_casilla_ids(observation: FiledDeclaracionObservation) 
     if not observation.casillas:
         return
     try:
-        snapshot = resources().modelos.authority.snapshot(
+        snapshot = bundled_authority().snapshot(
             observation.modelo,
             filing_year=observation.ejercicio,
             period=observation.period.registry_token,

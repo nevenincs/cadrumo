@@ -26,9 +26,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from ....domain.calculations.registry.authority import bundled_authority
 from .._calculate_input import ModeloCalculateBindingInputError, ModeloCalculateDecimalInputError
 from .._projection import _parse_projection_binding_overrides
 
@@ -42,7 +43,7 @@ _DATE_BINDING = "renta-2024-profile-taxpayer-birth-date"
 
 @pytest.fixture(scope="module")
 def revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
+    return bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
 
 
 def _refusal_context(

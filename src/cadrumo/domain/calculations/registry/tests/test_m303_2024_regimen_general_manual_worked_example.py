@@ -163,13 +163,13 @@ from .....core import (
     IvaDeductionFactKind,
     validated_casilla_id,
 )
-from .....core.resources import resources
 from ....iva import (
     IvaCategory,
     IvaFlowDirection,
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from ..authority import bundled_authority
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -341,7 +341,7 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
 
 
 def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period=_PERIOD)
     binding_values = {
         # "Cuota a compensar de periodos anteriores: 3.000 euros" (pag. 294).
         "modelo-303-compensacion-pendiente-anteriores": Decimal("3000.00"),

@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.schema_references import PeriodSelecto
 
 from ....core import BindingSourceKind, ForeignAssetObligationGroup, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from .._foreign_assets import (
     ForeignAssetClass,
@@ -74,8 +74,8 @@ def _m720_revision() -> ModeloRevision:
         period_selector=PeriodSelector(year_from=2013, periods=("0A",)),
         legal_refs=_M720_LEGAL_REFS,
         source_refs=_M720_SOURCE_REFS,
-        parameters=resources()
-        .modelos.authority.snapshot(
+        parameters=bundled_authority()
+        .snapshot(
             "720",
             filing_year=2025,
             period="0A",

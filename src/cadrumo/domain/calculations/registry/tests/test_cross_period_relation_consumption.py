@@ -29,7 +29,7 @@ from cadrumo.domain.calculations.registry.handoffs import relation_consumption_i
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from .....core import Modelo
-from .....core.resources import resources
+from ..authority import bundled_authority
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -47,7 +47,7 @@ _EVIDENCE_ROLE = "factual_evidence"
 
 
 def test_relation_consumption_includes_real_alternate_binding_channel() -> None:
-    snapshot = resources().modelos.authority.snapshot(Modelo.M390.value, filing_year=2025, period="0A")
+    snapshot = bundled_authority().snapshot(Modelo.M390.value, filing_year=2025, period="0A")
     relation = next(
         item for item in snapshot.revision.relations if item.id == "modelo-390-rel-303-cuota-devengada-total"
     )

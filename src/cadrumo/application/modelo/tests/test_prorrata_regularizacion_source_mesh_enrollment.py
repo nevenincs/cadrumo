@@ -38,7 +38,8 @@ from ....core import (
     ResultDisposition,
     validated_casilla_id,
 )
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
@@ -152,7 +153,7 @@ def _save_current_year_source_observations(repository: CalculationObservationRep
         },
     }
     for period, casilla_values in source_values_by_period.items():
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period=period)
+        snapshot = bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period=period)
         filing_values = {**casilla_values, M303_COMPENSATION_RESULTADO_CASILLA: Decimal("0.00")}
         repository.save(
             repository.prepare_observation_envelope(
@@ -177,7 +178,7 @@ def _save_current_year_source_observations(repository: CalculationObservationRep
 
 def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) -> None:
     """The live mesh invokes prorrata without requiring unrelated carry bindings."""
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    snapshot = bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
     assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 
@@ -219,7 +220,7 @@ def test_source_mesh_resolves_m390_prorrata_binding_from_m303_source_periods(
 ) -> None:
     """The M390 binding consumes stamped Modelo 303 source-period observations."""
     period = Period.from_year_and_code(_FILING_YEAR, "0A")
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=_FILING_YEAR, period="0A")
+    snapshot = bundled_authority().snapshot("390", filing_year=_FILING_YEAR, period="0A")
     assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id, modelo=ModeloCode("390"), period=period)
 

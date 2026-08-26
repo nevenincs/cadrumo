@@ -24,7 +24,7 @@ from ....adapters.outbound.aeat.sede import FiledDeclaracionObservationStore
 from ....core import Period
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.config import load_settings
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.live_gate import requires_live_enabled
 from ...calculations import IvaWalletDecisionRepository
 from ...modelo._iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
@@ -87,8 +87,8 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
 
     backend_bindings: dict[str, Decimal] = {}
     revision = (
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             "303",
             filing_year=target_year,
             period=target_period,

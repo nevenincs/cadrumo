@@ -52,7 +52,8 @@ from ...core import (
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.json_contract import Notice
-from ...core.resources import bundled_path, resources
+from ...core.resources import bundled_path
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -1116,7 +1117,7 @@ def authorization_advisory_for_modelo(modelo: str) -> ModeloAuthorizationAdvisor
     from ...core.access_gate import AuthorizationState
 
     try:
-        capability = resources().modelos.authority.authorization(modelo.strip())
+        capability = bundled_authority().authorization(modelo.strip())
     except CadrumoError:
         return None
     if capability.state is AuthorizationState.AUTHORIZED:

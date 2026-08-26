@@ -20,16 +20,17 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core import BindingSourceKind
-from ....core.resources import resources
 from ....domain.bienes_inversion import (
     BienInversionDisposal,
     BienInversionDisposalRegime,
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 
@@ -39,7 +40,7 @@ _BUCKET = "34d42853-3d81-4c00-b0b9-ad6c27290c49"  # was 'bi-advisory-bucket'
 
 
 def _revision(modelo: str, *, filing_year: int, period_token: str) -> ModeloRevision:
-    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period_token).revision
+    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period_token).revision
 
 
 def _record(identifier: str = "bi-2022-maquina") -> BienInversionIvaRecord:

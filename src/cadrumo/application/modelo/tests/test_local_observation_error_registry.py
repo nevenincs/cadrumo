@@ -8,7 +8,7 @@ import pytest
 
 from ....core import CasillaId, validated_casilla_id
 from ....core.errors import ERROR_REGISTRY, CadrumoError, ErrorCategory, build_error_envelope, get_registered_error_code
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import ModeloError
 from .._action_errors import ModeloLocalObservationError
 from .._local_observation_actions import _canonical_casilla_values
@@ -52,7 +52,7 @@ def test_modelo_local_observation_error_is_registered_and_envelopes() -> None:
 
 
 def test_local_observation_refuses_ambiguous_printed_number_with_canonical_candidates() -> None:
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
+    snapshot = bundled_authority().snapshot("200", filing_year=2025, period="0A")
 
     with pytest.raises(ModeloLocalObservationError) as exc_info:
         _canonical_casilla_values(

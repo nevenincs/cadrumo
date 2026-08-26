@@ -48,7 +48,7 @@ from ....core import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
 from ....domain.prorrata_register import ProrrataRegisterEntry, SectorDefinition
 from ....domain.transactions import (
@@ -77,7 +77,7 @@ _MID_YEAR_PERIOD = "1T"
 
 
 def _revision():
-    snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=_EJERCICIO, period="4T")
+    snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=_EJERCICIO, period="4T")
     return snapshot.revision
 
 

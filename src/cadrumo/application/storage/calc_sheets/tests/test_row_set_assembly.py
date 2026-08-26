@@ -14,14 +14,14 @@ from cadrumo.domain.calculations.registry.detail_record_bindings import Modelo72
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from .....adapters.outbound.google import RowSetCellEdit, RowSetEdit
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .. import assemble_row_sets_for_snapshot, collect_row_sets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _snapshot(modelo: str, *, filing_year: int, period: str):
-    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
 
 
 def _foreign_asset_cells(*, row_index: int = 1, country: str | None = "CH") -> tuple[RowSetCellEdit, ...]:

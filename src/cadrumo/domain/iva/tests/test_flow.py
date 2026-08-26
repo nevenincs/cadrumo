@@ -25,8 +25,10 @@ import tomllib
 
 import pytest
 
-from ....core.resources import bundled_path, resources
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+
+from ....core.resources import bundled_path
+from ...calculations.registry.authority import bundled_authority
 from .. import (
     InvoiceKind,
     IvaCategory,
@@ -327,7 +329,7 @@ def test_iva_flow_corpus_excerpts_present_with_boe_quotes() -> None:
 def test_iva_flow_load_registry_recognises_three_articles() -> None:
     """The registry tree loader must surface the three LIVA articles in
     the catalogue."""
-    catalogues = resources().modelos.authority.catalogues
+    catalogues = bundled_authority().catalogues
     assert "ley-37-1992:art-84" in catalogues.legal
     assert "ley-37-1992:art-88" in catalogues.legal
     assert "ley-37-1992:art-92" in catalogues.legal
@@ -476,7 +478,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
         IvaFlowDirection,
     )
 
-    m303 = resources().modelos.get("303")
+    m303 = bundled_authority().modelo("303")
     revision = m303.revisions["2022"]
 
     # Each ledger_iva_aggregation binding declares its flow direction in

@@ -22,7 +22,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
@@ -55,12 +55,12 @@ _M303_CARRY_SOURCE_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _SOURCE_PERIOD) -> str:
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period)
     return str(snapshot.revision.id)
 
 
 def _m390_first_quarter_requirements():
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=_YEAR, period=_M390_PERIOD)
+    snapshot = bundled_authority().snapshot("390", filing_year=_YEAR, period=_M390_PERIOD)
     return snapshot, tuple(
         requirement
         for requirement in cross_period_dependency_requirements(snapshot)
@@ -136,7 +136,7 @@ def _public_carry_outcomes(
             stamped_revision_id=stamped_revision_id,
         )
 
-        binding_snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
+        binding_snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
         binding_report = resolve_bindings_from_local_store(binding_snapshot, repository=repository)
         binding_refused = _M303_CARRY_BINDING_ID not in binding_report.binding_values
 

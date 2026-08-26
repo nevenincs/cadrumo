@@ -37,8 +37,9 @@ from pathlib import Path
 
 import pytest
 
-from .....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from ..authority import bundled_authority
 from ..record_design_coverage import _CASILLA_TAG_RE
 from .test_revision_span_matches_published_designs import _designs_by_year
 
@@ -71,7 +72,7 @@ _BOX_SHAPED = re.compile(r"^\d{1,5}$")
 
 
 def _revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD).revision
+    return bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD).revision
 
 
 def _normalise(number: str) -> str:

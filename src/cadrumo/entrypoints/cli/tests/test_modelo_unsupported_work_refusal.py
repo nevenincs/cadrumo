@@ -13,12 +13,12 @@ from dataclasses import dataclass
 import pytest
 
 from ....core.config import Settings, override_settings
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.aeat_literal_fixtures import aeat_host
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
-from ..errors import CliRefusedBoundaryError
 from .._modelo_work_lifecycle_cli import guard_unsupported_work_modelo
+from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -138,8 +138,8 @@ def test_registry_entries_for_unsupported_local_work_are_legally_grounded() -> N
         "714": ("ley-19-1991:art-28", "boe-modelo-714-layout"),
         "721": ("ley-11-2021:da-10", "boe-modelo-721-2023-layout"),
     }
-    modelos = resources().modelos.all()
-    catalogues = resources().modelos.authority.catalogues
+    modelos = bundled_authority().modelos
+    catalogues = bundled_authority().catalogues
     modelo_ids = {modelo.id for modelo in modelos}
 
     for modelo, (legal_id, source_id) in expected.items():

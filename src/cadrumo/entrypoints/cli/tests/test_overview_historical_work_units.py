@@ -9,8 +9,8 @@ import pytest
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....core.bucket_pointer import resolve_active_bucket_id
-from ....core.resources import resources
 from ....core.time import now
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     ModeloCode,
     WorkUnit,
@@ -29,7 +29,7 @@ _CURRENT_FILING_RECORD_ID = "b" * 64
 
 
 def _revision_for_target(*, modelo: str, year: int, period: str) -> str:
-    return str(resources().modelos.authority.snapshot(modelo, filing_year=year, period=period).revision.id)
+    return str(bundled_authority().snapshot(modelo, filing_year=year, period=period).revision.id)
 
 
 def _create_historical_work_unit(

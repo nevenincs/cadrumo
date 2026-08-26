@@ -18,9 +18,10 @@ from datetime import date
 
 import pytest
 
-from ....core import BindingSourceKind, Modelo
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+
+from ....core import BindingSourceKind, Modelo
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 from .._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
 
@@ -42,7 +43,7 @@ class _Record:
 
 def _export_bindings() -> tuple[DataBindingDefinition, ...]:
     """The real Modelo 100 2024 profile bindings that carry an export address."""
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         Modelo.M100.value,
         filing_year=2024,
         period="0A",

@@ -10,10 +10,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
 from ....core import Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
@@ -142,11 +143,11 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
         assert observed.source_metadata["captured_by"] == "sofia-local"
         assert observed.observation.casilla_values["1391"] == Decimal("0")
 
-        m100_snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+        m100_snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
         m100_prefill = resolve_bindings_from_local_store(m100_snapshot, repository=repository)
         assert m100_prefill.binding_values["renta-2025-base-liquidable-negativa-general-anterior"] == Decimal("0")
 
-        m130_snapshot = resources().modelos.authority.snapshot("130", filing_year=2025, period="1T")
+        m130_snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T")
         m130_prefill = resolve_bindings_from_local_store(m130_snapshot, repository=repository)
         assert m130_prefill.binding_values["irpf.previous_year_economic_activity_net_income"] == Decimal("0")
 

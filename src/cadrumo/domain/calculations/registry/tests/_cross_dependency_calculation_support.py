@@ -73,7 +73,7 @@ def _grounded_observations(
 
     Built from the compile-only registry tree at calculation grade -- these
     fixtures assert cross-model relation folding, never a filing claim --
-    rather than through ``resources().modelos.authority``, whose ``.load()``
+    rather than through ``bundled_authority()``, whose ``.load()``
     validates every modelo in the bundled tree before returning anything.
     """
     source = f"{modelo}/{filing_year}/{period}"

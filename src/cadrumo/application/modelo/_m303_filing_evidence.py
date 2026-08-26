@@ -6,10 +6,10 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
-from ...core.resources import resources
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
-from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.iva import is_last_filing_period_of_year, validate_regimen_simplificado_rows
 from ...domain.modelos import FilingInstanceEvidence, M303FilingInstanceEvidence, WorkUnit
 from ..calculations import calculate_m303_regimen_simplificado_result
@@ -138,7 +138,7 @@ def _validate_m303_simplified_filing_evidence(
         rows=regimen.rows,
         regimen_snapshot=regimen.regimen_snapshot,
         dana_2024_eligibility=regimen.dana_2024_eligibility,
-        catalogues=resources().modelos.authority.catalogues,
+        catalogues=bundled_authority().catalogues,
     )
     if regimen.calculation_result != expected_result:
         raise M303FilingEvidenceError(

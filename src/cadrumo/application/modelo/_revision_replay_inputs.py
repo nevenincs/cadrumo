@@ -29,12 +29,12 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 
 from ...core import CasillaId, Modelo
 from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
-from ...core.resources import resources
 from ...domain import filing as filing_domain
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import bound_casilla_binding_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import (
@@ -321,7 +321,7 @@ def _m232_detail_row_replay_inputs(
 def _snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot | None:
     """Return the law-determined registry snapshot for ``work_unit``, if loadable."""
     try:
-        return resources().modelos.authority.snapshot(
+        return bundled_authority().snapshot(
             work_unit.modelo,
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,

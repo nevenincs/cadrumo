@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .._layout import plan_layout
 from .._translator import TranslationError, translate_formula
 
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _m130_layout():
-    revision = resources().modelos.get("130").revisions["2019-y-siguientes"]
+    revision = bundled_authority().modelo("130").revisions["2019-y-siguientes"]
     return plan_layout(revision, bracket_filter_date=date(2025, 12, 31))
 
 

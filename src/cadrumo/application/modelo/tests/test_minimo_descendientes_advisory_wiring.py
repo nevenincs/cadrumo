@@ -35,9 +35,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, Modelo
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from ....core import CasillaId, Modelo
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import DescendantInfo, RentaMaritalStatus, descendant_facts_from_list
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import set_active_test_profile_facts
@@ -67,7 +68,7 @@ def bucket_id() -> str:
 
 
 def _revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
+    return bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
 
 
 def _write(
@@ -159,7 +160,7 @@ def test_the_settlement_advisory_reaches_the_coordinator() -> None:
     case in this module). The state is a property of the revision alone, so no
     profile setup is needed.
     """
-    revision = resources().modelos.authority.snapshot("100", filing_year=2020, period=_ANNUAL_PERIOD).revision
+    revision = bundled_authority().snapshot("100", filing_year=2020, period=_ANNUAL_PERIOD).revision
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
         {},
@@ -178,7 +179,7 @@ def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> N
     this the test above would pass against a collector that fired on every
     revision, which would say nothing about the condition it claims to detect.
     """
-    revision = resources().modelos.authority.snapshot("100", filing_year=2024, period=_ANNUAL_PERIOD).revision
+    revision = bundled_authority().snapshot("100", filing_year=2024, period=_ANNUAL_PERIOD).revision
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
         {},

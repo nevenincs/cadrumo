@@ -49,7 +49,6 @@ from ...core.errors import resolve_error_message
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId, ContentDigest, IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
-from ...core.resources import resources
 from ...core.time import now
 from ...domain.buckets import (
     BucketEvent,
@@ -58,6 +57,7 @@ from ...domain.buckets import (
     BucketEventType,
     bucket_event_history_write,
 )
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (
     casillas_by_id,
     undeclared_casilla_ids,
@@ -400,7 +400,7 @@ def _snapshot_for_scope(
 ) -> RegistrySnapshot:
     contract = build_m145_communication_service_contract(filing_year=communication_year)
 
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         M145_COMMUNICATION_MODELO,
         filing_year=communication_year,
         period=period_token.value,

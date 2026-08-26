@@ -22,6 +22,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
 from .....application.storage.calc_sheets import (
     CALC_SHEETS_ENGINE_VERSION,
     OperatorInput,
@@ -31,10 +35,7 @@ from .....application.storage.calc_sheets import (
     registry_sha,
 )
 from .....core import CasillaId, Period, validated_casilla_id
-from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.period import calculation_filing_date
 from .._calc_sheets_pull import (
     BindingEdit,
@@ -229,7 +230,7 @@ def test_modelo_369_exterior_export_pull_matches_normal_calculation_reference(
     ordinary-quarter end.
     """
     period = Period.from_year_and_code(2026, period_code)
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         "369",
         filing_year=2026,
         period=period_code,
@@ -287,14 +288,14 @@ def test_modelo_369_exterior_export_reference_uses_the_quarter_anchor() -> None:
     period = Period.from_year_and_code(2021, "EXT-1T")
 
     with pytest.raises(NoRevisionForPeriodError):
-        resources().modelos.authority.snapshot(
+        bundled_authority().snapshot(
             "369",
             filing_year=2021,
             period=period.registry_token,
             on=calculation_filing_date(period),
         )
 
-    legacy_snapshot = resources().modelos.authority.snapshot(
+    legacy_snapshot = bundled_authority().snapshot(
         "369",
         filing_year=2021,
         period=period.registry_token,

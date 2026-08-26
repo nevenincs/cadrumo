@@ -42,7 +42,8 @@ from cadrumo.domain.calculations.registry.loader_fingerprints import clear_finge
 from cadrumo.domain.calculations.registry.validate import RegistryValidator
 
 from ....core.directory_scan import iter_directory
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -65,7 +66,7 @@ def test_m303_snapshot_resolves_extraction_profile_verification_source() -> None
     ``validate_modelo`` raise ``RegistryValidationError`` here.
     """
     clear_fingerprint_cache()
-    authority = resources().modelos.authority
+    authority = bundled_authority()
 
     # Production validation path — runs the round-trip gate for M303. Must not raise.
     modelo = authority.validate_modelo(_MODELO_303)
@@ -97,7 +98,7 @@ def test_m303_public_registry_validation_still_refuses_the_partial_shape() -> No
     profile which claims corpus round-trip verification without declaring how that
     verification was grounded.
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     modelo = authority.validate_modelo(_MODELO_303)
     candidates = [
         (revision_id, revision, profile)

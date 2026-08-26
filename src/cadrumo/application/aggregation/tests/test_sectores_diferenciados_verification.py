@@ -38,6 +38,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.prorrata_register import (
@@ -52,9 +54,8 @@ from ....core import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from ....domain.transactions import (
@@ -174,7 +175,7 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(tmp_path:
     15.75 — a per-sector result, provably NOT any single whole-entity percentage
     applied across the 31.50 soportado.
     """
-    revision = resources().modelos.get("303").revisions["2022"]
+    revision = bundled_authority().modelo("303").revisions["2022"]
 
     # 1. Settle 2025 per-sector + common definitives from their own volumes.
     comercio_2025 = _settled_2025_entry("comercio", con="90000.00", sin="10000.00")  # 90%

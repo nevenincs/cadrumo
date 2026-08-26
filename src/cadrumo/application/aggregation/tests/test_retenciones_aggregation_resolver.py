@@ -19,16 +19,17 @@ from pathlib import Path
 
 import pytest
 
-from ....core import AggregationCaptureKind, BindingSourceKind, NoRecoveryOutcome, Period
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+
+from ....core import AggregationCaptureKind, BindingSourceKind, NoRecoveryOutcome, Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
-from ..errors import AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition
 from .._retencion_observations_repository import RetencionObservationRepository
 from .._retenciones import RetencionObservation, RetencionScheme
 from .._source_mesh import CalculationSourceContext
+from ..errors import AggregationValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,7 +51,7 @@ _M111_BINDING_VALUES = {
 
 @cache
 def _authority_snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
 
 
 def _observation(nif: str) -> RetencionObservation:

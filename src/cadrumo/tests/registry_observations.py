@@ -47,7 +47,7 @@ def registry_grounded_observation_rows(
     """Return ordered observations grounded in the selected registry snapshot.
 
     Built from the compile-only registry tree, scoped to ``modelo`` alone,
-    rather than through ``resources().modelos.authority`` -- the authority
+    rather than through ``bundled_authority()`` -- the authority
     validates every modelo in the bundled tree before it returns anything, so
     one unrelated modelo missing filing capability broke this fixture for
     every caller, on any modelo, anywhere it was imported. ``grade`` defaults

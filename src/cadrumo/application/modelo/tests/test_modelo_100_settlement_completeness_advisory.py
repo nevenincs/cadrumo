@@ -28,9 +28,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
@@ -171,7 +172,7 @@ def test_settlement_advisory_registered_on_revision(filing_year: int) -> None:
     semantics are base liquidable general (antecedent) and cuota resultante de
     la autoliquidación (consequent). No formula output is asserted.
     """
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=filing_year, period="0A")
+    snapshot = bundled_authority().snapshot("100", filing_year=filing_year, period="0A")
     matches = [p for p in snapshot.revision.verification_predicates if p.predicate_id.endswith(_PREDICATE_ID_SUFFIX)]
     assert len(matches) == 1, f"expected exactly one settlement guard on M100 {filing_year}"
     predicate = matches[0]

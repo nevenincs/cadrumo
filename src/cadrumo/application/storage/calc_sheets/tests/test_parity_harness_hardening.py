@@ -9,15 +9,15 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.config import override_settings
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .._engine import build_export_plan
-from ..errors import CalcSheetsParityError
 from .._parity_harness import (
     OperatorInputScenario,
     _build_operator_inputs,
     _seed_inputs_into_sheet,
     _sheets_recalc_delay_seconds,
 )
+from ..errors import CalcSheetsParityError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _UNKNOWN_SCENARIO_CASILLA: CasillaId = validated_casilla_id(
@@ -31,7 +31,7 @@ _UNKNOWN_EXPECTED_CASILLA: CasillaId = validated_casilla_id(
 
 
 def _m130_snapshot():
-    return resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+    return bundled_authority().snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
 def test_recalc_delay_uses_central_settings_override() -> None:

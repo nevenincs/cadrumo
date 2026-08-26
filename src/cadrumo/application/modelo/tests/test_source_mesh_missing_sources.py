@@ -45,10 +45,11 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import BindingSourceKind
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+
+from ....core import BindingSourceKind
+from ....domain.calculations.registry.authority import bundled_authority
 from ...aggregation import (
     BindingSourceDisposition,
     build_binding_source_dispositions,
@@ -64,7 +65,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _declared_source_kinds() -> frozenset[BindingSourceKind]:
-    report = RegistryQueryService(resources().modelos.authority).source_inventory()
+    report = RegistryQueryService(bundled_authority()).source_inventory()
     return report.declared_source_kinds
 
 
@@ -134,7 +135,7 @@ def test_novel_source_binding_raises_not_silent_zero() -> None:
     # Resolved from (modelo, filing year, period) rather than indexed by a
     # literal revision id: AEAT re-cuts revision layouts, and this modelo's
     # a broad M303 revision was decomposed into four narrower revisions.
-    revision = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision
+    revision = bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
     synthetic = DataBindingDefinition.model_construct(
         id="synthetic-missing-source-binding",
         source="synthetic_unrouted_source_qqq",

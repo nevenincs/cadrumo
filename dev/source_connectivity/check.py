@@ -15,12 +15,12 @@ from cadrumo.application.registry.source_connectivity import (
     load_source_connectivity_census,
     validate_census_destination_candidates,
 )
-from cadrumo.core.resources import resources
 from cadrumo.core.source_connectivity import (
     SourceConnectivityDisposition,
     SourceConnectivityExpiryPosture,
     SourceConnectivityProofAuthority,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from .discovery import (
     assign_capabilities_to_census,
@@ -124,7 +124,7 @@ def check_capability_census(
                     f"connected census destinations do not match independent proof fixture: {row.candidate_id}"
                 )
     try:
-        validate_census_destination_candidates(manifest, resources().modelos.authority)
+        validate_census_destination_candidates(manifest, bundled_authority())
     except ValueError as error:
         raise SourceConnectivityCheckError(str(error)) from error
     check_census_governance(manifest, as_of=as_of or date.today())

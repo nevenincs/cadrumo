@@ -59,3 +59,55 @@ are currently blocked before collection by an unrelated in-flight circular
 import between registry authority/schema and IVA lookup. This is reported as a
 whole-tree blocker, not waived or repaired in the M353 lane. M165/M200 remain
 separate active-tree blockers.
+
+## Re-review closure
+
+Re-review of commit `bcc060bf8d9` is **FAIL**. The BOE-A-2026-1761 corpus
+document is 62,880 bytes with SHA-256
+`69499aceb3a25d449c11d07dd70617b59d30441ab17a0d4a9683445438e57a34`; both
+sidecars name that same digest. Its final provision explicitly makes the
+replacement applicable first to Modelo 353 monthly February 2026. The registry
+therefore selects the 2021--2025 epoch for 2021--2025, the 2026 epoch for
+periods 02--12, and refuses 2015, 2020, January 2026, and 2027. The historical
+catalogue hashes and source windows, source-unjoined status, and the ordinary
+selector evidence are otherwise sound. No Modelo-353-specific selector,
+validator, loader, source alias, or misleading substitution for the historic
+record-design sources was introduced.
+
+### m353-historical-strict-geometry-proof-is-unrunnable | high | the claimed geometry is not executed
+
+The three strict-geometry parametrizations call `require_complete()` and then
+read `.sheets` from its return. That API returns the complete sheet tuple, not
+an extraction object, so each case raises `AttributeError` before checking the
+2015--2016 1800-byte body or either 1500-byte era. The focused canonical
+registry run fails at this assertion (`1 failed, 7 passed` with first-failure
+stopping), and the full parametrized run exposes all three failures. Repair the
+test against the canonical strict-parser result, then rerun the complete M353
+registry module; do not claim historical geometry coverage from a non-running
+assertion.
+
+### m353-generated-export-provenance-is-stale | high | both selected export epochs fail fresh-render equality
+
+The generated-tree gate reaches its M353 rows and shows that membership and
+ordinary generated fragments agree, while the sole differing member is
+`_generation.provenance.json` for each of `2021-2025` and `2026-desde-02`.
+The same fresh-render comparison has two failures and two passing anchor-bijection
+checks. No generator or registry module changed after the reviewed commit, so
+this is committed M353 provenance drift rather than a later shared-generator
+change. Regenerate and validate both complete export trees through the canonical
+generation transaction; an export source/layout claim is not closed while its
+attestation differs from the tree it describes.
+
+### m353-generated-tree-import-order | medium | the M353-touched generated-tree test fails Ruff
+
+The focused Ruff check fails only on the import block in the generated-tree
+test, with `I001` reporting unsorted imports. Restore canonical import order
+and rerun the focused lint gate alongside the repaired M353 tests.
+
+## Recommendations
+
+Preserve the February-only legal boundary and the explicit unsupported-period
+refusals. First restore executable strict geometry evidence, then regenerate
+the two provenance manifests through the normal generator and re-run the
+canonical focused registry, generated-tree, and lint gates. The M165 and M200
+whole-tree blockers remain separate from these M353-owned failures.

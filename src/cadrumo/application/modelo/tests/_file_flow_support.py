@@ -206,7 +206,7 @@ def _resolved_revision(*, modelo: str, filing_year: int, period: str) -> ModeloR
     ``load_registry_tree`` compiles the tree without validating it, and
     ``select_revision`` is a pure function with no validation of its own -- this
     works for any modelo, layout-bearing or not, unlike
-    ``resources().modelos.authority``, whose ``.load()`` validates the entire
+    ``bundled_authority()``, whose ``.load()`` validates the entire
     registry tree and currently refuses unconditionally as a result.
     """
     modelos, _catalogues = bundled_registry_tree()

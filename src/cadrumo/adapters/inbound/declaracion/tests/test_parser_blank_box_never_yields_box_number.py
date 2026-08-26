@@ -43,7 +43,7 @@ import pytest
 from cadrumo.domain.calculations.registry.schema_extraction import ExtractionTargetDefinition
 
 from .....core import validated_casilla_id
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .._parser import _classify_target, _printed_box_numbers, _TargetClassification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -301,7 +301,7 @@ def test_the_guard_is_actually_armed_for_semantically_named_casillas(
     bite: reverting to ``number`` still returns an entry for every target, and
     only the value shows it is the wrong one.
     """
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
     revision = snapshot.revision
     profile = next(
         p

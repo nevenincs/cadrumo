@@ -45,18 +45,19 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
+
+from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, CasillaId, Modelo, Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
@@ -172,7 +173,7 @@ def _calculate_and_verify(
             )
         )
 
-        snapshot = resources().modelos.authority.snapshot(
+        snapshot = bundled_authority().snapshot(
             Modelo.M720.value,
             filing_year=_YEAR_N_PLUS_1,
             period=_PERIOD,
@@ -247,12 +248,12 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
             _INMUEBLES_VALORACION: _INMUEBLES_N,
         },
     )
-    snapshot_n1 = resources().modelos.authority.snapshot(
+    snapshot_n1 = bundled_authority().snapshot(
         Modelo.M720.value,
         filing_year=_YEAR_N_PLUS_1,
         period=_PERIOD,
     )
-    snapshot_n2 = resources().modelos.authority.snapshot(
+    snapshot_n2 = bundled_authority().snapshot(
         Modelo.M720.value,
         filing_year=_YEAR_N_PLUS_1 + 1,
         period=_PERIOD,
@@ -425,7 +426,7 @@ def test_modelo_721_declares_no_independent_evidence_source(tmp_path: Path) -> N
     row-evidence binding the omission is revisited rather than forgotten.
     """
     with _secure_backend(tmp_path):
-        snapshot = resources().modelos.authority.snapshot(
+        snapshot = bundled_authority().snapshot(
             Modelo.M721.value,
             filing_year=2024,
             period=_PERIOD,

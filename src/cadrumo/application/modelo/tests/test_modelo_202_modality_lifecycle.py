@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
@@ -25,7 +26,6 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....core.resources import resources
 from ....domain.deadlines import (
     EntityType,
     IVARegime,
@@ -142,7 +142,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str) -> None:
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
     filing_repo = ModeloRecordCatalogueRepository()
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
+    snapshot = bundled_authority().snapshot("200", filing_year=2024, period="0A")
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="200",
@@ -215,7 +215,7 @@ def _calculate_m202(
     calc_repo = CalculationRevisionCatalogueRepository()
     filing_repo = ModeloRecordCatalogueRepository()
     verification_repo = VerificationReportCatalogueRepository()
-    snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period="1P")
+    snapshot = bundled_authority().snapshot("202", filing_year=2026, period="1P")
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo="202",
@@ -283,7 +283,7 @@ def test_m202_missing_required_bindings_refuses_before_persisting_zero_draft(tmp
         _seed_profile(bucket_id=_BUCKET_ID, incn=None)
         work_repo = WorkUnitCatalogueRepository()
         calc_repo = CalculationRevisionCatalogueRepository()
-        snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period="1P")
+        snapshot = bundled_authority().snapshot("202", filing_year=2026, period="1P")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="202",
@@ -327,7 +327,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
         calc_repo = CalculationRevisionCatalogueRepository()
         filing_repo = ModeloRecordCatalogueRepository()
         verification_repo = VerificationReportCatalogueRepository()
-        snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period="1P")
+        snapshot = bundled_authority().snapshot("202", filing_year=2026, period="1P")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="202",
@@ -452,7 +452,7 @@ def test_m202_missing_incn_with_explicit_relation_values_refuses_calculate(tmp_p
         _seed_prior_m200_evidence(bucket_id=_BUCKET_ID)
         work_repo = WorkUnitCatalogueRepository()
         calc_repo = CalculationRevisionCatalogueRepository()
-        snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period="1P")
+        snapshot = bundled_authority().snapshot("202", filing_year=2026, period="1P")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="202",

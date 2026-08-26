@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 from ._convenio_rate_support import resolve_convenio_rate
 
@@ -48,7 +48,7 @@ def test_us_interest_is_source_state_exempt(tmp_path: Path) -> None:
 
 def test_us_treaty_legal_entries_are_grounded() -> None:
     """The US treaty rows and their BOE-grounded legal entries are registered."""
-    catalogues = resources().modelos.authority.catalogues
+    catalogues = bundled_authority().catalogues
     assert "convenio-es-us-1990:art-10" in catalogues.legal
     assert "convenio-es-us-1990:art-11" in catalogues.legal
     art10 = catalogues.legal["convenio-es-us-1990:art-10"]

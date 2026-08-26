@@ -29,6 +29,7 @@ from pathlib import Path
 
 import pytest
 
+from ...domain.calculations.registry.authority import bundled_authority
 from ...tests import ast_for_path, leaf_name, repo_path, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -620,8 +621,9 @@ def test_dehu_rechazo_tacito_window_resolves_to_the_reviewed_legal_entry() -> No
     changing fails at the last assertion.
     """
     from cadrumo.domain.calculations.registry.legal import legal_reference_quotes_corpus, verify_legal_catalogue
+
     from ..external_constants import DEHU_RECHAZO_TACITO_DIAS_NATURALES
-    from ..resources import bundled_path, resources
+    from ..resources import bundled_path
 
     doc_comment = _doc_comment_above("DEHU_RECHAZO_TACITO_DIAS_NATURALES")
 
@@ -632,7 +634,7 @@ def test_dehu_rechazo_tacito_window_resolves_to_the_reviewed_legal_entry() -> No
     )
     entry_id = cited_ids[0]
 
-    catalogue = resources().modelos.authority.catalogues.legal
+    catalogue = bundled_authority().catalogues.legal
     assert entry_id in catalogue, f"cited legal-catalogue entry {entry_id!r} absent from the registry"
     reference = catalogue[entry_id]
     verify_legal_catalogue({entry_id: reference}, source_root=bundled_path())
