@@ -23,11 +23,13 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from pathlib import Path
+from shutil import copyfile
 
 import pytest
 
 from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
+from .. import m303_orden_manifest
 from ..errors import RegistryLoadError
 from ..ids import SourceRefId
 from ..m303_orden_census_artefact import (
@@ -39,7 +41,9 @@ from ..m303_orden_manifest import (
     _generate_manifest_with_censuses,
     check_m303_annual_orden_census_artefact,
     collect_m303_annual_orden_fingerprints,
+    load_m303_annual_orden_authority,
 )
+from ..m303_orden_raw_models import M303AnnualOrdenSourceCensus
 from ..schema_references import SourceReference
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
@@ -71,6 +75,14 @@ def _root_carrying(tmp_path: Path, text: str) -> Path:
         encoding="utf-8",
         newline="\n",
     )
+    return root
+
+
+def _root_carrying_runtime_artefacts(tmp_path: Path, census_text: str) -> Path:
+    """Copy the committed generated inputs while varying only the census bytes."""
+    root = _root_carrying(tmp_path, census_text)
+    committed_manifest = bundled_path("registry", "aeat", "m303_orden_anual", "manifest.toml")
+    copyfile(committed_manifest, root / "m303_orden_anual" / committed_manifest.name)
     return root
 
 
@@ -116,6 +128,81 @@ def test_the_artefact_is_fingerprinted_so_an_edit_re_keys_the_cache(tmp_path: Pa
     )
 
     assert collect_m303_annual_orden_fingerprints(root) != before
+
+
+def test_runtime_uses_the_shipped_census_without_parsing_and_reextracts_on_identity_mismatch(
+    monkeypatch: pytest.MonkeyPatch,
+    registry_sources: dict[SourceRefId, SourceReference],
+    shipped_artefact_text: str,
+    tmp_path: Path,
+) -> None:
+    """The generated census is the runtime cache; a source mismatch declines it.
+
+    Two unchanged compiler loads must not parse annual-Orden HTML at all.  A
+    census whose pinned-source identity disagrees is not served: the compiler
+    re-extracts each selected annual source and arrives at the same authority.
+    The separate fingerprint test above ensures that this exact generated input
+    also re-keys compiled-registry caching when its bytes change.
+    """
+    modelos, catalogues = bundled_registry_tree()
+    supported_filing_years = catalogues.supported_filing_years
+    assert supported_filing_years is not None
+    observed_extractions: list[tuple[int, SourceRefId]] = []
+    extract = m303_orden_manifest.extract_m303_annual_orden_source
+
+    def observe_extraction(
+        *,
+        ejercicio: int,
+        source: SourceReference,
+        source_root: Path,
+    ) -> M303AnnualOrdenSourceCensus:
+        observed_extractions.append((ejercicio, source.id))
+        return extract(ejercicio=ejercicio, source=source, source_root=source_root)
+
+    monkeypatch.setattr(m303_orden_manifest, "extract_m303_annual_orden_source", observe_extraction)
+
+    runtime_root = bundled_path("registry", "aeat")
+    first = load_m303_annual_orden_authority(
+        runtime_root,
+        source_root=bundled_path(),
+        modelos=modelos,
+        sources=registry_sources,
+        supported_filing_years=supported_filing_years.years,
+    )
+    second = load_m303_annual_orden_authority(
+        runtime_root,
+        source_root=bundled_path(),
+        modelos=modelos,
+        sources=registry_sources,
+        supported_filing_years=supported_filing_years.years,
+    )
+
+    assert second == first
+    assert observed_extractions == [], "an unchanged shipped census must prevent every HTML parse"
+
+    payload = _json_object(shipped_artefact_text)
+    _wrong_source_digest(payload)
+    mismatched_root = _root_carrying_runtime_artefacts(tmp_path, json.dumps(payload, indent=2) + "\n")
+    recompiled = load_m303_annual_orden_authority(
+        mismatched_root,
+        source_root=bundled_path(),
+        modelos=modelos,
+        sources=registry_sources,
+        supported_filing_years=supported_filing_years.years,
+    )
+
+    expected_extractions = [
+        (
+            ejercicio,
+            m303_orden_manifest._single_annual_orden_source_for_year(  # pyright: ignore[reportPrivateUsage]  # test observes the compiler's selected sources
+                registry_sources,
+                ejercicio=ejercicio,
+            ).id,
+        )
+        for ejercicio in supported_filing_years.years
+    ]
+    assert recompiled == first
+    assert observed_extractions == expected_extractions
 
 
 def _object_mapping(value: object, *, description: str) -> CensusArtefactPayload:
