@@ -28,6 +28,9 @@ RUN_ROOT: Final[Path] = REPO_ROOT / ".tmp-tui-visual-inventory"
 """Where runs land. Gitignored: these are review artefacts, never durable."""
 
 MANIFEST_NAME: Final[str] = "manifest.json"
+MANIFEST_SCHEMA_VERSION: Final[int] = 2
+"""Bumped whenever the manifest shape changes. Older runs are refused rather
+than upgraded -- see :func:`read_manifest`."""
 INDEX_NAME: Final[str] = "index.md"
 
 
@@ -124,7 +127,7 @@ class Manifest(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    schema_version: int = 2
+    schema_version: int = MANIFEST_SCHEMA_VERSION
     generated_at: str
     cell_height: int
     frames: tuple[RenderedFrame, ...] = ()
@@ -171,13 +174,35 @@ def write_manifest(directory: Path, manifest: Manifest) -> Path:
     return path
 
 
+class ManifestVersionError(RuntimeError):
+    """The manifest on disk was written by a different version of this tool."""
+
+
 def read_manifest(directory: Path) -> Manifest:
-    """Load the manifest a previous run wrote into ``directory``."""
+    """Load the manifest a previous run wrote into ``directory``.
+
+    A manifest from an older schema is REFUSED, never upgraded. A run is a
+    gitignored pile of review artefacts that is cheap to regenerate and
+    durable to nobody, so an upgrader here would be migration code defending
+    data that should simply be re-rendered. The refusal names the versions and
+    says what to do, which is the part a raw validation traceback does not.
+    """
     path = directory / MANIFEST_NAME
     if not path.is_file():
         message = f"no manifest in {directory}; is that a render run?"
         raise FileNotFoundError(message)
-    return Manifest.model_validate(json.loads(path.read_text(encoding=UTF_8)))
+
+    payload = json.loads(path.read_text(encoding=UTF_8))
+    found = payload.get("schema_version")
+    if found != MANIFEST_SCHEMA_VERSION:
+        message = (
+            f"run {directory.name!r} carries manifest schema {found!r}, "
+            f"but this tool writes {MANIFEST_SCHEMA_VERSION}. "
+            f"Review runs are disposable: re-render it with "
+            f"`python -m dev.tui render --run {directory.name}`."
+        )
+        raise ManifestVersionError(message)
+    return Manifest.model_validate(payload)
 
 
 def write_index(directory: Path, manifest: Manifest) -> Path:
@@ -213,7 +238,12 @@ def write_index(directory: Path, manifest: Manifest) -> Path:
             attempts = f" after {failure.attempts} attempts" if failure.attempts > 1 else ""
             lines.append(f"- `{failure.key}` — {failure.kind}{attempts}")
             if failure.detail:
-                lines.append(f"  - {failure.detail}")
+                # Indented as a fenced block: harness diagnostics are several
+                # lines of traceback or refusal text, and pasted raw they
+                # dissolve the surrounding list into unreadable prose.
+                lines.append("  ```")
+                lines.extend(f"  {line}" for line in failure.detail.splitlines())
+                lines.append("  ```")
         lines.append("")
 
     if manifest.skipped:
@@ -236,9 +266,12 @@ def write_index(directory: Path, manifest: Manifest) -> Path:
 __all__ = [
     "INDEX_NAME",
     "MANIFEST_NAME",
+    "MANIFEST_SCHEMA_VERSION",
     "RUN_ROOT",
+    "FailedFrame",
     "InterfaceRecord",
     "Manifest",
+    "ManifestVersionError",
     "RenderedFrame",
     "SkippedFrame",
     "digest",

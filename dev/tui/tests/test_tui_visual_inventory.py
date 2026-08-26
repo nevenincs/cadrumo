@@ -25,6 +25,9 @@ from .._artifacts import (
     write_index,
     write_manifest,
 )
+from .._artifacts import (
+    digest as _artifacts_digest,
+)
 from .._viewports import DEFAULT_VIEWPORTS, VIEWPORTS, resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -452,3 +455,218 @@ def test_rasterising_the_status_page_reports_its_untranslatable_glyph(tmp_path: 
             assert "\u24d8" in result.missing_glyphs
             return
     pytest.skip("no rendered status frame carried the notice glyph")
+
+
+def test_a_harness_refusal_is_told_apart_from_a_harness_crash() -> None:
+    """The two failure kinds drive different handling, so the read must be exact.
+
+    Both shapes are the real ones this tool has seen: the wizard's readiness
+    refusal, and the import error a peer's half-finished edit produced in a
+    shared worktree.
+    """
+    from .._harness import FailureKind, classify
+
+    refusal = (
+        "harness `open modelo-work-wizard --size 120x40 --theme dark` exited 1\n"
+        "refused: application.modelo.errors.profile_readiness_setup_incomplete\n"
+        "the surface did not open; the session on disk is unchanged."
+    )
+    crash = (
+        "harness `open form --size 80x50 --theme dark` exited 1\n"
+        "Traceback (most recent call last):\n"
+        '  File "<frozen runpy>", line 198, in _run_module_as_main\n'
+        "NameError: name 'InventorySelector' is not defined."
+    )
+
+    assert classify(refusal) is FailureKind.REFUSED
+    assert classify(crash) is FailureKind.CRASHED
+    assert classify("") is FailureKind.CRASHED, "an unreadable failure must not be mistaken for a considered refusal"
+
+
+def test_a_refusal_that_follows_a_traceback_still_reads_as_a_crash() -> None:
+    """Order decides: whichever marker the harness printed first is the cause.
+
+    A traceback that happens to contain the word ``refused:`` further down
+    must not be downgraded into a deterministic refusal, because downgrading
+    it would skip the whole surface on the strength of a transient crash.
+    """
+    from .._harness import FailureKind, classify
+
+    output = "Traceback (most recent call last):\n  ...\nValueError: refused: something that looks like a refusal"
+    assert classify(output) is FailureKind.CRASHED
+
+
+def test_a_harness_error_defaults_to_the_retryable_kind() -> None:
+    """An unclassified failure must not silently condemn a whole surface."""
+    from .._harness import FailureKind, HarnessError
+
+    assert HarnessError("boom").kind is FailureKind.CRASHED
+
+
+def test_the_refusal_reason_is_extracted_for_the_skip_note() -> None:
+    """A skipped frame must name why, in the harness's own words."""
+    from ..cli import _first_refusal_line
+
+    detail = (
+        "harness `open modelo-work-wizard --size 120x40 --theme dark` exited 1\n"
+        "refused: application.modelo.errors.profile_readiness_setup_incomplete\n"
+        "the surface did not open; the session on disk is unchanged."
+    )
+    assert _first_refusal_line(detail) == "application.modelo.errors.profile_readiness_setup_incomplete"
+    assert _first_refusal_line("") == "no diagnostics"
+
+
+def test_a_blocked_surface_is_named_from_failures_and_skips_together() -> None:
+    """A surface is blocked when it produced no frame, however it got there.
+
+    The wizard's real shape: one recorded refusal plus the rest of its matrix
+    recorded as skipped. Counting only failures would under-report it, and
+    counting only skips would miss the first frame that actually tried.
+    """
+    manifest = Manifest(
+        generated_at="2026-01-01T00:00:00+00:00",
+        cell_height=22,
+        frames=(
+            RenderedFrame(
+                surface="status",
+                viewport="small",
+                columns=80,
+                rows=24,
+                orientation="landscape",
+                theme="dark",
+                png="p",
+                svg="s",
+                text="t",
+                png_sha256="a" * 64,
+                text_sha256="b" * 64,
+            ),
+        ),
+        failures=(
+            FailedFrame(
+                surface="modelo-work-wizard",
+                viewport="small",
+                theme="dark",
+                kind="refused",
+                detail="refused: readiness incomplete",
+            ),
+        ),
+        skipped=(
+            SkippedFrame(
+                surface="modelo-work-wizard",
+                viewport="tall",
+                theme="light",
+                reason="surface already refused: readiness incomplete",
+            ),
+        ),
+    )
+    assert manifest.blocked_surfaces == ("modelo-work-wizard",)
+    assert "status" not in manifest.blocked_surfaces
+
+
+def test_the_index_reports_blocked_surfaces_and_unattempted_frames(tmp_path: Path) -> None:
+    """A run that stops mentioning what it gave up on reads as full coverage."""
+    manifest = Manifest(
+        generated_at="2026-01-01T00:00:00+00:00",
+        cell_height=22,
+        failures=(
+            FailedFrame(
+                surface="modelo-work-wizard",
+                viewport="small",
+                theme="dark",
+                kind="refused",
+                attempts=1,
+                detail="refused: readiness incomplete",
+            ),
+        ),
+        skipped=(
+            SkippedFrame(
+                surface="modelo-work-wizard",
+                viewport="tall",
+                theme="light",
+                reason="surface already refused: readiness incomplete",
+            ),
+        ),
+    )
+    body = write_index(tmp_path, manifest).read_text(encoding=UTF_8)
+    assert "Surfaces that produced no frame" in body
+    assert "Not attempted" in body
+    assert "modelo-work-wizard/tall/light" in body
+    assert "readiness incomplete" in body
+
+
+def test_a_manifest_from_an_older_schema_is_refused_not_upgraded(tmp_path: Path) -> None:
+    """Review runs are disposable, so a stale one is re-rendered, never migrated.
+
+    The refusal must name both versions and say what to do; a bare validation
+    error tells the operator nothing about which of the two to fix.
+    """
+    import json
+
+    from .._artifacts import MANIFEST_SCHEMA_VERSION, ManifestVersionError
+
+    stale = {
+        "schema_version": MANIFEST_SCHEMA_VERSION - 1,
+        "generated_at": "2026-01-01T00:00:00+00:00",
+        "cell_height": 22,
+        "failures": ["form: harness refused"],
+    }
+    (tmp_path / "manifest.json").write_text(json.dumps(stale), encoding=UTF_8)
+
+    with pytest.raises(ManifestVersionError) as refusal:
+        read_manifest(tmp_path)
+    message = str(refusal.value)
+    assert str(MANIFEST_SCHEMA_VERSION) in message
+    assert "render" in message, "the refusal must say how to recover"
+
+
+def test_a_manifest_with_no_schema_version_is_refused(tmp_path: Path) -> None:
+    """An absent version is unknown provenance, not an implicit current one."""
+    import json
+
+    from .._artifacts import ManifestVersionError
+
+    (tmp_path / "manifest.json").write_text(json.dumps({"generated_at": "x", "cell_height": 22}), encoding=UTF_8)
+    with pytest.raises(ManifestVersionError):
+        read_manifest(tmp_path)
+
+
+def test_repainting_a_run_rewrites_only_the_raster_derived_fields(tmp_path: Path) -> None:
+    """A repaint must not invent capture data it did not observe.
+
+    The PNG digest and the missing-glyph set belong to the rasteriser and are
+    rewritten; the captured text, the timing and the geometry readings belong
+    to the harness run that produced them and must survive untouched.
+    """
+    svg = _sample_svg()
+    run = tmp_path / "run"
+    (run / "svg").mkdir(parents=True)
+    (run / "text").mkdir(parents=True)
+    (run / "svg" / "frame.svg").write_bytes(svg.read_bytes())
+    (run / "text" / "frame.txt").write_text("captured\n", encoding=UTF_8)
+
+    original = RenderedFrame(
+        surface="status",
+        viewport="small",
+        columns=80,
+        rows=24,
+        orientation="landscape",
+        theme="dark",
+        png="png/frame.png",
+        svg="svg/frame.svg",
+        text="text/frame.txt",
+        png_sha256="0" * 64,
+        text_sha256="1" * 64,
+        elapsed_ms=987.0,
+        geometry_findings=("something the harness measured",),
+    )
+    write_manifest(run, Manifest(generated_at="2026-01-01T00:00:00+00:00", cell_height=22, frames=(original,)))
+
+    result = _raster.rasterise(run / original.svg, run / original.png, cell_height=18)
+    repainted = original.model_copy(
+        update={"png_sha256": _artifacts_digest(run / original.png), "missing_glyphs": result.missing_glyphs},
+    )
+
+    assert repainted.png_sha256 != original.png_sha256, "the repaint must actually change the image digest"
+    assert repainted.elapsed_ms == original.elapsed_ms
+    assert repainted.geometry_findings == original.geometry_findings
+    assert repainted.text_sha256 == original.text_sha256
