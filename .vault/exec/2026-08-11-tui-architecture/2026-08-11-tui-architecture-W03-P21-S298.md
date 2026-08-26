@@ -56,3 +56,14 @@ Verified `_raise_if_m349_intracom_ledger_rows_need_operator_rows` cannot
 newly refuse post-fix: it reads row PRESENCE only, and the union never
 reduces a non-empty identity group to zero rows, so collapsing a
 duplicate cannot flip presence to absence.
+
+Follow-through gap closed: `uncovered_detail_row_kinds()` derives required
+coverage from `ModeloDetailRow`'s own union members (`typing.get_args`),
+not a hand-listed set, so a new row kind added without a matching
+`_ROW_IDENTITY_FIELDS` entry reds the gate instead of silently
+regressing this fix -- the identity-unique fallback is safe (never
+wrongly merges) but was previously silent about never unioning a
+genuine duplicate for an uncovered kind. Proved the gate bites:
+`_uncovered_row_kinds` with one real kind removed from a copy of the
+table detects exactly that kind; the real table is untouched. Commit
+`5392365db2`.
