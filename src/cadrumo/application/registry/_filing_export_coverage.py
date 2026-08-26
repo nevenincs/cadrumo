@@ -1,10 +1,11 @@
-"""Closure-limb projection for exact filing layouts and verified official bytes.
+"""Closure-limb projection for exact filing layouts and two-channel proof.
 
 Filing capability is stricter than a revision merely declaring a layout.  The
-law-selected revision must admit a filing-grade snapshot, and each materialised
-layout must retain a layout-authority source whose bundled bytes still match the
-source catalogue.  The :class:`RegistryAuthorityGrade` boundary and this
-module report those facts without creating a second export authoring path.
+law-selected revision must admit a filing-grade snapshot, each materialised
+layout must retain byte-matching official authority, and both public conformance
+and encrypted source-owned replay must attest the canonical writer.  The
+:class:`RegistryAuthorityGrade` boundary and this module report those facts
+without creating a second export authoring path or projecting secret payloads.
 """
 
 from __future__ import annotations
@@ -13,6 +14,12 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
+from cadrumo.application.filing import (
+    FilingExportProof,
+    FilingExportProofAssessment,
+    FilingExportProofAuthority,
+    FilingExportProofCoordinate,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 
@@ -29,15 +36,11 @@ from ...domain.calculations.registry.temporal import (
 )
 from ._closure import (
     RegistryClosureEvidence,
+    RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,
     RegistryClosureOwnerDisposition,
     RegistryClosureRefusal,
     RegistryClosureRefusalReason,
-)
-from ._filing_export_authority import (
-    FilingExportProof,
-    FilingExportProofAuthority,
-    FilingExportProofConflictError,
 )
 
 __all__ = [
@@ -204,9 +207,10 @@ def _compose_revision_limb(
             detail=proof_failure.detail,
             work_item="aeat-export-fragment-generator-authority:production-emission-proof",
             reconsideration_condition=(
-                "Verify the canonical generation manifest against the current semantic map and render profile, "
-                "then record successful production emitted-byte evidence."
+                "Verify public conformance through the canonical writer and provide a current encrypted "
+                "source-owned replay receipt for the same law-selected provenance."
             ),
+            filing_channels=proof_failure.filing_channels,
         )
     assert proof is not None
     evidence = (*evidence, *_proof_evidence(proof))
@@ -264,54 +268,77 @@ def _filing_export_proof(
     proof_authority: FilingExportProofAuthority | None,
     snapshot: RegistrySnapshot,
 ) -> tuple[FilingExportProof | None, _LayoutEvidenceFailure | None]:
-    """Require one exact canonical-generation and production-emission proof."""
+    """Require one exact two-channel assessment at the law-selected coordinate."""
     if proof_authority is None:
         return None, _LayoutEvidenceFailure(
             reason="missing_evidence",
-            detail="no canonical generation and production emitted-byte proof authority was supplied",
+            detail="no canonical two-channel filing-export proof authority was supplied",
         )
     layout_ids = tuple(layout.id for layout in snapshot.revision.export_layouts)
+    coordinate = FilingExportProofCoordinate(
+        modelo=snapshot.modelo.id,
+        revision=snapshot.revision.id,
+        layout_ids=layout_ids,
+    )
     try:
-        proof = proof_authority.proof_for(
-            modelo=snapshot.modelo.id,
-            revision=snapshot.revision.id,
-            layout_ids=layout_ids,
-        )
-    except FilingExportProofConflictError as exc:
-        return None, _LayoutEvidenceFailure(reason="conflicting_evidence", detail=_failure_detail(exc))
+        assessment = proof_authority.assess_for(coordinate)
     except (OSError, RuntimeError, ValueError) as exc:
         return None, _LayoutEvidenceFailure(reason="stale_evidence", detail=_failure_detail(exc))
-    if proof is None:
-        return None, _LayoutEvidenceFailure(
-            reason="missing_evidence",
-            detail="canonical generation or successful production emitted-byte evidence is absent",
-        )
-    if proof.modelo != snapshot.modelo.id or proof.revision != snapshot.revision.id or proof.layout_ids != layout_ids:
+    if not isinstance(assessment, FilingExportProofAssessment) or assessment.coordinate != coordinate:
         return None, _LayoutEvidenceFailure(
             reason="conflicting_evidence",
-            detail="filing export proof identity does not match the law-selected registry snapshot",
+            detail="filing export assessment identity does not match the law-selected registry snapshot",
         )
-    return proof, None
+    if assessment.proof is None:
+        channel_refusals = tuple(
+            RegistryClosureFilingChannelRefusal(
+                channel=refusal.channel.value,
+                reason=refusal.reason.value,
+                authority_id=refusal.authority_id,
+            )
+            for refusal in assessment.refusals
+        )
+        conflicting_reasons = {"identity_mismatch", "provenance_mismatch"}
+        reason = (
+            "conflicting_evidence"
+            if any(item.reason in conflicting_reasons for item in channel_refusals)
+            else "missing_evidence"
+        )
+        detail = "; ".join(f"{item.channel}:{item.reason}" for item in channel_refusals)
+        return None, _LayoutEvidenceFailure(
+            reason=reason,
+            detail=f"two-channel filing export assessment refused: {detail}",
+            filing_channels=channel_refusals,
+        )
+    return assessment.proof, None
 
 
 def _proof_evidence(proof: FilingExportProof) -> tuple[RegistryClosureEvidence, ...]:
-    """Project both independent proof authorities into the closure evidence spine."""
+    """Project only public receipt metadata into the closure evidence spine."""
+    provenance = proof.conformance.provenance
     return (
         RegistryClosureEvidence(
-            authority=proof.generation.authority,
+            authority=proof.conformance.authority_id,
             locator=(
-                f"{proof.generation.manifest_locator}#sha256={proof.generation.manifest_sha256}"
-                f";semantic={proof.generation.semantic_map_sha256}"
-                f";render={proof.generation.render_profile_sha256}"
-                f";loader={proof.generation.loader_semantic_sha256}"
+                f"{provenance.official_source_ref}#sha256={provenance.official_source_sha256}"
+                f";manifest={provenance.generation_manifest_sha256}"
+                f";semantic={provenance.semantic_map_sha256}"
+                f";render={provenance.render_profile_sha256}"
+                f";loader={provenance.loader_semantic_sha256}"
+                f";writer={proof.conformance.canonical_writer}"
+                f";bytes={proof.conformance.emitted_bytes}"
+                f";checked-offsets={proof.conformance.checked_official_offsets}"
             ),
         ),
         RegistryClosureEvidence(
-            authority=proof.emission.authority,
+            authority=(f"{proof.secure_replay.source_authority_id}+{proof.secure_replay.custody_authority_id}"),
             locator=(
-                f"{proof.emission.evidence_locator}#payload-sha256={proof.emission.payload_sha256}"
-                f";bytes={proof.emission.emitted_bytes}"
-                f";checked-offsets={proof.emission.checked_official_offsets}"
+                f"secure-replay-receipt:{proof.secure_replay.receipt_id}"
+                f";writer={proof.secure_replay.canonical_writer}"
+                f";schema={proof.secure_replay.proof_schema_version}"
+                f";attested={proof.secure_replay.attested_at.isoformat()}"
+                f";valid-until={proof.secure_replay.valid_until.isoformat()}"
+                ";replay-passed=true;payload-digest-exposed=false"
             ),
         ),
     )
@@ -323,6 +350,7 @@ class _LayoutEvidenceFailure:
 
     reason: RegistryClosureRefusalReason
     detail: str
+    filing_channels: tuple[RegistryClosureFilingChannelRefusal, ...] = ()
 
 
 def _refused_limb(
@@ -333,6 +361,7 @@ def _refused_limb(
     detail: str,
     work_item: str,
     reconsideration_condition: str,
+    filing_channels: tuple[RegistryClosureFilingChannelRefusal, ...] = (),
 ) -> RegistryClosureLimb:
     """Return one accountable filing-export refusal."""
     return RegistryClosureLimb(
@@ -350,6 +379,7 @@ def _refused_limb(
                 work_item=work_item,
                 reconsideration_condition=reconsideration_condition,
             ),
+            filing_channels=filing_channels,
         ),
     )
 

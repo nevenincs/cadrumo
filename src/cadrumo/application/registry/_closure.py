@@ -21,6 +21,7 @@ from ...domain.calculations.registry.ids import (
 
 __all__ = [
     "RegistryClosureEvidence",
+    "RegistryClosureFilingChannelRefusal",
     "RegistryClosureLimb",
     "RegistryClosureLimbName",
     "RegistryClosureLimbOutcome",
@@ -79,12 +80,38 @@ class RegistryClosureOwnerDisposition(_ClosureModel):
     reconsideration_condition: _BoundedText
 
 
+class RegistryClosureFilingChannelRefusal(_ClosureModel):
+    """One public, non-sensitive refusal from a mandatory filing-proof channel."""
+
+    channel: Literal["conformance", "secure_replay"]
+    reason: Literal[
+        "evidence_missing",
+        "authority_unavailable",
+        "identity_mismatch",
+        "provenance_mismatch",
+        "canonical_writer_failed",
+        "custody_failed",
+        "proof_validation_failed",
+    ]
+    authority_id: _BoundedText | None = None
+
+
 class RegistryClosureRefusal(_ClosureModel):
     """Actionable reason a revision cannot claim one closure capability."""
 
     reason: RegistryClosureRefusalReason
     detail: _BoundedText
     disposition: RegistryClosureOwnerDisposition
+    filing_channels: tuple[RegistryClosureFilingChannelRefusal, ...] = ()
+
+    @model_validator(mode="after")
+    def _require_coherent_filing_channels(self) -> RegistryClosureRefusal:
+        channels = tuple(item.channel for item in self.filing_channels)
+        if len(channels) != len(set(channels)):
+            raise ValueError("closure refusal permits at most one refusal per filing-proof channel")
+        if self.filing_channels and self.disposition.limb != "filing_export":
+            raise ValueError("only a filing-export refusal may carry filing-proof channel refusals")
+        return self
 
 
 class RegistryClosureLimb(_ClosureModel):

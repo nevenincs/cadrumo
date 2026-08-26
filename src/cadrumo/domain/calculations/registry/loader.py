@@ -50,7 +50,6 @@ from .identity import RegistryIdentity, resolve_registry_identity, stamped_cache
 from .ids import RevisionId
 from .loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
-    MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
     ModeloSource,
     discover_modelo_sources,
     is_bundled_registry_root,
@@ -67,9 +66,6 @@ from .loader_fingerprints import (
 )
 from .loader_fingerprints import (
     clear_fingerprint_cache as _clear_fingerprint_cache,
-)
-from .loader_fingerprints import (
-    collect_registry_tree_fingerprints_for_cache as _collect_fingerprints_for_cache,
 )
 from .loader_fingerprints import (
     refresh_toml_fingerprint_after_load_error as _refresh_toml_fingerprint_after_load_error,
@@ -1129,26 +1125,6 @@ def load_registry_tree(
         return _load_registry_tree_cached(str(resolved), refreshed)
 
 
-def _collect_registry_tree_fingerprints_for_cache(
-    resolved: Path,
-    *,
-    use_cache: bool,
-) -> _RegistryPathFingerprints:
-    """Collect the cache key through the dedicated fingerprint orchestrator."""
-    return _collect_fingerprints_for_cache(
-        resolved,
-        use_cache=use_cache,
-        fingerprint_cache=_registry_fingerprint_cache,
-        is_bundled_root=is_bundled_registry_root,
-        bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
-        mutable_ttl=MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
-        live_cached=_live_cached_fingerprints,
-        collect_directory=_collect_registry_directory_fingerprints,
-        collect_sources=_registry_source_fingerprints,
-        store=_store_registry_fingerprints,
-    )
-
-
 def _live_cached_fingerprints(
     resolved: Path,
     *,
@@ -1423,7 +1399,6 @@ def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
 _collect_registry_tree_fingerprints, _collect_registry_tree_fingerprints_uncached = bind_tree_fingerprint_collectors(
     is_bundled_root=is_bundled_registry_root,
     bundled_ttl=BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
-    mutable_ttl=MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
     live_cached=_live_cached_fingerprints,
     collect_directory=_collect_registry_directory_fingerprints,
     collect_sources=_registry_source_fingerprints,

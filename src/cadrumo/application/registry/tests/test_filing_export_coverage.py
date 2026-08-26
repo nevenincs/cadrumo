@@ -3,11 +3,26 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 import pytest
 from pydantic import ValidationError
 
 from ....core import Modelo, RegistryAuthorityGrade, RevisionReviewStatus
+from ...filing import (
+    FilingExportConformanceReceipt,
+    FilingExportGeneratedOutput,
+    FilingExportOfficialProbe,
+    FilingExportProof,
+    FilingExportProofAssessment,
+    FilingExportProofChannel,
+    FilingExportProofCoordinate,
+    FilingExportProofRefusal,
+    FilingExportProofRefusalReason,
+    FilingExportPublicProvenance,
+    FilingExportSecureReplayReceipt,
+)
 from .. import (
     FilingExportEmissionProof,
     FilingExportGenerationProof,
@@ -18,6 +33,7 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DIGEST = "0" * 64
+_ATTESTED_AT = datetime(2026, 8, 26, 10, 0, tzinfo=UTC)
 
 
 def test_generation_proof_refuses_a_manifest_without_generated_fragments() -> None:
@@ -51,6 +67,7 @@ def test_application_registry_exports_no_passive_proof_catalogue() -> None:
     from .. import __all__ as registry_exports
 
     assert "FilingExportProofCatalogue" not in registry_exports
+    assert "FilingExportProofAuthority" not in registry_exports
 
 
 def test_filing_export_coverage_retains_every_revision_and_below_grade_non_participation(registry_authority) -> None:
@@ -114,7 +131,7 @@ def test_filing_export_coverage_refuses_layout_source_byte_drift(registry_author
     assert (limb.outcome, limb.refusal.reason) == ("refused", "stale_evidence")
 
 
-def test_modelo_111_layout_cannot_satisfy_without_generation_and_emission_proof(registry_authority) -> None:
+def test_modelo_111_layout_cannot_satisfy_without_two_channel_proof(registry_authority) -> None:
     """A loadable fixed-width declaration is not evidence that production can emit it."""
     modelo = registry_authority.modelo(Modelo.M111)
     revision = modelo.revisions["2019-y-siguientes"]
@@ -136,8 +153,123 @@ def test_modelo_111_layout_cannot_satisfy_without_generation_and_emission_proof(
     )
     assert limb.refusal is not None
     assert limb.refusal.reason == "missing_evidence"
-    assert "generation" in limb.refusal.detail
-    assert "emitted-byte" in limb.refusal.detail
+    assert "two-channel" in limb.refusal.detail
+
+
+def test_two_channel_public_receipts_satisfy_without_projecting_a_payload_digest(registry_authority) -> None:
+    """Synthetic strict receipts prove only the application bridge, never taxpayer acceptance."""
+    modelo = registry_authority.modelo(Modelo.M100)
+    revision = modelo.revisions["2025"]
+    authority = _authority_with_single_revision(registry_authority, modelo=modelo, revision=revision)
+    coordinate = FilingExportProofCoordinate(
+        modelo=modelo.id,
+        revision=revision.id,
+        layout_ids=tuple(layout.id for layout in revision.export_layouts),
+    )
+    provenance = _synthetic_public_provenance()
+    proof = FilingExportProof(
+        coordinate=coordinate,
+        conformance=FilingExportConformanceReceipt(
+            coordinate=coordinate,
+            provenance=provenance,
+            authority_id="test.public-conformance",
+            emitted_bytes=100,
+            checked_official_offsets=1,
+        ),
+        secure_replay=FilingExportSecureReplayReceipt(
+            receipt_id=UUID("00000000-0000-4000-8000-000000000001"),
+            coordinate=coordinate,
+            provenance=provenance,
+            source_authority_id="test.secure-source",
+            custody_authority_id="test.encrypted-custody",
+            attested_at=_ATTESTED_AT,
+            valid_until=_ATTESTED_AT + timedelta(days=1),
+        ),
+    )
+
+    limb = compose_filing_export_coverage(
+        authority=authority,
+        proof_authority=_StrictAssessmentAuthority(FilingExportProofAssessment(coordinate=coordinate, proof=proof)),
+    ).limbs[0]
+
+    assert limb.outcome == "satisfied"
+    assert len(limb.evidence) >= 2
+    projected = "\n".join(item.locator for item in limb.evidence)
+    assert "writer=cadrumo.application.filing.export_draft" in projected
+    assert "payload-sha256=" not in projected
+    assert "00000000-0000-4000-8000-000000000001" in projected
+
+
+def test_two_channel_refusals_remain_typed_per_channel(registry_authority) -> None:
+    """Unavailable secure replay and missing conformance remain distinct public refusals."""
+    modelo = registry_authority.modelo(Modelo.M100)
+    revision = modelo.revisions["2025"]
+    authority = _authority_with_single_revision(registry_authority, modelo=modelo, revision=revision)
+    coordinate = FilingExportProofCoordinate(
+        modelo=modelo.id,
+        revision=revision.id,
+        layout_ids=tuple(layout.id for layout in revision.export_layouts),
+    )
+    assessment = FilingExportProofAssessment(
+        coordinate=coordinate,
+        refusals=(
+            FilingExportProofRefusal(
+                coordinate=coordinate,
+                channel=FilingExportProofChannel.CONFORMANCE,
+                reason=FilingExportProofRefusalReason.EVIDENCE_MISSING,
+                authority_id="test.public-conformance",
+            ),
+            FilingExportProofRefusal(
+                coordinate=coordinate,
+                channel=FilingExportProofChannel.SECURE_REPLAY,
+                reason=FilingExportProofRefusalReason.AUTHORITY_UNAVAILABLE,
+            ),
+        ),
+    )
+
+    limb = compose_filing_export_coverage(
+        authority=authority,
+        proof_authority=_StrictAssessmentAuthority(assessment),
+    ).limbs[0]
+
+    assert limb.refusal is not None
+    assert tuple((item.channel, item.reason) for item in limb.refusal.filing_channels) == (
+        ("conformance", "evidence_missing"),
+        ("secure_replay", "authority_unavailable"),
+    )
+
+
+class _StrictAssessmentAuthority:
+    """Return one already-validated assessment without fabricating writer execution."""
+
+    def __init__(self, assessment: FilingExportProofAssessment) -> None:
+        self._assessment = assessment
+
+    def assess_for(self, coordinate: FilingExportProofCoordinate) -> FilingExportProofAssessment:
+        assert coordinate == self._assessment.coordinate
+        return self._assessment
+
+
+def _synthetic_public_provenance() -> FilingExportPublicProvenance:
+    """Build non-sensitive strict metadata solely for bridge-contract coverage."""
+    return FilingExportPublicProvenance(
+        official_source_ref="test.official-layout",
+        official_source_sha256="1" * 64,
+        design_epoch="2025",
+        generation_manifest_sha256="2" * 64,
+        semantic_map_sha256="3" * 64,
+        render_profile_sha256="4" * 64,
+        loader_semantic_sha256="5" * 64,
+        generated_outputs=(FilingExportGeneratedOutput(relative_path="generated/layout.toml", sha256="6" * 64),),
+        probes=(
+            FilingExportOfficialProbe(
+                record_id="record-1",
+                field_id="field-1",
+                emitted_offset=0,
+                length=1,
+            ),
+        ),
+    )
 
 
 def _authority_with_single_revision(

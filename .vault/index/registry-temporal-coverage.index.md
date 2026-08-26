@@ -3,10 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-temporal-coverage'
-date: '2026-08-25'
-modified: '2026-08-25'
-body_schema: 'body-v1'
-body_hash: 'sha256:0fdae62f6dd68481846441a41638e5e4c04d468fb7452669ef20c82676d8c7a3'
+date: '2026-08-26'
+modified: '2026-08-26'
 related:
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S01]]'
   - '[[2026-08-14-registry-temporal-coverage-W01-P01-S02]]'
@@ -36,6 +34,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S49]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S50]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P05-S51]]'
+  - '[[2026-08-14-registry-temporal-coverage-W02-P05-S53]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P06-S13]]'
   - '[[2026-08-14-registry-temporal-coverage-W02-P06-S14]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
@@ -65,6 +64,12 @@ related:
   - '[[2026-08-25-registry-temporal-coverage-s49-m721-package-review-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-s51-m126-m128-attachment-review-audit]]'
   - '[[2026-08-25-registry-temporal-coverage-w02-p05-s50-modelo-763-temporal-coverage-review-audit]]'
+  - '[[2026-08-26-modelo-353-temporal-epochs-audit]]'
+  - '[[2026-08-26-registry-temporal-coverage-exec]]'
+  - '[[2026-08-26-registry-temporal-coverage-m184-historical-epochs-review-audit]]'
+  - '[[2026-08-26-registry-temporal-coverage-m270-historical-epochs-review-audit]]'
+  - '[[2026-08-26-registry-temporal-coverage-m309-historical-epochs-audit]]'
+  - '[[2026-08-26-registry-temporal-coverage-m341-historical-layout-review-audit]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -100,6 +105,11 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-25-registry-temporal-coverage-s49-m721-package-review-audit` - `registry-temporal-coverage` audit: `S49 Modelo 721 package review`
 - `2026-08-25-registry-temporal-coverage-s51-m126-m128-attachment-review-audit` - `registry-temporal-coverage` audit: `S51 M126 and M128 historical attachment review`
 - `2026-08-25-registry-temporal-coverage-w02-p05-s50-modelo-763-temporal-coverage-review-audit` - `registry-temporal-coverage` audit: `W02.P05.S50 Modelo 763 temporal coverage independent review`
+- `2026-08-26-modelo-353-temporal-epochs-audit` - Modelo 353 temporal epochs audit
+- `2026-08-26-registry-temporal-coverage-m184-historical-epochs-review-audit` - `registry-temporal-coverage` audit: `Modelo 184 historical epoch implementation review`
+- `2026-08-26-registry-temporal-coverage-m270-historical-epochs-review-audit` - `registry-temporal-coverage` audit: `Modelo 270 historical epochs independent review`
+- `2026-08-26-registry-temporal-coverage-m309-historical-epochs-audit` - `registry-temporal-coverage` audit: `Modelo 309 historical epochs review`
+- `2026-08-26-registry-temporal-coverage-m341-historical-layout-review-audit` - `registry-temporal-coverage` audit: `Modelo 341 historical layout implementation review`
 
 ### exec
 
@@ -131,8 +141,10 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S49` - Acquire and hash-pin distinct Modelo 721 2023 and 2024 technical contract packages with exact exercise applicability, then split or constrain law-selected revision scope without claiming unbounded technical-layout authority or promoting authority grade.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S50` - Acquire Modelo 763 opening-period and design-era authority, then split the revision at the evidenced 2012, 2015, and 4T-2018 boundaries with period-aware selectors and complete deadlines without inventing unsupported windows or promoting authority grade.
 - `2026-08-14-registry-temporal-coverage-W02-P05-S51` - Acquire and hash-pin the missing historical design eras or constrain unsupported claimed years for Modelos 126, 128, 165, 181, 184, 270, 308, 309, 341, 353, and 576, and adjudicate Modelo 180 ejercicio 2022 on the presentation axis, until the whole-tree claimed-year layout-design gate passes without backdating a newer design or inventing temporal coverage
+- `2026-08-14-registry-temporal-coverage-W02-P05-S53` - Execute the accepted Modelo 200 exercise-2024 versus 2025-design ruling by atomically partitioning layout-correct 2024 and 2025 successors, or withdraw the premature filing layout and application link until that split is complete, without backdating the 2025 design, weakening the claimed-year gate, or promoting unsupported authority
 - `2026-08-14-registry-temporal-coverage-W02-P06-S13` - Replace the single-representative-year assessment with a derived modelo, filing-year, period and schema-family matrix over the validated authority that assesses every claimed year up to the assessment horizon, proven by property on a real long-span open revision
 - `2026-08-14-registry-temporal-coverage-W02-P06-S14` - Collapse the duplicated filing-eligibility predicate onto the snapshot-owned check and delete the coverage-ledger duplicate and the by-construction-empty filing gap surface outright, replacing them with matrix-derived gaps proven non-vacuous on a synthetic reviewed corpus, with no superseded ledger surface retained beside the matrix
+- `2026-08-26-registry-temporal-coverage-exec` - Reconcile the annual-Orden runtime parse-cache row onto the build-generated census artifact and prove parse bypass plus identity-drift fallback
 
 ### plan
 
