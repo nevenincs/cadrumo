@@ -335,7 +335,6 @@ def assert_enrollment_matches_manifest(
         EnrollmentEvidenceError: When no manifest entry enrolls the modelo, or
             the recorded distinct-year set differs from the claimed ``renta_years``.
     """
-
     if repository_root is None:
         manifest = bundled_authority().authorization_manifest
     else:

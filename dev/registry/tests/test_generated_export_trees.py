@@ -27,16 +27,16 @@ from typing import Final
 import pytest
 
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
     RegistryValidationError,
 )
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import (
     load_modelo_directory,
     load_registry_tree,
 )
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ..pipeline._export_tree import ExportTreeTransportProfile, render_complete_export_tree
 from ..pipeline._provenance_manifest import ExportFragmentTarget
