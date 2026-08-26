@@ -9,23 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.loader import load_modelo_directory
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
-from cadrumo.domain.calculations.registry.record_design import extract_record_design
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_exports import (
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    FilingEnvelopeDefinition,
-    FilingEnvelopePrefixFieldDeclaration,
-    FilingEnvelopePrefixRole,
-)
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.snapshot import build_snapshot
-
 from ....core import (
     AeatProductSoftwareEvidence,
     AeatProductSoftwareIdentity,
@@ -42,6 +25,22 @@ from ....core import (
 )
 from ....core.resources import bundled_path
 from ....domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult
+from ....domain.calculations.export_field_kind import CasillaFieldKind
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.loader import load_modelo_directory
+from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.record_design import extract_record_design
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    FilingEnvelopeDefinition,
+    FilingEnvelopePrefixFieldDeclaration,
+    FilingEnvelopePrefixRole,
+)
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.snapshot import build_snapshot
 from ....domain.deadlines import (
     ChargeAccount,
     IVARegime,
