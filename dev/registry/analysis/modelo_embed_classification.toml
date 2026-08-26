@@ -573,7 +573,7 @@ _m303_orden_* parsing modules that survive the embed teardown.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/m303_orden_projection_compiler.py"
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_projection_compiler.py"
 classification = "machinery"
 justification = """
 Compiles the parsed raw annual-orden rows into the projection the authority
@@ -601,7 +601,7 @@ destination = "registry authoring tree: the Lorca 2022 reduction percentage and 
 tree_ownership = "campaign_owned"
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/m303_orden_raw_models.py"
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_raw_models.py"
 classification = "regulatory_data_embed"
 justification = """
 Mostly machinery, with the same specific embed. _validate_source_lorca_2022_reduction
@@ -626,7 +626,7 @@ the _m303_orden_* parsing modules that survive the embed teardown.
 """
 
 [[classification]]
-path = "src/cadrumo/domain/calculations/registry/m303_orden_source.py"
+path = "src/cadrumo/domain/calculations/registry/_m303_orden_source.py"
 classification = "machinery"
 justification = """
 Parses the annual-orden HTML source into raw rows. Its numeric literals are
