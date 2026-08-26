@@ -71,8 +71,10 @@ from ._format_hints import attach_format_hints
 from .catalogue import SETUP_FLOW
 from .descendant_group import attach_descendant_group
 from .errors import (
+    WizardEditUnsupportedConsoleError,
     WizardMissingFlagError,
     WizardPreconditionCondition,
+    WizardUnsupportedConsoleError,
     WizardValidationError,
     wizard_no_action_verdict,
 )
@@ -1178,8 +1180,6 @@ def _run_full_flow(
         # before this command ran, so reaching this branch means the host
         # cannot present a screen at all.  The terminal verdict records that
         # factual capability refusal without prescribing a replacement flow.
-        from . import WizardEditUnsupportedConsoleError, WizardUnsupportedConsoleError
-
         if mode == "edit":
             raise WizardEditUnsupportedConsoleError(
                 translated_message="wizard.errors.unsupported_console_edit",
