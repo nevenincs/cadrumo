@@ -38,3 +38,7 @@ retaining the existing 30 June and 1 July explicit selections.
 - Add `orden-eha-1033-2011:articulo-unico` to the July revision's `orden_aplicabilidad` alongside the approval and effective-date authorities, and assert that complete authority set in the focused legal-boundary test.
 
 - Add a focused no-date 2011 selector assertion that requires `AmbiguousRevisionSelectionError`; retain generic temporal resolution rather than adding a Modelo 308 selector.
+
+## Closure
+
+Re-review of `710f998da1`: PASS. The former High is remediated by the exact applicability tuple containing the approval article, `orden-eha-1033-2011:articulo-unico`, and the effective-date provision; both distinct BOE anchors remain tested. The former Medium is remediated by an explicit undated-2011 refusal assertion, while the June and July boundary selections and the overlap mutation remain independent behavioral checks. The focused Modelo 308 registry, record-design, and lint gates pass. No unresolved Critical, High, or Medium finding remains.
