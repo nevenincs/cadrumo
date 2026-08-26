@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:47e91cb3c55caee90d541bf1b54b72d7a7306a0018cfc7c0336457e101417591'
+body_hash: 'sha256:eee7f7e0c1c58c9813c90ab4aac7d05dece422f926bde173b4c092a93e89c2f6'
 ---
 
 # `tui-architecture` plan
@@ -428,7 +428,7 @@ Compose the independently green lanes in the TUI launcher and app, then expose t
 Replace every CLI, application-test, and development import of the legacy TUI with backend facades or out-of-process invocation.
 
 - [x] `W06.P14.S76` - Remove frontend-owned manager callbacks and consume registered operation APIs and application results only; `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`.
-- [ ] `W06.P14.S157` - Replace the direct CLI profile-logout execution door with the composed public operation API and delete its application-authority call path without a compatibility branch; `src/cadrumo/entrypoints/cli/_config/_custody.py and focused CLI operation-projection tests`.
+- [x] `W06.P14.S157` - Replace the direct CLI profile-logout execution door with the composed public operation API and delete its application-authority call path without a compatibility branch; `src/cadrumo/entrypoints/cli/_config/_custody.py and focused CLI operation-projection tests`.
 - [x] `W06.P14.S158` - Delete remaining ad-hoc canonical JSON and SHA-256 redeclarations in operation-adjacent flow and filing paths by preserving their domain payload normalization while routing digest mechanics exclusively through core.hashing, with byte-parity and semantic RAG fixed-point tests; `src/cadrumo/application/flows/_definition.py and src/cadrumo/application/filing/_review.py`.
 - [x] `W06.P14.S77` - Remove manager TUI construction and retain only CLI projection or frontend-neutral selection behavior; `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py`.
 - [x] `W06.P14.S78` - Remove login TUI construction and consume the application authentication operation contract; `src/cadrumo/entrypoints/cli/_config/_login_frontend.py`.
