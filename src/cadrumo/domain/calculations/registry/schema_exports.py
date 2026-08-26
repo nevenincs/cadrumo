@@ -42,15 +42,11 @@ from .schema_base import LegalRefs, RegistryModel, SourceRefs
 
 __all__ = [
     "DeclaracionIdiomaValue",
-    "ExportComputedKey",
-    "ExportDraftAttribute",
     "ExportFieldDataType",
     "ExportFieldDefinition",
     "ExportLayoutDefinition",
     "ExportLayoutFormatValue",
     "ExportRecordDefinition",
-    "ExportSemanticPayloadAxis",
-    "ExportValuePolicyValue",
     "FilingEnvelopeCloserDerivation",
     "FilingEnvelopeDefinition",
     "FilingEnvelopePrefixFieldDeclaration",

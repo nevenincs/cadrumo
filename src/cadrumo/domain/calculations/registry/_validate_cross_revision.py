@@ -24,22 +24,16 @@ from ._cross_revision_divergence import (
 from ._validate_cross_revision_evolution import strict_continuity_evolution_failures
 from .errors import RegistryValidationError
 from .ids import RevisionId
-from .validate_cross_revision_advisory import (
-    CrossRevisionCasillaDriftSummary,
-    summarize_non_overlapping_cross_revision_casilla_drift,
-)
 
 # D3 defines revision-level continuidad_validation = "strict" as
 # surface-scoped strictness: declared continuity surfaces hard-fail drift,
 # while unannotated repeated-id drift remains advisory until a separate
 # corpus-wide completeness gate proves every repeated id has been reviewed.
 
-__all__ = (
-    "CrossRevisionCasillaDriftSummary",
+__all__ = [
     "declared_cross_revision_continuity_semantic_linkage_failures",
-    "summarize_non_overlapping_cross_revision_casilla_drift",
     "validate_cross_revision_casilla_consistency",
-)
+]
 
 
 def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefinition]) -> None:

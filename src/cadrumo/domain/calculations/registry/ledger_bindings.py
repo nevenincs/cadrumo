@@ -31,7 +31,6 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, IvaDeductionFactKind, Modelo, validated_casilla_id
 from ....core.aggregation import (
-    LEDGER_BINDING_SOURCE_KINDS,
     BindingAggregationOp,
     BindingSourceKind,
     LedgerIncomeGrounding,
@@ -80,7 +79,6 @@ from .schema_base import coerce_decimal_tuple, coerce_enum_member, coerce_enum_t
 # IRNR income projection). Cross-domain consumers route through this name so the
 # registry stays the single source of truth for ledger readiness.
 __all__ = [
-    "LEDGER_BINDING_SOURCE_KINDS",
     "IvaLedgerObservation",
     "IvaSelectorAxesProtocol",
     "OssIossLedgerObservation",
