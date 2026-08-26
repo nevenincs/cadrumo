@@ -120,9 +120,7 @@ def test_modelo_341_all_live_casillas_have_labels_in_every_shipped_locale() -> N
 
     historical = modelo.revisions["2005-2015"]
     wire_labels = {
-        casilla.id: casilla.get_label("es")
-        for casilla in historical.casillas
-        if casilla.id.startswith("wire.")
+        casilla.id: casilla.get_label("es") for casilla in historical.casillas if casilla.id.startswith("wire.")
     }
     assert wire_labels == {
         "wire.letras-etiqueta": "Letras de la etiqueta identificativa",
@@ -131,16 +129,37 @@ def test_modelo_341_all_live_casillas_have_labels_in_every_shipped_locale() -> N
     }
 
 
+def test_modelo_341_historical_presentation_roles_are_shared_with_modelo_309() -> None:
+    """Shared historical presentation concepts cannot retain singleton markers."""
+    modelo_341, _catalogues = _committed_modelo("341")
+    modelo_309, _catalogues = _committed_modelo("309")
+    expected_roles = {
+        "wire.letras-etiqueta": "letras_etiqueta_persona_fisica",
+        "wire.observaciones": "observaciones_presentacion",
+    }
+
+    for modelo, revision_id in ((modelo_341, "2005-2015"), (modelo_309, "2004-2015")):
+        casillas = {casilla.id: casilla for casilla in modelo.revisions[revision_id].casillas}
+        for casilla_id, role in expected_roles.items():
+            casilla = casillas[casilla_id]
+            assert casilla.semantic_role == role
+            assert casilla.semantic_role_cardinality == "shared"
+            assert casilla.semantic_role_cardinality_reason is None
+
+
 def test_modelo_341_historical_layout_covers_every_source_position() -> None:
     """Exercise the generic coverage validator against the real historical PDF."""
     modelo, catalogues = _committed_modelo("341")
     revision = modelo.revisions["2005-2015"]
 
-    assert validate_export_layout_record_coverage(
-        prefix="modelo 341 revision 2005-2015",
-        revision=revision,
-        source_refs=catalogues.sources,
-    ) == []
+    assert (
+        validate_export_layout_record_coverage(
+            prefix="modelo 341 revision 2005-2015",
+            revision=revision,
+            source_refs=catalogues.sources,
+        )
+        == []
+    )
 
     (layout,) = revision.export_layouts
     (record,) = layout.records
