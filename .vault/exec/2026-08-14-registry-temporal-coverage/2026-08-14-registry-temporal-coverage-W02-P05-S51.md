@@ -5,7 +5,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:8925a52f0d62225f22cc9aa3290ed45d1566cf4f4d8d1f308e324eaaae999364'
+body_hash: 'sha256:30595a3c9c24b7eb7d433bfa56c71ee609978aff328bda573a97d1c6c6e22d3f'
 step_id: 'S51'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
@@ -54,6 +54,14 @@ tests. It remains acquisition-only because 2000--2004 has no matching source
 and the required geometry comparison is unavailable during the active registry
 relocation.
 
+Commit `63135011cc` adds six official AEAT historical artefacts for Modelos 308
+and 309, atomically enrolling their URLs in the canonical synchronizer and
+removing the matching historical exclusions. Modelo 308 now has exact 2009 to
+July 2011, July 2011 to 2015, and 2016 to 2018 source bytes; Modelo 309 has exact
+2004 to 2015, 2016 to 2017, and 2018 to 2022 bytes. Canonical sync passes for 75
+URLs and 58 manifests, the corpus proof passes two tests, and the focused 308/309
+registry selection passes 17 tests in a detached worktree at the commit.
+
 No revision span, export layout, or claimed-year verdict changed in that
 commit. The whole-tree claimed-year gate therefore remains the acceptance
 criterion, not the acquisition count.
@@ -62,7 +70,7 @@ criterion, not the acquisition count.
 
 The M126 and M128 historical PDFs parse to the shipped business geometry, but
 the generic coverage validator currently misclassifies the combined label
-`Indicador de pÃƒÂ¡gina complementaria. Obligatorio En blanco` as a missing
+`Indicador de pÃƒÆ’Ã‚Â¡gina complementaria. Obligatorio En blanco` as a missing
 required field even though the authored layout emits the exact blank filler at
 offset 12. The generic validator and its test are actively owned by another
 dirty lane, so this execution did not overwrite them or add a modelo-specific
@@ -86,6 +94,13 @@ positional design, while the BOE 2005, 2007, and 2021 annex chain is graphical
 form evidence rather than a parser-usable writer contract. The 2007 order is
 effective only from 2008 and therefore cannot establish the missing 2007
 geometry.
+
+The 308/309 sources remain acquisition-only until canonical revision-era joins
+are authored. Modelo 308 additionally exposes a real selector limitation: the
+official design changes inside July 2011, while its current AD-HOC selector can
+express only a year boundary. No legal span was narrowed and no later design was
+backdated. The whole claimed-year gate is presently unable to reach these
+assertions because the active Modelo 200 lane leaves the bundled registry red.
 
 Commit `61cdab0e89` attached the already acquired finite 2015--2019 sources for
 Modelos 126 and 128 at revision, layout, and export application-link authority.
