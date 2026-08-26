@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:3ad6f3a2e647b13d70e15515ab24cb81cded04a44a406e2b417287d21877f362'
+body_hash: 'sha256:c9aae08b3ac9c5b12d94cd49f9dde167344fdeb0931b257925a6998d5e13a59b'
 ---
 
 # `tui-architecture` plan
@@ -294,6 +294,8 @@ Implement edit admission, parsing, preflight, exact mutation baselines, typed sc
 - [ ] `W03.P21.S136` - Implement the application-owned edit executor that rechecks every ModeloEditBaselineV1 coordinate at the guarded commit point, refuses stale or incompatible intent without rebasing, delegates canonical calculation and guarded persistence, and returns only typed result receipts; `src/cadrumo/application/modelo/_edit_execution.py`.
 - [ ] `W03.P21.S137` - Expose the edit facade and prove schema, parsing, preflight, scalar and row intent, guarded compare-and-swap, duplicate-result, rollback, compatibility refusal, persistence round-trip, non-retention, and redeclaration behavior while leaving operation-enrollment capability UNMEASURED until its C3 receipt exists; `src/cadrumo/application/modelo/__init__.py and src/cadrumo/application/modelo/tests/test_edit_contract.py`.
 - [ ] `W03.P21.S138` - Implement the sole ModeloEditContractC3DependencyReceiptV1 validator with exact C2 predecessor, contract schema, baseline, guarded persistence, result-receipt, conformance, financial-handoff, production-definition, no-legacy, and redeclaration checks while leaving receipt minting to the C3 custody phase; `src/cadrumo/application/modelo/tests/test_edit_dependency_receipt.py`.
+- [ ] `W03.P21.S275` - Extend the canonical calculation input surface to express explicit CLEAR_DECLARED_VALUE and REMOVE_OVERRIDE for manual scalar casillas, so an edit that withdraws a previously declared value reaches the engine through the same orchestrator every other input uses rather than a second write path, and prove a cleared casilla is distinguishable from one never declared; `the canonical calculate orchestrator input contract, src/cadrumo/application/modelo/_edit_execution.py, and focused clear-versus-never-declared tests`.
+- [ ] `W03.P21.S276` - Extend the canonical calculation input surface to express repeatable-row ADD_ROW, UPDATE_ROW, DELETE_ROW and MOVE_ROW against MANUAL_INPUT binding groups so row edits reach the engine through the owning orchestrator rather than the edit executor materializing rows itself, and prove row ordering and deletion survive a real calculate and guarded persist; `the canonical calculate orchestrator input contract, src/cadrumo/application/modelo/_edit_execution.py, and focused row-intent calculation and persistence tests`.
 
 ## Wave `W04` - Canonical TUI entrypoint and components
 
