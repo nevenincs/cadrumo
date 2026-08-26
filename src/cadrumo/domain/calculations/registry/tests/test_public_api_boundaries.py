@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import ast
 import importlib
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -149,16 +150,46 @@ def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:
     assert offenders == []
 
 
+#: Paths this gate does not read, and why. The benchmark baseline is a frozen
+#: copy of an earlier tree kept for comparison; it is not a consumer of today's
+#: package and rewriting it would destroy the baseline it exists to be.
+_FROZEN_BENCHMARK_SNAPSHOT = REPO_ROOT / "dev" / "benchmarks" / "cli" / ".baseline-source-snapshot"
+
+#: The one module allowed to bind the package namespace, keyed by path with its
+#: reason. Asserting a namespace exports nothing requires binding it, so the
+#: module that PROVES the inertness cannot be read as consuming it.
+_FACADE_BINDING_EXEMPTIONS: Mapping[str, str] = {
+    "src/cadrumo/domain/calculations/registry/tests/test_remote_authority_canonicalisation.py": (
+        "Binds the package solely to assert __all__ == [] -- the inertness this "
+        "gate exists to protect. There is no way to check that property without "
+        "importing the namespace it is a property of."
+    ),
+}
+
+
 def test_project_consumers_do_not_import_the_inert_registry_package_facade() -> None:
     """Every project consumer must name a defining registry module directly."""
     offenders = sorted(
         f"{path.relative_to(REPO_ROOT)} imports the registry package facade"
         for root in _PROJECT_PYTHON_ROOTS
         for path in scan_directory(root, pattern="*.py", recursive=True)
-        if _imports_registry_package_facade(path)
+        if not path.is_relative_to(_FROZEN_BENCHMARK_SNAPSHOT)
+        and path.relative_to(REPO_ROOT).as_posix() not in _FACADE_BINDING_EXEMPTIONS
+        and _imports_registry_package_facade(path)
     )
 
     assert offenders == []
+
+
+def test_every_facade_binding_exemption_still_binds_the_facade() -> None:
+    """An exemption that no longer describes a real binding is slack, not permission."""
+    stale = sorted(
+        relative
+        for relative in _FACADE_BINDING_EXEMPTIONS
+        if not _imports_registry_package_facade(REPO_ROOT / relative)
+    )
+
+    assert stale == [], f"exemption(s) no longer bind the package facade; remove them: {stale}"
 
 
 def test_modelo_registry_tests_use_public_registry_api_boundaries() -> None:

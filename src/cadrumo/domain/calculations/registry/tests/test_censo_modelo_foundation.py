@@ -11,7 +11,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry import censo_modelos as _censo_modelos
+import cadrumo.domain.calculations.registry.censo_modelos as _censo_modelos
 from cadrumo.domain.calculations.registry.censo_modelos import (
     CENSO_MODELO_ERROR_CODES,
     CENSO_MODELO_EVENT_KINDS,

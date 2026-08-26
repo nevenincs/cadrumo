@@ -10,12 +10,25 @@ import typer
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...application.modelo.work_review import build_modelo_work_review
+from ...application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
 from ...core.external_constants import OutputLanguage
 from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from ._modelo_rendering import verification_findings_notices
+from ._tui_policy import tui_was_requested
+
+
+def _run_review_destination(review: ModeloWorkReview) -> None:
+    """Launch the sole C1 bounded-review Textual host for one resolved review.
+
+    Kept as its own seam so a test can substitute a non-blocking stand-in for
+    the real full-screen ``run()`` call without touching the resolution logic
+    above it.
+    """
+    from ...entrypoints.tui.modelo.view.work_review import ModeloWorkReviewApp
+
+    ModeloWorkReviewApp(review).run()
 
 
 def _review_lines(result: WorkReviewResult) -> list[str]:
@@ -83,6 +96,8 @@ def work_review(
         calculation_repository=calculation_repository,
         verification_repository=VerificationReportCatalogueRepository(),
     )
+    if tui_was_requested(ctx):
+        _run_review_destination(review)
     result = WorkReviewResult(review=WorkReviewPayload.from_review(review))
     emit_envelope(
         ctx,

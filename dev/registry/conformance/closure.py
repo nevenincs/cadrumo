@@ -23,9 +23,6 @@ from pydantic import BaseModel, Field, computed_field, model_validator
 from cadrumo.application.filing import FilingExportProofAuthority
 from cadrumo.application.registry import (
     FilingExportCoverageReport,
-    RegistryClosureLimb,
-    RegistryClosureLimbName,
-    RegistryClosureOwnerDisposition,
     SourceConnectivityCoverageReport,
     TemporalCoverageReport,
     TemporalRevisionCoverageSummary,
@@ -33,6 +30,11 @@ from cadrumo.application.registry import (
     compose_source_connectivity_coverage,
     compose_temporal_coverage,
     load_source_connectivity_census,
+)
+from cadrumo.application.registry.closure import (
+    RegistryClosureLimb,
+    RegistryClosureLimbName,
+    RegistryClosureOwnerDisposition,
 )
 from cadrumo.core import STRICT_FROZEN_CONFIG, RegistryAuthorityGrade, SourceConnectivityProofAuthority
 from cadrumo.domain.calculations.registry.authority import (

@@ -1503,6 +1503,8 @@ cli:
           and --sal-capital-social.
         sal_reserva_not_decimal: '--sal-* values must be decimal amounts; received:
           {value}. Use a dot decimal separator with no thousands grouping, e.g. 1234.56.'
+        select_help: List registered work units and, under --tui, pick one to open
+          its review.
         selector_ambiguous: 'More than one active work unit matches this modelo, year,
           and period.
 

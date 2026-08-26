@@ -702,6 +702,16 @@ mcp:
     warm_degraded: '''{command}'' s''ha atès mitjançant el transport de subprocés
       perquè l''entorn d''execució en calent estava {reason}; el resultat és idèntic,
       només més lent. L''atenció en calent es reprèn quan acaba la crida lenta.'
+operation:
+  modal:
+    action:
+      apply: Aplica
+      cancel: Cancelar
+      close: Tanca
+      detach: Desvincula
+      reject: Rebutja
+    status:
+      running: En curs
 overview:
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
   no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.

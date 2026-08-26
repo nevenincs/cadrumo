@@ -205,6 +205,15 @@ flows:
       verification_outcome: Verification outcome
       work_unit: Work unit
     title: Modelo {modelo} · {filing_year} · {period}
+  modelo_select:
+    column:
+      filing_year: Filing year
+      modelo: Modelo
+      name: Name
+      period: Period
+      state: State
+    empty: No work units are registered on this profile yet.
+    title: Select a modelo work unit
   progress:
     current_answer: 'Current answer: {value}'
     current_answer_secret: 'Current answer: (hidden)'

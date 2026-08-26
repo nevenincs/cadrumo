@@ -749,6 +749,8 @@ errors:
       una credencial que necesita.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
+    locale_catalogue_capture_not_current: Esta captura del catálogo de idiomas ya
+      no está vigente.
     m145_communication_record_ambiguous: El prefijo del id de registro de comunicación
       del Modelo 145 coincide con varios registros.
     m145_communication_record_export: El registro local de comunicación del Modelo
@@ -823,6 +825,8 @@ errors:
       una unidad de trabajo de modelo.
     modelo_work_selector_revision_conflict: La unidad de trabajo de modelo seleccionada
       pertenece a otra revisión.
+    modelo_workspace_manifest_capture_not_current: El manifiesto de campos cambió
+      durante la lectura; vuelva a capturarlo.
     profile_capsule_archive: No se ha podido escribir o leer el archivo de copia del
       perfil
     profile_capsule_source: El origen indicado no es una cápsula de perfil legible

@@ -279,6 +279,15 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "WorkListResult",
     ),
     _leaf(
+        "select",
+        "cadrumo.entrypoints.cli._modelo_work_select_cli",
+        (_o("bucket_id", "--bucket-id"), _o("include_discarded", "--include-discarded", _BOOL, flag=True), _LANG),
+        _MODEL_READ,
+        "cadrumo.entrypoints.cli._modelo_payloads",
+        "WorkSelectResult",
+        tui_capability=TuiCapability.AVAILABLE,
+    ),
+    _leaf(
         "rename",
         "cadrumo.entrypoints.cli._modelo_work_lifecycle_cli",
         (_a("work_unit_id"), *_ADDRESS, _o("name", "--name"), _o("actor", "--by")),
@@ -301,6 +310,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _MODEL_READ,
         "cadrumo.entrypoints.cli._modelo_payloads",
         "WorkReviewResult",
+        tui_capability=TuiCapability.AVAILABLE,
     ),
     _leaf(
         "revisions",

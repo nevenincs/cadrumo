@@ -40,10 +40,22 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # (modelo_id, revision, approval_ref, plazo_ref, document_id, has_windows)
+#: The single 2000-y-siguientes revision was narrowed into two eras. Both cite
+#: the same Orden of 15 December 2000 as their approval and plazo authority, so
+#: each is listed rather than one standing in for the pair: a row per committed
+#: definition is what makes the validator run against every one of them.
 _MODELOS = [
     (
         "341",
-        "2000-y-siguientes",
+        "2005-2015",
+        "orden-min-2000-12-15-m341:art-1",
+        "orden-min-2000-12-15-m341:art-2",
+        "BOE-A-2000-22794",
+        False,
+    ),
+    (
+        "341",
+        "2016-y-siguientes",
         "orden-min-2000-12-15-m341:art-1",
         "orden-min-2000-12-15-m341:art-2",
         "BOE-A-2000-22794",

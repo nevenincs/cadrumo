@@ -89,7 +89,7 @@ from ._modelo_aux_payloads import (
     EvidenceRecordRefPayload,
     ModeloAuditCheckResult,
     ModeloAuditExportResult,
-    ModeloAuditShowResult,
+    ModeloAuditViewResult,
     ModeloDescribeResult,
     ModeloListResult,
     ModeloRowPayload,
@@ -471,6 +471,23 @@ class WorkListResult(OutputSchema):
     include_discarded: bool
     work_unit_count: int
     work_units: list[WorkUnitPayload]
+
+
+class WorkSelectResult(OutputSchema):
+    """Work-unit picker result returned by ``aeat app modelo work select``.
+
+    Carries the same listing as :class:`WorkListResult` plus the work unit the
+    operator chose in an interactive TUI session. ``selected_work_unit_id`` is
+    ``None`` in every scripted (non-``--tui``) invocation and in an
+    interactive session where the operator quit the picker without choosing.
+    """
+
+    operation: str = "modelo.work.select"
+    bucket_id_filter: str | None = None
+    include_discarded: bool
+    work_unit_count: int
+    work_units: list[WorkUnitPayload]
+    selected_work_unit_id: str | None = None
 
 
 class WorkStatusResult(OutputSchema):
@@ -1432,7 +1449,7 @@ __all__ = [
     "ModeloAggregateResult",
     "ModeloAuditCheckResult",
     "ModeloAuditExportResult",
-    "ModeloAuditShowResult",
+    "ModeloAuditViewResult",
     "ModeloBindingsListResult",
     "ModeloBindingsPreviewResult",
     "ModeloCasillaResult",

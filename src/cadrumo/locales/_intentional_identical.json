@@ -143,6 +143,7 @@
     "flows.modelo_review.filter.option.input_kind.manual": "Manual is identical in Spanish",
     "flows.modelo_review.filter.option.realised_kind.LITERAL": "Literal is identical in Spanish",
     "flows.modelo_review.title": "the title is the Spanish noun modelo plus interpolated identifiers only",
+    "flows.modelo_select.column.modelo": "modelo is the Spanish AEAT domain term the product keeps untranslated",
     "locales.cli.audit.file_drift": "pure key=value diagnostic, identical across en/es/ca",
     "locales.cli.audit.file_ok": "pure key=value diagnostic, identical across en/es/ca",
     "locales.cli.audit.key_extra": "identical word in Spanish (extra)",

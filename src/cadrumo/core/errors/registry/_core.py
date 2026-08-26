@@ -497,4 +497,14 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.core.i18n.locale_catalogue.LocaleCatalogueCaptureError",
+        ErrorCode(
+            code="REFUSED_LOCALE_CATALOGUE_CAPTURE_NOT_CURRENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.locale_catalogue_capture_not_current",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

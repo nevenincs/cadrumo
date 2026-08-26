@@ -257,8 +257,8 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
     )
     # ...and a floor, so an empty or mis-rooted parse cannot satisfy the above.
     assert {
-        (1, "_errors", "RegistryValidationError"),
-        (1, "_schema", "SourceReference"),
+        (1, "errors", "RegistryValidationError"),
+        (0, "cadrumo.domain.calculations.registry.schema_references", "SourceReference"),
         (4, "core.hashing", "hash_file"),
         (4, "core.resources", "resolve_companion_binary"),
     } <= top_level_imported_symbols

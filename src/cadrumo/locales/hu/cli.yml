@@ -1600,6 +1600,8 @@ cli:
         sal_reserva_not_decimal: 'A --sal-* értékeknek decimális összegeknek kell
           lenniük; kapott érték: {value}. Használjon tizedespontot ezreselválasztó
           nélkül, pl. 1234.56.'
+        select_help: Felsorolja a regisztrált munkaegységeket, és --tui esetén lehetővé
+          teszi az egyik kiválasztását az áttekintés megnyitásához.
         selector_ambiguous: Több aktív munkaegység illeszkedik erre a modellre, évre
           és időszakra. {candidates}
         selector_not_found: Nincs aktív munkaegység ehhez a modellhez, évhez és időszakhoz.

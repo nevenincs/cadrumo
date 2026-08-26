@@ -683,6 +683,16 @@ mcp:
     warm_degraded: '''{command}'' was served through the subprocess transport because
       the warm in-process runtime was {reason}; the result is identical, only slower.
       Warm serving resumes once the slow call clears.'
+operation:
+  modal:
+    action:
+      apply: Apply
+      cancel: Cancel
+      close: Close
+      detach: Detach
+      reject: Reject
+    status:
+      running: Running
 overview:
   no_aeat_history: This profile holds no filing evidence AEAT confirmed.
   no_aeat_history_sociedades: This profile holds no filing evidence AEAT confirmed.

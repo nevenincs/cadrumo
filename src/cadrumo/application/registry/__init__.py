@@ -96,15 +96,6 @@ from ...domain.calculations.registry.verification_tolerance import (
     verification_tolerance_or_exact as _verification_tolerance_or_exact,
 )
 from ...domain.period import calculation_filing_date as _calculation_filing_date
-from ._closure import (
-    RegistryClosureEvidence,
-    RegistryClosureLimb,
-    RegistryClosureLimbName,
-    RegistryClosureLimbOutcome,
-    RegistryClosureOwnerDisposition,
-    RegistryClosureRefusal,
-    RegistryClosureRefusalReason,
-)
 from ._conformance import (
     AnnualCasillaPopulationComparison,
     CoverageAuthorityScope,
@@ -645,13 +636,6 @@ __all__ = [
     "RegistryCitationsListCommand",
     "RegistryCitationsListReport",
     "RegistryCitationsVerificationReport",
-    "RegistryClosureEvidence",
-    "RegistryClosureLimb",
-    "RegistryClosureLimbName",
-    "RegistryClosureLimbOutcome",
-    "RegistryClosureOwnerDisposition",
-    "RegistryClosureRefusal",
-    "RegistryClosureRefusalReason",
     "RegistryConformanceProfile",
     "RegistryCorpusIssueProjection",
     "RegistryDestinationCandidate",

@@ -589,4 +589,4 @@ def test_allowed_values_enforcement_has_one_canonical_codec_owner() -> None:
         if "def _require_allowed_value" in path.read_text(encoding="utf-8")
     )
 
-    assert owners == (production_root / "domain/calculations/registry/_fixed_width_codec.py",)
+    assert owners == (production_root / "domain/calculations/registry/fixed_width_codec.py",)

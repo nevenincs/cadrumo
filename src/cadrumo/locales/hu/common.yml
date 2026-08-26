@@ -694,6 +694,16 @@ mcp:
     warm_degraded: A(z) '{command}' az alfolyamat-átvitelen keresztül lett kiszolgálva,
       mert a meleg, folyamaton belüli futtatókörnyezet {reason} volt; az eredmény
       azonos, csak lassabb. A meleg kiszolgálás folytatódik, amint a lassú hívás befejeződik.
+operation:
+  modal:
+    action:
+      apply: Alkalmaz
+      cancel: Megszakit
+      close: Bezár
+      detach: Leválaszt
+      reject: Elutasit
+    status:
+      running: Folyamatban
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
