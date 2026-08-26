@@ -151,8 +151,8 @@ stores:
 Each reconciliation is recorded in the profile's event history. List the past
 reconciliations recorded for the active profile:
 
-```{cli-sequence} reconcile-history
-:verify: Confirm the reconciliation history reads back cleanly.
+```{cli-sequence} reconcile-list
+:verify: Confirm the recorded reconciliations read back cleanly.
 ```
 
 On a fresh profile the list is empty; after you reconcile a filing a row

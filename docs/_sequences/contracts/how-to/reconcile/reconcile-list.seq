@@ -1,4 +1,4 @@
 @step List the reconciliations recorded for the active profile.
-@result aeat --format json app modelo reconcile history
+@result aeat --format json app modelo reconcile list
 @expect result.reconciliation_count == 0
 @expect exit_code == 0

@@ -8,16 +8,16 @@
         "app",
         "modelo",
         "reconcile",
-        "history"
+        "list"
       ],
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.reconcile.history",
+        "command": "modelo.reconcile.list",
         "notices": [],
         "result": {
           "bucket_id": "<bucket-id>",
-          "operation": "modelo.reconcile.history",
+          "operation": "modelo.reconcile.list",
           "reconciliation_count": 0,
           "reconciliations": [],
           "work_unit_id": null
@@ -33,5 +33,5 @@
     }
   ],
   "golden_schema_version": 1,
-  "sequence_id": "reconcile-history"
+  "sequence_id": "reconcile-list"
 }

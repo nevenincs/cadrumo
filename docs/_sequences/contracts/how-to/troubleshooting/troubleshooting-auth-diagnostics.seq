@@ -3,5 +3,5 @@
 @expect result.row_count == 0
 @expect exit_code == 0
 @step Inspect one diagnostic by its reference.
-@static aeat config auth diagnostics show <diagnostic-id>
+@static aeat config auth diagnostics view <diagnostic-id>
 @blocked operator-artifact Needs a real login-failure diagnostic, which only a live AEAT auth page-drive produces; the preceding list frame is empty by design, so there is nothing to capture and one must not be fabricated as a fixture.

@@ -606,8 +606,8 @@ msgid ""
 msgstr ""
 "Ez hordozhatósági rés, nem helyreállítási hiba. A mentés és a "
 "helyreállítás változatlanul a `aeat config profile archive export` és "
-"`aeat config profile restore` parancsokon keresztül működik, amelyek a "
-"lezárt profil-kapszulán dolgoznak."
+"`aeat config profile restore` parancsokon keresztül működik, "
+"amelyek a lezárt profil-kapszulán dolgoznak."
 
 #: ../../reference/import-export-and-evidence.md:160
 msgid ""
