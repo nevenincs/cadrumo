@@ -63,6 +63,7 @@ _INSPECTION_ROOT_FIELDS = frozenset(
         "modelo_id",
         "revision_id",
         "review_status",
+        "family_dispositions",
         "source_root",
         "revision_source_refs",
         "sources",
