@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:64920b8476d8801952a788ed74d9981bc3aaef9d29712d67c1d43ca0859856cc'
+body_hash: 'sha256:fb5043d20d9a6da97a44c3ebea796940a3796e327cd84f0f9c54c37243768d2d'
 ---
 
 # `tui-architecture` plan
@@ -338,7 +338,8 @@ Render census field review and filed-history outcome detail without placing doma
 - [ ] `W05.P12.S69` - Implement filed-history stage, unit, refusal, partial-effect, evidence, wallet, notification, and provenance result projection; `src/cadrumo/entrypoints/tui/profile/sync_review.py`.
 - [x] `W05.P12.S70` - Prove census review dispatches exact typed responses and never writes or recomputes policy in the TUI; `src/cadrumo/entrypoints/tui/profile/tests/test_census_sync_review.py`.
 - [ ] `W05.P12.S71` - Prove filed-history progress, scoped errors, viewable logs, child provenance, and partial outcomes remain visible through settlement; `src/cadrumo/entrypoints/tui/profile/tests/test_filed_history_operation_view.py`.
-- [ ] `W05.P12.S255` - Bind the filed-history operation to a stable public result schema so its evidence, IVA wallet, notificaciones and provenance facts resolve through a typed public door rather than an opaque result_ref, replacing compose_request_only with a compose binding that declares the result schema, and prove no frontend imports the private FiledHistoryOnboardingRun type to project them; `src/cadrumo/application/live/filed_history_operation.py, its public result schema binding, and focused public-result-contract tests`.
+- [ ] `W05.P12.S255` - Build the generic operation result-projection mechanism symmetric with REVIEW's reviewed_operand_type and review_projector, so a settled operation can expose a typed PUBLIC result distinct from its private result_type: add a result_projector slot and its registry validation, a projection service resolving result_ref to the stored operand and through the projector to a public schema instance, its frontend request success and refusal contracts, and its OperationComposedServices slot, covering the refused and failed settlement paths as well as succeeded, and amend the operation-observation decision record in the same change; no operation binds its private result_type as its own public schema; `src/cadrumo/application/operations/registry.py, projection_services.py, frontend_contracts.py, composition.py, the amended operation-observation ADR, and focused result-projection contract tests`.
+- [ ] `W05.P12.S256` - Wire the filed-history operation through the generic result-projection mechanism with a typed public result exposing its evidence, IVA wallet, notificaciones and provenance facts, registering its result_projector against the stored run, and prove a frontend projects every fact W05.P12.S69 names without importing the private FiledHistoryOnboardingRun type; `src/cadrumo/application/live/filed_history_operation.py, its public result type and projector registration, and focused filed-history public-result tests`.
 
 ### Phase `W05.P23` - C3 transient financial custody and dependency receipts
 
