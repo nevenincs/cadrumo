@@ -13,6 +13,7 @@ from dev.quality.registry_facade_family_census import (
     exact_relocation_candidates,
     generated_rows,
     mechanical_relocation_pairs,
+    refresh_reviewed_matrix_document,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -65,6 +66,32 @@ def test_checked_matrix_is_byte_stable() -> None:
     check_matrix_document(json.loads(before))
 
     assert MATRIX_PATH.read_bytes() == before
+
+
+def test_reviewed_refresh_preserves_every_manual_adjudication_field() -> None:
+    """A census refresh cannot erase the independently reviewed row decisions."""
+    document = json.loads(MATRIX_PATH.read_text(encoding="utf-8"))
+    refreshed = refresh_reviewed_matrix_document(document)
+    reviewed_fields = {
+        "semantic_owner",
+        "semantic_evidence",
+        "disposition",
+        "terminal_state",
+        "follow_on_step_id",
+        "follow_on_action",
+        "follow_on_scope",
+        "follow_on_predecessors",
+    }
+    reviewed_rows = document["rows"]
+    refreshed_rows = refreshed["rows"]
+
+    assert isinstance(reviewed_rows, list)
+    assert isinstance(refreshed_rows, list)
+
+    for before, after in zip(reviewed_rows, refreshed_rows, strict=True):
+        assert isinstance(before, dict)
+        assert isinstance(after, dict)
+        assert {field: before[field] for field in reviewed_fields} == {field: after[field] for field in reviewed_fields}
 
 
 def test_reviewed_rows_are_one_to_one_complete_and_not_grouped() -> None:
