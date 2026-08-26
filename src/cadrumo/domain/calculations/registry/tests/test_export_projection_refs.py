@@ -10,19 +10,6 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_exports import (
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-    ProjectionEndpointDeclaration,
-)
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
-
 from .....core import (
     FilingProducerKey,
     M303Exonerado390OperacionesTercerosProjectionRef,
@@ -42,7 +29,19 @@ from .._validate_exports import (
     _validate_generated_projection_layout_bijection,
     _validate_projection_endpoint_declarations,
 )
+from ..authority import bundled_authority
+from ..errors import RegistryLoadError, RegistryValidationError
+from ..export import derive_export_layouts_from_bindings
+from ..fixed_width_codec import ExportEncoding
 from ..loader import _compile_export_semantic_field, _compile_projection_endpoint_declaration
+from ..schema import ModeloRevision
+from ..schema_exports import (
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    ProjectionEndpointDeclaration,
+)
+from ..schema_references import PeriodSelector
 from ..snapshot import _validate_materialized_export_record_families
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
