@@ -61,5 +61,3 @@ The locale help leaves were regenerated through `dev.locales set-batch` from eac
   prose with the actual four-era topology and record shape. State that no
   continuity IDs are declared if that is the real reason the advisory family is
   empty; do not claim that predecessor revisions do not exist.
-
-
