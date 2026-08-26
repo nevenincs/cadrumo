@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:6bbd7e97b66f3e67fe7e4588b277b6ac6f81be1cdcd15f2177a52656f50c7aeb'
+body_hash: 'sha256:a0499e555e97c188eafcdb51b5e1cd93b4188dfcf77daa270ddbc2c9be6d5864'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -117,7 +117,9 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P20-S283]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S284]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S286]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S290]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S291]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S293]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S132]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S133]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S134]]'
@@ -247,6 +249,7 @@ related:
   - '[[2026-08-25-tui-architecture-s58-tests-audit]]'
   - '[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]'
   - '[[2026-08-25-tui-architecture-workspace-v1-contract-reference]]'
+  - '[[2026-08-26-tui-architecture-detail-record-repetition-audit]]'
   - '[[2026-08-26-tui-architecture-narrow-step-closes-audit]]'
   - '[[2026-08-26-tui-architecture-registry-facade-census-final-hardening-audit]]'
   - '[[2026-08-26-tui-architecture-registry-facade-census-review-remediation-audit]]'
@@ -352,6 +355,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-25-tui-architecture-s57-launcher-composition-review-audit` - `tui-architecture` audit: `s57 launcher composition review`
 - `2026-08-25-tui-architecture-s58-tests-audit` - `tui-architecture` audit: `Canonical TUI presentation-test relocation review`
 - `2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit` - `tui-architecture` audit: `Workspace owner seam architecture reconciliation`
+- `2026-08-26-tui-architecture-detail-record-repetition-audit` - `tui-architecture` audit: `Detail records that cannot express more than one occurrence`
 - `2026-08-26-tui-architecture-narrow-step-closes-audit` - `tui-architecture` audit: `Steps closed narrower than their row text`
 - `2026-08-26-tui-architecture-registry-facade-census-final-hardening-audit` - `tui-architecture` audit: `Registry facade census final hardening`
 - `2026-08-26-tui-architecture-registry-facade-census-review-remediation-audit` - `tui-architecture` audit: `registry facade census review remediation`
@@ -478,7 +482,9 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P20-S283` - Decide what a static-inspection casilla row of the Workspace schema record may carry, given the inspection retains casilla and legal IDENTIFIERS by design while the record requires data_type, classification, family membership, legal_refs and constraint presence: rule whether those enrich the inspection, whether the casilla row is bounded to identity alone for this admission, and in either case rule how an absent field is represented so an empty legal_refs or constraint tuple cannot silently read as none declared; amend the governing registry-api-gate decision record in the same change
 - `2026-08-11-tui-architecture-W03-P20-S284` - Decide what the Workspace schema record's required label means for formula, binding, relation and parameter rows, for which no locale-key derivation exists alongside the modelo, revision, construct and casilla functions that do: rule whether these identities carry operator-facing display text at all, and either add the missing key convention with its four catalogue entries or give the label field a way to state that a row's identity is a technical name rather than a translated string, so a bare identifier is never presented as a localized label; amend the governing registry-api-gate decision record in the same change
 - `2026-08-11-tui-architecture-W03-P20-S286` - Rehome the registry facade census onto this repository's established census shape, which the regulatory-drift and CLI-action censuses already use and which the facade census alone does not: keep the human adjudication in its own small checked-in dispositions ledger, re-derive every finding from the tree on each run, and reconcile the two into unadjudicated, stale and ambiguous residues, so a moving tree can never invalidate a reviewed judgement and a 27MB artifact stops carrying both; restore the eight currently failing census gates and prove a reviewed disposition survives an unrelated edit to its own defining module
+- `2026-08-11-tui-architecture-W03-P20-S290` - Decide how a graded-snapshot provenance record names its subject, since the workspace provenance record requires the casilla or binding identity a trace explains while the persisted calculation source ref carries only resolver identity, resolved binding source, source-object reference and fingerprint, with no field naming the subject and no shared key to join on: rule whether the persisted trace gains a subject identity, whether the provenance facet is keyed by resolved binding source instead, or whether a per-subject provenance record cannot be produced from what is persisted; amend the governing registry-api-gate decision record in the same change
 - `2026-08-11-tui-architecture-W03-P20-S291` - Decide how a period-level ledger preflight issue reaches the workspace, since the producing issue admits a period sentinel alongside a transaction id while the workspace ledger issue type accepts a transaction id alone, leaving a period-scoped readiness problem with no representable arm: rule whether the workspace type gains the period arm or the issue is otherwise carried, and prove a period-level issue is never dropped nor forced into a fabricated transaction identity; amend the governing registry-api-gate decision record in the same change
+- `2026-08-11-tui-architecture-W03-P20-S293` - Adjudicate the cross-module private import of _ManualInputSelector: extract the manual_input selector model, its record-shape key set and is_layout_binding_selector into their own public defining module, so binding_selector_utils.py's two function-local imports of a private bindings.py symbol -- present specifically to break a real module-level import cycle -- become ordinary module-level imports of a shared public contract with no cycle, and no consumer imports a private cross-module name
 - `2026-08-11-tui-architecture-W03-P21-S132` - Define the strict ModeloEditContractV1 family covering version and compatibility headers, read-only edit schema, ModeloEditBaselineV1, parse and preflight requests and results, scalar and repeatable-row intents, guarded apply request, mutation capability, typed refusal, and immutable result receipt
 - `2026-08-11-tui-architecture-W03-P21-S133` - Implement edit admission, registry-backed schema projection, locale-neutral parsing, typed-intent normalization, and preflight services that issue exact ModeloEditBaselineV1 coordinates and never treat a Workspace safe-read baseline as mutation authority
 - `2026-08-11-tui-architecture-W03-P21-S134` - Persist encrypted Modelo edit result receipts with strict current-only serialization, compatibility-tuple validation, atomic lookup, and real round-trip evidence that cannot pass through tautological in-memory reconstruction
