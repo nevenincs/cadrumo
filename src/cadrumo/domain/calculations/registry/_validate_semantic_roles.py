@@ -20,20 +20,16 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
 from . import _validate_semantic_role_typos as _semantic_role_typos
-from ._validate_semantic_role_required import REQUIRED_ROLE_LABEL_PATTERNS, required_role_declaration_failures
 from ._validate_semantic_role_required import (
     collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,
 )
 from .ids import RevisionId
 
-__all__ = (
-    "REQUIRED_ROLE_LABEL_PATTERNS",
-    "collect_casillas_by_semantic_role",
-    "required_role_declaration_failures",
+__all__ = [
     "semantic_role_cardinality_failures",
     "semantic_role_consistency_failures",
     "semantic_role_typo_twin_failures",
-)
+]
 
 
 class _RoleObservation:

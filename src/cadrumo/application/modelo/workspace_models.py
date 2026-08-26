@@ -51,6 +51,13 @@ _MAX_SAFE_FACT_TEXT_LENGTH = 256
 
 type _BoundedText = Annotated[str, Field(min_length=1, max_length=256)]
 type _BoundedCode = Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9_.-]*$")]
+type _BoundedLocaleKey = Annotated[str, Field(min_length=1, max_length=256, pattern=r"^[a-z][a-z0-9_.-]*$")]
+"""Locale keys embed a base32hex-encoded arbitrary identity segment
+(:func:`~cadrumo.domain.calculations.registry.modelo_localization.encode_modelo_locale_segment`)
+for any casilla/binding/relation/etc id containing characters outside the
+plain-segment pattern, so a real key can exceed ``_BoundedCode``'s 128-char
+bound; 256 covers the longest real casilla id observed in the bundled
+registry (143 chars) with headroom."""
 type _BoundedLocalizedText = Annotated[str, Field(min_length=1, max_length=512)]
 type _BoundedRefList[T] = Annotated[tuple[T, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)]
 
@@ -260,9 +267,32 @@ class ModeloWorkspaceLocaleSummaryV1(_WorkspaceModel):
 class ModeloWorkspaceLocalizedTextV1(_WorkspaceModel):
     """One localized display string with its canonical resolution coordinates."""
 
-    locale_key: _BoundedCode
+    kind: Literal["localized"] = "localized"
+    locale_key: _BoundedLocaleKey
     value: _BoundedLocalizedText
     locale: ModeloWorkspaceLocaleSummaryV1
+
+
+class ModeloWorkspaceTechnicalLabelV1(_WorkspaceModel):
+    """A row's canonical registry identifier, presented honestly as never-translated.
+
+    S284: formula, binding, relation, and parameter identities have no
+    locale-catalogue entry anywhere in the tree and are never surfaced to a
+    taxpayer as operator-facing prose -- they are registry names, always
+    shown as themselves in every diagnostic and review surface that already
+    displays them. Wrapping a bare identifier in
+    :class:`ModeloWorkspaceLocalizedTextV1` would misrepresent it as a
+    translation that happened; this type says plainly that none did.
+    """
+
+    kind: Literal["technical"] = "technical"
+    identifier: _BoundedCode
+
+
+type ModeloWorkspaceRecordLabelV1 = Annotated[
+    ModeloWorkspaceLocalizedTextV1 | ModeloWorkspaceTechnicalLabelV1,
+    Field(discriminator="kind"),
+]
 
 
 class ModeloWorkspaceSchemaIdentityV1(_WorkspaceModel):
@@ -470,7 +500,7 @@ class ModeloWorkspaceSchemaRecordV1(_WorkspaceModel):
     reference: ModeloWorkspaceSchemaReferenceV1
     section_path: Annotated[tuple[_BoundedText, ...], Field(max_length=_MAX_SCHEMA_SECTION_DEPTH)]
     data_type: _BoundedCode
-    label: ModeloWorkspaceLocalizedTextV1
+    label: ModeloWorkspaceRecordLabelV1
     classification: ModeloWorkspaceSchemaClassification
     family_disposition: RegistrySchemaFamilyDisposition
     legal_refs: _BoundedRefList[LegalRefId] | None = ()
@@ -1194,6 +1224,7 @@ __all__ = [
     "ModeloWorkspaceProjectionV1",
     "ModeloWorkspaceProvenanceRecordV1",
     "ModeloWorkspaceReadinessV1",
+    "ModeloWorkspaceRecordLabelV1",
     "ModeloWorkspaceRefusalCode",
     "ModeloWorkspaceRefusalV1",
     "ModeloWorkspaceRefusedResultV1",
@@ -1222,6 +1253,7 @@ __all__ = [
     "ModeloWorkspaceStaticInspectionResultV1",
     "ModeloWorkspaceStaticInspectionScopeV1",
     "ModeloWorkspaceTargetV1",
+    "ModeloWorkspaceTechnicalLabelV1",
     "ModeloWorkspaceTextFactValueV1",
     "ModeloWorkspaceVersionHeader",
     "ModeloWorkspaceVersionRefusalV1",

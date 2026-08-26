@@ -73,11 +73,16 @@ class ModeloEditMutationFamily(StrEnum):
 
 
 class ModeloEditScalarIntentKind(StrEnum):
-    """The three distinct scalar edit intents; address absence means UNCHANGED."""
+    """The two distinct scalar edit intents; address absence means UNCHANGED.
+
+    ``REMOVE_OVERRIDE`` is deliberately NOT a member: it addresses the
+    ``CalculationRevision.binding_overrides`` store, which is keyed by
+    ``BindingId``, never ``CasillaId`` -- no casilla-addressed scalar intent
+    can reach it. See :class:`ModeloEditBindingIntentKind`.
+    """
 
     SET_TYPED_VALUE = "set_typed_value"
     CLEAR_DECLARED_VALUE = "clear_declared_value"
-    REMOVE_OVERRIDE = "remove_override"
 
 
 class ModeloEditRowIntentKind(StrEnum):
@@ -87,6 +92,19 @@ class ModeloEditRowIntentKind(StrEnum):
     UPDATE_ROW = "update_row"
     DELETE_ROW = "delete_row"
     MOVE_ROW = "move_row"
+
+
+class ModeloEditBindingIntentKind(StrEnum):
+    """The two distinct binding-override edit intents; address absence means UNCHANGED.
+
+    Mirrors ``SET_TYPED_VALUE``/``CLEAR_DECLARED_VALUE`` in shape, but these
+    apply to the ``BindingId``-keyed ``binding_overrides`` store rather than a
+    casilla's declared value -- the operator-facing ``--binding KEY=VALUE``
+    CLI override and its withdrawal.
+    """
+
+    SET_OVERRIDE_VALUE = "set_override_value"
+    REMOVE_OVERRIDE = "remove_override"
 
 
 class ModeloEditNonWritableReason(StrEnum):
@@ -195,6 +213,20 @@ class ModeloEditScalarAddressV1(_EditModel):
     casilla_id: CasillaId
 
 
+class ModeloEditBindingAddressV1(_EditModel):
+    """A canonical binding-override address, keyed by the registry binding identity.
+
+    Distinct from :class:`ModeloEditScalarAddressV1`: a binding override
+    addresses ``CalculationRevision.binding_overrides``, which is keyed by
+    ``BindingId``, never ``CasillaId`` -- most overridable bindings (a
+    fichero-BOE record-field ``manual_input`` binding, most notably) have no
+    casilla at all to address through.
+    """
+
+    kind: Literal["binding"] = "binding"
+    binding_id: BindingId
+
+
 class ModeloEditExistingRowAddressV1(_EditModel):
     """The application-issued canonical coordinate of one persisted repeated row."""
 
@@ -222,7 +254,10 @@ type ModeloEditRowAddressV1 = Annotated[
 ]
 
 type ModeloEditAddressV1 = Annotated[
-    ModeloEditScalarAddressV1 | ModeloEditExistingRowAddressV1 | ModeloEditNewRowCorrelationV1,
+    ModeloEditScalarAddressV1
+    | ModeloEditBindingAddressV1
+    | ModeloEditExistingRowAddressV1
+    | ModeloEditNewRowCorrelationV1,
     Field(discriminator="kind"),
 ]
 
@@ -314,11 +349,45 @@ class ModeloEditNonWritableRowGroupSurfaceEntryV1(_EditModel):
     reason: ModeloEditNonWritableReason
 
 
+class ModeloEditWritableBindingOverrideSurfaceEntryV1(_EditModel):
+    """One binding the baseline admits the operator-facing ``--binding`` override for.
+
+    Distinct from a scalar or row-group entry: it addresses
+    ``CalculationRevision.binding_overrides`` (``BindingId``-keyed), never a
+    casilla, because most eligible bindings -- a fichero-BOE record-field
+    ``manual_input`` binding, most notably -- have no casilla to address
+    through at all.
+    """
+
+    kind: Literal["writable_binding_override"] = "writable_binding_override"
+    binding_id: BindingId
+    allowed_intents: Annotated[tuple[ModeloEditBindingIntentKind, ...], Field(min_length=1, max_length=2)]
+
+    @field_validator("allowed_intents")
+    @classmethod
+    def _require_unique_allowed_binding_intents(
+        cls, value: tuple[ModeloEditBindingIntentKind, ...]
+    ) -> tuple[ModeloEditBindingIntentKind, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("writable binding-override surface entry must declare each allowed intent at most once")
+        return value
+
+
+class ModeloEditNonWritableBindingOverrideSurfaceEntryV1(_EditModel):
+    """One binding the baseline exposes as override-locked, with its reason."""
+
+    kind: Literal["non_writable_binding_override"] = "non_writable_binding_override"
+    binding_id: BindingId
+    reason: ModeloEditNonWritableReason
+
+
 type ModeloEditPermittedSurfaceEntryV1 = Annotated[
     ModeloEditWritableScalarSurfaceEntryV1
     | ModeloEditNonWritableScalarSurfaceEntryV1
     | ModeloEditWritableRowGroupSurfaceEntryV1
-    | ModeloEditNonWritableRowGroupSurfaceEntryV1,
+    | ModeloEditNonWritableRowGroupSurfaceEntryV1
+    | ModeloEditWritableBindingOverrideSurfaceEntryV1
+    | ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
     Field(discriminator="kind"),
 ]
 
@@ -326,6 +395,10 @@ type ModeloEditPermittedSurfaceEntryV1 = Annotated[
 def _surface_entry_address(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:
     if isinstance(entry, (ModeloEditWritableScalarSurfaceEntryV1, ModeloEditNonWritableScalarSurfaceEntryV1)):
         return ("scalar", entry.casilla_id)
+    if isinstance(
+        entry, (ModeloEditWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
+    ):
+        return ("binding_override", entry.binding_id)
     return ("row_group", entry.binding_id)
 
 
@@ -532,6 +605,7 @@ class ModeloEditUnsupportedIntentReason(StrEnum):
     Step Record that implements each reason, never the reverse.
     """
 
+    SET_OVERRIDE_VALUE_NOT_YET_WIRED = "set_override_value_not_yet_wired"
     REMOVE_OVERRIDE_NOT_YET_WIRED = "remove_override_not_yet_wired"
     ADD_ROW_NOT_YET_WIRED = "add_row_not_yet_wired"
     UPDATE_ROW_NOT_YET_WIRED = "update_row_not_yet_wired"
@@ -639,6 +713,27 @@ class ModeloScalarEditIntentV1(_EditModel):
         return self
 
 
+class ModeloBindingEditIntentV1(_EditModel):
+    """One binding-override edit intent; zero and false remain distinct from UNCHANGED.
+
+    Addresses ``CalculationRevision.binding_overrides`` directly by
+    ``BindingId``. Never carries a value for ``REMOVE_OVERRIDE``: withdrawing
+    an override is expressed by absence of a value, not a typed zero.
+    """
+
+    address: ModeloEditBindingAddressV1
+    kind: ModeloEditBindingIntentKind
+    value: ModeloScalar | None = None
+
+    @model_validator(mode="after")
+    def _require_value_only_for_set_override(self) -> ModeloBindingEditIntentV1:
+        if self.kind is ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE and self.value is None:
+            raise ValueError("SET_OVERRIDE_VALUE binding intent requires a typed value")
+        if self.kind is not ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE and self.value is not None:
+            raise ValueError("only SET_OVERRIDE_VALUE may carry a binding intent value")
+        return self
+
+
 class ModeloRowEditIntentV1(_EditModel):
     """One repeatable-row edit intent addressed by canonical or correlation identity."""
 
@@ -669,9 +764,13 @@ class ModeloRowEditIntentV1(_EditModel):
         return self
 
 
-def _intent_address_key(address: ModeloEditScalarAddressV1 | ModeloEditRowAddressV1) -> tuple[str, str]:
+def _intent_address_key(
+    address: ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1 | ModeloEditRowAddressV1,
+) -> tuple[str, str]:
     if isinstance(address, ModeloEditScalarAddressV1):
         return ("scalar", address.casilla_id)
+    if isinstance(address, ModeloEditBindingAddressV1):
+        return ("binding_override", address.binding_id)
     if isinstance(address, ModeloEditExistingRowAddressV1):
         return ("existing_row", f"{address.binding_id}:{address.row_index}")
     return ("new_row", f"{address.binding_id}:{address.client_correlation_id}")
@@ -688,6 +787,7 @@ class ModeloEditSubmissionV1(_EditModel):
     baseline: ModeloEditBaselineV1
     mutation_family: ModeloEditMutationFamily
     scalar_intents: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
+    binding_intents: Annotated[tuple[ModeloBindingEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     row_intents: Annotated[tuple[ModeloRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
 
     @model_validator(mode="after")
@@ -695,9 +795,10 @@ class ModeloEditSubmissionV1(_EditModel):
         if self.mutation_family is not self.baseline.mutation_family:
             raise ValueError("edit submission mutation family must match its baseline")
         keys = [_intent_address_key(intent.address) for intent in self.scalar_intents]
+        keys.extend(_intent_address_key(intent.address) for intent in self.binding_intents)
         keys.extend(_intent_address_key(intent.address) for intent in self.row_intents)
         if len(set(keys)) != len(keys):
-            raise ValueError("edit submission must not address the same casilla or row more than once")
+            raise ValueError("edit submission must not address the same casilla, binding, or row more than once")
         return self
 
 
@@ -811,12 +912,15 @@ type ModeloEditExecutionResultV1 = Annotated[
 
 
 __all__ = [
+    "ModeloBindingEditIntentV1",
     "ModeloEditAddressV1",
     "ModeloEditAdmissionRequestV1",
     "ModeloEditAdmissionResultV1",
     "ModeloEditAdmittedV1",
     "ModeloEditApplyRequestV1",
     "ModeloEditBaselineV1",
+    "ModeloEditBindingAddressV1",
+    "ModeloEditBindingIntentKind",
     "ModeloEditCasillaDataType",
     "ModeloEditCompatibilityRefusalV1",
     "ModeloEditCompatibilityTupleV1",
@@ -831,6 +935,7 @@ __all__ = [
     "ModeloEditMutationFamily",
     "ModeloEditMutationResultReceiptV1",
     "ModeloEditNewRowCorrelationV1",
+    "ModeloEditNonWritableBindingOverrideSurfaceEntryV1",
     "ModeloEditNonWritableReason",
     "ModeloEditNonWritableRowGroupSurfaceEntryV1",
     "ModeloEditNonWritableScalarSurfaceEntryV1",
@@ -857,6 +962,7 @@ __all__ = [
     "ModeloEditUnsupportedIntentRefusalV1",
     "ModeloEditVersionHeader",
     "ModeloEditVersionRefusalV1",
+    "ModeloEditWritableBindingOverrideSurfaceEntryV1",
     "ModeloEditWritableRowGroupSurfaceEntryV1",
     "ModeloEditWritableScalarSurfaceEntryV1",
     "ModeloMutationCapabilityProjectionV1",

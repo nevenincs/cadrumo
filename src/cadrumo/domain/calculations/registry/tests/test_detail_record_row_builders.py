@@ -17,11 +17,11 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import _build_foreign_asset_rows
 from cadrumo.domain.calculations.registry.detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
     RefundOperationObservation,
+    build_foreign_asset_rows,
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
     resolve_refund_binding_row_values,
@@ -66,7 +66,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
         ),
     )
 
-    rows = _build_foreign_asset_rows(obs)
+    rows = build_foreign_asset_rows(obs)
 
     # Sort key: (country_code, asset_class_code, asset_identifier, acquisition_date)
     assert [row["country_code"] for row in rows] == ["CH", "CH", "DE"]

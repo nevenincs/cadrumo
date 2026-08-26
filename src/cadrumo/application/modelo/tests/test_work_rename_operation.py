@@ -6,12 +6,14 @@ import ast
 import inspect
 import textwrap
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from ....core import OperationCancellation, OperationDurability, OperationEffect, OperationInteractionKind
+from ....domain.modelos import CalculationRevisionAmendmentKind
 from ...operations.capabilities import (
     OperationBaselinePolicy,
     OperationConflictScope,
@@ -23,6 +25,10 @@ from ..operation_definitions import (
     ModeloExportExecutor,
     ModeloExportPublicResultV1,
     ModeloExportRequest,
+    ModeloWorkAmendBaseline,
+    ModeloWorkAmendExecutor,
+    ModeloWorkAmendOverride,
+    ModeloWorkAmendRequest,
     ModeloWorkDiscardBaseline,
     ModeloWorkDiscardExecutor,
     ModeloWorkDiscardPublicResultV1,
@@ -37,6 +43,7 @@ from ..operation_definitions import (
     ModeloWorkVerifyPublicResultV1,
     ModeloWorkVerifyRequest,
     build_modelo_export_definition,
+    build_modelo_work_amend_definition,
     build_modelo_work_discard_definition,
     build_modelo_work_discard_registration,
     build_modelo_work_file_definition,
@@ -346,3 +353,58 @@ def test_the_export_identity_is_resolved_not_replayed() -> None:
     assert {"calculation_revision_id", "output_path"} <= fields
     for identity in ("presenter", "taxpayer_identity", "product_software_identity", "actor"):
         assert identity not in fields, f"the request pins an identity that should be resolved: {identity}"
+
+
+def _amend_definition():
+    return build_modelo_work_amend_definition(actor="operator")
+
+
+def test_an_amendment_is_bound_to_the_filed_baseline_it_corrects() -> None:
+    """An amendment is only meaningful against a specific filed return."""
+    definition = _amend_definition()
+
+    assert set(ModeloWorkAmendBaseline.model_fields) == {"from_filing_record_id"}
+    assert definition.capabilities.baseline is OperationBaselinePolicy.EXACT_APPROVAL
+    assert OperationInteractionKind.REVIEW in definition.interaction_kinds
+
+
+def test_an_amendment_cannot_be_filed_without_a_stated_reason() -> None:
+    """Declaring a previously filed figure wrong requires saying why."""
+    with pytest.raises(ValidationError):
+        ModeloWorkAmendRequest(
+            baseline=ModeloWorkAmendBaseline(from_filing_record_id="record-1"),
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            overrides=(ModeloWorkAmendOverride(casilla_id="03", value="10.00"),),
+            reason="",
+        )
+
+
+def test_an_amendment_must_correct_at_least_one_casilla() -> None:
+    """An amendment that changes nothing is not an amendment."""
+    with pytest.raises(ValidationError):
+        ModeloWorkAmendRequest(
+            baseline=ModeloWorkAmendBaseline(from_filing_record_id="record-1"),
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            overrides=(),
+            reason="corrected base",
+        )
+
+
+def test_an_override_value_survives_the_wire_exactly() -> None:
+    """The public schema carries digits, so no float coercion can round it."""
+    override = ModeloWorkAmendOverride(casilla_id="03", value="1234.56")
+
+    assert override.as_decimal() == Decimal("1234.56")
+    with pytest.raises(ValidationError):
+        ModeloWorkAmendOverride(casilla_id="03", value="not-a-number")
+
+
+def test_the_amend_executor_decides_no_amendment_legality() -> None:
+    """Which kinds a modelo admits and whether the baseline is attested is the authority's."""
+    source = inspect.getsource(ModeloWorkAmendExecutor)
+    tree = ast.parse(textwrap.dedent(source))
+    called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+
+    assert "amend_modelo_revision" in called
+    for forbidden in ("RECTIFICATIVA", "SUSTITUTIVA", "aeat_attested", "ModeloRecordCatalogue"):
+        assert forbidden not in source, f"the executor duplicates amendment legality: {forbidden}"

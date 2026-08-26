@@ -40,7 +40,6 @@ if TYPE_CHECKING:
 
 __all__ = [
     "RegistryFoldRequirement",
-    "RelationDefinition",
     "derive_offset_source_period",
     "relation_requirement_index",
     "relation_source_requirements",

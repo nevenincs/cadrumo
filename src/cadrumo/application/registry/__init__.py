@@ -65,7 +65,7 @@ from ...core import validated_casilla_id as _validated_casilla_id
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation as _RegistryModeloObservation
-from ...domain.calculations.registry.bindings import (
+from ...domain.calculations.registry.bindings_previous_filing import (
     resolve_previous_filing_binding_values as _resolve_previous_filing_binding_values,
 )
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids as _undeclared_casilla_ids

@@ -48,7 +48,6 @@ _InvoiceRowField = Literal[
 # taxonomy) rather than hand-listing strings. Every consumer that needs "is
 # this binding an invoice binding?" routes through this name.
 __all__ = [
-    "INVOICE_BINDING_SOURCE_KINDS",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
     "Modelo349OperadorClaveTotal",

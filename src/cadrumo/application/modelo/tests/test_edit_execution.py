@@ -27,9 +27,12 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ...operations.registry import OperationSchemaIdentityV1
 from .._edit_execution import apply_modelo_edit
 from .._edit_models import (
+    ModeloBindingEditIntentV1,
     ModeloEditAdmissionRequestV1,
     ModeloEditAdmittedV1,
     ModeloEditApplyRequestV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
     ModeloEditCompatibilityTupleV1,
     ModeloEditExecutionNoEffectV1,
     ModeloEditExecutionUpdatedV1,
@@ -42,6 +45,7 @@ from .._edit_models import (
     ModeloEditSubmissionV1,
     ModeloEditUnsupportedIntentReason,
     ModeloEditUnsupportedIntentRefusalV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
@@ -331,15 +335,24 @@ def test_apply_refuses_recalculate_with_the_typed_unsupported_reason(tmp_path: P
 
 
 @pytest.mark.parametrize(
-    ("kind", "reason"),
+    ("kind", "reason", "value"),
     [
-        (ModeloEditScalarIntentKind.REMOVE_OVERRIDE, ModeloEditUnsupportedIntentReason.REMOVE_OVERRIDE_NOT_YET_WIRED),
+        (
+            ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+            ModeloEditUnsupportedIntentReason.SET_OVERRIDE_VALUE_NOT_YET_WIRED,
+            "150.00",
+        ),
+        (
+            ModeloEditBindingIntentKind.REMOVE_OVERRIDE,
+            ModeloEditUnsupportedIntentReason.REMOVE_OVERRIDE_NOT_YET_WIRED,
+            None,
+        ),
     ],
 )
-def test_apply_refuses_each_unsupported_scalar_intent_kind_by_name(
-    tmp_path: Path, kind: ModeloEditScalarIntentKind, reason: ModeloEditUnsupportedIntentReason
+def test_apply_refuses_each_unsupported_binding_intent_kind_by_name(
+    tmp_path: Path, kind: ModeloEditBindingIntentKind, reason: ModeloEditUnsupportedIntentReason, value: str | None
 ) -> None:
-    """Each unreachable scalar intent kind refuses with its own specific reason."""
+    """Each unreachable binding-override intent kind refuses with its own specific reason."""
     work_unit = _work_unit()
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -351,14 +364,16 @@ def test_apply_refuses_each_unsupported_scalar_intent_kind_by_name(
         work_unit_repository.save(WorkUnitCatalogue.from_work_units((work_unit,)))
         admitted = _admit(work_unit, work_catalogue=work_unit_repository.load())
         baseline = admitted.baseline
-        scalar_entry = next(e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableScalarSurfaceEntryV1))
+        binding_entry = next(
+            e for e in baseline.permitted_surface if isinstance(e, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+        )
 
         submission = ModeloEditSubmissionV1(
             baseline=baseline,
             mutation_family=ModeloEditMutationFamily.CALCULATE,
-            scalar_intents=(
-                ModeloScalarEditIntentV1(
-                    address=ModeloEditScalarAddressV1(casilla_id=scalar_entry.casilla_id), kind=kind
+            binding_intents=(
+                ModeloBindingEditIntentV1(
+                    address=ModeloEditBindingAddressV1(binding_id=binding_entry.binding_id), kind=kind, value=value
                 ),
             ),
         )

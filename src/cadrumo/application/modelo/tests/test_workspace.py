@@ -10,7 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import Period, RegistrySchemaFamilyDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -25,17 +25,25 @@ from ..workspace import (
     capture_modelo_workspace_target_axes,
     capture_modelo_workspace_target_captures,
     formula_operand_references_for_casilla,
+    graded_snapshot_materialization_facet,
     modelo_work_selector_request_for_target,
     paginate_static_inspection_schema_facet,
     relation_source_endpoints_for_casilla,
     relation_target_endpoints_for_binding,
     resolve_modelo_workspace_target,
     resolve_static_inspection_baseline,
+    resolve_static_inspection_result,
     resolve_static_inspection_schema_identity,
+    static_inspection_binding_schema_records,
     static_inspection_casilla_schema_records,
     static_inspection_contributors,
     static_inspection_evidence_horizon,
+    static_inspection_family_dispositions,
+    static_inspection_formula_schema_records,
     static_inspection_modelo_workspace_capabilities,
+    static_inspection_parameter_schema_records,
+    static_inspection_relation_schema_records,
+    static_inspection_schema_records,
 )
 from ..workspace_models import (
     ModeloVisibleFilingTarget,
@@ -482,7 +490,9 @@ def test_static_inspection_capabilities_are_identical_regardless_of_work_state(
 
     assert absent_target.work_unit_id is None
     assert present_target.work_unit_id is not None
-    assert present_target.requested_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.MATCHED
+    assert (
+        present_target.requested_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.MATCHED
+    )
 
     absent_capabilities = static_inspection_modelo_workspace_capabilities(absent_target)
     present_capabilities = static_inspection_modelo_workspace_capabilities(present_target)
@@ -549,7 +559,6 @@ def test_relation_target_endpoint_matches_the_registrys_own_target_binding_field
 def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_digest() -> None:
     """schema_identity must use the S278 generated-manifest digest, never the completeness manifest's."""
     from ....application.modelo.workspace_manifest import generate_modelo_workspace_field_manifest_for_inspection
-
     from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
     authority = bundled_authority()
@@ -562,7 +571,10 @@ def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_
 
     assert identity == identity_again
     assert identity.schema_id == f"modelo-130-{_LAW_SELECTED_REVISION_ID}"
-    assert identity.field_manifest_digest == generate_modelo_workspace_field_manifest_for_inspection(inspection).manifest_digest
+    assert (
+        identity.field_manifest_digest
+        == generate_modelo_workspace_field_manifest_for_inspection(inspection).manifest_digest
+    )
 
 
 def test_static_inspection_evidence_horizon_is_stable_and_sourced_from_the_inspection() -> None:
@@ -628,8 +640,8 @@ def test_static_inspection_baseline_pins_the_exact_target_and_revision(
     schema_identity = resolve_static_inspection_schema_identity(inspection)
     locale = capture_modelo_workspace_locale_summary(target, output_language=OutputLanguage.ES)
 
-    from ..workspace_producers import ModeloWorkspaceLocaleCataloguePortV1
     from ....domain.calculations.registry.modelo_localization import revision_locale_key
+    from ..workspace_producers import ModeloWorkspaceLocaleCataloguePortV1
 
     locale_capture = ModeloWorkspaceLocaleCataloguePortV1(
         translation_key=revision_locale_key(target.modelo, target.law_selected_revision_id),
@@ -745,7 +757,7 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
         ),
     )
 
-    from ..workspace_models import ModeloWorkspaceCasillaReferenceV1
+    from ..workspace_models import ModeloWorkspaceCasillaReferenceV1, ModeloWorkspaceLocalizedTextV1
 
     records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
 
@@ -755,13 +767,16 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
         casilla_ids.append(record.reference.casilla_id)
         assert record.legal_refs is None
         assert record.constraints is None
+        assert isinstance(record.label, ModeloWorkspaceLocalizedTextV1)
         assert record.label.value  # a real, non-empty label was resolved
 
     assert len(records) == len(inspection.casilla_ids)
     assert casilla_ids == sorted(inspection.casilla_ids)
 
     by_id = {casilla_id: record for casilla_id, record in zip(casilla_ids, records, strict=True)}
-    assert by_id["03"].label.value == "Rendimiento neto"
+    label = by_id["03"].label
+    assert isinstance(label, ModeloWorkspaceLocalizedTextV1)
+    assert label.value == "Rendimiento neto"
     assert any(op.formula_id == "modelo-130-pago-fraccionado-directa" for op in by_id["03"].formula_operands)
 
 
@@ -845,3 +860,361 @@ def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_pag
             page_size=3,
             cursor=first_page.next_cursor,
         )
+
+
+def _real_303_inspection():
+    from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
+
+    authority = bundled_authority()
+    capture = authority.capture_law_selected_projection("303", filing_year=2026, period="1T")
+    inspection = capture.projection
+    assert isinstance(inspection, RegistryRevisionInspection)
+    return inspection
+
+
+def test_static_inspection_binding_schema_records_use_the_real_binding_definitions() -> None:
+    from ..workspace_models import ModeloWorkspaceBindingReferenceV1, ModeloWorkspaceTechnicalLabelV1
+
+    inspection = _real_303_inspection()
+    records = static_inspection_binding_schema_records(inspection)
+
+    assert len(records) == len(inspection.binding_ids)
+    binding_ids = []
+    for record in records:
+        assert isinstance(record.reference, ModeloWorkspaceBindingReferenceV1)
+        binding_ids.append(record.reference.binding_id)
+        assert isinstance(record.label, ModeloWorkspaceTechnicalLabelV1)
+        assert record.label.identifier == record.reference.binding_id
+        assert record.legal_refs is not None  # DataBindingDefinition is retained whole
+        assert record.constraints == ()
+    assert binding_ids == sorted(inspection.binding_ids)
+
+    by_id = dict(zip(binding_ids, records, strict=True))
+    target_binding = "modelo-303-compensacion-pendiente-anteriores"
+    assert any(
+        endpoint.relation_id == "modelo-303-rel-self-compensacion-anteriores"
+        for endpoint in by_id[target_binding].relation_endpoints
+    )
+
+
+def test_static_inspection_formula_schema_records_carry_their_own_full_operand_set() -> None:
+    from ..workspace_models import ModeloWorkspaceFormulaReferenceV1, ModeloWorkspaceTechnicalLabelV1
+
+    inspection = _real_303_inspection()
+    records = static_inspection_formula_schema_records(inspection)
+
+    assert len(records) == len(inspection.formulas)
+    for record in records:
+        assert isinstance(record.reference, ModeloWorkspaceFormulaReferenceV1)
+        assert isinstance(record.label, ModeloWorkspaceTechnicalLabelV1)
+        assert record.label.identifier == record.reference.formula_id
+        assert record.legal_refs is not None
+
+
+def test_static_inspection_relation_schema_records_state_both_of_their_own_endpoints() -> None:
+    from ..workspace_models import (
+        ModeloWorkspaceRelationReferenceV1,
+        ModeloWorkspaceRelationSourceEndpointReferenceV1,
+        ModeloWorkspaceRelationTargetEndpointReferenceV1,
+    )
+
+    inspection = _real_303_inspection()
+    records = static_inspection_relation_schema_records(inspection)
+
+    assert len(records) == len(inspection.relations)
+    record = records[0]
+    assert isinstance(record.reference, ModeloWorkspaceRelationReferenceV1)
+    assert record.reference.relation_id == "modelo-303-rel-self-compensacion-anteriores"
+    endpoint_kinds = {type(endpoint) for endpoint in record.relation_endpoints}
+    assert endpoint_kinds == {
+        ModeloWorkspaceRelationSourceEndpointReferenceV1,
+        ModeloWorkspaceRelationTargetEndpointReferenceV1,
+    }
+
+
+def test_static_inspection_parameter_schema_records_key_off_dispatching_formulas() -> None:
+    from ..workspace_models import ModeloWorkspaceParameterReferenceV1
+
+    inspection = _real_303_inspection()
+    records = static_inspection_parameter_schema_records(inspection)
+
+    assert len(records) == len(inspection.parameters)
+    for record in records:
+        assert isinstance(record.reference, ModeloWorkspaceParameterReferenceV1)
+        assert record.legal_refs is not None
+
+
+def test_static_inspection_schema_records_covers_all_five_reference_kinds_deterministically() -> None:
+    from ....core import OutputLanguage
+
+    inspection = _real_303_inspection()
+    target = _minimal_resolved_target(inspection)
+
+    records = static_inspection_schema_records(inspection, target, output_language=OutputLanguage.ES)
+    records_again = static_inspection_schema_records(inspection, target, output_language=OutputLanguage.ES)
+
+    expected_total = (
+        len(inspection.casilla_ids)
+        + len(inspection.binding_ids)
+        + len(inspection.formulas)
+        + len(inspection.relations)
+        + len(inspection.parameters)
+    )
+    assert len(records) == expected_total
+    assert records == records_again  # deterministic ordering across identical repeated reads
+
+    kinds = {record.reference.kind for record in records}
+    assert kinds == {"casilla", "binding", "formula", "relation", "parameter"}
+
+
+def _minimal_resolved_target(inspection):
+    from ..workspace_models import ModeloWorkspaceResolvedTargetV1, ModeloWorkspaceRevisionAssertionV1
+
+    return ModeloWorkspaceResolvedTargetV1(
+        bucket_id="test-bucket-0000-0000-0000-000000000000",
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        law_selected_revision_id=inspection.revision_id,
+        review_status=inspection.review_status,
+        requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
+        ),
+        stored_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.STORED,
+            disposition=ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT,
+            asserted_revision_id=None,
+        ),
+    )
+
+
+def test_static_inspection_family_dispositions_reports_only_declared_not_applicable_families() -> None:
+    inspection = _real_303_inspection()
+
+    dispositions = static_inspection_family_dispositions(inspection)
+
+    assert len(dispositions) == len(inspection.family_dispositions)
+    by_family = {d.family: d for d in dispositions}
+    assert "applicability" in by_family
+    assert by_family["applicability"].disposition == RegistrySchemaFamilyDisposition.NOT_APPLICABLE
+    assert by_family["applicability"].legal_refs == inspection.family_dispositions["applicability"].legal_refs
+    # A family the inspection has no data for at all (e.g. "constructs") is
+    # never reported here -- reporting nothing is honest, guessing is not.
+    assert "constructs" not in by_family
+
+
+def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    from ....core import OutputLanguage
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    result = resolve_static_inspection_result(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+        output_language=OutputLanguage.ES,
+    )
+
+    projection = result.projection
+    assert projection.target.modelo == "130"
+    assert projection.target.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+    assert projection.schema_facet.records  # a real, non-empty schema facet
+    assert projection.work_review is STATIC_INSPECTION_WORK_REVIEW_FACET
+    assert len(projection.capabilities) == len(ModeloWorkspaceCapabilityName)
+    assert projection.materialization_facet is None
+    assert projection.provenance_facet is None
+
+    # Round-trip through JSON must reproduce the identical result.
+    from ..workspace_models import ModeloWorkspaceStaticInspectionResultV1
+
+    reloaded = ModeloWorkspaceStaticInspectionResultV1.model_validate_json(result.model_dump_json())
+    assert reloaded == result
+
+
+def test_resolve_static_inspection_result_never_re_reads_the_work_catalogue(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A single encrypted-SQL work-catalogue read must back the entire assembled result."""
+    import logging
+
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    from ....core import OutputLanguage
+
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.modelos_work_units"):
+        result = resolve_static_inspection_result(
+            _visible_target(bucket_id),
+            bucket_id=bucket_id,
+            catalogue_repository=repository,
+            authority=authority,
+            output_language=OutputLanguage.ES,
+        )
+
+    assert result.projection.target.modelo == "130"
+    load_log_lines = [record for record in caplog.records if "loaded work-unit catalogue" in record.message]
+    assert len(load_log_lines) == 1
+
+
+def _real_calculation_revision_with_row_materialization():
+    """Build a real CalculationRevision carrying both a scalar and a repeated row.
+
+    Mirrors the construction pattern in
+    ``test_source_mesh_revision_roundtrip.py`` -- the only existing site that
+    builds one of these with row materialization, confirming this shape is
+    the real one rather than an invented fixture.
+    """
+    from decimal import Decimal
+
+    from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+
+    from ....core import BindingSourceKind, validated_casilla_id
+    from ....domain.calculations import DirectRowMaterializationProvenance, RowSourceIdentity
+    from ....domain.modelos import (
+        CalculationRevision,
+        CalculationRevisionState,
+        derive_calculation_revision_id,
+        derive_work_unit_id,
+    )
+
+    bucket_id = "30330300-0000-4000-8000-000000000601"
+    scalar_casilla = validated_casilla_id("00501")
+    row_casilla = validated_casilla_id("00181")
+    now = datetime(2026, 7, 4, 14, 0, tzinfo=UTC)
+
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id="2022",
+    )
+    row_identity = RowSourceIdentity(
+        source_kind=BindingSourceKind.INVENTORY,
+        source_row_identity="materialization-facet-canary",
+        fingerprint="7" * 64,
+    )
+    row_binding_values = {"inventory-operation-0181": {"1": "120.00"}}
+    row_source_identities = {("inventory-operation-0181", 1): row_identity}
+    row_casilla_values = {(row_casilla, 1): Decimal("120.00")}
+    row_casilla_provenance = {
+        (row_casilla, 1): DirectRowMaterializationProvenance(
+            source_binding_id="inventory-operation-0181",
+            source_row_index=1,
+            source_identity=row_identity,
+            materialization_rule_id="inventory-operation-0181",
+            materialization_rule_version="2022",
+        )
+    }
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={scalar_casilla: "140000.00"},
+        binding_overrides={},
+        row_binding_values=row_binding_values,
+        row_source_identities=row_source_identities,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance=row_casilla_provenance,
+        casilla_values={scalar_casilla: Decimal("140000.00")},
+        source_provenance=(),
+        filing_instance_evidence=None,
+    )
+    return CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id={scalar_casilla: "140000.00"},
+        row_binding_values=row_binding_values,
+        row_source_identities=row_source_identities,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance=row_casilla_provenance,
+        casilla_values={scalar_casilla: Decimal("140000.00")},
+        observations=(
+            CasillaObservation(
+                casilla_id=scalar_casilla,
+                value=Decimal("140000.00"),
+                legal_refs=("ley-37-1992:art-99",),
+                source_refs=("boe-modelo-303-2025-form",),
+            ),
+        ),
+        source_provenance=(),
+        created_at=now,
+        updated_at=now,
+        filing_instance_evidence=None,
+    )
+
+
+def test_graded_snapshot_materialization_facet_covers_scalar_and_repeated_rows() -> None:
+    from decimal import Decimal
+
+    from ..workspace_models import (
+        ModeloWorkspaceRepeatedRowMaterializationRecordV1,
+        ModeloWorkspaceScalarMaterializationRecordV1,
+    )
+
+    revision = _real_calculation_revision_with_row_materialization()
+
+    records = graded_snapshot_materialization_facet(revision)
+
+    scalar_records = [r for r in records if isinstance(r, ModeloWorkspaceScalarMaterializationRecordV1)]
+    repeated_records = [r for r in records if isinstance(r, ModeloWorkspaceRepeatedRowMaterializationRecordV1)]
+    assert len(scalar_records) == 1
+    assert scalar_records[0].scalar.value == Decimal("140000.00")
+    assert len(repeated_records) == 1
+    repeated = repeated_records[0].repeated_row
+    assert repeated.binding_id == "inventory-operation-0181"
+    assert repeated.row_index == 1
+    assert repeated.values[0].value == Decimal("120.00")
+
+
+def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_provenance() -> None:
+    """Prove the facet's own defensive check, since the model already forecloses the shape.
+
+    ``CalculationRevision`` itself enforces
+    ``set(row_casilla_values) == set(row_casilla_provenance)`` at construction, so this
+    inconsistent shape can never reach the facet through normal validated construction.
+    ``model_construct`` bypasses that validator deliberately, to prove the facet carries
+    its own belt-and-suspenders refusal rather than relying solely on an upstream
+    invariant it does not itself control.
+    """
+    from decimal import Decimal
+
+    from ....core import validated_casilla_id
+    from ....domain.modelos import CalculationRevision, CalculationRevisionState, derive_work_unit_id
+
+    bucket_id = "30330300-0000-4000-8000-000000000601"
+    row_casilla = validated_casilla_id("00181")
+    now = datetime(2026, 7, 4, 14, 0, tzinfo=UTC)
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id="2022",
+    )
+    row_casilla_values = {(row_casilla, 1): Decimal("120.00")}
+    revision = CalculationRevision.model_construct(
+        calculation_revision_id="a" * 64,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance={},
+        casilla_values={},
+        observations=(),
+        source_provenance=(),
+        created_at=now,
+        updated_at=now,
+        filing_instance_evidence=None,
+    )
+
+    with pytest.raises(ValueError, match="row_casilla_provenance"):
+        graded_snapshot_materialization_facet(revision)

@@ -280,6 +280,8 @@ errors:
       és compatible amb l'estat actual de la revisió de càlcul.
     error_modelo_casilla_provenance_missing: Una casella del resultat del motor no
       té definició al registre.
+    error_modelo_detail_row_wrong_modelo: La fila de detall de tipus {row_type} pertany
+      al model {owning_modelo}, però aquest càlcul correspon al model {work_unit_modelo}.
     error_modelo_external_filing_import: No s'ha pogut desar la declaració externa
       importada. Comprova els valors de les caselles i la referència d'evidència.
     error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada

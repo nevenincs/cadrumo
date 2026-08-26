@@ -266,6 +266,8 @@ errors:
       a számítás-revízió jelenlegi állapotával.
     error_modelo_casilla_provenance_missing: Egy motor-eredmény mezőnek nincs definíciója
       a nyilvántartásban.
+    error_modelo_detail_row_wrong_modelo: A(z) {row_type} típusú részletsor a(z) {owning_modelo}
+      modellhez tartozik, de ez a számítás a(z) {work_unit_modelo} modellre vonatkozik.
     error_modelo_external_filing_import: Az importált külső bevallás nem menthető.
       Ellenőrizze a mező értékeit és az igazolás hivatkozást.
     error_modelo_filing_record_not_found: A kért benyújtási rekord nem található.

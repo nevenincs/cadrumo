@@ -181,7 +181,7 @@ def _write_year_ambiguous_registry(
         ):
             section_dir = revision_dir / section
             section_dir.mkdir()
-            (section_dir / f"0001-{section}.toml").write_text(
+            (section_dir / f"0001-{section.replace('_', '-')}.toml").write_text(
                 template.format(revision_id=revision_id),
                 encoding="utf-8",
             )

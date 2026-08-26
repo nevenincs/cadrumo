@@ -138,6 +138,9 @@ from ._calculation_modelo_adjustments import (
     raise_if_m390_303_reconciliation_would_save_silent_zero as _raise_if_m390_303_reconciliation_would_save_silent_zero,
 )
 from ._calculation_modelo_adjustments import (
+    require_detail_rows_declared_for_their_owning_modelo as _require_detail_rows_declared_for_their_owning_modelo,
+)
+from ._calculation_modelo_adjustments import (
     suppress_m349_row_field_template_outputs as _suppress_m349_row_field_template_outputs,
 )
 from ._calculation_preparation import (
@@ -496,6 +499,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         revision=snapshot.revision,
         handoff=m303_regimen_simplificado_annual_summary_handoff,
     )
+    _require_detail_rows_declared_for_their_owning_modelo(work_unit=work_unit, detail_rows=detail_rows)
     _validate_m210_agrupacion_renta_detail_rows(work_unit, detail_rows, m210_official_tipo_renta_code)
     resolved_relations = dict(relation_values or {})
     backend_casilla_inputs = {

@@ -278,6 +278,8 @@ errors:
       es compatible con el estado actual de la revisión de cálculo.
     error_modelo_casilla_provenance_missing: Una casilla del resultado del motor no
       tiene definición en el registro.
+    error_modelo_detail_row_wrong_modelo: La fila de detalle de tipo {row_type} pertenece
+      al modelo {owning_modelo}, pero este cálculo corresponde al modelo {work_unit_modelo}.
     error_modelo_external_filing_import: No se pudo guardar la declaración externa
       importada. Comprueba los valores de las casillas y la referencia de evidencia.
     error_modelo_filing_record_not_found: No se encontró la declaración registrada

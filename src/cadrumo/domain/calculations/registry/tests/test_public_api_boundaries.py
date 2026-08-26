@@ -248,3 +248,54 @@ def _relative_private_imports(path: Path) -> tuple[str, ...]:
             and node.module.startswith("_")
         )
     )
+
+
+def _locally_bound_names(tree: ast.Module) -> set[str]:
+    """Every name a module binds itself, imports excluded.
+
+    ``ast.TypeAlias`` carries PEP 695 ``type X = ...`` statements. Omitting it
+    reports a locally defined alias as borrowed, which manufactures findings.
+    """
+    bound: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            bound.add(node.name)
+        elif isinstance(node, ast.Assign):
+            bound.update(target.id for target in node.targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            bound.add(node.target.id)
+        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+            bound.add(node.name.id)
+    return bound
+
+
+def _declared_exports(tree: ast.Module) -> list[str] | None:
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(getattr(t, "id", "") == "__all__" for t in node.targets):
+            if isinstance(node.value, ast.List | ast.Tuple):
+                return [e.value for e in node.value.elts if isinstance(e, ast.Constant)]
+    return None
+
+
+def test_no_registry_module_exports_a_symbol_it_does_not_define() -> None:
+    """A module's public surface is its own contract, never a borrowed one.
+
+    Re-exporting another module's symbol makes two import paths for one name,
+    so a consumer can bind to a module that merely forwards it. The owner is
+    then free to move while the forwarder still resolves, and the boundary the
+    export list appears to describe is not the one imports actually cross.
+    """
+    modules = sorted(p for p in _REGISTRY_TEST_ROOT.glob("*.py") if p.name != "__init__.py")
+    assert len(modules) > 50, f"registry module sweep collapsed to {len(modules)} files"
+
+    borrowed: dict[str, list[str]] = {}
+    for path in modules:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        exports = _declared_exports(tree)
+        if exports is None:
+            continue
+        bound = _locally_bound_names(tree)
+        if outside := sorted(name for name in exports if name not in bound):
+            borrowed[path.name] = outside
+
+    assert borrowed == {}, f"registry modules exporting borrowed symbols: {borrowed}"

@@ -15,7 +15,9 @@ the shared calculation boundary
 has an input shape for today -- a set value and an explicit clear, the latter
 via its own ``cleared_casilla_ids`` identity axis so a cleared casilla stays
 provably distinguishable from one never declared. Every other syntactically
-admitted intent refuses with a typed, enumerated
+admitted intent -- including every binding-override intent, which the
+calculate boundary has no ``binding_overrides``-clearing input shape for yet
+-- refuses with a typed, enumerated
 :class:`~._edit_models.ModeloEditUnsupportedIntentReason` naming the specific
 intent kind, not a generic bucket -- extending the shared calculation
 boundary's own input surface further, or materialising repeatable rows inside
@@ -39,6 +41,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ._calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ._edit_models import (
     ModeloEditApplyRequestV1,
+    ModeloEditBindingIntentKind,
     ModeloEditExecutionNoEffectV1,
     ModeloEditExecutionResultV1,
     ModeloEditExecutionUpdatedV1,
@@ -65,8 +68,9 @@ _ROW_UNSUPPORTED_REASON: dict[ModeloEditRowIntentKind, ModeloEditUnsupportedInte
     ModeloEditRowIntentKind.MOVE_ROW: ModeloEditUnsupportedIntentReason.MOVE_ROW_NOT_YET_WIRED,
 }
 
-_SCALAR_UNSUPPORTED_REASON: dict[ModeloEditScalarIntentKind, ModeloEditUnsupportedIntentReason] = {
-    ModeloEditScalarIntentKind.REMOVE_OVERRIDE: ModeloEditUnsupportedIntentReason.REMOVE_OVERRIDE_NOT_YET_WIRED,
+_BINDING_UNSUPPORTED_REASON: dict[ModeloEditBindingIntentKind, ModeloEditUnsupportedIntentReason] = {
+    ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE: ModeloEditUnsupportedIntentReason.SET_OVERRIDE_VALUE_NOT_YET_WIRED,
+    ModeloEditBindingIntentKind.REMOVE_OVERRIDE: ModeloEditUnsupportedIntentReason.REMOVE_OVERRIDE_NOT_YET_WIRED,
 }
 
 _NUMERIC_DATA_TYPES = frozenset({"decimal", "money", "integer", "ratio", "year"})
@@ -103,6 +107,11 @@ def _reachable_scalar_inputs(
     if submission.row_intents:
         first_row = submission.row_intents[0]
         return _unsupported_intent_refusal(_ROW_UNSUPPORTED_REASON[first_row.kind], address=first_row.address)
+    if submission.binding_intents:
+        first_binding = submission.binding_intents[0]
+        return _unsupported_intent_refusal(
+            _BINDING_UNSUPPORTED_REASON[first_binding.kind], address=first_binding.address
+        )
 
     baseline = submission.baseline
     casilla_inputs: dict[str, Decimal] = {}
@@ -112,9 +121,6 @@ def _reachable_scalar_inputs(
         if intent.kind is ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE:
             cleared_casilla_ids.append(intent.address.casilla_id)
             continue
-        unsupported_reason = _SCALAR_UNSUPPORTED_REASON.get(intent.kind)
-        if unsupported_reason is not None:
-            return _unsupported_intent_refusal(unsupported_reason, address=intent.address)
         entry = _writable_scalar_entry(baseline, intent.address.casilla_id)
         data_type = entry.data_type if entry is not None else "text"
         if data_type in _NUMERIC_DATA_TYPES:

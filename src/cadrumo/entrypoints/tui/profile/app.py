@@ -43,7 +43,7 @@ class ProfileJourneyStage(IntEnum):
     READY = 4
 
 
-_STAGE_LABEL_KEYS: dict[ProfileJourneyStage, str] = {
+_STAGE_LABEL_LOCALE_KEYS: dict[ProfileJourneyStage, str] = {
     ProfileJourneyStage.OVERVIEW: "profile.journey.stage.overview",
     ProfileJourneyStage.GET_DATA: "profile.journey.stage.get_data",
     ProfileJourneyStage.REQUIRED: "profile.journey.stage.required",
@@ -109,7 +109,7 @@ class ProfileJourneyApp(App[None]):
 
     def _build_stage_strip(self) -> StageNavigationStrip:
         return StageNavigationStrip(
-            [tr(_STAGE_LABEL_KEYS[stage]) for stage in ProfileJourneyStage],
+            [tr(_STAGE_LABEL_LOCALE_KEYS[stage]) for stage in ProfileJourneyStage],
             current_index=int(self._stage),
             id="journey-stages",
         )

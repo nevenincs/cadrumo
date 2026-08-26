@@ -7,7 +7,7 @@ modelo:
         title: Préstamos, créditos y operaciones financieras sobre inmuebles (informativa
           anual)
       revision:
-        2009-y-siguientes:
+        2022-y-siguientes:
           casilla:
             cantidades-minorar-principal:
               help: null
