@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:294bb9822989e5aeea5929bcc143f8e780708ec14b69b41436ed0a9d6de1bb57'
 step_id: 'S22'
@@ -15,8 +15,9 @@ related:
 
 ## Scope
 
-- `dev/`
-- `src/cadrumo/domain/calculations/registry/tests/`
+- `dev/registry/analysis/modelo_embed_classification.py`
+- `dev/registry/analysis/modelo_embed_classification.toml`
+- `dev/registry/tests/test_modelo_specific_embed_classification.py`
 
 ## Description
 
@@ -51,77 +52,14 @@ related:
 
 ## Outcome
 
-The derivation yields 36 modelo-specific modules, every one adjudicated exactly
-once, with zero reconciliation failures. Eight are regulatory data embeds and
-twenty-eight are machinery; none is dead, because every derived module has at
-least one importer under the package root.
+The original classifier was delivered earlier, but its durable gate was reopened on 2026-08-26 after public-module relocation made it red. Before reconciliation it derived 43 modules against 41 ledger entries and emitted 62 failures: 30 stale private paths paired with their public replacements, plus two genuinely new modules.
 
-The derived set strictly contains the 18-module figure the campaign brief
-supplied as a cross-check, and adds 18 the brief did not name. Not one of the
-added eighteen carries a modelo code in its file name: each is a generic module
-caught only because it reads a concrete modelo member or defines a modelo-scoped
-symbol. Three of the eight embeds come from that added set, so the difference was
-not cosmetic.
+Commit `bce006e444` maps all 30 relocations through the exact `c94133f295` history, classifies `deadline_coordinate.py` as reasoned machinery and `inventory_bindings.py` as an unowned regulatory embed, and replaces the deleted `SUPPORTED_EJERCICIOS` anchor with the live censo foundation-year embed. Both the anchor and dropped-entry mutation remain non-vacuous.
 
-The regulatory-literal detector reaches the confirmed embed independently: it
-flags the shared-constants module's ejercicio tuple, its three seasonal index
-coefficients, its difficult-justification percentage and the Lorca 2022
-reduction percentage, without being told to look for them.
-
-The gate bites, proven twice against the real package tree rather than a
-fixture. A module named for a modelo, planted and then removed, took the derived
-set to 37 and reddened both the tool's check mode and the gate with a message
-naming the module, its modelo and the signal that caught it. A second plant
-naming no modelo in its file name, carrying only a modelo-scoped defined symbol,
-reddened the same way -- the case a file-name glob cannot see. The tool returned
-to a clean 36-module reconciliation after each removal.
-
-The new gate is ten tests, all green. A sequential run of the whole registry
-test directory finished at 581 failed, 3805 passed, 122 errors; the gate's own
-file appears in no failure or error line, so the delta this Step contributes is
-ten added passes and nothing else. The directory was already broadly red for
-reasons recorded elsewhere in the campaign and untouched here; peers were
-committing to the shared tree during the 33-minute run, so the absolute figures
-are a snapshot rather than a stable baseline. No production module was modified
-by this Step, so no other test could change behaviour.
+Current results are 43 derived modules, 43 ledger entries, and zero reconciliation failures. `python -m dev.registry.analysis.modelo_embed_classification --check` passes, the focused test module passes 10/10, and Ruff passes.
 
 ## Notes
 
-This Step deletes nothing and migrates nothing; it produces the inventory and
-the protection list the migration Step consumes.
+This row maintains the exhaustive inventory and does not itself migrate or delete production facts. The current unowned S23 queue derived from the green ledger includes the complete Modelo 202 applicability/reason cluster, the censo foundation year, the Modelo 100 letter-casilla first year, and the Modelo 100 inventory 2025 binding. Mixed applicability content for 303/390 and annual-Orden/Lorca content remain explicitly campaign-owned and are not opportunistically migrated here.
 
-The eight embeds are the applicability rule table and its Spanish verdict prose,
-the Modelo 202 modalidad rule module, the censo foundation year, the Modelo 100
-letter-casilla first year, the annual-orden shared constants module, the
-annual-orden legal-reference prose, and the two annual-orden model modules that
-each restate the Lorca 2022 reduction percentage as a literal.
-
-Only two of the eight migrate whole: the Modelo 202 modalidad module and the
-annual-orden shared constants module. The other six are mixed, and each
-justification states exactly which content migrates and which must survive,
-because a whole-module deletion there would take working machinery with it. The
-two annual-orden model modules in particular keep every projection, snapshot and
-raw parse model, and every pydantic percentage and ejercicio field bound: those
-are the definitional ranges of their units, not values the orden fixes. With the
-reduction declared in the authoring tree, both re-derive as machinery on the next
-run.
-
-The machinery justifications are the protection list. Every annual-orden parsing
-module -- keys, source, manifest, projection compiler and resolution -- is
-machinery and survives, as do the three other Modelo 303 projections, matching
-the campaign's stated intent to keep that family pending the operator's ruling on
-full authoring-tree migration. The Modelo 347 threshold module is recorded as the
-worked example of the shape an embed should be migrated into: the regulatory
-figure arrives through the curated core external-constants channel and the module
-owns only the strictness of the comparison.
-
-Three observations for the campaign, none actioned here. First, the annual-orden
-Lorca 2022 reduction percentage is spelled as a `Decimal` literal in three
-separate modules, so the migration must retire all three spellings or the
-duplication survives the extraction. Second, one production identifier in the
-annual-orden projection models names a plan step id, which the source-hygiene
-rule forbids; it is outside this Step's scope. Third, the classification of the
-Modelo 100 letter-casilla first year and the censo foundation year as embeds is a
-judgement the adjudication records rather than a mechanical result: both are
-Python-resident regulatory years, and if the campaign reads either as a parser
-format detail instead, the ledger row is where that ruling belongs.
+The historical 36-module inventory is no longer treated as a timeless completion claim; closure now rests on the current derived denominator and the mutation-backed zero-failure gate.
