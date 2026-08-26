@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:03fdfb78002f744a25519b760b4f77819b0169667e5bd8dcaf7b59af41f8b749'
+body_hash: 'sha256:b197f432d8cba1095c419b6eebdff9fccd3c6072bd64e0abd5c25f803759353b'
 related: []
 ---
 
@@ -61,6 +61,27 @@ excerpted, not taken on the diseño's word):
   arrendamiento-vivienda reduction (90/70/60/50%); art. 23.3 is the >2-year or
   notoriamente-irregular 30% reduction capped at EUR 300,000/year. Both are genuine
   capital-inmobiliario reductions matching the diseño's clave-C usage.
+### Correction: two DIFFERENT subclave tables exist for clave A, one per record
+
+The diseño defines clave A's subclave enumeration TWICE, once per record, and the two
+enumerations differ: the ENTIDAD record's own subclave field (positions 78-79) lists "01
+Rendimientos obtenidos en España / 02 Rendimientos obtenidos en el extranjero / 03
+Reducciones aplicables" — a source/reduction axis, used when the ENTITY declares its own
+aggregate reduction as a separate row. The SOCIO record's own subclave field (positions
+94-95, the one this research inventories) lists "01 Rendimientos... apartados 1, 2 y 3
+del artículo 25 / 02 Rendimientos... apartado 4 del artículo 25" — an income-type axis
+with no "03 = reducciones" value at all. The socio record's own REDUCCIÓN field (positions
+109-119) explicitly conditions on "posiciones 94 a 95 del mismo registro se consigne
+'02'" — the SOCIO table's subclave 02, not the entidad table's subclave 03 — so the
+reduction the socio record describes is a value NESTED inside an income-type subclave
+row, not a distinct subclave value the way the entity's own record models it. The two
+mechanisms report the same underlying legal concept (a capital-mobiliario reduction) at
+two different levels (entity aggregate vs. per-socio detail) through two different,
+lookalike-but-non-identical subclave tables in the same PDF. This inventory's field
+mapping (reducción keyed to socio-subclave 02) is internally consistent with the socio
+record's own field text, cited above verbatim; it should not be read against the
+entidad-record's table, which governs a different record entirely.
+
 - **LIRPF art. 24.2 (clave A/subclave 02 reducción) — CONFIRMED WRONG, and NOT YET
   RESOLVED to a replacement.** Art. 24 is "Rendimiento en caso de parentesco" (a
   related-party imputed-rent rule), one paragraph, no numbered subsections at all — it
