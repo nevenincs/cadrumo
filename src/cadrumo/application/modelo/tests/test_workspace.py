@@ -26,6 +26,7 @@ from ..workspace import (
     relation_source_endpoints_for_casilla,
     relation_target_endpoints_for_binding,
     resolve_modelo_workspace_target,
+    resolve_static_inspection_schema_identity,
     static_inspection_modelo_workspace_capabilities,
 )
 from ..workspace_models import (
@@ -535,3 +536,22 @@ def test_relation_target_endpoint_matches_the_registrys_own_target_binding_field
 
     # The relation's own SOURCE casilla id must never be accepted as a target binding.
     assert relation_target_endpoints_for_binding(relations, "iva.compensacion-disponible-fin-periodo") == ()
+
+
+def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_digest() -> None:
+    """schema_identity must use the S278 generated-manifest digest, never the completeness manifest's."""
+    from ....application.modelo.workspace_manifest import generate_modelo_workspace_field_manifest_for_inspection
+
+    from ....domain.calculations.registry.static_inspection import RegistryRevisionInspection
+
+    authority = bundled_authority()
+    capture = authority.capture_law_selected_projection("130", filing_year=2026, period="1T")
+    inspection = capture.projection
+    assert isinstance(inspection, RegistryRevisionInspection)
+
+    identity = resolve_static_inspection_schema_identity(inspection)
+    identity_again = resolve_static_inspection_schema_identity(inspection)
+
+    assert identity == identity_again
+    assert identity.schema_id == f"modelo-130-{_LAW_SELECTED_REVISION_ID}"
+    assert identity.field_manifest_digest == generate_modelo_workspace_field_manifest_for_inspection(inspection).manifest_digest

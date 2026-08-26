@@ -24,10 +24,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ...core import OutputLanguage
+from ...core import OutputLanguage, content_hash_hex
 from ...domain.calculations.registry.modelo_localization import revision_locale_key
 from ...domain.calculations.registry.schema import FormulaDefinition, RelationDefinition
 from ...domain.calculations.registry.schema_formula import FormulaExpression
+from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos import ModeloCode
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .work_addressing import (
@@ -55,6 +56,7 @@ from .workspace_models import (
     ModeloWorkspaceRelationSourceEndpointReferenceV1,
     ModeloWorkspaceRelationTargetEndpointReferenceV1,
     ModeloWorkspaceResolvedTargetV1,
+    ModeloWorkspaceSchemaIdentityV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
@@ -66,6 +68,8 @@ from .workspace_producers import (
     MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceContributingProjectionV1,
+    ModeloWorkspaceFieldManifestPortV1,
     ModeloWorkspaceLocaleCataloguePortV1,
     ModeloWorkspaceProducerContractV1,
     ModeloWorkspaceRegistryPortV1,
@@ -196,14 +200,23 @@ def resolve_modelo_workspace_revision_axes(
     )
 
 
-def capture_modelo_workspace_target_axes(
+def capture_modelo_workspace_target_captures(
     target: ModeloWorkspaceTargetV1,
     *,
     bucket_id: str,
     catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
     authority: ValidatedRegistryAuthority,
-) -> tuple[ModeloWorkResolution, ModeloWorkspaceRegistryProjectionV1, ModeloWorkspaceRevisionAxes]:
+) -> tuple[
+    ModeloWorkspaceContributingProjectionV1[ModeloWorkResolution],
+    ModeloWorkspaceContributingProjectionV1[ModeloWorkspaceRegistryProjectionV1],
+    ModeloWorkspaceRevisionAxes,
+]:
     """Capture WORK exactly once, then REGISTRY exactly once from its coordinates.
+
+    Returns the full stamped-and-epoched captures, not just their bare
+    projections, so a baseline assembler can fold the WORK/REGISTRY
+    contributor stamps and epochs into its consistency digest without a
+    second capture of either.
 
     This is the ordering-critical sequence itself: WORK is resolved first, its
     ``(modelo, filing_year, period)`` is read back to build the REGISTRY port
@@ -236,7 +249,31 @@ def capture_modelo_workspace_target_axes(
     registry_projection = registry_capture.projection
 
     axes = resolve_modelo_workspace_revision_axes(resolution, registry_projection=registry_projection)
-    return resolution, registry_projection, axes
+    return work_capture, registry_capture, axes
+
+
+def capture_modelo_workspace_target_axes(
+    target: ModeloWorkspaceTargetV1,
+    *,
+    bucket_id: str,
+    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
+    authority: ValidatedRegistryAuthority,
+) -> tuple[ModeloWorkResolution, ModeloWorkspaceRegistryProjectionV1, ModeloWorkspaceRevisionAxes]:
+    """Capture WORK exactly once, then REGISTRY exactly once from its coordinates.
+
+    Thin convenience wrapper over :func:`capture_modelo_workspace_target_captures`
+    exposing only the two bare projections plus the axes -- the shape every
+    existing caller in this module already consumes. A caller that also needs
+    the WORK/REGISTRY stamps and epochs (baseline assembly) calls the richer
+    function directly instead of re-capturing.
+    """
+    work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
+        target,
+        bucket_id=bucket_id,
+        catalogue_repository=catalogue_repository,
+        authority=authority,
+    )
+    return work_capture.projection, registry_capture.projection, axes
 
 
 def resolve_modelo_workspace_target(
@@ -415,6 +452,7 @@ __all__ = [
     "ModeloWorkspaceRevisionAxes",
     "capture_modelo_workspace_locale_summary",
     "capture_modelo_workspace_target_axes",
+    "capture_modelo_workspace_target_captures",
     "formula_expression_operand_references",
     "formula_operand_references_for_casilla",
     "modelo_work_selector_request_for_target",
@@ -422,6 +460,7 @@ __all__ = [
     "relation_target_endpoints_for_binding",
     "resolve_modelo_workspace_revision_axes",
     "resolve_modelo_workspace_target",
+    "resolve_static_inspection_schema_identity",
     "static_inspection_modelo_workspace_capabilities",
 ]
 
@@ -538,4 +577,33 @@ def relation_target_endpoints_for_binding(
         ModeloWorkspaceRelationTargetEndpointReferenceV1(relation_id=relation.id, binding_id=relation.target_binding)
         for relation in relations
         if relation.target_binding == binding_id
+    )
+
+
+def resolve_static_inspection_schema_identity(
+    inspection: RegistryRevisionInspection,
+) -> ModeloWorkspaceSchemaIdentityV1:
+    """Build the STATIC_INSPECTION schema identity from the one REGISTRY capture already held.
+
+    ``schema_fingerprint`` is a content digest over the inspection's own
+    declared identity sets (casilla and binding ids) -- the same shape
+    ``_edit_services.py`` already uses for its own (unrelated,
+    interface-ADR-governed) schema identity, adapted to the flatter
+    STATIC_INSPECTION type. ``field_manifest_digest`` is the S278
+    inspection-rooted field manifest's own digest -- never the
+    ``CalculationCompletenessManifest`` digest that a sibling module (a
+    different, write-path concern) happens to also store under the same
+    field name on this shared type.
+    """
+    field_manifest_port = ModeloWorkspaceFieldManifestPortV1(authority=inspection)
+    field_manifest_capture = field_manifest_port.capture_projection_with_epoch()
+    return ModeloWorkspaceSchemaIdentityV1(
+        schema_id=f"modelo-{inspection.modelo_id}-{inspection.revision_id}".lower(),
+        schema_fingerprint=content_hash_hex(
+            {
+                "casilla_ids": sorted(inspection.casilla_ids),
+                "binding_ids": sorted(inspection.binding_ids),
+            }
+        ),
+        field_manifest_digest=field_manifest_capture.projection.manifest_digest,
     )
