@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._command_spec import (
     ArgumentSpec,
     CommandSpec,
@@ -117,6 +118,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="revision",
@@ -209,6 +213,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
         ),
         policy=_CRYPTO_READ,
@@ -237,6 +244,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="output",
@@ -248,6 +258,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="bucket_id",
@@ -285,12 +298,18 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             ArgumentSpec(
                 name="signature",
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.signature_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
             ),
             OptionSpec(
                 name="public_key",
@@ -330,12 +349,18 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             ArgumentSpec(
                 name="signature",
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.signature_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
             ),
             OptionSpec(
                 name="output",
@@ -347,6 +372,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="note",
@@ -397,12 +425,18 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             ArgumentSpec(
                 name="receipt_path",
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.receipt_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
             ),
             OptionSpec(
                 name="operator_public_key",
@@ -453,6 +487,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.package_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="recipient_id",
@@ -475,6 +512,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="review_only",
@@ -537,6 +577,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.envelope_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="output",
@@ -548,6 +591,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="bucket_id",
@@ -636,6 +682,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(),
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="note",
@@ -658,6 +707,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
             ),
             OptionSpec(
                 name="bucket_id",
@@ -697,6 +749,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 value=ValueContract(DeferredTarget("pathlib", "Path")),
                 default=ParameterDefault.required(),
                 help_key=TranslationKey("cli.app.modelo.review_package.feedback_envelope_path_help"),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
             ),
             OptionSpec(
                 name="package",
@@ -708,6 +763,9 @@ MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 is_flag=False,
                 flag_value=None,
                 constraint=ParameterConstraint(),
+                transport_locus=TransportLocus.LOCAL_IN,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.AUXILIARY,
             ),
             OptionSpec(
                 name="operator_public_key_hex",

@@ -379,9 +379,10 @@ def test_pre_resolution_error_envelope_command_stays_null() -> None:
 
 def _record_divergence(profile_name: str) -> None:
     """Persist one open cotejo divergence on the named profile's record."""
-    from .....application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo
-    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
     from cadrumo.application.workflow.persistence import workflow_state_repository
+    from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+
+    from .....application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo
 
     pointer = read_profile_bucket(profile_name)
     assert pointer is not None

@@ -12,8 +12,9 @@ import json
 
 import pytest
 
-from ....application.registry import RegistryRevisionDiffReport
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+from ....application.registry import RegistryRevisionDiffReport
 from ._registry_cli_fixtures import (
     _isolated_registry_cli_backend,
     _isolated_secure_backend,

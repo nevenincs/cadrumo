@@ -9,6 +9,8 @@ from datetime import UTC, date, datetime
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+
 from ....adapters.outbound.aeat.sede import (
     Declaracion,
     NotificationsSnapshot,
@@ -30,7 +32,6 @@ from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import clear_output_language_cache
 from ....core.time import frozen_clock, now, today_madrid
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     ExternalEvidenceKind,
     upsert_filing_record,

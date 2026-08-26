@@ -28,8 +28,9 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from ...core.json_contract import OutputSchema
 from cadrumo.domain.calculations.registry.ids import BindingId, LegalRefId, RelationId, SourceRefId
+
+from ...core.json_contract import OutputSchema
 
 
 class BindingEncodedOptionPayload(OutputSchema):

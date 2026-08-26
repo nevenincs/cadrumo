@@ -13,10 +13,11 @@ from __future__ import annotations
 
 from pydantic import Field
 
+from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
+
 from ...core import CasillaId
 from ...core.identity import FilingRecordId
 from ...core.json_contract import OutputSchema
-from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.modelos import CalculationRevisionAmendmentKind, M303RectificativaMotive
 from ._modelo_payloads import ModeloRecordPayload
 

@@ -47,6 +47,8 @@ from typing import TYPE_CHECKING, Any
 import typer
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+
 from ...application.flows.line_frontend import LineFlowFrontend
 from ...application.modelo._action_errors import (
     CalculationRegistryUnavailableError,
@@ -67,9 +69,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.flows import FlowMode
 from ...core.i18n import tr
 from ...core.json_contract import Notice
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ._common import activate_subcommand_output_language, attach_cli_policy_verdict, emit_envelope
-from .errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -83,6 +83,7 @@ from ._modelo_rendering import (
     source_diagnostic_notice_text,
 )
 from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
+from .errors import CliOutboundPayloadBoundaryError, CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from ...application.modelo._calculate_input import ModeloWorkCalculationServiceResult

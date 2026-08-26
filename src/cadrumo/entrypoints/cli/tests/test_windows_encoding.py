@@ -20,8 +20,8 @@ import pytest
 
 from ....core.access_gate import LiveSubmitForbiddenError
 from ....core.errors import render_error_text
-from ..errors import write_stderr
 from .._stdio import _set_windows_console_utf8, configure_stdio_for_utf8
+from ..errors import write_stderr
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

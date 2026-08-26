@@ -20,9 +20,10 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.calculations._relation_prefill import _absent_bound_carry_diagnostics
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.relations import relation_source_requirements
+
+from ....application.calculations._relation_prefill import _absent_bound_carry_diagnostics
 from .._modelo_rendering import source_diagnostic_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

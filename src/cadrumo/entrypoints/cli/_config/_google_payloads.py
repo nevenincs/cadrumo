@@ -34,10 +34,11 @@ from typing import Literal
 
 from pydantic import Field
 
+from cadrumo.domain.calculations.registry.ids import FormulaId, LegalRefId, RelationId, SourceRefId
+
 from ....adapters.outbound.storage import ProviderKind
 from ....core import CasillaId
 from ....core.json_contract import OutputSchema
-from cadrumo.domain.calculations.registry.ids import FormulaId, LegalRefId, RelationId, SourceRefId
 
 
 class GoogleRegisterResult(OutputSchema):

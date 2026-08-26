@@ -20,8 +20,8 @@ from pydantic_core import ErrorDetails
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.cli_exception_preconditions import CliExceptionPrecondition, cli_exception_no_recovery_verdict
 from ...application.ledger.actions_manual import ledger_transaction_payload, list_manual_transactions
-from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...application.ledger.id_resolution import resolve_transaction_id
+from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...core.decimal import format_decimal
 from ...core.errors import CadrumoError
 from ...core.i18n import tr

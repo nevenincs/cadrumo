@@ -25,6 +25,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from cadrumo.application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
+
 from ...core import Hex64Str
 from ...core.json_contract import OutputSchema
 

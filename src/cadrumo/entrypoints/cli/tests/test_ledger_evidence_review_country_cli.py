@@ -39,8 +39,8 @@ from typing import Final
 
 import pytest
 
-from ....application.ledger.evidence_draft import InvoiceDraft
 from ....application.ledger.deterministic_findings import deterministic_findings
+from ....application.ledger.evidence_draft import InvoiceDraft
 from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.bucket_pointer import resolve_active_bucket_id

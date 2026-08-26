@@ -32,7 +32,10 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._common import emit_envelope
 
 if TYPE_CHECKING:
-    from ....application.user_profile.capsule_archive import ProfileCapsuleArchiveInspection, ProfileCapsuleArchiveReceipt
+    from ....application.user_profile.capsule_archive import (
+        ProfileCapsuleArchiveInspection,
+        ProfileCapsuleArchiveReceipt,
+    )
 
 
 def _export_lines(receipt: ProfileCapsuleArchiveReceipt) -> tuple[str, ...]:

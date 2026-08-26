@@ -8,6 +8,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+
 from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
@@ -18,7 +20,6 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....application.calculations import CalculationObservationRepository
 from ....core import Period
 from ....core.config import load_settings
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.modelos import upsert_filing_record
 from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session

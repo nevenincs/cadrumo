@@ -13,6 +13,8 @@ from enum import Enum
 from types import MappingProxyType
 from typing import Literal
 
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
+
 type CommandNodeKind = Literal["root", "group", "leaf"]
 type ParameterKind = Literal["argument", "option"]
 type LiteralValue = str | int | float | bool | bytes | None
@@ -435,6 +437,33 @@ class RecoveryHandoffSpec:
             raise ValueError("recovery handoff Windows bootstrap must be a non-empty token")
 
 
+def _require_coherent_transport(
+    locus: TransportLocus,
+    shape: TransportShape,
+    role: TransportRole,
+    *,
+    field: str,
+) -> None:
+    """Refuse a transport declaration whose three axes disagree.
+
+    A locus that is not local has no filesystem shape and no role, and saying
+    otherwise asserts a fact that does not exist. A locus that IS local has
+    both, and leaving either at its not-applicable member is an author who
+    filled in one field and stopped.
+    """
+    local = locus in {TransportLocus.LOCAL_IN, TransportLocus.LOCAL_OUT}
+    if not local:
+        if shape is not TransportShape.NOT_APPLICABLE:
+            raise ValueError(f"{field} declares a shape without a local locus")
+        if role is not TransportRole.NOT_APPLICABLE:
+            raise ValueError(f"{field} declares a role without a local locus")
+        return
+    if shape is TransportShape.NOT_APPLICABLE:
+        raise ValueError(f"{field} declares a local locus without a shape")
+    if role is TransportRole.NOT_APPLICABLE:
+        raise ValueError(f"{field} declares a local locus without a role")
+
+
 @dataclass(frozen=True, slots=True)
 class ArgumentSpec:
     """One positional argument declaration, in command tuple order."""
@@ -447,6 +476,9 @@ class ArgumentSpec:
     show_default: bool = True
     hidden: bool = False
     constraint: ParameterConstraint = ParameterConstraint()
+    transport_locus: TransportLocus = TransportLocus.NONE
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE
 
     kind: ParameterKind = "argument"
 
@@ -454,6 +486,12 @@ class ArgumentSpec:
         _require_identifier(self.name, field="argument name")
         if self.metavar is not None:
             _require_token(self.metavar, field="argument metavar")
+        _require_coherent_transport(
+            self.transport_locus,
+            self.transport_shape,
+            self.transport_role,
+            field="argument transport",
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -479,6 +517,9 @@ class OptionSpec:
     constraint: ParameterConstraint = ParameterConstraint()
     machine_secret_channel: MachineSecretChannelKind | None = None
     profile_secret_channel: ProfileSecretChannelKind | None = None
+    transport_locus: TransportLocus = TransportLocus.NONE
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE
 
     kind: ParameterKind = "option"
 
@@ -522,6 +563,12 @@ class OptionSpec:
             and self.value.annotation != DeferredTarget("builtins", "int")
         ):
             raise ValueError("file-descriptor profile-secret channel must be integer")
+        _require_coherent_transport(
+            self.transport_locus,
+            self.transport_shape,
+            self.transport_role,
+            field="option transport",
+        )
 
 
 type ParameterSpec = ArgumentSpec | OptionSpec

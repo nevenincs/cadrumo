@@ -21,6 +21,9 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from cadrumo.domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+
 from ...application.modelo._result_summary import calculation_result_summary
 from ...application.modelo._verification_preconditions import VerificationFindingPreconditionProjection
 from ...application.modelo._work_plazo import (
@@ -30,8 +33,6 @@ from ...application.modelo._work_plazo import (
 from ...core import CasillaId
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
-from cadrumo.domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,

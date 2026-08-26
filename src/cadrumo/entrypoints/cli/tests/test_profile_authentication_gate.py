@@ -19,7 +19,6 @@ from .._config._secure_input import (
     ProfileSecretChannel,
     ProfileSecretSelection,
 )
-from ..errors import CliRefusedBoundaryError, render_error_payload
 from .._profile_authentication_gate import _preflight_sources
 from .._profile_authentication_notice import (
     drain_profile_authentication_notices,
@@ -27,6 +26,7 @@ from .._profile_authentication_notice import (
 )
 from .._profile_session_gate import session_refusal_translation_key
 from .._windows_profile_secret_bootstrap import descriptor_from_inherited_handle
+from ..errors import CliRefusedBoundaryError, render_error_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

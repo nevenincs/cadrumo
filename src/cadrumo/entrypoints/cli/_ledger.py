@@ -21,9 +21,9 @@ import typer
 from pydantic import ValidationError
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
 from ...application.ledger.id_resolution import resolve_lineage_transaction_id
+from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...core import Art104TresExclusion, IvaDeductionFactKind, M210PayerMode, ProrrataRegisterRegime
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY

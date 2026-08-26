@@ -35,8 +35,9 @@ from .._common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ....application.diagnostics import ConfigRepairReport
     from cadrumo.application.workflow.events import WorkflowStateResetFingerprint
+
+    from ....application.diagnostics import ConfigRepairReport
     from .._config_payloads import ConfigRepairResult, WorkflowFingerprintPayload
 
 

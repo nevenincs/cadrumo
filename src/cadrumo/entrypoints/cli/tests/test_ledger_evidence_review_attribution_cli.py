@@ -32,8 +32,8 @@ import pytest
 
 from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from ....application.ledger.evidence_draft import FieldProvenance, InvoiceDraft
-from ....application.ledger.grounded_reading import ground_draft_against_transcription
 from ....application.ledger.extraction_draft_store import write_extraction_draft
+from ....application.ledger.grounded_reading import ground_draft_against_transcription
 from ....core import LOCAL_TRANSPORT_LABEL, STR_KEYED_MAPPING_ADAPTER, FieldGroundingOutcome, FieldOrigin
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings

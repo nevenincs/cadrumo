@@ -9,13 +9,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....core import STR_KEYED_MAPPING_ADAPTER, Period
 from ....core.errors import ERROR_REGISTRY
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import EUMemberState, IvaCategory
