@@ -1249,18 +1249,25 @@ def graded_snapshot_provenance_facet(
     any, its resolution feeds. One ref fans out into one
     :class:`ModeloWorkspaceProvenanceRecordV1` per casilla it names. A ref
     whose originating resolver call site never associated a casilla (an empty
-    ``source_casilla_ids``) produces NO record -- it is not fabricated a
-    subject it never carried, and remains invisible to this facet until its
-    resolver populates the link.
+    ``source_casilla_ids``) still produces exactly ONE record, with
+    ``subject=None`` -- an audit reader must see every contributing source,
+    including the unattributed ones, rather than have them silently vanish
+    from the facet. This is common today: most resolver call sites do not yet
+    populate the link.
     """
-    return tuple(
-        ModeloWorkspaceProvenanceRecordV1(
-            subject=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
-            calculation_source=ref,
-        )
-        for ref in source_provenance
-        for casilla_id in sorted(ref.source_casilla_ids)
-    )
+    records: list[ModeloWorkspaceProvenanceRecordV1] = []
+    for ref in source_provenance:
+        if not ref.source_casilla_ids:
+            records.append(ModeloWorkspaceProvenanceRecordV1(subject=None, calculation_source=ref))
+            continue
+        for casilla_id in sorted(ref.source_casilla_ids):
+            records.append(
+                ModeloWorkspaceProvenanceRecordV1(
+                    subject=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),
+                    calculation_source=ref,
+                )
+            )
+    return tuple(records)
 
 
 def _graded_snapshot_ledger_issue(issue: LedgerPreflightIssue) -> ModeloWorkspaceLedgerIssueV1:

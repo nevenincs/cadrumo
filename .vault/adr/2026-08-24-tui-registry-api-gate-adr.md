@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:a03225789b66c36c27ff9679080da83f103746634f9122cc508a002d245db7f4'
+body_hash: 'sha256:a15386b170711621330fff053886845c9f01ef962e4e629ed53f0882f91230af'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -1004,13 +1004,19 @@ the originating resolver call site did not associate this row with a
 casilla, which is common today (verified: `_modelo_bindings.py`'s ledger IVA
 aggregation provenance never populates the field). Backfilling every
 resolver call site to populate it is explicitly OUT of this amendment's
-scope; a resolver that never links a casilla simply produces no provenance
+scope; a resolver that never links a casilla produces no LINKED provenance
 record for that source until it does.
 
-`ModeloWorkspaceProvenanceRecordV1.subject` is unchanged in type
-(`ModeloWorkspaceSchemaReferenceV1`, already a discriminated union including
-`ModeloWorkspaceCasillaReferenceV1`) — no new Workspace type was needed.
-`graded_snapshot_provenance_facet` fans one `CalculationSourceRef` out into
-one record per casilla in its `source_casilla_ids`; a ref with an empty
-tuple produces zero records rather than a record with a fabricated or
-inferred subject.
+`ModeloWorkspaceProvenanceRecordV1.subject` is `ModeloWorkspaceSchemaReferenceV1
+| None` (widened, not unchanged — the original landing left it required,
+a follow-on correction closed this before S290 checked): `None` is the same
+None-vs-() shaped distinction S283 gave a schema record's optional grounding
+fields, meaning "this producer never carries a linked subject for this row",
+never a silently dropped record. `graded_snapshot_provenance_facet` fans one
+`CalculationSourceRef` out into one record per casilla in its
+`source_casilla_ids`; a ref with an empty tuple still produces exactly ONE
+record, with `subject=None`, rather than vanishing from the facet or being
+given a fabricated or inferred subject. An audit reader sees every
+contributing source, attributed or not, and can distinguish "unattributed"
+from "record never surfaced" — the same distinction an under-declaration
+review depends on everywhere else in this codebase.

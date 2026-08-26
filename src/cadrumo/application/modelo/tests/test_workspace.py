@@ -1314,8 +1314,8 @@ def test_graded_snapshot_readiness_preserves_every_axis_and_the_ledger_issue_sub
     assert isinstance(period_issue.subject, ModeloWorkspaceLedgerPeriodSubjectV1)
 
 
-def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_drops_unlinked_refs() -> None:
-    """S290: a source ref fans out to one record per linked casilla; an unlinked ref yields none."""
+def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_marks_unlinked_refs() -> None:
+    """S290: a source ref fans out to one record per linked casilla; an unlinked ref yields one subject=None record."""
     from ....core import CalculationSourceLineageRole, validated_casilla_id
     from ....core.aggregation import BindingSourceKind
     from ....domain.modelos import CalculationSourceRef
@@ -1346,10 +1346,16 @@ def test_graded_snapshot_provenance_facet_fans_out_by_linked_casilla_and_drops_u
 
     records = graded_snapshot_provenance_facet((linked_ref, unlinked_ref))
 
-    assert len(records) == 2
-    assert all(isinstance(record.subject, ModeloWorkspaceCasillaReferenceV1) for record in records)
+    assert len(records) == 3
+    linked_records = [record for record in records if record.subject is not None]
+    unlinked_records = [record for record in records if record.subject is None]
+    assert len(linked_records) == 2
+    assert len(unlinked_records) == 1
     subjects = {
-        record.subject.casilla_id for record in records if isinstance(record.subject, ModeloWorkspaceCasillaReferenceV1)
+        record.subject.casilla_id
+        for record in linked_records
+        if isinstance(record.subject, ModeloWorkspaceCasillaReferenceV1)
     }
     assert subjects == {linked_casilla, second_linked_casilla}
-    assert all(record.calculation_source is linked_ref for record in records)
+    assert all(record.calculation_source is linked_ref for record in linked_records)
+    assert unlinked_records[0].calculation_source is unlinked_ref

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:2b5e385dcc915817b25a7fcfcc3e629aa03561e33e3052a231e17632be00ef7c'
+body_hash: 'sha256:f24af34e3f3353122773e4e94c914347a128149bac1e4c9ffc592d503630f604'
 step_id: 'S290'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -63,8 +63,25 @@ It does NOT backfill `source_casilla_ids` at the 16 `CalculationSourceProvenance
 construction sites across 7 application-layer files that do not yet populate
 it (spot-checked one, `_modelo_bindings.py`'s ledger IVA aggregation
 provenance, and confirmed it leaves the field at its `()` default). Those
-resolvers producing zero provenance records today is the honest, non-fabricated
-consequence of that gap, not a defect in this change -- populating each
-resolver is a separate undertaking, several of which would need the
-registry's own binding-to-casilla wiring (the same kind of join S277 already
-built for schema_facet) rather than a trivial field copy.
+resolvers producing zero LINKED provenance records today is the honest,
+non-fabricated consequence of that gap, not a defect in this change --
+populating each resolver is a separate undertaking, several of which would
+need the registry's own binding-to-casilla wiring (the same kind of join
+S277 already built for schema_facet) rather than a trivial field copy.
+
+Follow-on correction (same day, before the Step checked, commit forthcoming):
+team lead flagged that the original landing had an unlinked ref produce ZERO
+provenance records -- silently dropping it, which is exactly the
+absence-versus-emptiness problem S283/S284 exist to prevent, and material
+because most of the 16 construction sites are unlinked today, so unlinked
+would be the common case rather than the exception. Widened
+`ModeloWorkspaceProvenanceRecordV1.subject` to `ModeloWorkspaceSchemaReferenceV1
+| None` (the same S283 shape) and changed `graded_snapshot_provenance_facet`
+to emit exactly one record per ref regardless of linkage -- `subject=None`
+for an unlinked ref, never a dropped ref. Test renamed and extended to
+assert the unlinked ref now produces one `subject=None` record rather than
+none. Also considered and rejected a binding-keyed third option team lead
+raised in parallel (add `binding_id`, derive casilla attribution via S277
+joins) -- superseded once both of us confirmed the casilla-linked landing
+was already free, since `CalculationSourceProvenance` carried the field the
+whole time.

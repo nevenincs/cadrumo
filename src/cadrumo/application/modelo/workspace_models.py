@@ -545,9 +545,21 @@ class ModeloWorkspaceFamilyDispositionV1(_WorkspaceModel):
 
 
 class ModeloWorkspaceProvenanceRecordV1(_WorkspaceModel):
-    """One selected canonical resolver lineage row for a workspace subject."""
+    """One selected canonical resolver lineage row, optionally for a workspace subject.
 
-    subject: ModeloWorkspaceSchemaReferenceV1
+    S290: ``subject`` is ``None`` when the underlying ``calculation_source``
+    (``CalculationSourceRef``) carries no linked casilla identity --
+    ``source_casilla_ids`` empty, which is the common case today since most
+    resolver call sites do not yet populate it. This is the same
+    None-vs-()-shaped distinction S283 gave a schema record's optional
+    grounding fields: ``None`` means "this producer never carries this data
+    for this row", never a silently dropped record. An unlinked ref still
+    produces exactly one record (never zero), so an audit reader sees every
+    contributing source and can distinguish "unattributed" from "record
+    never surfaced".
+    """
+
+    subject: ModeloWorkspaceSchemaReferenceV1 | None
     calculation_source: CalculationSourceRef
 
 
