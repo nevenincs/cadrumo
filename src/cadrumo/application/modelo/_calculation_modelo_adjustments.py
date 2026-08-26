@@ -48,9 +48,14 @@ from ...domain.calculations.registry.schema import (
     RegistrySnapshot,
 )
 from ...domain.modelos import (
+    Modelo184MemberRow,
+    Modelo210AgrupacionRentaRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloDetailRow,
+    ModeloError,
     WorkUnit,
 )
 from ._action_errors import ModeloCrossPeriodCleanStateError
@@ -73,6 +78,50 @@ _M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE: Mapping[CasillaId, CasillaId]
     "iva.cuota-deducible-total": "iva.anual.cuota-deducible-total",
     "iva.resultado-regimen-general": "iva.anual.resultado-regimen-general",
 }
+
+_DETAIL_ROW_OWNING_MODELO: Mapping[type[ModeloDetailRow], str] = {
+    Modelo184MemberRow: "184",
+    Modelo232VinculadaRow: "232",
+    Modelo349OperadorRow: "349",
+    Modelo349RectificacionRow: "349",
+    Modelo347ContraparteRow: "347",
+    Modelo210AgrupacionRentaRow: "210",
+}
+
+
+def require_detail_rows_declared_for_their_owning_modelo(
+    *,
+    work_unit: WorkUnit,
+    detail_rows: tuple[ModeloDetailRow, ...],
+) -> None:
+    """Refuse any detail row whose typed kind belongs to a different modelo.
+
+    Each ``ModeloDetailRow`` subtype is a bespoke per-modelo shape (M184
+    member, M232 vinculada, M349 operador/rectificación, M347 contraparte,
+    M210 agrupación renta) that is never legitimately declared against a
+    different modelo's work unit. Before this check existed, a mismatched
+    row was silently PERSISTED into that revision's ``detail_rows`` while
+    contributing to no figure -- a taxpayer-declared row that appeared to
+    exist yet affected nothing, with no advisory anywhere. Every kind now
+    refuses through one convention rather than five ad hoc call sites.
+
+    This runs at the calculate boundary's single funnel
+    (:func:`~._calculation_actions._calculate_modelo_revision_with_trusted_mesh_sources`),
+    so both the direct and bucket-aggregation calculate entry points are
+    covered.
+    """
+    for row in detail_rows:
+        owning_modelo = _DETAIL_ROW_OWNING_MODELO.get(type(row))
+        if owning_modelo is None or str(work_unit.modelo) == owning_modelo:
+            continue
+        raise ModeloError(
+            translated_message="errors.error.error_modelo_detail_row_wrong_modelo",
+            context={
+                "row_type": type(row).__name__,
+                "owning_modelo": owning_modelo,
+                "work_unit_modelo": str(work_unit.modelo),
+            },
+        )
 
 
 @dataclass(frozen=True, slots=True)
