@@ -1981,6 +1981,25 @@ required_text = [
     "A los efectos de lo previsto en el artículo 16 de esta Ley",
 ]
 
+[legal."ley-27-2014:art-15-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a15bis"
+document_id = "BOE-A-2014-12328"
+article = "15-bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a15bis"
+published_at = 2014-11-28
+effective_from = 2021-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; ANCHOR NOTE -- BOE's own anchor for this provision is #a1-2, which _canonical_anchor normalises to 'a12' and so collides with articulo 12; the resolver correctly REFUSES it. The compact form #a15bis reaches the provision through the resolver's structural-title fallback and resolves to exactly one unit, verified through the production resolver before this entry was written. required_text confirmed present in that resolved unit; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 15 bis: asimetrias hibridas. Niega la deducibilidad de gastos correspondientes a operaciones con personas o entidades vinculadas que, por una calificacion fiscal diferente en aquellas, no generen ingreso, generen un ingreso exento o sujeto a una reduccion del tipo, o den lugar a una deduccion sin inclusion. Transpone la ATAD II. Funda la seccion asimetrias_hibridas_art_15_bis_lis del Modelo 200, cuyo tag nombra este articulo con la salvedad que el propio tag recoge."
+required_text = [
+    "Asimetrías híbridas",
+    "No serán fiscalmente deducibles los gastos correspondientes a operaciones realizadas con personas o entidades vinculadas",
+]
+
 [legal."ley-49-2002:art-20"]
 evidence_tier = "legal_authority"
 authority = "boe"
