@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:c96c35c0995db4e718eaaf346b1197d33ecacfb1fc1f5c03819237639f53d014'
+body_hash: 'sha256:47450d4668b19da48d87d33c0a76b2a7cb282d257012aeffe9976a3092de7844'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]"
@@ -498,3 +498,58 @@ every binding intent kind refuses today with a typed, enumerated
 `REMOVE_OVERRIDE_NOT_YET_WIRED`), matching the row-intent precedent. The
 permitted surface and admission are real and grounded; only execution is
 future work.
+
+## Amendment 2026-08-26: detail-row edits are whole-set replacement by natural key
+
+**What this corrects.** The premise that only M210's grouped-renta row
+carries a business key while the other four `ModeloDetailRow` kinds are
+identified by position alone is FALSE: every kind already carries a real,
+already-declared natural key in its own fields -- `nif` (M184 member, M232
+counterparty, M347 counterparty), `nif_comunitario` + `clave_operacion` (M349
+operador/rectificación, since one counterparty can carry more than one
+operation type), `source_id` (M210, already explicit). No `ModeloDetailRow`
+kind needed a new field or a minted identity.
+
+**The decision: whole-set replacement, addressed by natural key, no minted
+or positional identity.** `detail_rows` is memoryless -- resupplied whole on
+every calculate call, exactly like `casilla_inputs` and `binding_values` --
+so an edit submission does not need to track a delta against history. The
+established codebase precedent for exactly this shape is
+`RetencionObservationRepository.replace_observations` (Modelo 180/193
+per-perceptor rows): "SET-REPLACE, not additive upsert: clears any prior rows
+for the exact key-tuple, then writes the supplied set, both in ONE
+transaction," addressed by the row's own natural key, never a minted id or
+position. `ModeloEditDetailRowAddressV1` (`_edit_models.py`) follows the same
+convention: `detail_row_kind` (the `ModeloDetailRow.row_type` discriminator)
+plus `natural_key` (the row's own identity field, `|`-joined for a compound
+key).
+
+**A row absent from a resupplied set needs no distinguishing axis.** Unlike
+a scalar value -- where declared-zero, cleared, and never-declared collapse
+into one absence, which is exactly why `cleared_casilla_ids` had to exist --
+a detail row has only two states: present with real field values, or
+absent. There is no ambiguous middle state to disambiguate. The established
+precedent confirms this: `replace_observations`'s own read path records no
+trace of a dropped row, no deletion-count axis, nothing; removal is
+expressed purely by the row's absence from the resupplied set.
+
+**MOVE_ROW is retained**, not retired the way the binding-keyed row-group
+category was: row order is structurally significant. `_record_renderer.py`
+renders a `repeat == "binding_rows"` record via `enumerate(..., 1)` over row
+order, and that order is derived directly from `detail_rows` tuple order
+(confirmed via `_revision_replay_inputs.py`'s M349 replay projection). Order
+therefore determines each row's physical record occurrence number in the
+exported fichero and already participates in the revision's content address,
+so two orderings of the same substantive rows are legitimately distinct
+revisions. `ModeloDetailRowEditIntentV1.move_to_index` repositions an
+existing row (by natural key) within its own kind's ordered subsequence;
+cross-kind ordering is not structurally significant, since each
+`ModeloDetailRow` kind renders as its own distinct fichero record type.
+
+The guarded executor (`_edit_execution.py::_reconstruct_detail_rows`) groups
+the current revision's `detail_rows` by kind, applies each submitted intent
+by natural key (ADD appends, UPDATE replaces in place, DELETE removes,
+MOVE repositions within the kind), and resupplies the reconstructed complete
+tuple to the calculate boundary -- no signature change to the calculate
+boundary's own `detail_rows` parameter was needed, since it already accepted
+a complete tuple.

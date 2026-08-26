@@ -36,7 +36,7 @@ from ...domain.buckets import BucketEventId
 from ...domain.calculations.registry.ids import BindingId, RevisionId
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing import ModeloScalar
-from ...domain.modelos import ModeloCode
+from ...domain.modelos import ModeloCode, ModeloDetailRow
 from ..operations.models import OperationDefinitionId, OperationId, OperationReference
 from ..operations.registry import OperationSchemaIdentityV1
 from ..operator_actions import ActionReference
@@ -87,6 +87,21 @@ class ModeloEditScalarIntentKind(StrEnum):
 
 class ModeloEditRowIntentKind(StrEnum):
     """The closed repeatable-row edit intents; MOVE_ROW requires reorderable groups."""
+
+    ADD_ROW = "add_row"
+    UPDATE_ROW = "update_row"
+    DELETE_ROW = "delete_row"
+    MOVE_ROW = "move_row"
+
+
+class ModeloEditDetailRowIntentKind(StrEnum):
+    """The closed ``ModeloDetailRow`` edit intents, addressed by natural key.
+
+    Order is structurally significant (it determines each row's physical
+    record occurrence number in the exported fichero and participates in the
+    calculation revision's content address), so ``MOVE_ROW`` is retained and
+    carries an explicit target position.
+    """
 
     ADD_ROW = "add_row"
     UPDATE_ROW = "update_row"
@@ -253,11 +268,35 @@ type ModeloEditRowAddressV1 = Annotated[
     Field(discriminator="kind"),
 ]
 
+
+class ModeloEditDetailRowAddressV1(_EditModel):
+    """The natural-key address of one ``ModeloDetailRow``, never position or a minted id.
+
+    ``detail_row_kind`` is the discriminated ``ModeloDetailRow.row_type`` value
+    (e.g. ``"miembro"``, ``"contraparte"``). ``natural_key`` is the row's own
+    already-declared identity field, joined with ``|`` for a compound key
+    (M349 operador/rectificación key on ``nif_comunitario|clave_operacion``,
+    since one counterparty can carry more than one operation type) -- never a
+    minted or positional identity. This mirrors the codebase's established
+    whole-set-replacement convention for repeating declared rows
+    (``RetencionObservationRepository.replace_observations``): rows are
+    addressed by the business key they already carry, and an absent key is
+    sufficient to express removal with no separate "explicitly deleted" axis,
+    because a row (unlike a scalar) has no ambiguous middle state between
+    "declared" and "absent".
+    """
+
+    kind: Literal["detail_row"] = "detail_row"
+    detail_row_kind: _BoundedCode
+    natural_key: Annotated[str, Field(min_length=1, max_length=256)]
+
+
 type ModeloEditAddressV1 = Annotated[
     ModeloEditScalarAddressV1
     | ModeloEditBindingAddressV1
     | ModeloEditExistingRowAddressV1
-    | ModeloEditNewRowCorrelationV1,
+    | ModeloEditNewRowCorrelationV1
+    | ModeloEditDetailRowAddressV1,
     Field(discriminator="kind"),
 ]
 
@@ -381,13 +420,39 @@ class ModeloEditNonWritableBindingOverrideSurfaceEntryV1(_EditModel):
     reason: ModeloEditNonWritableReason
 
 
+class ModeloEditWritableDetailRowSurfaceEntryV1(_EditModel):
+    """One ``ModeloDetailRow`` kind the baseline admits for writing, natural-key addressed.
+
+    Distinct from the (permanently empty) ``BindingId``-keyed row-group axis:
+    this addresses the genuine repeatable, taxpayer-typed ``ModeloDetailRow``
+    mechanism, admitted per the same real, enforced per-modelo eligibility
+    table that
+    :func:`~._calculation_modelo_adjustments.require_detail_rows_declared_for_their_owning_modelo`
+    refuses a mismatched row against.
+    """
+
+    kind: Literal["writable_detail_row"] = "writable_detail_row"
+    detail_row_kind: _BoundedCode
+    allowed_intents: Annotated[tuple[ModeloEditDetailRowIntentKind, ...], Field(min_length=1, max_length=4)]
+
+    @field_validator("allowed_intents")
+    @classmethod
+    def _require_unique_allowed_detail_row_intents(
+        cls, value: tuple[ModeloEditDetailRowIntentKind, ...]
+    ) -> tuple[ModeloEditDetailRowIntentKind, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("writable detail-row surface entry must declare each allowed intent at most once")
+        return value
+
+
 type ModeloEditPermittedSurfaceEntryV1 = Annotated[
     ModeloEditWritableScalarSurfaceEntryV1
     | ModeloEditNonWritableScalarSurfaceEntryV1
     | ModeloEditWritableRowGroupSurfaceEntryV1
     | ModeloEditNonWritableRowGroupSurfaceEntryV1
     | ModeloEditWritableBindingOverrideSurfaceEntryV1
-    | ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
+    | ModeloEditNonWritableBindingOverrideSurfaceEntryV1
+    | ModeloEditWritableDetailRowSurfaceEntryV1,
     Field(discriminator="kind"),
 ]
 
@@ -399,6 +464,8 @@ def _surface_entry_address(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[st
         entry, (ModeloEditWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
     ):
         return ("binding_override", entry.binding_id)
+    if isinstance(entry, ModeloEditWritableDetailRowSurfaceEntryV1):
+        return ("detail_row", entry.detail_row_kind)
     return ("row_group", entry.binding_id)
 
 
@@ -764,13 +831,50 @@ class ModeloRowEditIntentV1(_EditModel):
         return self
 
 
+class ModeloDetailRowEditIntentV1(_EditModel):
+    """One ``ModeloDetailRow`` edit intent, addressed by the row's own natural key.
+
+    ADD_ROW and UPDATE_ROW submit a complete typed ``ModeloDetailRow``.
+    DELETE_ROW names only the natural key: removal is expressed by the row's
+    absence from the executor's reconstructed set, with no separate
+    "explicitly deleted" axis, per :class:`ModeloEditDetailRowAddressV1`.
+    MOVE_ROW repositions an already-declared row without altering its
+    content.
+    """
+
+    address: ModeloEditDetailRowAddressV1
+    kind: ModeloEditDetailRowIntentKind
+    row: ModeloDetailRow | None = None
+    move_to_index: Annotated[int, Field(ge=1)] | None = None
+
+    @model_validator(mode="after")
+    def _require_shape_matches_kind(self) -> ModeloDetailRowEditIntentV1:
+        if self.kind in (ModeloEditDetailRowIntentKind.ADD_ROW, ModeloEditDetailRowIntentKind.UPDATE_ROW):
+            if self.row is None:
+                raise ValueError("ADD_ROW/UPDATE_ROW detail-row intent requires a complete typed row")
+            if self.move_to_index is not None:
+                raise ValueError("ADD_ROW/UPDATE_ROW detail-row intent may not carry a move_to_index")
+        elif self.kind is ModeloEditDetailRowIntentKind.DELETE_ROW:
+            if self.row is not None or self.move_to_index is not None:
+                raise ValueError("DELETE_ROW detail-row intent requires only the natural-key address")
+        elif self.kind is ModeloEditDetailRowIntentKind.MOVE_ROW:
+            if self.row is not None or self.move_to_index is None:
+                raise ValueError("MOVE_ROW detail-row intent requires only the natural-key address and move_to_index")
+        return self
+
+
 def _intent_address_key(
-    address: ModeloEditScalarAddressV1 | ModeloEditBindingAddressV1 | ModeloEditRowAddressV1,
+    address: ModeloEditScalarAddressV1
+    | ModeloEditBindingAddressV1
+    | ModeloEditRowAddressV1
+    | ModeloEditDetailRowAddressV1,
 ) -> tuple[str, str]:
     if isinstance(address, ModeloEditScalarAddressV1):
         return ("scalar", address.casilla_id)
     if isinstance(address, ModeloEditBindingAddressV1):
         return ("binding_override", address.binding_id)
+    if isinstance(address, ModeloEditDetailRowAddressV1):
+        return ("detail_row", f"{address.detail_row_kind}:{address.natural_key}")
     if isinstance(address, ModeloEditExistingRowAddressV1):
         return ("existing_row", f"{address.binding_id}:{address.row_index}")
     return ("new_row", f"{address.binding_id}:{address.client_correlation_id}")
@@ -789,6 +893,7 @@ class ModeloEditSubmissionV1(_EditModel):
     scalar_intents: Annotated[tuple[ModeloScalarEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     binding_intents: Annotated[tuple[ModeloBindingEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
     row_intents: Annotated[tuple[ModeloRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
+    detail_row_intents: Annotated[tuple[ModeloDetailRowEditIntentV1, ...], Field(max_length=_MAX_INTENTS)] = ()
 
     @model_validator(mode="after")
     def _require_consistent_submission(self) -> ModeloEditSubmissionV1:
@@ -797,8 +902,11 @@ class ModeloEditSubmissionV1(_EditModel):
         keys = [_intent_address_key(intent.address) for intent in self.scalar_intents]
         keys.extend(_intent_address_key(intent.address) for intent in self.binding_intents)
         keys.extend(_intent_address_key(intent.address) for intent in self.row_intents)
+        keys.extend(_intent_address_key(intent.address) for intent in self.detail_row_intents)
         if len(set(keys)) != len(keys):
-            raise ValueError("edit submission must not address the same casilla, binding, or row more than once")
+            raise ValueError(
+                "edit submission must not address the same casilla, binding, row, or detail row more than once"
+            )
         return self
 
 
@@ -913,6 +1021,7 @@ type ModeloEditExecutionResultV1 = Annotated[
 
 __all__ = [
     "ModeloBindingEditIntentV1",
+    "ModeloDetailRowEditIntentV1",
     "ModeloEditAddressV1",
     "ModeloEditAdmissionRequestV1",
     "ModeloEditAdmissionResultV1",
@@ -924,6 +1033,8 @@ __all__ = [
     "ModeloEditCasillaDataType",
     "ModeloEditCompatibilityRefusalV1",
     "ModeloEditCompatibilityTupleV1",
+    "ModeloEditDetailRowAddressV1",
+    "ModeloEditDetailRowIntentKind",
     "ModeloEditDomainRefusalV1",
     "ModeloEditExecutionEffect",
     "ModeloEditExecutionNoEffectV1",
@@ -963,6 +1074,7 @@ __all__ = [
     "ModeloEditVersionHeader",
     "ModeloEditVersionRefusalV1",
     "ModeloEditWritableBindingOverrideSurfaceEntryV1",
+    "ModeloEditWritableDetailRowSurfaceEntryV1",
     "ModeloEditWritableRowGroupSurfaceEntryV1",
     "ModeloEditWritableScalarSurfaceEntryV1",
     "ModeloMutationCapabilityProjectionV1",
