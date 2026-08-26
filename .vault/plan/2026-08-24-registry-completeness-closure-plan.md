@@ -3,8 +3,7 @@ tags:
   - '#plan'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-25'
-body_hash: 'sha256:be1542d1f96ca17f08edb56fe47019a0c285242af5930a597b603f4c714e6520'
+modified: '2026-08-26'
 tier: L3
 related:
   - '[[2026-08-24-registry-completeness-closure-adr]]'
@@ -13,6 +12,16 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
   - '[[2026-08-22-source-casilla-integration-plan]]'
 ---
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `registry-completeness-closure` plan
 
@@ -160,7 +169,7 @@ Run the derived release gate and an independent fresh-context honesty review, ac
 
 - [ ] `W03.P07.S37` - Run a fresh-context honesty review of the derived closure report and every predecessor close claim; `.vault/audit/`.
 - [ ] `W03.P07.S38` - Resolve or formally defer every honesty-review finding through its owning predecessor plan; `.vault/plan/`.
-- [ ] `W03.P07.S39` - Run the blocking release predicate, publish the supported-versus-refused boundary, and close this roll-up plan; `dev/registry/conformance/`.
+- [ ] `W03.P07.S39` - First restore a green canonical bundled-registry validation at current HEAD without absorbing foreign in-flight lanes; then run the blocking cross-authority release predicate, publish the supported-versus-refused boundary, and close this roll-up plan only when both gates pass; `dev/registry/conformance/; src/cadrumo/_data/registry/aeat/; src/cadrumo/domain/calculations/registry/`.
 
 ## Parallelization
 
