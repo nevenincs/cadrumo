@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:1a58cd1f820197cefe998e0d8128068d9f6f7e31b2daa27003d67be15cfdcb71'
+body_hash: 'sha256:4a82c39100951afd9b85df6db2dd6bedc9b9b5f828e90fcf948401e40f47681b'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-15-registry-temporal-coverage-acquisition-worklist-research]]"
@@ -59,6 +59,21 @@ are currently blocked before collection by an unrelated in-flight circular
 import between registry authority/schema and IVA lookup. This is reported as a
 whole-tree blocker, not waived or repaired in the M353 lane. M165/M200 remain
 separate active-tree blockers.
+
+## Review remediation evidence
+
+The parser witness now consumes the tuple returned by `require_complete()` and
+asserts each source's sheet name, parsed field count, and total extent:
+`35300` is 13 fields with variable extent; the 2015–16 `35301` is 146 fields
+and 1800 positions; the 2017–19 and 2020 `35301` variants are 132 fields and
+1500 positions. This is a physical-source witness, independent of the registry
+writer-refusal assertion.
+
+Both generated 353 export trees were freshly rendered with the canonical
+`render_complete_export_tree` tooling. Their generated provenance manifests
+were promoted from those fresh renders; the focused generated-tree gate proves
+both membership equality and byte equality. Ruff's import sorter also cleared
+the touched generated-tree test's I001 finding.
 
 ## Re-review closure
 
