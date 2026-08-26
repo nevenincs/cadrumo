@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:36c6a117303d50c94206d1f90d39687a26c212b100ae710bef080f11b8da3b57'
+body_hash: 'sha256:edb81a0eb1140963007ec3281b958b70e125e230ef84e5d20283b8110a86cd8b'
 ---
 
 # `tui-architecture` plan
@@ -321,14 +321,14 @@ Build the operation-agnostic modal, live log projection, interactions, and domai
 
 Project supervisor snapshots and ordered events into a detachable modal, live logs, progress, controls, and typed interactions.
 
-- [ ] `W05.P11.S60` - Implement a TUI controller limited to the composed public submit, atomic observation, registered REVIEW, typed response, cancel, detach, and Workspace-refresh services, with no supervisor inspection or persistence access; `src/cadrumo/entrypoints/tui/operations/controller.py`.
-- [ ] `W05.P11.S61` - Project only OperationPublicProjectionV1 and its public capability and refusal fields into immutable modal view models without importing persisted snapshots, journal records, or supervisor-private state; `src/cadrumo/entrypoints/tui/operations/projection.py`.
-- [ ] `W05.P11.S62` - Project only OperationPublicEventPageV1 into bounded live and historical log views, honoring public cursors, replay and resynchronization dispositions, and approved diagnostic references without reading the journal; `src/cadrumo/entrypoints/tui/operations/logs.py`.
-- [ ] `W05.P11.S63` - Render only registered safe REVIEW projections and separately response-authorized APPLY and REJECT controls, treating public INPUT and CHOICE interaction kinds as unsupported until a later accepted contract enrolls them; `src/cadrumo/entrypoints/tui/operations/interactions.py`.
-- [ ] `W05.P11.S64` - Implement the generic detachable operation modal solely from public projection, event-page, REVIEW, response-control, cancellation, detach, terminal-receipt, and typed Workspace-refresh DTOs; `src/cadrumo/entrypoints/tui/operations/modal.py`.
-- [ ] `W05.P11.S65` - Expose a narrow operation-presentation facade that accepts only public operation contracts and exports neither Textual internals nor application-private operation types as backend contracts; `src/cadrumo/entrypoints/tui/operations/__init__.py`.
-- [ ] `W05.P11.S66` - Derive spinner visibility, enabled controls, close policy, interaction affordance, and terminal copy solely from OperationPublicProjectionV1 and public response-control projections without reclassifying lifecycle truth; `src/cadrumo/entrypoints/tui/operations/projection.py`.
-- [ ] `W05.P11.S67` - Prove public cursor replay, resynchronization, detach and reattach, REVIEW revision and response authority, cancellation acknowledgement, typed Workspace refresh, terminal settlement, log visibility, subscriber loss, and exact C0 receipt ancestry with no private operation imports; `src/cadrumo/entrypoints/tui/operations/tests`.
+- [x] `W05.P11.S60` - Implement a TUI controller limited to the composed public submit, atomic observation, registered REVIEW, typed response, cancel, detach, and Workspace-refresh services, with no supervisor inspection or persistence access; `src/cadrumo/entrypoints/tui/operations/controller.py`.
+- [x] `W05.P11.S61` - Project only OperationPublicProjectionV1 and its public capability and refusal fields into immutable modal view models without importing persisted snapshots, journal records, or supervisor-private state; `src/cadrumo/entrypoints/tui/operations/projection.py`.
+- [x] `W05.P11.S62` - Project only OperationPublicEventPageV1 into bounded live and historical log views, honoring public cursors, replay and resynchronization dispositions, and approved diagnostic references without reading the journal; `src/cadrumo/entrypoints/tui/operations/logs.py`.
+- [x] `W05.P11.S63` - Render only registered safe REVIEW projections and separately response-authorized APPLY and REJECT controls, treating public INPUT and CHOICE interaction kinds as unsupported until a later accepted contract enrolls them; `src/cadrumo/entrypoints/tui/operations/interactions.py`.
+- [x] `W05.P11.S64` - Implement the generic detachable operation modal solely from public projection, event-page, REVIEW, response-control, cancellation, detach, terminal-receipt, and typed Workspace-refresh DTOs; `src/cadrumo/entrypoints/tui/operations/modal.py`.
+- [x] `W05.P11.S65` - Expose a narrow operation-presentation facade that accepts only public operation contracts and exports neither Textual internals nor application-private operation types as backend contracts; `src/cadrumo/entrypoints/tui/operations/__init__.py`.
+- [x] `W05.P11.S66` - Derive spinner visibility, enabled controls, close policy, interaction affordance, and terminal copy solely from OperationPublicProjectionV1 and public response-control projections without reclassifying lifecycle truth; `src/cadrumo/entrypoints/tui/operations/projection.py`.
+- [x] `W05.P11.S67` - Prove public cursor replay, resynchronization, detach and reattach, REVIEW revision and response authority, cancellation acknowledgement, typed Workspace refresh, terminal settlement, log visibility, subscriber loss, and exact C0 receipt ancestry with no private operation imports; `src/cadrumo/entrypoints/tui/operations/tests`.
 
 ### Phase `W05.P12` - Domain review projections
 
