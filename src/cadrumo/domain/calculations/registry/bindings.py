@@ -50,14 +50,7 @@ from ...iva_compensation import (
 from .binding_selector_utils import selector_against_model, selector_as_dict
 from .bindings_previous_filing import PreviousModeloSelector, validate_previous_filing_binding
 from .bindings_previous_filing import previous_filing_source_reference as _previous_filing_source_reference
-from .counterpart_bindings import (
-    CounterpartAggregationObservation,
-    CounterpartObservationRequirement,
-    counterpart_binding_requirements,
-    resolve_counterpart_binding_row_values,
-    resolve_counterpart_binding_values,
-    validate_counterpart_binding,
-)
+from .counterpart_bindings import validate_counterpart_binding
 from .detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
@@ -232,8 +225,6 @@ from .withholding_bindings import (
 __all__ = [
     "AtributionMemberObservation",
     "CasillaObservation",
-    "CounterpartAggregationObservation",
-    "CounterpartObservationRequirement",
     "DataBindingDefinition",
     "DonativoDonorObservation",
     "Gasto193Observation",
@@ -274,7 +265,6 @@ __all__ = [
     "casillas_by_binding",
     "compute_modelo_349_operador_totals_parity",
     "compute_withholding_totals_parity",
-    "counterpart_binding_requirements",
     "foreign_asset_binding_row_field",
     "invoice_binding_requirements",
     "is_m347_declarante_summary_invoice_binding",
@@ -284,8 +274,6 @@ __all__ = [
     "resolve_atribucion_binding_row_values",
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_bound_casilla_binding_value",
-    "resolve_counterpart_binding_row_values",
-    "resolve_counterpart_binding_values",
     "resolve_donativo_binding_row_values",
     "resolve_foreign_asset_binding_row_values",
     "resolve_gasto193_binding_row_values",
