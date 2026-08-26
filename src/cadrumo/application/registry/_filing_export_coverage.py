@@ -37,7 +37,7 @@ from ...domain.calculations.registry.temporal import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
 )
-from ._closure import (
+from .closure import (
     RegistryClosureEvidence,
     RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,

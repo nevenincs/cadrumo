@@ -23,7 +23,7 @@ from ...core import (
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.ids import ModeloId
 from ...domain.calculations.registry.schema import ModeloRevision
-from ._closure import (
+from .closure import (
     RegistryClosureEvidence,
     RegistryClosureLimb,
     RegistryClosureOwnerDisposition,
