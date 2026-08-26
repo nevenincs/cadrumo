@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:a7371695e7867b751da19bdcf891f652acad86352bdd41b4446285d0ff8793aa'
+body_hash: 'sha256:3d2056f538a62ca5121c0b653990c9252425fe68483adf262285147a7430def6'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -27,8 +27,8 @@ artifact.
 ### authority-identity | low | one strict physical-root pair owns keys and domains
 
 `src/cadrumo/domain/calculations/registry/authority.py` resolves both roots
-strictly, collapses relative, dot-segment, and symlink aliases, applies native
-case normalization, and uses the resulting pair for both the root load-state key
+strictly, collapses relative, dot-segment, symlink, and same-file case aliases,
+and uses the physical device/inode pair for both the root load-state key
 and opaque `ContentDigest` comparison domain. Missing, broken, or non-directory
 roots refuse before entering authority state.
 
