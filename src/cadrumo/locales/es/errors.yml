@@ -825,6 +825,8 @@ errors:
       una unidad de trabajo de modelo.
     modelo_work_selector_revision_conflict: La unidad de trabajo de modelo seleccionada
       pertenece a otra revisión.
+    modelo_workspace_manifest_capture_not_current: El manifiesto de campos cambió
+      durante la lectura; vuelva a capturarlo.
     profile_capsule_archive: No se ha podido escribir o leer el archivo de copia del
       perfil
     profile_capsule_source: El origen indicado no es una cápsula de perfil legible

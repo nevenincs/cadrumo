@@ -779,6 +779,8 @@ errors:
       feloldása előtt.
     modelo_work_selector_revision_conflict: A kiválasztott modell munkaegység másik
       revízióhoz tartozik.
+    modelo_workspace_manifest_capture_not_current: A mezőjegyzék olvasás közben megváltozott;
+      rögzítse újra.
     profile_capsule_archive: A profil archívumát nem sikerült írni vagy olvasni
     profile_capsule_source: A megadott forrás nem olvasható profilkapszula
     profile_import_collision: Az importált profil azonosítója ütközik egy meglévővel.

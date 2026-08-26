@@ -39,6 +39,7 @@ Submodules
    cadrumo.application.modelo._decimal_parsing
    cadrumo.application.modelo._dt12_advisory
    cadrumo.application.modelo._dt12_antiquity_advisory
+   cadrumo.application.modelo._edit_models
    cadrumo.application.modelo._export
    cadrumo.application.modelo._export_amendment_evidence
    cadrumo.application.modelo._filed_revision_observation
@@ -110,7 +111,7 @@ Submodules
    cadrumo.application.modelo._work_lifecycle
    cadrumo.application.modelo._work_plazo
    cadrumo.application.modelo._workflow_gate
-   cadrumo.application.modelo._workspace_manifest
+   cadrumo.application.modelo.calculation
    cadrumo.application.modelo.calculation_repository
    cadrumo.application.modelo.calculation_route
    cadrumo.application.modelo.external_import_actions
@@ -124,8 +125,9 @@ Submodules
    cadrumo.application.modelo.registry_discovery
    cadrumo.application.modelo.verify_selector
    cadrumo.application.modelo.work_addressing
-   cadrumo.application.modelo.work_review_projection
+   cadrumo.application.modelo.work_review
    cadrumo.application.modelo.work_unit_repository
    cadrumo.application.modelo.work_wizard
+   cadrumo.application.modelo.workspace_manifest
    cadrumo.application.modelo.workspace_models
    cadrumo.application.modelo.workspace_producers

@@ -832,6 +832,8 @@ errors:
       una unitat de treball de modelo.
     modelo_work_selector_revision_conflict: La unitat de treball de modelo seleccionada
       pertany a una altra revisió.
+    modelo_workspace_manifest_capture_not_current: El manifest de camps ha canviat
+      mentre es llegia; torneu a capturar-lo.
     profile_capsule_archive: No s'ha pogut escriure o llegir l'arxiu de còpia del
       perfil
     profile_capsule_source: L'origen indicat no és una càpsula de perfil llegible
