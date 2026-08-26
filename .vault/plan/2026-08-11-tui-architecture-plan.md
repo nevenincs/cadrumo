@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:863d41a03122779e6395cb4e481548c93eec1c849dcd461785610d1de5b6990b'
+body_hash: 'sha256:3ad6f3a2e647b13d70e15515ab24cb81cded04a44a406e2b417287d21877f362'
 ---
 
 # `tui-architecture` plan
@@ -186,9 +186,9 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [ ] `W03.P20.S130` - Prove strict Workspace round trips, exhaustive manifest coverage, exact ModeloWorkReview/readiness/closure parity, admission-specific contributor sets, exact-one-native-capture behavior, immutable or snapshot-isolated captures including mutation-after-capture isolation, unchanged owner generations, epoch/ABA/cross-incarnation refusal, locale behavior, bounded non-retention, forbidden lower-layer ModeloWorkspace imports, and a Vaultspec-RAG-plus-exact census that fails duplicate, legacy, shim, alias, fallback, bridge, or parallel Workspace authorities; `src/cadrumo/application/modelo/tests/test_workspace_projection.py`.
 - [ ] `W03.P20.S131` - Implement the sole ModeloWorkspaceC2DependencyReceiptV1 validator with current-HEAD, accepted-authority, closed-predecessor, public-schema, native-owner surface inventory, native/S126 seam-conformance digest, producer inventory, field denominator, process-incarnation refusal, conformance, no-legacy, and semantic redeclaration evidence checks while leaving receipt minting to the C1 handoff phase; `src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py`.
 - [x] `W03.P20.S176` - Hard-move the remote-read host authority to the core defining module and eliminate the registry aeat_hosts surface; `src/cadrumo/domain/calculations/registry/aeat_hosts.py and src/cadrumo/core/remote_authority.py`.
-- [ ] `W03.P20.S177` - Prove aeat_nif_iva_oracle remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/aeat_nif_iva_oracle.py`.
+- [x] `W03.P20.S177` - Prove aeat_nif_iva_oracle remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/aeat_nif_iva_oracle.py`.
 - [ ] `W03.P20.S178` - Retain applicability as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/applicability.py`.
-- [ ] `W03.P20.S179` - Prove authority remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/authority.py`.
+- [x] `W03.P20.S179` - Prove authority remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [ ] `W03.P20.S180` - Prove binding_selector_utils remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/binding_selector_utils.py`.
 - [ ] `W03.P20.S181` - Retain bindings as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/bindings.py`.
 - [ ] `W03.P20.S182` - Prove casilla_membership remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/casilla_membership.py`.
