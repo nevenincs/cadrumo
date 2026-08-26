@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:4db7ce39c6426355ddb4e989297d78e3e403fa0c146610d77f51c1d9eaa25d85'
+body_hash: 'sha256:55c398bac8eb2ea87d073a585ef85a5ca98e3356e1a9f081a0766ef2a8a049f3'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -61,6 +61,12 @@ related:
 - `M` `src/cadrumo/application/modelo/workspace.py`, `workspace_models.py`, `tests/test_workspace.py` (commit `9aaba37009`: unlinked provenance ref represented, never dropped)
 - `M` `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md` (S290 amendment correction)
 - `M` `.vault/plan/2026-08-11-tui-architecture-plan.md` (commit `37190be3a6`: S290, S291 checked)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `0aa5b4864b`: S287, `graded_snapshot_modelo_workspace_capabilities`)
+- `M` `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md` (S287 amendment, all five dispositions)
+- `M` `.vault/plan/2026-08-11-tui-architecture-plan.md` (commit `bc5bf256d2`: S287 checked)
+- `M` `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md` (commit `585e977397`: two-different-reasons clarification)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `e3b1a1fc8e`: `grade` parameter on the WORK-then-REGISTRY capture core)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (113 passed, 1 pre-existing unrelated failure)
 
 ## Notes
 
@@ -354,7 +360,28 @@ widened to `... | None` (the S283 shape); `graded_snapshot_provenance_facet`
 now emits exactly one record per ref regardless of linkage. S290 and S291
 are both closed in the plan (`37190be3a6`).
 
-Still held: the runtime capability-disposition computation (S287, confirmed
-unimplementable as written for `FILING_DRAFT_READINESS`; concrete stamps
-identified for the other four, proposal sent). S128 stays unchecked until
-S287 is ruled on.
+S287 landed (commit `0aa5b4864b`, checked `bc5bf256d2`): `graded_snapshot_modelo_workspace_capabilities` computes all five
+dispositions, four real (SCHEMA_INSPECTION, CALCULATION_MATERIALIZATION,
+VERIFICATION_READINESS keyed on exact `work_unit_id` coordinate,
+FILING_EXPORT_READINESS unmeasured pending a ninth contributor port) and
+one permanently unmeasured (FILING_DRAFT_READINESS, `build_draft` is
+stateless -- ADR records this as the fourth "nothing can reach this"
+finding, distinguished explicitly from FILING_EXPORT_READINESS's
+different, wiring-only gap).
+
+Sized the full GRADED_SNAPSHOT assembly and found the twelfth gap (S296,
+opened): `ModeloWorkspaceProjectionV1.schema_facet` is required of every
+admission, but every existing schema_facet builder
+(`static_inspection_*_schema_records` and their S277 join helpers) reads
+`RegistryRevisionInspection` specifically -- nothing builds the same
+five-kind schema set from a `RegistrySnapshot`. This is the entire
+S277-S284 vertical not yet existing for graded admission, not a missing
+field. Built the one piece that IS scoped to S128 itself rather than
+S296: `capture_modelo_workspace_target_captures` gained an optional
+`grade` parameter (commit `e3b1a1fc8e`), reusing the exact WORK-then-
+REGISTRY ordering and proven single-read for the graded case the same
+way as static.
+
+S128 stays unchecked pending S296 (the graded schema_facet vertical) and
+the full `resolve_graded_snapshot_result` assembly, which cannot be
+built to completion without S296.
