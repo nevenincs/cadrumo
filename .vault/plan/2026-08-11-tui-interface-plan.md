@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:13d0ab81eb1de21dd00a256e312ee244e67624959fadc1288de8b9bd216d83a9'
+body_hash: 'sha256:0c5a018f63e4cc9a4d16a3e2f066ac56c8124254b0f324ea634dd6294a8fe0d9'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -53,9 +53,9 @@ Create one exact receipt vocabulary and generated action denominator, then recor
 
 Freeze the application-owned profile projection required for requirement class, applicability, source, provenance, conflict, and readiness rendering.
 
-- [ ] `W01.P02.S04` - Define typed profile presentation states for static requiredness conditional applicability filing preflight readiness relevance source provenance conflicts and explicit unknowns; `src/cadrumo/application/user_profile/_overview.py`.
-- [ ] `W01.P02.S05` - Publish the settled profile presentation contract through the application facade; `src/cadrumo/application/user_profile/__init__.py`.
-- [ ] `W01.P02.S06` - Prove the profile projection from real schema conditional-completeness filing-preflight selector and stored-fact inputs without presentation inference; `src/cadrumo/application/user_profile/tests/test_overview.py`.
+- [ ] `W01.P02.S04` - Define typed profile presentation states for static requiredness conditional applicability filing preflight readiness relevance source provenance conflicts and explicit unknowns; `src/cadrumo/application/user_profile/presentation.py`.
+- [ ] `W01.P02.S05` - Publish the settled profile presentation contract through the application facade; `src/cadrumo/application/user_profile/presentation.py public defining module`.
+- [ ] `W01.P02.S06` - Prove the profile projection from real schema conditional-completeness filing-preflight selector and stored-fact inputs without presentation inference; `src/cadrumo/application/user_profile/tests/test_presentation.py`.
 
 ## Wave `W02` - Reusable information-architecture components
 
