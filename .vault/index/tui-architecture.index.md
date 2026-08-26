@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:6ff95dfa1719f2de6ffe5564b221646c1c257c9ea44f55063065223112869c87'
+body_hash: 'sha256:324ab2b5411e6b182d1ed39573a3e767fa465c469377e750c1d4e31e5515b7c9'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -50,6 +50,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P20-S204]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S205]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S206]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S207]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S208]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S209]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S211]]'
@@ -121,6 +122,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P20-S290]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S291]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S293]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S296]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S132]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S133]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S134]]'
@@ -136,6 +138,7 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P21-S285]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S288]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S292]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S298]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S60]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S61]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S62]]'
@@ -252,6 +255,8 @@ related:
   - '[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]'
   - '[[2026-08-25-tui-architecture-workspace-v1-contract-reference]]'
   - '[[2026-08-26-tui-architecture-detail-record-repetition-audit]]'
+  - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]'
+  - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr]]'
   - '[[2026-08-26-tui-architecture-narrow-step-closes-audit]]'
   - '[[2026-08-26-tui-architecture-registry-facade-census-final-hardening-audit]]'
   - '[[2026-08-26-tui-architecture-registry-facade-census-review-remediation-audit]]'
@@ -276,6 +281,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 ### adr
 
 - `2026-08-11-tui-architecture-adr` - `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
+- `2026-08-26-tui-architecture-m184-socio-clave-subclave-row-shape-adr` - `tui-architecture` adr: `modelo 184 socio row shape: repeat per member, clave and subclave` | (**status:** `proposed`)
 
 ### audit
 
@@ -417,6 +423,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P20-S204` - Prove identity remains public with locally defined symbols and direct consumer imports
 - `2026-08-11-tui-architecture-W03-P20-S205` - Prove ids remains public with locally defined symbols and direct consumer imports
 - `2026-08-11-tui-architecture-W03-P20-S206` - Prove iva_wallet_relation_targets remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S207` - Privatize the ledger_binding_resolution implementation after eliminating every external consumer and public package reach
 - `2026-08-11-tui-architecture-W03-P20-S208` - Prove legal remains public with locally defined symbols and direct consumer imports
 - `2026-08-11-tui-architecture-W03-P20-S209` - Prove live_parity remains public with locally defined symbols and direct consumer imports
 - `2026-08-11-tui-architecture-W03-P20-S211` - Prove m303_differentiated_deduction_projection remains public with locally defined symbols and direct consumer imports
@@ -488,6 +495,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P20-S290` - Decide how a graded-snapshot provenance record names its subject, since the workspace provenance record requires the casilla or binding identity a trace explains while the persisted calculation source ref carries only resolver identity, resolved binding source, source-object reference and fingerprint, with no field naming the subject and no shared key to join on: rule whether the persisted trace gains a subject identity, whether the provenance facet is keyed by resolved binding source instead, or whether a per-subject provenance record cannot be produced from what is persisted; amend the governing registry-api-gate decision record in the same change
 - `2026-08-11-tui-architecture-W03-P20-S291` - Decide how a period-level ledger preflight issue reaches the workspace, since the producing issue admits a period sentinel alongside a transaction id while the workspace ledger issue type accepts a transaction id alone, leaving a period-scoped readiness problem with no representable arm: rule whether the workspace type gains the period arm or the issue is otherwise carried, and prove a period-level issue is never dropped nor forced into a fabricated transaction identity; amend the governing registry-api-gate decision record in the same change
 - `2026-08-11-tui-architecture-W03-P20-S293` - Adjudicate the cross-module private import of _ManualInputSelector: extract the manual_input selector model, its record-shape key set and is_layout_binding_selector into their own public defining module, so binding_selector_utils.py's two function-local imports of a private bindings.py symbol -- present specifically to break a real module-level import cycle -- become ordinary module-level imports of a shared public contract with no cycle, and no consumer imports a private cross-module name
+- `2026-08-11-tui-architecture-W03-P20-S296` - Build the graded-admission schema facet over the registry snapshot, which the projection requires of every admission while every existing builder and join reads the static inspection projection instead: derive the same five reference kinds from the snapshot's own definitions, populate the legal-refs and constraint arms the static admission correctly leaves absent since the snapshot carries the definitions the inspection does not, and SHARE the edge-derivation joins with the static walk rather than writing a second copy, justifying explicitly any place the two genuinely diverge
 - `2026-08-11-tui-architecture-W03-P21-S132` - Define the strict ModeloEditContractV1 family covering version and compatibility headers, read-only edit schema, ModeloEditBaselineV1, parse and preflight requests and results, scalar and repeatable-row intents, guarded apply request, mutation capability, typed refusal, and immutable result receipt
 - `2026-08-11-tui-architecture-W03-P21-S133` - Implement edit admission, registry-backed schema projection, locale-neutral parsing, typed-intent normalization, and preflight services that issue exact ModeloEditBaselineV1 coordinates and never treat a Workspace safe-read baseline as mutation authority
 - `2026-08-11-tui-architecture-W03-P21-S134` - Persist encrypted Modelo edit result receipts with strict current-only serialization, compatibility-tuple validation, atomic lookup, and real round-trip evidence that cannot pass through tautological in-memory reconstruction
@@ -503,6 +511,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P21-S285` - Refuse a detail row submitted against a modelo that cannot carry it, at the calculate boundary, for every row kind that lacks the check the M210 grouped-renta validator already performs: the M349 operador and rectificacion path currently returns an empty aggregation on a modelo mismatch so the rows persist into the revision while contributing nothing, and the M184 member, M232 vinculada and M347 contraparte kinds carry no membership check at all while their share-sum and threshold validations run unconditionally; make every kind refuse with an instructive error naming the row kind and the work unit's modelo, and prove a mismatched row of each kind is rejected rather than dropped or persisted
 - `2026-08-11-tui-architecture-W03-P21-S288` - Decide how a repeatable detail row is identified across edits, since detail_rows is resupplied whole on every calculate call and only the M210 grouped-renta row carries a business key while the other four kinds are identified by position alone: rule whether an edit submission replaces the whole row set so position suffices within one submission, or whether a stable clock-free row identity is minted at add time and threaded into the revision's content address, and rule how a row absent from a resupplied set is distinguished from one never declared; amend the edit-contract decision record in the same change
 - `2026-08-11-tui-architecture-W03-P21-S292` - Establish whether a detail row's physical record occurrence number in the exported fichero carries meaning, since the renderer numbers occurrences from the detail-rows tuple order while the calculation revision's content address sorts rows before hashing so a pure reorder yields the same revision id: rule whether two ficheros differing only in row order may legitimately share one revision identity, and either make the identity order-aware or record that occurrence numbering is presentation-only and prove nothing downstream depends on it
+- `2026-08-11-tui-architecture-W03-P21-S298` - Stop a modelo 349 declarant summary over-declaring when the same operation reaches it from two supply paths: resolver-produced and caller-supplied detail rows are concatenated with no identity comparison, so an invoice-sourced operador row that the operator also enters manually is counted twice, inflating both the declared operator count and the declared amount; union the two sources by each row kind's own natural identity, refuse with an instructive conflict naming the counterparty and the divergent fields when the two disagree, union cleanly when they agree, and prove the summary totals are unchanged for every modelo whose rows come from one source alone
 - `2026-08-11-tui-architecture-W05-P11-S60` - Implement a TUI controller limited to the composed public submit, atomic observation, registered REVIEW, typed response, cancel, detach, and Workspace-refresh services, with no supervisor inspection or persistence access
 - `2026-08-11-tui-architecture-W05-P11-S61` - Project only OperationPublicProjectionV1 and its public capability and refusal fields into immutable modal view models without importing persisted snapshots, journal records, or supervisor-private state
 - `2026-08-11-tui-architecture-W05-P11-S62` - Project only OperationPublicEventPageV1 into bounded live and historical log views, honoring public cursors, replay and resynchronization dispositions, and approved diagnostic references without reading the journal
@@ -547,3 +556,4 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-research` - `tui-architecture` research: `Canonical operation envelope and supervisor API`
 - `2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research` - `tui-architecture` research: `Censo operation authority reconciliation`
 - `2026-08-24-tui-architecture-pre-custody-login-secret-submission-research` - `tui-architecture` research: `pre custody login secret submission`
+- `2026-08-26-tui-architecture-m184-socio-clave-subclave-research` - `tui-architecture` research: `modelo 184 socio record clave/subclave repetition axis`
