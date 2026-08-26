@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from cadrumo.application.registry import FilingExportProofAuthority
+from cadrumo.application.filing import FilingExportProofAuthority
 from cadrumo.core import SourceConnectivityProofAuthority
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 
 from ...source_connectivity.live_proof import canonical_live_connected_proof_authority
-from ..filing_export_proof import canonical_live_filing_export_proof_authority
+from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
 
 __all__ = [
     "RegistryClosureAuthorities",
@@ -50,11 +50,13 @@ def canonical_live_registry_closure_authorities(
     """Yield current live authorities without inventing absent proof entries."""
     resolved_root = repository_root.resolve(strict=True)
     registry = bundled_authority()
-    filing = canonical_live_filing_export_proof_authority(
+    filing = canonical_two_channel_filing_export_proof_authority(
         workspace_root=resolved_root,
         registry_root=bundled_path("registry", "aeat"),
         source_root=bundled_path(),
         authority=registry,
+        secure_replay_source=None,
+        secure_replay_custody=None,
     )
     with canonical_live_connected_proof_authority(resolved_root) as source:
         yield RegistryClosureAuthorities(

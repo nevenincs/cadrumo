@@ -40,16 +40,16 @@ from ....core import (
     read_toml,
     storage_location,
 )
+from ....core.config import load_settings
 from ....core.directory_scan import (
     DirectoryEntryKind,
     iter_directory,
     scan_directory,
 )
-from ....core.config import load_settings
 from ....core.resources import bundled_path
+from ._toml_helpers import as_toml_table as _as_toml_table
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
 from .ids import RevisionId
-from ._toml_helpers import as_toml_table as _as_toml_table
 
 REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 """Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""
@@ -76,7 +76,6 @@ _REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_D
 # read-only installed (non-editable) wheel benefits identically: nothing
 # ever rewrites it, so the periodic re-walk merely repeats the same answer.
 BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS = 10.0
-MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS = 1.0
 
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]

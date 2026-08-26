@@ -11,13 +11,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionCatalogue,
 )
+from ..bucket_event_repository import bucket_event_history_repository
 from ..review import LedgerReviewStatus
 from .actions_common import _display_decimal, _require_transaction
 from .models import LedgerReviewQuery, LedgerReviewQueryResult, LedgerReviewRow, LedgerTransactionPayload
@@ -196,9 +196,8 @@ def _bucket_event_repository(
 ) -> BucketEventHistoryRepositoryProtocol:
     if repository is not None:
         return repository
-    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+    return bucket_event_history_repository(bucket_id=bucket_id)
 
-    return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
 
 __all__ = [
     "ledger_transaction_review_status",

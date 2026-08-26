@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
+from cadrumo.application.filing import FilingExportProofAssessment, FilingExportProofCoordinate
 from cadrumo.application.registry import (
     FilingExportCoverageReport,
     RegistryClosureEvidence,
@@ -23,10 +24,6 @@ from cadrumo.core import (
     SourceConnectivityOperatorReachabilityProof,
 )
 from cadrumo.core.source_connectivity import SourceConnectivityConnectionIdentity
-from cadrumo.domain.calculations.registry.ids import (
-    ModeloId,
-    RevisionId,
-)
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ..authorities import RegistryClosureAuthorities
@@ -76,15 +73,9 @@ class _HostileFilingExportAuthority:
     def __init__(self) -> None:
         self.calls: list[str] = []
 
-    def proof_for(
-        self,
-        *,
-        modelo: ModeloId,
-        revision: RevisionId,
-        layout_ids: tuple[str, ...],
-    ) -> None:
-        self.calls.append(f"{modelo}/{revision}/{','.join(layout_ids)}")
-        raise AssertionError("hostile closure context invoked proof_for")
+    def assess_for(self, coordinate: FilingExportProofCoordinate) -> FilingExportProofAssessment:
+        self.calls.append(f"{coordinate.modelo}/{coordinate.revision}/{','.join(coordinate.layout_ids)}")
+        raise AssertionError("hostile closure context invoked assess_for")
 
 
 def _temporal(*, modelo: str = "303", revision: str = "2026", refused: bool = False) -> TemporalRevisionCoverage:
@@ -245,7 +236,7 @@ def test_row_constructor_refuses_a_present_limb_at_a_different_coordinate() -> N
 
 
 def test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_proof() -> None:
-    """Live canonical loading cannot infer filing proof from an unenrolled layout."""
+    """Live canonical loading explicitly refuses unavailable encrypted replay."""
     canonical_report = load_registry_closure_report(as_of=_AS_OF, registry_authority=bundled_authority())
 
     result = CliRunner().invoke(app, ["closure", "--check", "--as-of", _AS_OF.isoformat()])
@@ -253,8 +244,8 @@ def test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_
     assert result.exit_code == 1, result.output
     assert "release_eligible=false" in result.output
     assert f"revisions={len(canonical_report.rows)}" in result.output
-    assert "canonical generation or successful production emitted-byte evidence is absent" in result.output
-    assert "no canonical generation and production emitted-byte proof authority was supplied" not in result.output
+    assert "secure_replay:authority_unavailable" in result.output
+    assert "no canonical two-channel filing-export proof authority was supplied" not in result.output
 
 
 def test_cli_offline_mode_explicitly_restores_the_no_proof_refusal() -> None:
@@ -266,8 +257,8 @@ def test_cli_offline_mode_explicitly_restores_the_no_proof_refusal() -> None:
 
     assert result.exit_code == 1, result.output
     assert "release_eligible=false" in result.output
-    assert "no canonical generation and production emitted-byte proof authority was supplied" in result.output
-    assert "canonical generation or successful production emitted-byte evidence is absent" not in result.output
+    assert "no canonical two-channel filing-export proof authority was supplied" in result.output
+    assert "secure_replay:authority_unavailable" not in result.output
 
 
 def test_actual_cli_ignores_a_precomposed_eligible_context_claim() -> None:
@@ -315,6 +306,6 @@ def test_actual_cli_ignores_exact_hostile_authority_context() -> None:
 
     assert result.exit_code == 1, result.output
     assert "release_eligible=false" in result.output
-    assert "canonical generation or successful production emitted-byte evidence is absent" in result.output
+    assert "secure_replay:authority_unavailable" in result.output
     assert source.calls == []
     assert filing.calls == []

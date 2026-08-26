@@ -121,7 +121,6 @@ _UNADJUDICATED: frozenset[tuple[str, str]] = frozenset(
         ("application/ledger/evidence_input.py", "_reject_unreadable_bytes"),
         ("application/ledger/evidence_input.py", "document_shape"),
         ("application/ledger/llm_classification.py", "_record_injected_classifier_run"),
-        ("application/ledger/review_projection.py", "_bucket_event_repository"),
         ("application/live/justificante.py", "capture_justificante_snapshot_outcome"),
         ("application/live/notifications.py", "capture_notifications"),
         ("application/live/censo.py", "pull_censal_datos"),

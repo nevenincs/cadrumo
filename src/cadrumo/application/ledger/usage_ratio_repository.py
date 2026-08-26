@@ -1,4 +1,4 @@
-"""Explicit lifetime binding for censo-guarded usage-ratio persistence."""
+"""Explicit lifetime binding for usage-ratio profile persistence."""
 
 from __future__ import annotations
 
@@ -24,9 +24,42 @@ class UsageRatioCensoGuardLoader(Protocol):
         ...
 
 
+class UsageRatioProfileLoader(Protocol):
+    """Load one profile's persisted usage ratios."""
+
+    def __call__(self, *, bucket_id: str) -> UsageRatioProfile:
+        """Return the persisted ratio profile for ``bucket_id``."""
+        ...
+
+
+class UsageRatioProfileSaver(Protocol):
+    """Persist one profile's usage ratios."""
+
+    def __call__(self, profile: UsageRatioProfile, *, bucket_id: str) -> None:
+        """Persist ``profile`` for ``bucket_id``."""
+        ...
+
+
 _BOUND_USAGE_RATIO_CENSO_GUARD_LOADER: ContextVar[UsageRatioCensoGuardLoader] = ContextVar(
     "cadrumo_usage_ratio_censo_guard_loader"
 )
+_BOUND_USAGE_RATIO_PROFILE_PERSISTENCE: ContextVar[tuple[UsageRatioProfileLoader, UsageRatioProfileSaver]] = ContextVar(
+    "cadrumo_usage_ratio_profile_persistence"
+)
+
+
+@contextmanager
+def bind_usage_ratio_profile_persistence(
+    *,
+    loader: UsageRatioProfileLoader,
+    saver: UsageRatioProfileSaver,
+) -> Generator[None]:
+    """Bind the load/save pair as one atomic usage-ratio persistence lifetime."""
+    token = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.set((loader, saver))
+    try:
+        yield
+    finally:
+        _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.reset(token)
 
 
 @contextmanager
@@ -57,8 +90,31 @@ def usage_ratio_profile_with_censo_guard(
     )
 
 
+def load_usage_ratio_profile(*, bucket_id: str) -> UsageRatioProfile:
+    """Load the usage-ratio profile through the explicitly composed authority."""
+    try:
+        loader, _saver = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.get()
+    except LookupError as error:
+        raise RuntimeError("usage-ratio persistence has not been composed") from error
+    return loader(bucket_id=bucket_id)
+
+
+def save_usage_ratio_profile(profile: UsageRatioProfile, *, bucket_id: str) -> None:
+    """Persist the usage-ratio profile through the explicitly composed authority."""
+    try:
+        _loader, saver = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.get()
+    except LookupError as error:
+        raise RuntimeError("usage-ratio persistence has not been composed") from error
+    saver(profile, bucket_id=bucket_id)
+
+
 __all__ = [
     "UsageRatioCensoGuardLoader",
+    "UsageRatioProfileLoader",
+    "UsageRatioProfileSaver",
     "bind_usage_ratio_censo_guard_loader",
+    "bind_usage_ratio_profile_persistence",
+    "load_usage_ratio_profile",
+    "save_usage_ratio_profile",
     "usage_ratio_profile_with_censo_guard",
 ]

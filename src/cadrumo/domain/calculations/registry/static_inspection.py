@@ -18,22 +18,21 @@ from typing import Literal, Protocol
 
 from pydantic import Field, model_validator
 
-from cadrumo.domain.calculations.registry.schema import (
+from ....core import CasillaId
+from .casilla_membership import casillas_by_id
+from .ids import BindingId, LegalRefId, ModeloId, RevisionId, SourceRefId
+from .schema import (
     DataBindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
 )
-from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
-from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
-from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
-
-from ....core import CasillaId
-from .casilla_membership import casillas_by_id
-from .ids import BindingId, LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema_base import RegistryModel
+from .schema_exports import ProjectionEndpointDeclaration
+from .schema_formula import ParameterDefinition
+from .schema_references import SourceReference
+from .schema_surfaces import RelationDefinition
+from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 
 __all__ = [
     "GeneratedArtifactInspection",

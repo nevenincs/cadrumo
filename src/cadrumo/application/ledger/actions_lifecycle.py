@@ -3,7 +3,8 @@
 Archive, stash, restore, remove, and reset operations mutate a loaded
 :class:`TransactionCatalogue`, append bucket events, and return typed
 application reports. Removal and reset paths can also update an
-:class:`InvoiceCatalogue` through an :class:`InvoiceCatalogueRepository` when
+:class:`InvoiceCatalogue` through an
+:class:`~cadrumo.domain.invoices.InvoiceCatalogueRepositoryProtocol` when
 purchase-invoice evidence must be detached.
 
 The public services return
@@ -15,12 +16,7 @@ The public services return
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    pass
-
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets import (
     BucketEvent,
@@ -357,7 +353,7 @@ def remove_manual_transaction(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    invoices: InvoiceCatalogueRepository | None = None
+    invoices = None
     purchase_evidence_ids: tuple[str, ...] = ()
     updated_invoice_catalogue: InvoiceCatalogue | None = None
     if invoice_repository is not None or current.purchase_invoice_evidence_id is not None:
@@ -476,7 +472,7 @@ def reset_ledger_catalogue(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    invoices: InvoiceCatalogueRepository | None = None
+    invoices = None
     invoice_catalogue = InvoiceCatalogue()
     purchase_evidence_ids: tuple[str, ...] = ()
     updated_invoice_catalogue: InvoiceCatalogue | None = None
@@ -779,6 +775,7 @@ def _removal_events(
         ),
     )
     return tuple(events)
+
 
 __all__ = [
     "archive_manual_transaction",

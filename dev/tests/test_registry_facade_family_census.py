@@ -191,7 +191,6 @@ def test_non_python_package_symbol_targets_are_attributed_to_the_exporting_row()
 
 def test_fully_qualified_package_access_and_aliased_registration_keep_exact_provenance() -> None:
     """Package-object spelling and register aliases resolve to the referenced family only."""
-    package = "cadrumo.domain.calculations.registry"
     qualified = ast.parse(
         "import cadrumo.domain.calculations.registry\n"
         "cadrumo.domain.calculations.registry.ValidatedRegistryAuthority\n"
@@ -327,7 +326,7 @@ def test_generated_rows_preserve_one_row_per_exact_c941_candidate() -> None:
 
 def test_documented_direct_script_invocation_does_not_shadow_stdlib_types() -> None:
     """The repository-local quality/types.py cannot break direct CLI startup."""
-    completed = subprocess.run(
+    completed = subprocess.run(  # noqa: S603  # fixed interpreter and repository-owned script
         [sys.executable, str(census.__file__), "--help"],
         cwd=census.ROOT,
         check=True,
@@ -420,7 +419,7 @@ def test_review_validator_rejects_irrelevant_rag_symbol_and_normalized_templates
     second["semantic_evidence"]["substitutability"]["rationale"] = first["semantic_evidence"][
         "substitutability"
     ]["rationale"].replace(first["rag_query"], second["rag_query"])
-    with pytest.raises(RuntimeError, match="normalized rationale template|templated substitutability evidence"):
+    with pytest.raises(RuntimeError, match=r"normalized rationale template|templated substitutability evidence"):
         check_matrix_document(document)
 
 

@@ -165,7 +165,6 @@ from ._filing_export_authority import (
     FilingExportEmissionProof,
     FilingExportGenerationProof,
     FilingExportProof,
-    FilingExportProofAuthority,
     FilingExportProofConflictError,
     GeneratedExportFileDigest,
 )
@@ -628,7 +627,6 @@ __all__ = [
     "FilingExportEmissionProof",
     "FilingExportGenerationProof",
     "FilingExportProof",
-    "FilingExportProofAuthority",
     "FilingExportProofConflictError",
     "FormulaDiff",
     "GeneratedExportFileDigest",

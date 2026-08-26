@@ -13,13 +13,14 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Modelo
-from cadrumo.domain.calculations.registry.schema import ApplicabilityRuleDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ApplicabilityRuleDefinition, ModeloRevision
+
+from .....core import Modelo
+from .._validate_applicability_section import validate_applicability_section
 from ..applicability import ModeloApplicabilityRule, hydrate_applicability_rule
 from ..loader import load_modelo_directory
 from ..schema_base import schema_family_enrollment_failures, schema_family_fields
-from .._validate_applicability_section import validate_applicability_section
 from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
