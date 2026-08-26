@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:90f0e8e58d8ec25870b54e127e471e5b754d39224dbc9471afce68c1d245b701'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
-  - "[[2026-08-10-casilla-schema-W05-P11-S38]]"
   - "[[2026-08-10-casilla-schema-blocker-spine-adr]]"
 ---
 # `casilla-schema` audit: `W05.P11.S38 dormant enum adjudication review`

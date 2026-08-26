@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:564fd7273fcd058c5337fdf6cf4d80aee99ec2403a2e2e425bc10c219f10a33b'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
-  - "[[2026-08-10-casilla-schema-W05-P11-S41]]"
   - "[[2026-08-11-casilla-schema-s01-import-and-collection-readiness-audit]]"
 ---
 # `casilla-schema` audit: `W05.P11.S41 full-tree collection gate review`

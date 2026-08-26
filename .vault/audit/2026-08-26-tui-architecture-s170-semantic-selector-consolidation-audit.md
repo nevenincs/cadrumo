@@ -5,30 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:9305abd4f178b1fdad4ec90acc84add11c4a186afa928960d9261084840a642a'
+body_hash: 'sha256:89f906e5627e343a81a920654d8f66f81da676265467d0bc5fa8c47ad1a8ada3'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-26-tui-architecture-s170-alias-selection-remediation-audit]]"
-  - "[[2026-08-11-tui-architecture-W03-P20-S170]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `S170 semantic selector consolidation`
 
@@ -103,4 +84,3 @@ scanner, declarative fixed-point and resident tests, and this audit. A later
 independent review must replay every positive and negative mutant and verify
 the inlined behavior once the shared registry fixture is valid. Only that
 review may recommend a lifecycle transition.
-

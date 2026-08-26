@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-07-04'
-modified: '2026-07-17'
+modified: '2026-08-26'
 body_hash: 'sha256:a0c2e0862844a542eebbb5b11dcdbf6f12ad7848da83a7cc02170bd3e39ae035'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]"
-  - "[[2026-06-26-binding-vocabulary-cli-cohesion-W04-P07-S23]]"
-  - "[[2026-06-26-binding-vocabulary-cli-cohesion-W04-P07-S24]]"
 ---
 
 # `binding-vocabulary-cli-cohesion` audit: `S23/S24 evidence review`

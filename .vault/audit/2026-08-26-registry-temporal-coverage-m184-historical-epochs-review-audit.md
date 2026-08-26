@@ -8,7 +8,6 @@ body_schema: 'body-v1'
 body_hash: 'sha256:c1566b367112e546c77757c0fc5acf1d955202cbd950142a4d18c128fceb432d'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
-  - "[[2026-08-14-registry-temporal-coverage-W02-P05-S51]]"
 ---
 
 # `registry-temporal-coverage` audit: `Modelo 184 historical epoch implementation review`

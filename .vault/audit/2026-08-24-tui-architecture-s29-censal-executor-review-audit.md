@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:0ef5a9aa8181b9e2d8ff33d13f0828fd46dbba4e5c12267629c980616bc4aca5'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research]]"
-  - "[[2026-08-11-tui-architecture-W03-P06-S29]]"
 ---
 
 # `tui-architecture` audit: `S29 resumable censal executor review`

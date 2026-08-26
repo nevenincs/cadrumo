@@ -8,8 +8,8 @@ body_hash: 'sha256:bdb925c8d3e60fdbd1e9caa758506eaa50c4e74f52a0afec6ac22380c0537
 tier: L2
 related:
   - '[[2026-08-07-m200-export-nif-misbinding-adr]]'
+  - '[[2026-08-07-m200-export-nif-misbinding-reference]]'
 ---
-
 # `m200-export-nif-misbinding` plan
 
 Close the M200 grupo mercantil NIF export field misbinding, a live filing-

@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:b0542048b798873d3168c31fe9aa12f1d7c19ce1634a3150f84fa255d4b04fb8'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-research]]"
-  - "[[2026-08-11-tui-architecture-W02-P04-S21]]"
 ---
 
 # `tui-architecture` audit: `S21 persistence integration review`

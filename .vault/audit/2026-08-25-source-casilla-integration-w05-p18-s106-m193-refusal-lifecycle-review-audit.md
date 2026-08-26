@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:53e6e3ee89ce1b9f944de2f57d240700cbbe50a3bb59961215c46af12e4052b2'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-22-source-casilla-integration-W05-P18-S106]]"
   - "[[2026-08-25-source-casilla-integration-w05-p18-s105-m193-terminal-deferral-review-audit]]"
 ---
 # `source-casilla-integration` audit: `W05 P18 S106 Modelo 193 refusal lifecycle review`

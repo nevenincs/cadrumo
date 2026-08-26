@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#quality-gate-zero-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:da95f013c4fe0a3d45921a2e3ed3a04328bf3a70edbf78efe256b35540f66837'
 related:
-  - '[[2026-08-24-quality-gate-zero-closure-W07-P20-S93]]'
-  - '[[2026-08-24-quality-gate-zero-closure-W07-P20-S94]]'
   - '[[2026-08-24-quality-gate-zero-closure-adr]]'
   - '[[2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference]]'
   - '[[2026-08-24-quality-gate-zero-closure-live-rag-redeclaration-audit]]'

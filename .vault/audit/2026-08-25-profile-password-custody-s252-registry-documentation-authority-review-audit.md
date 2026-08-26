@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:83af1284f83b25a56ad8075f43584ebe4fb34479fb2678f038d156b8ce17d33e'
 related:
   - '[[2026-08-13-profile-password-custody-plan]]'
-  - '[[2026-08-13-profile-password-custody-W06-P12-S252]]'
   - '[[2026-08-24-deadline-window-revision-authority-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
 ---

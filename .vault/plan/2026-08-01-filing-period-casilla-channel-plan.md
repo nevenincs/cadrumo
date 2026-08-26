@@ -8,8 +8,8 @@ body_hash: 'sha256:77575301edb98d0a5fdd9cf1f23b201ecb506353343faffcae9f8488fd610
 tier: L2
 related:
   - '[[2026-08-01-filing-period-casilla-channel-adr]]'
+  - '[[2026-08-01-filing-period-casilla-channel-audit]]'
 ---
-
 # `filing-period-casilla-channel` plan
 
 Carry the AEAT period token on the typed text channel, close the literal-membership dispatch class, refresh the goldens, and unblock the docs publish.

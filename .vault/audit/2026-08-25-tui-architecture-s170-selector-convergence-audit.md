@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:af10ad0588f804b9edff8d114e0f339a62a96848ee0f2f8b619bb1d7f613e5ed'
 related:
   - '[[2026-08-11-tui-architecture-plan]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-25-tui-architecture-s170-plan-review-audit]]'
-  - '[[2026-08-11-tui-architecture-W03-P20-S170]]'
 ---
 # `tui-architecture` audit: `S170 selector convergence code review`
 

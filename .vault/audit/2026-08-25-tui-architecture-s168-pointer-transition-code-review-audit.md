@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:2a7991f1b269d9accebf46444b6af28299125ecee023251538f421b8687df49a'
 related:
@@ -11,7 +11,6 @@ related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-s160-approved-amendment-architecture-review-audit]]"
   - "[[2026-08-25-tui-architecture-s160-plan-amendment-review-audit]]"
-  - "[[2026-08-11-tui-architecture-W03-P20-S168]]"
 ---
 
 # `tui-architecture` audit: `S168 pointer transition code review`

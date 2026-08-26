@@ -1,0 +1,344 @@
+---
+tags:
+  - '#exec'
+  - '#profile-password-custody'
+date: '2026-08-13'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:b87d2073438e7bf17870c0eaaf74f491739f6d67a8216cd829c0361993170039'
+related:
+  - "[[2026-08-13-profile-password-custody-plan]]"
+---
+
+# `profile-password-custody` ledger
+
+## Changes
+
+- `S01` `T` `src/cadrumo/adapters/persistence/storage/custody/`
+- `S02` `T` `src/cadrumo/adapters/persistence/storage/custody/`
+- `S03` `T` `src/cadrumo/adapters/persistence/storage/custody/`
+- `S04` `T` `src/cadrumo/adapters/persistence/storage/custody/`
+- `S05` `T` `src/cadrumo/application/user_profile/`
+- `S06` `T` `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/application/user_profile/`
+- `S07` `T` `src/cadrumo/application/user_profile/`
+- `S08` `T` `src/cadrumo/application/workflow/_profile_bucket_scan.py`
+- `S09` `T` `src/cadrumo/application/user_profile/`
+- `S10` `T` `src/cadrumo/application/user_profile/_login_session.py`
+- `S11` `T` `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/application/user_profile/_login_session.py`
+- `S12` `T` `src/cadrumo/application/user_profile/_login_session.py and src/cadrumo/adapters/persistence/storage/custody/`
+- `S13` `T` `src/cadrumo/adapters/persistence/storage/bucket/`
+- `S14` `T` `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/_recovery_artifact.py`
+- `S15` `T` `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/application/user_profile/`
+- `S16` `T` `src/cadrumo/entrypoints/cli/_config/`
+- `S17` `T` `src/cadrumo/entrypoints/`
+- `S18` `T` `src/cadrumo/entrypoints/cli/`
+- `S19` `T` `src/cadrumo/application/profile_custody/ and src/cadrumo/application/user_profile/_custody_ports.py and src/cadrumo/domain/user_profile/_protocols.py and src/cadrumo/adapters/persistence/storage/ and src/cadrumo/adapters/outbound/aeat/ and src/cadrumo/application/ and src/cadrumo/entrypoints/cli/`
+- `S20` `T` `src/cadrumo/adapters/persistence/storage/master_key/`
+- `S20` `T` `src/cadrumo/adapters/persistence/storage/{__init__.py`
+- `S20` `T` `_rotation.py`
+- `S20` `T` `_kdf_bounds.py`
+- `S20` `T` `errors.py}`
+- `S20` `T` `src/cadrumo/application/{bucket_maintenance/`
+- `S20` `T` `user_profile/}`
+- `S20` `T` `src/cadrumo/entrypoints/cli/{__init__.py`
+- `S20` `T` `_bootstrap_exempt.py`
+- `S20` `T` `_config/`
+- `S20` `T` `_config_payloads.py`
+- `S20` `T` `tests/}`
+- `S20` `T` `src/cadrumo/{core/_storage_taxonomy_locations.py`
+- `S20` `T` `tests/master_key.py}`
+- `S21` `T` `src/cadrumo/`
+- `S22` `T` `src/cadrumo/adapters/persistence/storage/custody/tests/`
+- `S23` `T` `src/cadrumo/entrypoints/cli/tests/`
+- `S24` `T` `.vault/audit/`
+- `S25` `T` `src/cadrumo/application/user_profile/`
+- `S25` `T` `.vault/exec/`
+- `S26` `T` `src/cadrumo/adapters/persistence/storage/custody/`
+- `S27` `T` `src/cadrumo/application/user_profile/_cotejo_apply.py and src/cadrumo/application/wizard/_persistence.py`
+- `S28` `T` `src/cadrumo/adapters/persistence/storage/master_key/ and src/cadrumo/adapters/persistence/storage/custody/`
+- `S29` `T` `src/cadrumo/adapters/persistence/storage/custody/_capsule_discovery.py`
+- `S30` `T` `src/cadrumo/application/profile_custody/ and src/cadrumo/application/`
+- `S31` `T` `src/cadrumo/adapters/persistence/storage/`
+- `S31` `T` `src/cadrumo/application/user_profile/_bundle_encryption.py`
+- `S32` `T` `src/cadrumo/application/auth/tests/`
+- `S33` `T` `src/cadrumo/application/user_profile/tests/`
+- `S34` `T` `src/cadrumo/application/bucket_maintenance/`
+- `S35` `T` `dev/quality/import_hygiene_scan.py`
+- `S36` `T` `src/cadrumo/adapters/persistence/storage/master_key/_recovery.py`
+- `S37` `T` `src/cadrumo/core/config.py and src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py`
+- `S38` `T` `src/cadrumo/core/hashing.py and src/cadrumo/adapters/persistence/storage/ and src/cadrumo/application/`
+- `S39` `T` `src/cadrumo/adapters/persistence/storage/custody/_label_head.py`
+- `S40` `T` `src/cadrumo/application/modelo/_export.py`
+- `S41` `T` `src/cadrumo/application/user_profile/ and src/cadrumo/application/wizard/_commands.py`
+- `S42` `T` `src/cadrumo/entrypoints/cli/`
+- `S43` `T` `src/cadrumo/application/tests/`
+- `S43` `T` `src/cadrumo/application/overview/tests/`
+- `S44` `T` `src/cadrumo/application/auth/_operator_scope.py`
+- `S45` `T` `src/cadrumo/tests/test_every_module_has_test_coverage.py`
+- `S46` `T` `src/cadrumo/adapters/persistence/storage/master_key/ and src/cadrumo/entrypoints/cli/ and src/cadrumo/application/setup/tests/ and src/cadrumo/application/tests/`
+- `S47` `T` `src/cadrumo/entrypoints/cli/tests/ and docs/how-to/ and src/cadrumo/application/repair_integrity.py`
+- `S48` `T` `src/cadrumo/application/wizard/ and src/cadrumo/domain/buckets/`
+- `S49` `T` `src/cadrumo/application/user_profile/ and src/cadrumo/application/workflow/ and src/cadrumo/application/modelo/tests/`
+- `S50` `T` `src/cadrumo/application/user_profile/_profile_record_repository.py`
+- `S51` `T` `src/cadrumo/application/user_profile/_login_session.py and src/cadrumo/adapters/persistence/storage/master_key/_persisted_session.py and src/cadrumo/application/user_profile/tests/test_login_handover.py`
+- `S52` `T` `src/cadrumo/application/user_profile/tests/test_login_handover.py`
+- `S53` `T` `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py and src/cadrumo/adapters/persistence/storage/custody/_kdf_supervision.py`
+- `S54` `T` `src/cadrumo/tests/profile_capsule.py and src/cadrumo/application/auth/tests/`
+- `S55` `T` `src/cadrumo/adapters/persistence/storage/`
+- `S56` `T` `src/cadrumo/application/user_profile/_profile_record_repository.py`
+- `S57` `T` `src/cadrumo/application/auth/_sessions.py and src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py`
+- `S58` `T` `src/cadrumo/application/user_profile/_profile_record_repository.py`
+- `S59` `T` `src/cadrumo/entrypoints/cli/_config/ and src/cadrumo/entrypoints/cli/_bootstrap_exempt.py and src/cadrumo/entrypoints/cli/_config_payloads.py and src/cadrumo/entrypoints/cli/_config_sandbox_payloads.py and src/cadrumo/entrypoints/mcp/`
+- `S60` `T` `src/cadrumo/application/wizard/_persistence.py and src/cadrumo/entrypoints/cli/_config/`
+- `S61` `T` `pyproject.toml and src/cadrumo/entrypoints/cli/tests/`
+- `S62` `T` `src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py and src/cadrumo/adapters/persistence/storage/custody/_capsule_discovery.py and src/cadrumo/tests/secure_sql.py`
+- `S63` `T` `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/application/auth/tests/ and src/cadrumo/adapters/outbound/aeat/auth/tests/`
+- `S64` `T` `src/cadrumo/core/__init__.py`
+- `S65` `T` `src/cadrumo/application/filing/ and src/cadrumo/domain/calculations/registry/_m303_prorrata_activity_projection.py`
+- `S66` `T` `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py and src/cadrumo/entrypoints/cli/_config/_manager_actions.py and src/cadrumo/entrypoints/cli/_config/tests/test_config.py`
+- `S67` `T` `src/cadrumo/application/setup/ and src/cadrumo/tests/test_layout_import_smoke.py`
+- `S68` `T` `src/cadrumo/adapters/persistence/storage/master_key/ and src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/adapters/persistence/storage/bucket/ and src/cadrumo/application/profile_custody/`
+- `S69` `T` `src/cadrumo/adapters/persistence/storage/bucket/_layout.py`
+- `S70` `T` `dev/tests/test_error_code_default_recovery_rehoming.py and dev/quality/error_code_default_recovery_rehoming.py`
+- `S71` `T` `dev/quality/error_code_default_recovery_rehoming.py`
+- `S72` `T` `src/cadrumo/core/tests/test_config_override.py`
+- `S73` `T` `.vault/adr/`
+- `S74` `T` `src/cadrumo/application/user_profile/_capsule_record.py`
+- `S75` `T` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S76` `T` `src/cadrumo/adapters/outbound/aeat/auth/tests/`
+- `S77` `T` `src/cadrumo/application/config_reset.py and src/cadrumo/domain/retention/`
+- `S78` `T` `.vault/plan/`
+- `S79` `T` `dev/quality/error_code_default_recovery_rehoming.py and .vault/plan/`
+- `S80` `T` `justfile and src/cadrumo/adapters/persistence/storage/master_key/tests/ and src/cadrumo/adapters/persistence/storage/tests/`
+- `S81` `T` `src/cadrumo/application/user_profile/_login_session.py`
+- `S82` `T` `src/cadrumo/application/user_profile/tests/test_login_handover.py`
+- `S83` `T` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_persisted_session_roundtrip.py`
+- `S84` `T` `src/cadrumo/adapters/persistence/storage/tests/`
+- `S85` `T` `src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py and src/cadrumo/application/user_profile/_login_session.py`
+- `S86` `T` `src/cadrumo/application/calculations/tests/ and src/cadrumo/application/modelo/tests/`
+- `S87` `T` `src/cadrumo/application/config_reset.py`
+- `S88` `T` `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`
+- `S89` `T` `src/cadrumo/application/auth/_operator.py and src/cadrumo/application/user_profile/`
+- `S90` `T` `src/cadrumo/application/auth/_operator.py and src/cadrumo/application/auth/_operator_cleanup.py and src/cadrumo/application/auth/tests/test_operator_storage_session.py`
+- `S91` `T` `src/cadrumo/adapters/persistence/storage/master_key/_persisted_session.py and src/cadrumo/adapters/outbound/aeat/auth/_session_store.py and src/cadrumo/application/auth/`
+- `S92` `T` `src/cadrumo/application/user_profile/tests/`
+- `S93` `T` `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/application/wizard/`
+- `S94` `T` `src/cadrumo/application/operations/tests/test_supervisor_lifecycle.py`
+- `S95` `T` `src/cadrumo/adapters/persistence/storage/master_key/_acceleration_receipt.py`
+- `S96` `T` `src/cadrumo/tests/secure_sql.py and src/cadrumo/application/user_profile/_capsule_record.py`
+- `S97` `T` `src/cadrumo/application/auth/_apoderado.py`
+- `S98` `T` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key_errors.py`
+- `S99` `T` `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/tests/`
+- `S100` `T` `src/cadrumo/core/identity/ and src/cadrumo/adapters/persistence/storage/custody/_capsule_records.py`
+- `S101` `T` `src/cadrumo/adapters/persistence/storage/custody/_paths.py`
+- `S102` `T` `src/cadrumo/locales/ and src/cadrumo/tests/test_parity.py`
+- `S103` `T` `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/domain/modelos/tests/`
+- `S104` `T` `src/cadrumo/application/bucket_maintenance/ and src/cadrumo/entrypoints/cli/_config/`
+- `S105` `T` `.vault/audit/`
+- `S106` `T` `src/cadrumo/tests/ and src/cadrumo/application/user_profile/`
+- `S107` `T` `src/cadrumo/adapters/persistence/storage/master_key/`
+- `S108` `T` `src/cadrumo/entrypoints/cli/_config/tests/test_profile_label_ambiguity_refusal.py`
+- `S109` `T` `dev/quality/import_hygiene_scan.py`
+- `S109` `T` `src/cadrumo/tests/test_import_edge_integrity_gate.py`
+- `S109` `T` `src/cadrumo/tests/test_import_hygiene_gate.py`
+- `S110` `T` `src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py and src/cadrumo/application/user_profile/`
+- `S111` `T` `.vault/adr/ and src/cadrumo/adapters/persistence/storage/master_key/tests/`
+- `S112` `T` `src/cadrumo/application/operator_surface/ and src/cadrumo/entrypoints/mcp/`
+- `S113` `T` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S113` `T` `src/cadrumo/entrypoints/cli/tests/test_login_gated_verbs_never_exempt.py`
+- `S114` `T` `src/cadrumo/entrypoints/mcp/tests/`
+- `S114` `T` `cadrumo-harness`
+- `S114` `T` `src/cadrumo-harness/src/cadrumo_harness/mcp/tests/`
+- `S114` `T` `test_action_projection.py`
+- `S114` `T` `test_tools_and_dispatch.py`
+- `S115` `T` `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/core/config/`
+- `S116` `T` `src/cadrumo/application/bucket_maintenance/_manifest_digest.py`
+- `S117` `T` `src/cadrumo/adapters/persistence/storage/bucket/_manifest_io.py and src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py`
+- `S118` `T` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S118` `T` `src/cadrumo/entrypoints/cli/tests/test_bootstrap_exempt_entries_resolve.py`
+- `S118` `T` `src/cadrumo/entrypoints/cli/tests/test_login_gated_verbs_never_exempt.py`
+- `S119` `T` `src/cadrumo/adapters/persistence/storage/custody/_acceleration_receipt.py`
+- `S120` `T` `src/cadrumo/adapters/persistence/storage/tests/test_rotation_crash_windows.py`
+- `S121` `T` `src/cadrumo/application/config_reset.py and src/cadrumo/application/bucket_maintenance/`
+- `S122` `T` `src/cadrumo/entrypoints/cli/_config/tests/test_profile_setup_incomplete_surface.py`
+- `S123` `T` `src/cadrumo/core/compatibility_lifecycle.py`
+- `S124` `T` `src/cadrumo/adapters/persistence/storage/tests/`
+- `S125` `T` `src/cadrumo/adapters/persistence/storage/custody/_capsule_discovery.py`
+- `S126` `T` `src/cadrumo/core/compatibility_lifecycle.py and src/cadrumo/adapters/persistence/storage/custody/`
+- `S127` `T` `src/cadrumo/_data/compat_fixtures/`
+- `S128` `T` `src/cadrumo/entrypoints/cli/_config/__init__.py`
+- `S129` `T` `src/cadrumo/entrypoints/cli/tests/_profile_lifecycle_support.py`
+- `S130` `T` `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/core/compatibility_lifecycle.py`
+- `S131` `T` `src/cadrumo/core/_bucket_pointer.py and src/cadrumo/core/compatibility_lifecycle.py`
+- `S132` `T` `src/cadrumo/adapters/outbound/aeat/ and src/cadrumo/core/compatibility_lifecycle.py`
+- `S133` `T` `src/cadrumo/core/compatibility_lifecycle.py`
+- `S134` `T` `src/cadrumo/application/config_reset.py and src/cadrumo/application/bucket_maintenance/`
+- `S135` `T` `src/cadrumo/adapters/persistence/storage/custody/_capsule_discovery.py`
+- `S136` `T` `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/entrypoints/cli/_config/tests/`
+- `S137` `T` `src/cadrumo/application/filing/_profile_filing_retention.py and src/cadrumo/application/user_profile/`
+- `S138` `T` `src/cadrumo/application/user_profile/_custody_service.py`
+- `S139` `T` `src/cadrumo/entrypoints/cli/_config/tests/`
+- `S140` `T` `src/cadrumo/domain/user_profile/ and src/cadrumo/entrypoints/cli/_config/`
+- `S141` `T` `pyproject.toml and src/cadrumo/entrypoints/`
+- `S142` `T` `src/cadrumo/core/telemetry/tests/`
+- `S143` `T` `pyproject.toml`
+- `S144` `T` `.vault/audit/2026-08-15-profile-password-custody-deletion-without-consumer-sweep-detectability-audit.md`
+- `S144` `T` `dev/quality/import_hygiene_scan.py`
+- `S144` `T` `src/cadrumo/tests/test_import_edge_integrity_gate.py`
+- `S144` `T` `src/cadrumo/tests/test_import_hygiene_gate.py`
+- `S145` `T` `pyproject.toml and src/cadrumo/entrypoints/ and src/cadrumo-harness/`
+- `S146` `T` `src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/entrypoints/cli/_config/tests/`
+- `S147` `T` `src/cadrumo/application/_bucket_deletion_contracts.py and src/cadrumo/application/config_reset.py`
+- `S148` `T` `src/cadrumo/tests/test_persisted_format_enrollment.py and src/cadrumo/adapters/persistence/storage/`
+- `S149` `T` `src/cadrumo/`
+- `S150` `T` `src/cadrumo/core/errors/registry/`
+- `S151` `T` `src/cadrumo/entrypoints/cli/_config/_registration_screen.py and src/cadrumo/entrypoints/cli/_config/_manager_frontend.py`
+- `S152` `T` `src/cadrumo/application/wizard/_persistence.py and src/cadrumo/application/wizard/_commands.py`
+- `S153` `T` `src/cadrumo/_data/registry/ and src/cadrumo/application/user_profile/`
+- `S154` `T` `src/cadrumo/application/bucket_maintenance/_service.py`
+- `S154` `T` `src/cadrumo/application/bucket_maintenance/tests/test_service_assess_deletion.py`
+- `S154` `T` `src/cadrumo/application/profile_custody/__init__.py`
+- `S154` `T` `src/cadrumo/application/tests/test_config_reset.py`
+- `S154` `T` `src/cadrumo/application/tests/test_config_reset_concurrency.py`
+- `S155` `T` `src/cadrumo/application/modelo/_revision_persistence.py`
+- `S155` `T` `src/cadrumo/domain/retention/_errors.py`
+- `S156` `T` `src/cadrumo/application/evidence/_profile_legal_hold.py`
+- `S157` `T` `src/cadrumo/application/user_profile/_registration.py`
+- `S157` `T` `src/cadrumo/application/filing/_profile_filing_retention.py`
+- `S157` `T` `src/cadrumo/application/modelo/_revision_persistence.py`
+- `S158` `T` `src/cadrumo/application/user_profile/_bundle.py`
+- `S159` `T` `src/cadrumo/domain/fincas/ and src/cadrumo/adapters/persistence/`
+- `S160` `T` `src/cadrumo/core/compatibility_lifecycle.py`
+- `S161` `T` `src/cadrumo/core/compatibility_lifecycle.py`
+- `S162` `T` `src/cadrumo/entrypoints/cli/tests/`
+- `S163` `T` `src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/`
+- `S164` `T` `src/cadrumo/adapters/persistence/storage/`
+- `S165` `T` `src/cadrumo/application/profile_custody/ and src/cadrumo/application/user_profile/_capsule_record.py`
+- `S166` `T` `justfile and .github/workflows/ci.yml`
+- `S167` `T` `src/cadrumo/application/tests/test_custody_hard_cutover_absence.py`
+- `S168` `T` `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py and _manager_actions.py and _capabilities_cli.py and _descendiente.py`
+- `S169` `T` `src/cadrumo/entrypoints/cli/tests/test_active_profile_env_override_name.py`
+- `S170` `T` `src/cadrumo/entrypoints/cli/_config/_custody.py and src/cadrumo/core/_bucket_pointer.py`
+- `S171` `T` `dev/quality/fixture_ownership.toml and dev/quality/error_code_default_recovery_rehoming.toml`
+- `S172` `T` `src/cadrumo/application/calculations/ and src/cadrumo/application/user_profile/_capsule_record.py and src/cadrumo/application/profile_custody/`
+- `S173` `T` `src/cadrumo/application/workflow/_models.py and src/cadrumo/application/workflow/_profile_health.py and src/cadrumo/application/user_profile/_profile_record_repository.py`
+- `S174` `T` `src/cadrumo/application/user_profile/_login_session.py and src/cadrumo/application/user_profile/_profile_pointer_transaction.py`
+- `S175` `T` `src/cadrumo/application/operations/`
+- `S176` `T` `src/cadrumo/tests/test_parity.py`
+- `S177` `T` `dev/locales/ and .pre-commit-config.yaml`
+- `S178` `T` `src/cadrumo/application/user_profile/tests/`
+- `S179` `T` `src/cadrumo/application/wizard/_persistence.py and src/cadrumo/entrypoints/cli/_config/`
+- `S180` `T` `src/cadrumo/adapters/outbound/storage/_records.py and src/cadrumo/application/user_profile/_custody_transactions.py and src/cadrumo/application/user_profile/_custody_hold_models.py`
+- `S181` `T` `src/cadrumo/entrypoints/cli/tests/test_repair_policy_coverage.py and src/cadrumo/application/repair_integrity.py`
+- `S182` `T` `src/cadrumo/adapters/persistence/storage/master_key/_bucket_identity.py and src/cadrumo/core/identity/ and src/cadrumo/application/auth/_apoderado.py and src/cadrumo/application/modelo/ and src/cadrumo/domain/usage_ratios/`
+- `S183` `T` `src/cadrumo/ and pyproject.toml`
+- `S184` `T` `src/cadrumo/entrypoints/cli/_config/ and src/cadrumo/entrypoints/cli/tests/test_verb_input_schema.py`
+- `S185` `T` `docs/how-to/protect-data-access.md`
+- `S186` `T` `src/cadrumo/core/tests/test_persisted_version_single_declaration.py and src/cadrumo/core/compatibility_lifecycle.py and src/cadrumo/core/tests/test_persisted_format_enrolment_binding.py`
+- `S187` `T` `src/cadrumo/application/config_reset.py and src/cadrumo/application/auth/`
+- `S188` `T` `src/cadrumo/tests/user_profile.py`
+- `S189` `T` `dev/agent_eval/tests/`
+- `S190` `T` `src/cadrumo/entrypoints/cli/_config/__init__.py and src/cadrumo/application/workflow/_profile_bucket_scan.py`
+- `S191` `T` `src/cadrumo/application/operations/_execution_context.py and src/cadrumo/core/errors/registry/`
+- `S192` `T` `src/cadrumo/application/user_profile/_capsule_record.py and _profile_record_repository.py and tests/_profile_record_boundary_support.py and src/cadrumo/application/profile_custody/__init__.py`
+- `S193` `T` `src/cadrumo/application/user_profile/_custody_service.py and src/cadrumo/application/user_profile/_registration.py`
+- `S194` `T` `src/cadrumo/entrypoints/cli/_config/_status_frontend.py and src/cadrumo/application/wizard/_commands.py`
+- `S195` `T` `src/cadrumo/entrypoints/cli/tests/test_profile_setup_incomplete_surface.py`
+- `S196` `T` `src/cadrumo/tests/profile_capsule.py and src/cadrumo/tests/secure_sql.py and src/cadrumo/tests/bucket_layout.py`
+- `S197` `T` `dev/packaging/_acquire_common.py and dev/packaging/acquire_pypi.py and dev/packaging/oracle_emit_cohort.py and dev/release/tests/test_readiness.py`
+- `S198` `T` `src/cadrumo/application/user_profile/_custody_service.py and src/cadrumo/application/config_reset.py`
+- `S199` `T` `src/cadrumo/application/diagnostics.py and src/cadrumo/locales/`
+- `S200` `T` `src/cadrumo/application/user_profile/_profile_record_repository.py and src/cadrumo/adapters/persistence/storage/custody/`
+- `S201` `T` `src/cadrumo/core/errors/registry/ and src/cadrumo/adapters/persistence/storage/custody/_errors.py`
+- `S202` `T` `src/cadrumo/locales/ and src/cadrumo/_data/registry/`
+- `S203` `T` `dev/locales/_ast_scanner.py`
+- `S204` `T` `src/cadrumo/application/user_profile/ and src/cadrumo/application/workflow/`
+- `S205` `T` `src/cadrumo/tests/user_profile.py and src/cadrumo/application/evidence/_profile_legal_hold.py`
+- `S206` `T` `src/cadrumo/application/user_profile/_registration.py and src/cadrumo/application/user_profile/_custody_service.py`
+- `S206` `T` `src/cadrumo/entrypoints/cli/`
+- `S206` `T` `src/cadrumo/adapters/inbound/tui/`
+- `S206` `T` `src/cadrumo/locales/`
+- `S206` `T` `docs/how-to/protect-data-access.md`
+- `S207` `T` `src/cadrumo/application/evidence/_profile_legal_hold.py and src/cadrumo/application/user_profile/_custody_hold.py and src/cadrumo/application/user_profile/_registration.py`
+- `S208` `T` `src/cadrumo/adapters/persistence/storage/master_key/_master_key_io.py and src/cadrumo/adapters/persistence/storage/ and src/cadrumo/application/bucket_maintenance/_manifest_digest.py and src/cadrumo/application/user_profile/ and src/cadrumo/domain/user_profile/_protocols.py and justfile`
+- `S209` `T` `src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`
+- `S209` `T` `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py`
+- `S209` `T` `src/cadrumo/adapters/persistence/storage/custody/_kdf_attestation.py`
+- `S209` `T` `src/cadrumo/adapters/persistence/storage/custody/_filesystem_primitives.py`
+- `S209` `T` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py`
+- `S209` `T` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S210` `T` `.vault/adr/2026-08-13-profile-password-custody-rollup-adr.md`
+- `S211` `T` `.vault/plan/2026-08-13-profile-password-custody-plan.md`
+- `S212` `T` `.vault/audit/2026-08-18-profile-password-custody-campaign-close-audit.md`
+- `S213` `T` `src/cadrumo/application/user_profile/_registration.py and src/cadrumo/application/user_profile/_custody_service.py`
+- `S214` `T` `src/cadrumo/entrypoints/cli/_config/_scripted_registration.py and src/cadrumo/entrypoints/cli/_config/_profile_command_specs.py`
+- `S215` `T` `src/cadrumo/entrypoints/cli/_config/_manager_frontend.py and src/cadrumo/adapters/inbound/tui/`
+- `S216` `T` `src/cadrumo/tests/ and src/cadrumo-harness/src/cadrumo_harness/`
+- `S217` `T` `src/cadrumo/application/user_profile/tests/ and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/adapters/inbound/tui/tests/ and src/cadrumo/adapters/persistence/storage/`
+- `S218` `T` `src/cadrumo/application/user_profile/_recovery_custody.py and src/cadrumo/application/user_profile/_capsule_restore.py and src/cadrumo/application/user_profile/_custody_ports.py and src/cadrumo/adapters/persistence/storage/custody/`
+- `S219` `T` `docs/how-to/protect-data-access.md and docs/locales/ and docs/_sequences/`
+- `S220` `T` `.vault/exec/2026-08-13-profile-password-custody/`
+- `S221` `T` `src/cadrumo/application/user_profile/tests/test_recovery_enrollment_at_creation.py and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/adapters/inbound/tui/tests/`
+- `S222` `T` `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S223` `T` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S223` `T` `src/cadrumo/adapters/persistence/storage/custody/_acceleration_receipt.py`
+- `S223` `T` `.vault/audit/`
+- `S224` `T` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S224` `T` `src/cadrumo/adapters/persistence/storage/custody/_acceleration_receipt.py`
+- `S225` `T` `src/cadrumo/application/user_profile/tests/test_capsule_source_reads_are_anchored.py`
+- `S226` `T` `dev/packaging/tests/test_distribution_evidence_emit.py`
+- `S227` `T` `docs/workstation-setup.md and docs/_sequences/contracts/workstation-setup/`
+- `S228` `T` `docs/how-to/profile-setup.md and docs/_sequences/contracts/how-to/`
+- `S229` `T` `docs/locales/es/LC_MESSAGES/ and docs/locales/ca/LC_MESSAGES/ and docs/locales/hu/LC_MESSAGES/`
+- `S230` `T` `docs/locales/es/LC_MESSAGES/`
+- `S231` `T` `docs/locales/ca/LC_MESSAGES/`
+- `S232` `T` `docs/locales/hu/LC_MESSAGES/`
+- `S233` `T` `dev/docs/tests/`
+- `S233` `T` `dev/tests/test_no_skip_xfail.py`
+- `S233` `T` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S234` `T` `src/cadrumo/application/user_profile/ and src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/entrypoints/cli/`
+- `S236` `T` `.vault/audit/2026-08-24-profile-password-custody-s227-workstation-docs-review-audit.md`
+- `S237` `T` `src/cadrumo-harness/src/cadrumo_harness/`
+- `S238` `T` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py and src/cadrumo/entrypoints/cli/_config/_profile_delete.py and src/cadrumo/entrypoints/cli/tests/ and src/cadrumo/application/config_reset.py and src/cadrumo/application/user_profile/_custody_repository.py and src/cadrumo/application/user_profile/_custody_service.py and src/cadrumo/application/user_profile/_custody_transactions.py and src/cadrumo/application/user_profile/_lifecycle.py and src/cadrumo/application/user_profile/tests/test_custody_transactions.py`
+- `S239` `T` `src/cadrumo/core/observability/ and dev/docs/sequences/ and dev/docs/tests/test_sequence_goldens.py`
+- `S240` `T` `docs/_sequences/contracts/`
+- `S240` `T` `dev/docs/tests/test_documented_command_conformance.py`
+- `S241` `T` `docs/_sequences/contracts/ and docs/how-to/ and docs/quickstart.md`
+- `S242` `T` `docs/_sequences/`
+- `S243` `T` `docs/locales/ and docs/reference/cli/`
+- `S244` `T` `docs/api/ and docs/conf.py`
+- `S245` `T` `src/cadrumo-harness/`
+- `S246` `T` `src/cadrumo-harness/`
+- `S247` `T` `src/cadrumo/ and src/cadrumo-harness/ and dev/`
+- `S248` `T` `src/cadrumo/_data/registry/aeat/modelos/303/ and src/cadrumo/_data/registry/aeat/modelos/390/ and src/cadrumo/domain/calculations/registry/tests/`
+- `S249` `T` `docs/_sequences/contracts/ and docs/quickstart.md and docs/how-to/profile-setup.md and docs/troubleshooting.md`
+- `S250` `T` `docs/_sequences/contracts/ and src/cadrumo/application/operations/`
+- `S251` `T` `docs/_sequences/contracts/filing-spine/ and src/cadrumo/application/`
+- `S252` `T` `docs/_sequences/contracts/ and docs/how-to/ and docs/reference/`
+- `S253` `T` `docs/_sequences/contracts/ledger-evidence/ and docs/_sequences/contracts/manage-invoices/`
+- `S254` `T` `docs/_sequences/contracts/how-to/verification-reports/`
+- `S254` `T` `src/cadrumo/application/modelo/_verification_actions.py`
+- `S254` `T` `src/cadrumo/domain/modelos/_verification_report.py`
+- `S254` `T` `src/cadrumo/entrypoints/cli/_modelo_records_cli.py`
+- `S254` `T` `src/cadrumo/entrypoints/cli/_modelo_rendering.py`
+- `S254` `T` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S255` `T` `docs/_sequences/contracts/how-to/censo-update/`
+- `S255` `T` `docs/_sequences/how-to/censo-update/`
+- `S255` `T` `docs/how-to/censo-update.md`
+- `S255` `T` `src/cadrumo/application/user_profile/`
+- `S255` `T` `src/cadrumo/entrypoints/cli/_config/_censo_file.py`
+- `S256` `T` `docs/_sequences/contracts/workstation-setup/ and src/cadrumo/application/diagnostics.py and src/cadrumo/core/observability/`
+- `S257` `T` `src/cadrumo/application/user_profile/_censal_operation.py and src/cadrumo/entrypoints/cli/_config/ and src/cadrumo/adapters/inbound/tui/`
+- `S258` `T` `src/cadrumo/application/preflight.py and src/cadrumo/application/tests/test_preflight.py`
+- `S259` `T` `src/cadrumo/_data/registry/aeat/modelos/220/ and src/cadrumo/domain/calculations/registry/tests/`
+- `S260` `T` `src/cadrumo/_data/registry/aeat/modelos/182/ and src/cadrumo/domain/calculations/registry/tests/`
+- `S261` `T` `src/cadrumo/tests/profile_capsule.py and dev/docs/sequences/_runner.py and src/cadrumo-harness/src/cadrumo_harness/mcp/tests/`
+- `S262` `T` `locales/ and dev/locales/ and docs/locales/`
+- `S263` `T` `docs/reference/environment-overrides.md and dev/docs/emdash_baseline.json`
+- `S264` `T` `src/cadrumo-harness/src/cadrumo_harness/mcp/tests/ and src/cadrumo-harness/ packaging`
+- `S265` `T` `src/cadrumo/application/ and src/cadrumo-harness/src/cadrumo_harness/mcp/tests/test_result_size_budget.py`
+- `S266` `T` `src/cadrumo/entrypoints/cli/ and src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S267` `T` `.vault/`
+- `S268` `T` `src/cadrumo/, docs/api/, docs/conf.py, and dev/docs/apidocs/`
+- `S269` `T` `dev/docs/sequences/_runner.py and cadrumo/adapters/persistence/storage/tests/profile_capsule_runtime.py`
+- `S270` `T` `src/cadrumo/locales/ and dev/locales/`

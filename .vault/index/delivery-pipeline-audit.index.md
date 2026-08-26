@@ -4,18 +4,12 @@ tags:
   - '#index'
   - '#delivery-pipeline-audit'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:324a550d4a99850db39e84ccbe020d77b19e7f44fcdf59d93b5b5745e0e31412'
 related:
   - '[[2026-07-24-delivery-pipeline-audit-adr]]'
   - '[[2026-07-24-delivery-pipeline-audit-audit]]'
-  - '[[2026-07-25-delivery-pipeline-audit-S01]]'
-  - '[[2026-07-25-delivery-pipeline-audit-S03]]'
-  - '[[2026-07-25-delivery-pipeline-audit-S04]]'
-  - '[[2026-07-25-delivery-pipeline-audit-S05]]'
-  - '[[2026-07-25-delivery-pipeline-audit-S06]]'
-  - '[[2026-07-25-delivery-pipeline-audit-S07]]'
   - '[[2026-07-25-delivery-pipeline-audit-plan]]'
 ---
 

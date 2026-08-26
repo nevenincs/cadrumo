@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:940b32cd59cb6ca007be902c57a2d220d15910745d5b1045f4c28423c4d32f50'
 related:
   - '[[2026-08-13-profile-password-custody-plan]]'
-  - '[[2026-08-13-profile-password-custody-W06-P12-S253]]'
   - '[[2026-07-17-ledger-evidence-atomicity-adr]]'
   - '[[2026-07-24-evidence-revision-identity-adr]]'
 ---

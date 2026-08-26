@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:04013588f165b83d9a74e26082233ca930f0c3524d0c0e3fb8a2f72a811c0f48'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
-  - "[[2026-08-24-registry-completeness-closure-W01-P02-S70]]"
-  - "[[2026-08-24-registry-completeness-closure-W01-P02-S11]]"
   - "[[2026-08-24-registry-completeness-closure-s11-independent-post-review-audit]]"
 ---
 # `registry-completeness-closure` audit: `S70 evidence reconciliation post review`

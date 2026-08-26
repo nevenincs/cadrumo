@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:4ed4816a7148b285f6a3a5727f2e87fecdfa7cfa608c4037955fef23ee57c7b7'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-research]]"
-  - "[[2026-08-11-tui-architecture-W02-P05-S25]]"
 ---
 # `tui-architecture` audit: `S25 failure normalization and diagnostic correlation review`
 

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:cfec453adc1f6fb43699717d4b2a155471e7fb5430f0120cba0ffe7ca1f7c084'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-22-source-casilla-integration-W05-P15-S93]]"
 ---
 # `source-casilla-integration` audit: `S93 M232 deferral review`
 

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:d3601d3cab66d3db0206009fdbb198442477fd0b08c671c1aaf0be59edbedb61'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-22-source-casilla-integration-W05-P18-S107]]"
   - "[[2026-08-22-source-casilla-integration-W05-P18-summary]]"
   - "[[2026-08-25-source-casilla-integration-w05-p18-s106-m193-refusal-lifecycle-review-audit]]"
 ---

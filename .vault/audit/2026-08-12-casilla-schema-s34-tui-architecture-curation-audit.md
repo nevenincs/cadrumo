@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-13'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:85b04e14364bcd784868efcfd74161bb1d12c78ace07d68026a5d1cd31f4f57c'
 related:
@@ -14,7 +14,6 @@ related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-interface-plan]]"
   - "[[2026-08-12-casilla-schema-s34-tui-review-audit]]"
-  - "[[2026-08-10-casilla-schema-W04-P10-S34]]"
 ---
 # `casilla-schema` audit: `S34 TUI architecture lifecycle reconciliation`
 

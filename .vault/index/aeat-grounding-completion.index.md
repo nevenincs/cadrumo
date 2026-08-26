@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#aeat-grounding-completion'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:b0978de4c51ea8725aed98eefc55a681e8cfb4b4dae855477f860f76a1f36d57'
 related:
-  - '[[2026-06-14-aeat-grounding-completion-W01-P01-S01]]'
   - '[[2026-06-14-aeat-grounding-completion-adr]]'
   - '[[2026-06-14-aeat-grounding-completion-audit]]'
   - '[[2026-06-14-aeat-grounding-completion-plan]]'

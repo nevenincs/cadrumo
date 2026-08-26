@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:b45156eaf28e7128809aa624ba67e19a8bb545ab92cb483e4ad96468fb081492'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-dead-surface-adr]]"
-  - "[[2026-08-10-casilla-schema-W04-P09-S29]]"
-  - "[[2026-08-10-casilla-schema-W04-P09-S30]]"
 ---
 # `casilla-schema` audit: `S30 application verification deletion review`
 

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:2ce33265a4144d9a3247f539bb8bd9e0d4d7c98377648d4d6beaf5bedbdeaa70'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-22-source-casilla-integration-W02-P09-S54]]"
 ---
 
 # `source-casilla-integration` audit: `S54 inventory terminal refusal review`

@@ -1,0 +1,122 @@
+---
+tags:
+  - '#exec'
+  - '#modelo-multiyear-renta'
+date: '2026-06-02'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:330b4a723de702b3fb524c420c18c64cd8988a673ecd900d83c64490649f7cf1'
+related:
+  - "[[2026-06-02-modelo-multiyear-renta-plan]]"
+---
+
+# `modelo-multiyear-renta` ledger
+
+## Changes
+
+- `S01` `T` `src/aeat/_data/registry/aeat/authorization.d`
+- `S02` `T` `src/aeat/domain/calculations/registry/_loader.py`
+- `S03` `T` `src/aeat/core/access_gate/_authorization.py`
+- `S04` `T` `src/aeat/domain/calculations/registry/_authority.py`
+- `S05` `T` `src/aeat/core/access_gate/tests/test_authorization_manifest.py`
+- `S06` `T` `src/aeat/application/calculations/_multi_year.py`
+- `S07` `T` `src/aeat/application/calculations/_multi_year.py`
+- `S07` `T` `src/aeat/application/calculations/tests/test_multi_year_recorder.py`
+- `S08` `T` `src/aeat/application/calculations/tests/test_multi_year_recorder.py`
+- `S09` `T` `src/aeat/tests/test_modelo_authorization_gate.py`
+- `S10` `T` `src/aeat/tests/test_modelo_authorization_gate.py`
+- `S11` `T` `src/aeat/entrypoints/cli/tests/test_modelo_authorization_advisory_banner.py`
+- `S11` `T` `.vault/plan/2026-06-02-modelo-multiyear-renta-plan.md`
+- `S11` `T` `.vault/index/modelo-multiyear-renta.index.md`
+- `S12` `T` `src/aeat/application/modelo/_work_create_policy.py`
+- `S12` `T` `src/aeat/entrypoints/cli/tests/test_modelo_unsupported_work_refusal.py`
+- `S12` `T` `src/aeat/entrypoints/cli/tests/test_root_fallback_write_guard.py`
+- `S13` `T` `.vault/adr/2026-06-02-modelo-multiyear-renta-353-grupo-aggregation-adr.md`
+- `S14` `T` `.vault/adr/2026-06-02-modelo-720-prior-year-baseline-adr.md`
+- `S15` `T` `.vault/adr/2026-06-02-modelo-multiyear-renta-income-adr.md`
+- `S16` `T` `.vault/adr/2026-06-02-modelo-multiyear-renta-income-adr.md`
+- `S17` `T` `.vault/adr/2026-06-02-modelo-multiyear-renta-income-adr.md`
+- `S18` `T` `.vault/adr/2026-06-02-modelo-714-patrimonio-engine-adr.md`
+- `S19` `T` `.vault/adr/2026-06-02-modelo-multiyear-renta-151-beckham-adr.md`
+- `S20` `T` `.vault/adr/2026-05-27-m210-irnr-full-engine-adr.md`
+- `S21` `T` `.vault/adr/2026-06-02-modelo-721-cripto-data-fidelity-adr.md`
+- `S22` `T` `src/aeat/application/calculations/tests/test_modelo_130_multiyear_renta_enrollment.py`
+- `S23` `T` `src/aeat/_data/registry/aeat/authorization.d/130.toml`
+- `S24` `T` `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/bindings/0020-renta-2024-base-liquidable-negativa-anterior.toml`
+- `S24` `T` `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/bindings/0048-renta-2025-base-liquidable-negativa-anterior.toml`
+- `S24` `T` `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/casillas/1332-1388.toml`
+- `S24` `T` `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/casillas/1387-1388.toml`
+- `S25` `T` `src/aeat/application/calculations/tests/test_modelo_100_multiyear_renta_enrollment.py`
+- `S26` `T` `src/aeat/_data/registry/aeat/authorization.d/100.toml`
+- `S27` `T` `src/aeat/application/calculations/tests/test_modelo_131_carry_forward_continuity.py`
+- `S28` `T` `src/aeat/_data/registry/aeat/authorization.d/131.toml`
+- `S29` `T` `src/aeat/application/calculations/tests/test_modelo_190_111_reconciliation_continuity.py`
+- `S30` `T` `src/aeat/_data/registry/aeat/authorization.d/190.toml`
+- `S31` `T` `src/aeat/application/calculations/tests/test_modelo_180_115_reconciliation_continuity.py`
+- `S32` `T` `src/aeat/_data/registry/aeat/authorization.d/180.toml`
+- `S33` `T` `src/aeat/application/calculations/tests/test_modelo_193_123_reconciliation_continuity.py`
+- `S34` `T` `src/aeat/_data/registry/aeat/authorization.d/193.toml`
+- `S35` `T` `src/aeat/application/calculations/tests/test_modelo_303_compensacion_carry_forward_continuity.py`
+- `S35` `T` `src/aeat/_data/registry/aeat/modelos/303/revisions/2024-y-siguientes/relations/0001-relations.toml`
+- `S36` `T` `src/aeat/_data/registry/aeat/authorization.d/303.toml`
+- `S37` `T` `src/aeat/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py`
+- `S37` `T` `src/aeat/_data/registry/aeat/modelos/390/revisions/2022-y-siguientes/bindings/0001-bindings.toml`
+- `S38` `T` `src/aeat/_data/registry/aeat/authorization.d/390.toml`
+- `S39` `T` `src/aeat/application/calculations/tests/test_modelo_322_grupo_individual_continuity.py`
+- `S40` `T` `src/aeat/_data/registry/aeat/authorization.d/322.toml`
+- `S41` `T` `src/aeat/_data/registry/aeat/modelos/353/revisions/2008-y-siguientes/bindings/0002-bindings.toml`
+- `S42` `T` `src/aeat/application/calculations/tests/test_modelo_353_grupo_aggregation_continuity.py`
+- `S43` `T` `src/aeat/_data/registry/aeat/authorization.d/353.toml`
+- `S44` `T` `src/aeat/application/calculations/tests/test_modelo_369_oss_fidelity.py`
+- `S45` `T` `src/aeat/_data/registry/aeat/authorization.d/369.toml`
+- `S46` `T` `src/aeat/application/calculations/tests/test_modelo_349_intracomunitario_fidelity.py`
+- `S47` `T` `src/aeat/_data/registry/aeat/authorization.d/349.toml`
+- `S48` `T` `src/aeat/application/calculations/tests/test_modelo_308_adhoc_fidelity.py`
+- `S49` `T` `src/aeat/_data/registry/aeat/authorization.d/308.toml`
+- `S50` `T` `src/aeat/application/calculations/tests/test_modelo_309_adhoc_fidelity.py`
+- `S51` `T` `src/aeat/_data/registry/aeat/authorization.d/309.toml`
+- `S52` `T` `src/aeat/application/calculations/tests/test_modelo_360_adhoc_fidelity.py`
+- `S53` `T` `src/aeat/_data/registry/aeat/authorization.d/360.toml`
+- `S54` `T` `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/relations.toml`
+- `S55` `T` `src/aeat/application/calculations/tests/test_modelo_200_bin_carry_forward_continuity.py`
+- `S56` `T` `src/aeat/_data/registry/aeat/authorization.d/200.toml`
+- `S57` `T` `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/bindings/0003-modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior.toml`
+- `S57` `T` `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/relations/0004-modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p.toml`
+- `S58` `T` `src/aeat/application/calculations/tests/test_modelo_202_cuota_base_ejercicio_anterior_continuity.py`
+- `S59` `T` `src/aeat/_data/registry/aeat/authorization.d/202.toml`
+- `S60` `T` `src/aeat/application/calculations/tests/test_modelo_232_operaciones_vinculadas_fidelity.py`
+- `S61` `T` `src/aeat/_data/registry/aeat/authorization.d/232.toml`
+- `S62` `T` `src/aeat/domain/calculations/engines/_modelo_210.py`
+- `S63` `T` `src/aeat/application/calculations/test_modelo_210_annual_continuity.py`
+- `S64` `T` `src/aeat/_data/registry/aeat/authorization.toml`
+- `S65` `T` `src/aeat/domain/calculations/engines/_modelo_714.py`
+- `S66` `T` `src/aeat/_data/registry/aeat/modelos/714/`
+- `S67` `T` `src/aeat/application/calculations/test_modelo_714_wealth_continuity.py`
+- `S68` `T` `src/aeat/_data/registry/aeat/authorization.toml`
+- `S69` `T` `.vault/adr/2026-06-02-modelo-721-cripto-data-fidelity-adr.md`
+- `S70` `T` `src/aeat/_data/registry/aeat/modelos/721/`
+- `S71` `T` `src/aeat/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py`
+- `S72` `T` `src/aeat/_data/registry/aeat/authorization.toml`
+- `S73` `T` `src/aeat/domain/calculations/engines/_modelo_151.py`
+- `S74` `T` `src/aeat/_data/registry/aeat/modelos/151/`
+- `S75` `T` `src/aeat/application/calculations/test_modelo_151_flat_rate_continuity.py`
+- `S76` `T` `src/aeat/_data/registry/aeat/authorization.toml`
+- `S77` `T` `src/aeat/application/calculations/test_modelo_347_fidelity_continuity.py`
+- `S78` `T` `src/aeat/_data/registry/aeat/authorization.toml`
+- `S79` `T` `src/aeat/application/calculations/test_modelo_184_fidelity_continuity.py`
+- `S80` `T` `src/aeat/_data/registry/aeat/authorization.toml`
+- `S81` `T` `src/aeat/_data/registry/aeat/modelos/720/`
+- `S82` `T` `src/aeat/application/calculations/test_modelo_720_baseline_continuity.py`
+- `S83` `T` `src/aeat/_data/registry/aeat/authorization.toml`
+- `S84` `T` `src/aeat/application/calculations/test_modelo_036_obligation_continuity.py`
+- `S85` `T` `src/aeat/_data/registry/aeat/authorization.toml`
+- `S86` `T` `src/aeat/application/calculations/test_modelo_840_exemption_continuity.py`
+- `S87` `T` `src/aeat/_data/registry/aeat/authorization.toml`
+- `S88` `T` `src/aeat/application/calculations/_multi_year.py`
+- `S88` `T` `src/aeat/application/calculations/tests/test_carry_gate_parity.py`
+- `S88` `T` `.vault/exec/2026-06-26-binding-fold-in-carry-unification/2026-06-26-binding-fold-in-carry-unification-P04-S16.md`
+- `S88` `T` `.vault/exec/2026-06-26-binding-fold-in-carry-unification/2026-06-26-binding-fold-in-carry-unification-P04-S17.md`
+- `S89` `T` `src/aeat/domain/calculations/registry/_bindings_previous_filing.py`
+- `S89` `T` `src/aeat/domain/calculations/registry/tests/test_modelo_721_registry.py`
+- `S89` `T` `src/aeat/application/calculations/tests/test_modelo_721_cripto_extranjero_fidelity.py`
+- `S89` `T` `.vault/adr/2026-06-02-modelo-721-cripto-data-fidelity-adr.md`

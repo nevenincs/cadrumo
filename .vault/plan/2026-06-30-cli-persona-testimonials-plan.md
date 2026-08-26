@@ -10,8 +10,8 @@ related:
   - '[[2026-06-04-cli-persona-testimonials-adr]]'
   - '[[2026-06-04-cross-campaign-hardening-adr]]'
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
+  - '[[2026-06-30-cli-persona-testimonials-audit]]'
 ---
-
 # `cli-persona-testimonials` plan
 
 ## Wave `W01` - campaign intake and evidence authority

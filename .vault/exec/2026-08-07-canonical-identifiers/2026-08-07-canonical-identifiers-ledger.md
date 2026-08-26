@@ -1,0 +1,164 @@
+---
+tags:
+  - '#exec'
+  - '#canonical-identifiers'
+date: '2026-08-07'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:231a607971c5a4810a05aba46d1894a939a6f822462f5372d2ab23ba6f65bb8c'
+related:
+  - "[[2026-08-07-canonical-identifiers-plan]]"
+---
+
+# `canonical-identifiers` ledger
+
+## Changes
+
+- `S01` `T` `src/cadrumo/domain/modelos/_ids.py`
+- `S02` `T` `src/cadrumo/core/identity/__init__.py`
+- `S02` `T` `src/cadrumo/domain/modelos/_ids.py`
+- `S02` `T` `src/cadrumo/domain/modelos/__init__.py`
+- `S02` `T` `docs/api/cadrumo.domain.modelos._ids.rst`
+- `S03` `T` `src/cadrumo/domain/invoices/_ids.py`
+- `S03` `T` `src/cadrumo/domain/invoices/__init__.py`
+- `S03` `T` `src/cadrumo/core/identity/__init__.py`
+- `S03` `T` `docs/api/cadrumo.domain.invoices._ids.rst`
+- `S04` `T` `src/cadrumo/tests/`
+- `S05` `T` `src/cadrumo/core/identity/_namespace.py`
+- `S06` `T` `src/cadrumo/core/identity/__init__.py`
+- `S06` `T` `src/cadrumo/core/identity/_namespace.py`
+- `S06` `T` `src/cadrumo/core/identity/tests/test_namespace.py`
+- `S06` `T` `src/cadrumo/domain/justificante/_schema.py`
+- `S07` `T` `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`
+- `S07` `T` `src/cadrumo/adapters/outbound/aeat/sede/_declarations_schema.py`
+- `S07` `T` `src/cadrumo/application/calculations/_iva_compensation_history.py`
+- `S07` `T` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part2.py`
+- `S07` `T` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part3.py`
+- `S07` `T` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_cotejo_csv_extraction.py`
+- `S08` `T` `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`
+- `S09` `T` `src/cadrumo/core/_iva_compensation_provenance.py`
+- `S09` `T` `src/cadrumo/domain/iva_compensation/_carry_forward.py`
+- `S09` `T` `src/cadrumo/application/calculations/_iva_compensation_history.py`
+- `S09` `T` `src/cadrumo/application/calculations/_iva_compensation_annual_partition.py`
+- `S09` `T` `src/cadrumo/application/modelo/_filed_revision_observation.py`
+- `S09` `T` `src/cadrumo/application/live/_filed_observation_persistence.py`
+- `S09` `T` `src/cadrumo/entrypoints/cli/_modelo_iva_wallet_cli.py`
+- `S10` `T` `src/cadrumo/domain/iva_compensation/tests/`
+- `S11` `T` `src/cadrumo/entrypoints/cli/_app_live_payloads.py`
+- `S12` `T` `src/cadrumo/entrypoints/cli/tests/test_expediente_declaration_payload_schema_pin.py`
+- `S13` `T` `src/cadrumo/domain/justificante/`
+- `S14` `T` `src/cadrumo/adapters/persistence/profile/justificante.py`
+- `S15` `T` `src/cadrumo/core/identity/__init__.py`
+- `S16` `T` `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`
+- `S17` `T` `src/cadrumo/domain/justificante/_schema.py`
+- `S18` `T` `src/cadrumo/application/live/_justificante.py`
+- `S19` `T` `src/cadrumo/adapters/inbound/borrador/_schema.py`
+- `S20` `T` `src/cadrumo/application/overview/_calendar_evidence.py`
+- `S21` `T` `src/cadrumo/adapters/persistence/profile/tests/test_justificante_secure_storage_roundtrip.py`
+- `S21` `T` `src/cadrumo/domain/justificante/tests/test_secure_storage_roundtrip.py`
+- `S22` `T` `src/cadrumo/domain/justificante/tests/`
+- `S22` `T` `src/cadrumo/adapters/inbound/justificante/tests/`
+- `S22` `T` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_live.py`
+- `S23` `T` `src/cadrumo/adapters/outbound/aeat/sede/_declarations_remote.py`
+- `S24` `T` `src/cadrumo/core/identity/_namespace.py`
+- `S24` `T` `src/cadrumo/core/identity/__init__.py`
+- `S25` `T` `src/cadrumo/core/identity/tests/test_namespace.py`
+- `S29` `T` `src/cadrumo/application/ledger/_llm_review_workflow.py`
+- `S29` `T` `src/cadrumo/application/ledger/_models.py`
+- `S29` `T` `src/cadrumo/application/ledger/tests/test_llm_review_workflow_types.py`
+- `S29` `T` `src/cadrumo/application/ledger/tests/test_actions_classification_parse.py`
+- `S30` `T` `src/cadrumo/application/aggregation/_impatriado_income_ledger.py`
+- `S30` `T` `src/cadrumo/application/aggregation/_irnr_income_ledger.py`
+- `S30` `T` `src/cadrumo/application/aggregation/_iva_ledger.py`
+- `S30` `T` `src/cadrumo/application/aggregation/_renta_gasto_ledger.py`
+- `S30` `T` `src/cadrumo/application/aggregation/_renta_income_ledger.py`
+- `S30` `T` `src/cadrumo/application/aggregation/_renta_ledger.py`
+- `S30` `T` `src/cadrumo/application/aggregation/tests/test_grouping.py`
+- `S30` `T` `src/cadrumo/application/aggregation/tests/test_income_withheld_derivation.py`
+- `S30` `T` `src/cadrumo/application/aggregation/tests/test_renta_ledger_helpers.py`
+- `S31` `T` `src/cadrumo/adapters/persistence/profile/`
+- `S32` `T` `src/cadrumo/application/invoices/_linking.py`
+- `S32` `T` `src/cadrumo/application/invoices/_queries.py`
+- `S32` `T` `src/cadrumo/application/invoices/_reconciliation.py`
+- `S32` `T` `src/cadrumo/domain/invoices/_decomposition.py`
+- `S32` `T` `src/cadrumo/domain/invoices/_service.py`
+- `S32` `T` `src/cadrumo/domain/invoices/tests/test_decomposition.py`
+- `S32` `T` `src/cadrumo/domain/invoices/tests/test_service.py`
+- `S33` `T` `src/cadrumo/application/modelo/_reconciliation_records.py`
+- `S34` `T` `src/cadrumo/tests/`
+- `S35` `T` `src/cadrumo/domain/calculations/registry/_snapshot_coordinate.py`
+- `S36` `T` `src/cadrumo/domain/calculations/registry/`
+- `S37` `T` `src/cadrumo/application/workflow/_resume.py`
+- `S37` `T` `src/cadrumo/application/modelo/_selectors.py`
+- `S38` `T` `src/cadrumo/core/identity/_namespace.py`
+- `S39` `T` `src/cadrumo/core/identity/_namespace.py`
+- `S40` `T` `src/cadrumo/domain/calculations/registry/`
+- `S41` `T` `src/cadrumo/adapters/outbound/aeat/sede/_notifications.py`
+- `S42` `T` `src/cadrumo/core/identity/_namespace.py`
+- `S42` `T` `src/cadrumo/domain/calculations/registry/_schema_surfaces.py`
+- `S42` `T` `src/cadrumo/domain/calculations/registry/_query_reports.py`
+- `S42` `T` `src/cadrumo/domain/calculations/registry/_renta_web_open_oracle.py`
+- `S42` `T` `src/cadrumo/core/observability/_models.py`
+- `S42` `T` `adapters/outbound/aeat/sede/_notifications.py`
+- `S43` `T` `src/cadrumo/domain/transactions/_m210_income_classification.py`
+- `S43` `T` `src/cadrumo/core/_irnr.py`
+- `S44` `T` `src/cadrumo/core/_foreign_asset_obligation.py`
+- `S44` `T` `src/cadrumo/core/__init__.py`
+- `S44` `T` `src/cadrumo/domain/calculations/registry/_detail_record_bindings.py`
+- `S44` `T` `src/cadrumo/application/aggregation/_foreign_assets.py`
+- `S44` `T` `src/cadrumo/application/calculations/_row_set_assembly.py`
+- `S44` `T` `src/cadrumo/domain/calculations/registry/tests/test_detail_record_row_builders.py`
+- `S44` `T` `src/cadrumo/domain/calculations/registry/tests/test_detail_record_observations.py`
+- `S44` `T` `domain/modelos/`
+- `S44` `T` `domain/transactions/`
+- `S44` `T` `W05.P08.S43`
+- `S44` `T` `domain/calculations/registry/`
+- `S45` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S45` `T` `src/cadrumo/application/filing/_complementaria.py`
+- `S45` `T` `src/cadrumo/domain/contribuyente/tests/test_family.py`
+- `S46` `T` `src/cadrumo/application/ledger/_evidence_draft.py`
+- `S46` `T` `src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`
+- `S46` `T` `src/cadrumo/llm/_suggestions.py`
+- `S46` `T` `src/cadrumo/domain/calculations/registry/_invoice_bindings.py`
+- `S46` `T` `src/cadrumo/domain/calculations/registry/_donativo_bindings.py`
+- `S46` `T` `src/cadrumo/llm/_invoice_field_grounding.py`
+- `S47` `T` `src/cadrumo/core/identity/tests/`
+- `S48` `T` `src/cadrumo/core/identity/_namespace.py`
+- `S49` `T` `dev/identifier_noun_census.py`
+- `S49` `T` `dev/tests/test_identifier_noun_census.py`
+- `S50` `T` `src/cadrumo/core/identity/_namespace.py`
+- `S51` `T` `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`
+- `S52` `T` `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`
+- `S53` `T` `.vault/plan/2026-08-07-canonical-identifiers-plan.md`
+- `S53` `T` `.vault/plan/2026-08-13-profile-password-custody-plan.md`
+- `S53` `T` `src/cadrumo/application/config_reset.py`
+- `S53` `T` `src/cadrumo/application/bucket_maintenance/_service.py`
+- `S54` `T` `.vault/plan/2026-08-07-canonical-identifiers-plan.md`
+- `S54` `T` `.vault/plan/2026-08-13-profile-password-custody-plan.md`
+- `S54` `T` `src/cadrumo/application/operator_actions/_catalogue.py`
+- `S55` `T` `src/cadrumo/entrypoints/cli/`
+- `S56` `T` `src/cadrumo/entrypoints/mcp/tests/`
+- `S57` `T` `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`
+- `S58` `T` `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`
+- `S59` `T` `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`
+- `S60` `T` `.vault/plan/2026-08-07-canonical-identifiers-plan.md`
+- `S62` `T` `src/cadrumo/`
+- `S63` `T` `src/cadrumo/`
+- `S64` `T` `src/cadrumo/core/identity/`
+- `S65` `T` `src/cadrumo/application/calculations/tests/`
+- `S66` `T` `src/cadrumo/application/evidence/_ids.py`
+- `S66` `T` `src/cadrumo/domain/attachments/_ids.py`
+- `S66` `T` `src/cadrumo/application/modelo/_m145_communication_records.py`
+- `S67` `T` `src/cadrumo/application/overview/_calendar_models.py`
+- `S67` `T` `src/cadrumo/domain/filing/_amendment.py`
+- `S67` `T` `src/cadrumo/application/filing/_complementaria.py`
+- `S67` `T` `src/cadrumo/entrypoints/cli/_overview_payloads.py`
+- `S68` `T` `src/cadrumo/core/product_identity.py`
+- `S69` `T` `src/cadrumo/domain/calculations/registry/_schema_surfaces.py`
+- `S70` `T` `src/cadrumo/application/filing/_complementaria.py`
+- `S71` `T` `src/cadrumo/entrypoints/`
+- `S71` `T` `src/cadrumo/application/`
+- `S73` `T` `src/cadrumo/application/calculations/_cross_period_clean_state.py`
+- `S73` `T` `src/cadrumo/application/live/_justificante.py`
+- `S73` `T` `src/cadrumo/application/live/_filed_observation_persistence.py`
+- `S73` `T` `src/cadrumo/core/_aeat_csv.py`

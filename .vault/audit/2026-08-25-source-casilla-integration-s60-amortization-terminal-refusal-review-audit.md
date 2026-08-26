@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:c96bdb4457f7f79dd83fc97d77855440f05cc9327f4bba125d0a3b42a142102f'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-22-source-casilla-integration-W03-P10-S60]]"
 ---
 
 # `source-casilla-integration` audit: `S60 amortization terminal refusal review`

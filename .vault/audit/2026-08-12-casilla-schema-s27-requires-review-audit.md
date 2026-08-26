@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:0cd37df36c6998061780bc51f02c64f3ee09371a379329584954cc69e32e910d'
 related:
@@ -11,7 +11,6 @@ related:
   - "[[2026-08-10-casilla-schema-read-model-adr]]"
   - "[[2026-08-10-casilla-schema-canonical-derivations-adr]]"
   - "[[2026-08-10-casilla-schema-research]]"
-  - "[[2026-08-10-casilla-schema-W03-P07-S27]]"
 ---
 
 # `casilla-schema` audit: `S27 modelo.requires classifier review`

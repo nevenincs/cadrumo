@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-m200-export-fragments'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-26'
 body_hash: 'sha256:7dfd318e8412dd0a6874e6f5fd18119c5cec4a766fa1fb41ac6c3c5e5d58b539'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-hardening-m200-export-pressure-audit]]"
-  - "[[2026-06-02-schema-hardening-P05-S28]]"
 ---
 
 # `registry-m200-export-fragments` Code Review

@@ -1,0 +1,185 @@
+---
+tags:
+  - '#exec'
+  - '#registry-completeness-closure'
+date: '2026-08-24'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:7105afe449d2c48f0c42690f3c1270d2b0d9968af4aa24fe5565f207e69a181a'
+related:
+  - "[[2026-08-24-registry-completeness-closure-plan]]"
+---
+
+# `registry-completeness-closure` ledger
+
+## Changes
+
+- `S01` `T` `.vault/audit/`
+- `S02` `T` `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`
+- `S03` `T` `.vault/exec/2026-08-14-registry-temporal-coverage/`
+- `S04` `T` `.vault/audit/`
+- `S05` `T` `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`
+- `S05` `T` `.vault/plan/2026-08-24-registry-completeness-closure-plan.md`
+- `S05` `T` `.vault/index/registry-temporal-coverage.index.md`
+- `S05` `T` `.vault/index/registry-completeness-closure.index.md`
+- `S06` `T` `src/cadrumo/application/registry/`
+- `S07` `T` `src/cadrumo/application/registry/`
+- `S08` `T` `src/cadrumo/application/registry/`
+- `S09` `T` `src/cadrumo/application/registry/`
+- `S10` `T` `dev/registry/conformance/`
+- `S11` `T` `src/cadrumo/application/registry/tests/`
+- `S11` `T` `dev/registry/conformance/tests/`
+- `S11` `T` `.vault/exec/2026-08-24-registry-completeness-closure/`
+- `S12` `T` `.vault/reference/`
+- `S13` `T` `.vault/reference/`
+- `S14` `T` `.vault/reference/`
+- `S15` `T` `.vault/reference/`
+- `S16` `T` `.vault/reference/`
+- `S17` `T` `.vault/reference/`
+- `S18` `T` `.vault/reference/`
+- `S19` `T` `.vault/reference/`
+- `S20` `T` `.vault/reference/`
+- `S21` `T` `.vault/reference/`
+- `S22` `T` `.vault/reference/`
+- `S23` `T` `.vault/reference/`
+- `S24` `T` `.vault/reference/`
+- `S25` `T` `.vault/reference/`
+- `S26` `T` `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`
+- `S27` `T` `.vault/plan/2026-08-22-source-casilla-integration-plan.md`
+- `S27` `T` `.vault/exec/2026-08-24-registry-completeness-closure/`
+- `S28` `T` `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`
+- `S29` `T` `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
+- `S30` `T` `dev/locales/`
+- `S31` `T` `src/cadrumo/domain/calculations/registry/_validate_cross_revision.py`
+- `S31` `T` `src/cadrumo/domain/calculations/registry/_validate_registry_scope.py`
+- `S31` `T` `src/cadrumo/domain/calculations/registry/tests/`
+- `S31` `T` `src/cadrumo/_data/registry/aeat/modelos/303/`
+- `S31` `T` `src/cadrumo/_data/registry/aeat/modelos/390/`
+- `S32` `T`
+- `S33` `T` `dev/registry/filing_export_proof.py`
+- `S33` `T` `dev/registry/tests/test_filing_emitted_byte_acceptance.py`
+- `S33` `T` `.vault/reference/2026-08-25-registry-completeness-closure-production-emission-proof-reference.md`
+- `S34` `T` `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`
+- `S35` `T` `.vault/plan/2026-08-22-source-casilla-integration-plan.md`
+- `S35` `T` `src/cadrumo/_data/source_connectivity/census.toml`
+- `S35` `T` `src/cadrumo/application/registry/`
+- `S35` `T` `dev/source_connectivity/`
+- `S35` `T` `.vault/audit/2026-08-25-registry-completeness-closure-source-casilla-predecessor-reconciliation-audit.md`
+- `S40` `T` `src/cadrumo/domain/calculations/registry/`
+- `S41` `T` `src/cadrumo/domain/calculations/registry/_authority.py`
+- `S42` `T` `src/cadrumo/application/registry/`
+- `S43` `T` `src/cadrumo/application/registry/`
+- `S44` `T` `src/cadrumo/application/registry/`
+- `S45` `T` `src/cadrumo/application/registry/`
+- `S46` `T` `src/cadrumo/application/registry/`
+- `S47` `T` `src/cadrumo/application/registry/`
+- `S48` `T` `src/cadrumo/application/registry/tests/`
+- `S49` `T` `src/cadrumo/application/registry/`
+- `S50` `T` `src/cadrumo/application/registry/tests/`
+- `S51` `T` `src/cadrumo/core/tests/`
+- `S51` `T` `src/cadrumo/application/registry/tests/`
+- `S52` `T` `src/cadrumo/application/registry/_source_connectivity_coverage.py`
+- `S53` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S52.md`
+- `S54` `T` `src/cadrumo/application/registry/tests/`
+- `S54` `T` `src/cadrumo/core/tests/`
+- `S55` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md`
+- `S56` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S51.md`
+- `S56` `T` `.vault/plan/2026-08-24-registry-completeness-closure-plan.md`
+- `S56` `T` `.vault/audit/`
+- `S57` `T` `src/cadrumo/application/registry/`
+- `S57` `T` `dev/registry/`
+- `S57` `T` `src/cadrumo/application/filing/tests/`
+- `S58` `T` `src/cadrumo/domain/calculations/registry/`
+- `S58` `T` `src/cadrumo/application/registry/`
+- `S59` `T` `src/cadrumo/domain/calculations/registry/tests/test_embedded_envelope_source_authority.py`
+- `S60` `T` `src/cadrumo/application/registry/`
+- `S60` `T` `dev/registry/`
+- `S60` `T` `src/cadrumo/application/filing/tests/`
+- `S61` `T` `dev/registry/filing_export_proof.py`
+- `S61` `T` `dev/registry/tests/test_filing_export_live_proof.py`
+- `S62` `T` `.vault/audit/2026-08-24-registry-completeness-closure-s60-live-export-proof-review-audit.md`
+- `S62` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S60.md`
+- `S63` `T` `dev/registry/conformance/`
+- `S63` `T` `dev/source_connectivity/`
+- `S63` `T` `src/cadrumo/application/registry/`
+- `S63` `T` `dev/registry/conformance/tests/`
+- `S64` `T` `dev/registry/conformance/`
+- `S64` `T` `dev/source_connectivity/`
+- `S64` `T` `dev/registry/`
+- `S64` `T` `src/cadrumo/application/registry/`
+- `S65` `T` `dev/registry/conformance/tests/test_closure.py`
+- `S65` `T` `dev/registry/conformance/cli.py`
+- `S65` `T` `dev/registry/conformance/authorities.py`
+- `S65` `T` `dev/registry/conformance/closure.py`
+- `S66` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S65.md`
+- `S67` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S65.md`
+- `S67` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S66.md`
+- `S68` `T` `.vault/audit/2026-08-24-registry-completeness-closure-s64-independent-post-review-audit.md`
+- `S68` `T` `.vault/audit/2026-08-24-registry-completeness-closure-s65-context-authority-review-audit.md`
+- `S69` `T` `src/cadrumo/application/registry/tests/`
+- `S69` `T` `dev/registry/conformance/tests/`
+- `S70` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W01-P02-S11.md`
+- `S70` `T` `.vault/audit/2026-08-24-registry-completeness-closure-s11-source-connectivity-ratchet-audit.md`
+- `S70` `T` `.vault/audit/2026-08-24-registry-completeness-closure-s11-independent-post-review-audit.md`
+- `S70` `T` `.vault/index/registry-completeness-closure.index.md`
+- `S71` `T` `.vault/plan/2026-08-24-registry-completeness-closure-plan.md`
+- `S72` `T` `src/cadrumo/application/registry/`
+- `S72` `T` `dev/registry/conformance/`
+- `S73` `T` `.vault/reference/`
+- `S73` `T` `.vault/adr/`
+- `S73` `T` `.vault/plan/2026-08-22-source-casilla-integration-plan.md`
+- `S73` `T` `src/cadrumo/_data/source_connectivity/census.toml`
+- `S74` `T` `.vault/reference/`
+- `S74` `T` `.vault/exec/`
+- `S74` `T` `.vault/plan/`
+- `S75` `T` `.vault/reference/2026-08-24-registry-completeness-closure-modelo-038-design-extraction-reference.md`
+- `S75` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S13.md`
+- `S75` `T` `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`
+- `S75` `T` `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`
+- `S76` `T` `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
+- `S76` `T` `.vault/reference/`
+- `S77` `T` `.vault/reference/2026-08-24-registry-completeness-closure-modelo-182-design-era-and-donor-row-reference.md`
+- `S77` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S15.md`
+- `S77` `T` `src/cadrumo/domain/calculations/registry/tests/test_detail_record_observations.py`
+- `S78` `T` `.vault/reference/2026-08-24-registry-completeness-closure-modelo-187-design-era-coverage-reference.md`
+- `S78` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P03-S17.md`
+- `S79` `T` `src/cadrumo/_data/registry/aeat/modelos/220/revisions/2024/revision.toml`
+- `S79` `T` `.vault/exec/2026-08-24-registry-completeness-closure/`
+- `S80` `T` `.vault/adr/`
+- `S80` `T` `.vault/reference/`
+- `S80` `T` `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`
+- `S80` `T` `src/cadrumo/domain/calculations/registry/_validate_export_exemption.py`
+- `S80` `T` `src/cadrumo/domain/calculations/registry/tests/test_export_exemption_declared.py`
+- `S81` `T` `src/cadrumo/application/modelo/_m036_lifecycle.py`
+- `S81` `T` `src/cadrumo/entrypoints/cli/_modelo_m036_cli.py`
+- `S81` `T` `src/cadrumo/application/modelo/tests/`
+- `S81` `T` `src/cadrumo/entrypoints/cli/tests/`
+- `S82` `T` `src/cadrumo/application/registry/source_connectivity.py`
+- `S82` `T` `dev/source_connectivity/check.py`
+- `S82` `T` `dev/source_connectivity/tests/test_census_completeness.py`
+- `S82` `T` `.vault/reference/2026-08-24-registry-completeness-closure-modelo-036-source-connectivity-reference.md`
+- `S83` `T` `.vault/adr/`
+- `S83` `T` `.vault/reference/`
+- `S83` `T` `.vault/plan/2026-08-24-registry-completeness-closure-plan.md`
+- `S83` `T` `.vault/exec/2026-08-24-registry-completeness-closure/2026-08-24-registry-completeness-closure-W02-P04-S28.md`
+- `S83` `T` `src/cadrumo/domain/calculations/registry/tests/test_filing_capability_worklist.py`
+- `S84` `T` `src/cadrumo/application/filing/`
+- `S84` `T` `src/cadrumo/adapters/persistence/profile/`
+- `S84` `T` `src/cadrumo/adapters/persistence/storage/`
+- `S84` `T` `dev/registry/`
+- `S85` `T` `materialize a non-sensitive conformance vector only after full-registry validation and a separately reviewed canonical builder`
+- `S85` `T` `otherwise retain one typed per-revision residue and its owner. Reconcile the concurrent Modelo 200 spanning-tree authority conflict through`
+- `S85` `T` `-`
+- `S86` `T` `it cannot pass while any selected revision lacks validated provenance or a canonical builder`
+- `S86` `T` `including a zero-success enrollment`
+- `S86` `T` `dev/registry/tests/`
+- `S86` `T` `dev/registry/conformance/`
+- `S87` `T` `src/cadrumo/application/registry/`
+- `S87` `T` `src/cadrumo/application/filing/`
+- `S87` `T` `dev/registry/conformance/`
+- `S87` `T` `dev/registry/`
+- `S87` `T` `src/cadrumo/application/registry/tests/`
+- `S87` `T` `dev/registry/conformance/tests/`
+- `S88` `T` `dev/locales/`
+- `S88` `T` `src/cadrumo/locales/`
+- `S88` `T` `dev/locales/tests/`

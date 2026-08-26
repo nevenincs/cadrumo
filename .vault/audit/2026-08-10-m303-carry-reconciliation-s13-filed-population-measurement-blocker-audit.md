@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#m303-carry-reconciliation'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:0270178e4f10336da1d52b95ada4f7684d5afc9eb4b906c1a1a28914f3b2c612'
 related:
   - "[[2026-08-07-m303-carry-reconciliation-plan]]"
-  - "[[2026-08-07-m303-carry-reconciliation-S13]]"
 ---
 
 # `m303-carry-reconciliation` audit: `M303 S13 filed-population measurement blocker`

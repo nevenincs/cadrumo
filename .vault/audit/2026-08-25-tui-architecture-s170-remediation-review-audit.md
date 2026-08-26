@@ -3,33 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff0cdd6efcfed9b5bac80bb92b6c570104023ee468e342ebbf56010a2ad846b6'
+body_hash: 'sha256:31857f1727fe8fe77f6fd7be96760ad2abd2395b538a491f8a2f86b136bd928c'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-s170-selector-convergence-audit]]"
-  - "[[2026-08-11-tui-architecture-W03-P20-S170]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `S170 selector convergence remediation review`
 
@@ -122,4 +102,3 @@ independent clean-HEAD review that treats this audit as the finding inventory,
 re-runs both fixed-point gates, focused import hygiene, Ruff, and the canonical
 resident-service lane, and verifies no relevant RAG result is a parallel owner.
 Only that later review may recommend closing S170.
-

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:35768c62310101810089caf3ff335e754f06e9e5edef05a61a38077b609cf25b'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
-  - "[[2026-08-14-registry-temporal-coverage-W02-P05-S51]]"
 ---
 
 # `registry-temporal-coverage` audit: `S51 M126 and M128 historical attachment review`

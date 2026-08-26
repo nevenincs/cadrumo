@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:ecf88c985c4b934cba1f42b3965ab2d0c37dd0521f981cc626829fb5c1cdfef4'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-22-source-casilla-integration-W05-P14-S91]]"
 ---
 # `source-casilla-integration` audit: `S91 M720 worksheet roundtrip review`
 

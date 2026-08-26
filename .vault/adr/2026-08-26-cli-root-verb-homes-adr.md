@@ -5,278 +5,433 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:7591cf4daafd4c35e9aa05e4a459e8f9a3d82dce8a5d8680a67b4bcdd30b6280'
+body_hash: 'sha256:189105287a2d2ce64d874c4fdeb8725c5e3ec4322c4ee646fec55d8a86a600ed'
 related:
   - "[[2026-08-25-cli-root-verb-homes-audit]]"
 ---
 
-# `cli-root-verb-homes` adr: `root verb homes and bidirectional transport verb symmetry` | (**status:** `proposed`)
+# `cli-root-verb-homes` adr: `root verb homes and bidirectional transport verb symmetry` | (**status:** `accepted`)
 
 ## Problem Statement
 
 The executable mounts 294 leaves under two roots whose entire written charter is
-two help strings. `2026-08-25-cli-root-verb-homes-audit` establishes nine drifts
-against that charter, the sharpest being that the whole modelo workbook surface
-lives under `config google` and carries the only `filing` capability outside `app`.
+two help strings. `2026-08-25-cli-root-verb-homes-audit` establishes twelve drifts
+against that charter, the sharpest being that the modelo workbook surface lives
+under `config google` and holds the only `filing` capability outside `app`.
 
-Re-homing those leaves cannot be done in isolation, because the drift has a second
-dimension the audit surfaced only in passing: the verbs themselves do not form
-predictable pairs. Data enters the application through `import`, `file`, `pull`,
-`pull-folder`, `doclink`, `add --source-path`, `batch --directory` and `restore`,
-and leaves through `export` and `push`. Two of those tokens are spelled with
-options the CLI contract already forbids. Three tokens (`file`, `archive`,
-`restore`) carry two unrelated meanings each depending on which family they appear
-in. Moving a verb to the right root while leaving it in a nine-token intake
-vocabulary would relocate the confusion rather than remove it.
+Re-homing cannot be done in isolation, because the drift has a second dimension:
+the verbs do not form predictable pairs. Data enters through `import`, `file`,
+`pull`, `pull-folder`, `doclink`, `add`, `batch` and `restore`, and leaves through
+`export` and `push`. Three tokens (`file`, `archive`, `restore`) carry two
+unrelated meanings each depending on family. Twenty-three leaves spell a local
+path with one of nineteen different option or metavar names. Moving a verb to the
+right root while leaving it in that vocabulary relocates the confusion.
 
 A decision is needed now because both dimensions touch the same specs, the same
-locale keys and the same envelope `command=` identifiers. Landing them separately
-means paying the breaking-envelope cost twice.
+locale keys and the same envelope `command=` identifiers, and the envelope
+identifier is the expensive part of any move. Landing them separately pays that
+cost twice.
+
+This record is a full re-derivation of a first draft that two independent reviews
+rejected. The first draft's transport half rested on a premise both reviews
+falsified: that a gate could tell a local path from a remote handle by inspecting
+what is already declared. It cannot, and the re-derivation below turns that from
+an assumption into a precondition.
 
 ## Considerations
 
-- The two root help strings are the only charter; no prior ADR states a placement
-  rule (audit, `no-gate-enforces-root-ownership`).
-- Every leaf already declares an `ExecutionPolicySpec` carrying capabilities, side
-  effects and a write route, so an objective placement signal exists in authored
-  data and needs no new annotation (audit, Scope).
-- `filing` is declared on eleven leaves, ten under `app`; `registry` on
-  twenty-three, twenty-two under `app`. The policy axes already dissent from the
-  mount points (audit, findings one and five).
-- Both workbook transports already share one plan builder in the application layer,
-  so the defect is confined to the entrypoint (audit, finding one).
-- The `aeat-cli-contract` rule fixes `pull` as the AEAT fetch verb and `--file` as
-  the single-local-file input, and gives `censo file --file` plus `censo pull` as
-  its worked dual-transport example. Any grammar that renames `file` must amend
-  that rule rather than contradict it.
-- The `sensitive-financial-data-secure-storage-only` rule prohibits live AEAT
-  submission, so the AEAT counterparty has no outbound half by policy and its
-  asymmetry is principled rather than accidental.
-- `aeat-naming` reserves Spanish stems for AEAT domain concepts and leaves generic
-  computing vocabulary in English, so a transport-neutral subject noun is
-  admissible where no AEAT surface names the thing.
-- `no-legacy-compatibility` forbids alias or bridge spellings, so every rename is a
-  hard cutover with the old spelling deleted.
-- The runtime write guard derives from the spec's declared `write_route` rather
-  than a path allowlist, so re-homing carries the guard with it (audit, finding
-  nine).
-- `aeat-vaultspec-centralisation` retires new rule authorship, so the grammar lands
-  as an amendment to the existing `aeat-cli-contract` rule source, never as a new
-  rule file.
+- The two root help strings are the only charter; `2026-07-28-cli-authority-verb-conformance-adr`
+  separately states the two-root split is an accepted architectural boundary and
+  gives a second criterion — app commands operate on the active profile bucket —
+  that reaches the same verdict on the workbook family by a different route.
+- Capability counts, re-derived directly from `COMMAND_GRAPH`: 294 leaves, 212
+  `app` / 82 `config`; `filing` 7 (6 app, 1 config); `registry` 22 (all app);
+  `calculation` 40 (32 app, 8 config); `profile-custody` 52 (1 app, 51 config).
+  The audit's first published counts were inflated by a census that matched
+  capability names against whole rendered rows, and are corrected in place there.
+- `calculation` is NOT a reliable `app` signal on its own: `config profile
+  status`, `validate` and `preflight` declare it while computing facts about the
+  profile, and `config repair integrity registry` declares it while reading
+  bundled data. All four are read-only with write route `none`.
+- Nothing on a leaf declares that a verb moves data, or that an option carries a
+  local path. Path-typing is a proxy that misfires in both directions: `app ledger
+  pull-folder --folder` is a remote Drive id typed `str`; `app ledger evidence add`
+  takes a local path as a positional typed `str`; `app ledger import
+  --verify-source` is `Path`-typed but is not the primary input.
+- `app ledger doclink --source` is a required `DocumentLinkSource` closed enum
+  sitting beside a separately required `--reference`. `aeat-architecture-boundaries`
+  mandates that enum declaration. It is not a local-file spelling.
+- `app modelo readiness` already asserts its `--revision-id` equal to the
+  law-determined resolution and refuses on divergence
+  (`src/cadrumo/application/state_projection.py:852`), and the guard is written
+  `if request.revision_id and ...`, so the projection already tolerates an omitted
+  id. Only the CLI spec makes it required.
+- `config google sync probe` verifies OAuth credentials and root-folder resolution
+  (`src/cadrumo/entrypoints/cli/_config/_google.py:356`). It never reads the
+  secure-object mirror; it is Google configuration.
+- `docs/_sequences/contracts/**/*.seq` is gate-covered by
+  `test_documented_command_conformance.py`, so a rename reds there rather than
+  rotting. `docs/locales/{es,ca,hu}/LC_MESSAGES/**` is NOT gate-covered and rots
+  silently.
+- `src/cadrumo/_data/agent/` does not exist; the harness is `src/cadrumo-harness`.
+  The `aeat-cli-contract` rule cites the dead path, so the rule is itself stale.
+- `aeat-locales-cli` requires a real value in all four catalogues and forbids the
+  placeholder; the rename touches roughly 78 keys in each of en/es/ca/hu.
+- `no-legacy-compatibility` forbids alias spellings, so every rename is a hard
+  cutover. `aeat-vaultspec-centralisation` retires new rule authorship, so the
+  grammar lands as an amendment to `aeat-cli-contract`.
+- `aeat-architecture-boundaries` was rewritten by another actor while this record
+  was being drafted, and its import model reversed: package facades, re-export
+  modules, hierarchical roll-ups and PEP 562 export maps are now prohibited, and
+  every cross-package consumer imports directly from the symbol's canonical
+  defining module with `__init__.py` namespaces inert. This binds the campaign's
+  implementation, because the workbook handlers being moved currently reach the
+  export service through a package facade. Every moved handler adopts canonical
+  defining-module imports as part of its move; none may carry a facade import to
+  its new home. This is a constraint discovered mid-campaign, not a decision of
+  this record.
 
 ## Considered options
 
-**Option A — re-home only, leave the verb vocabulary alone.** Cheapest and matches
-the audit's literal scope. Rejected: it pays the breaking envelope-identifier cost
-without buying predictability, and it leaves `config google sync calc pull` sitting
-next to `app ledger pull-folder` as two spellings of one idea.
+**Option A — re-home only.** Rejected: pays the envelope break without buying
+predictability.
 
-**Option B — normalise the verb vocabulary, leave the mounts alone.** Rejected for
-the mirror reason: an operator who learns the grammar still cannot guess which root
-a family lives under, and the `filing`-under-`config` defect survives untouched.
+**Option B — normalise verbs only.** Rejected: the `filing`-under-`config` defect
+survives and root membership stays unguessable.
 
-**Option C — key the transport grammar on the transport mechanism** (HTTP, Drive
-API, Sheets API, filesystem). Rejected: mechanism is an implementation fact that
-changes without the operator's knowledge, and it produces four token pairs where
-the operator can only meaningfully distinguish two.
+**Option C — key the grammar on transport mechanism** (HTTP, Drive API, Sheets
+API, filesystem). Rejected: mechanism changes without the operator's knowledge and
+yields four pairs where an operator can distinguish two.
 
-**Option D — key the transport grammar on the counterparty, and key root placement
-on the declared execution policy.** Chosen. Two independent criteria, each derived
-from something already authored and greppable, each mechanically gateable.
+**Option D — key the grammar on the counterparty, key placement on declared
+policy, and treat the gate as derivable from what is already declared.** This was
+the first draft. **Rejected on review**: the placement half is derivable, the
+transport half is not, and a gate written against the transport half degrades to a
+name list — a tally, which `aeat-quality-gates` forbids.
 
-**Option E — retire the two-root split entirely and mount every family at the
-executable root.** Rejected: `aeat-architecture-boundaries` fixes the CLI root
-surface at `config` and `app` and forbids a third family, and flattening would
-break that constraint in the opposite direction while making the 294-leaf surface
-unnavigable.
+**Option E — as D, but declare the missing fact.** Chosen. Placement stays keyed
+on declared policy at narrowest-subject granularity; the transport grammar becomes
+enforceable by adding a transport-locus annotation to the parameter spec, which is
+a precondition of the gate rather than an assumption behind it.
+
+**Option F — flatten to one root.** Rejected: `aeat-architecture-boundaries` fixes
+the root surface at `config` and `app`.
 
 ## Constraints
 
-No frontier technology and no immature dependency; the whole change is entrypoint
-declaration plus locale keys. The blocking constraints are contractual rather than
-technical.
+The transport half **cannot ship before its precondition**: `ParameterSpec` gains
+a declared locus, and every path-bearing parameter declares it. Until that lands,
+any spelling gate is a name list. This ordering is a hard dependency, not a
+preference, and the plan sequences it first.
 
-The envelope `command=` identifiers are part of the operator-facing JSON contract,
-and every re-homed or renamed leaf changes its identifier. There is no released
-data and no deployed caller, so `no-legacy-compatibility` governs: the old
-identifier is deleted, not aliased.
+The envelope `command=` identifiers change for every re-homed or renamed leaf.
+With no released data and no deployed caller, `no-legacy-compatibility` governs:
+delete the old identifier, never alias it.
 
-The `aeat-cli-contract` rule must be amended in the same campaign, because this
-record's grammar retires the `file` transport token that the rule currently
-presents as its canonical example. The amendment lands on the
-`.vaultspec/rules/aeat-cli-contract.md` source and propagates through
-`vaultspec-core sync`; the generated provider copies are never hand-edited.
+The change is larger than the first draft claimed. Beyond entrypoint specs it
+touches roughly 78 locale keys in each of four catalogues (312 leaves) under a
+hard parity gate and an honesty ratchet that forbids the placeholder; gate-covered
+`.seq` contracts and their JSON goldens; three non-gate-covered `docs/locales`
+catalogues; `src/cadrumo/application/operator_actions/_catalogue.py:512`;
+`dev/quality/cli_action_census_dispositions.toml`; and `dev/benchmarks/cli`
+goldens.
 
-The rule's own warning about unscanned surfaces binds every rename here: the
-error-registry `default_suggestion` fields, the cross-period `next_action`
-builders, the curated `operator_surface/_help.py` surface and the envelope
-identifiers are not covered by the conformance gates and must be swept by hand.
+`aeat-cli-contract` must be amended, and D7 enumerates the specific sentences.
+The amendment lands on `.vaultspec/rules/aeat-cli-contract.md` and propagates by
+`vaultspec-core sync`; generated provider copies are never hand-edited.
 
-One dependency is genuinely absent rather than deferred: there is no restore path
-that reads the encrypted-object mirror back from the remote store. This record
-does not build one, and it does not ship a stub, because
-`aeat-architecture-boundaries` forbids design-only implementation shells.
+One capability is genuinely absent: nothing reads the encrypted-object mirror back
+from the remote store. This record does not build it and does not ship a stub.
 
 ## Implementation
 
-### D1 — Root placement is keyed on the declared execution policy
+### D1 — Placement is refused per subject, from declared policy
 
-A leaf declaring `calculation`, `filing` or `registry` is tax-application work and
-mounts under `app`. A leaf whose write route is `bootstrap-root`, or whose
-capability set is `profile-custody` without `encrypted-facts`, is custody or
-environment configuration and mounts under `config`. A leaf declaring neither
-signal is placed by its owning family, and its family is placed by this rule.
+**Leaf signals.** A leaf carries an `app` signal if it declares `filing`, or
+`registry`, or `calculation` together with a write route other than `none`. A leaf
+carries a `config` signal if its write route is `bootstrap-root`, or if it
+declares `profile-custody` without `encrypted-facts`.
 
-The criterion is deliberately keyed on data the author already writes, so the gate
-that enforces it reads the same field the runtime write guard reads.
+`calculation` alone is deliberately insufficient, because four read-only `config`
+leaves declare it while computing facts about the profile or about bundled data.
+Requiring a write route separates computing a filing from reporting on a profile.
 
-### D2 — Transport verbs are keyed on the counterparty, in matched pairs
+**Subject rule.** Placement is decided for the NARROWEST MOUNTABLE SUBJECT — the
+deepest group that can move as a unit — not for a leaf and not for a top-level
+family. That subject mounts under `app` if any of its leaves carries an `app`
+signal, under `config` if any carries a `config` signal. A subject carrying both
+is a design defect and is split before it is placed. Operators navigate subjects,
+and a subject split across roots is unlearnable regardless of which half is right.
 
-There are two counterparty axes and exactly four transport tokens.
+The granularity is load-bearing and was found by simulation, not by argument. At
+top-level-family granularity the rule moves the whole `config google` family to
+`app`, because three of its fourteen leaves carry `app` signals — contradicting
+D5, which keeps Google auth, folder and credential-source under `config`. At
+narrowest-subject granularity the rule produces exactly two moves over the whole
+graph, `config google sync calc` to `app` and `app maintenance` to `config`, and
+demands no splits. Those are precisely D5's moves.
 
-A **remote counterparty** — the AEAT sede, a Google Drive or Sheets store, a model
-distribution host — is read with `pull` and written with `push`. A **local
-filesystem** counterparty is read with `import` and written with `export`.
+**D1 is a refusal criterion, not a placement criterion, and the record does not
+claim otherwise.** Simulated over all 67 mountable subjects, 46 of them — 68% —
+carry no signal in either direction. D1 says nothing about where `app live`,
+`app overview`, `config auth` or `config provision` belong; it only refuses a
+subject that has landed demonstrably wrong. Every no-signal subject stays where it
+is, and its placement rests on the charter prose in D7, not on this criterion.
+Claiming more than that is what made the first draft's gate untestable.
+
+### D2 — Transport verbs are keyed on the counterparty
+
+Two axes, four tokens. A **remote counterparty** — the AEAT sede, a Drive or
+Sheets store, a model distribution host — is read with `pull`, written with
+`push`. A **local filesystem** counterparty is read with `import`, written with
+`export`.
+
+**The verb names the primary counterparty; a secondary locus is an option, never a
+second verb.** `app live filed pull --output-root` reads AEAT and writes local: it
+is a `pull`, and its local output is spelled by D3.
+
+**A verb whose primary purpose is computation names the computation.** Transport
+it performs as a means is incidental and is declared on its options. This is why
+`spreadsheet calculate` is not a `pull` even though it reads a remote workbook —
+and the ADR records that collision rather than defining it away.
+
+**Compounds are permitted and their suffix axis is ruled.** `<token>-<subject>`
+and `<token>-all` are legal inflections; `<token>-<locus>` is not, because locus
+belongs in an option. So `pull-sources`, `pull-evidence`, `pull-history` and
+`pull-all` are legal, and `pull-folder` is not.
 
 `upload`, `download`, `fetch`, `sync`, `send`, `get`, `capture`, `refresh`,
-`mirror`, `probe` and `file` are not transport tokens and may not name a verb that
-moves data. `file` retains its domain meaning as the act of filing a declaration,
-and that meaning becomes exclusive.
+`mirror`, `probe`, `doclink` and `file` may not name a verb whose primary purpose
+is moving data. `file` retains only its domain meaning.
 
-Every family that moves data in both directions declares the matched pair of its
-axis. Where one half is absent, the absence is recorded here as either a policy
-fact or a declared gap; an unexplained missing half is a defect.
+**Every family that moves data carries a disposition for each half.** A missing
+half is either a policy fact or a declared gap; unexplained is a defect. The
+dispositions:
 
-The AEAT axis has no outbound half, permanently, because live submission is
-prohibited. That is the one asymmetry the grammar blesses.
+- AEAT (`app live`): inbound `pull`; outbound absent **by policy** — live
+  submission is prohibited.
+- `app modelo spreadsheet`: `pull` / `push` complete.
+- `app modelo` filing artefacts: `export` outbound, `reconcile import` and
+  `filing-record import` inbound; complete.
+- `app modelo audit`: `export` outbound; inbound absent — **declared gap**, an
+  audit bundle is re-derivable and has no import case.
+- `app modelo review-package`: `export` and `import` both present; see D5.
+- `app ledger`: `import` / `export` complete for rows; `evidence pull` /
+  `pull-all` inbound from remote, outbound absent — **declared gap**.
+- `config profile archive`: `export` / `import` complete for local.
+- `config profile mirror`: `push` outbound; `pull` absent — **declared gap**, the
+  restore path does not exist and is owed a follow-on record.
+- `config provision`: `pull` inbound; outbound absent **by policy** — the app
+  never publishes a model.
+- Credential enrolment (`config auth certificate register`, `config auth
+  configure`, `config google register`): **carved out of D2 entirely.** These read
+  a local file to enrol a credential; the verb names the enrolment, not the
+  transport, and `import` would be a worse name.
 
-### D3 — Option grammar is symmetric across the local axis
+### D3 — Option spelling is keyed on a DECLARED locus
 
-The single local input file is `--file`; the single local output path is
-`--output`. `--source`, `--source-path`, `--path` and `--from-*` are forbidden as
-local-file spellings. A bulk local directory is `--directory`.
+**Precondition.** `ParameterSpec` gains a `TransportLocus` declaring `local-in`,
+`local-out`, `remote-handle` or `none`, plus a shape of `file`, `directory` or
+`root`. Every path-bearing or handle-bearing parameter declares it. Without this,
+the rest of D3 is unenforceable.
 
-`--output` is today a de-facto convention on four leaves and is promoted here to a
-declared half of the pair, so that the local axis reads `import --file` against
-`export --output`.
+Given the declaration, spellings are fixed:
 
-### D4 — Colliding tokens are resolved in favour of the domain meaning
+Spelling is keyed on locus, shape and ROLE. Role is the axis the first draft
+missed, and it is the one that matters most: a verb may take more than one local
+input, and the tree does so on at least eight leaves.
 
-`file` keeps only the filing meaning (`app modelo work file`); its transport uses
-become `import`. `archive` and `restore` keep only the ledger row-lifecycle
-meaning; the custody-backup uses become the `archive` subject's `export` and
-`import` verbs, which reads as a noun-scoped subject rather than a colliding verb.
+| locus | shape | role | spelling |
+|---|---|---|---|
+| local-in | file | primary | `--file`, or the positional subject |
+| local-in | file | auxiliary | `--<role>` naming what it is |
+| local-in | file | auxiliary, repeatable | plural `--<role>` |
+| local-out | file | primary | `--output` |
+| local-in | directory | primary | `--directory` |
+| local-out | directory | primary | `--output-root` |
+| local-in | root | auxiliary | `--<name>-root` |
+| remote-handle | — | — | free (`--folder`, `--reference`, `--spreadsheet-id`) |
+| none | — | — | free |
+
+**Exactly one local input per verb is primary.** Every additional local input is an
+auxiliary and is spelled for the role it plays, not for the fact that it is a file.
+`app ledger import --file --verify-source`, `app modelo work calculate
+--m303-filing-evidence`, `app registry verify-filed-state --observation
+--source-observation`, and `review-package encrypt-feedback --output --receipt` are
+all CONFORMANT under this rule, and were all violations under the first draft's
+single-`--file` table. Naming an auxiliary for its role is better operator
+guidance than numbering it, so the rule ratifies the existing practice rather than
+churning it.
+
+A positional subject satisfies the primary role. Where a leaf carries two path
+positionals — `review-package counter-sign <PACKAGE> <SIGNATURE>`,
+`verify-receipt <PACKAGE> <RECEIPT_PATH>`, `verify-signature <PACKAGE>
+<SIGNATURE>` — the first is the subject and the second is an auxiliary that may
+stay positional, because a cryptographic verification reads as a pair. What is
+refused is a subject spelled as an option while its siblings use a positional,
+which is why `review-package import-feedback --package` changes and nothing else
+in that family does.
+
+A parameter declaring locus `none` is outside the table entirely. That protects
+`--source` on `doclink` (a closed enum), `--from-year` and `--from-filing-record`.
+
+The consequence of the role axis is that the campaign is far smaller than the
+first draft implied. Of 55 `Path`-typed parameters across 37 leaves and 15
+distinct spellings, this table leaves all but two conformant: `import-feedback
+--package` becomes a positional, and `config profile restore --file --artifact`
+must declare which of its two local inputs is primary. `config google register
+--client-json` is an auxiliary-free enrolment verb already carved out of D2, and
+D3's carve-out extends to it: it keeps `--client-json`.
+
+### D4 — Colliding tokens resolve to the domain meaning
+
+`file` keeps only the filing meaning; its transport uses become `import`.
+`archive` and `restore` keep only the ledger row-lifecycle meaning; the
+custody-backup uses become verbs under the `archive` and `mirror` subjects.
+`work` and any new subject must not shadow each other, which is why the workbook
+subject is `spreadsheet` and not `workbook`.
 
 ### D5 — The concrete surface changes
 
-The modelo workbook family moves to `app` under a transport-neutral subject that
-also accommodates the offline transport the export rule anticipates:
-`config google sync calc export` becomes `app modelo workbook push`;
-`sync calc pull` becomes `app modelo workbook pull`; `sync calc compute` and
-`sync calc verify` become `app modelo workbook compute` and `workbook verify`,
-neither being a transport verb.
+**Workbook family moves and is renamed.** `config google sync calc {export, pull,
+compute, verify}` becomes `app modelo spreadsheet {push, pull, calculate,
+verify}`. The subject is `spreadsheet`, not `workbook`, because `app modelo work`
+already exists and `work` / `workbook` differ by four characters under one parent.
+`compute` becomes `calculate` to match `app modelo work calculate`, which is the
+same idea. `calculate` and `verify` are computation verbs under D2 and keep their
+names despite reading a remote workbook; the collision with `pull` is recorded
+here, not defined away.
 
-The custody-backup family consolidates under one subject:
-`config profile archive export` keeps its name and gains `--output` conformance;
-`config profile restore` becomes `config profile archive import --file`;
-`config google sync push` becomes `config profile archive push`;
-`config google sync probe` becomes `config profile archive status`;
-`config profile archive inspect` is unchanged. `config google` is left holding
-only `login`, `logout`, `register`, `status`, `folder` and `credential-source` —
-configuration and nothing else.
+**Custody backup splits into two subjects by blast radius.** `config profile
+archive export` keeps its name; `config profile restore` becomes `config profile
+archive import --file`; `config profile archive inspect` is unchanged. The
+whole-corpus Drive mirror does NOT join that subject: `config google sync push`
+becomes `config profile mirror push`. `archive` implies a thing you can restore,
+and the mirror cannot be read back — putting it under `archive` would promise
+recoverability that does not exist. `config google sync probe` **stays where it
+is**: it is a credential and connectivity check, which is Google configuration.
 
-Ledger evidence intake collapses to the grammar: `app ledger doclink` becomes
-`app ledger pull` with its forbidden `--source` retired in favour of
-`--reference`; `app ledger pull-folder` keeps its name, matching the established
-`pull` / `pull-all` sibling pattern in the live family; `app ledger evidence add`
-renames `--source-path` to `--file`.
+**Ledger evidence intake moves into its own subgroup.** `app ledger doclink`
+becomes `app ledger evidence pull <TRANSACTION_ID> --reference`, **retaining
+`--source` unchanged** as the required link-source enum. `app ledger pull-folder`
+becomes `app ledger evidence pull-all --folder`, using the real `pull-all`
+cardinality precedent from `app live filed` rather than the `-folder` locus
+suffix D2 refuses. `app ledger evidence add`'s positional local path and `evidence
+batch`'s positional directory declare their locus and take the D3 spellings.
 
-`app modelo reconcile file` becomes `app modelo reconcile import`, and
-`config profile censo file` becomes `config profile censo import`, both retaining
+**`file` transport uses are renamed.** `app modelo reconcile file` becomes
+`reconcile import`; `config profile censo file` becomes `censo import`. Both keep
 `--file` and their `pull` siblings.
 
-`app maintenance reconcile` folds into `config repair` and the one-verb `app
-maintenance` family retires. `config repair integrity registry` retires in favour
-of the existing `app registry verify`. One of `config profile preflight` and
-`app modelo readiness` retires once their reports are shown to answer the same
-question; the survivor is the `app` one, because the question is modelo-scoped.
+**`review-package` is brought under the grammar.** Its ten leaves are local
+transport: `build` and the `sign`/`encrypt-*` leaves write with `--output`;
+`import-feedback` and `decrypt` read. `import-feedback`'s `--package` becomes a
+positional to match its six siblings; `<ENVELOPE_PATH>`, `<RECEIPT_PATH>` and
+`<SIGNATURE>` declare their locus and keep positional subject form.
 
-`config provision pull` is already conformant under D2 and is not touched.
+**Duplicates retire.** `app maintenance reconcile` folds into `config repair` and
+the one-verb family retires. `config repair integrity registry` retires in favour
+of `app registry verify`; note its duplication is behavioural, not visible in its
+declared capability, so D6's gate does not catch it and it retires by this ruling
+alone. `config profile preflight` retires in favour of `app modelo readiness`,
+**conditional on readiness first making `--revision-id` optional** with
+law-determined resolution — cheap, because the projection already resolves
+law-determined and asserts equality — and on adopting preflight's exit-2 contract.
+Ten `.seq` contracts call preflight and are re-pointed in the same change.
 
-### D6 — A property gate enforces both criteria
+`config provision pull` is already conformant and is not touched.
 
-One gate walks the declared graph and refuses on the property: a leaf declaring
-`filing` or `registry` mounted outside `app`; a leaf with a `bootstrap-root` write
-route mounted outside `config`; a transport verb whose token is outside the four;
-a local-file option spelled anything but `--file` or `--output`. Exemptions are
-keyed by leaf path with a stated reason, never by count, and the absent
-remote-store restore path is the one exemption this record authorises.
+### D6 — Two gates, each testing a stated property
 
-The gate is proven by mounting a `filing` leaf under `config` from outside the
-repository and confirming it reds.
+**Gate one, placement.** Encodes D1 literally, at narrowest-subject granularity:
+no subject carrying an `app` signal mounts under `config`, none carrying a
+`config` signal mounts under `app`, and no subject carries both. Because D1
+refuses rather than decides, this gate is silent on the 68% of subjects that carry
+no signal — it must not be read, or extended, as an assertion that those are
+correctly placed.
 
-### D7 — The charter is written down
+**Gate two, spelling.** Encodes the D3 table over declared locus. It ships only
+after the D3 precondition, and it refuses on the declared locus, never on a name
+list or a `Path` type guess.
 
-The `config` help string is corrected to stop claiming diagnostics it does not own,
-and the `aeat-cli-contract` rule source gains D2, D3 and D4 as an amendment,
-replacing its `file --file` worked example with the counterparty grammar.
+Exemptions are keyed by `(leaf path, enclosing function)` with a stated reason, and
+a stale exemption fails — the discipline `aeat-quality-gates` requires. An
+exemption cannot express an ABSENCE, so the declared gaps in D2 live in this
+record and in the family disposition table, not in a gate exemption list.
+
+Each gate is proven by breaking production on purpose from outside the repository:
+mount a `filing` leaf under `config` for gate one, mis-spell a declared `local-in`
+file parameter for gate two.
+
+### D7 — The charter and the rule are corrected
+
+The `config` root help stops claiming diagnostics it does not own. The
+`aeat-cli-contract` rule source is amended in these specific places: the opening
+paragraph fixing `pull` as the AEAT fetch verb (widened to the remote
+counterparty, with the AEAT signal migrating to the `app live` subtree); the
+normative sentence requiring a dual-transport command to be a subgroup of `pull`
+and `file --file` (becomes `pull` and `import --file`); the `censo file --file`
+worked example; and the dead `src/cadrumo/_data/agent/` path, which is now
+`src/cadrumo-harness`.
 
 ## Rationale
 
-Option D wins on a knockout criterion the alternatives cannot meet: both of its
-criteria are computable from data already authored on every leaf, in one pass over
-the declared graph. That is what makes the gate in D6 a property rather than a
-tally, and it is why the audit could enumerate all nine drifts mechanically before
-this record existed. A criterion that required new annotation would decay the first
-time an author skipped it.
+Option E wins because it is the only option that makes the enforcing gate honest.
+The first draft's knockout claim — that both criteria are computable from data
+already authored — was true for placement and false for transport, and both
+reviews independently falsified it. Rather than weaken the gate to a name list,
+this record declares the missing fact. That converts an assumption into a
+precondition with a cost, which is a worse-looking decision and a better one.
 
-Keying the transport grammar on the counterparty rather than the mechanism
-(Option C) is what produces usability. An operator does not know or care whether
-evidence arrives over the Drive API or an HTTP redirect, but always knows whether
-the other end is a machine elsewhere or a file on their own disk. Two pairs are
-learnable; four are a lookup table.
+Keying transport on counterparty rather than mechanism produces usability: an
+operator never knows whether evidence arrives over the Drive API or an HTTP
+redirect, but always knows whether the other end is a machine elsewhere or a file
+on their own disk. Two pairs are learnable; four are a lookup table.
 
-The grammar also converts the audit's `pull`-dilution finding from a defect into a
-rule. `pull` was diluted precisely because it was defined against one counterparty
-(AEAT) while being the natural word for every remote read. Widening it to the
-remote axis and giving it a `push` partner restores the signal the CLI contract
-wanted, because the operator now learns "remote" instead of "AEAT", and AEAT's
-missing `push` teaches the filing prohibition every time it is noticed.
+Deciding placement per subject rather than per leaf is what makes D1 survive
+contact with the tree. A leaf-level rule evicted `config profile status` — the most
+canonical `config` verb there is — because it declares `calculation`. The subject
+rule keeps it, without weakening the signal that moves the workbook family. Both
+the granularity and the 68% blind spot were established by simulating the rule
+over the graph before adopting it, which is the check the first draft skipped.
 
-Doing both dimensions in one campaign is justified by cost rather than elegance:
-the envelope `command=` identifier is the expensive part of any move, and it is
-paid once per leaf whether the leaf moves root, changes verb, or both.
+Doing both dimensions in one campaign is justified by cost: the envelope
+identifier is the expensive part, and it is paid once per leaf whether the leaf
+changes root, verb, or both.
 
 ## Consequences
 
-Every re-homed or renamed leaf changes its envelope `command=` identifier. With no
-released data and no deployed caller this is a clean cutover, but it is a real
-break for anything scripted against the current strings, and the agent harness
-documents must be swept in the same commits per the CLI contract.
+Every re-homed or renamed leaf changes its envelope `command=` identifier — a
+clean cutover with no released data, but a real break for anything scripted, and
+the `.seq` goldens and `operator_actions` catalogue must move with it.
 
-The four unscanned surfaces the contract rule names — error-registry suggestions,
-`next_action` builders, the curated help surface, envelope identifiers — carry the
-real regression risk, because no gate catches a stale reference in them. The
-mitigation is that the write guard is spec-derived and therefore moves with the
-leaf, so the failure mode is a dead instruction rather than a dropped write
-guard.
+The D3 precondition means this campaign adds a field to the parameter spec before
+it renames anything. That is real work with no operator-visible benefit on its
+own, and it is the price of a gate that is a property rather than a tally.
 
-Retiring `config repair integrity registry` and one of the two readiness verbs
-removes surface rather than adding it, which is the campaign's only net
-simplification and should not be traded away if scope pressure appears.
+Widening `pull` to every remote counterparty gives up something the first draft
+did not price: today `pull` under `app live` plus the one sanctioned `censo pull`
+is a greppable enumeration of AEAT reach. After D2 it names Drive reads, Sheets
+reads and model downloads indistinguishably. The write guard is unaffected — it is
+spec-derived from `write_route` with no verb allowlist — so the loss is
+auditability, not enforcement. D6's placement gate compensates by refusing an AEAT
+`network` leaf mounted outside `app live`, which moves the signal from the verb to
+the mount.
 
-The declared gap is honest and uncomfortable: after this record, `config profile
-archive push` writes an encrypted mirror to a remote store that nothing can read
-back. Naming it `push` makes the missing `pull` visible on every help listing,
-which is the intended effect — the current name `sync push` hides it. A follow-on
-record owes the restore path, and it will have to rule on key availability at
-restore time, which is why it is not folded in here.
+Naming the mirror `config profile mirror push` rather than folding it into
+`archive` keeps a true promise instead of an attractive one. The operator still
+meets `push` in a place that does not round-trip, and that asymmetry is recorded
+rather than hidden — but `mirror` does not imply the recovery that `archive`
+would.
 
-Amending `aeat-cli-contract` retires a worked example that other documents may
-cite by its `file --file` spelling, so the amendment sweep must grep the vault and
-the rule corpus, not only the source tree.
+Retiring three leaves is the campaign's only net simplification and should not be
+traded away under scope pressure.
 
-The grammar opens a pathway the export rule already anticipated: once
-`app modelo workbook` exists as a subject with a counterparty-keyed verb set, the
-offline xls transport lands as `workbook export --output` and `workbook import
---file` with no new vocabulary and no new decision.
+Amending `aeat-cli-contract` retires a worked example other documents may cite by
+its `file --file` spelling, so the amendment sweep covers the vault and the rule
+corpus, not only the source tree.
+
+The grammar opens the pathway the export rule anticipates: once `app modelo
+spreadsheet` exists with a counterparty-keyed verb set, the offline xls transport
+lands as `spreadsheet export --output` and `spreadsheet import --file` with no new
+vocabulary and no new decision.

@@ -4,15 +4,10 @@ tags:
   - '#index'
   - '#iva-art-69-dos-services'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:e87024da9f190339897e1d25fa519dae34063255d119e7c7612292d6d76453b5'
 related:
-  - '[[2026-08-12-iva-art-69-dos-services-S01]]'
-  - '[[2026-08-12-iva-art-69-dos-services-S02]]'
-  - '[[2026-08-12-iva-art-69-dos-services-S03]]'
-  - '[[2026-08-12-iva-art-69-dos-services-S04]]'
-  - '[[2026-08-12-iva-art-69-dos-services-S05]]'
   - '[[2026-08-12-iva-art-69-dos-services-adr]]'
   - '[[2026-08-12-iva-art-69-dos-services-plan]]'
 ---

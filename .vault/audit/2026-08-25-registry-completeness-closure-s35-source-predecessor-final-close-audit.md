@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:d0eec31d2d60d7ffe3c5e8d06e248c3f35560709c1399ea1830cfe1d57ab127e'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-24-registry-completeness-closure-W03-P06-S35]]"
   - "[[2026-08-25-registry-completeness-closure-source-casilla-predecessor-reconciliation-audit]]"
 ---
 

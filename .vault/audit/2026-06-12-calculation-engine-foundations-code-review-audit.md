@@ -3,12 +3,10 @@ tags:
   - '#audit'
   - '#calculation-engine-foundations'
 date: '2026-06-12'
-modified: '2026-07-17'
+modified: '2026-08-26'
 body_hash: 'sha256:8cb775bb74481a762f10fd97be68aafc368714b2dda287b65859d47350b3508e'
 related:
   - '[[2026-06-10-calculation-engine-foundations-plan]]'
-  - '[[2026-06-10-calculation-engine-foundations-W04-P12-S31]]'
-  - '[[2026-06-10-calculation-engine-foundations-W04-P12-S38]]'
 ---
 
 # `calculation-engine-foundations` Code Review

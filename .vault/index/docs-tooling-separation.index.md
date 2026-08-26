@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#docs-tooling-separation'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:cb5ecbf6a6ddd1b5ef1ea39614d4245c02fc437e1eabe8cdabc0e86b3a086299'
 related:
-  - '[[2026-06-14-docs-tooling-separation-S01]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'
   - '[[2026-06-14-docs-tooling-separation-plan]]'
   - '[[2026-06-14-docs-tooling-separation-research]]'

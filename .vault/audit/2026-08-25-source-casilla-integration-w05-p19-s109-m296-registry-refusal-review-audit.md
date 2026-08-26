@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:81fb39ba0dc8b662d39e91c3dc0cd37bd9b9ae52cbc96249addf1b152ab81524'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-22-source-casilla-integration-W05-P19-S109]]"
   - "[[2026-08-25-source-casilla-integration-m296-row-source-grounding-research]]"
 ---
 # `source-casilla-integration` audit: `W05 P19 S109 Modelo 296 registry refusal review`

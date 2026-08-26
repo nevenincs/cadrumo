@@ -4,11 +4,10 @@ tags:
   - '#index'
   - '#release-readiness-gate'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:1105b463f04325c119a50cc1cf541ca1fe166be65fba596f7c783c7b1ec3db91'
 related:
-  - '[[2026-07-04-release-readiness-gate-S01]]'
   - '[[2026-07-04-release-readiness-gate-adr]]'
   - '[[2026-07-04-release-readiness-gate-plan]]'
   - '[[2026-07-06-release-readiness-gate-research]]'

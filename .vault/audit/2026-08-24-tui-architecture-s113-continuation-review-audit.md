@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:873660d66b67c1b612024f2a45fd8bd97d420db92e2e174056d30819d7de5715'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research]]"
-  - "[[2026-08-11-tui-architecture-W03-P06-S113]]"
 ---
 
 # `tui-architecture` audit: `S113 durable continuation safety review`

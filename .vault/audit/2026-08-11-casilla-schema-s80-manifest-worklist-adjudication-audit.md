@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:b38e59d51e0cfeb8bb623a0826253732e7ced5d078d6fce37dc702b812a9c1dd'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
-  - "[[2026-08-10-casilla-schema-W05-P11-S80]]"
 ---
 # `casilla-schema` audit: `S80 manifest worklist adjudication`
 

@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:781b82682cb12ef0bd1eed32a85cd17879aa9f1a699f671f5143d96670c5e1f1'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-W02-P03-S08]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-s08-independent-review-audit]]"
 ---
 # `aeat-export-fragment-generator-authority` audit: `S08 partition and literal review`

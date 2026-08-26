@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:99ac7817c0fdd055bf451707cf2499e3fb7f43365afba3c606061bd8fb309493'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
-  - "[[2026-08-11-tui-architecture-W03-P07-S38]]"
 ---
 # `tui-architecture` audit: `S38 filed-history conformance review`
 

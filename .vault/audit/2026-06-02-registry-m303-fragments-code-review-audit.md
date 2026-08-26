@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-m303-fragments'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-26'
 body_hash: 'sha256:e5413c0c4b84630d79b6e0a2dbff0796753fbbc9ac0d45fa2520a35962fe5bc4'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-hardening-m303-fragment-pressure-audit]]"
-  - "[[2026-06-02-schema-hardening-P05-S29]]"
 ---
 
 # `registry-m303-fragments` Code Review

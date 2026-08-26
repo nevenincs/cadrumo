@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:274fc9ca84e9715428a205c6e06c1368b939142217d638627acdd0f68bda6581'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-22-source-casilla-integration-W05-P17-S102]]"
   - "[[2026-08-25-source-casilla-integration-s102-m182-terminal-deferral-review-audit]]"
 ---
 # `source-casilla-integration` audit: `S102 M182 terminal-deferral follow-up review`

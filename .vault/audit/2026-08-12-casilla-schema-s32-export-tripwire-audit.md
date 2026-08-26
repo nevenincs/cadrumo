@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:d78035c810c9360c8559af6d403871a17755001ecb0354bae8fbb46e03d05170'
 related:
   - "[[2026-08-10-casilla-schema-dead-surface-adr]]"
-  - "[[2026-08-10-casilla-schema-W04-P09-S32]]"
 ---
 # `casilla-schema` audit: `S32 export post-write tripwire`
 

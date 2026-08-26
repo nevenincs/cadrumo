@@ -3,21 +3,11 @@ tags:
   - '#adr'
   - '#m303-prorrata-grounding'
 date: '2026-07-28'
-modified: '2026-08-15'
+modified: '2026-08-26'
 body_hash: 'sha256:387c6775d98b7c8660b93f84cdd722d5dde9532883ade23694ff64dbfe32ba6e'
 related:
   - "[[2026-07-27-conformance-cli-plan]]"
   - "[[2026-07-27-conformance-cli-adr]]"
-  - "[[2026-07-27-conformance-cli-P02-S30]]"
-  - "[[2026-07-27-conformance-cli-P02-S31]]"
-  - "[[2026-07-27-conformance-cli-P02-S38]]"
-  - "[[2026-07-27-conformance-cli-P02-S45]]"
-  - "[[2026-07-27-conformance-cli-P02-S47]]"
-  - "[[2026-07-27-conformance-cli-P02-S48]]"
-  - "[[2026-07-27-conformance-cli-P02-S58]]"
-  - "[[2026-07-27-conformance-cli-P02-S59]]"
-  - "[[2026-07-27-conformance-cli-P05-S52]]"
-  - "[[2026-07-27-conformance-cli-P05-S60]]"
   - '[[2026-07-06-cross-period-prorrata-reference]]'
   - '[[2026-07-07-prorrata-especial-adr]]'
   - '[[2026-07-08-iva-prorrata-complexity-adr]]'

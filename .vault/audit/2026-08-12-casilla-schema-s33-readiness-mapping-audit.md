@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:a9739b6fb1da72e4a474753f877134b66b35620bcd34c4ccf93ff6a3ec4b4879'
 related:
   - "[[2026-08-10-casilla-schema-dead-surface-adr]]"
   - "[[2026-08-10-casilla-schema-blocker-spine-adr]]"
   - "[[2026-08-10-casilla-schema-plan]]"
-  - "[[2026-08-10-casilla-schema-W04-P09-S33]]"
 ---
 # `casilla-schema` audit: `S33 readiness mapping review`
 

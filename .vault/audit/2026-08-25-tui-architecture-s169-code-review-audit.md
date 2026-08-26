@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:384a6d959b385ada382847ea0b5f6d2360c7350fbdc4a2785f6d2e57430a05d2'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-s169-plan-review-audit]]"
-  - "[[2026-08-11-tui-architecture-W03-P20-S169]]"
 ---
 
 # `tui-architecture` audit: `S169 code review`

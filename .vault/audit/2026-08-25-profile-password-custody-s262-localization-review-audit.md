@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:61655acaa4bdc92258c1cac1df36788fab6d5ea8e0bc63dda1c378902bc17224'
-related:
-  - "[[2026-08-13-profile-password-custody-W06-P12-S262]]"
+related: []
 ---
 # `profile-password-custody` audit: `s262 localization review`
 

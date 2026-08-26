@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:8de0528f1b1d0ce13973b6eb91375ddf059b23e47b1f76020589bb4363b9a631'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-24-registry-completeness-closure-adr]]"
-  - "[[2026-08-24-registry-completeness-closure-W01-P02-S72]]"
 ---
 
 # `registry-completeness-closure` audit: `S72 filing-grade scoping independent post-review`

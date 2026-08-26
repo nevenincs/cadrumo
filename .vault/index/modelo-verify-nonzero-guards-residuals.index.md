@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#modelo-verify-nonzero-guards-residuals'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:49bbe019b694df4a749f45b8ba3787299d2353a850a8e943bba480d65ff37186'
 related:
-  - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-P01-S01]]'
-  - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-P02-S02]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-adr]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-plan]]'
   - '[[2026-07-01-modelo-verify-nonzero-guards-residuals-research]]'

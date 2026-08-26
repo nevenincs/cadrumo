@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:139c87bb0f288b165d4c9a905df40b9a24e232ebc59adf4e57b8e9bcdefca645'
 related:
   - "[[2026-08-10-casilla-schema-read-model-adr]]"
   - "[[2026-08-10-casilla-schema-plan]]"
-  - "[[2026-08-10-casilla-schema-W03-P08-S28]]"
 ---
 # `casilla-schema` audit: `S28 pipeline-health persisted-readiness review`
 

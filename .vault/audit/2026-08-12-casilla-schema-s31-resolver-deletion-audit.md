@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:c33549669d85ed00987b3a37e4f274203ec62fb6b0254e436f8ee6ce6dbd322b'
 related:
   - "[[2026-08-10-casilla-schema-dead-surface-adr]]"
-  - "[[2026-08-10-casilla-schema-W04-P09-S31]]"
 ---
 # `casilla-schema` audit: `S31 strict bound-input resolver deletion`
 

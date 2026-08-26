@@ -8,8 +8,8 @@ body_hash: 'sha256:a273f437d1ee623c70e2d1fb003151f366805d12274a2aad3713a64c6c8c3
 tier: L2
 related:
   - '[[2026-08-09-cli-verb-profile-diagnostics-adr]]'
+  - '[[2026-08-09-cli-verb-profile-diagnostics-reference]]'
 ---
-
 # `cli-verb-profile-diagnostics` plan
 
 ## Description

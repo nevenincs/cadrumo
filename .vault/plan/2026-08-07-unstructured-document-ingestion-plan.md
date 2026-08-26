@@ -15,8 +15,8 @@ related:
   - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
+  - '[[2026-08-07-unstructured-document-ingestion-confirm-boundary-under-declaration-audit]]'
 ---
-
 <!-- RETIRED: S35, S36, S37, S39, S82, S101, S125, S134, S146, S150, S161, S186, S193, S213, S214, S224, S228, S246, S255, S263, S266, S282, S295, S299, S303, S304, S307 -->
 
 # `unstructured-document-ingestion` plan

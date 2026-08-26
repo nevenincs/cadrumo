@@ -8,10 +8,10 @@ related:
   - '[[2026-07-21-ci-discipline-adr]]'
   - '[[2026-07-20-ci-speed-redesign-adr]]'
   - '[[2026-06-01-registry-period-code-union-cli-boundary-adr]]'
+  - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 modified: '2026-08-25'
 body_hash: 'sha256:83e3d2b7fc7d083a17092e0c214c16c634f5e9e618584451ea3aba06fadb2a6f'
 ---
-
 <!-- RETIRED: S01, S10 -->
 
 # `ci-lane-deconflation` plan

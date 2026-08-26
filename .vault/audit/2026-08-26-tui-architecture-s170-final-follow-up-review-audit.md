@@ -5,30 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:494dce4570ec77a369ed7672d4b39f3902ba0f05f474e18992013aceb2cf71cf'
+body_hash: 'sha256:f2b2dac0aef88e16d23dd2a83b06002044c2b534992a640bd0996d4f3a0afa86'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-s170-remediation-review-audit]]"
-  - "[[2026-08-11-tui-architecture-W03-P20-S170]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `S170 final follow-up review`
 
@@ -96,4 +77,3 @@ resident query proofs, verify the obsolete shipped test remains absent, and
 adjudicate whether the unrelated resident-lane registry-data failure and global
 import-hygiene failures prevent a PASS disposition. Only a subsequent review
 may recommend closing S170.
-

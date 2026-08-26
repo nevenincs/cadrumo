@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:d0318ceecea5f0f787bd7733e14b3adad1c80ad67e011a78e4d2c5048d479f43'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
-  - "[[2026-08-24-registry-completeness-closure-W03-P05-S85]]"
   - "[[2026-08-25-registry-completeness-closure-s85-independent-classification-review-audit]]"
 ---
 

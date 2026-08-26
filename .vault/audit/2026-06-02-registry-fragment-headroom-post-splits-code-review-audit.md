@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-fragment-headroom-post-splits'
 date: '2026-06-02'
-modified: '2026-07-17'
+modified: '2026-08-26'
 body_hash: 'sha256:9b402b3ddc140c7c6336884c2cd07528b43b9709c56a3b30a37f335c4b18993c'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
   - "[[2026-06-02-registry-fragment-headroom-post-splits-audit]]"
-  - "[[2026-06-02-schema-hardening-P05-S30]]"
 ---
 
 # `registry-fragment-headroom-post-splits` Code Review

@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cli-root-verb-homes'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:bd3f23e971c12c1b6781920057bb829e5be5844dca902a59a987e106c12591ab'
+body_hash: 'sha256:1513bc64b25b8a7f136bd9610d0bac513f2aec30af3e67c5133f2705d1e550d8'
 related: []
 ---
 
@@ -51,10 +51,17 @@ AEAT oracle, local Decimal runtime and Sheets, read operator-edited cells back i
 typed records, and compute casilla values from a workbook's operator edits. Each
 declares `calculation`; `export` additionally declares `filing`.
 
-Across the whole graph, `filing` appears on eleven leaves. Ten are under
+Across the whole graph, `filing` appears on seven leaves. Six are under
 `app modelo` or `app ledger`. `config google sync calc export` is the sole
-exception. `calculation` appears on forty-one leaves, thirty-three under `app`. The
+exception. `calculation` appears on forty leaves, thirty-two under `app`. The
 declared policy axes therefore already dissent from the mount point.
+
+(Corrected 2026-08-26. The first published version of this finding said eleven
+`filing` leaves and forty-one `calculation` leaves. Both were inflated: the census
+matched capability names against the whole rendered row, so a path segment such as
+`filing-record` or `app registry` counted as a capability declaration. The
+conclusion is unchanged and in fact sharpens — the outlier is one leaf out of
+seven, not one out of eleven.)
 
 What is lost is not correctness but discoverability and transferability. There is
 no offline workbook export verb anywhere on the CLI, so `config google` is not a
@@ -97,9 +104,17 @@ ciphertext to Drive. It accepts `--namespace-filter`, `--limit` and `--dry-run`.
 This is a backup or replication verb over the operator's whole financial corpus.
 Nothing about it configures the application; it moves the application's data.
 
-Its sibling `config google sync probe` reads Drive state back, and both sit beside
-genuine settings verbs in the same group, so the group's blast radius is not
-legible from its name.
+Its sibling `config google sync probe` was described here as reading Drive state
+back. **That was wrong and is withdrawn.** `_config/_google.py:356` builds a
+provider and calls `probe()`: it confirms the persisted OAuth records yield usable
+credentials and the configured root folder resolves, and only optionally
+round-trips a sentinel into `_probe/`. It never touches the secure-object mirror.
+It is a credential-and-connectivity check, which makes it Google *configuration*
+and correctly homed where it is.
+
+The finding against `sync push` stands on its own: it sits beside genuine settings
+verbs in the same group, so the group's blast radius is not legible from its
+name.
 
 ### modelo-scoped-profile-readiness-has-two-homes | high | `config profile preflight` and `app modelo readiness` both answer profile readiness for one modelo target, from two roots.
 
@@ -121,13 +136,20 @@ in the package graph.
 
 ### registry-integrity-reported-from-both-roots | medium | `config repair integrity registry` reports registry authority integrity, duplicating the `app registry verify` family.
 
-`aeat config repair integrity registry`
+**This finding's original evidence was false and is withdrawn; the conclusion
+survives on different evidence.** The withdrawn claim was that the leaf is "the
+only leaf outside `app` declaring the `registry` capability". It declares
+`calculation`, not `registry`, and all twenty-two `registry` leaves are under
+`app` with none under `config`. The error had the same root cause as the count
+correction above.
+
+What actually holds: `aeat config repair integrity registry`
 (`src/cadrumo/entrypoints/cli/_config/_repair_command_specs.py:171`, handler
 `src/cadrumo/entrypoints/cli/_config/_repair_cli.py:344`) reports calculation
-registry authority and bundled snapshot integrity, and is the only leaf outside
-`app` declaring the `registry` capability. The other twenty-two `registry` leaves
-are under `app registry` and `app modelo`, including `app registry verify` and
-`app registry inspect`, which exist to report exactly that authority's health.
+registry authority and bundled snapshot integrity — the same subject that
+`app registry verify` and `app registry inspect` exist to report. The duplication
+is behavioural and visible in the handlers; it is not visible in the declared
+capability, which means a capability-keyed gate will NOT catch it.
 
 The registry is bundled read-only data, not operator configuration, so a repair
 verb over it under `config` implies a mutation door that does not exist — the leaf
@@ -254,3 +276,58 @@ what let the drift accumulate unnoticed.
 Tied to `pull-verb-semantics-diluted-beyond-aeat`: lowest priority, and possibly a
 wontfix. Record the ruling either way, because a later reader will otherwise
 re-open it.
+
+### local-file-option-spellings-diverge | high | Four leaves spell a local-file input with a token the CLI contract forbids or with a shape their own siblings do not use.
+
+A pass over every leaf's declared parameters, resolving each as argument or
+option, finds four divergences the first census missed because it read verb
+tokens rather than parameter kinds.
+
+`aeat modelo review-package import-feedback` declares `package` as an **option**,
+while its six siblings — `counter-sign`, `encrypt-for-recipient`, `sign`,
+`verify`, `verify-receipt`, `verify-signature` — declare the same `package` as a
+positional **argument**. The siblings are conformant, because the CLI contract
+makes the subject positional. The one option spelling is a local input file named
+neither `--file` nor as its family's subject.
+
+`aeat config google sync calc verify` declares `scenario_path` as an option, which
+is the `--*-path` family the contract names as forbidden for a local-file input.
+
+`aeat config profile restore` declares **two** local inputs, `file` and `artifact`,
+as options on one verb. The contract fixes `--file` as *the* single-local-file
+input and is silent on a second one, so this verb has no conformant reading.
+
+`aeat app ledger evidence add` declares `source_path` as a positional argument
+rather than an option. This is NOT a contract violation — the forbidden spellings
+are option spellings, and a positional renders as a metavar — but it is the only
+local-file intake in the ledger family that is positional while `import`,
+`invoice import`, `classify`, `evidence batch` and `inventory
+closing-authority-record` all use `--file`. Recorded as an inconsistency, not a
+breach; the earlier reading of it as a breach was wrong.
+
+### local-directory-and-root-options-are-ungoverned | medium | Ten leaves take a local directory or root path, and no rule covers that shape in either direction.
+
+Five `app live` leaves — `filed pull`, `filed pull-all`, `filed pull-sources`,
+`iva-wallet pull-evidence`, `iva-wallet pull-history` — take `--output-root`, a
+local output DIRECTORY on a verb whose counterparty is AEAT. These are
+remote-inbound and local-outbound in one operation, which no single transport
+token describes.
+
+Four `app registry` leaves plus `filed pull-sources` take `--registry-root` and
+`--source-root`, local input directories. `app ledger evidence batch` takes a
+positional `directory` alongside an optional `--file`.
+
+The contract governs the single local FILE in each direction and says nothing
+about directories or roots. Ten leaves therefore sit outside the rule rather than
+in violation of it, which is the more dangerous state: a new author has no
+spelling to copy and no gate to catch a bad guess.
+
+### two-local-inbound-verbs-in-one-modelo-family | medium | `filing-record import` and `filing-record observe-local` both ingest a local file into the same family.
+
+`aeat app modelo filing-record import --file` and `aeat app modelo filing-record
+observe-local --file` both take a local file into the filing-record family. The
+first declares `filing` capability, the second does not, so they are not simple
+duplicates — but nothing in the surface tells an operator which local file goes
+to which verb, and `observe-local` is not a transport token under any grammar.
+Whether this is one verb with two modes or two genuinely different ingests is
+undetermined and must be settled before either is renamed.

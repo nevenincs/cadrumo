@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#canonical-identifiers'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:b9c7ce726229aa9967b03dee02afaf50dd66bc3b99afac34e0c2456bb1242554'
-related:
-  - "[[2026-08-07-canonical-identifiers-W02-P03-S13]]"
+related: []
 ---
 
 # `canonical-identifiers` audit: `s13 csv closure`

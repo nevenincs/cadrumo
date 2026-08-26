@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#domain-boundary-audit'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:b91472c85bd0bcfed97d08e56cd5b1a31f57acc3b5baba07e978003af7a60ccc'
 related:
-  - '[[2026-06-01-domain-boundary-audit-W10-P33-S109]]'
-  - '[[2026-06-01-domain-boundary-audit-W11-P37-S108]]'
   - '[[2026-06-01-domain-boundary-audit-adr]]'
   - '[[2026-06-01-domain-boundary-audit-audit]]'
   - '[[2026-06-01-domain-boundary-audit-plan]]'

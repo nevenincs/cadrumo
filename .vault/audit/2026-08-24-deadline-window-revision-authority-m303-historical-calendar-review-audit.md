@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:81bb1692480764c0dfd229bf983a55c5d014b0dd79af3e23e10a71746b379b0b'
-related:
-  - "[[2026-08-24-deadline-window-revision-authority-W02-P04-S12]]"
+related: []
 ---
 # Modelo 303 historical deadline materialisation review
 

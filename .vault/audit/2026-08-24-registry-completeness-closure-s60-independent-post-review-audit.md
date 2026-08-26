@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:3ec301841023454d8c928d2cee2d6e07e3143d213237495e12f4dc350b79356f'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
-  - "[[2026-08-24-registry-completeness-closure-W01-P02-S60]]"
 ---
 
 # `registry-completeness-closure` audit: `S60 independent post-review`

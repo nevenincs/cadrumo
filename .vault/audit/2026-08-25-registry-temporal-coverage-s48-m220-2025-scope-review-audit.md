@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:9cb0af64ba066bf4849a48bae6d27837962c10dca779e50b9f99bb954df6def1'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
-  - "[[2026-08-14-registry-temporal-coverage-W02-P05-S48]]"
 ---
 # `registry-temporal-coverage` audit: `S48 Modelo 220 2025 scope review`
 

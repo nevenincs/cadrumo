@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:33abf861dc2174cb6a66e4be6bba38df604bcbf2e4f44ed05a9b815395accb30'
-related:
-  - "[[2026-08-22-source-casilla-integration-W05-P16-S97]]"
+related: []
 ---
 
 # `source-casilla-integration` audit: `S97 M360 terminal deferral review`

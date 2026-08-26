@@ -8,7 +8,6 @@ body_schema: 'body-v1'
 body_hash: 'sha256:7b51136b09abc7d29ef912498919a648160e073413c247c8c2e347d65d06ed62'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
-  - "[[2026-08-14-registry-temporal-coverage-W02-P05-S51]]"
 ---
 
 # `registry-temporal-coverage` audit: `Modelo 341 historical layout implementation review`

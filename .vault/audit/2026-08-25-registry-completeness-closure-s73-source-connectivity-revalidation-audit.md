@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:1ebfded6513dda5b667bd10c9cd0855f5487e9487f9c486c7ceb6dc67d16ba74'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
-  - "[[2026-08-24-registry-completeness-closure-W02-P04-S73]]"
 ---
 # `registry-completeness-closure` audit: `S73 source-connectivity revalidation audit`
 

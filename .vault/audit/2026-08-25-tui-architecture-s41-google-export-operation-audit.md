@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:0893f74d11d352d4bf8dbd10c123f8c401dd519ac32f08db176023d05b95f4e2'
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-plan]]'
-  - '[[2026-08-11-tui-architecture-W03-P08-S41]]'
 ---
 # `tui-architecture` audit: `S41/S44 Google export operation and export facade`
 

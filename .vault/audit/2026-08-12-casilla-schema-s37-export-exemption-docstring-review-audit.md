@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:b87e9594c0fcf56ef61e3923d83bee6a2586725ca2635e80d50acc965845d1c4'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
-  - "[[2026-08-10-casilla-schema-W05-P11-S37]]"
   - "[[2026-08-10-casilla-schema-canonical-derivations-adr]]"
 ---
 # `casilla-schema` audit: `W05.P11.S37 export exemption docstring review`

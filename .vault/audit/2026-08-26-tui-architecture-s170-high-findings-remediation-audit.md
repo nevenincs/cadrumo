@@ -5,30 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:2bae9b5ad302c6d58b5f55f75f76b742d61f1105c10c5d6aaa9911eafdd54b1d'
+body_hash: 'sha256:95fada6137af8f69978d67aa925a17d63e1ec9352805d441193e24a6d0719d97'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-26-tui-architecture-s170-final-follow-up-review-audit]]"
-  - "[[2026-08-11-tui-architecture-W03-P20-S170]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `S170 high findings remediation`
 
@@ -88,4 +69,3 @@ mutants, resident classifier mutant, and this audit with explicit paths. Then
 request a new independent Sol-medium review that replays every previously
 reproduced false negative and verifies the complete tracked-live gate. Only
 that reviewer may recommend a lifecycle transition.
-

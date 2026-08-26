@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:ee557921bd4979174cb3af6f3d04e7d58b0da2e4ae185b4f1914044dfd7e76e9'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
-  - "[[2026-08-14-registry-temporal-coverage-W02-P05-S50]]"
 ---
 # `registry-temporal-coverage` audit: `W02.P05.S50 Modelo 763 temporal coverage independent review`
 

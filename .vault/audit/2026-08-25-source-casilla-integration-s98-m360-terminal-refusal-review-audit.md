@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:6c9d9dece0d80be390bc0884804a8ce9058c631f2a6682cedb62522357efecab'
-related:
-  - "[[2026-08-22-source-casilla-integration-W05-P16-S98]]"
+related: []
 ---
 
 # `source-casilla-integration` audit: `S98 M360 terminal refusal review`

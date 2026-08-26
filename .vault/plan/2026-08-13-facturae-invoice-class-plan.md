@@ -8,8 +8,8 @@ body_hash: 'sha256:1ee680ad6cfd89bc030426e25977184275cff432a6ac96f85ecb6ecf16436
 tier: L1
 related:
   - '[[2026-08-13-facturae-invoice-class-adr]]'
+  - '[[2026-08-12-facturae-invoice-class-reference]]'
 ---
-
 # `facturae-invoice-class` plan
 
 ## Description

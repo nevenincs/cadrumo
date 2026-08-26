@@ -8,8 +8,8 @@ body_hash: 'sha256:fff85b0857b5d45afae4fe3552e862562dcffaae7bc9461ba41424945f1fc
 tier: L1
 related:
   - '[[2026-08-07-declarations-register-pagination-adr]]'
+  - '[[2026-08-07-declarations-register-pagination-reference]]'
 ---
-
 # `declarations-register-pagination` plan
 
 ## Description

@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-04'
-modified: '2026-08-05'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:d109160f0cfa6a20f49b4ea64cc5574b42bf1bd9e872db1558fae7be9068dabf'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
-  - "[[2026-08-03-canonical-storage-management-W05-P22-S115]]"
 ---
 
 # `canonical-storage-management` audit: `void assertion class`

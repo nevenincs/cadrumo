@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:02451e28f371a4812535ecfe7f983da1c316fe0b0a073d54236aa01705974426'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
   - "[[2026-08-24-registry-completeness-closure-adr]]"
-  - "[[2026-08-24-registry-completeness-closure-W01-P02-S57]]"
 ---
 
 # `registry-completeness-closure` audit: `S57 generation and emission proof review`

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:913d111fa1ef08110f9905560b101f42fe3d9ba6677a094af9f9bcae37b7f48e'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S50]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `s50 simplified activity review`

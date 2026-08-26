@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:bceeb1afa562521678a41269d5d0e8371049561040883fa5812a44c72702c9c0'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
-  - "[[2026-08-11-tui-architecture-W01-P01-S04]]"
 ---
 
 # `tui-architecture` audit: `W01.P01.S04 independent review`

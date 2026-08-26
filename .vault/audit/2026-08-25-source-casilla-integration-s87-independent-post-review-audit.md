@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:1d9467db8b37bd5c2a7bda2a0016195d2397238d933b839423647cb6b380f334'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-22-source-casilla-integration-W05-P14-S87]]"
 ---
 # `source-casilla-integration` audit: `S87 snapshot-bound row assembly independent review`
 

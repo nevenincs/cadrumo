@@ -5,30 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:88daa1f621dab5a1efa2c150ae55f4adba3f1fd263ffdde84bd6d5d6472d9dd8'
+body_hash: 'sha256:b3172a77b178de4f8d119835d548f6257d585b6da7f966fa5ba74f6fb4928549'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-26-tui-architecture-s170-high-findings-remediation-audit]]"
-  - "[[2026-08-11-tui-architecture-W03-P20-S170]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-architecture with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-architecture` audit: `S170 alias and selection remediation`
 
@@ -87,4 +68,3 @@ Keep `W03.P20.S170` unchecked. Commit only the reusable scanner, declarative
 fixed-point and RAG tests, and this audit. A subsequent independent Sol-medium
 review must replay every positive bypass and both projection-loop negative
 controls before recommending any lifecycle transition.
-

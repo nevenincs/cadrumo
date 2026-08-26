@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-completeness-closure'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:284b3de8648a4bb4fc5cbdfd778f1fefd0a975a388101534c3858dc7074ace36'
 related:
   - "[[2026-08-24-registry-completeness-closure-plan]]"
-  - "[[2026-08-24-registry-completeness-closure-W03-P05-S85]]"
   - "[[2026-08-25-registry-completeness-closure-s33-two-channel-export-proof-adr]]"
 ---
 # `registry-completeness-closure` audit: `S85 independent classification review`

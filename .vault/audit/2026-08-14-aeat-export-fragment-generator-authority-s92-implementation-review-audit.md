@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-14'
-modified: '2026-08-14'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:cde06fa3d6817d00d4589a1c834c114eb5e9dc9bd5ee9e7414c1a76a775d40b4'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S92]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `S92 M303 rectificativa motive implementation review`

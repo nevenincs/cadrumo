@@ -1,0 +1,168 @@
+---
+tags:
+  - '#exec'
+  - '#canonical-storage-management'
+date: '2026-08-03'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:2584def90a4e37e699bcf12f66eb76e421ee86993235aeaf92dc2eaa73f109aa'
+related:
+  - "[[2026-08-03-canonical-storage-management-plan]]"
+---
+
+# `canonical-storage-management` ledger
+
+## Changes
+
+- `S01` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S02` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S03` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S04` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S05` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S06` `T` `src/cadrumo/core/tests/test_storage_taxonomy_parity.py`
+- `S07` `T` `src/cadrumo/core/__init__.py`
+- `S08` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S09` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S10` `T` `src/cadrumo/core/paths.py`
+- `S11` `T` `src/cadrumo/core/config.py`
+- `S12` `T` `src/cadrumo/core/config.py`
+- `S13` `T` `src/cadrumo/core/config.py`
+- `S14` `T` `src/cadrumo/core/config.py`
+- `S15` `T` `src/cadrumo/core/config.py`
+- `S16` `T` `src/cadrumo/core/tests/test_ensure_storage_tree.py`
+- `S17` `T` `src/cadrumo/core/config.py`
+- `S18` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S19` `T` `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`
+- `S20` `T` `src/cadrumo/adapters/persistence/storage/bucket/_layout.py`
+- `S21` `T` `src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py`
+- `S22` `T` `src/cadrumo/core/config.py`
+- `S23` `T` `src/cadrumo/core/_config_storage_route.py`
+- `S24` `T` `src/cadrumo/core/_bucket_pointer_io.py`
+- `S25` `T` `src/cadrumo/application/_config_reset_repository.py`
+- `S26` `T` `src/cadrumo/core/paths.py`
+- `S26` `T` `src/cadrumo/core/tests/test_paths.py`
+- `S27` `T` `src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py`
+- `S28` `T` `src/cadrumo/adapters/persistence/storage/master_key/_persisted_session.py`
+- `S29` `T` `src/cadrumo/adapters/persistence/storage/master_key/_master_key_bucket_dek.py`
+- `S30` `T` `src/cadrumo/adapters/persistence/storage/master_key/_login_throttle.py`
+- `S31` `T` `src/cadrumo/adapters/persistence/storage/bucket/_layout.py`
+- `S32` `T` `src/cadrumo/application/user_profile/_orchestration.py`
+- `S33` `T` `src/cadrumo/application/user_profile/_profile_repository.py`
+- `S34` `T` `src/cadrumo/core/paths.py`
+- `S35` `T` `src/cadrumo/core/observability/_store.py`
+- `S36` `T` `src/cadrumo/application/bucket_maintenance/_service.py`
+- `S37` `T` `src/cadrumo/core/paths.py`
+- `S38` `T` `src/cadrumo/core/observability/_store.py`
+- `S39` `T` `src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`
+- `S40` `T` `src/cadrumo/entrypoints/mcp/_telemetry.py`
+- `S41` `T` `src/cadrumo/domain/calculations/registry/_compiled_cache.py`
+- `S42` `T` `src/cadrumo/application/corpus_search/_runtime.py`
+- `S43` `T` `src/cadrumo/entrypoints/mcp/_telemetry.py`
+- `S44` `T` `src/cadrumo/domain/calculations/registry/_loader_cache.py`
+- `S45` `T` `src/cadrumo/domain/calculations/registry/_loader_cache.py`
+- `S46` `T` `src/cadrumo/application/provisioning.py`
+- `S47` `T` `src/cadrumo/core/config.py`
+- `S48` `T` `src/cadrumo/core/config.py`
+- `S49` `T` `src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`
+- `S50` `T` `src/cadrumo/core/_config_integration_fields.py`
+- `S51` `T` `src/cadrumo/domain/calculations/registry/_validate_evidence.py`
+- `S52` `T` `src/cadrumo/domain/calculations/registry/_validate_verdict.py`
+- `S53` `T` `src/cadrumo/core/observability/_store.py`
+- `S54` `T` `src/cadrumo/core/logging.py`
+- `S55` `T` `src/cadrumo/entrypoints/mcp/_tools.py`
+- `S56` `T` `src/cadrumo/application/storage_management/`
+- `S57` `T` `src/cadrumo/entrypoints/cli/_config/_storage_cli.py`
+- `S58` `T` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S59` `T` `src/cadrumo/application/storage_management/tests/`
+- `S60` `T` `src/cadrumo/entrypoints/cli/_config/_storage_payloads.py`
+- `S61` `T` `src/cadrumo/entrypoints/cli/_config/tests/`
+- `S62` `T` `src/cadrumo/entrypoints/cli/_config/tests/`
+- `S63` `T` `docs/api/`
+- `S64` `T` `src/cadrumo/application/_journal_repository.py`
+- `S65` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S65` `T` `src/cadrumo/core/observability/_fingerprint.py`
+- `S66` `T` `src/cadrumo/core/tests/test_storage_taxonomy.py`
+- `S66` `T` `src/cadrumo/core/tests/test_config_state_root.py`
+- `S67` `T` `src/cadrumo/core/paths.py`
+- `S68` `T` `src/cadrumo/tests/test_storage_provenance_gate.py`
+- `S69` `T` `src/cadrumo/tests/test_storage_materialisation_parity.py`
+- `S70` `T` `src/cadrumo/core/tests/test_storage_binding_gate.py`
+- `S70` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S71` `T` `src/cadrumo/core/tests/test_storage_liveness_gate.py`
+- `S72` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S72` `T` `src/cadrumo/core/config.py`
+- `S72` `T` `src/cadrumo/core/_config_storage_route.py`
+- `S73` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S74` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S75` `T` `src/cadrumo/tests/secure_sql.py`
+- `S76` `T` `src/cadrumo/tests/secure_sql.py`
+- `S76` `T` `src/cadrumo/tests/env_scope.py`
+- `S77` `T` `src/cadrumo/adapters/persistence/storage/master_key/tests/`
+- `S77` `T` `src/cadrumo/adapters/persistence/storage/bucket/tests/`
+- `S78` `T` `src/cadrumo/tests/`
+- `S79` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S79` `T` `src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py`
+- `S80` `T` `src/cadrumo/tests/test_storage_provenance_gate.py`
+- `S81` `T` `src/cadrumo/core/tests/test_ensure_storage_tree.py`
+- `S82` `T` `.vault/exec/2026-08-03-canonical-storage-management/`
+- `S83` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S84` `T` `src/cadrumo/tests/`
+- `S85` `T` `src/cadrumo/tests/`
+- `S86` `T` `src/cadrumo/adapters/persistence/storage/blob_store/_blob_store.py`
+- `S86` `T` `src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py`
+- `S87` `T` `src/cadrumo/adapters/outbound/storage/_local.py`
+- `S88` `T` `src/cadrumo/core/observability/_store.py`
+- `S88` `T` `src/cadrumo/core/observability/_sink.py`
+- `S89` `T` `src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py`
+- `S89` `T` `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py`
+- `S89` `T` `src/cadrumo/application/user_profile/_custody.py`
+- `S90` `T` `src/cadrumo/application/live/_iva_remote_state.py`
+- `S91` `T` `src/cadrumo/adapters/persistence/storage/_rotation.py`
+- `S92` `T` `src/cadrumo/domain/manuals/_fetch.py`
+- `S93` `T` `src/cadrumo/application/user_profile/_profile_pointer_transaction.py`
+- `S94` `T` `src/cadrumo/application/user_profile/_login_session.py`
+- `S95` `T` `src/cadrumo/application/workflow/_profile_bucket_scan.py`
+- `S96` `T` `src/cadrumo/application/user_profile/_profile_repository.py`
+- `S97` `T` `src/cadrumo/application/_config_reset_repository.py`
+- `S98` `T` `src/cadrumo/application/user_profile/_bundle_export_operation.py`
+- `S99` `T` `src/cadrumo/entrypoints/cli/registry.py`
+- `S99` `T` `src/cadrumo/entrypoints/cli/_app_live.py`
+- `S100` `T` `src/cadrumo/entrypoints/cli/registry.py`
+- `S100` `T` `src/cadrumo/entrypoints/cli/_app_live.py`
+- `S101` `T` `src/cadrumo/core/tests/test_settings_lifecycle_gate.py`
+- `S102` `T` `src/cadrumo/`
+- `S103` `T` `src/cadrumo/tests/`
+- `S104` `T` `src/cadrumo/entrypoints/cli/_app_live.py`
+- `S104` `T` `src/cadrumo/entrypoints/cli/_overview_evidence.py`
+- `S104` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S105` `T` `src/cadrumo/core/config.py`
+- `S106` `T` `src/cadrumo/application/storage_management/tests/`
+- `S107` `T` `src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py`
+- `S108` `T` `src/cadrumo/application/_config_reset_repository.py`
+- `S108` `T` `src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py`
+- `S109` `T` `consider deriving the expectation from the declared formats rather than restating it by hand`
+- `S109` `T` `since a hardcoded census of uncovered formats is the gate shape this project forbids elsewhere`
+- `S109` `T` `src/cadrumo/tests/test_compatibility_lifecycle_gate.py`
+- `S110` `T` `src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py`
+- `S111` `T` `src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py`
+- `S111` `T` `src/cadrumo/adapters/persistence/storage/tests/test_storage_path_directory_agreement_gate.py`
+- `S112` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S112` `T` `src/cadrumo/adapters/persistence/storage/_namespace_taxonomy.py`
+- `S112` `T` `src/cadrumo/tests/test_storage_kind_parity_gate.py`
+- `S113` `T` `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`
+- `S113` `T` `src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py`
+- `S113` `T` `src/cadrumo/adapters/persistence/storage/bucket/_layout.py`
+- `S113` `T` `src/cadrumo/adapters/persistence/storage/bucket/_lockfile.py`
+- `S113` `T` `src/cadrumo/adapters/persistence/storage/bucket/_manifest_io.py`
+- `S113` `T` `src/cadrumo/adapters/persistence/storage/bucket/_output_language_hint.py`
+- `S113` `T` `src/cadrumo/core/_storage_taxonomy.py`
+- `S114` `T` `src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py`
+- `S115` `T` `src/cadrumo/domain/filing/tests/test_secure_storage_roundtrip.py`
+- `S115` `T` `src/cadrumo/adapters/persistence/profile/tests/test_justificante_repository.py`
+- `S116` `T` `src/cadrumo/adapters/persistence/profile/tests/test_transactions_repository_roundtrip.py`
+- `S116` `T` `src/cadrumo/adapters/persistence/profile/tests/test_invoices_secure_storage_roundtrip.py`
+- `S116` `T` `src/cadrumo/domain/usage_ratios/tests/test_service.py`
+- `S116` `T` `src/cadrumo/adapters/persistence/storage/tests/test_submission_repository.py`
+- `S116` `T` `src/cadrumo/domain/filing/tests/test_amendment_roundtrip.py`
+- `S116` `T` `src/cadrumo/application/filing/tests/test_history_repository_roundtrip.py`
+- `S116` `T` `src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py`

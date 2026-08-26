@@ -8,8 +8,8 @@ body_hash: 'sha256:69e1bb35d5d0850cbc4946f9da55f48b24c21446e7ec38b4c328cb5b02096
 tier: L1
 related:
   - '[[2026-07-24-delivery-pipeline-audit-adr]]'
+  - '[[2026-07-24-delivery-pipeline-audit-audit]]'
 ---
-
 <!-- RETIRED: S02 -->
 
 # `delivery-pipeline-audit` plan

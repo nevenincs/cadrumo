@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#docs-terminology-search'
 date: '2026-06-12'
-modified: '2026-07-17'
+modified: '2026-08-26'
 body_hash: 'sha256:c03410f2253f4c84a2da6d57596f082876df6a12dd0f0118dec07b422c870c54'
 related:
   - '[[2026-06-10-docs-terminology-search-adr]]'
   - '[[2026-06-10-docs-terminology-search-plan]]'
-  - '[[2026-06-10-docs-terminology-search-W05-P13-S30]]'
 ---
 
 # `docs-terminology-search` audit: `rung-2 adjudication`

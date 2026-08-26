@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:9e1ffd997fe898cdaf7982456b8b2bc87f8c562cbe5645abf2026a911607c72b'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
-  - "[[2026-08-10-casilla-schema-W04-P10-S35]]"
   - "[[2026-08-10-casilla-schema-read-model-adr]]"
   - "[[2026-08-11-tui-interface-adr]]"
 ---

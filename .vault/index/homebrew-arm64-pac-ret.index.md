@@ -4,16 +4,11 @@ tags:
   - '#index'
   - '#homebrew-arm64-pac-ret'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:94fecff17a0aef12c4df8ed7e51fb48c85ff8378f758b0f3cf52415623b44e6e'
 related:
   - '[[2026-07-22-homebrew-arm64-pac-ret-adr]]'
-  - '[[2026-07-25-homebrew-arm64-pac-ret-S01]]'
-  - '[[2026-07-25-homebrew-arm64-pac-ret-S02]]'
-  - '[[2026-07-25-homebrew-arm64-pac-ret-S03]]'
-  - '[[2026-07-25-homebrew-arm64-pac-ret-S04]]'
-  - '[[2026-07-25-homebrew-arm64-pac-ret-S05]]'
   - '[[2026-07-25-homebrew-arm64-pac-ret-plan]]'
   - '[[2026-07-28-homebrew-arm64-pac-ret-evidence-row-blocker-chain-audit]]'
 ---

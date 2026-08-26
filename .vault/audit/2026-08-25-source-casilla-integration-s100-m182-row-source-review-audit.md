@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:7861c640c69024ca3a9ce9f301fa9c444622da3ff7de5ce6ad3ab3526fd837ac'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
-  - "[[2026-08-22-source-casilla-integration-W05-P17-S100]]"
 ---
 
 # `source-casilla-integration` audit: `W05.P17.S100 independent review`

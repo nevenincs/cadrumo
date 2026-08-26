@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:4f1a58e672eddcba61a29c76357a677cb120302468ab978a5db54e3e2ed7b4cb'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-plan]]"
-  - "[[2026-08-11-tui-architecture-W03-P06-S32]]"
 ---
 # `tui-architecture` audit: `S32 census operation facade review`
 

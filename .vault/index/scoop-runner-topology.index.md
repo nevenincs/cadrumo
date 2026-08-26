@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#scoop-runner-topology'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:67decd84df88547770303db2e8a82b39c7caef8485bc32bfe1d9db3202fbae8b'
 related:
   - '[[2026-07-22-scoop-runner-topology-adr]]'
-  - '[[2026-07-25-scoop-runner-topology-S04]]'
-  - '[[2026-07-25-scoop-runner-topology-S05]]'
   - '[[2026-07-25-scoop-runner-topology-plan]]'
 ---
 

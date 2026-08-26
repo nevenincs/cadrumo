@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#registry-temporal-coverage'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:965ad7f93fa3f656dffe712eab077a738e22334ee21274c2abbe546544bd45c7'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
-  - "[[2026-08-14-registry-temporal-coverage-W02-P05-S43]]"
 ---
 
 # `registry-temporal-coverage` audit: `S43 BOE grounding review`

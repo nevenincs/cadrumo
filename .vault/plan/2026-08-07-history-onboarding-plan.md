@@ -11,8 +11,8 @@ related:
   - '[[2026-08-07-declarations-register-pagination-adr]]'
   - '[[2026-08-07-dehu-notification-legal-effect-reference]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
+  - '[[2026-08-07-history-onboarding-reference]]'
 ---
-
 # `history-onboarding` plan
 
 Roll-up plan executing `[[2026-08-07-history-onboarding-adr]]`: land AEAT-declared history

@@ -8,8 +8,8 @@ body_hash: 'sha256:05acc31eabaaaafb8f289560e4b7da876c07dadfe9d003d3b16eac6398530
 tier: L1
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
+  - '[[2026-08-09-m303-carry-reconciliation-prior-domiciliation-s21-reference]]'
 ---
-
 # `m303-carry-reconciliation` plan
 
 Close the two reach-and-duplication findings a code review raised against the

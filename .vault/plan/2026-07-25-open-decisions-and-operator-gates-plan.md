@@ -14,8 +14,8 @@ related:
   - '[[2026-07-25-reconcile-evidence-relocation-adr]]'
   - '[[2026-07-24-evidence-revision-identity-adr]]'
   - '[[2026-07-25-account-distribution-standard-adr]]'
+  - '[[2026-07-25-open-decisions-and-operator-gates-three-rulings-audit]]'
 ---
-
 # `open-decisions-and-operator-gates` plan
 
 - [x] `S01` - DECISION OPEN, rule on the code-dedup-sweep ADR which sits at proposed with no plan and no exec records, since dedup work has already landed against it and an unruled record leaves that work ungoverned; `.vault/adr/2026-07-25-code-dedup-sweep-adr.md`.

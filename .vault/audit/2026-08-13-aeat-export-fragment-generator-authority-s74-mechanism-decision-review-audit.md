@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-13'
-modified: '2026-08-13'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:dffe834f187ea9ae7db4a73607703f6b8199e6d2b56f724e705b08af0994bc9e'
 related:
   - "[[2026-07-01-modelo-303-regimen-simplificado-adr]]"
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S74]]"
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `s74 mechanism decision review`

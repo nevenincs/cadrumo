@@ -1,0 +1,145 @@
+---
+tags:
+  - '#exec'
+  - '#release-pipeline-full-automation'
+date: '2026-08-02'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:86dce8f0a229b96427221f0f82252a25158a1a40d976ebb390951d75d094e10c'
+related:
+  - "[[2026-08-02-release-pipeline-full-automation-plan]]"
+---
+
+# `release-pipeline-full-automation` ledger
+
+## Changes
+
+- `S01` `T` `.github/workflows/publish-release.yml`
+- `S02` `T` `dev/release/tests/test_publish_release_workflow.py`
+- `S03` `T` `.github/workflows/publish-release.yml`
+- `S03` `T` `dev/release/tests/test_publish_release_workflow.py`
+- `S04` `T` `dev/release/environment_inventory.py`
+- `S04` `T` `dev/release/tests/test_environment_inventory.py`
+- `S04` `T` `RELEASING.md`
+- `S05` `T` `dev/release/run_resolution.py`
+- `S05` `T` `dev/release/tests/test_run_resolution.py`
+- `S06` `T` `dev/release/run_resolution.py`
+- `S06` `T` `dev/release/tests/test_run_resolution.py`
+- `S07` `T` `dev/packaging/publication_inputs.py`
+- `S07` `T` `dev/packaging/tests/test_publication_inputs.py`
+- `S08` `T` `dev/packaging/publication_inputs.py`
+- `S08` `T` `dev/packaging/tests/test_publication_inputs.py`
+- `S09` `T` `dev/release/version_bump.py`
+- `S09` `T` `dev/release/tests/test_version_bump.py`
+- `S10` `T` `dev/release/version_bump.py`
+- `S10` `T` `dev/release/tests/test_version_bump.py`
+- `S11` `T` `dev/release/version_bump.py`
+- `S11` `T` `dev/release/tests/test_version_bump.py`
+- `S12` `T` `justfile`
+- `S12` `T` `dev/release/tests/test_justfile_release_guidance.py`
+- `S13` `T` `dev/release/version_bump.py`
+- `S13` `T` `dev/release/tests/test_version_bump.py`
+- `S14` `T` `dev/release/release_candidate.py`
+- `S14` `T` `dev/release/tests/test_release_candidate.py`
+- `S15` `T` `dev/release/release_candidate.py`
+- `S15` `T` `dev/packaging/evidence_release.py`
+- `S15` `T` `dev/release/tests/test_release_candidate.py`
+- `S16` `T` `dev/release/soak_promoter.py`
+- `S16` `T` `dev/release/tests/test_soak_promoter.py`
+- `S17` `T` `dev/release/soak_promoter.py`
+- `S17` `T` `dev/release/tests/test_soak_promoter.py`
+- `S18` `T` `dev/release/soak_promoter.py`
+- `S18` `T` `dev/release/release_candidate.py`
+- `S18` `T` `dev/release/tests/test_soak_promoter.py`
+- `S19` `T` `dev/release/release_candidate.py`
+- `S19` `T` `dev/release/soak_promoter.py`
+- `S19` `T` `dev/release/tests/test_soak_promoter.py`
+- `S20` `T` `.github/workflows/release-soak-promoter.yml`
+- `S20` `T` `dev/release/soak_promoter.py`
+- `S20` `T` `dev/release/tests/test_soak_promoter_workflow.py`
+- `S21` `T` `.github/workflows/release-orchestrator.yml`
+- `S21` `T` `dev/release/tests/test_release_orchestrator_workflow.py`
+- `S22` `T` `.github/workflows/release-orchestrator.yml`
+- `S22` `T` `dev/release/tests/test_release_orchestrator_workflow.py`
+- `S22` `T` `dev/release/version_bump.py`
+- `S23` `T` `.github/workflows/release-orchestrator.yml`
+- `S23` `T` `dev/release/tests/test_release_orchestrator_workflow.py`
+- `S23` `T` `dev/release/run_resolution.py`
+- `S24` `T` `.github/workflows/release-orchestrator.yml`
+- `S24` `T` `dev/release/tests/test_release_orchestrator_workflow.py`
+- `S24` `T` `dev/packaging/publication_inputs.py`
+- `S25` `T` `.github/workflows/release-orchestrator.yml`
+- `S25` `T` `dev/release/tests/test_release_orchestrator_workflow.py`
+- `S25` `T` `dev/packaging/publication_inputs.py`
+- `S26` `T` `.github/workflows/release-orchestrator.yml`
+- `S26` `T` `dev/release/seal_candidate.py`
+- `S26` `T` `dev/release/tests/test_release_orchestrator_workflow.py`
+- `S27` `T` `.github/workflows/release-orchestrator.yml`
+- `S27` `T` `dev/release/soak_promoter.py`
+- `S27` `T` `dev/release/tests/test_release_orchestrator_workflow.py`
+- `S27` `T` `dev/release/tests/test_soak_promoter.py`
+- `S28` `T` `.github/workflows/release-orchestrator.yml`
+- `S28` `T` `dev/release/tests/test_release_orchestrator_workflow.py`
+- `S29` `T` `dev/release/alerting.py`
+- `S29` `T` `dev/release/tests/test_release_alerting.py`
+- `S30` `T` `.github/workflows/release-orchestrator.yml`
+- `S30` `T` `.github/workflows/release-soak-promoter.yml`
+- `S30` `T` `.github/workflows/publish-release.yml`
+- `S30` `T` `.github/workflows/docs-publish.yml`
+- `S31` `T` `dev/release/tests/test_release_alerting.py`
+- `S32` `T` `RELEASING.md`
+- `S32` `T` `src/cadrumo/tests/test_release_config.py`
+- `S33` `T` `RELEASING.md`
+- `S33` `T` `src/cadrumo/tests/test_release_config.py`
+- `S34` `T` `RELEASING.md`
+- `S34` `T` `docs/_release_checklist.yaml`
+- `S34` `T` `src/cadrumo/tests/test_release_config.py`
+- `S35` `T` `docs/`
+- `S35` `T` `dev/docs/tests/`
+- `S36` `T` `dev/release/environment_inventory.py`
+- `S36` `T` `dev/release/tests/test_environment_inventory.py`
+- `S36` `T` `RELEASING.md`
+- `S37` `T` `RELEASING.md`
+- `S37` `T` `src/cadrumo/tests/test_release_config.py`
+- `S38` `T` `RELEASING.md`
+- `S38` `T` `src/cadrumo/tests/test_release_config.py`
+- `S39` `T` `.vault/audit/`
+- `S40` `T` `dev/packaging/publication_inputs.py`
+- `S40` `T` `dev/packaging/tests/test_publication_inputs.py`
+- `S41` `T` `dev/release/soak_promoter.py`
+- `S41` `T` `dev/release/tests/test_soak_promoter.py`
+- `S42` `T` `dev/release/alerting.py`
+- `S42` `T` `dev/release/tests/test_release_alerting.py`
+- `S43` `T` `dev/release/environment_inventory.py`
+- `S43` `T` `dev/release/tests/test_environment_inventory.py`
+- `S43` `T` `RELEASING.md`
+- `S43` `T` `src/cadrumo/tests/test_release_config.py`
+- `S44` `T` `dev/release/soak_promoter.py`
+- `S44` `T` `dev/release/tests/test_soak_promoter.py`
+- `S45` `T` `.github/workflows/release-orchestrator.yml`
+- `S45` `T` `dev/packaging/publication_inputs.py`
+- `S45` `T` `dev/release/tests/test_release_orchestrator_workflow.py`
+- `S46` `T` `.github/workflows/release-soak-promoter.yml`
+- `S46` `T` `dev/release/tests/test_soak_promoter_workflow.py`
+- `S47` `T` `.github/workflows/release-orchestrator.yml`
+- `S47` `T` `.github/workflows/release-soak-promoter.yml`
+- `S47` `T` `.github/workflows/publish-release.yml`
+- `S47` `T` `.github/workflows/docs-publish.yml`
+- `S47` `T` `dev/release/tests/test_release_alerting.py`
+- `S48` `T` `dev/release/version_bump.py`
+- `S48` `T` `dev/release/tests/test_version_bump.py`
+- `S49` `T` `RELEASING.md`
+- `S49` `T` `src/cadrumo/tests/test_release_config.py`
+- `S50` `T` `dev/release/version_bump.py`
+- `S50` `T` `.vault/plan/`
+- `S51` `T` `.github/workflows/release-orchestrator.yml`
+- `S51` `T` `.github/workflows/release-soak-promoter.yml`
+- `S51` `T` `.github/workflows/publish-release.yml`
+- `S51` `T` `dev/release/tests/test_release_alerting.py`
+- `S52` `T` `.github/workflows/release-orchestrator.yml`
+- `S52` `T` `dev/packaging/publication_inputs.py`
+- `S52` `T` `dev/release/seal_candidate.py`
+- `S52` `T` `dev/release/tests/test_release_orchestrator_workflow.py`
+- `S52` `T` `dev/packaging/tests/test_publication_inputs.py`
+- `S53` `T` `.github/workflows/release-orchestrator.yml`
+- `S53` `T` `dev/release/tests/test_release_orchestrator_workflow.py`

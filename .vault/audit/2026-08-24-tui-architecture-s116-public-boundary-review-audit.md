@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:332c8a4fce8dc780eb6549a0abf15cc9fd559b861c47282bb03b431ea17c0d74'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-11-tui-architecture-adr]]"
-  - "[[2026-08-11-tui-architecture-W02-P19-S116]]"
 ---
 # `tui-architecture` audit: `S116 public operation boundary code review`
 

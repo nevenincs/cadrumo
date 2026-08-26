@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:9b65e255bb9e435204eb6ac93ebefbd6ecd13de4f25ac5a676b868a26100df44'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-25-tui-architecture-s171-code-review-audit]]"
-  - "[[2026-08-11-tui-architecture-W03-P20-S171]]"
 ---
 
 # `tui-architecture` audit: `S171 Workspace model relocation remediation review`

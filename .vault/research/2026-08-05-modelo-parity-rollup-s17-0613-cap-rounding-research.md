@@ -3,13 +3,12 @@ tags:
   - '#research'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:b6e26255c30914c83fe4b8dd0625ae807ea6629e5d72665e0140eccb15c733b5'
 related:
   - "[[2026-08-05-modelo-parity-rollup-s16-s18-evidence-research]]"
   - "[[2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research]]"
-  - "[[2026-08-05-modelo-parity-rollup-W03-P08-S17]]"
 ---
 # `modelo-parity-rollup` research: `S17 0613 cap and rounding evidence`
 

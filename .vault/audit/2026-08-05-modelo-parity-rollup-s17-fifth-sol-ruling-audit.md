@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#modelo-parity-rollup'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:445d7cc4f95a86741ef3d3a4ca0d722881ef2b5c134eef5005e185c5a871ef0b'
 related:
   - "[[2026-08-05-modelo-parity-rollup-s17-0613-cap-rounding-research]]"
-  - "[[2026-08-05-modelo-parity-rollup-W06-P13-S32]]"
 ---
 # `modelo-parity-rollup` audit: `S17 fifth SOL ruling`
 

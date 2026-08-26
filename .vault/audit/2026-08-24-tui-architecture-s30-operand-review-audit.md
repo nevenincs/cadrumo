@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:5f5512438a66b47bdbb8d1c96c567aa06e38c6ede65b63004d3939df0bfedd55'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-architecture-censo-operation-authority-reconciliation-research]]"
-  - "[[2026-08-11-tui-architecture-W03-P06-S30]]"
 ---
 
 # `tui-architecture` audit: `S30 censal reviewed operand review`

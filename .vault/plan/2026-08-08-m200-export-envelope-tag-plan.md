@@ -8,8 +8,8 @@ body_hash: 'sha256:c5eef3791d8bcc32559232e88333cf63a2fe9987fab9a2deb24b0672a5566
 tier: L2
 related:
   - '[[2026-08-08-m200-export-envelope-tag-adr]]'
+  - '[[2026-08-08-m200-export-envelope-tag-reference]]'
 ---
-
 # `m200-export-envelope-tag` plan
 
 Reconstruct the M200 fichero-BOE envelope open and close tags, a live

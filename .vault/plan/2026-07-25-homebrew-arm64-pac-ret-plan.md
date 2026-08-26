@@ -9,8 +9,8 @@ tier: L1
 related:
   - '[[2026-07-22-homebrew-arm64-pac-ret-adr]]'
   - '[[2026-07-17-post-release-distribution-plan]]'
+  - '[[2026-07-28-homebrew-arm64-pac-ret-evidence-row-blocker-chain-audit]]'
 ---
-
 # `homebrew-arm64-pac-ret` plan
 
 - [x] `S01` - Bring the self-hosted Linux ARM64 runner back online, since it was offline at record time and no diagnosis can proceed without it, OPERATOR-GATED as a host action; `operator action, self-hosted Linux ARM64 host`.

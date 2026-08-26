@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-13'
-modified: '2026-08-14'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:50183efbd0642ca33348f9afb0f43c14eff035056b2a1bfcd5c5dfe453351f22'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S77]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `s77 typed calculation cutover`

@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#profile-password-custody'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:aeabbffc6d29467045870e8120a43ef80a93d9d223b98d3d663b391b624fa7af'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
   - "[[2026-08-13-profile-password-custody-rollup-adr]]"
   - "[[2026-08-23-cli-machine-secret-channel-unification-adr]]"
-  - "[[2026-08-13-profile-password-custody-W03-P06-S209]]"
 ---
 # `profile-password-custody` audit: `S209 POSIX KDF descriptor attestation security review`
 

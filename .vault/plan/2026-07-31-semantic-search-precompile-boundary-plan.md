@@ -8,8 +8,8 @@ body_hash: 'sha256:95c59d6471720eaed42722f6abad8730601f7a09dfa1c5e0ac4a5ed6a16de
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-adr]]'
+  - '[[2026-08-01-semantic-search-precompile-boundary-close-honesty-review-audit]]'
 ---
-
 # `semantic-search-precompile-boundary` plan
 
 ## Description

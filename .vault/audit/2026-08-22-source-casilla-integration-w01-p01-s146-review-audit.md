@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-22'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:fe9f62ede216133c6000b2ae1045f02d55d06010d74996ebca51ee7aa8deb448'
 related:
   - "[[2026-08-22-source-casilla-integration-plan]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
-  - "[[2026-08-22-source-casilla-integration-W01-P01-S146]]"
 ---
 
 # `source-casilla-integration` audit: `W01.P01.S146 Calculation Route Identity Remediation Review`

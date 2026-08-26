@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:d12faa966ff5c9ba2f456f17802e4668d8f0b059c65d71bb1306df4d608101c3'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
   - "[[2026-08-25-tui-architecture-workspace-owner-seam-reconciliation-audit]]"
-  - "[[2026-08-11-tui-architecture-W03-P20-S159]]"
 ---
 # `tui-architecture` audit: `S159 registry native capture review`
 

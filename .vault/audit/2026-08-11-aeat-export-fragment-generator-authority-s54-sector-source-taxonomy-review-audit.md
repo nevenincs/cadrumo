@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:2a59e54a1d4a8248c2322c5e4ab1dd30e1ae07727d246f48fda7d3f89eeaf92e'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S54]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `s54 sector source taxonomy review`

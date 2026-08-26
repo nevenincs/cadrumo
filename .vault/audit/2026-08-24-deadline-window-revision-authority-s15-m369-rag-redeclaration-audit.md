@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#deadline-window-revision-authority'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:b8d7f63878fc4f3289307aa55772f36084871c609d3dc6dd77e3ebdb3b3ab618'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-plan]]"
-  - "[[2026-08-24-deadline-window-revision-authority-W02-P04-S15]]"
 ---
 
 # `deadline-window-revision-authority` audit: `S15 Modelo 369 RAG redeclaration audit`

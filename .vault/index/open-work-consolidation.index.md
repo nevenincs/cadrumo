@@ -4,12 +4,10 @@ tags:
   - '#index'
   - '#open-work-consolidation'
 date: '2026-08-16'
-modified: '2026-08-16'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:1353e9858d44bd52527bf8ab6a23590efdc5f7e9fe110481c71fbdb733cd61ca'
 related:
-  - '[[2026-07-30-open-work-consolidation-P05-S28]]'
-  - '[[2026-07-30-open-work-consolidation-P05-S30]]'
   - '[[2026-07-30-open-work-consolidation-adr]]'
   - '[[2026-07-30-open-work-consolidation-audit]]'
 ---

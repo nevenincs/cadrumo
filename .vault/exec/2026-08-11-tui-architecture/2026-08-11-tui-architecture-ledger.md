@@ -1,0 +1,276 @@
+---
+tags:
+  - '#exec'
+  - '#tui-architecture'
+date: '2026-08-11'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:b2db57a54edc5fb3ac0ee99b9971e0796bf5c0d47a09bacea3defb60a0b3b8b3'
+related:
+  - "[[2026-08-11-tui-architecture-plan]]"
+---
+
+# `tui-architecture` ledger
+
+## Changes
+
+- `S01` `T` `dev/quality/import_hygiene_scan.py`
+- `S02` `T` `.importlinter`
+- `S03` `T` `src/cadrumo/tests/test_import_hygiene_gate.py`
+- `S04` `T` `.vault/adr`
+- `S05` `T` `src/cadrumo/tests/test_tui_migration_manifest.py`
+- `S05` `T` `dev/quality/import_hygiene_scan.py`
+- `S05` `T` `dev/tests/test_import_hygiene_scan.py`
+- `S06` `T` `src/cadrumo/core/operations.py`
+- `S06` `T` `src/cadrumo/core/tests/test_operations.py`
+- `S07` `T` `src/cadrumo/application/operations/_models.py`
+- `S07` `T` `src/cadrumo/application/operations/tests/test_models.py`
+- `S07` `T` `src/cadrumo/core/__init__.py`
+- `S08` `T` `src/cadrumo/application/operations/_capabilities.py`
+- `S08` `T` `src/cadrumo/application/operations/__init__.py`
+- `S08` `T` `src/cadrumo/application/operations/tests/test_capabilities.py`
+- `S09` `T` `src/cadrumo/application/operations/_events.py`
+- `S09` `T` `src/cadrumo/application/operations/tests/test_events.py`
+- `S10` `T` `src/cadrumo/application/operations/_interactions.py`
+- `S10` `T` `src/cadrumo/application/operations/tests/test_interactions.py`
+- `S11` `T` `src/cadrumo/application/operations/__init__.py`
+- `S11` `T` `src/cadrumo/application/operations/tests/test_facade.py`
+- `S12` `T` `src/cadrumo/application/operations/tests/test_contract_invariants.py`
+- `S13` `T` `src/cadrumo/application/operations/_executor.py`
+- `S14` `T` `src/cadrumo/application/operations/_registry.py`
+- `S16` `T`
+- `S17` `T` `src/cadrumo/application/operations/_journal.py`
+- `S17` `T` `src/cadrumo/application/operations/_leases.py`
+- `S17` `T` `src/cadrumo/application/operations/_replay.py`
+- `S17` `T` `src/cadrumo/application/operations/__init__.py`
+- `S17` `T` `src/cadrumo/application/operations/tests/test_journal.py`
+- `S17` `T` `src/cadrumo/application/operations/tests/test_facade.py`
+- `S18` `T` `src/cadrumo/adapters/persistence/operations/_journal.py`
+- `S18` `T` `JournalRepositoryBase`
+- `S19` `T` `src/cadrumo/adapters/persistence/operations/_lease.py`
+- `S19` `T` `src/cadrumo/adapters/persistence/operations/_journal.py`
+- `S19` `T` `and focused real-filesystem lease and journal tests`
+- `S20` `T` `src/cadrumo/adapters/persistence/operations/__init__.py`
+- `S21` `T` `src/cadrumo/adapters/persistence/operations/tests`
+- `S22` `T`
+- `S23` `T`
+- `S24` `T` `src/cadrumo/application/operations/_supervisor.py`
+- `S24` `T` `src/cadrumo/application/operations/_journal.py`
+- `S24` `T` `src/cadrumo/application/operations/_execution_context.py`
+- `S24` `T` `src/cadrumo/application/operations/_executor.py`
+- `S24` `T` `src/cadrumo/adapters/persistence/operations/_journal.py`
+- `S25` `T` `src/cadrumo/application/operations/_supervisor.py`
+- `S26` `T` `src/cadrumo/application/operations/_supervisor.py`
+- `S27` `T` `src/cadrumo/application/operations/tests/test_supervisor_lifecycle.py`
+- `S28` `T` `src/cadrumo/application/operations/tests/test_supervisor_recovery.py`
+- `S29` `T` `src/cadrumo/application/user_profile/_censal_operation.py`
+- `S30` `T` `src/cadrumo/application/user_profile/_censal_observation.py`
+- `S30` `T` `src/cadrumo/application/user_profile/_censal_operation.py`
+- `S30` `T` `src/cadrumo/application/user_profile/_censo_sync.py`
+- `S30` `T` `src/cadrumo/application/user_profile/__init__.py`
+- `S30` `T` `src/cadrumo/adapters/outbound/aeat/sede/_censal_datos.py`
+- `S31` `T` `src/cadrumo/application/user_profile/_cotejo_apply.py`
+- `S31` `T` `src/cadrumo/application/user_profile/tests/test_censal_reviewed_apply.py`
+- `S32` `T` `src/cadrumo/application/user_profile/__init__.py`
+- `S32` `T` `src/cadrumo/application/user_profile/tests/test_censal_operation_facade.py`
+- `S33` `T` `src/cadrumo/application/user_profile/tests/test_censal_operation.py`
+- `S34` `T` `src/cadrumo/application/live/_filed_history_operation.py`
+- `S34` `T` `src/cadrumo/application/live/_filed_data_capture.py`
+- `S34` `T` `src/cadrumo/application/live/_remote_state_models.py`
+- `S34` `T` `src/cadrumo/application/storage/sync_runs/_records.py`
+- `S34` `T` `src/cadrumo/application/storage/sync_runs/__init__.py`
+- `S34` `T` `src/cadrumo/application/live/tests/test_filed_history_operation_executor.py`
+- `S35` `T` `src/cadrumo/application/live/_filed_history_operation.py`
+- `S35` `T` `src/cadrumo/application/live/_filed_data_capture.py`
+- `S35` `T` `src/cadrumo/application/live/tests/test_filed_history_composition.py`
+- `S35` `T` `src/cadrumo/application/live/tests/test_filed_history_operation_executor.py`
+- `S36` `T` `src/cadrumo/application/live/_filed_data_capture.py`
+- `S36` `T` `src/cadrumo/application/live/_filed_history_operation.py`
+- `S36` `T` `src/cadrumo/application/live/tests/test_filed_history_operation_executor.py`
+- `S37` `T` `src/cadrumo/application/live/__init__.py`
+- `S37` `T` `src/cadrumo/application/live/tests/test_filed_history_operation_facade.py`
+- `S38` `T` `src/cadrumo/application/live/tests/test_filed_history_operation.py`
+- `S38` `T` `src/cadrumo/application/live/_filed_data_capture.py`
+- `S38` `T` `src/cadrumo/application/live/_filed_history_operation.py`
+- `S38` `T` `src/cadrumo/tests/offline_aeat_register.py`
+- `S38` `T` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_register_walk_offline.py`
+- `S38` `T` `src/cadrumo/application/live/tests/test_filed_bulk_sweep_continues_past_a_failed_pair.py`
+- `S38` `T` `src/cadrumo/application/live/tests/test_filed_bulk_capture_continues_past_a_failed_pair.py`
+- `S38` `T` `src/cadrumo/application/operations/tests/test_supervisor.py`
+- `S38` `T` `src/cadrumo/application/operations/tests/test_supervisor_lifecycle.py`
+- `S38` `T` `.vault/index/tui-architecture.index.md`
+- `S39` `T` `src/cadrumo/application/auth/_operation_definitions.py`
+- `S39` `T` `src/cadrumo/application/auth/tests/test_operation_definitions.py`
+- `S39` `T` `src/cadrumo/application/user_profile/_custody_ports.py`
+- `S40` `T` `src/cadrumo/application/user_profile/_operation_definitions.py`
+- `S40` `T` `src/cadrumo/application/user_profile/tests/test_operation_definitions.py`
+- `S41` `T` `src/cadrumo/application/export/_google_operation.py`
+- `S41` `T` `src/cadrumo/application/export/tests/test_google_operation.py`
+- `S41` `T` `src/cadrumo/entrypoints/_operation_composition.py`
+- `S41` `T` `src/cadrumo/entrypoints/cli/_config/_google_sync_calc.py`
+- `S41` `T` `src/cadrumo/entrypoints/cli/_config/_manager_actions.py`
+- `S41` `T` `src/cadrumo/entrypoints/tests/test_operation_composition.py`
+- `S42` `T` `src/cadrumo/application/auth/__init__.py`
+- `S43` `T` `src/cadrumo/application/user_profile/__init__.py`
+- `S44` `T` `src/cadrumo/application/export/__init__.py`
+- `S45` `T` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S45` `T` `src/cadrumo/application/operations/_supervisor.py`
+- `S45` `T` `src/cadrumo/application/operations/tests/test_supervisor.py`
+- `S45` `T` `src/cadrumo/application/operations/tests/test_supervisor_lifecycle.py`
+- `S46` `T` `src/cadrumo/entrypoints/tui/__init__.py`
+- `S47` `T` `src/cadrumo/entrypoints/tui/components/theme.py`
+- `S48` `T` `src/cadrumo/entrypoints/tui/components/widgets.py`
+- `S49` `T` `src/cadrumo/entrypoints/tui/components/forms.py`
+- `S50` `T` `src/cadrumo/entrypoints/tui/components/dialogs.py`
+- `S50` `T` `src/cadrumo/entrypoints/tui/components/tests/test_dialogs.py`
+- `S51` `T` `src/cadrumo/entrypoints/tui/components/status.py`
+- `S52` `T` `src/cadrumo/entrypoints/tui/components`
+- `S53` `T` `src/cadrumo/entrypoints/tui/components/tests`
+- `S54` `T` `src/cadrumo/entrypoints/tui/profile`
+- `S55` `T` `src/cadrumo/entrypoints/tui/secret`
+- `S56` `T` `src/cadrumo/entrypoints/tui/flows`
+- `S56` `T` `src/cadrumo/adapters/inbound/tui/__init__.py`
+- `S57` `T` `src/cadrumo/entrypoints/tui/devtools`
+- `S58` `T` `src/cadrumo/entrypoints/tui/tests`
+- `S59` `T` `src/cadrumo/entrypoints/tui/tests/test_relocation_parity.py`
+- `S78` `T` `src/cadrumo/entrypoints/cli/_config/_login_frontend.py`
+- `S79` `T` `src/cadrumo/entrypoints/cli/_config/_status_frontend.py`
+- `S80` `T` `src/cadrumo/entrypoints/cli/_config/_profile_bundle_flow.py`
+- `S83` `T` `src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`
+- `S84` `T` `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`
+- `S85` `T` `src/cadrumo/application/flows/tests/test_frontend_parity.py`
+- `S86` `T` `src/cadrumo/tests/manager_pilot.py`
+- `S87` `T` `dev/tui`
+- `S88` `T` `dev/import_hygiene_scan.py`
+- `S89` `T` `src/cadrumo/adapters/inbound/tui`
+- `S90` `T` `src/cadrumo/adapters/inbound/__init__.py`
+- `S104` `T` `src/cadrumo/entrypoints/tui/modelo/view and src/cadrumo/adapters/inbound/tui/_modelo_work_review_screen.py`
+- `S105` `T` `src/cadrumo/entrypoints/cli/_root_command_specs.py`
+- `S105` `T` `src/cadrumo/entrypoints/cli/_root_cli.py`
+- `S106` `T` `src/cadrumo/entrypoints/cli/_command_runtime.py`
+- `S106` `T` `src/cadrumo/entrypoints/cli/_errors.py`
+- `S106` `T` `src/cadrumo/core/errors/registry/_entrypoints.py`
+- `S107` `T` `src/cadrumo/entrypoints/cli/_config`
+- `S107` `T` `src/cadrumo/core`
+- `S107` `T` `src/cadrumo/application/user_profile`
+- `S107` `T` `src/cadrumo/adapters/inbound/tui`
+- `S108` `T` `src/cadrumo/entrypoints/cli/tests`
+- `S108` `T` `src/cadrumo/locales`
+- `S109` `T` `.vault/reference/2026-08-24-tui-architecture-command-enrollment-parity-reference.md`
+- `S110` `T` `src/cadrumo/entrypoints/cli/_config`
+- `S110` `T` `src/cadrumo/entrypoints/cli/_modelo_work_command_specs.py`
+- `S110` `T` `src/cadrumo/entrypoints/cli/_modelo_nonwork_command_specs.py`
+- `S111` `T` `src/cadrumo/entrypoints/cli/tests/test_global_tui_request.py`
+- `S111` `T` `src/cadrumo/entrypoints/cli/_config/tests`
+- `S112` `T` `.vault/adr/2026-08-11-tui-architecture-adr.md`
+- `S112` `T` `.vault/adr/2026-08-11-tui-interface-adr.md`
+- `S112` `T` `.vault/audit`
+- `S113` `T` `src/cadrumo/application/operations/_executor.py`
+- `S113` `T` `src/cadrumo/application/operations/_interactions.py`
+- `S113` `T` `src/cadrumo/application/operations/_supervisor.py`
+- `S113` `T` `src/cadrumo/application/operations/tests`
+- `S113` `T` `src/cadrumo/adapters/persistence/operations/tests/test_journal.py`
+- `S114` `T` `src/cadrumo/application/operations`
+- `S114` `T` `src/cadrumo/adapters/persistence/operations`
+- `S114` `T` `and focused real persistence and lifecycle tests`
+- `S115` `T` `src/cadrumo/application/operations/_registry.py`
+- `S116` `T` `src/cadrumo/application/operations/_public.py`
+- `S116` `T` `src/cadrumo/application/operations/_registry.py`
+- `S116` `T` `src/cadrumo/application/operations/_models.py`
+- `S116` `T` `src/cadrumo/application/operations/__init__.py`
+- `S116` `T` `src/cadrumo/application/operations/tests/test_public_contracts.py`
+- `S116` `T` `src/cadrumo/application/operations/tests/test_facade.py`
+- `S117` `T` `src/cadrumo/application/operations/_journal.py`
+- `S117` `T` `src/cadrumo/application/operations/_registry.py`
+- `S117` `T` `src/cadrumo/application/operations/_supervisor.py`
+- `S117` `T` `src/cadrumo/adapters/persistence/operations/_journal.py`
+- `S117` `T` `src/cadrumo/adapters/persistence/operations/_journal_validation.py`
+- `S118` `T` `src/cadrumo/adapters/persistence/operations/_journal.py`
+- `S118` `T` `src/cadrumo/application/operations/_journal.py`
+- `S118` `T` `src/cadrumo/application/operations/__init__.py`
+- `S118` `T` `src/cadrumo/adapters/persistence/operations/tests/test_journal.py`
+- `S119` `T` `src/cadrumo/application/operations/_observation.py`
+- `S119` `T` `src/cadrumo/application/operations/_journal.py`
+- `S119` `T` `src/cadrumo/application/operations/_execution_context.py`
+- `S119` `T` `src/cadrumo/application/operations/_supervisor.py`
+- `S119` `T` `src/cadrumo/application/operations/_registry.py`
+- `S119` `T` `src/cadrumo/application/operations/__init__.py`
+- `S119` `T` `src/cadrumo/application/user_profile/_censal_operation.py`
+- `S120` `T` `src/cadrumo/application/operations/_projection_services.py`
+- `S120` `T` `src/cadrumo/application/operations/_registry.py`
+- `S120` `T` `src/cadrumo/application/operations/_supervisor.py`
+- `S120` `T` `src/cadrumo/application/operations/__init__.py`
+- `S120` `T` `src/cadrumo/application/operations/tests/test_projection_services.py`
+- `S121` `T` `src/cadrumo/application/operations`
+- `S121` `T` `src/cadrumo/adapters/persistence/operations`
+- `S122` `T` `src/cadrumo/application/operations/__init__.py and src/cadrumo/entrypoints/_operation_composition.py`
+- `S123` `T` `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py`
+- `S125` `T` `src/cadrumo/application/modelo/_workspace_models.py`
+- `S125` `T` `src/cadrumo/application/modelo/tests/test_workspace_models.py`
+- `S126` `T` `src/cadrumo/application/modelo/_workspace_producers.py`
+- `S126` `T` `src/cadrumo/application/modelo/tests/test_workspace_producers.py`
+- `S127` `T` `src/cadrumo/application/modelo/_workspace_manifest.py`
+- `S127` `T` `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`
+- `S158` `T` `src/cadrumo/application/flows/_definition.py`
+- `S158` `T` `src/cadrumo/application/filing/_review.py`
+- `S159` `T` `src/cadrumo/domain/calculations/registry/_authority.py`
+- `S159` `T` `src/cadrumo/domain/calculations/registry/__init__.py`
+- `S159` `T` `src/cadrumo/domain/calculations/registry/tests/test_authority.py`
+- `S159` `T` `src/cadrumo/domain/calculations/registry/tests/test_authority_native_capture.py`
+- `S168` `T` `src/cadrumo/core/_bucket_pointer.py`
+- `S168` `T` `src/cadrumo/core/_bucket_pointer_io.py`
+- `S168` `T` `src/cadrumo/core/__init__.py`
+- `S168` `T` `src/cadrumo/core/config.py`
+- `S168` `T` `src/cadrumo/application/storage_write_policy.py`
+- `S168` `T` `src/cadrumo/application/config_reset.py`
+- `S168` `T` `src/cadrumo/application/auth/_operator_scope.py`
+- `S168` `T` `src/cadrumo/application/user_profile/_profile_pointer_transaction.py`
+- `S168` `T` `src/cadrumo/application/user_profile/__init__.py`
+- `S168` `T` `src/cadrumo/application/workflow/_profile_health.py`
+- `S168` `T` `src/cadrumo/application/user_profile/_login_session.py`
+- `S168` `T` `src/cadrumo/application/user_profile/_lifecycle.py`
+- `S168` `T` `src/cadrumo/application/user_profile/_custody_service.py`
+- `S168` `T` `src/cadrumo/application/user_profile/_custody_repository.py`
+- `S168` `T` `src/cadrumo/entrypoints/cli/_config/_profile_delete.py`
+- `S169` `T` `src/cadrumo/domain/modelos/work_unit_repository.py`
+- `S169` `T` `retired WorkUnitCatalogueRepositoryProtocol definition in src/cadrumo/domain/modelos/_protocols.py`
+- `S169` `T` `src/cadrumo/domain/modelos/__init__.py`
+- `S169` `T` `the exact 20 application consumers under src/cadrumo/application/ledger`
+- `S169` `T` `src/cadrumo/application/calculations`
+- `S169` `T` `and src/cadrumo/application/modelo`
+- `S169` `T` `src/cadrumo/adapters/persistence/profile/_secure_enveloped_document.py`
+- `S169` `T` `src/cadrumo/adapters/persistence/profile/_secure_model_document.py`
+- `S169` `T` `src/cadrumo/adapters/persistence/profile/modelos_work_units.py`
+- `S169` `T` `adapter-owned replay-guard persistence and retired application/adapter bridge and parallel-reader sites`
+- `S169` `T` `every affected adapter/dev/test/fixture/annotation/dynamic caller`
+- `S169` `T` `focused real encrypted-SQL interleaving`
+- `S169` `T` `one-SELECT`
+- `S169` `T` `CAS`
+- `S169` `T` `lineage`
+- `S169` `T` `and encryption tests`
+- `S169` `T` `dev/quality/import_hygiene_scan.py`
+- `S169` `T` `dev/tests/test_import_hygiene_gate.py`
+- `S169` `T` `and exact AST/Vaultspec-RAG zero-remnant tests`
+- `S170` `T`
+- `S171` `T` `src/cadrumo/application/modelo/workspace_models.py`
+- `S171` `T` `retired src/cadrumo/application/modelo/_workspace_models.py`
+- `S171` `T` `src/cadrumo/application/modelo/__init__.py inert-namespace gate for Workspace-model bindings`
+- `S171` `T` `src/cadrumo/application/modelo/tests/test_workspace_models.py`
+- `S171` `T` `every affected production/test/documentation/tooling/annotation/registration/dynamic-target/receipt consumer`
+- `S171` `T` `docs/api/cadrumo.application.modelo.rst`
+- `S171` `T` `retired docs/api/cadrumo.application.modelo._workspace_models.rst`
+- `S171` `T` `dev/quality/regulatory_drift_dispositions.toml`
+- `S171` `T` `and focused direct-import/current-only/independent-axis/digest-consistency/package-binding/zero-remnant tests`
+- `S172` `T` `src/cadrumo/application/modelo/workspace_producers.py`
+- `S172` `T` `retired src/cadrumo/application/modelo/_workspace_producers.py`
+- `S172` `T` `src/cadrumo/application/modelo/__init__.py inert-namespace gate for producer-contract and registration bindings`
+- `S172` `T` `src/cadrumo/application/modelo/tests/test_workspace_producers.py`
+- `S172` `T` `every affected production/test/documentation/tooling/annotation/registration/dynamic-target/receipt consumer`
+- `S172` `T` `docs/api/cadrumo.application.modelo.rst`
+- `S172` `T` `retired docs/api/cadrumo.application.modelo._workspace_producers.rst`
+- `S172` `T` `and focused direct-import/epoch-v2/current-only/package-binding/zero-remnant tests`
+- `S175` `T` `dev/quality/registry_facade_family_census.py`
+- `S175` `T` `dev/quality/registry_facade_family_census.v1.json`
+- `S175` `T` `dev/tests/test_registry_facade_family_census.py`
+- `S175` `T` `.vault/audit/2026-08-26-tui-architecture-registry-facade-family-census-audit.md`
+- `S175` `T` `.vault/plan/2026-08-11-tui-architecture-plan.md`

@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:4be205aa581ce2c53f21ab9582a68b1c551bb3f38198134f7a470b6d71444c63'
-related:
-  - "[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S49]]"
+related: []
 ---
 
 # `aeat-export-fragment-generator-authority` audit: `s49 differentiated deduction review`

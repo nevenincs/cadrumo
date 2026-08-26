@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#casilla-schema'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-26'
 body_schema: 'body-v1'
 body_hash: 'sha256:195dd0c0a4b1cffa2b664490da9f7db112edbe25194d670d6da7e1acd3832114'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
-  - "[[2026-08-10-casilla-schema-W05-P11-S83]]"
 ---
 # `casilla-schema` audit: `S83 split fixture review`
 
