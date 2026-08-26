@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:31dc4c1e12ae49e21eaeff66d25854d6a6529944dd7cb3222a71e7bf6883a264'
+body_hash: 'sha256:57bbe692c7d9ef3dee0ea8223480ea2f93349eccf89faae484530005a2730b0a'
 ---
 
 # `tui-architecture` plan
@@ -281,6 +281,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [ ] `W03.P20.S271` - Retire the 1 schema re-export(s) from the registry bindings dispatch module by direct-importing DataBindingDefinition from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.; `src/cadrumo/domain/calculations/registry/schema.py, src/cadrumo/domain/calculations/registry/bindings.py, and every consumer of the listed symbols under src/, dev/ and docs/`.
 - [ ] `W03.P20.S272` - Retire the 2 withholding296_bindings re-export(s) from the registry bindings dispatch module by direct-importing Withholding296Observation, resolve_withholding296_binding_row_values from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.; `src/cadrumo/domain/calculations/registry/withholding296_bindings.py, src/cadrumo/domain/calculations/registry/bindings.py, and every consumer of the listed symbols under src/, dev/ and docs/`.
 - [ ] `W03.P20.S273` - Retire the 9 withholding_bindings re-export(s) from the registry bindings dispatch module by direct-importing WithholdingClaveBreakdown, WithholdingObservation, WithholdingObservationRequirement, WithholdingTotalsParity, aggregate_withholding_by_clave, compute_withholding_totals_parity and others from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.; `src/cadrumo/domain/calculations/registry/withholding_bindings.py, src/cadrumo/domain/calculations/registry/bindings.py, and every consumer of the listed symbols under src/, dev/ and docs/`.
+- [ ] `W03.P20.S274` - Correct the Workspace producer projection fingerprint so it identifies the contract a consumer actually receives instead of demanding that a model's input and output shapes coincide: derive the fingerprint from the serialization schema alone, replace the validation-equals-serialization equality with a real round-trip property proving a dumped projection re-validates, and prove the fingerprint admits a Decimal-bearing domain model while still refusing a genuine schema drift; amend the governing decision record in the same change; `src/cadrumo/application/modelo/workspace_producers.py, the amended tui-architecture ADR, and focused fingerprint round-trip and drift-refusal tests`.
 
 ### Phase `W03.P21` - Frontend-neutral Modelo Edit Contract V1
 
