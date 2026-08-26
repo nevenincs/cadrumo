@@ -6,7 +6,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a626fc8cd24a7ce0186dbf9f50031e3821603d131faf70af0202ade48e167b0c'
+body_hash: 'sha256:4e07ebf34146740c4d6545dc85c0d9af03356e7d744d8ef706ae8f333ef36c9b'
 related:
   - '[[2026-08-11-tui-interface-W01-P01-S01]]'
   - '[[2026-08-11-tui-interface-W01-P01-S02]]'
@@ -32,6 +32,8 @@ related:
   - '[[2026-08-11-tui-interface-W04-P07-S19]]'
   - '[[2026-08-11-tui-interface-W04-P07-S20]]'
   - '[[2026-08-11-tui-interface-W04-P07-S21]]'
+  - '[[2026-08-11-tui-interface-W04-P08-S22]]'
+  - '[[2026-08-11-tui-interface-W04-P08-S23]]'
   - '[[2026-08-11-tui-interface-W05-P10-S24]]'
   - '[[2026-08-11-tui-interface-W05-P10-S25]]'
   - '[[2026-08-11-tui-interface-W05-P10-S38]]'
@@ -76,6 +78,8 @@ Auto-generated index of all documents tagged with `#tui-interface`.
 - `2026-08-11-tui-interface-W04-P07-S19` - Complete profile-secret creation and registration presentation through public application contracts
 - `2026-08-11-tui-interface-W04-P07-S20` - Complete passphrase-change presentation with confirmation outcome and cancellation states
 - `2026-08-11-tui-interface-W04-P07-S21` - Prove exact operation binding expiry single use mismatch refusal cancellation cleanup and canary non-retention through real secret journeys
+- `2026-08-11-tui-interface-W04-P08-S22` - Extend the settled guided-flow shell with reusable stage navigation validation summaries and cancellation
+- `2026-08-11-tui-interface-W04-P08-S23` - Prove guided flows consume application-owned questions and decisions without embedding flow semantics
 - `2026-08-11-tui-interface-W05-P10-S24` - Register modelo.work.select and the sole C1 modelo.work.review destination over the architecture-relocated view, consuming the exact public ModeloWorkReview without a second producer or legacy route
 - `2026-08-11-tui-interface-W05-P10-S25` - Prove C1 review outliers, stable keyboard order, non-colour status, and all four locales, three geometries, and two themes before its route can become callable
 - `2026-08-11-tui-interface-W05-P10-S38` - Emit and validate ModeloWorkspaceC1ExitReceiptV1 with the accepted-companion prefix, migration evidence, denominator digest, C1 accessibility matrix, production route, and availability fence

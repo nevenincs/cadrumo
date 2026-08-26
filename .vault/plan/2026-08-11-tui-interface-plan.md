@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:3cf055dfb1fd17304e088026d7f20224e55d5c8cdc9f1742b34949308eb74369'
+body_hash: 'sha256:3ab5d8792c0f74a908dfe57359604549fb8b2de0be2b5bd5fb1b3dd5fee1c502'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -115,8 +115,8 @@ Deliver profile selection, login, registration, password entry, profile-secret c
 
 Rebuild reusable guided-flow presentation from settled application flow contracts without moving flow rules into the TUI.
 
-- [ ] `W04.P08.S22` - Extend the settled guided-flow shell with reusable stage navigation validation summaries and cancellation; `src/cadrumo/entrypoints/tui/flows/app.py`.
-- [ ] `W04.P08.S23` - Prove guided flows consume application-owned questions and decisions without embedding flow semantics; `src/cadrumo/entrypoints/tui/flows/tests/test_guided_flows.py`.
+- [x] `W04.P08.S22` - Extend the settled guided-flow shell with reusable stage navigation validation summaries and cancellation; `src/cadrumo/entrypoints/tui/flows/app.py`.
+- [x] `W04.P08.S23` - Prove guided flows consume application-owned questions and decisions without embedding flow semantics; `src/cadrumo/entrypoints/tui/flows/tests/test_guided_flows.py`.
 
 ## Wave `W05` - Modelo C1-C2 read cohorts
 
