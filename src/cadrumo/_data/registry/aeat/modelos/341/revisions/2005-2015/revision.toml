@@ -2,7 +2,12 @@
 authority_grade = "applicability"
 # Exact 619-position fixed-width era from aeat-dr-341-2005-2015. This layout
 # authority proves byte geometry only; it does not promote the revision to
-# filing grade or claim operator-reviewed filing support.
+# filing grade or claim operator-reviewed filing support. The year selector is
+# the natural ejercicio coordinate; valid_from is the independent optional
+# as-of axis. BOE-A-2004-17306's final provision admits telematic presentation
+# only from the first presentation period beginning after 2005-02-01, so an
+# explicit January 2005 as-of date truthfully refuses this otherwise-declared
+# 2005 filing year.
 valid_from = 2005-02-01
 valid_to = 2015-12-31
 period_selector = { year_from = 2005, year_to = 2015, periods = ["1T", "2T", "3T", "4T"] }

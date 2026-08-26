@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v1'
-body_hash: 'sha256:f0942c75fdd81bcfe2a20e1eacea3bd556398ea4888088f9d0f86b3b8a6866da'
+body_hash: 'sha256:48d5cf44d23f5c7423c64afd02a5eb8c0f068ccf1be997c548d66e5beca12d8b'
 related:
   - "[[2026-08-14-registry-temporal-coverage-plan]]"
   - "[[2026-08-14-registry-temporal-coverage-W02-P05-S51]]"
@@ -34,8 +34,8 @@ related:
 
 ## Scope
 
-Independent review at live HEAD `f25b8e37664` of the Modelo 341 paths committed
-in `cfc47d7194`, limited to the Modelo 341 registry and legal declarations, its
+Independent review of the Modelo 341 paths committed in `cfc47d7194` as they
+stand at the live review HEAD, limited to the Modelo 341 registry and legal declarations, its
 focused tests, and the S51 execution record. The review checked the hash-pinned
 AEAT 2005--2015 binary, the 619-position/20-field fixed-width transcription,
 the 2016 successor's separate variable-envelope/800-position shape, temporal
@@ -100,3 +100,37 @@ unresolved date-window meaning.
   exception with the authoritative date-axis evidence, and add a mutation or
   boundary test for the resulting rule.
 
+## Remediation evidence (2026-08-26)
+
+Both findings are remediated in the bounded M341 correction. The canonical
+`dev.locales move-revision` migration copied the retired
+`2000-y-siguientes` occurrence subtree into `2005-2015` and
+`2016-y-siguientes`, distributed only casillas each destination actually
+declares, and released the retired subtree. `dev.locales scaffold` then added
+the three historical-only wire occurrences, and `dev.locales set` supplied
+real Spanish, English, Catalan, and Hungarian labels. The focused regression
+loads both live revisions and resolves every casilla label in every shipped
+locale; it also pins the three historical Spanish wire labels so a null,
+stale-revision key, or semantic relabel fails. The registry-aware revision
+parity suite passes, and `dev.locales scaffold --check` reports all four
+catalogues clean.
+
+The date-axis finding is resolved by preserving, documenting, and testing the
+existing generic boundary rather than flattening it. The accepted
+period-revision resolver ADR defines `filing_year` plus `period` as the natural
+coordinate and `on` as an optional reference date intersected with
+`valid_from`. BOE-A-2004-17306's final provision makes telematic presentation
+available only from the first presentation period beginning after 1 February
+2005. Accordingly, the revision keeps the 2005 ejercicio selector and the
+independent `valid_from = 2005-02-01` as-of boundary: an explicit 31 January
+request refuses, while 1 February admits the same `2005/1T` coordinate. The
+focused test now proves both sides.
+
+Verification evidence: the seven focused M341 tests pass with pytest's
+repository confcut, Ruff passes the M341 test module, the direct M341
+`RegistryValidator.validate_modelo` gate passes, the revision-locale parity
+suite passes, and locale scaffold check reports `ca`, `en`, `es`, and `hu`
+clean. The whole shipped-schema runtime localization test remains blocked by
+14,028 unrelated null translations introduced by the concurrent Modelo 200
+partition; its first failure is `modelo 200 / 2025-y-siguientes`, not Modelo
+341. S51 remains open for the other modelos in its row.

@@ -82,6 +82,55 @@ def test_modelo_341_refuses_pre_design_years_and_selects_two_layout_eras() -> No
     assert {ref for layout in current.export_layouts for ref in layout.source_refs} == {"aeat-dr-341-2016"}
 
 
+def test_modelo_341_2005_effective_date_is_an_explicit_as_of_boundary() -> None:
+    """Keep the BOE presentation boundary distinct from the ejercicio selector."""
+    modelo, _catalogues = _committed_modelo("341")
+
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=2005, period="1T", on=date(2005, 1, 31))
+
+    selected = select_revision(modelo, filing_year=2005, period="1T", on=date(2005, 2, 1))
+    assert selected.id == "2005-2015"
+
+
+def test_modelo_341_all_live_casillas_have_labels_in_every_shipped_locale() -> None:
+    """Refuse a stale or missing locale occurrence in either live revision."""
+    modelo, _catalogues = _committed_modelo("341")
+    expected_ids = {
+        "2005-2015": {
+            "decl.ejercicio",
+            "decl.periodo",
+            "wire.letras-etiqueta",
+            "wire.codigo-cuenta-cliente",
+            "wire.observaciones",
+            *(f"{number:02d}" for number in range(1, 11)),
+        },
+        "2016-y-siguientes": {
+            "decl.ejercicio",
+            "decl.periodo",
+            *(f"{number:02d}" for number in range(1, 11)),
+        },
+    }
+
+    for revision_id, casilla_ids in expected_ids.items():
+        revision = modelo.revisions[revision_id]
+        assert {casilla.id for casilla in revision.casillas} == casilla_ids
+        for locale in ("es", "en", "ca", "hu"):
+            assert all(casilla.get_label(locale).strip() for casilla in revision.casillas)
+
+    historical = modelo.revisions["2005-2015"]
+    wire_labels = {
+        casilla.id: casilla.get_label("es")
+        for casilla in historical.casillas
+        if casilla.id.startswith("wire.")
+    }
+    assert wire_labels == {
+        "wire.letras-etiqueta": "Letras de la etiqueta identificativa",
+        "wire.codigo-cuenta-cliente": "Código de cuenta cliente (C.C.C.)",
+        "wire.observaciones": "Observaciones",
+    }
+
+
 def test_modelo_341_historical_layout_covers_every_source_position() -> None:
     """Exercise the generic coverage validator against the real historical PDF."""
     modelo, catalogues = _committed_modelo("341")

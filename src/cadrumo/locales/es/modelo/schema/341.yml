@@ -59,7 +59,7 @@ modelo:
               field:
                 title: Modelo 341 autoliquidación del IVA
           field:
-            label: Modelo 341 (orden-min-2000-12-15-m341), ejercicios 2000 y siguientes
+            label: Modelo 341 (orden-min-2000-12-15-m341), ejercicios 2005 a 2015
         2016-y-siguientes:
           casilla:
             '01':
@@ -103,4 +103,4 @@ modelo:
               field:
                 title: Modelo 341 autoliquidación del IVA
           field:
-            label: Modelo 341 (orden-min-2000-12-15-m341), ejercicios 2000 y siguientes
+            label: Modelo 341 (orden-min-2000-12-15-m341), ejercicios 2016 y siguientes
