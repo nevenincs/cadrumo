@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:982a8ed6ba1df5501504fd565f59f589a183d833019f160b0848fc83b050adcb'
+body_hash: 'sha256:a619340f3339a91cbcbc410c854557de5e0496c4dbb1db7d1ccdc06c238c2ee8'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -50,6 +50,11 @@ related:
 - `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `40c802ea31`: GRADED_SNAPSHOT `graded_snapshot_materialization_facet`)
 - `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/workspace.py src/cadrumo/application/modelo/tests/test_workspace.py` -> `pass`
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (108 passed, 1 pre-existing unrelated failure)
+- `M` `src/cadrumo/application/modelo/workspace_models.py`, `tests/test_workspace_models.py` (commit `c03f834da4`: S291, `ModeloWorkspaceLedgerIssueSubjectV1` discriminated union)
+- `M` `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md` (S291 amendment)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `dfc8a9f19c`: `graded_snapshot_readiness` pass-through)
+- `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/workspace.py src/cadrumo/application/modelo/workspace_models.py src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py` -> `pass` (only pre-existing unrelated diagnostics)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (110 passed, 1 pre-existing unrelated failure)
 
 ## Notes
 
@@ -304,3 +309,23 @@ worktree index when this commit ran; verified harmless (`ty check` clean,
 `.baseline-source-snapshot` fixed-point failure and unrelated
 `cadrumo_harness.mcp` collection errors reproducing independently of this
 change) and disclosed rather than unwound.
+
+S291 (`W03.P20.S291`, decided and closed separately, own exec record) and
+the readiness pass-through both landed (commits `c03f834da4`, `dfc8a9f19c`).
+`graded_snapshot_readiness` projects `ProjectionModeloReadiness` onto
+`ModeloWorkspaceReadinessV1` as a pure axis-preserving pass-through --
+`ledger_issues` is the one axis needing a shape change, routed through the
+new `ModeloWorkspaceLedgerIssueSubjectV1` discriminated union so a
+period-level `LedgerPreflightIssue` (`transaction_id == "__period__"`) is
+represented as itself. Proved with a real `ProjectionModeloReadiness`
+carrying one of each row kind (profile requirement, binding requirement,
+a transaction-scoped and a period-scoped ledger issue) and asserting every
+field survives the projection unchanged. This completes all three
+GRADED_SNAPSHOT mechanical pieces authorized (materialization, ledger-issue
+subject, readiness).
+
+Still held: `graded_snapshot_provenance_facet` (S290, opened and unresolved
+-- `CalculationSourceRef` has no field naming the casilla/binding it
+explains) and the runtime capability-disposition computation (S287,
+confirmed unimplementable as written). S128 stays unchecked until both are
+ruled on.
