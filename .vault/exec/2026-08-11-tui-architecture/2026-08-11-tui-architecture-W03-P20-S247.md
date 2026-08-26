@@ -5,16 +5,11 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:15601440b01178f0209b83bb6f2b07ea4b7260b75c4eb608b232cf5717fcd64b'
+body_hash: 'sha256:6ac1827d3344d4bb92eb45c0788f55e4e2b6d6f67b29e6a61ea686865acc919e'
 step_id: 'S247'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Privatize the validate implementation after eliminating every external consumer and public package reach
 
@@ -30,23 +25,6 @@ M 24 registry modules and tests repointed onto the relative private path
 M dev/quality/registry_facade_family_census.v1.json
 D docs/api/cadrumo.domain.calculations.registry.validate.rst
 M docs/api/cadrumo.domain.calculations.registry.rst
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 ## Notes
 

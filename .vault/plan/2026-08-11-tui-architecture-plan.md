@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:e28e8bb8cd4ea059ffc20f2872f51d6daf67b0213bb1ba138481d75aa654b592'
+body_hash: 'sha256:f5e58767b1ad7e772721b4b4f7855aa4c7707f21c0a2916fc0e4644a35855738'
 ---
 
 # `tui-architecture` plan
@@ -219,7 +219,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S207` - Privatize the ledger_binding_resolution implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/ledger_binding_resolution.py`.
 - [x] `W03.P20.S208` - Prove legal remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/legal.py`.
 - [x] `W03.P20.S209` - Prove live_parity remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/live_parity.py`.
-- [ ] `W03.P20.S210` - Privatize the loader implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/loader.py`.
+- [x] `W03.P20.S210` - Privatize the loader implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/loader.py`.
 - [x] `W03.P20.S211` - Prove m303_differentiated_deduction_projection remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/m303_differentiated_deduction_projection.py`.
 - [x] `W03.P20.S212` - Prove m303_exonerado_390_projection remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/m303_exonerado_390_projection.py`.
 - [x] `W03.P20.S213` - Prove m303_orden_census_artefact remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/m303_orden_census_artefact.py`.
@@ -250,7 +250,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S238` - Prove schema_rounding remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/schema_rounding.py`.
 - [x] `W03.P20.S239` - Prove schema_scalars remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/schema_scalars.py`.
 - [x] `W03.P20.S240` - Prove schema_verification remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/schema_verification.py`.
-- [ ] `W03.P20.S241` - Privatize the snapshot implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/snapshot.py`.
+- [x] `W03.P20.S241` - Privatize the snapshot implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/snapshot.py`.
 - [x] `W03.P20.S242` - Prove snapshot_coordinate remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/snapshot_coordinate.py`.
 - [x] `W03.P20.S243` - Prove static_inspection remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/static_inspection.py`.
 - [x] `W03.P20.S244` - Prove support_matrix remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/support_matrix.py`.
@@ -263,7 +263,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S251` - Prove validate_revision_identity remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/validate_revision_identity.py`.
 - [x] `W03.P20.S252` - Privatize the verdict_cache implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/verdict_cache.py`.
 - [x] `W03.P20.S253` - Prove verification_tolerance remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/verification_tolerance.py`.
-- [ ] `W03.P20.S254` - Prove the registry package fixed point: zero project package bindings, zero re-exports, and zero unresolved family rows; `src/cadrumo/domain/calculations/registry/__init__.py`.
+- [x] `W03.P20.S254` - Prove the registry package fixed point: zero project package bindings, zero re-exports, and zero unresolved family rows; `src/cadrumo/domain/calculations/registry/__init__.py`.
 - [x] `W03.P20.S257` - Retire the 2 binding_aggregation re-export(s) from the registry bindings dispatch module by direct-importing binding_aggregation_op, default_binding_aggregation_op from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.; `src/cadrumo/domain/calculations/registry/binding_aggregation.py, src/cadrumo/domain/calculations/registry/bindings.py, and every consumer of the listed symbols under src/, dev/ and docs/`.
 - [x] `W03.P20.S258` - Retire the 4 bindings_previous_filing re-export(s) from the registry bindings dispatch module by direct-importing previous_filing_binding_source_casilla_ids, previous_filing_observation_requirements, previous_filing_source_reference, resolve_previous_filing_binding_values from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.; `src/cadrumo/domain/calculations/registry/bindings_previous_filing.py, src/cadrumo/domain/calculations/registry/bindings.py, and every consumer of the listed symbols under src/, dev/ and docs/`.
 - [x] `W03.P20.S259` - Retire the 4 core.aggregation re-export(s) from the registry bindings dispatch module by direct-importing BindingAggregationOp, CounterpartSourceKind, INVOICE_BINDING_SOURCE_KINDS, LEDGER_BINDING_SOURCE_KINDS from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols. This is a CROSS-LAYER facade: a core symbol republished through a registry module, so the direct import must reach core.; `src/cadrumo/core/aggregation.py, src/cadrumo/domain/calculations/registry/bindings.py, and every consumer of the listed symbols under src/, dev/ and docs/`.
