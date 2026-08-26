@@ -18,7 +18,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
 modified: '2026-08-26'
-body_hash: 'sha256:3ab5d8792c0f74a908dfe57359604549fb8b2de0be2b5bd5fb1b3dd5fee1c502'
+body_hash: 'sha256:4d825e7f12bbdf0768edae5e6368200a7f3c3395a645bfd41b253b55a242622f'
 ---
 
 <!-- RETIRED: P09, S26, S35 -->
@@ -95,7 +95,7 @@ Expose explicit source actions, provenance, conflicts, and exact apply or reject
 - [x] `W03.P06.S14` - Render explicit automatic-source capabilities scope authentication needs and operation launch actions; `src/cadrumo/entrypoints/tui/profile/overview.py`.
 - [x] `W03.P06.S15` - Render provenance current and proposed values conflicts and exact apply or reject reconciliation decisions; `src/cadrumo/entrypoints/tui/profile/sync_review.py`.
 - [x] `W03.P06.S16` - Prove acquisition is never implicit and reconciliation persists only accepted decisions through public contracts; `src/cadrumo/entrypoints/tui/profile/tests/test_sync_review.py`.
-- [ ] `W03.P06.S95` - Declare the acquisition-source capability, scope and authentication contract that W03.P06.S14 renders but no public surface currently supplies, so an operator sees which scopes and credentials a source requires and whether they are held, deriving each fact from the owning authority rather than a presentation-local policy, then render those facts on the source-action panel; `the public acquisition-source capability contract, src/cadrumo/application/user_profile/acquisition_sources.py, src/cadrumo/entrypoints/tui/profile/overview.py, and focused capability and scope rendering tests`.
+- [x] `W03.P06.S95` - Declare the acquisition-source capability, scope and authentication contract that W03.P06.S14 renders but no public surface currently supplies, so an operator sees which scopes and credentials a source requires and whether they are held, deriving each fact from the owning authority rather than a presentation-local policy, then render those facts on the source-action panel; `the public acquisition-source capability contract, src/cadrumo/application/user_profile/acquisition_sources.py, src/cadrumo/entrypoints/tui/profile/overview.py, and focused capability and scope rendering tests`.
 
 ## Wave `W04` - Secret surfaces and generic flows
 

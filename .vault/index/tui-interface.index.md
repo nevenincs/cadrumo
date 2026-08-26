@@ -6,7 +6,7 @@ tags:
 date: '2026-08-16'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:4e07ebf34146740c4d6545dc85c0d9af03356e7d744d8ef706ae8f333ef36c9b'
+body_hash: 'sha256:420cdddee96d93ddbdc4b68002918343a629bfa3600ff9cc307c100ffcc51e6a'
 related:
   - '[[2026-08-11-tui-interface-W01-P01-S01]]'
   - '[[2026-08-11-tui-interface-W01-P01-S02]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-08-11-tui-interface-W03-P06-S14]]'
   - '[[2026-08-11-tui-interface-W03-P06-S15]]'
   - '[[2026-08-11-tui-interface-W03-P06-S16]]'
+  - '[[2026-08-11-tui-interface-W03-P06-S95]]'
   - '[[2026-08-11-tui-interface-W04-P07-S17]]'
   - '[[2026-08-11-tui-interface-W04-P07-S18]]'
   - '[[2026-08-11-tui-interface-W04-P07-S19]]'
@@ -73,6 +74,7 @@ Auto-generated index of all documents tagged with `#tui-interface`.
 - `2026-08-11-tui-interface-W03-P06-S14` - Render explicit automatic-source capabilities scope authentication needs and operation launch actions
 - `2026-08-11-tui-interface-W03-P06-S15` - Render provenance current and proposed values conflicts and exact apply or reject reconciliation decisions
 - `2026-08-11-tui-interface-W03-P06-S16` - Prove acquisition is never implicit and reconciliation persists only accepted decisions through public contracts
+- `2026-08-11-tui-interface-W03-P06-S95` - Declare the acquisition-source capability, scope and authentication contract that W03.P06.S14 renders but no public surface currently supplies, so an operator sees which scopes and credentials a source requires and whether they are held, deriving each fact from the owning authority rather than a presentation-local policy, then render those facts on the source-action panel
 - `2026-08-11-tui-interface-W04-P07-S17` - Complete reusable masked credential and password-entry presentation over the receipt-named public EphemeralSecretSubmission facade
 - `2026-08-11-tui-interface-W04-P07-S18` - Complete login and profile-picker presentation without moving authentication policy into the TUI
 - `2026-08-11-tui-interface-W04-P07-S19` - Complete profile-secret creation and registration presentation through public application contracts

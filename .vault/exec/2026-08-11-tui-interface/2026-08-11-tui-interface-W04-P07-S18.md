@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:14a34662e9c695b878e9b64b8c3230d64775841bd11ca58282c13453be1c0412'
+body_hash: 'sha256:6951e0e8201e758371e6335ab0790146bf15b90cb94f5603857826841f73edd9'
 step_id: 'S18'
 related:
   - "[[2026-08-11-tui-interface-plan]]"
