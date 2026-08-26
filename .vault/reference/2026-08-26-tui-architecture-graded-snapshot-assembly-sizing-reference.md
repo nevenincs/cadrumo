@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:92bd1fd8767a24958abe92b9db07bd47b4aea350ded22d19489efc76eaea052f'
+body_hash: 'sha256:443e35f741bb067a6680a42a739567f69afaf210c1a1fba670645b36c0380cb3'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
   - "[[2026-08-24-tui-registry-api-gate-adr]]"
@@ -70,6 +70,19 @@ clamped down to what was asked) -- but I have not found anywhere in the
 codebase that actually computes or names an "effective grade" distinct from
 `declared_grade` for this purpose, so this is a guess to verify, not a traced
 fact, before wiring `ModeloWorkspaceSnapshotScopeV1` construction.
+
+**This has two readings, and the next pass must establish which before
+touching this field, not guess.** Either (a) `effective_grade` is genuinely
+always equal to `declared_grade` and the field is a harmless, mildly
+misleading redundant restatement of it -- in which case the assembly simply
+mirrors `declared_grade` into both fields -- or (b) `effective_grade` is a
+designed-but-unimplemented axis: the model declares a three-way distinction
+(`required`/`declared`/`effective`) that no code anywhere actually computes,
+which would be a genuine contract gap of the same kind as the other thirteen
+found this session, not ordinary unexplored implementation surface. The
+answer changes whether the assembly computes anything for this field at all
+or simply copies `declared_grade`. Resolve this FIRST in the next pass,
+before starting `resolve_graded_snapshot_result`.
 
 ### CONFIRMED: what still needs building, and why it cannot reuse the static functions as-is
 
