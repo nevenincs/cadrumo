@@ -14,9 +14,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Modelo, Period
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core import Modelo, Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     ModeloCode,
     ModeloVerificationFinding,
@@ -39,7 +40,7 @@ _M100_CODE = ModeloCode(Modelo.M100.value)
 
 @pytest.fixture(scope="module")
 def snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=_FILING_YEAR, period="0A")
+    return bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A")
 
 
 def _work_unit(modelo: ModeloCode = _M100_CODE, *, filing_year: int = _FILING_YEAR) -> WorkUnit:

@@ -48,10 +48,14 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
+from cadrumo.domain.calculations.registry.bindings import (
+    RegistryModeloObservation,
+    resolve_available_bound_inputs_by_casilla_id,
+)
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import resolve_bindings_from_local_store
@@ -144,7 +148,7 @@ def _calculate_131(
     carry_binding: dict[str, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL M131 engine for one quarter; return result + produced-value count."""
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
     bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, carry_binding)
     inputs = {**bound, **casilla_inputs}
     result = calculate_registry_snapshot(
@@ -223,7 +227,7 @@ def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(tmp_path: Path) -> No
                 captured_at=_CLOCK,
             )
         )
-        q2_snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N, period="2T")
+        q2_snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N, period="2T")
         report = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo)
 
     assert report.binding_values.get(_CARRY_BINDING) == _EXPECTED_Q1_2024_SALDO

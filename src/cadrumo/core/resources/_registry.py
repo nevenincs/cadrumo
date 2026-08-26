@@ -24,7 +24,6 @@ from ._repos import (
     RecargoBandsRepository,
     TopicCatalogueRepository,
 )
-from ._repos.modelos import StaticModeloRepository
 
 
 @dataclass(slots=True, frozen=True)
@@ -42,7 +41,6 @@ class ResourceRegistry:
     category_profiles: CategoryProfileRepository = field(default_factory=CategoryProfileRepository)
     holiday_calendars: HolidayCalendarRepository = field(default_factory=HolidayCalendarRepository)
     manuals: ManualRepository = field(default_factory=ManualRepository)
-    modelos: StaticModeloRepository = field(default_factory=StaticModeloRepository)
     recargo_bands: RecargoBandsRepository = field(default_factory=RecargoBandsRepository)
     topics: TopicCatalogueRepository = field(default_factory=TopicCatalogueRepository)
     iva_catalogues: IvaCatalogueRepository = field(default_factory=IvaCatalogueRepository)

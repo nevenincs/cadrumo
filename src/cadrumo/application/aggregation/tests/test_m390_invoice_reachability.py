@@ -39,7 +39,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import Modelo
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .._modelo_bindings import _INVOICE_LEDGER_SCREEN_BINDINGS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -58,7 +58,7 @@ _STRUCTURAL_EJERCICIO = 2025
 
 
 def _revision(modelo_id: str, period: str):
-    return resources().modelos.authority.snapshot(modelo_id, filing_year=_STRUCTURAL_EJERCICIO, period=period).revision
+    return bundled_authority().snapshot(modelo_id, filing_year=_STRUCTURAL_EJERCICIO, period=period).revision
 
 
 def test_the_invoice_versus_ledger_screen_now_covers_m390() -> None:

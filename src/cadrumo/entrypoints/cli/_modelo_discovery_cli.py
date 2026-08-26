@@ -46,6 +46,7 @@ from ...core import ActionArgumentSource, ActionArgumentStatus, Period, TaxDomai
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ._common import _parse_iso_date, emit_envelope, resolve_notice_action
 from ._modelo_behavior_support import bare_period_error, resolve_year_period
@@ -237,7 +238,6 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
 
     from ...application.user_profile.preflight import format_profile_path_requirements
-    from ...core.resources import resources
     from ...domain.user_profile.loader import load_user_profile_schema
 
     if not checklist.unresolved_profile_keys:
@@ -246,7 +246,7 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
         format_profile_path_requirements(
             checklist.unresolved_profile_keys,
             schema=load_user_profile_schema(),
-            grounding_index=build_profile_grounding_index(resources().modelos.authority),
+            grounding_index=build_profile_grounding_index(bundled_authority()),
         )
     )
 

@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -24,8 +24,8 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from .._work_lifecycle import create_work_unit
 from .._projection import ModeloCompareDeltaRow, ModeloProjectionCasillaObservation, compare_modelo_years
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,7 +40,7 @@ _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="projecti
 def _m130_ingresos_registry_provenance() -> tuple[tuple[str, ...], tuple[str, ...]]:
     registry_casilla = next(
         item
-        for item in resources().modelos.authority.snapshot("130", filing_year=2026, period="1T").revision.casillas
+        for item in bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.casillas
         if item.id == _M130_INGRESOS_CASILLA
     )
     return tuple(registry_casilla.legal_refs), tuple(registry_casilla.source_refs)
@@ -167,7 +167,7 @@ def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path:
     row = next(item for item in result.delta_rows if item.casilla_id == _M130_INGRESOS_CASILLA)
     registry_casilla = next(
         item
-        for item in resources().modelos.authority.snapshot("130", filing_year=2026, period="1T").revision.casillas
+        for item in bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.casillas
         if item.id == _M130_INGRESOS_CASILLA
     )
     assert row.delta == Decimal("500.00")
@@ -190,7 +190,7 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(t
     merely never having been fed a value small enough to matter.
     """
     published_tolerance = (
-        resources().modelos.authority.snapshot("130", filing_year=2026, period="1T").verification_policy().tolerance
+        bundled_authority().snapshot("130", filing_year=2026, period="1T").verification_policy().tolerance
     )
     assert published_tolerance == Decimal("0.01"), (
         "test precondition: modelo 130 2026 1T must publish a real, non-zero tolerance "

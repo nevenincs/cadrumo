@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors import CadrumoError, build_error_envelope, resolve_error_message
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .._calculate_input import (
     ModeloCalculateDecimalInputError,
     ModeloCalculateRelationInputError,
@@ -97,7 +97,7 @@ def test_m210_tipo_renta_unknown_code_refuses_and_lists_accepted_and_fetch_gated
 
 
 def test_unknown_relation_override_error_names_revision_relation_ids() -> None:
-    revision = resources().modelos.authority.validate_modelo("200").revisions["2024-y-siguientes"]
+    revision = bundled_authority().validate_modelo("200").revisions["2024-y-siguientes"]
     relation_ids = {relation.id for relation in revision.relations}
     accepted_relation = "modelo-200-2024-rel-202-pagos-fraccionados"
     assert accepted_relation in relation_ids

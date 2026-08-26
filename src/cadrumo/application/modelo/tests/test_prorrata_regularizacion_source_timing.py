@@ -30,7 +30,8 @@ from typing import Any
 import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from .._calculation_source_staging import (
     _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
@@ -104,7 +105,7 @@ def _work_unit(*, revision_id: str) -> WorkUnit:
 
 def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engine() -> None:
     """The seam exposes manual volume seeds and computed values from one engine pass."""
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    snapshot = bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
     assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 

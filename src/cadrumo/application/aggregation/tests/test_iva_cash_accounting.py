@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Modelo, Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import (
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,
@@ -49,7 +49,7 @@ _PARITY_BUCKET_ID = "5c5c5c5c-5c5c-4c5c-8c5c-5c5c5c5c5c5c"
 
 
 def _revision_303():
-    return resources().modelos.authority.snapshot("303", filing_year=2026, period="2T").revision
+    return bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
 
 
 def _raw(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
@@ -560,8 +560,8 @@ def _m390_repercutido_values(transaction: Transaction) -> dict[str, Decimal]:
     # registry and rots on the next span split, and pinning a different year's
     # id would compute this period under another year's norms.
     revision = (
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             Modelo.M390.value,
             filing_year=annual.filing_year,
             period=annual.registry_token,

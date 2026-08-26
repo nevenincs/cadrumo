@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
@@ -35,7 +36,6 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
-from ....core.resources import resources
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.prorrata_register import ProrrataRegisterEntry
 from ....domain.transactions import (
@@ -534,7 +534,7 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     is the sum of the deductible bases, derived from the inputs — never copied
     from engine output.
     """
-    modelo_def = resources().modelos.get("130")
+    modelo_def = bundled_authority().modelo("130")
     revision = modelo_def.revisions["2019-y-siguientes"]
 
     casilla_02 = next(c for c in revision.casillas if c.id == _M130_GASTOS_CASILLA)

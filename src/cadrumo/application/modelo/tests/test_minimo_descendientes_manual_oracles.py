@@ -37,7 +37,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.tests import read_manual_worked_example
 from ....domain.contribuyente import RentaMaritalStatus
 from ....domain.user_profile.values import UserProfileFactValue
@@ -61,7 +61,7 @@ def _expected(name: str, casilla_id: str) -> Decimal:
 
 
 def _snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=_ORACLE_YEAR, period="0A")
+    return bundled_authority().snapshot("100", filing_year=_ORACLE_YEAR, period="0A")
 
 
 def _injected_decimal(facts: dict[str, UserProfileFactValue], key: str) -> Decimal:

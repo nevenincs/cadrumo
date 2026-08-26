@@ -11,17 +11,18 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.errors import ErrorCategory, get_registered_error_code
-from ....core.resources import resources
 from ....domain.buckets import BucketEventType
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import derive_calculation_revision_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -34,12 +35,12 @@ from .._borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
     Modelo100BorradorSourceResolver,
+    _decimal_value,
     resolve_modelo_100_borrador_bindings,
 )
 from .._calculation_actions import calculate_modelo_revision
-from .._work_lifecycle import create_work_unit
-from .._borrador_binding import _decimal_value
 from .._registry_helpers import validate_casilla_input_ids
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -100,7 +101,7 @@ def service_repositories(tmp_path: Path) -> Generator[_ServiceRepositories]:
 
 
 def _modelo_100_registry_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def test_validate_casilla_input_ids_rejects_non_string_keys_without_coercion() -> None:
@@ -145,7 +146,7 @@ def test_validate_casilla_input_ids_keeps_malformed_key_precedence_over_other_fa
 
 
 def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> None:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
+    snapshot = bundled_authority().snapshot("303", filing_year=2025, period="1T")
     result_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M303_RESULT_CASILLA)
     assert result_casilla.number == "69"
     assert result_casilla.id != result_casilla.number
@@ -163,7 +164,7 @@ def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> 
 
 
 def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() -> None:
-    snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
+    snapshot = bundled_authority().snapshot("200", filing_year=2025, period="0A")
 
     with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")})
@@ -393,7 +394,7 @@ def test_committed_modelo_100_registry_declares_borrador_prefilled_bindings() ->
 def test_borrador_resolution_rejects_registry_without_borrador_capability(
     snapshot_repository: Borrador100SnapshotRepository,
 ) -> None:
-    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+    registry_snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
 
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(

@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -443,7 +443,7 @@ def test_modelo_303_calculate_surface_is_reachable(
         modelo="303",
         filing_year=2026,
         period="1T",
-        revision=str(resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision.id),
+        revision=str(bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id),
     )
 
     # Supply zero-value manual casillas so the engine can complete the

@@ -72,7 +72,6 @@ from ...core import (
 from ...core.atomic_write import StagedPublication, hardened_staged_publication
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
-from ...core.resources import resources
 from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
 from ...domain.bienes_inversion import (
@@ -81,6 +80,7 @@ from ...domain.bienes_inversion import (
     compute_registro_regularizacion,
 )
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing import ModeloDraft
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
@@ -674,7 +674,7 @@ def _resolve_m303_export_arrivals(
     RegistroRegularizacionResult,
 ]:
     """Assemble current canonical register arrivals from the work-unit-bound register."""
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         Modelo.M303.value,
         filing_year=period.filing_year,
         period=period.registry_token,

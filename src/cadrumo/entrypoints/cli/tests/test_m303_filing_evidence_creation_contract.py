@@ -8,9 +8,10 @@ from pathlib import Path
 import pytest
 import typer
 
-from ....core import Period
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+
+from ....core import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     M303RegimenSimplificadoScope,
@@ -35,7 +36,7 @@ def _write_evidence(path: Path, period: Period, *, joint_return_elected: bool = 
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=resources().modelos.authority.snapshot(
+        registry_snapshot=bundled_authority().snapshot(
             "303",
             filing_year=period.filing_year,
             period=period.code,

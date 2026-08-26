@@ -30,11 +30,12 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.temporal import select_revision
+
 from ....application.modelo._work_plazo import ModeloWorkDeadlinePosture
 from ....core import Period, PeriodKind, registry_period_kind
-from ....core.resources import resources
 from ....core.time import MADRID_TZ, frozen_clock
-from cadrumo.domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import resolve_filing_closes_on
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _result
@@ -107,7 +108,7 @@ def _registered_quarterly_closes(filing_year: int) -> list[tuple[str, date]]:
 
     Sorted by close date so callers can derive both postures relationally.
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     tokens = {
         window.period.registry_token
         for modelo, _revision, window in authority.deadline_windows(filing_year)
@@ -119,7 +120,7 @@ def _registered_quarterly_closes(filing_year: int) -> list[tuple[str, date]]:
 
 def _deadline_case() -> tuple[int, date, tuple[str, date], tuple[str, date]]:
     """Derive one overdue/in-time pair from the canonical supported horizon."""
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     supported_years = authority.catalogues.supported_filing_years
     assert supported_years is not None
     for filing_year in reversed(supported_years.years):
@@ -133,7 +134,7 @@ def _deadline_case() -> tuple[int, date, tuple[str, date], tuple[str, date]]:
 
 def _revision_id(filing_year: int, period_token: str) -> str:
     """Return the canonical law-selected M130 revision for one test coordinate."""
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     revision = select_revision(authority.modelo("130"), filing_year=filing_year, period=period_token)
     return str(revision.id)
 
@@ -163,7 +164,7 @@ def test_overdue_posture_fallback_emits_null_preview_without_rate_wording() -> N
     assert "displayed rate" not in message
     assert "previsualización no evaluada" not in message
 
-    catalogues = resources().modelos.authority.catalogues
+    catalogues = bundled_authority().catalogues
     legal_entry = catalogues.legal[_RECARGO_LEGAL_REF]
     assert legal_entry.corpus_ref
     assert legal_entry.required_text

@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import Modelo
-from ....core.resources import resources
+from ...calculations.registry.authority import bundled_authority
 from .._retenciones_routing_integrity import (
     RENTA_130_RETENCIONES_BINDING_ID,
     RENTA_130_RETENCIONES_OUTPUT_CASILLA,
@@ -95,7 +95,7 @@ def test_modelo_130_revisions_declare_the_output_casilla() -> None:
     constant reproduces the exact defect the registered check guards
     against.
     """
-    modelo_130 = resources().modelos.get("130")
+    modelo_130 = bundled_authority().modelo("130")
 
     for revision_id, revision in modelo_130.revisions.items():
         casilla_ids = {casilla.id for casilla in revision.casillas}
@@ -113,7 +113,7 @@ def test_modelo_130_snapshot_builds_cleanly_for_every_quarter() -> None:
     ``RegistryValidationError`` at snapshot build, not as a runtime redirect
     to a non-existent casilla.
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     for period in ("1T", "2T", "3T", "4T"):
         snapshot = authority.snapshot(Modelo.M130, filing_year=2026, period=period)
         assert snapshot.revision.id == "2019-y-siguientes"

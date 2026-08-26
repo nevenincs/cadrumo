@@ -132,7 +132,7 @@ def resolve_filing_window(
         DeadlineValidationError: More than one window matches the atomic request
             coordinate. Ambiguous registry authority is never treated as absence.
     """
-    from ...core.resources import resources
+    from ..calculations.registry.authority import bundled_authority
 
     if resultado is not None and not isinstance(resultado, ResultDisposition):
         raise DeadlineValidationError(
@@ -145,7 +145,7 @@ def resolve_filing_window(
             f"filing window tipo_renta_code {tipo_renta_code!r} is not a canonical official Modelo 210 code",
         )
 
-    authority = resources().modelos.authority
+    authority = bundled_authority()
 
     windows = authority.deadline_windows(filing_year, modelos=(modelo,))
     return _resolve_projected_filing_window(
@@ -171,7 +171,10 @@ def _resolve_projected_filing_window(
     # Registry applicability imports this deadline facade, so defer the public
     # registry-facade import until resolution time to keep that dependency cycle
     # out of module initialisation.
-    from cadrumo.domain.calculations.registry.deadline_coordinate import deadline_semantic_coordinate, deadline_window_semantic_coordinates
+    from cadrumo.domain.calculations.registry.deadline_coordinate import (
+        deadline_semantic_coordinate,
+        deadline_window_semantic_coordinates,
+    )
     from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
 
     requested = deadline_semantic_coordinate(modelo, period, resultado, tipo_renta_code)

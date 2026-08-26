@@ -77,7 +77,7 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
             "no cross-domain checks must be registered before the snapshot build"
         )
 
-        snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+        snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
         assert snapshot.modelo.id == "100"
         assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
             "building an M100 snapshot must register the renta first-slice "
@@ -112,7 +112,7 @@ def test_m100_build_succeeds_when_renta_is_imported() -> None:
             "importing renta must register at least one cross-domain check"
         )
 
-        snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+        snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
         assert snapshot.modelo.id == "100"
         print("M100_BUILD_OK")
         """,
@@ -146,7 +146,7 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
             "no cross-domain checks must be registered without renta imported"
         )
 
-        snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
+        snapshot = bundled_authority().snapshot("303", filing_year=2025, period="1T")
         assert snapshot.modelo.id == "303"
         print("M303_BUILD_OK")
         """,

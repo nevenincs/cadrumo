@@ -26,7 +26,7 @@ import pytest
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import (
     DescendantInfo,
     MinimoDescendientesThresholds,
@@ -45,7 +45,7 @@ _ENGINE_FILING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 
 
 def _snapshot(year: int) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+    return bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _parameter(snapshot: RegistrySnapshot, suffix: str) -> Decimal:

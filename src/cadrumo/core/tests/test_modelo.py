@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import pytest
 
+from ...domain.calculations.registry.authority import bundled_authority
 from .. import NON_REGISTRY_MODELOS, Modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -55,9 +56,7 @@ def test_non_registry_modelos_are_not_registry_loadable() -> None:
     """
     from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 
-    from ..resources import resources
-
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     assert NON_REGISTRY_MODELOS, "expected at least the retired M037 carve-out"
     for member in NON_REGISTRY_MODELOS:
         with pytest.raises(RegistrySnapshotError):

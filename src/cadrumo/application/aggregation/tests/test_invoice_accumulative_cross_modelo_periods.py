@@ -51,15 +51,16 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
@@ -349,7 +350,7 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=period)
+    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
@@ -392,7 +393,7 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> Calculatio
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=_YEAR, period="0A")
+    snapshot = bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="390",
@@ -418,7 +419,7 @@ def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, 
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=_YEAR, period=period)
+    snapshot = bundled_authority().snapshot("130", filing_year=_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
@@ -449,7 +450,7 @@ def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, 
 def _m100_non_relation_zero_bindings(secure_objects: SecureObjectRepository) -> dict[BindingId, Decimal]:
     """Zero-default every M100 binding that is neither profile- nor relation-sourced."""
     del secure_objects
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period="0A")
+    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
     values = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -474,7 +475,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> Calculatio
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period="0A")
+    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",

@@ -38,6 +38,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ActionEvidenceProvenance, BindingSourceKind, CalculationSourceLineageRole, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import (
     DataBindingDefinition,
@@ -270,9 +271,7 @@ class Modelo100BorradorSourceResolver:
         """
         snapshot = self._registry_snapshot
         if snapshot is None:
-            from ...core.resources import resources
-
-            snapshot = resources().modelos.authority.snapshot(
+            snapshot = bundled_authority().snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
                 period=context.period.registry_token,

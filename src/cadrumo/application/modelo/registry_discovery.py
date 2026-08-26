@@ -3,7 +3,7 @@
 CLI discovery commands call this module instead of constructing
 :class:`RegistryQueryService` or reading the registry authority directly. Each
 query delegates to the central validated authority exposed by
-``resources().modelos.authority`` and returns the domain query report unchanged.
+``bundled_authority()`` and returns the domain query report unchanged.
 
 The ``*_for_scope`` helpers accept a concrete :class:`~core.Period` and
 pass its filing year plus bare registry token into the query service, so
@@ -26,13 +26,13 @@ from cadrumo.domain.calculations.registry.query_reports import (
 )
 
 from ...core import Period, TaxDomain
-from ...core.resources import resources
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.schema_input_kind import InputKind
 
 
 def _service() -> RegistryQueryService:
-    return RegistryQueryService(resources().modelos.authority)
+    return RegistryQueryService(bundled_authority())
 
 
 def _refuse_unscoped_as_of(*, as_of: date | None, scoped_form: str) -> None:
@@ -56,7 +56,7 @@ def declared_modelo_period_tokens(modelo: str | None) -> tuple[str, ...]:
     """Return every period token declared by any revision of one modelo."""
     if not modelo or not modelo.strip():
         return ()
-    definition = resources().modelos.authority.validate_modelo(modelo.strip())
+    definition = bundled_authority().validate_modelo(modelo.strip())
     return tuple(
         sorted({token for revision in definition.revisions.values() for token in revision.period_selector.periods}),
     )

@@ -17,7 +17,7 @@ import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
@@ -268,7 +268,7 @@ def _blocked_wallet_decision(
 
 
 def _m130_casilla_definition(casilla_id: CasillaId) -> CasillaDefinition:
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
     return next(item for item in snapshot.revision.casillas if item.id == casilla_id)
 
 
@@ -877,7 +877,7 @@ class TestWorkflowInputMismatchError:
 def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() -> None:
     """Verify-time draft replay must not feed M100 0224 back as an operator input."""
     work_unit = _minimal_work_unit(modelo="100", period="0A", filing_year=2024, revision_id="2024")
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A", revision_id="2024")
+    snapshot = bundled_authority().snapshot("100", filing_year=2024, period="0A", revision_id="2024")
     binding_values: dict[BindingId, Decimal] = {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),

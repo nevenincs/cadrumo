@@ -14,13 +14,13 @@ from reportlab.pdfgen import canvas
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.errors import CadrumoError
 from .....core.money import round_to_cents
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.justificante import PdfModeloImportError
 from .....tests import FIXTURES_DIR
 from ...pdf import source_pdf_reference_path
 from .. import parse_declaracion
-from ..errors import DeclaracionParseError, TemplateNotDetectedError
 from .._parser import _extract_pages_words
+from ..errors import DeclaracionParseError, TemplateNotDetectedError
 
 pytestmark = [
     pytest.mark.unit,
@@ -198,7 +198,7 @@ def _modelo_130_snapshot():
 
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
-    return resources().modelos.authority.snapshot(modelo_id, filing_year=filing_year, period=period)
+    return bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
 
 
 def _expected_period(filing_year: int, period: str) -> Period:

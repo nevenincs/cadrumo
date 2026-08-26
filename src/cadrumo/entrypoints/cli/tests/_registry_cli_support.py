@@ -9,7 +9,8 @@ import typer
 from click.testing import Result
 from typer.core import TyperGroup
 
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_runner import cadrumo_click_command
 from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli
 
@@ -93,14 +94,14 @@ def _command_tree_paths(group: TyperGroup, *, prefix: tuple[str, ...] = ()) -> s
 
 @cache
 def _registry_modelos() -> tuple[str, ...]:
-    return tuple(sorted(modelo.id for modelo in resources().modelos.all()))
+    return tuple(sorted(modelo.id for modelo in bundled_authority().modelos))
 
 
 @cache
 def _registry_application_surfaces() -> set[str]:
     return {
         link.surface
-        for modelo in resources().modelos.all()
+        for modelo in bundled_authority().modelos
         for revision in modelo.revisions.values()
         for link in revision.application_links
     }

@@ -12,7 +12,7 @@ import pytest
 
 from ....application.calculations import IvaWalletDecisionRepository
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import M303RegimeComposition
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -67,7 +67,7 @@ def _store_current_profile(
 
 
 def _m303_work_id() -> str:
-    revision = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision.id
+    revision = bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id
     return create_modelo_work_unit_via_cli(
         modelo="303",
         filing_year=2026,

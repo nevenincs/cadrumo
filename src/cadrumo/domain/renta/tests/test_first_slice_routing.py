@@ -22,7 +22,7 @@ import pytest
 from cadrumo.domain.calculations.registry.ledger_bindings import renta_first_slice_binding_target_casillas
 
 from ....core import CasillaId, Modelo
-from ....core.resources import resources
+from ...calculations.registry.authority import bundled_authority
 from ...categories import SpendingCategory
 from .._first_slice_routing import (
     FIRST_SLICE_EXPENSE_CASILLAS,
@@ -123,7 +123,7 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
     :func:`_check_all_id_references`.
     """
 
-    modelo_100 = resources().modelos.get("100")
+    modelo_100 = bundled_authority().modelo("100")
 
     all_casilla_ids: set[CasillaId] = set()
     for revision in modelo_100.revisions.values():
@@ -196,7 +196,7 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped() -> None:
     per-revision referential-integrity requirement.
     """
 
-    modelo_100 = resources().modelos.get("100")
+    modelo_100 = bundled_authority().modelo("100")
 
     for year in ("2020", "2021", "2022"):
         revision = modelo_100.revisions[year]
@@ -221,7 +221,7 @@ def test_modelo_100_snapshots_build_cleanly_across_every_revision() -> None:
     casilla set reproduces the exact defect this test guards against.
     """
 
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     for year in (2020, 2021, 2022, 2023, 2024, 2025):
         snapshot = authority.snapshot(Modelo.M100, filing_year=year, period="0A")
         assert snapshot.revision.id == str(year)

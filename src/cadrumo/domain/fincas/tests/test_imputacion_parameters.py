@@ -13,13 +13,14 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core.resources import bundled_path, resources
-from ..errors import FincaValidationError
+from ....core.resources import bundled_path
+from ...calculations.registry.authority import bundled_authority
 from .._imputacion_parameters import (
     LirpfArt85ImputacionParameters,
     _parameters_from_catalogue,
     load_imputacion_parameters,
 )
+from ..errors import FincaValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -106,7 +107,7 @@ def test_loader_record_validates_inputs_in_pydantic_strict_mode() -> None:
 
 
 def test_missing_lirpf_art_85_parameter_raises_finca_validation_error() -> None:
-    parameters = dict(resources().modelos.authority.catalogues.parameters)
+    parameters = dict(bundled_authority().catalogues.parameters)
     del parameters["lirpf-art-85:catastral-revision-lookback-years"]
 
     with pytest.raises(FincaValidationError, match=r"catastral-revision-lookback-years"):

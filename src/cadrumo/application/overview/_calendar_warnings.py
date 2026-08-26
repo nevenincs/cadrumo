@@ -31,6 +31,7 @@ from ...core.external_constants import IVA_REGIME_MODELOS
 from ...domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
 )
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.deadlines import IrpfEstimationRegime as _IrpfEstimationRegime
 from ...domain.deadlines import IVARegime as _IVARegime
 from ..operator_actions import DeclaredNextAction
@@ -131,10 +132,9 @@ def _record_gating_field(
 
 @lru_cache(maxsize=1)
 def _deadline_window_profile_keys_by_modelo() -> MappingProxyType[str, tuple[str, ...]]:
-    from ...core.resources import resources
 
     keys_by_modelo: dict[str, set[str]] = {}
-    for modelo_definition in resources().modelos.all():
+    for modelo_definition in bundled_authority().modelos:
         modelo = str(modelo_definition.id)
         for revision in modelo_definition.revisions.values():
             for window in revision.deadline_windows:

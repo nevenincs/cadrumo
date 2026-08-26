@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.detail_record_bindings import (
 from cadrumo.domain.calculations.registry.withholding_bindings import resolve_withholding_binding_row_values
 
 from ....adapters.outbound.google import RowSetCellEdit
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .._row_set_assembly import (
     assemble_atribucion_observations,
     assemble_foreign_asset_observations,
@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _modelo(modelo_id: str, revision_id: str):
-    return resources().modelos.get(modelo_id).revisions[revision_id]
+    return bundled_authority().modelo(modelo_id).revisions[revision_id]
 
 
 def test_modelo_190_perceptor_round_trip_preserves_typed_values() -> None:

@@ -32,11 +32,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Modelo, Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
@@ -64,7 +65,7 @@ _M100_NET_INCOME_CASILLAS: tuple[CasillaId, ...] = tuple(
 
 
 def _m130_snapshot():
-    return resources().modelos.authority.snapshot(
+    return bundled_authority().snapshot(
         Modelo.M130.value,
         filing_year=_YEAR,
         period=_TARGET_PERIOD,

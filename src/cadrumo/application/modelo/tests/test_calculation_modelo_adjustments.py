@@ -7,7 +7,7 @@ import pytest
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ....core import Modelo
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .._calculation_modelo_adjustments import _m390_303_reconciliation_targets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -20,7 +20,7 @@ _RELATION = "modelo-390-rel-303-cuota-devengada-total"
 
 def test_m390_reconciliation_target_reaches_a_binding_declared_only_as_an_alternate() -> None:
     """The adjustment consumes the canonical reverse join, including alternates."""
-    snapshot = resources().modelos.authority.snapshot(Modelo.M390.value, filing_year=2025, period="0A")
+    snapshot = bundled_authority().snapshot(Modelo.M390.value, filing_year=2025, period="0A")
     revised_casillas = tuple(
         CasillaDefinition.model_validate(
             {

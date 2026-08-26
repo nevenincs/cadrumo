@@ -35,7 +35,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import EntityType, IVARegime, TaxpayerProfile
 from .._verification_predicates import _evaluate_predicate_expression
 
@@ -61,7 +61,7 @@ def _profile() -> TaxpayerProfile:
 
 
 def _revision(year: int):
-    return resources().modelos.authority.snapshot("151", filing_year=year, period="0A").revision
+    return bundled_authority().snapshot("151", filing_year=year, period="0A").revision
 
 
 def _predicate(year: int):

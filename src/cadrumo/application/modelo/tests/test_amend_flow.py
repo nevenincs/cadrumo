@@ -28,8 +28,8 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import AuthProviderKind, CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
-from ....core.resources import resources
 from ....domain.buckets import BucketEventType
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -332,7 +332,7 @@ def _seed_local_filing_record(
 
 
 def test_amend_refuses_evidence_less_m303_external_baseline(repos: _Repos) -> None:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
     _, _, baseline = _seed_external_baseline(
         repos,
         modelo="303",

@@ -21,10 +21,11 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import CadrumoError, build_error_envelope
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
+
+from ....core.errors import CadrumoError, build_error_envelope
+from ....domain.calculations.registry.authority import bundled_authority
 from .._calculate_input import (
     ModeloCalculateBindingInputError,
     _validated_binding_input_channel,
@@ -43,7 +44,7 @@ _M100_DATE_BINDING: BindingId = "renta-2024-profile-taxpayer-birth-date"
 
 
 def _revision():
-    return resources().modelos.authority.validate_modelo(_MODELO).revisions[_REVISION]
+    return bundled_authority().validate_modelo(_MODELO).revisions[_REVISION]
 
 
 def _channel_inputs():
@@ -107,7 +108,7 @@ def test_date_sourced_binding_is_detected_as_a_date_channel() -> None:
     date binding in the live registry, so a regression that stops detecting it
     fails here rather than passing vacuously.
     """
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+    snapshot = bundled_authority().snapshot("100", filing_year=2024, period="0A")
     revision = snapshot.revision
     date_ids = revision_date_binding_ids(revision)
     assert _M100_DATE_BINDING in date_ids

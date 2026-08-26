@@ -18,8 +18,7 @@ from pydantic import BaseModel, Field, computed_field, field_validator, model_va
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
 from ....core.logging import get_logger
-from ....core.resources import resources
-from .authority import ValidatedRegistryAuthority
+from .authority import ValidatedRegistryAuthority, bundled_authority
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .temporal import select_revision
 
@@ -263,7 +262,7 @@ def _require_modelo_string(modelo: object) -> str:
 def censo_modelo_ownership(modelo: str) -> CensoModeloOwnership:
     """Return the :class:`CensoModeloOwnership` record for an exact string modelo code."""
     modelo = _require_modelo_string(modelo)
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     if modelo == _ACTIVE_CENSO_MODELO:
         return _active_036_ownership_from_registry(authority)
     if modelo == _HISTORICAL_CENSO_MODELO:

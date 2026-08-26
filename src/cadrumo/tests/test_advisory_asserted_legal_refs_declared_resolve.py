@@ -45,7 +45,7 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.legal import assert_legal_ref_ids_resolve
 
-from ..core.resources import resources
+from ..domain.calculations.registry.authority import bundled_authority
 from ._inventory import production_ast_items, repo_relative
 
 if TYPE_CHECKING:
@@ -215,7 +215,7 @@ def collect_asserted_legal_ref_declarations(
 
 def _legal_catalogue() -> Mapping[str, LegalReference]:
     """Return the live bundled legal catalogue every declaration resolves against."""
-    return resources().modelos.authority.catalogues.legal
+    return bundled_authority().catalogues.legal
 
 
 def _resolve_all(

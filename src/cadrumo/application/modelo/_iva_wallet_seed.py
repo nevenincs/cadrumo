@@ -33,6 +33,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core import ActionEvidenceProvenance, Modelo, Period
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.iva_compensation import (
     IvaCompensationPeriodState,
     IvaCompensationReconciliationDecision,
@@ -478,11 +479,10 @@ def record_iva_compensation_override_for_bucket(
             },
         )
 
-    from ...core.resources import resources
     from ...core.time import now
     from ...domain.iva_compensation import IvaCompensationOverride
 
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         Modelo.M303.value,
         filing_year=period.filing_year,
         period=period.registry_token,

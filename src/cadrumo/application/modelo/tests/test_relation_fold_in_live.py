@@ -52,7 +52,8 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import AggregationCaptureKind, CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_tree import bundled_registry_tree
@@ -155,7 +156,7 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
 
 def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[CasillaId, Decimal]:
     """Calculate + persist the four 115 quarters; return the summed 01/02/03 totals."""
-    auth = resources().modelos.authority
+    auth = bundled_authority()
     totals: dict[CasillaId, Decimal] = {
         _M115_PERCEPTORES_CASILLA: Decimal("0"),
         _M115_BASE_CASILLA: Decimal("0"),

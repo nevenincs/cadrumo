@@ -39,14 +39,15 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.domain.calculations.registry.ids import RelationId
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import AuthProviderKind, CasillaId, Period, RefundElection, ResultDisposition, validated_casilla_id
 from ....core.config import Settings
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import RelationId
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,
@@ -66,9 +67,9 @@ from ...calculations import (
 from .._action_errors import ModeloRefundElectionNotEligibleError
 from .._calculation_actions import calculate_modelo_revision
 from .._filing_actions import file_modelo_revision
+from .._result_disposition_resolution import resolve_modelo_result_disposition
 from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
-from .._result_disposition_resolution import resolve_modelo_result_disposition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -233,7 +234,7 @@ def _calculate_negative_period(
     filing_repo = ModeloRecordCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
 
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=period_token)
+    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=period_token)
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=_TAX_ID,
@@ -349,7 +350,7 @@ def _file_period(
 
 def _next_period_carry_in(*, next_year: int, next_period: str) -> Decimal | None:
     """Resolve the next period's casilla-110 carry-in from whatever carry the filing persisted."""
-    snapshot_next = resources().modelos.authority.snapshot("303", filing_year=next_year, period=next_period)
+    snapshot_next = bundled_authority().snapshot("303", filing_year=next_year, period=next_period)
     relation_values = resolve_relations_from_local_store(
         snapshot_next,
         repository=CalculationObservationRepository(),

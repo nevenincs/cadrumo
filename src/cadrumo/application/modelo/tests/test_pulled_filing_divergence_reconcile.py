@@ -63,7 +63,7 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ....core import CasillaId, Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -153,7 +153,7 @@ def _law_resolved_revision() -> ModeloRevision:
     from a stored revision id, so the revision under test is the law-determined
     one and the work unit below can only assert it rather than select it.
     """
-    return resources().modelos.authority.snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD_CODE).revision
+    return bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD_CODE).revision
 
 
 def _subject_casilla(revision: ModeloRevision) -> tuple[CasillaDefinition, DataBindingDefinition]:

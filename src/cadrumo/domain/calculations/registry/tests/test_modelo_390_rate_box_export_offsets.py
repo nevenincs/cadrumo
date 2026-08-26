@@ -36,8 +36,10 @@ import re
 
 import pytest
 
-from .....core.resources import bundled_path, resources
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from .....core.resources import bundled_path
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -62,7 +64,7 @@ _CASILLA_PREFIX = "iva.anual.repercutido.tipo-"
 
 
 def _m390_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("390", filing_year=2024, period="0A").revision
+    return bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _design_text() -> str:

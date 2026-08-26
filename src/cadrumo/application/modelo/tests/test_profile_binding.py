@@ -27,7 +27,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
@@ -86,7 +86,7 @@ def _store_profile(record: UserProfileRecord) -> None:
 
 
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:

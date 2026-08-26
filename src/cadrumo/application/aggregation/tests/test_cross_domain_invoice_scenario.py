@@ -41,7 +41,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ....core import Modelo, Period
 from ....core.aggregation import LedgerIncomeGrounding
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -446,8 +446,8 @@ def _modelo_130_revision() -> ModeloRevision:
     hand-built snapshot could agree with the test and disagree with the filing.
     """
     return (
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             Modelo.M130.value,
             filing_year=2024,
             period="1T",
@@ -509,8 +509,8 @@ def _modelo_303_revision() -> ModeloRevision:
     are the ones a real calculate would load.
     """
     return (
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             Modelo.M303.value,
             filing_year=2024,
             period="1T",

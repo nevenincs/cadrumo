@@ -151,7 +151,6 @@ def test_resources_factory_composes_every_repository() -> None:
         "category_profiles",
         "holiday_calendars",
         "manuals",
-        "modelos",
         "recargo_bands",
         "topics",
         "iva_catalogues",
@@ -160,24 +159,14 @@ def test_resources_factory_composes_every_repository() -> None:
     assert set(registry.__dataclass_fields__.keys()) == expected_fields
 
 
-def test_resources_modelos_repository_loads_real_modelo() -> None:
-    """The composed registry's modelos surface backs onto real bundled data."""
-
-    resources.cache_clear()
-
-    modelo = resources().modelos.get("100")
-
-    assert modelo.id == "100"
-
-
 def test_resources_registry_clear_empties_every_repository() -> None:
     """The aggregate clear() empties every Repository's Identity Map."""
 
     resources.cache_clear()
     registry = resources()
-    registry.modelos.get("100")
-    assert registry.modelos._cache != {}
+    registry.apoderamientos.singleton
+    assert registry.apoderamientos._cache != {}
 
     registry.clear()
 
-    assert registry.modelos._cache == {}
+    assert registry.apoderamientos._cache == {}

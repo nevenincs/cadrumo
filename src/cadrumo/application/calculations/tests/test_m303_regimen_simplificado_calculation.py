@@ -6,10 +6,11 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import M303RegimenSimplificadoFact, Period
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+
+from ....core import M303RegimenSimplificadoFact, Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     ActividadNoAgricolaSimplificado,
@@ -36,7 +37,7 @@ def _annual_snapshot_and_rows(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=resources().modelos.authority.snapshot(
+        registry_snapshot=bundled_authority().snapshot(
             "303",
             filing_year=period.filing_year,
             period=period.registry_token,
@@ -93,7 +94,7 @@ def test_2024_annual_dana_reduces_each_eligible_activity_once_from_bundled_autho
         rows=rows,
         regimen_snapshot=snapshot,
         dana_2024_eligibility=eligibility,
-        catalogues=resources().modelos.authority.catalogues,
+        catalogues=bundled_authority().catalogues,
     )
 
     activity = result.activities[0]
@@ -121,7 +122,7 @@ def test_2024_annual_dana_reduces_each_eligible_activity_once_from_bundled_autho
         rows=rows,
         regimen_snapshot=snapshot,
         dana_2024_eligibility=eligibility,
-        catalogues=resources().modelos.authority.catalogues,
+        catalogues=bundled_authority().catalogues,
     )
 
 
@@ -140,5 +141,5 @@ def test_dana_eligibility_is_refused_outside_the_2024_annual_result() -> None:
             rows=rows,
             regimen_snapshot=snapshot,
             dana_2024_eligibility=eligibility,
-            catalogues=resources().modelos.authority.catalogues,
+            catalogues=bundled_authority().catalogues,
         )

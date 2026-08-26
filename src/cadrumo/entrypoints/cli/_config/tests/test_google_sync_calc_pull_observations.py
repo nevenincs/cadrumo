@@ -9,14 +9,14 @@ from decimal import Decimal
 import pytest
 
 from .....adapters.outbound.google import RowSetCellEdit, RowSetEdit
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .._google_sync_calc import _assemble_pull_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def _snapshot():
-    return resources().modelos.authority.snapshot(
+    return bundled_authority().snapshot(
         "190",
         filing_year=2025,
         period="0A",

@@ -11,7 +11,7 @@ from cadrumo.application.modelo.calculation_route import (
 from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.core import BindingSourceKind, RegistryAuthorityGrade
-from cadrumo.core.resources import resources
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..check import (
@@ -81,7 +81,7 @@ def test_m182_deferred_source_has_no_connected_downstream_lifecycle() -> None:
     candidate_id = "rows.donativo-donor"
     census = load_source_connectivity_census()
     entry = next(item for item in census.entries if item.candidate_id == candidate_id)
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         "182",
         filing_year=2025,
         period="0A",
@@ -115,7 +115,7 @@ def test_m182_deferred_source_has_no_connected_downstream_lifecycle() -> None:
     assert all(fixture.candidate_id != candidate_id for fixture in CONNECTED_PROOF_FIXTURES)
 
     coverage = compose_source_connectivity_coverage(
-        authority=resources().modelos.authority,
+        authority=bundled_authority(),
         census=census,
         as_of=date(2026, 8, 25),
     )

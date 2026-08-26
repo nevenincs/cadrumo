@@ -37,6 +37,8 @@ from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.deadlines import (
     DeadlineEngine,
@@ -198,11 +200,9 @@ def _modelo_is_registered(modelo: str) -> bool:
     a registry-data gap the CLI should degrade gracefully around rather
     than crash on.
     """
-    from ...core.resources import ResourceNotFoundError, resources
-
     try:
-        resources().modelos.get(modelo)
-    except ResourceNotFoundError:
+        bundled_authority().modelo(modelo)
+    except RegistrySnapshotError:
         return False
     return True
 

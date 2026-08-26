@@ -28,6 +28,8 @@ from typing import Any, cast, override
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....core import (
     BindingSourceKind,
@@ -41,8 +43,8 @@ from ....core import (
 from ....core.directory_scan import (
     scan_directory,
 )
-from ....core.resources import bundled_path, resources
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
@@ -123,7 +125,7 @@ def _current_year_values() -> dict[CasillaId, Decimal]:
 
 
 def _snapshot(modelo: str, period: str) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot(modelo, filing_year=_FILING_YEAR, period=period)
+    return bundled_authority().snapshot(modelo, filing_year=_FILING_YEAR, period=period)
 
 
 def _context(

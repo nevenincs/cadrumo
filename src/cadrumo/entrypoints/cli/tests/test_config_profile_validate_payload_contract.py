@@ -15,7 +15,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState
 from .._config_payloads import ConfigLoginResult, ConfigProfilePreflightResult, ConfigProfileValidateResult
 
@@ -111,7 +111,7 @@ def _preflight_kwargs(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "profile_id": "11111111-1111-4111-8111-111111111111",
         "modelo": "303",
-        "revision_id": str(resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision.id),
+        "revision_id": str(bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id),
         "filing_year": 2026,
         "period": Period.from_year_and_code(2026, "1T"),
         "ready": True,

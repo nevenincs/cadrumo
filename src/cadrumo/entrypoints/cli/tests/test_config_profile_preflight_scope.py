@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
@@ -96,8 +96,8 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
 ) -> None:
     _create_defaulted_natural_person_profile(profile_name)
     revision_id = str(
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             modelo,
             filing_year=int(filing_year),
             period=period,

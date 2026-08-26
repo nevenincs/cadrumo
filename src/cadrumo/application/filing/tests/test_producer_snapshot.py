@@ -25,7 +25,6 @@ from ....core import (
     ResultDisposition,
     validated_casilla_id,
 )
-from ....core.resources import resources
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,
     BienInversionIvaRecord,
@@ -33,6 +32,7 @@ from ....domain.bienes_inversion import (
     RegistroRegularizacionResult,
     compute_registro_regularizacion,
 )
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import (
     ChargeAccount,
     IVARegime,
@@ -303,7 +303,7 @@ def _m303_instance_evidence(period: Period) -> M303FilingInstanceEvidence:
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=resources().modelos.authority.snapshot(
+        registry_snapshot=bundled_authority().snapshot(
             "303",
             filing_year=period.filing_year,
             period="1T",

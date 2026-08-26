@@ -8,9 +8,10 @@ from functools import lru_cache
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -96,7 +97,7 @@ _PREDICATE_CASES = (
 
 @lru_cache
 def _predicate(predicate_id: str, expression: str) -> VerificationPredicateDefinition:
-    revision = resources().modelos.authority.validate_modelo("390").revisions["2010-y-siguientes"]
+    revision = bundled_authority().validate_modelo("390").revisions["2010-y-siguientes"]
     predicate = next(item for item in revision.verification_predicates if item.predicate_id == predicate_id)
     assert predicate.finding_kind == "BLOCKING_RULE"
     assert predicate.expression == expression

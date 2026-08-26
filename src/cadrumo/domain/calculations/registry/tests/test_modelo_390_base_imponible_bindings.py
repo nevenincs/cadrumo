@@ -41,8 +41,8 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from .....core import IvaDeductionFactKind
-from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
+from ..authority import bundled_authority
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -65,7 +65,7 @@ _EXPORT_BASE = Decimal("2300.00")
 
 
 def _m390_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("390", filing_year=2024, period="0A").revision
+    return bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _observation(

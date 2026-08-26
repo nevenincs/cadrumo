@@ -27,9 +27,10 @@ from functools import cache
 
 import pytest
 
-from ....core import Modelo, Period, TipoActividad
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from ....core import Modelo, Period, TipoActividad
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -58,7 +59,7 @@ _CASILLA_05 = "05"
 @cache
 def _m131_revision() -> ModeloRevision:
     """The real Modelo 131 revision, so the grounding assertions read real refs."""
-    return resources().modelos.get(Modelo.M131.value).revisions["2025"]
+    return bundled_authority().modelo(Modelo.M131.value).revisions["2025"]
 
 
 def _income_row(

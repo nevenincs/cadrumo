@@ -30,8 +30,8 @@ import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
 from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._calculation_actions import _resolve_bucket_source_mesh
@@ -85,7 +85,7 @@ def _record() -> BienInversionIvaRecord:
 
 def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: Path) -> None:
     """The live mesh projects the register value into Modelo 303 casilla 43."""
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    snapshot = bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
     assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 

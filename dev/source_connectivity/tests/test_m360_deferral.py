@@ -10,8 +10,9 @@ from cadrumo.application.modelo.calculation_route import (
 from cadrumo.application.registry import compose_source_connectivity_coverage
 from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
 from cadrumo.core import BindingSourceKind
-from cadrumo.core.resources import bundled_path, resources
+from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
 from ..check import SourceConnectivityCheckError, check_census_governance
@@ -80,7 +81,7 @@ def test_m360_deferred_source_has_no_connected_downstream_lifecycle() -> None:
 
     census = load_source_connectivity_census()
     coverage = compose_source_connectivity_coverage(
-        authority=resources().modelos.authority,
+        authority=bundled_authority(),
         census=census,
         as_of=date(2026, 8, 25),
     )

@@ -17,10 +17,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import RelationId
+
+from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._observations_repository import CalculationObservationRepository
@@ -51,7 +52,7 @@ def _m202_observation(
 
 
 def _resolve_m200_pagos_fraccionados(repository: CalculationObservationRepository) -> dict[RelationId, Decimal]:
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
@@ -102,7 +103,7 @@ def _all_m202_relation_values(
     *,
     first_year_cuota: bool,
 ) -> dict[RelationId, Decimal | None]:
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
     )
     relation_vals = resolve_relations_from_local_store(

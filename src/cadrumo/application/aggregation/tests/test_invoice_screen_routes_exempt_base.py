@@ -29,7 +29,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices import Invoice, IvaRate
 from ....domain.iva import InvoiceKind, IvaCategory
 from .._iva_ledger import resolve_iva_ledger_binding_values
@@ -45,7 +45,7 @@ _CASILLA_60 = "modelo-303-casilla-60-exportaciones-base"
 
 
 def _revision():
-    return resources().modelos.authority.snapshot("303", filing_year=2024, period="1T").revision
+    return bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
 
 
 def _invoice(

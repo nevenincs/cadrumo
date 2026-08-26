@@ -9,18 +9,23 @@ from __future__ import annotations
 
 import pytest
 
-from .....core import BindingSourceKind, Modelo
-from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
-from cadrumo.domain.calculations.registry.profile_grounding import ProfileKeyGrounding, binding_profile_keys, build_profile_grounding_index
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.profile_grounding import (
+    ProfileKeyGrounding,
+    binding_profile_keys,
+    build_profile_grounding_index,
+)
+from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+
+from .....core import BindingSourceKind, Modelo
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @pytest.fixture(scope="module")
 def index() -> dict[str, ProfileKeyGrounding]:
-    return dict(build_profile_grounding_index(resources().modelos.authority))
+    return dict(build_profile_grounding_index(bundled_authority()))
 
 
 def test_index_inverts_the_censo_status_binding(index: dict[str, ProfileKeyGrounding]) -> None:

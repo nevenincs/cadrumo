@@ -33,8 +33,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id, validated_casilla_id_map
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core import CasillaId, validated_casilla_id, validated_casilla_id_map
+from ....domain.calculations.registry.authority import bundled_authority
 from .._taxation_comparison import (
     INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT,
     TaxationComparisonError,
@@ -51,9 +53,8 @@ importlib.import_module("cadrumo.domain.renta")
 @pytest.fixture(scope="module")
 def snapshot_2025() -> RegistrySnapshot:
     """Real Modelo 100 2025 registry snapshot (module-level singleton)."""
-    from ....core.resources import resources
 
-    return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    return bundled_authority().snapshot("100", filing_year=2025, period="0A")
 
 
 def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
@@ -388,9 +389,8 @@ def test_comparison_error_raised_for_non_m100_snapshot() -> None:
     profile-declaration-type binding; the function should detect this
     and raise TaxationComparisonError rather than a raw engine error.
     """
-    from ....core.resources import resources
 
-    snapshot_303 = resources().modelos.authority.snapshot("303", filing_year=2025, period="3T")
+    snapshot_303 = bundled_authority().snapshot("303", filing_year=2025, period="3T")
 
     with pytest.raises(TaxationComparisonError, match="declaration-type"):
         compare_taxation_modes(

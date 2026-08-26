@@ -40,7 +40,7 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import IntracomOperationType, Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
 from ...invoices import build_catalogue_invoice
@@ -91,7 +91,7 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
 
 def _screen(secure_objects: SecureObjectRepository) -> _ScreenedInvoiceIva:
     """Run the real screen, returning its channels as the types they are."""
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=_PERIOD)
+    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD)
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="303",

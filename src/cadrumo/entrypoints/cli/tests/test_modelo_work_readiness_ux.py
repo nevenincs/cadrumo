@@ -8,7 +8,7 @@ import pytest
 
 from ....core import Modelo
 from ....core.config import override_settings
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_cli_profile
@@ -34,6 +34,7 @@ _REPRESENTANTE_PROFILE_PATHS = frozenset(
 
 def _remove_representante_fields_from_operator_profile() -> None:
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
+
     from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
 
     pointer = read_profile_bucket(_PROFILE_ID)
@@ -177,7 +178,7 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
         [
             "app", "modelo", "readiness",
             "--modelo", "303",
-            "--revision-id", str(resources().modelos.authority.snapshot("303", filing_year=2026, period="1T").revision.id),
+            "--revision-id", str(bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id),
             "--year", "2026",
             "--period", "1T",
         ],

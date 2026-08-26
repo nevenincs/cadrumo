@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .._reconcile_casilla import (
     CasillaDivergenceKind,
     detect_casilla_divergences,
@@ -60,7 +60,7 @@ _FILED_ONE_CENT_HIGH = Decimal("1000.01")
 
 def _snapshot(modelo_id: str) -> RegistrySnapshot:
     """Resolve a real bundled snapshot through the registry authority."""
-    return resources().modelos.authority.snapshot(modelo_id, filing_year=_FILING_YEAR, period=_PERIOD)
+    return bundled_authority().snapshot(modelo_id, filing_year=_FILING_YEAR, period=_PERIOD)
 
 
 def _published_tolerance(modelo_id: str) -> Decimal:

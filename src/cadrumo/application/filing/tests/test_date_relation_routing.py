@@ -29,10 +29,11 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.submission import ModeloDraftStatus
 from .. import (
     _bound_casilla_binding_ids,
@@ -57,7 +58,7 @@ _M100_RELATIONS = (
 
 
 def _m100_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=2024, period="0A", on=None)
+    return bundled_authority().snapshot("100", filing_year=2024, period="0A", on=None)
 
 
 def _profile() -> ModeloOperatorProfile:

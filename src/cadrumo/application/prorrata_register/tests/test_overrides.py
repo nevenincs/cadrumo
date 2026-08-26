@@ -25,7 +25,7 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....core import CasillaId, Modelo, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.prorrata_register import ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -46,7 +46,7 @@ _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surf
 
 
 def _prior_revision_id() -> str:
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         Modelo.M303.value,
         filing_year=_PRIOR_YEAR,
         period=_SETTLEMENT_PERIOD,

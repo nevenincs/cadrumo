@@ -18,11 +18,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from .. import _filing_binding_values, _string_inputs_for_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -59,7 +60,7 @@ def _m200_snapshot() -> RegistrySnapshot:
     they exercise. Modelo 200 declares exactly that rung and deliberately
     withholds filing while its revision spans two AEAT layouts.
     """
-    return resources().modelos.authority.snapshot(
+    return bundled_authority().snapshot(
         "200",
         filing_year=2025,
         period="0A",

@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+
 from ....core import (
     Modelo,
     PaymentElection,
@@ -17,9 +19,8 @@ from ....core import (
     ResultDisposition,
     validated_casilla_id,
 )
-from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister, compute_registro_regularizacion
-from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
@@ -121,7 +122,7 @@ def _regimen_evidence(period: Period) -> M303RegimenSimplificadoFilingEvidence:
         scope_decision=scope,
         rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
         regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
-            registry_snapshot=resources().modelos.authority.snapshot(
+            registry_snapshot=bundled_authority().snapshot(
                 "303",
                 filing_year=period.filing_year,
                 period=period.code,

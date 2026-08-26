@@ -9,10 +9,12 @@ from typing import Any, cast, override
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core import BindingSourceKind, Period
 from ....core.directory_scan import scan_directory
-from ....core.resources import resources
 from ....domain.bienes_inversion import (
     BienesInversionIvaRegister,
     BienInversionDisposal,
@@ -20,8 +22,7 @@ from ....domain.bienes_inversion import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .._bienes_inversion_regularizacion import (
@@ -65,7 +66,7 @@ def _context(
     *,
     bucket_id: str = _BUCKET_ID,
 ) -> CalculationSourceContext:
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=_FILING_YEAR, period=period)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=_FILING_YEAR, period=period)
     return CalculationSourceContext(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -76,7 +77,7 @@ def _context(
 
 
 def _m303_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T").revision
+    return bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T").revision
 
 
 def _register() -> BienesInversionIvaRegister:
@@ -100,7 +101,7 @@ def _save_current_year_m303_prorrata_observation(
     *,
     percentage: Decimal,
 ) -> None:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    snapshot = bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
     repository.save(
         repository.prepare_observation_envelope(
             RegistryModeloObservation(

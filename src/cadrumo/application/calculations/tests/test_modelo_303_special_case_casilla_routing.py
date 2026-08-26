@@ -38,11 +38,12 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
-from ....domain.bienes_inversion import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+
+from ....core import CasillaId, Period, validated_casilla_id
+from ....domain.bienes_inversion import BienesInversionIvaRegister
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import (
     IvaCategory,
 )
@@ -125,7 +126,7 @@ def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path:
     """
     intracom_cuota = Decimal("42.00")
     with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
+        snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
         binding_values = {
             _INTRACOM_BINDING: intracom_cuota,
             _AUTOCONSUMO_BINDING: Decimal("0"),
@@ -158,7 +159,7 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible(tmp_path: Path) -
     — a net positive result that over-states the IVA payable on a neutral acquisition.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
+        snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_PERIOD)
         binding_values = {
             _INTRACOM_BINDING: Decimal("42.00"),
             _AUTOCONSUMO_BINDING: Decimal("0"),

@@ -13,7 +13,7 @@ from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ....core import BindingSourceKind
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -94,7 +94,7 @@ _ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
 
 
 def _snapshot_2024() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+    return bundled_authority().snapshot("100", filing_year=2024, period="0A")
 
 
 def _full_profile() -> UserProfileRecord:

@@ -56,7 +56,7 @@ from pydantic import BaseModel, ConfigDict
 
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.json_contract import EnvelopeStatus, ResolvedActionArgument
-from cadrumo.core.resources import resources
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from ._models import (
     LIFECYCLE_STAGE_ORDER,
@@ -117,7 +117,7 @@ def _skill_path_parts(skill: object) -> set[str]:
 
 def _resolve_revision(scenario: GoldenScenario) -> object:
     """Load the registry revision the scenario resolves to (pure registry read)."""
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         scenario.modelo,
         filing_year=scenario.filing_year,
         period=scenario.period,

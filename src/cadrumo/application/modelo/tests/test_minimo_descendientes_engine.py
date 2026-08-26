@@ -42,7 +42,7 @@ from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_par
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 from ....core import validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
@@ -64,7 +64,7 @@ _MADRID_FULL_DIVERGENCE_YEARS = (2022, 2023, 2024, 2025)
 
 @lru_cache
 def _snapshot(year: int) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+    return bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _aggregate_key(year: int) -> str:

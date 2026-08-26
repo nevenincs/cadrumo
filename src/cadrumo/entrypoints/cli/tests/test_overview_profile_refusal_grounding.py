@@ -19,13 +19,14 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
+from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
+
 from ....application.user_profile.preflight import (
     build_profile_preflight_requirement,
     format_profile_preflight_requirement,
     format_profile_selector_requirements,
 )
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....tests.cli_runner import invoke_cached_cli
 from .._overview import (
@@ -53,7 +54,7 @@ def _invoke(args: Sequence[str]) -> Result:
 
 
 def _grounding_index():
-    return build_profile_grounding_index(resources().modelos.authority)
+    return build_profile_grounding_index(bundled_authority())
 
 
 def test_the_gating_field_label_differs_from_its_selector_token() -> None:

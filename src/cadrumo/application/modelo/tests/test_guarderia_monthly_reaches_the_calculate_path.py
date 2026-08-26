@@ -30,7 +30,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import (
     DescendantInfo,
     descendant_facts_from_list,
@@ -52,7 +52,7 @@ _COUNT_BINDING = "renta-2024-profile-descendientes-guarderia"
 
 @lru_cache
 def _snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=_YEAR, period="0A")
+    return bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
 
 
 def _resolved(*descendientes: DescendantInfo) -> dict[str, Decimal]:

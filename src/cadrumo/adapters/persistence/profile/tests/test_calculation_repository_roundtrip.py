@@ -34,7 +34,7 @@ from cadrumo.domain.calculations.registry.formula_runtime_ops import RegistryUnr
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 
 from .....core import CasillaId, Period, validated_casilla_id
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.filing_evidence import FilingEvidenceReference
 from .....domain.iva import (
     M303RegimenSimplificadoScope,
@@ -89,7 +89,7 @@ def _filing_instance_evidence() -> FilingInstanceEvidence:
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T"),
+        registry_snapshot=bundled_authority().snapshot("303", filing_year=2026, period="1T"),
         scope_decision=scope,
     )
     return FilingInstanceEvidence(

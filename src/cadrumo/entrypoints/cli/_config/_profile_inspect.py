@@ -22,6 +22,7 @@ from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.logging import get_logger as _get_logger
+from ....domain.calculations.registry.authority import bundled_authority
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._common import emit_envelope, no_active_profile_refusal
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -259,7 +260,6 @@ def config_profile_preflight(
         """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.modelo._profile_readiness_gate import modelo_work_profile_preflight_report
-    from ....core.resources import resources
     from ....domain.user_profile.errors import ProfileNotFoundError
 
     pointer = resolve_active_profile_pointer()
@@ -288,7 +288,7 @@ def config_profile_preflight(
         filing_year=filing_period.filing_year,
         period=filing_period,
         resolve_revision_when_missing=False,
-        authority=resources().modelos.authority,
+        authority=bundled_authority(),
     )
     if report.ready:
         resolved_revision_id = _resolve_preflight_revision_id(
@@ -296,7 +296,7 @@ def config_profile_preflight(
             period=filing_period,
             revision_id=revision_id,
         )
-        revision = resources().modelos.authority.validate_modelo(modelo).revisions[resolved_revision_id]
+        revision = bundled_authority().validate_modelo(modelo).revisions[resolved_revision_id]
         report = modelo_work_profile_preflight_report(
             record=record,
             modelo=modelo,
@@ -304,7 +304,7 @@ def config_profile_preflight(
             filing_year=filing_period.filing_year,
             period=filing_period,
             revision=revision,
-            authority=resources().modelos.authority,
+            authority=bundled_authority(),
         )
     result = ConfigProfilePreflightResult(
         profile_id=report.profile_id,

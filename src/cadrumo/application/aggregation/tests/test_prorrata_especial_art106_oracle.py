@@ -37,6 +37,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
@@ -47,9 +49,8 @@ from ....core import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
-from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
@@ -136,7 +137,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
 def _deducible_cuota(objects: SecureObjectRepository) -> Decimal:
     from ....domain.transactions import TransactionCatalogue
 
-    revision = resources().modelos.get("303").revisions["2022"]
+    revision = bundled_authority().modelo("303").revisions["2022"]
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     tx_repo.save(TransactionCatalogue.from_transactions(_txns()))
     aggregation = aggregate_iva_ledger_observations_from_repositories(
@@ -200,7 +201,7 @@ def test_each_art106_regla_isolated(
     """Each art. 106.Uno regla, isolated, deducts at its lawful rate (100 / 0 / general)."""
     from ....domain.transactions import TransactionCatalogue
 
-    revision = resources().modelos.get("303").revisions["2022"]
+    revision = bundled_authority().modelo("303").revisions["2022"]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_register(objects, ProrrataRegisterRegime.ESPECIAL)

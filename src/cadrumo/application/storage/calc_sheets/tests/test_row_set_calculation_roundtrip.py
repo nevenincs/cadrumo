@@ -20,7 +20,7 @@ from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalog
 from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from .....core import BindingSourceKind, Period
 from .....core.hashing import content_hash_hex
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .....tests.profile_capsule import seed_test_profile_record
 from .....tests.secure_sql import isolated_runtime_profile
@@ -82,7 +82,7 @@ def test_empty_calculation_tab_omits_invalid_data_body_style_range() -> None:
 
 def test_real_worksheet_pull_calculation_roundtrips_m720_row_source_through_encrypted_revision(tmp_path: Path) -> None:
     """A real XLSX and canonical pull decoder retain every row-identity axis."""
-    snapshot = resources().modelos.authority.snapshot("720", filing_year=2025, period="0A")
+    snapshot = bundled_authority().snapshot("720", filing_year=2025, period="0A")
     plan = build_export_plan(snapshot)
     row_set = next(row_set for row_set in plan.row_sets if row_set.grouping == "per_foreign_asset")
     values = {

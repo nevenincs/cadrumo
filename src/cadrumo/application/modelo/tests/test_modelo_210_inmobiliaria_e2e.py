@@ -68,7 +68,7 @@ from ....core import (
     Period,
     validated_casilla_id,
 )
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, ModeloVerificationFindingKind, VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -186,7 +186,7 @@ def _calculate_and_verify_m210_inmobiliaria(
     ``isolated_runtime_profile`` provisioning passes over the same ``tmp_path``.
     """
     with _secure_backend(tmp_path):
-        snapshot = resources().modelos.authority.snapshot(_M210, filing_year=_FILING_YEAR, period=_PERIOD_CODE)
+        snapshot = bundled_authority().snapshot(_M210, filing_year=_FILING_YEAR, period=_PERIOD_CODE)
         work_repo, calc_repo, event_repo = _repositories()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

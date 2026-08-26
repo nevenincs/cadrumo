@@ -38,7 +38,7 @@ from .....core import (
     validated_casilla_id,
 )
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....core.resources import bundled_path, resources
+from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ....iva import (
     IvaCategory,
@@ -49,6 +49,7 @@ from ....iva import (
     IvaRateKind,
     required_deduction_evidence_authority,
 )
+from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..relations import resolve_relation_values_from_observations
 from ..snapshot import build_snapshot
@@ -108,7 +109,7 @@ _M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA: CasillaId = validated_casilla_id("04")
 
 @lru_cache(maxsize=1)
 def _modelo_303_revision() -> ModeloRevision:
-    modelo = resources().modelos.get("303")
+    modelo = bundled_authority().modelo("303")
     return modelo.revisions["2022"]
 
 
@@ -228,12 +229,12 @@ def _calculate_303_from_observations(
     period: str,
     observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
-    # Stays on ``resources().modelos.authority`` (unlike the M390 helper below):
+    # Stays on ``bundled_authority()`` (unlike the M390 helper below):
     # M303 snapshots include the compiled annual-Orden authority, and the
     # production access point is the only source of that cross-cutting
     # projection -- bypassing it via ``load_registry_tree`` would silently
     # produce a partial snapshot rather than a scoped one.
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         "modelo-303-autoconsumo-promotor-base": Decimal("0"),
@@ -277,7 +278,7 @@ def _calculate_390_from_observations_and_303_filings(
 ) -> RegistryCalculationResult:
     # Scoped to M390 alone, at calculation grade -- this computes an IVA
     # aggregation result, never a filing claim -- rather than through
-    # ``resources().modelos.authority``, whose ``.load()`` validates every
+    # ``bundled_authority()``, whose ``.load()`` validates every
     # modelo in the bundled tree before returning anything.
     modelos, catalogues = bundled_registry_tree()
     modelo_390 = next(modelo for modelo in modelos if modelo.id == "390")
@@ -306,8 +307,8 @@ def _calculate_390_from_observations_and_303_filings(
                 captured_at=_M303_APP_FILING_CAPTURED_AT,
                 source_kind="app_filing",
                 stamped_revision_id=str(
-                    resources()
-                    .modelos.authority.snapshot(
+                    bundled_authority()
+                    .snapshot(
                         "303",
                         filing_year=filing_year,
                         period=period,

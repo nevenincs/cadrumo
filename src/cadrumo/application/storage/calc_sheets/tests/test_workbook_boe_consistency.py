@@ -34,7 +34,7 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefi
 
 from .....application.filing import build_runtime_schema_provider
 from .....core import ExportLayoutFormat, Period
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .. import build_export_plan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -92,7 +92,7 @@ def _fixed_width_layout_casilla_slots(layout: ExportLayoutDefinition) -> set[str
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
 def test_fichero_boe_and_workbook_share_computed_export_surface(modelo: str, year: int, period: str, on: date) -> None:
-    snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
+    snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period, on=on)
     revision = snapshot.revision
     by_id = {casilla.id: casilla for casilla in revision.casillas}
     workbook = _workbook_emitted_ids(snapshot)

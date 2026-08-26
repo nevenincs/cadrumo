@@ -16,8 +16,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+
+from ...calculations.registry.authority import bundled_authority
 from .._maritime_exemption import (
     ART_7P_EXEMPTION_CAP_EUR,
     RENTA_EXENTA_CASILLA,
@@ -572,7 +573,7 @@ def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
 
 def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
     """Runtime maritime provenance must resolve through typed registry catalogues."""
-    catalogues = resources().modelos.authority.catalogues
+    catalogues = bundled_authority().catalogues
 
     art7p_obs = calculate_art_7p_exemption(
         annual_salary=Decimal("36500"),

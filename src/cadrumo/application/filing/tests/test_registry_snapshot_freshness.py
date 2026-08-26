@@ -59,14 +59,14 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .. import _load_registry_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
     from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 _MODELO = "130"
 _PERIOD = Period(filing_year=2024, code="1T")
@@ -97,7 +97,7 @@ def test_snapshot_resolution_is_not_memoized_above_the_authority() -> None:
     cache entry, so the second resolution would return the pinned object instead
     of a rebuilt one.
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
 
     first = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
     warm = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
@@ -145,7 +145,7 @@ def test_law_determined_resolution_is_preserved() -> None:
     one another, and the resolved revision must be the one the registry's own
     temporal selection returns for that context.
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
 
     for filing_year in (2023, 2024):
         period = Period(filing_year=filing_year, code="1T")

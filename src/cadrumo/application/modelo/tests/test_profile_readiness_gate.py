@@ -11,6 +11,7 @@ import pytest
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Modelo, NoRecoveryOutcome, Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -499,10 +500,9 @@ def test_grounding_index_lookup_stays_bounded_across_repeated_readiness_checks(t
     """
     import time
 
-    from ....core.resources import resources
     from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
 
-    authority = resources().modelos.authority
+    authority = bundled_authority()
 
     first_start = time.perf_counter()
     first_index = build_profile_grounding_index(authority)

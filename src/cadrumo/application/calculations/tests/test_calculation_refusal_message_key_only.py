@@ -31,6 +31,8 @@ import pytest
 
 from ....core import NoRecoveryOutcome
 from ....core.directory_scan import scan_directory
+from ....domain.calculations.registry.authority import bundled_authority
+from .._m303_carry_ingress import M303CarryIngressError
 from ..errors import (
     BindingPrefillTypeError,
     CalculationRefusalPrecondition,
@@ -39,7 +41,6 @@ from ..errors import (
     ObservationKeyError,
     calculation_no_recovery_verdict,
 )
-from .._m303_carry_ingress import M303CarryIngressError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -220,11 +221,11 @@ def test_observation_key_refusal_renders_as_its_key() -> None:
 
 
 def test_row_set_grouping_refusal_renders_as_its_key() -> None:
-    from ....core.resources import resources
     from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
     from .._row_set_assembly import assemble_observations_for_grouping
 
-    revision = resources().modelos.authority.snapshot("190", filing_year=2025, period="0A").revision
+    revision = bundled_authority().snapshot("190", filing_year=2025, period="0A").revision
 
     with pytest.raises(RegistryValidationError) as excinfo:
         assemble_observations_for_grouping("no-such-grouping", (), revision, filing_year=2025)

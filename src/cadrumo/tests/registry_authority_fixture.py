@@ -27,7 +27,7 @@ def bundled_registry_authority_fixture(*, name: str) -> Callable[[], ValidatedRe
 
     Sharing the body claims no saving in load time and none should be read
     into it. Every route to the bundled authority -- this one,
-    ``resources().modelos.authority``, and a direct ``bundled_authority()``
+    ``bundled_authority()``, and a direct ``bundled_authority()``
     call -- resolves through one memo keyed on the registry and
     source-evidence fingerprints, so the second and later calls in a process
     hand back the identical object (measured at 0.03s against 30s for the

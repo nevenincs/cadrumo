@@ -23,7 +23,7 @@ from ....core import (
     Period,
     validated_casilla_id,
 )
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva import InvoiceKind, IvaDeductionClassificationProvenance
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
@@ -63,15 +63,14 @@ from ...invoices import build_catalogue_invoice, create_catalogue_invoice
 from ...ledger.actions_manual import attach_manual_transaction_evidence, link_manual_transaction_invoice
 from ...ledger.evidence import PurchaseInvoiceEvidenceService
 from .._calculation_actions import calculate_modelo_revision_from_bucket_aggregation
-from .._filing_actions import file_modelo_revision
+from .._export import ModeloExportCommand, ModeloExportEvidenceMissingError, export_modelo_revision
+from .._filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
 from .._verification_actions import (
+    _missing_evidence_findings,
     verify_modelo_revision,
     verify_modelo_revision_with_preconditions,
 )
 from .._work_lifecycle import create_work_unit
-from .._export import ModeloExportCommand, ModeloExportEvidenceMissingError, export_modelo_revision
-from .._filing_actions import ModeloFilingEvidenceMissingError
-from .._verification_actions import _missing_evidence_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -265,7 +264,7 @@ def _calculate_irene_revision(
         taxable_base=Decimal("200.00"),
     )
     tx_repo.save(TransactionCatalogue.from_transactions((sale, purchase)))
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=_PERIOD)
+    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",

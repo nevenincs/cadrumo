@@ -43,8 +43,8 @@ from cadrumo.domain.calculations.registry.ledger_bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 
-from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -80,7 +80,7 @@ _UNRATED_BASE = Decimal("330.00")
 
 
 def _m390_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("390", filing_year=2024, period="0A").revision
+    return bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _observation(

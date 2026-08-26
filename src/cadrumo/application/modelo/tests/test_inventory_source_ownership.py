@@ -6,11 +6,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import BindingSourceKind, validated_casilla_id
-from ....core.resources import resources
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
+from ....core import BindingSourceKind, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from .._action_errors import ModeloAggregationBindingError
 from .._calculation_actions import _reject_caller_overrides_of_source_bindings
 from .._calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
@@ -43,7 +44,7 @@ def _binding(operation: str, target: str) -> DataBindingDefinition:
 
 
 def _revision(*, declared: bool = True, alias: bool = False) -> ModeloRevision:
-    base = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A").revision
+    base = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     if not declared:
         return base
     bindings = tuple(_binding(operation, target) for operation, target in _DESTINATIONS.items())

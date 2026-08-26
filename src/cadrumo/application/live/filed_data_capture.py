@@ -67,14 +67,15 @@ from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.identity import AeatExpedienteId
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.resources import bundled_path, resources
+from ...core.resources import bundled_path
 from ...core.time import now
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.bindings import RegistryModeloObservation
+from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.schema import (
     ModeloDefinition,
     ModeloRevision,
 )
-from ...domain.calculations.registry.bindings import RegistryModeloObservation
-from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
 from ..operations.owner import OperationEventEmitter
@@ -212,7 +213,7 @@ def _declares_filed_declarations_read_surface(revisions: Sequence[ModeloRevision
 
 def _registered_modelo_definition(modelo: str) -> ModeloDefinition | None:
     """Look up a registry modelo with the registry's existing duplicate-key resolution."""
-    return {str(definition.id): definition for definition in resources().modelos.all()}.get(modelo)
+    return {str(definition.id): definition for definition in bundled_authority().modelos}.get(modelo)
 
 
 def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
@@ -625,7 +626,7 @@ async def list_filed_data_bulk(
             translated_message="live.errors.year_range_invalid",
         )
 
-    resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in resources().modelos.all())
+    resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in bundled_authority().modelos)
     rows: list[FiledDataListingRow] = []
     query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
 
@@ -1038,7 +1039,7 @@ async def capture_filed_data_bulk(
             translated_message="live.errors.year_range_invalid",
         )
 
-    resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in resources().modelos.all())
+    resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in bundled_authority().modelos)
     store = FiledDeclaracionObservationStore(output_root)
     accumulator = _CaptureAccumulator()
     query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
@@ -1965,7 +1966,7 @@ def recapture_divergence_notices(
         if stored is None:
             continue
         try:
-            snapshot = resources().modelos.authority.snapshot(
+            snapshot = bundled_authority().snapshot(
                 observation.modelo,
                 filing_year=observation.ejercicio,
                 period=observation.period.registry_token,

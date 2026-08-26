@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from ....core.access_gate import AuthorizationState
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
@@ -125,7 +125,7 @@ def test_work_calculate_warns_but_computes_unauthorized_modelo_117(
 ) -> None:
     """A real unauthorized modelo with an engine computes and emits the advisory."""
 
-    capability = resources().modelos.authority.authorization(_MODELO)
+    capability = bundled_authority().authorization(_MODELO)
     assert capability.state is AuthorizationState.UNAUTHORIZED
     assert capability.has_engine is True
 

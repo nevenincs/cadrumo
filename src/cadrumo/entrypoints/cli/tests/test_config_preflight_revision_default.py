@@ -27,7 +27,7 @@ import pytest
 from click.testing import Result
 
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage
@@ -272,7 +272,7 @@ def test_preflight_refuses_ambiguous_natural_key_with_candidates() -> None:
     refusal translation, with no mock or patch object in play.
     """
     _seed_active_profile()
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     definition = authority.modelo("303")
     base_revision = authority.snapshot("303", filing_year=2026, period="1T").revision
     twin = base_revision.model_copy(update={"id": f"{base_revision.id}-twin"})
@@ -306,10 +306,11 @@ def test_ambiguous_resolution_carries_candidates_on_typed_field_not_message() ->
     asserts the refusal context carries both candidate ids verbatim.
     """
     from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
+
     from .._config._profile_inspect import _resolve_preflight_revision_id
     from ..errors import CliRefusedBoundaryError
 
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     definition = authority.modelo("303")
     base_revision = authority.snapshot("303", filing_year=2026, period="1T").revision
     twin = base_revision.model_copy(update={"id": f"{base_revision.id}-twin"})

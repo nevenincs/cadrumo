@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, CalculationSourceLineageRole
 from ...core.errors import CoreValidationError
+from ...domain.calculations.registry.authority import bundled_authority
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -334,10 +335,9 @@ def assert_enrollment_matches_manifest(
         EnrollmentEvidenceError: When no manifest entry enrolls the modelo, or
             the recorded distinct-year set differs from the claimed ``renta_years``.
     """
-    from ...core.resources import resources
 
     if repository_root is None:
-        manifest = resources().modelos.authority.authorization_manifest
+        manifest = bundled_authority().authorization_manifest
     else:
         from ...core.access_gate import load_authorization_manifest
 
@@ -391,9 +391,7 @@ class PreviousFilingSourceResolver:
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         snapshot = self._registry_snapshot
         if snapshot is None:
-            from ...core.resources import resources
-
-            snapshot = resources().modelos.authority.snapshot(
+            snapshot = bundled_authority().snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
                 period=context.period.registry_token,

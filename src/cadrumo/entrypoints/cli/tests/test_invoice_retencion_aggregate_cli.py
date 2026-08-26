@@ -32,7 +32,7 @@ from ....application.modelo._calculation_actions import (
 )
 from ....application.modelo._work_lifecycle import create_work_unit
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -118,7 +118,7 @@ def _seed_ready_profile(root: Path) -> None:
 
 
 def _calculate_m111(objects: SecureObjectRepository, period: Period) -> dict[str, Decimal]:
-    snapshot = resources().modelos.authority.snapshot("111", filing_year=period.filing_year, period="1T")
+    snapshot = bundled_authority().snapshot("111", filing_year=period.filing_year, period="1T")
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,

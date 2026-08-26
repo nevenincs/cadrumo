@@ -29,7 +29,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import (
     DescendantInfo,
     compute_deduccion_maternidad_0611,
@@ -50,7 +50,7 @@ _MELLIZO_BIRTH = date(2023, 1, 15)
 
 @lru_cache
 def _snapshot(year: int) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+    return bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _record(*descendientes: DescendantInfo) -> UserProfileRecord:

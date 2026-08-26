@@ -7,8 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.resources import bundled_path, resources
+from .....core.resources import bundled_path
 from .....domain.deadlines import shift_deadline
+from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_catalogue
 from ..legal import verify_legal_catalogue
 
@@ -42,7 +43,7 @@ _M345_SOURCE_REFS = {
 
 
 def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation() -> None:
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     modelo = authority.modelo("345")
     revision = modelo.revisions["2025"]
 
@@ -100,7 +101,7 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
 
 
 def test_modelo_345_additional_data_subfields_follow_official_record_design() -> None:
-    revision = resources().modelos.authority.modelo("345").revisions["2025"]
+    revision = bundled_authority().modelo("345").revisions["2025"]
     casillas = {str(casilla.id): casilla for casilla in revision.casillas}
 
     expected = (

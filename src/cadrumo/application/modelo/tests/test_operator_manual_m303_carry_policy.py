@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Modelo, Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
     CalculationObservationRepository,
@@ -60,7 +60,7 @@ def test_operator_manual_m303_is_not_carry_evidence_but_remains_available_to_unr
         ):
             validate_normalized_m303_carry_observation_envelope(first_quarter)
 
-        annual_snapshot = resources().modelos.authority.snapshot(
+        annual_snapshot = bundled_authority().snapshot(
             Modelo.M390.value,
             filing_year=_FILING_YEAR,
             period="0A",

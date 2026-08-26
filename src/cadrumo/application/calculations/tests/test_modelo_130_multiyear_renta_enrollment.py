@@ -46,12 +46,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
@@ -280,7 +281,7 @@ def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos: _Re
     # the local store — it auto-pulls renta year N's M100 net income — then run
     # a real calculation with it. Nothing about the prior-year income is
     # re-keyed by hand.
-    snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
+    snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
     resolved = resolve_bindings_from_local_store(snapshot_n1, repository=obs_repo).binding_values
     assert resolved.get(_PREV_YEAR_BINDING) == _PRIOR_YEAR_NET_INCOME
 

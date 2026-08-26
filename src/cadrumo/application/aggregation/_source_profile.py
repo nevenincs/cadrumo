@@ -14,6 +14,7 @@ from collections.abc import Iterable
 from typing import ClassVar
 
 from ...core import BindingSourceKind
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ._source_mesh import (
@@ -60,9 +61,7 @@ class ProfileSourceResolver:
         """
         snapshot = self._registry_snapshot
         if snapshot is None:
-            from ...core.resources import resources
-
-            snapshot = resources().modelos.authority.snapshot(
+            snapshot = bundled_authority().snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
                 period=context.period.registry_token,

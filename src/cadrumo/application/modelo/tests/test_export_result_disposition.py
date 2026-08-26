@@ -7,9 +7,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, PaymentElection, Period, RefundElection
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
+
+from ....core import CasillaId, PaymentElection, Period, RefundElection
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,
@@ -45,7 +46,7 @@ _BUCKET_ID = "6e84e19e-58f8-4241-b2d1-6ab9bcc3dd7b"
 
 
 def _result_disposition_work_unit(*, modelo: str, period: Period) -> WorkUnit:
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         modelo,
         filing_year=period.filing_year,
         period=period.registry_token,

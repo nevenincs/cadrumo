@@ -11,6 +11,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -26,9 +28,8 @@ from ....core import (
     ProrrataRegisterRegime,
 )
 from ....core.classification import SensitivityClass
-from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import (
     Invoice,
@@ -108,13 +109,13 @@ class LedgerIvaAggregationSourceResolver(_LedgerIvaAggregationSourceResolver):
 
 @cache
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
-    modelo_definition = resources().modelos.get(modelo)
+    modelo_definition = bundled_authority().modelo(modelo)
     return modelo_definition.revisions[revision_id]
 
 
 @cache
 def _m303_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision
+    return bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
 
 
 def _raw_transaction(

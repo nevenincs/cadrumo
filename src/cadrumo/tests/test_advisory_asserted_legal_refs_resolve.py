@@ -21,10 +21,11 @@ from __future__ import annotations
 
 import pytest
 
-from ..application.aggregation import CalculationSourceDiagnostic
-from ..core.resources import resources
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.legal import assert_legal_ref_ids_resolve
+
+from ..application.aggregation import CalculationSourceDiagnostic
+from ..domain.calculations.registry.authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -66,7 +67,7 @@ def test_the_evidenced_legitimate_population_still_resolves() -> None:
     incomplete for that provision, which is a stop-and-report finding, never a
     reason to relax the check.
     """
-    catalogue = resources().modelos.authority.catalogues.legal
+    catalogue = bundled_authority().catalogues.legal
     diagnostics = tuple(_asserted_diagnostic(ref_id) for ref_id in _EVIDENCED_LEGITIMATE_ASSERTED_REFS)
 
     for diagnostic in diagnostics:
@@ -83,7 +84,7 @@ def test_a_fabricated_provision_id_refuses() -> None:
     Necessary but not sufficient on its own -- see the control above, which is
     what proves the mechanism does not over-reach on real advisory claims.
     """
-    catalogue = resources().modelos.authority.catalogues.legal
+    catalogue = bundled_authority().catalogues.legal
     diagnostic = _asserted_diagnostic("ley-99-9999:art-0")
 
     with pytest.raises(RegistryValidationError, match="ley-99-9999:art-0"):

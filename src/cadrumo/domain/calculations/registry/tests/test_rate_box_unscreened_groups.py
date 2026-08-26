@@ -39,10 +39,14 @@ from collections.abc import Iterator
 
 import pytest
 
-from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.rate_box_partition import derive_rate_box_partitions, rate_box_unscreened_groups
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.rate_box_partition import (
+    derive_rate_box_partitions,
+    rate_box_unscreened_groups,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from ..authority import bundled_authority
 from ..rate_box_partition import _NO_RATE_BLIND_SIBLING
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -64,7 +68,7 @@ _M303_STRANDED_BINDINGS = (
 
 def _revisions() -> Iterator[tuple[str, str, ModeloRevision]]:
     """Yield the live revision for each modelo this module measures."""
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     yield "303", "2025-3T", authority.snapshot("303", filing_year=2025, period="3T").revision
     yield "390", "2024-0A", authority.snapshot("390", filing_year=2024, period="0A").revision
 

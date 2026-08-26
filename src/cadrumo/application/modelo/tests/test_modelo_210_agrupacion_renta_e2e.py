@@ -15,7 +15,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import M210PayerMode, Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import Modelo210AgrupacionRentaRow, ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices
@@ -111,7 +111,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
     )
 
     with _secure_backend(tmp_path):
-        snapshot = resources().modelos.authority.snapshot("210", filing_year=_FILING_YEAR, period="0A")
+        snapshot = bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="0A")
         work_repo = WorkUnitCatalogueRepository()
         calculation_repo = CalculationRevisionCatalogueRepository()
         event_repo = BucketEventHistoryRepository()
@@ -226,7 +226,7 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
 ) -> None:
     """Real calculation and verification retain one identical grounded notice."""
     with _secure_backend(tmp_path):
-        snapshot = resources().modelos.authority.snapshot("210", filing_year=_FILING_YEAR, period="0A")
+        snapshot = bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="0A")
         work_repo = WorkUnitCatalogueRepository()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -293,7 +293,7 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
 def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_path: Path) -> None:
     """Tipo 28 remains event-shaped and silent at both lifecycle boundaries."""
     with _secure_backend(tmp_path):
-        snapshot = resources().modelos.authority.snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
+        snapshot = bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -332,7 +332,7 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
 ) -> None:
     """The real EVENT-N work model reuses the qualified annual plazo authority."""
     with _secure_backend(tmp_path):
-        snapshot = resources().modelos.authority.snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
+        snapshot = bundled_authority().snapshot("210", filing_year=_FILING_YEAR, period="EVENT-1")
         work_repo = WorkUnitCatalogueRepository()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

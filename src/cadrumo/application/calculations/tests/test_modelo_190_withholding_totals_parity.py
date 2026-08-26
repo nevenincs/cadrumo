@@ -62,7 +62,7 @@ from cadrumo.domain.calculations.registry.withholding_bindings import (
 
 from ....core import CasillaId, validated_casilla_id
 from ....core.aggregation import RetencionClave
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -130,7 +130,7 @@ def _calculate_190(
     withholding_observations: tuple[WithholdingObservation, ...],
 ):
     """Run the REAL 190 annual calculation from relations + withholding detail."""
-    snapshot = resources().modelos.authority.snapshot(_MODELO_190, filing_year=_FILING_YEAR, period="0A")
+    snapshot = bundled_authority().snapshot(_MODELO_190, filing_year=_FILING_YEAR, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     withholding_binding_values = resolve_withholding_binding_values(snapshot.revision, withholding_observations)
     binding_values = {**relation_binding_values, **withholding_binding_values}
@@ -224,10 +224,7 @@ def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
     default was a hardcoded cent that would have masked exactly this gap.
     """
     published = (
-        resources()
-        .modelos.authority.snapshot(_MODELO_190, filing_year=_FILING_YEAR, period="0A")
-        .verification_policy()
-        .tolerance
+        bundled_authority().snapshot(_MODELO_190, filing_year=_FILING_YEAR, period="0A").verification_policy().tolerance
     )
     assert published == Decimal("0"), "test precondition: modelo 190 2025 must publish exact equality"
 

@@ -180,13 +180,13 @@ from cadrumo.domain.calculations.registry.ledger_bindings import (
 )
 
 from .....core import CasillaId, IvaDeductionFactKind, validated_casilla_id
-from .....core.resources import resources
 from ....iva import (
     IvaCategory,
     IvaFlowDirection,
     IvaLedgerObservationRole,
     IvaRateKind,
 )
+from ..authority import bundled_authority
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -375,7 +375,7 @@ def _calculate(
     include_recargo: bool,
     regularizacion_prorrata: Decimal | None = None,
 ) -> RegistryCalculationResult:
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = bundled_authority().snapshot("390", filing_year=_FILING_YEAR, period=_PERIOD)
     binding_values: dict[str, Decimal] = {
         # This scenario grounds only the ledger-derived annual totals against
         # the manual's own four-quarter arithmetic; it does not exercise the
@@ -538,7 +538,7 @@ def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bo
     general/reducido tiers are proven above rather than asserting an absolute
     figure the manual never states.
     """
-    snapshot = resources().modelos.authority.snapshot("390", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = bundled_authority().snapshot("390", filing_year=_FILING_YEAR, period=_PERIOD)
     observations = (
         *_annual_observations(include_recargo=True),
         IvaLedgerObservation(

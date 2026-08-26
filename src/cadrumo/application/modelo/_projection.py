@@ -32,7 +32,8 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
-from ...core.resources import bundled_path, resources
+from ...core.resources import bundled_path
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.errors import (
     RegistrySnapshotError,
@@ -623,7 +624,7 @@ def project_modelo_100_from_m130(
     """
     annual = _m130_annual_projection(year)
 
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     m100_snapshot = authority.snapshot(Modelo.M100.value, filing_year=year, period="0A")
     extra_inputs = validate_casilla_input_ids(
         m100_snapshot.revision,

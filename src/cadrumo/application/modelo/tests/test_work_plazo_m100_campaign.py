@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from .._work_plazo import modelo_work_deadline_posture
 
@@ -30,8 +30,8 @@ def test_m100_tax_year_work_unit_resolves_its_following_campaign_deadline(
 ) -> None:
     period = Period.from_year_and_code(filing_year, "0A")
     revision_id = (
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             "100",
             filing_year=filing_year,
             period=period.registry_token,

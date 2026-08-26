@@ -85,6 +85,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
@@ -97,7 +98,6 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
-from ....core.resources import resources
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -284,7 +284,7 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID_M200, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         _M200,
         filing_year=_FILING_YEAR,
         period="0A",
@@ -408,7 +408,7 @@ def _calculate_m202(secure_objects: SecureObjectRepository, *, period: str) -> B
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot(_M202, filing_year=_FILING_YEAR, period=period)
+    snapshot = bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M202,
@@ -517,7 +517,7 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot(_M202, filing_year=_FILING_YEAR, period="2P")
+    snapshot = bundled_authority().snapshot(_M202, filing_year=_FILING_YEAR, period="2P")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_M202,

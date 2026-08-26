@@ -43,7 +43,7 @@ from ....core import (
     ResultDisposition,
     validated_casilla_id,
 )
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
@@ -136,7 +136,7 @@ def _ledger_observation(
 
 
 def _m303_revision_id(*, filing_year: int, period: str) -> str:
-    snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
     return str(snapshot.revision.id)
 
 
@@ -487,7 +487,7 @@ def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
     One year per shipped revision window, so a newly-shipped revision cannot
     slip past this refusal by simply not being enumerated here.
     """
-    snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
 
     assert str(snapshot.revision.id) == revision_id
     assert "61" not in declared_casilla_ids(snapshot.revision)

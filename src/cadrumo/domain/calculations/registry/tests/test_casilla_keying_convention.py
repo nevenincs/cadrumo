@@ -7,12 +7,16 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
-from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.casilla_membership import (
+    casilla_noncanonical_reference_targets,
+    format_noncanonical_casilla_reference,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.casilla_membership import casilla_noncanonical_reference_targets, format_noncanonical_casilla_reference
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -37,14 +41,12 @@ _M303_PREVIOUS_COMPENSATION_BINDING = "modelo-303-compensacion-pendiente-anterio
 
 @pytest.fixture(scope="module")
 def _m303_2025_1t_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
+    return bundled_authority().snapshot("303", filing_year=2025, period="1T")
 
 
 @pytest.fixture(scope="module")
 def _m200_2024_snapshot() -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot(
-        "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
-    )
+    return bundled_authority().snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
 def test_runtime_accepts_canonical_casilla_id_for_semantic_input(_m303_2025_1t_snapshot: RegistrySnapshot) -> None:

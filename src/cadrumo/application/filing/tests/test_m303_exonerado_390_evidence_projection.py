@@ -17,7 +17,7 @@ from ....core import (
     Period,
     validated_casilla_id,
 )
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing import FilingExportError
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
@@ -91,7 +91,7 @@ def _evidence(
 
 
 def _snapshot(period: Period) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot("303", filing_year=period.filing_year, period=period.code)
+    return bundled_authority().snapshot("303", filing_year=period.filing_year, period=period.code)
 
 
 def _record_design(registry_snapshot: RegistrySnapshot) -> SourceReference:

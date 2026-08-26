@@ -46,6 +46,9 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
@@ -58,9 +61,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, CasillaValueKind, Modelo, Period, validated_casilla_id
 from ....core.config import Settings
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -230,7 +231,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     makes the comparison a statement about the observation store rather than about
     the caller channel.
     """
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         Modelo.M100.value,
         filing_year=_YEAR,
         period=_M100_ANNUAL_PERIOD,
@@ -266,7 +267,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository, *, bucket_id:
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=bucket_id, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=bucket_id, objects=secure_objects)
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         Modelo.M100.value,
         filing_year=_YEAR,
         period=_M100_ANNUAL_PERIOD,

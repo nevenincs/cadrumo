@@ -36,7 +36,7 @@ import pytest
 from cadrumo.domain.calculations.registry.ledger_bindings import IvaLedgerObservation
 
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices import Invoice, IvaRate
 from ....domain.iva import (
     InvoiceKind,
@@ -164,7 +164,7 @@ def test_the_preserved_category_does_not_by_itself_declare_the_cuota() -> None:
     """
     observation = _observation_for(_received_reverse_charge())
     assert observation is not None
-    revision = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T").revision
+    revision = bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
 
     resolved = {str(k): v for k, v in resolve_iva_ledger_binding_values(revision, (observation,)).items()}
 

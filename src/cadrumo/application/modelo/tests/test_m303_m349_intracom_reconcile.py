@@ -19,6 +19,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ...tests import isolated_profile_backend as _isolated_backend
 
 __all__ = ["_isolated_backend"]
@@ -28,7 +29,6 @@ from cadrumo.application.workflow.persistence import workflow_state_repository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -60,9 +60,7 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:
     assert bucket_id is not None
     typed_period = Period.from_year_and_code(filing_year, period)
     revision_id = (
-        resources()
-        .modelos.authority.snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token)
-        .revision.id
+        bundled_authority().snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token).revision.id
     )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,

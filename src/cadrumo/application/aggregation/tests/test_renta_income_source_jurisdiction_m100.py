@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID, secure_objects
 
 __all__ = ["secure_objects"]
@@ -16,7 +17,6 @@ from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.resources import resources
 from ....domain.transactions import TransactionCatalogue
 from .._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
@@ -239,7 +239,7 @@ def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
     wiring under test are exactly what ships. Expected value derived from the
     input, never copied from engine output.
     """
-    modelo_def = resources().modelos.get("100")
+    modelo_def = bundled_authority().modelo("100")
     revision = modelo_def.revisions["2025"]
     casilla_0171 = next(c for c in revision.casillas if c.id == _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA)
     assert str(casilla_0171.input_kind) == "bound"

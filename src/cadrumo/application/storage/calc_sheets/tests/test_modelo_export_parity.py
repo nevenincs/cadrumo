@@ -19,8 +19,9 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from .....domain.calculations.registry.authority import bundled_authority
 from .. import build_export_plan
 from .._layout import plan_layout
 from .._translator import is_translatable
@@ -72,7 +73,7 @@ _COVERED = [
 
 
 def _snapshot(modelo: str, year: int, period: str, on: date):
-    return resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
+    return bundled_authority().snapshot(modelo, filing_year=year, period=period, on=on)
 
 
 _FORMAT_BY_REGISTRY_TYPE = {

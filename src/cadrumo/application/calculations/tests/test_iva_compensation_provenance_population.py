@@ -67,7 +67,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.config import Settings
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....domain.modelos import (
     CalculationRevision,
@@ -178,8 +178,8 @@ class _Population:
 
 def _registry_revision_id(*, filing_year: int, period: str) -> str:
     return (
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             Modelo.M303.value,
             filing_year=filing_year,
             period=period,
@@ -402,7 +402,7 @@ def _binding_prefill_census() -> _PathCensus:
             )
             continue
         projected = _observation_from_iva_compensation_history(state)
-        snapshot = resources().modelos.authority.snapshot(
+        snapshot = bundled_authority().snapshot(
             Modelo.M303.value,
             filing_year=target_year,
             period=target_period,
@@ -453,9 +453,7 @@ def _carry_ingress_census() -> _PathCensus:
         reconstructed = _period_state_from_303_envelope(payload)
         rows.append(reconstructed)
         partition = resolve_iva_compensation_annual_partition_binding_values(
-            resources()
-            .modelos.authority.snapshot(Modelo.M390.value, filing_year=period.filing_year, period="0A")
-            .revision,
+            bundled_authority().snapshot(Modelo.M390.value, filing_year=period.filing_year, period="0A").revision,
             (payload,),
             filing_year=period.filing_year,
         )

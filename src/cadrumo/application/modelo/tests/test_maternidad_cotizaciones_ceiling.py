@@ -31,7 +31,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from ....core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..profile_binding import resolve_maternidad_meses
@@ -63,7 +63,7 @@ def _record_declaring_months(filing_year: int) -> UserProfileRecord:
 
 
 def _resolution(filing_year: int):
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=filing_year, period="0A")
+    snapshot = bundled_authority().snapshot("100", filing_year=filing_year, period="0A")
     return resolve_maternidad_meses(_record_declaring_months(filing_year), snapshot)
 
 

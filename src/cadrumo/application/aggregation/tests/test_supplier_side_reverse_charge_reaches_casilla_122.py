@@ -29,7 +29,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices import Invoice, IvaRate
 from ....domain.iva import InvoiceKind, IvaCategory, is_deducible_flow
 from .._iva_ledger import resolve_iva_ledger_binding_values
@@ -64,7 +64,7 @@ def test_every_declared_category_base_only_flow_stays_outside_deduction_authorit
 
 
 def _revision():
-    return resources().modelos.authority.snapshot("303", filing_year=2024, period="1T").revision
+    return bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
 
 
 def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:

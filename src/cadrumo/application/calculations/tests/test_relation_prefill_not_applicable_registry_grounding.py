@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....core import Modelo
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
@@ -55,7 +55,7 @@ _T0 = datetime(2026, 1, 12, 10, 0, tzinfo=UTC)
 
 
 def _m100_snapshot(filing_year: int) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot(Modelo.M100.value, filing_year=filing_year, period="0A")
+    return bundled_authority().snapshot(Modelo.M100.value, filing_year=filing_year, period="0A")
 
 
 def _save_profile(bucket_id: str, extra_facts: tuple[UserProfileFact, ...]) -> None:
@@ -253,7 +253,7 @@ class TestFailClosed:
                     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
                 ),
             )
-            snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=2024, period="1T")
+            snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=2024, period="1T")
             assert _economic_activity_conditional_source_modelos(snapshot) == frozenset(), (
                 "test precondition: Modelo 303 must declare no economic-activity-conditional dependency"
             )

@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from ....core import CasillaId, Modelo, ProrrataProvisionalProvenance, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker
@@ -41,7 +41,7 @@ _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surf
 
 
 def _prior_revision_id(*, filing_year: int = _PRIOR_YEAR, period: str = _SETTLEMENT_PERIOD) -> str:
-    snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
     return str(snapshot.revision.id)
 
 

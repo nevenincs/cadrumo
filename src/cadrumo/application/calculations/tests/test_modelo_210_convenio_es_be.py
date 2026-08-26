@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 from ._convenio_rate_support import resolve_convenio_rate
 
@@ -47,7 +47,7 @@ def test_be_interest_resolves_treaty_ceiling_of_10_percent(tmp_path: Path) -> No
 
 def test_be_treaty_legal_entries_are_grounded() -> None:
     """The BE treaty rows and their BOE-grounded legal entries are registered."""
-    catalogues = resources().modelos.authority.catalogues
+    catalogues = bundled_authority().catalogues
     assert "convenio-es-be-1995:art-10" in catalogues.legal
     assert "convenio-es-be-1995:art-11" in catalogues.legal
     art10 = catalogues.legal["convenio-es-be-1995:art-10"]

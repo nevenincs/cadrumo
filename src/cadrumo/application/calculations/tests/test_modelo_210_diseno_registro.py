@@ -31,11 +31,13 @@ from pathlib import Path
 
 import pytest
 
-from ....core import validated_casilla_id
-from ....core.resources import bundled_path, resources
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.ids import BindingId
+
+from ....core import validated_casilla_id
+from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -56,7 +58,7 @@ def _calculate(
     casilla_inputs: Mapping[str, str],
 ) -> Mapping[str, Decimal]:
     """Drive the REAL M210 engine and return values keyed by official number."""
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR, period="EVENT-1")
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period="EVENT-1")
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {_COUNTRY_BINDING: country_code} if country_code else {}
     text_inputs = {validated_casilla_id("tipo_renta", surface="diseno_registro_test"): tipo_renta}
@@ -78,7 +80,7 @@ def _calculate(
 
 def test_official_numbered_boxes_4_to_31_are_all_declared() -> None:
     """Every official diseño-de-registro numbered box [4]-[31] is present."""
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR, period="EVENT-1")
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period="EVENT-1")
     declared = {c.number for c in snapshot.revision.casillas}
     missing = [n for n in _OFFICIAL_NUMBERS if n not in declared]
     assert not missing, f"official M210 casilla numbers absent from the schema: {missing!r}"
@@ -86,7 +88,7 @@ def test_official_numbered_boxes_4_to_31_are_all_declared() -> None:
 
 def test_layout_authority_corpus_artefact_resolves() -> None:
     """The bundled diseño-de-registro PDF is registered and present on disk."""
-    catalogues = resources().modelos.authority.catalogues
+    catalogues = bundled_authority().catalogues
     source = catalogues.sources[_DR_SOURCE]
     assert source.evidence_tier == "layout_authority"
     assert source.corpus_path == "corpus/aeat_official/disenos_registro/modelo_210/dr210_2011.pdf"

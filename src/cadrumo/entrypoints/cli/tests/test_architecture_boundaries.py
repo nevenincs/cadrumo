@@ -188,7 +188,7 @@ def test_legacy_modelo_root_does_not_add_registry_authority_reads(source_tree_as
     """Registry authority reads must move out of the CLI root, not multiply."""
     path = _CLI_ROOT / _MODELO_LEGACY_ROOT
     text = path.read_text(encoding="utf-8")
-    authority_reads = text.count("resources().modelos.authority")
+    authority_reads = text.count("bundled_authority()")
     service_calls = _registry_query_service_call_count(path, source_tree_ast)
 
     assert authority_reads <= _LEGACY_ROOT_REGISTRY_AUTHORITY_READ_BUDGET

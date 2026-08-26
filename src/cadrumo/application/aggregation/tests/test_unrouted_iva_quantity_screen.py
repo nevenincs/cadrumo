@@ -34,8 +34,8 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
-from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import (
     InvoiceKind,
     IvaCashAccountingTreatment,
@@ -96,8 +96,8 @@ def _revision(modelo_id: str) -> ModeloRevision:
     """
     period = "1T" if modelo_id == "303" else "0A"
     return (
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             modelo_id,
             filing_year=_Q1_2025.filing_year,
             period=period,

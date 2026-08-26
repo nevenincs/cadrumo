@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+
 if TYPE_CHECKING:
     from cadrumo.application.registry.source_connectivity import SourceConnectivityCensusManifest
 
@@ -189,11 +191,7 @@ def _class_names(node: ast.ClassDef) -> frozenset[str]:
 
 
 def _self_attribute_name(node: ast.AST) -> str | None:
-    if (
-        isinstance(node, ast.Attribute)
-        and isinstance(node.value, ast.Name)
-        and node.value.id == "self"
-    ):
+    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "self":
         return node.attr
     return None
 
@@ -919,7 +917,6 @@ def _lexical_tokens(value: str) -> frozenset[str]:
 
 def discover_lexical_destination_advisories(repo_root: Path) -> tuple[LexicalDestinationAdvisory, ...]:
     """Emit report-only token overlaps; never infer binding identity or equivalence."""
-    from cadrumo.core.resources import resources
 
     capability_phrases: list[tuple[str, str, str]] = []
     capability_phrases.extend(
@@ -945,7 +942,7 @@ def discover_lexical_destination_advisories(repo_root: Path) -> tuple[LexicalDes
     )
 
     advisories: list[LexicalDestinationAdvisory] = []
-    for modelo in resources().modelos.authority.modelos:
+    for modelo in bundled_authority().modelos:
         for revision in modelo.revisions.values():
             for casilla in revision.casillas:
                 destination_text = " ".join(

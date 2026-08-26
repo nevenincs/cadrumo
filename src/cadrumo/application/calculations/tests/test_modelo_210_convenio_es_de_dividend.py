@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 from ._convenio_rate_support import resolve_convenio_rate
 
@@ -39,7 +39,7 @@ def test_de_dividend_resolves_treaty_ceiling_of_15_percent(tmp_path: Path) -> No
 
 def test_de_dividend_legal_entry_is_grounded() -> None:
     """The DE dividend treaty row and its BOE-grounded art-10 legal entry exist."""
-    catalogues = resources().modelos.authority.catalogues
+    catalogues = bundled_authority().catalogues
     assert "convenio-es-de-2011:art-10" in catalogues.legal
     art10 = catalogues.legal["convenio-es-de-2011:art-10"]
     assert art10.document_id == "BOE-A-2012-10212"

@@ -17,7 +17,6 @@ from ...core import Modelo
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ...core.time import now, today_madrid
-
 # Type-only registry references. Runtime callers below import the
 # concrete symbols lazily inside the helpers that use them so importing
 # this module does not trigger the ~870ms ValidatedRegistryAuthority
@@ -143,9 +142,9 @@ class DeadlineEngine:
             raise DeadlineValidationError(f"due_soon_days must be >= 0, got {due_soon_days}")
         self.due_soon_days = due_soon_days
         if registry_root is None and source_root is None:
-            from ...core.resources import resources
+            from ..calculations.registry.authority import bundled_authority
 
-            self._registry = resources().modelos.authority
+            self._registry = bundled_authority()
             self._source_root = bundled_path()
             return
         self._source_root = source_root if source_root is not None else bundled_path()

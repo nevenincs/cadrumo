@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 
 from ....adapters.outbound.google import RowSetCellEdit
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .. import assemble_observations_for_snapshot
 from .._row_set_assembly import (
     assemble_atribucion_observations,
@@ -35,11 +35,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _modelo(modelo_id: str, revision_id: str):
-    return resources().modelos.get(modelo_id).revisions[revision_id]
+    return bundled_authority().modelo(modelo_id).revisions[revision_id]
 
 
 def _snapshot(modelo_id: str, *, filing_year: int, period: str):
-    return resources().modelos.authority.snapshot(
+    return bundled_authority().snapshot(
         modelo_id,
         filing_year=filing_year,
         period=period,

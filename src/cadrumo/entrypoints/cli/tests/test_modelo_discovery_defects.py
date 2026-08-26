@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
@@ -280,7 +280,7 @@ def test_work_create_still_accepts_quarterly_tokens() -> None:
             "--format", "json",
             "app", "modelo", "work", "create",
             "--modelo", "303", "--year", "2024", "--period", "1T",
-            "--revision", str(resources().modelos.authority.snapshot("303", filing_year=2024, period="1T").revision.id),
+            "--revision", str(bundled_authority().snapshot("303", filing_year=2024, period="1T").revision.id),
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output

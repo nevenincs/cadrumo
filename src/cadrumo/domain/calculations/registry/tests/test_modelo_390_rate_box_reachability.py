@@ -43,7 +43,6 @@ from cadrumo.domain.calculations.registry.ledger_bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
-from .....core.resources import resources
 from ....invoices import IvaRate
 from ....iva import (
     InvoiceKind,
@@ -52,6 +51,7 @@ from ....iva import (
     IvaRateNotFoundError,
     invoice_line_to_iva_observation,
 )
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -111,7 +111,7 @@ _OUT_OF_WINDOW = (
 
 
 def _m390_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("390", filing_year=2024, period="0A").revision
+    return bundled_authority().snapshot("390", filing_year=2024, period="0A").revision
 
 
 def _issued_lines() -> tuple[IvaLedgerObservation, ...]:

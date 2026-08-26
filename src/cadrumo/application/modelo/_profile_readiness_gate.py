@@ -28,19 +28,18 @@ from datetime import date
 from ...core import Modelo, Period
 from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date
-from ...core.resources import resources
 from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.profile_grounding import (
     ProfileKeyGrounding,
     build_profile_grounding_index,
 )
-from ...domain.calculations.registry.errors import RegistrySnapshotError
-from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.deadlines import EntityType, IrpfIncomeCategory
 from ...domain.modelos import WorkUnit
@@ -289,7 +288,7 @@ def _report_for_target(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> ProfilePreflightReport:
     try:
-        resolved_authority = authority or resources().modelos.authority
+        resolved_authority = authority or bundled_authority()
         modelo_definition = resolved_authority.modelo(modelo)
         selected = select_revision(
             modelo_definition,
@@ -556,7 +555,7 @@ def require_profile_ready_for_modelo_work(
             # so the refusal named the fields and dropped the articles that make
             # them required, on the one surface whose whole purpose is telling an
             # operator why a field is demanded of them.
-            grounding = build_profile_grounding_index(resources().modelos.authority)
+            grounding = build_profile_grounding_index(bundled_authority())
             missing_labels = ", ".join(
                 _render_missing_requirement(
                     build_profile_preflight_requirement(path, schema=schema, grounding_index=grounding),
@@ -571,7 +570,7 @@ def require_profile_ready_for_modelo_work(
             translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
             context={"bucket_id": bucket_id, "modelo": modelo},
         )
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     grounding_index = build_profile_grounding_index(authority)
     applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
     if applicability_first:

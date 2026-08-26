@@ -20,9 +20,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -53,7 +54,7 @@ def _predicate_id(year: str) -> str:
 
 def _vivienda_advisory_predicate(year: str) -> VerificationPredicateDefinition:
     """Load the shipped M100 vivienda-habitual eligibility advisory for a revision year."""
-    revision = resources().modelos.authority.validate_modelo("100").revisions[year]
+    revision = bundled_authority().validate_modelo("100").revisions[year]
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _predicate_id(year))
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == 'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'

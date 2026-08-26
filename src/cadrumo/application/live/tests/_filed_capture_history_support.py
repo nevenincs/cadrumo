@@ -95,7 +95,7 @@ def _registry_snapshot(modelo: str, filing_year: int, period: str):
 
     ``load_registry_tree`` compiles the tree without validating it; ``build_snapshot``
     then validates only the requested modelo's own revisions -- unlike
-    ``resources().modelos.authority``, whose ``.load()`` validates the entire registry
+    ``bundled_authority()``, whose ``.load()`` validates the entire registry
     tree (including every OTHER modelo's export layouts) and currently refuses
     unconditionally as a result. A modelo whose OWN revisions lack an export layout
     still refuses here, honestly, on its own missing capability.

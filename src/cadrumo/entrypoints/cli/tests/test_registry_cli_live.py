@@ -13,6 +13,8 @@ import pytest
 from pydantic import AnyHttpUrl, ValidationError
 from typer.core import TyperGroup
 
+from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+
 from ....adapters.outbound.aeat.sede import (
     Declaracion,
     FiledDeclaracionArtefact,
@@ -48,8 +50,8 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.access_gate import AeatLiveReadNotEnabledError
-from ....core.resources import bundled_path, resources
-from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....core.resources import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation import IvaCompensationDecisionReason
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .. import _app_live
@@ -792,7 +794,7 @@ def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_pa
 
 @cache
 def _modelo_130_filed_state_observations() -> tuple[FiledDeclaracionObservation, FiledDeclaracionObservation]:
-    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
     calculation = calculate_registry_snapshot(
         snapshot,
         inputs=_modelo_130_inputs(),

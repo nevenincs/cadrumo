@@ -9,12 +9,11 @@ from pathlib import Path
 import pytest
 
 from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .._work_lifecycle import create_work_unit
 from .._calculate_input import (
     ModeloCalculateCasillaInputError,
     ModeloCalculateDecimalInputError,
@@ -22,6 +21,7 @@ from .._calculate_input import (
     WorkCalculateInputBundle,
     build_work_calculate_input_bundle,
 )
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,7 +48,7 @@ _M200_MANUAL_DECIMAL_CASILLA: CasillaId = validated_casilla_id(
 def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp_path: Path) -> None:
     """A raw ``--casilla`` token must be the canonical ``casilla.id``."""
     period = Period.from_year_and_code(2025, "0A")
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         "200",
         filing_year=2025,
         period=period.registry_token,
@@ -136,7 +136,7 @@ _CANONICAL_CASILLA_VALUES = ("140000", "140000.00", "-140000.55", "0", "0.335", 
 def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCalculateInputBundle:
     """Drive the real calculate-input boundary with one manual ``--casilla`` value."""
     period = Period.from_year_and_code(2025, "0A")
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         "200",
         filing_year=2025,
         period=period.registry_token,
@@ -212,7 +212,7 @@ _M303_PROFILE_ID = "20000000-0000-4000-8000-000000000303"
 def _m303_bundle_with_period_override(raw_value: str, *, tmp_path: Path) -> WorkCalculateInputBundle:
     """Drive the real calculate-input boundary with one ``period_code`` ``--casilla`` value."""
     period = Period.from_year_and_code(2025, "1T")
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period=period.registry_token)
+    snapshot = bundled_authority().snapshot("303", filing_year=2025, period=period.registry_token)
     bucket_id = _M303_PROFILE_ID
     with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(bucket_id):
         # Seeded through a detached WorkflowState, never a repository read:
@@ -292,7 +292,7 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
     advisory fires, never the ambiguous-relacion one.
     """
     period = Period.from_year_and_code(_MATERNIDAD_CEILINGED_FILING_YEAR, "0A")
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         "100",
         filing_year=_MATERNIDAD_CEILINGED_FILING_YEAR,
         period=period.registry_token,

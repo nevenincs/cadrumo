@@ -55,7 +55,7 @@ from cadrumo.domain.calculations.registry.invoice_bindings import InvoiceObserva
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 
 from .....core import Modelo
-from .....core.resources import resources
+from ..authority import bundled_authority
 from ..detail_record_bindings import (
     _AtributionRowField,
     _ForeignAssetRowField,
@@ -109,7 +109,7 @@ def _undeclared(model: type[BaseModel], literal: object) -> frozenset[str]:
 
 def _has_export_layout(modelo: Modelo) -> bool:
     """Whether this modelo writes any artefact a dropped column could vanish from."""
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     for year in (2024, 2025):
         try:
             revision = authority.snapshot(modelo.value, filing_year=year, period="0A").revision
@@ -159,7 +159,7 @@ def test_the_probe_answers_for_a_modelo_whose_snapshot_refuses() -> None:
 
     for modelo in refusing:
         with pytest.raises(RegistryValidationError):
-            resources().modelos.authority.snapshot(modelo.value, filing_year=2025, period="0A")
+            bundled_authority().snapshot(modelo.value, filing_year=2025, period="0A")
         assert _has_export_layout(modelo) is False, (
             f"{modelo.value}: a refusing snapshot must read as 'exports nothing'"
         )

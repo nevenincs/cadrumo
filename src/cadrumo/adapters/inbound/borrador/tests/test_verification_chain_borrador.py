@@ -68,10 +68,11 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
-from .....core.resources import resources
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+
+from .....core import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.authority import bundled_authority
 from .....tests import FIXTURES_DIR
 from .. import ArtefactKind, BorradorParseError, BorradorParseMode, parse_borrador
 
@@ -118,7 +119,7 @@ _COMPUTED_CASILLAS_M100: frozenset[CasillaId] = frozenset(
 
 def _registry_snapshot_m100(year: int):
     """Resolve the M100 validated registry snapshot for the given filing year."""
-    return resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+    return bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _borrador_extraction_profile(snapshot):

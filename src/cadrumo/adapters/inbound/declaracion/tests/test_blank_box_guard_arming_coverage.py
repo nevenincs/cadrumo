@@ -39,8 +39,9 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from .....domain.calculations.registry.authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -111,7 +112,7 @@ def _monetary_named_label_targets() -> list[tuple[str, str, str, bool]]:
     never ``artefact_kind``, which silently missed 18 of 29 profiles when a gate
     was last authored against it.
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     rows: list[tuple[str, str, str, bool]] = []
     seen: set[tuple[str, str, str]] = set()
     for modelo in authority.modelos:
@@ -186,7 +187,7 @@ def test_instruction_grounded_form_numbers_match_the_published_numbers(
     """
     revision = next(
         rev
-        for modelo in resources().modelos.authority.modelos
+        for modelo in bundled_authority().modelos
         if str(modelo.id) == modelo_id
         for rev_id, rev in modelo.revisions.items()
         if rev_id == revision_id

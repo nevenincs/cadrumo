@@ -588,7 +588,7 @@ RULES: Final[tuple[ClassificationRule, ...]] = (
     ),
     ClassificationRule(
         classification="conditionally_reachable",
-        trigger="bundled-resource repository requests: StaticModeloRepository and its sibling repositories",
+        trigger="bundled-resource repository requests and the validated modelo authority",
         reason=(
             "The resource repositories are constructed lazily and load their bundled material on "
             "first get; the registry load reaches only the path boundary among them."

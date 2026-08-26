@@ -40,14 +40,15 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.domain.calculations.registry.ids import RelationId
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import AuthProviderKind, CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import RelationId
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,
@@ -203,7 +204,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     filing_repo = ModeloRecordCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
 
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=period)
+    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=period)
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=_TAX_ID,
@@ -288,7 +289,7 @@ def _next_period_carry_in(*, next_period: str = _NEXT_PERIOD) -> Decimal | None:
     scenarios pass ``_REDEME_NEXT_PERIOD`` (the monthly period following
     ``_REDEME_REFUND_PERIOD``).
     """
-    snapshot_next = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=next_period)
+    snapshot_next = bundled_authority().snapshot("303", filing_year=_YEAR, period=next_period)
     relation_values = resolve_relations_from_local_store(
         snapshot_next,
         repository=CalculationObservationRepository(),

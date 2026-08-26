@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import RegistryAuthorityGrade
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ...registry import (
     derive_registry_binding_records,
     derive_registry_destination_records,
@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_every_loaded_revision_has_deterministic_connectivity_records() -> None:
     """Project every validated revision without order drift or omitted declarations."""
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     exercised: set[tuple[str, str]] = set()
 
     for modelo in authority.modelos:

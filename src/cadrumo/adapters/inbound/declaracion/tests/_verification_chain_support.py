@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 
 from .....core import CasillaId, Period, validated_casilla_id
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import CasillaObservation as CasillaObservation
 from .....domain.calculations.registry.bindings import RegistryModeloObservation as RegistryModeloObservation
 from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
@@ -325,7 +325,7 @@ _COMPUTED_CASILLAS_M111: frozenset[CasillaId] = frozenset(validated_casilla_id(_
 
 def _registry_snapshot(modelo: str, filing_year: int, period: str):
     """Resolve a validated registry snapshot from the committed authority."""
-    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
 
 
 _M303_2023_ONWARDS_PARAMS = [

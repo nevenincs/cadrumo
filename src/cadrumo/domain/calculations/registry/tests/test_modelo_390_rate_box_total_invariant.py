@@ -56,10 +56,11 @@ from collections.abc import Iterator
 
 import pytest
 
-from .....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -72,7 +73,7 @@ def _revisions() -> Iterator[tuple[str, ModeloRevision]]:
     epochs that do not exist yet, and keeps covering them if the partition is
     revised again.
     """
-    modelo = resources().modelos.authority.modelo("390")
+    modelo = bundled_authority().modelo("390")
     yield from modelo.revisions.items()
 
 

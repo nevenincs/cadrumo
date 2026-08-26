@@ -14,7 +14,6 @@ from .holiday_calendars import HolidayCalendarRepository
 from .iva_catalogues import IvaCatalogueRepository
 from .iva_rate_tables import IvaRateTableRepository
 from .manuals import ManualKey, ManualRepository
-from .modelos import StaticModeloRepository
 from .recargo_bands import RecargoBandsRepository
 from .topics import TopicCatalogueRepository
 
@@ -27,6 +26,5 @@ __all__ = [
     "ManualKey",
     "ManualRepository",
     "RecargoBandsRepository",
-    "StaticModeloRepository",
     "TopicCatalogueRepository",
 ]

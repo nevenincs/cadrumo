@@ -21,8 +21,9 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
+
+from ....domain.calculations.registry.authority import bundled_authority
 from .._row_set_assembly import _GROUPING_DISPATCH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -37,7 +38,7 @@ _INVOICE_GROUPINGS: frozenset[str] = frozenset({"operator_clave", "operator_clav
 
 def _all_row_producer_groupings() -> set[str]:
     groupings: set[str] = set()
-    for modelo in resources().modelos.all():
+    for modelo in bundled_authority().modelos:
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
                 if binding.aggregation is None or binding.aggregation.op != "rows":

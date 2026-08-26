@@ -215,7 +215,7 @@ def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
 
     from .....core.resources import bundled_path
 
-    # Scoped to M349 alone rather than through ``resources().modelos.authority``,
+    # Scoped to M349 alone rather than through ``bundled_authority()``,
     # whose ``.load()`` validates every modelo in the bundled tree before
     # returning anything.
     modelos, catalogues = bundled_registry_tree()

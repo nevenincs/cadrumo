@@ -41,11 +41,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.external_grounding import ManualWorkedExamplePayload
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.tests import oracle_declared_figures, read_manual_worked_example
 from ....domain.iva import (
     InputClassification,
@@ -151,7 +152,7 @@ def _m303_prorrata_percentage_from_manual_annual_volumes(payload: ManualWorkedEx
     line items it is made of and the formula line that uses it, rather than
     pointing at a total the page does not display.
     """
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=payload.filing_year, period="4T")
+    snapshot = bundled_authority().snapshot("303", filing_year=payload.filing_year, period="4T")
     binding_values = _m303_zero_bindings()
     manual_volume_inputs = oracle_declared_figures(_ORACLE_PAYLOAD_NAME)
     inputs = {

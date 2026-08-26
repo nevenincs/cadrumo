@@ -40,7 +40,7 @@ import pytest
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import load_test_profile_record, seed_test_profile_record
@@ -64,7 +64,7 @@ _CASILLA_1039: CasillaId = validated_casilla_id("1039", surface="test_autonomic_
 @pytest.fixture(scope="module")
 def m100_2025_snapshot() -> RegistrySnapshot:
     """Real bundled M100 2025 snapshot carrying the casilla-1039 semantic role."""
-    return resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _base_facts(**overrides: str) -> tuple[UserProfileFact, ...]:

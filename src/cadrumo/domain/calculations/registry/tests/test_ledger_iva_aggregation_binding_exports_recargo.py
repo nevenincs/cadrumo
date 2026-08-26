@@ -19,12 +19,12 @@ from cadrumo.domain.calculations.registry.ledger_bindings import (
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from .....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
-from .....core.resources import resources
 from ....iva import (
     IvaCategory,
     IvaFlowDirection,
     IvaRateKind,
 )
+from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ._ledger_iva_aggregation_support import (
     _M303_REPERCUTIDO_GENERAL_BASE_CASILLA,
@@ -48,7 +48,7 @@ def _m303_revision(revision_id: str) -> ModeloRevision:
 
 @cache
 def _m303_2022_2t_snapshot():
-    return resources().modelos.authority.snapshot("303", filing_year=2022, period="2T")
+    return bundled_authority().snapshot("303", filing_year=2022, period="2T")
 
 
 def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
@@ -383,7 +383,7 @@ def _calculate_303_2009_from_observations(
     2022 revision declares only
     ``modelo-303-compensacion-pendiente-anteriores`` as a manual binding fact.
     """
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),

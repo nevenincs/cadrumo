@@ -35,7 +35,7 @@ from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
 
 from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -68,7 +68,7 @@ _CASILLA_BASE_BINDING: dict[CasillaId, BindingId] = {
 
 @cache
 def _modelo_303_revision():
-    return resources().modelos.authority.snapshot("303", filing_year=2025, period="1T").revision
+    return bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
 
 
 def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> Decimal:

@@ -5,9 +5,9 @@ from collections.abc import Callable
 import pytest
 
 from ....core import RegistryAuthorityGrade
-from ....core.resources import bundled_path, resources
+from ....core.resources import bundled_path
 from ....tests.registry_tree import bundled_registry_tree
-from .authority import ValidatedRegistryAuthority
+from .authority import ValidatedRegistryAuthority, bundled_authority
 from .ids import RevisionId
 from .schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from .snapshot import build_snapshot
@@ -15,7 +15,7 @@ from .snapshot import build_snapshot
 
 @pytest.fixture(scope="session")
 def registry_authority() -> ValidatedRegistryAuthority:
-    return resources().modelos.authority
+    return bundled_authority()
 
 
 @pytest.fixture(scope="session")

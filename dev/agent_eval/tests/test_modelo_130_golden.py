@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 from .. import load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands
@@ -52,12 +53,9 @@ def test_provenance_dimension_is_not_vacuous() -> None:
     # Prove the provenance dimension actually inspects real registry grounding:
     # the modelo-130 revision must carry casillas with legal_refs/source_refs, so a
     # pass is grounded, not an empty-set tautology.
-    from cadrumo.core.resources import resources
 
     scenario = load_scenario(_SCENARIO)
-    snapshot = resources().modelos.authority.snapshot(
-        scenario.modelo, filing_year=scenario.filing_year, period=scenario.period
-    )
+    snapshot = bundled_authority().snapshot(scenario.modelo, filing_year=scenario.filing_year, period=scenario.period)
     casillas = snapshot.revision.casillas
     rows = list(casillas.values()) if isinstance(casillas, dict) else list(casillas)
     assert rows, "modelo-130 revision has no casillas to ground"
@@ -111,13 +109,10 @@ def test_runner_accepts_one_declaration_per_lifecycle_stage() -> None:
 def test_verification_dimension_is_grounded_and_not_vacuous() -> None:
     # The modelo-130 revision must declare an AEAT-grounded verification contract
     # (computed_casilla_ids with source_refs), so a pass is grounded.
-    from cadrumo.core.resources import resources
 
     scenario = load_scenario(_SCENARIO)
     revision = (
-        resources()
-        .modelos.authority.snapshot(scenario.modelo, filing_year=scenario.filing_year, period=scenario.period)
-        .revision
+        bundled_authority().snapshot(scenario.modelo, filing_year=scenario.filing_year, period=scenario.period).revision
     )
     expectations = list(revision.verification_expectations)
     assert expectations, "modelo-130 revision declares no verification contract"

@@ -48,8 +48,8 @@ from .....application.modelo.reconciliation_records import (
 )
 from .....application.workflow.persistence import workflow_state_repository
 from .....core import ABSENT_SECURE_OBJECT_REVISION_ID, Period
-from .....core.resources import resources
 from .....domain.buckets import BucketEventType
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id, upsert_work_unit
 from .....tests import FIXTURES_DIR
 from .....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
@@ -94,9 +94,7 @@ def _seed_work_unit(*, modelo: str = "130", filing_year: int = 2026, period: str
     # selects, so a fabricated pin diverts reconcile into a snapshot_unavailable
     # advisory instead of reaching the branch under test.
     revision_id = (
-        resources()
-        .modelos.authority.snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token)
-        .revision.id
+        bundled_authority().snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token).revision.id
     )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,

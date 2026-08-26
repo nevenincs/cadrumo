@@ -6,9 +6,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -28,7 +29,7 @@ _M202_REVISION_IDS = ("2019-2022", "2023-2024", "2025-y-siguientes")
 
 def _m202_advisory_predicate(revision_id: str) -> VerificationPredicateDefinition:
     """Load the shipped M202 silent-under-declaration advisory from the authority."""
-    revision = resources().modelos.authority.validate_modelo("202").revisions[revision_id]
+    revision = bundled_authority().validate_modelo("202").revisions[revision_id]
     predicate = next(p for p in revision.verification_predicates if p.predicate_id == _M202_PREDICATE_ID)
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == 'implies_nonzero(["04", "13"])'
@@ -107,7 +108,7 @@ _M202_B2_TRAMO_CASES = (
 
 def _m202_2025_predicate(predicate_id: str) -> VerificationPredicateDefinition:
     """Load a shipped 2025-y-siguientes-only M202 silent-under-declaration advisory."""
-    revision = resources().modelos.authority.validate_modelo("202").revisions["2025-y-siguientes"]
+    revision = bundled_authority().validate_modelo("202").revisions["2025-y-siguientes"]
     return next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
 
 

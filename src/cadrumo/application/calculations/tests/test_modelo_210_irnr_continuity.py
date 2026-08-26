@@ -55,12 +55,13 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.ids import BindingId
+
+from ....core import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 
@@ -156,7 +157,7 @@ def _calculate_210_result(
     Returns the real registry calculation result so tests can inspect value and
     provenance behavior without rebuilding formula logic.
     """
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period="EVENT-1")
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="EVENT-1")
     # Text casillas (tipo_renta) and enum bindings (country_of_fiscal_residence)
     # are supplied through text_inputs and enum_binding_values respectively.
     # Numeric manual casillas go through casilla_inputs.

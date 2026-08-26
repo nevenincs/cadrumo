@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+
+from ....domain.calculations.registry.authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _authority():
-    return resources().modelos.authority
+    return bundled_authority()
 
 
 def test_formula_backed_casillas_are_computed_inputs() -> None:

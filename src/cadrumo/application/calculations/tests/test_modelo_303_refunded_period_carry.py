@@ -28,13 +28,14 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
-from ....core.resources import resources
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.calculations.registry.relations import materialize_relation_binding_values
-from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.temporal import select_revision
+
+from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -144,7 +145,7 @@ def _calculate_303(
     cuota_binding_overrides: Mapping[str, Decimal],
     relation_values: Mapping[RelationId, Decimal],
 ) -> RegistryCalculationResult:
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
     relation_binding_values = materialize_relation_binding_values(
         snapshot.revision,
         dict(relation_values),
@@ -236,7 +237,7 @@ def _year_n_4t_work_unit() -> WorkUnit:
 
 def _carry_in_for_year_n_plus_1(obs_repo: CalculationObservationRepository) -> Decimal | None:
     """Resolve year N+1 1T casilla 110 from whatever year-N 4T carry is persisted."""
-    snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
+    snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
     relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
     resolved: dict[RelationId, Decimal] = {
         item.relation: item.value for item in relation_values.values if item.value is not None

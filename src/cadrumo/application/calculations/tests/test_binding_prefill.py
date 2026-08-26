@@ -32,7 +32,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
@@ -80,7 +80,7 @@ _M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-dis
 
 @cache
 def _snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
-    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
 
 
 def test_m130_first_year_activity_start_prefills_prior_year_m100_as_no_prior_obligation(

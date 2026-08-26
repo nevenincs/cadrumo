@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....application.calculations import (
     M303_DECLARATION_TYPE_HEADER_KEY,
@@ -15,8 +17,7 @@ from ....application.calculations import (
     ResultDispositionProjection,
 )
 from ....core import ObservedHeaderFact, Period, PriorDomiciliationElection, ResultDisposition
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentIdentity,
@@ -72,8 +73,8 @@ def _source_header_disposition(
 def _work_unit(*, modelo: str = "303") -> WorkUnit:
     period = Period.from_year_and_code(2025, "1T")
     revision_id = (
-        resources()
-        .modelos.authority.snapshot(
+        bundled_authority()
+        .snapshot(
             modelo,
             filing_year=period.filing_year,
             period=period.registry_token,

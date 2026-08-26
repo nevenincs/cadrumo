@@ -8,10 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core import CasillaId, Modelo, ObservedHeaderFact, Period, ResultDisposition
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
+
+from ....core import CasillaId, Modelo, ObservedHeaderFact, Period, ResultDisposition
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -44,7 +45,7 @@ def _observed_header(code: str) -> ObservedHeaderFact:
 
 
 def _carry_observation() -> RegistryModeloObservation:
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         Modelo.M303.value,
         filing_year=_PERIOD.filing_year,
         period=_PERIOD.registry_token,

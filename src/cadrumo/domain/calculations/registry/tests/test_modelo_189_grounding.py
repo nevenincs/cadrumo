@@ -6,7 +6,8 @@ from datetime import date
 
 import pytest
 
-from .....core.resources import bundled_path, resources
+from .....core.resources import bundled_path
+from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_catalogue
 from ..legal import verify_legal_catalogue
 
@@ -29,7 +30,7 @@ _M189_SOURCE_REFS = {
 
 
 def test_modelo_189_current_registry_uses_2025_sources_without_fake_calculation() -> None:
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     modelo = authority.modelo("189")
     revision = modelo.revisions["2025"]
 

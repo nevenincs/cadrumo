@@ -20,7 +20,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import (
     Invoice,
@@ -306,8 +306,8 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     assert wire[10:12] == expected_wire_period
     assert period_token.encode("ascii") not in wire
     layout = (
-        resources()
-        .modelos.authority.snapshot("369", filing_year=_M369_YEAR, period=period_token, revision_id="esquema-exterior")
+        bundled_authority()
+        .snapshot("369", filing_year=_M369_YEAR, period=period_token, revision_id="esquema-exterior")
         .revision.export_layouts[0]
     )
     parsed = parse_export_payload(layout, wire)

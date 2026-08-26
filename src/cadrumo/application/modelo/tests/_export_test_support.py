@@ -18,7 +18,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.identity import nif_check_letter
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import (
     IVARegime,
     M303RegimeComposition,
@@ -162,7 +162,7 @@ def _seed_revision(
     binding_overrides = dict(binding_overrides or {})
     casilla_values = dict(casilla_values or {})
     typed_period = Period.from_year_and_code(filing_year, period)
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         modelo,
         filing_year=filing_year,
         period=typed_period.registry_token,

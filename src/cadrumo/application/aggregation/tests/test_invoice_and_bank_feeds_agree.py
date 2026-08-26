@@ -37,7 +37,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices import Invoice, IvaRate
 from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
 from ....domain.transactions import (
@@ -66,7 +66,7 @@ _CASILLA_60 = "modelo-303-casilla-60-exportaciones-base"
 
 @cache
 def _revision():
-    return resources().modelos.authority.snapshot("303", filing_year=2026, period="2T").revision
+    return bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
 
 
 def _resolved(observations) -> dict[str, Decimal]:

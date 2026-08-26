@@ -1,7 +1,7 @@
 """Registry resource helpers shared by modelo application actions.
 
 Modelo application services access the packaged registry through the central
-:class:`ValidatedRegistryAuthority` exposed by ``resources().modelos.authority``.
+:class:`ValidatedRegistryAuthority` exposed by ``bundled_authority()``.
 This module keeps that access path in one place for work-unit creation,
 calculation, verification, import, and comparison code that needs the bundled
 ``registry/aeat`` tree or its cached authority.
@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core import Period
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos import ModeloError
 
@@ -51,9 +52,8 @@ def authority_via_resources() -> ValidatedRegistryAuthority:
     verification, import, and create-work-unit paths share the same packaged
     registry cache and source-root configuration.
     """
-    from ...core.resources import resources
 
-    return resources().modelos.authority
+    return bundled_authority()
 
 
 def reject_unknown_revision(*, modelo: str, revision_id: RevisionId) -> None:

@@ -21,6 +21,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.ids import BindingId
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -28,9 +31,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -166,7 +167,7 @@ def _calculate_m100(
     filing_year: int,
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
 ) -> BucketAggregationCalculationResult:
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=filing_year, period=_PERIOD)
+    snapshot = bundled_authority().snapshot("100", filing_year=filing_year, period=_PERIOD)
     work_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -256,7 +257,7 @@ def test_m100_2025_anexo_c_applied_amount_reduces_base_liquidable_not_base_impon
 
 def test_m100_2025_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> None:
     """The live 2025 registry keeps Art. 48 only on the distinct base-imponible step."""
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period=_PERIOD)
+    snapshot = bundled_authority().snapshot("100", filing_year=2025, period=_PERIOD)
     revision = snapshot.revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     formulas = {formula.id: formula for formula in revision.formulas}
@@ -275,7 +276,7 @@ def test_m100_2025_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> N
     assert formulas["renta-2025-base-liquidable-negativa-general-compensacion-total"].legal_refs == (art_50,)
     assert formulas["renta-2025-base-imponible-general"].legal_refs[0] == art_48
     assert art_50 not in formulas["renta-2025-base-imponible-general"].legal_refs
-    prior_snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period=_PERIOD)
+    prior_snapshot = bundled_authority().snapshot("100", filing_year=2024, period=_PERIOD)
     prior_binding = next(
         item
         for item in prior_snapshot.revision.bindings

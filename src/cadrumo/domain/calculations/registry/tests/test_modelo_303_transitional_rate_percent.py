@@ -58,9 +58,10 @@ from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_
 from cadrumo.domain.calculations.registry.snapshot import build_snapshot
 
 from .....core import CasillaId, validated_casilla_id
-from .....core.resources import bundled_path, resources
+from .....core.resources import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
 from ....period import Period, calculation_filing_date
+from ..authority import bundled_authority
 from ..errors import RegistryValidationError
 from ..loader import load_registry_tree
 
@@ -80,7 +81,7 @@ def _calculate(*, filing_year: int, period: str) -> RegistryCalculationResult:
     ratio) are pinned to their no-op values, mirroring the sibling worked-
     example tests in this package.
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     snapshot = authority.snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),

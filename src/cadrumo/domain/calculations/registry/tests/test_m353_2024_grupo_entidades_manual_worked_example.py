@@ -77,8 +77,8 @@ from cadrumo.domain.calculations.registry.ledger_bindings import (
 )
 
 from .....core import CasillaId, IvaDeductionFactKind, validated_casilla_id
-from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
+from ..authority import bundled_authority
 from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -111,7 +111,7 @@ _RECONCILIATION_BINDING_IDS = (
 
 
 def _calculate() -> object:
-    snapshot = resources().modelos.authority.snapshot("353", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = bundled_authority().snapshot("353", filing_year=_FILING_YEAR, period=_PERIOD)
     observations = (
         IvaLedgerObservation(
             ledger_id="grupo-devengado-general",

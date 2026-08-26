@@ -13,15 +13,15 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.resources import resources
 from .. import _validate_previous_filing_year_coverage as _module
 from .._validate_previous_filing_year_coverage import validate_previous_filing_source_year_coverage
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _loaded_modelos():
-    modelos = resources().modelos.all()
+    modelos = bundled_authority().modelos
     return modelos, {modelo.id: modelo for modelo in modelos}
 
 

@@ -61,7 +61,7 @@ from cadrumo.domain.calculations.registry.ledger_bindings import (
 )
 
 from ....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
@@ -163,7 +163,7 @@ def _member_ledger(*, member_nif: str, filing_year: int, period: str) -> tuple[I
 
 def _calculate_322_member(*, member_nif: str, filing_year: int, period: str) -> RegistryCalculationResult:
     """Run the REAL 322 monthly calculation for one grupo member."""
-    snapshot = resources().modelos.authority.snapshot("322", filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot("322", filing_year=filing_year, period=period)
     binding_values = resolve_ledger_iva_aggregation_binding_values(
         snapshot.revision,
         _member_ledger(member_nif=member_nif, filing_year=filing_year, period=period),
@@ -228,7 +228,7 @@ def _resolve_353_aggregate(
     point as 390's prev-303 bindings — enumerating and summing every member's
     322 for ``(322, filing_year, period)``.
     """
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
     prefill = resolve_bindings_from_local_store(snapshot, repository=repository)
     binding_values = {
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()),

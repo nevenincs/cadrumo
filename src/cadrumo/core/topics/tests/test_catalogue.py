@@ -25,6 +25,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ...resources import resources
 from .. import Topic, TopicCatalogue, TopicCatalogueEmptyError, TopicNotFoundError, load_topic_catalogue
 
@@ -149,7 +150,7 @@ def test_every_topic_renders_title_and_body_in_default_locale() -> None:
 def test_every_topic_legal_ref_resolves_against_real_legal_catalogue() -> None:
     """Topic citation links must resolve through the committed legal catalogue."""
     catalogue = resources().topics.singleton
-    legal_ids = set(resources().modelos.authority.catalogues.legal)
+    legal_ids = set(bundled_authority().catalogues.legal)
     ungrounded = sorted(topic.slug for topic in catalogue.topics if not topic.legal_refs)
     missing = sorted(
         f"{topic.slug}: {legal_ref}"

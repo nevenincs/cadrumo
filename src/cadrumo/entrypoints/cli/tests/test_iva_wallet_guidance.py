@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_runtime_profile
@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _m303_revision_id(*, filing_year: int, period: str) -> str:
-    return str(resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period).revision.id)
+    return str(bundled_authority().snapshot("303", filing_year=filing_year, period=period).revision.id)
 
 
 def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(

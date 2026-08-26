@@ -55,15 +55,16 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
 from ....core import (
     CasillaId,
     ForeignAssetObligationGroup,
     Period,
     validated_casilla_id,
 )
-from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
@@ -534,7 +535,7 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
-        snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+        snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
         report = resolve_bindings_from_local_store(snapshot_n1, repository=repo, captured_at=_CLOCK_N_PLUS_1)
 
     assert dict(report.binding_values) == {
@@ -584,7 +585,7 @@ def test_previous_filing_baselines_do_not_cross_taxpayer_buckets(tmp_path: Path)
     primary calculation input.
     """
     prior_observation = _year_n_observation_with_explicit_inmuebles_zero()
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
     expected_bindings = {
         _CUENTAS_BASELINE_BINDING: _CUENTAS_N,
         _VALORES_BASELINE_BINDING: _VALORES_N,
@@ -642,7 +643,7 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save(repo.prepare_observation_envelope(obs_n, source_kind="app_filing", captured_at=_CLOCK_N))
-        snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+        snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
         with pytest.raises(RegistryValidationError, match="inmuebles\\.valoracion"):
             resolve_bindings_from_local_store(snapshot_n1, repository=repo, captured_at=_CLOCK_N_PLUS_1)

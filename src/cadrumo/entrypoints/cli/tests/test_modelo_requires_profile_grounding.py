@@ -11,9 +11,10 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.user_profile.preflight import format_profile_selector_requirements
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys, build_profile_grounding_index
+
+from ....application.user_profile.preflight import format_profile_selector_requirements
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -21,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _profile_bindings_with_keys():
     """Return committed profile bindings that name at least one profile key."""
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     found = []
     for definition in authority.modelos:
         for revision in definition.revisions.values():
@@ -45,7 +46,7 @@ def test_a_profile_binding_key_renders_as_a_label_rather_than_the_binding_id() -
     one example a hand-picked fixture would cover.
     """
     schema = load_user_profile_schema()
-    grounding_index = build_profile_grounding_index(resources().modelos.authority)
+    grounding_index = build_profile_grounding_index(bundled_authority())
 
     for binding, keys in _profile_bindings_with_keys():
         rendered = format_profile_selector_requirements(

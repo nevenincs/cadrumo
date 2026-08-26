@@ -8,11 +8,27 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from .....core.errors import get_registered_error_code
-from .....core.resources import resources
-from cadrumo.domain.calculations.registry.censo_modelos import CENSO_MODELO_ERROR_CODES, CENSO_MODELO_EVENT_KINDS, CENSO_MODELO_SERVICE_OWNER, CensoModeloEventKind, CensoModeloFoundationCommand, CensoModeloFoundationLogFields, CensoModeloFoundationResult, CensoModeloRole, censo_modelo_ownership, censo_modelo_ownership_map, get_censo_modelo_foundation_contract, is_active_censo_modelo, resolve_censo_modelo_foundation, resolve_censo_modelo_work_unit_foundation
+from cadrumo.domain.calculations.registry.censo_modelos import (
+    CENSO_MODELO_ERROR_CODES,
+    CENSO_MODELO_EVENT_KINDS,
+    CENSO_MODELO_SERVICE_OWNER,
+    CensoModeloEventKind,
+    CensoModeloFoundationCommand,
+    CensoModeloFoundationLogFields,
+    CensoModeloFoundationResult,
+    CensoModeloRole,
+    censo_modelo_ownership,
+    censo_modelo_ownership_map,
+    get_censo_modelo_foundation_contract,
+    is_active_censo_modelo,
+    resolve_censo_modelo_foundation,
+    resolve_censo_modelo_work_unit_foundation,
+)
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.temporal import select_revision
+
+from .....core.errors import get_registered_error_code
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,7 +47,7 @@ def _m036_2025_alta_revision():
     `select_revision` is the sanctioned resolver for "which revision governs this
     period" and keeps the teeth -- a period no revision declares still raises.
     """
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     return select_revision(authority.validate_modelo("036"), filing_year=2025, period="alta")
 
 
@@ -102,7 +118,7 @@ def test_modelo_037_is_historical_metadata_superseded_by_036() -> None:
 
 
 def test_modelo_145_registry_presence_does_not_change_censo_036_037_contracts() -> None:
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     modelo_145_snapshot = authority.snapshot("145", filing_year=2026, period="comunicacion")
     active_036 = resolve_censo_modelo_work_unit_foundation(modelo="036", period="alta")
     historical_037 = resolve_censo_modelo_foundation(CensoModeloFoundationCommand(modelo="037"))
@@ -126,7 +142,7 @@ def test_modelo_145_registry_presence_does_not_change_censo_036_037_contracts() 
 
 
 def test_historical_037_contract_is_proven_by_registry_absence_and_suppression_source() -> None:
-    authority = resources().modelos.authority
+    authority = bundled_authority()
 
     with pytest.raises(RegistrySnapshotError, match="not present in the calculation registry"):
         authority.validate_modelo("037")

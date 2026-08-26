@@ -7,9 +7,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core.classification import SensitivityClass
-from ....core.resources import bundled_path, resources
 from cadrumo.domain.calculations.registry.legal import verify_legal_catalogue
+
+from ....core.classification import SensitivityClass
+from ....core.resources import bundled_path
+from ...calculations.registry.authority import bundled_authority
 from ..errors import SCHEMA_LOAD_MESSAGE_KEY, UserProfileNotFoundError, UserProfileSchemaLoadError
 from ..loader import CONDITION_SCHEMA_PATH_STAT, CONDITION_SCHEMA_TABLE_PRESENT, load_user_profile_schema
 from ..schema import (
@@ -127,7 +129,7 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
 
 def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_corpus() -> None:
     schema = load_user_profile_schema()
-    catalogues = resources().modelos.authority.catalogues
+    catalogues = bundled_authority().catalogues
     refs_by_field = {
         f"{section.key}.{field.key}": field.legal_refs
         for section in schema.sections
@@ -158,7 +160,7 @@ def test_no_grounded_profile_key_regresses_to_a_schema_field_with_no_legal_refs(
     """
     from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
 
-    authority = resources().modelos.authority
+    authority = bundled_authority()
     index = build_profile_grounding_index(authority)
     schema = load_user_profile_schema()
 

@@ -35,8 +35,8 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, SnapshotId
-from ...core.resources import resources
 from ...core.time import now
+from ...domain.calculations.registry.authority import bundled_authority
 from .errors import LiveApplicationInputError
 from .remote_state_models import ExpedientesBulkCaptureFailureRow, ExpedientesBulkCaptureReport
 from .remote_state_outcomes import bounded_context_text
@@ -224,7 +224,9 @@ async def capture_expedientes_bulk(
             translated_message="live.errors.year_range_invalid",
         )
 
-    resolved_modelos = modelos if modelos is not None else tuple(str(modelo.id) for modelo in resources().modelos.all())
+    resolved_modelos = (
+        modelos if modelos is not None else tuple(str(modelo.id) for modelo in bundled_authority().modelos)
+    )
     session, settings = await active_verified_session(operation=LIVE_EXPEDIENTES_READ_OPERATION)
     service = ExpedientesService(settings=settings)
     snapshot_ids: list[str] = []

@@ -51,12 +51,12 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.ledger_bindings import resolve_ledger_iva_aggregation_binding_values
 
 from .....core import CasillaId, validated_casilla_id
-from .....core.resources import resources
 from ....iva import (
     ProrrataInputs,
     ProrrataKind,
     compute_prorrata_general,
 )
+from ..authority import bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -103,7 +103,7 @@ def _registry_percentage(
 ) -> Decimal:
     """The prorrata percentage via the real registry snapshot and formula runtime."""
     period_token, (close_month, close_day) = period
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period_token)
+    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period=period_token)
     declared = {binding.id for binding in snapshot.revision.bindings}
     binding_values: dict[str, Decimal] = {
         binding_id: Decimal("100") if binding_id.endswith("state-attribution-ratio") else Decimal("0")
@@ -137,7 +137,7 @@ def test_no_volume_data_leaves_the_deduction_right_whole(filing_year: int) -> No
     reached because art. 102.Uno's *conjuntamente* antecedent is unmet), not a
     re-run of the registry formula.
     """
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period="4T")
+    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
     percentage = _registry_percentage(filing_year, Decimal("0"), Decimal("0"))
 
     assert percentage == _FULL_RIGHT_TO_DEDUCT, (
@@ -158,7 +158,7 @@ def test_both_live_revisions_agree_on_the_no_volume_branch() -> None:
     surfaces one.
     """
     by_revision = {
-        resources().modelos.authority.snapshot("303", filing_year=year, period="4T").revision.id: (
+        bundled_authority().snapshot("303", filing_year=year, period="4T").revision.id: (
             _registry_percentage(year, Decimal("0"), Decimal("0"))
         )
         for year in _LIVE_FILING_YEARS
@@ -203,7 +203,7 @@ _PRORRATA_PORCENTAJE_FORMULA_ID = "modelo-303-iva-prorrata-porcentaje"
 
 def _prorrata_formula_legal_refs(filing_year: int) -> tuple[str, ...]:
     """The prorrata percentage formula's own declared legal refs for one filing year."""
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period="4T")
+    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
     formula = next(f for f in snapshot.revision.formulas if f.id == _PRORRATA_PORCENTAJE_FORMULA_ID)
     return tuple(formula.legal_refs)
 
@@ -218,7 +218,7 @@ def test_prorrata_formula_declares_the_full_right_to_deduct_article(filing_year:
     dependency is the formula's, so the declaration is too.
     """
     refs = _prorrata_formula_legal_refs(filing_year)
-    revision_id = resources().modelos.authority.snapshot("303", filing_year=filing_year, period="4T").revision.id
+    revision_id = bundled_authority().snapshot("303", filing_year=filing_year, period="4T").revision.id
 
     assert _FULL_RIGHT_TO_DEDUCT_ARTICLE in refs, (
         f"M303 {revision_id}: the prorrata percentage formula declares {refs!r} and omits "
@@ -238,7 +238,7 @@ def test_both_live_revisions_declare_the_same_prorrata_formula_grounding() -> No
     justify a different citation set, so a divergence is drift.
     """
     by_revision = {
-        resources().modelos.authority.snapshot("303", filing_year=year, period="4T").revision.id: frozenset(
+        bundled_authority().snapshot("303", filing_year=year, period="4T").revision.id: frozenset(
             _prorrata_formula_legal_refs(year),
         )
         for year in _LIVE_FILING_YEARS

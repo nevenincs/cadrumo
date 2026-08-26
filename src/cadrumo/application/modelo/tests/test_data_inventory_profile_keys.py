@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import BindingSourceKind
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.profile_grounding import binding_profile_keys
+
+from ....core import BindingSourceKind
+from ....domain.calculations.registry.authority import bundled_authority
 from ...aggregation import AtribucionMemberSourceResolver
 from .._data_inventory import _LIVE_OBSERVATION_SOURCE_KINDS, _profile_keys_for_bindings
 
@@ -21,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _a_committed_profile_binding():
     """Return one real committed ``(binding, revision, keys)`` triple."""
-    for model in resources().modelos.authority.modelos:
+    for model in bundled_authority().modelos:
         for revision in model.revisions.values():
             for binding in revision.bindings:
                 keys = binding_profile_keys(binding)

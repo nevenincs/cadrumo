@@ -34,7 +34,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
 from ....core import BindingSourceKind
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime import (
     _evaluate_expression,
     _UnresolvedFormulaDependencyError,
@@ -48,7 +48,7 @@ _LEDGER_IVA = BindingSourceKind.LEDGER_IVA_AGGREGATION
 
 
 def _modelo_303_revision() -> ModeloRevision:
-    return resources().modelos.authority.snapshot("303", filing_year=2024, period="1T").revision
+    return bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
 
 
 def test_expected_but_missing_fires_when_present_source_resolved_no_value() -> None:

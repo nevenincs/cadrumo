@@ -75,8 +75,8 @@ from ...core.config import load_settings as _load_settings
 from ...core.errors import CadrumoError as _CadrumoError
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.identity import tax_id_identity_token as _tax_id_identity_token
-from ...core.resources import resources as _resources
 from ...core.time import now
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.iva_compensation import IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource
 from ...domain.iva_compensation import IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot
 from ...domain.iva_compensation import IvaCompensationPeriodState as _IvaCompensationPeriodState
@@ -605,7 +605,7 @@ def persist_and_reconcile_iva_compensation_wallet(
                 "target_period": observation.target_period.registry_token,
             },
         )
-    snapshot = _resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         Modelo.M303.value,
         filing_year=reloaded.target_year,
         period=reloaded.target_period.registry_token,

@@ -8,11 +8,12 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.ids import RevisionId
+
 from ....adapters.persistence.storage.errors import DecryptionError
 from ....core import BindingSourceKind, CalculationSourceLineageRole, CasillaId, validated_casilla_id
-from ....core.resources import resources
 from ....domain.calculations import DirectRowMaterializationProvenance
-from cadrumo.domain.calculations.registry.ids import RevisionId
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
 from .. import (
     CalculationSourceDiagnostic,
@@ -24,8 +25,8 @@ from .. import (
     merge_source_resolutions_by_precedence,
     storage_degradation_resolution,
 )
-from ..errors import AggregationValidationError
 from .._source_mesh import RowSourceIdentity, SourceMeshError, out_of_window_summary_source_diagnostic
+from ..errors import AggregationValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -1041,7 +1042,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
 
 
 def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> None:
-    modelo_303 = resources().modelos.get("303")
+    modelo_303 = bundled_authority().modelo("303")
     revision = modelo_303.revisions["2022"]
 
     diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=frozenset())

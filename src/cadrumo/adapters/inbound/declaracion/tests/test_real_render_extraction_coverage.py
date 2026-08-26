@@ -95,7 +95,7 @@ from pathlib import Path
 import pytest
 
 from .....core import RegistryAuthorityGrade
-from .....core.resources import resources
+from .....domain.calculations.registry.authority import bundled_authority
 from .....tests import FIXTURES_DIR
 from .._parser import _extract_profile_values, _select_extraction_profile, extract_pages_text
 
@@ -282,7 +282,7 @@ def _declaracion_profile(specimen: _AnnexSpecimen | _ReplacementSpecimen):
     :class:`DeclaracionParseError` from the selector itself rather than a local
     assertion -- the same refusal an operator would meet.
     """
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = bundled_authority().snapshot(
         specimen.modelo,
         filing_year=specimen.filing_year,
         period=specimen.period,

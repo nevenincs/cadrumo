@@ -55,15 +55,15 @@ from ...core import (
     result_disposition_is_refund,
 )
 from ...core.errors import CoreValidationError
-from ...core.resources import resources
-from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.errors import RegistrySnapshotError
-from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
     format_noncanonical_casilla_reference,
 )
+from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.iva import (
     is_last_filing_period_of_year,
@@ -242,7 +242,7 @@ def _result_disposition_values_for_revision(
     # assert_snapshot_matches_work_unit_revision so the two resolution sites
     # cannot drift in wording or refusal type.
     try:
-        snapshot = resources().modelos.authority.snapshot(
+        snapshot = bundled_authority().snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=period.registry_token,

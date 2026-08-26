@@ -36,7 +36,7 @@ from ....core import (
     RefundElection,
     ResultDisposition,
 )
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from .._m296_projection import build_m296_filing_projection_plan
 from .._producer_snapshot import (
     FilingElectionFacts,
@@ -130,7 +130,7 @@ def _snapshot_and_layout():
     Resolved from (modelo, filing_year, period), never from a stored revision id: which
     revision applies is a derived fact, and the id is only asserted equal to it.
     """
-    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=2024, period="0A", on=None)
+    snapshot = bundled_authority().snapshot(_MODELO, filing_year=2024, period="0A", on=None)
     assert str(snapshot.revision.id) == _REVISION, (
         f"the law-determined revision for 296/2024/0A is {snapshot.revision.id}, not {_REVISION}"
     )

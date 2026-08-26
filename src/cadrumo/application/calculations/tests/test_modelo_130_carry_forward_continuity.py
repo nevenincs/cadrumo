@@ -46,7 +46,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, ExternalEvidenceKind, ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -239,7 +239,7 @@ def _import_official_filing_evidence(
     casilla_values: Mapping[CasillaId, Decimal],
 ) -> tuple[str, dict[str, str]]:
     wu_repo, cr_repo, bv_repo, _obs_repo, _vr_repo, filing_repo = repos
-    source_snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    source_snapshot = bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
     source_work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
@@ -350,7 +350,7 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) ->
     )
     _seed_prior_year_m100(obs_repo)
 
-    q2_snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="2T")
+    q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
     report = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo)
 
     # Both M130 previous_filing bindings auto-resolve from the local store:
@@ -379,7 +379,7 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
     )
     _seed_prior_year_m100(obs_repo)
 
-    q2_snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="2T")
+    q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
     resolved = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo).binding_values
 
     # Q2 cumulative (Jan-Jun): ingresos 8000, gastos 2000 -> rendimiento 6000,
@@ -461,7 +461,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
         source_metadata=m100_source_metadata,
     )
 
-    q2_snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="2T")
+    q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
     resolved = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo).binding_values
     assert resolved.get(_CARRY_FORWARD_BINDING) == Decimal("62.00")
     assert resolved.get(_PREV_YEAR_BINDING) == Decimal("20000")
@@ -569,7 +569,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
         )
     )
 
-    snapshot_3t = resources().modelos.authority.snapshot("130", filing_year=2026, period="3T")
+    snapshot_3t = bundled_authority().snapshot("130", filing_year=2026, period="3T")
     resolved = resolve_bindings_from_local_store(snapshot_3t, repository=obs_repo).binding_values
 
     # Independent identity (a different code path than the span binding): the

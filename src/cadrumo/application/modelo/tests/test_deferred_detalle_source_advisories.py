@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ._dormant_resolver_live_support import _revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -76,13 +77,12 @@ def test_every_registry_declared_deferred_kind_has_an_advisory_case() -> None:
     which to emit an advisory. Once it is declared by a revision, it must gain an
     explicit real-revision case here rather than silently joining the mesh.
     """
-    from ....core.resources import resources
     from ...aggregation import DEFERRED_SOURCE_KINDS
 
     covered = {deferred_kind for _modelo, _revision_id, deferred_kind in _DEFERRED_ADVISORY_CASES}
     declared = {
         binding.source.value
-        for modelo in resources().modelos.all()
+        for modelo in bundled_authority().modelos
         for revision in modelo.revisions.values()
         for binding in revision.bindings
         if binding.source in DEFERRED_SOURCE_KINDS

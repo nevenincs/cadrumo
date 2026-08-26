@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import resources
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _m100_revision_id(*, filing_year: int, period: str) -> str:
-    return str(resources().modelos.authority.snapshot("100", filing_year=filing_year, period=period).revision.id)
+    return str(bundled_authority().snapshot("100", filing_year=filing_year, period=period).revision.id)
 
 
 def _create_natural_person() -> None:

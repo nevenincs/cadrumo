@@ -34,6 +34,8 @@ import pytest
 
 from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices
@@ -133,9 +135,8 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
 
 
 def _registry_first_tranche(year: int) -> Decimal:
-    from ....core.resources import resources
 
-    snapshot: RegistrySnapshot = resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+    snapshot: RegistrySnapshot = bundled_authority().snapshot("100", filing_year=year, period="0A")
     by_id = {p.id: p for p in snapshot.revision.parameters}
     param = by_id[f"renta-{year}-minimo-descendientes-primer-hijo-{year}"]
     return resolve_parameter(param, {"filing_period": date(year, 12, 31)})
@@ -852,9 +853,8 @@ def _registry_guarderia_cap_anual(year: int = 2024) -> Decimal:
     literal buried in a formula expression is registry data no other layer can
     read.
     """
-    from ....core.resources import resources
 
-    snapshot: RegistrySnapshot = resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+    snapshot: RegistrySnapshot = bundled_authority().snapshot("100", filing_year=year, period="0A")
     by_id = {p.id: p for p in snapshot.revision.parameters}
     return resolve_parameter(
         by_id[f"renta-{year}-guarderia-incremento-cap-anual"], {"filing_period": date(year, 12, 31)}
