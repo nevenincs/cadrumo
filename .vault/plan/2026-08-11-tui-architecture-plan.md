@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:6fd69d1b8ad642d7b414fa6ca7e6253b7b217a7737b86dd2dfff3698b04aa0cc'
+body_hash: 'sha256:573206f4de33e8250caea71e82e6497222fc8f4e55ba804939cfdb2f39f3c572'
 ---
 
 # `tui-architecture` plan
@@ -338,6 +338,7 @@ Render census field review and filed-history outcome detail without placing doma
 - [ ] `W05.P12.S69` - Implement filed-history stage, unit, refusal, partial-effect, evidence, wallet, notification, and provenance result projection; `src/cadrumo/entrypoints/tui/profile/sync_review.py`.
 - [ ] `W05.P12.S70` - Prove census review dispatches exact typed responses and never writes or recomputes policy in the TUI; `src/cadrumo/entrypoints/tui/profile/tests/test_census_sync_review.py`.
 - [ ] `W05.P12.S71` - Prove filed-history progress, scoped errors, viewable logs, child provenance, and partial outcomes remain visible through settlement; `src/cadrumo/entrypoints/tui/profile/tests/test_filed_history_operation_view.py`.
+- [ ] `W05.P12.S255` - Bind the filed-history operation to a stable public result schema so its evidence, IVA wallet, notificaciones and provenance facts resolve through a typed public door rather than an opaque result_ref, replacing compose_request_only with a compose binding that declares the result schema, and prove no frontend imports the private FiledHistoryOnboardingRun type to project them; `src/cadrumo/application/live/filed_history_operation.py, its public result schema binding, and focused public-result-contract tests`.
 
 ### Phase `W05.P23` - C3 transient financial custody and dependency receipts
 
