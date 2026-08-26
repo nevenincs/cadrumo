@@ -10,11 +10,11 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests import REPO_ROOT
+from .._snapshot_internals import _source_applies_across
 from ..corpus_catalogue import verify_source_file
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..legal import verify_legal_catalogue
 from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ..snapshot import _source_applies_across
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo
 

@@ -210,7 +210,7 @@ class RegistryRevisionInspection(RegistryModel):
         # target is legible to a reader and to static analysis alike: the
         # deferral is what breaks the cycle, and naming the module through an
         # f-string bought nothing while hiding where the call actually lands.
-        from .snapshot import collect_snapshot_ref_ids
+        from ._snapshot_internals import collect_snapshot_ref_ids
 
         selected_legal_ids, selected_source_ids = collect_snapshot_ref_ids(modelo, revision)
         missing_legal_refs = selected_legal_ids.difference(legal_ref_ids)

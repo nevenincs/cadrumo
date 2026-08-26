@@ -36,10 +36,10 @@ from datetime import date
 import pytest
 from pydantic import TypeAdapter
 
+from .._snapshot_internals import _check_revision_scoped_legal_windows, collect_snapshot_ref_ids
 from .._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, RegistryCatalogues
-from ..snapshot import _check_revision_scoped_legal_windows, collect_snapshot_ref_ids
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

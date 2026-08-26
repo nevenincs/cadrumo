@@ -32,6 +32,7 @@ Submodules
    cadrumo.domain.calculations.registry._schema_export_exemption
    cadrumo.domain.calculations.registry._schema_family_coverage
    cadrumo.domain.calculations.registry._schema_governance
+   cadrumo.domain.calculations.registry._snapshot_internals
    cadrumo.domain.calculations.registry._source_evidence_fingerprint
    cadrumo.domain.calculations.registry._supplementary_orden
    cadrumo.domain.calculations.registry._supported_filing_years
@@ -142,6 +143,7 @@ Submodules
    cadrumo.domain.calculations.registry.m303_orden_resolution
    cadrumo.domain.calculations.registry.m303_prorrata_activity_projection
    cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection
+   cadrumo.domain.calculations.registry.manual_input_selector
    cadrumo.domain.calculations.registry.modelo_localization
    cadrumo.domain.calculations.registry.observation_fold
    cadrumo.domain.calculations.registry.period_offset_math

@@ -29,6 +29,7 @@ from ....core.access_gate import (
 from ....core.hashing import content_hash_hex
 from ....core.identity import ContentDigest
 from ....core.resources import bundled_path as _bundled_path
+from ._snapshot_internals import _build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
 from ._supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
@@ -57,9 +58,6 @@ from .schema import (
     ModeloRevision,
     RegistryCatalogues,
     RegistrySnapshot,
-)
-from .snapshot import (
-    _build_validated_snapshot,  # pyright: ignore[reportPrivateUsage]  # the registry authority owns snapshot admission
 )
 from .static_inspection import RegistryRevisionInspection, StaticGeneratedArtifactInspection
 from .temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision

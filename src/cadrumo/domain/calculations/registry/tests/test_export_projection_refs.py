@@ -23,6 +23,7 @@ from .....core import (
 from .....core.directory_scan import (
     scan_directory,
 )
+from .._snapshot_internals import _validate_materialized_export_record_families
 from .._validate_evidence import EvidenceValidator
 from .._validate_exports import (
     _validate_export_record,
@@ -42,7 +43,6 @@ from ..schema_exports import (
     ProjectionEndpointDeclaration,
 )
 from ..schema_references import PeriodSelector
-from ..snapshot import _validate_materialized_export_record_families
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
