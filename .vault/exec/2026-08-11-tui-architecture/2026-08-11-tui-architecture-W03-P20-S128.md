@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:4ba3ab8f5cfd797757a06ad03d5cd39322471ec6fb3751a502dd772003ece698'
+body_hash: 'sha256:2ee2b4e08c107aa12f23013ddc6688419aa721dbb84f44775b9dc642a3f81edb'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -25,6 +25,9 @@ related:
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py -m integration -q` -> `pass` (5 passed)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (23 passed, no regression from the added `revision_id` property)
 - `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/workspace.py src/cadrumo/application/modelo/workspace_producers.py src/cadrumo/application/modelo/tests/test_workspace.py` -> `pass`
+- `M` `src/cadrumo/domain/calculations/registry/static_inspection.py` (separate commit `822642adbc`: enrolled `review_status` on `RegistryRevisionInspection`)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `workspace_producers.py`, `tests/test_workspace.py` (commit `be5384912c`: made revision-axis mismatch non-raising typed data; added `resolve_modelo_workspace_target` and `ModeloWorkspaceRegistryProjectionV1.review_status`)
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (32 passed)
 
 ## Notes
 
@@ -48,15 +51,33 @@ to read the law-selected revision uniformly off either admission shape
 (`RegistryRevisionInspection.revision_id` or `RegistrySnapshot.revision.id`)
 without a second registry read.
 
-NOT built here, and explicitly deferred pending a ruling: request/admission
-dispatch, the STATIC_INSPECTION and GRADED_SNAPSHOT projection assemblies, and
-`ModeloWorkspaceResolvedTargetV1` construction. That record's required
-`review_status: RevisionReviewStatus` field cannot currently be sourced for
-the STATIC_INSPECTION admission -- `RegistryRevisionInspection` (the static
-admission's own projection shape) carries no `review_status` field at all,
-unlike `RegistrySnapshot`. Reported to the team lead rather than inferring a
-resolution (e.g. a second structural read off `ModeloDefinition`, or enrolling
-the field onto `RegistryRevisionInspection`); awaiting a ruling before
-proceeding to the STATIC_INSPECTION vertical slice and, beyond that, sizing
-GRADED_SNAPSHOT's remaining facets (schema walk, materialization, provenance,
-capability denominator) from inside the code as previously agreed.
+Update: the `review_status` gap is resolved. Team lead ruled against sourcing
+it from a second structural read off `ModeloDefinition` (a fresh
+`authority.validate_modelo(...)` is a second, unsynchronized observation of
+registry state -- the exact inconsistency the epoch/ABA capture machinery
+exists to rule out, even though it would have been cheap). Instead
+`RegistryRevisionInspection` was enrolled with the field itself (own commit
+`822642adbc`, kept separate from assembly work per instruction): it is a
+governance stamp, not filing-grade content, so it stays in scope for a static
+inspection. `RegistryRevisionInspection` is constructed only through
+`from_revision()` across the tree, so no consumer needed updating.
+
+While building on top of this, self-caught a second real defect before it
+shipped: the axis computation originally re-raised
+`assert_work_target_revision` on any mismatch, which would have destroyed the
+per-axis `MISMATCHED` disposition the moment a caller tried to build
+`ModeloWorkspaceRevisionMismatchRefusalV1` from it -- that refusal is built
+FROM the mismatched axes, not from a caught exception. Corrected to always
+return typed data; the pure assertion remains available, unused by the
+non-raising path, for a caller that wants the canonical raised text (proven by
+a dedicated test). `resolve_modelo_workspace_target` now assembles the full
+`ModeloWorkspaceResolvedTargetV1`, including a resolved mismatch case.
+
+Still NOT built here: request/admission dispatch, and the STATIC_INSPECTION
+and GRADED_SNAPSHOT projection assemblies (schema walk, materialization,
+provenance, capability denominator, baseline, facets/cursors, evidence
+horizon, locale summary, family dispositions, readiness/closure
+integration). Per the agreed order, next is the STATIC_INSPECTION vertical
+slice, then sizing GRADED_SNAPSHOT's remaining facets from inside the code,
+stopping again (not inferring) if the capability denominator's dispositions
+turn out undocumented for any of the five capability members.
