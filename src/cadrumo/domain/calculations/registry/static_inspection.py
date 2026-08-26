@@ -18,7 +18,7 @@ from typing import Literal, Protocol
 
 from pydantic import Field, model_validator
 
-from ....core import CasillaId
+from ....core import CasillaId, RevisionReviewStatus
 from .casilla_membership import casillas_by_id
 from .ids import BindingId, LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema import (
@@ -159,6 +159,10 @@ class RegistryRevisionInspection(RegistryModel):
 
     modelo_id: ModeloId
     revision_id: RevisionId
+    review_status: RevisionReviewStatus
+    """The revision's own governance stamp -- not filing-grade content, so it
+    stays in scope for a static inspection whose job is validating generated
+    static artefacts against a revision it may or may not trust yet."""
     source_root: Path
     revision_source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     sources: Mapping[SourceRefId, SourceReference]
@@ -216,6 +220,7 @@ class RegistryRevisionInspection(RegistryModel):
         return cls(
             modelo_id=modelo.id,
             revision_id=revision.id,
+            review_status=revision.review_status,
             source_root=source_root,
             revision_source_refs=revision.source_refs,
             sources=selected_sources,
