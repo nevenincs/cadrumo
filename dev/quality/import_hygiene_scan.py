@@ -123,6 +123,7 @@ class SubstitutableNaturalScanRule:
     collection_methods: frozenset[str]
     coordinate_names: frozenset[str]
     minimum_coordinates: int = 2
+    exempt_functions: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
@@ -321,7 +322,7 @@ class _CanonicalAuthorityAnalyzer:
         for definition in definitions:
             if isinstance(definition, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 self._check_wrapper(definition, scope)
-                self._check_natural_scan(definition)
+                self._check_natural_scan(definition, scope)
             self._scan_scope(definition.body, scope.child())
 
     def _populate_scope(self, statements: list[ast.stmt], scope: _AuthorityScope) -> None:
@@ -501,52 +502,104 @@ class _CanonicalAuthorityAnalyzer:
                     self.add(rule.kind, node, node.name)
 
     @staticmethod
-    def _keyword_source_calls(value: ast.AST, scope: _AuthorityScope) -> tuple[ast.Call, ...]:
+    def _keyword_source_calls(
+        value: ast.AST, scope: _AuthorityScope, seen: frozenset[str] = frozenset()
+    ) -> tuple[ast.Call, ...]:
         if isinstance(value, ast.Call):
             return (value,)
-        if isinstance(value, ast.Name) and isinstance(source := scope.literals.get(value.id), ast.Call):
-            return (source,)
+        if isinstance(value, ast.Name) and value.id not in seen:
+            source = scope.literals.get(value.id)
+            if source is not None:
+                return _CanonicalAuthorityAnalyzer._keyword_source_calls(
+                    source, scope, seen | {value.id}
+                )
         return ()
 
-    def _check_natural_scan(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
-        if (
-            "tests" in self.path.parts
-            or self.path.name.startswith("test_")
-            or any(self.path.resolve() == target.path.resolve() for target in self.spec.targets)
-        ):
+    def _check_natural_scan(
+        self, node: ast.FunctionDef | ast.AsyncFunctionDef, parent: _AuthorityScope
+    ) -> None:
+        if "tests" in self.path.parts or self.path.name.startswith("test_"):
             return
-        for loop in (
-            item
-            for item in _scope_nodes(node.body)
-            if isinstance(item, (ast.For, ast.AsyncFor, ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp))
-        ):
-            generators = (
-                loop.generators
-                if isinstance(loop, (ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp))
-                else (loop,)
-            )
-            for generator in generators:
-                target_node = generator.target
-                iterator = generator.iter
-                if not isinstance(target_node, ast.Name) or not isinstance(iterator, ast.Call):
-                    continue
-                if not isinstance(iterator.func, ast.Attribute) or not isinstance(iterator.func.value, ast.Name):
-                    continue
-                candidate = target_node.id
-                coordinates = {
-                    child.attr
-                    for child in ast.walk(loop)
-                    if isinstance(child, ast.Attribute)
-                    and isinstance(child.value, ast.Name)
-                    and child.value.id == candidate
-                }
-                for rule in self.spec.natural_scan_rules:
-                    if (
-                        iterator.func.value.id in rule.collection_names
-                        and iterator.func.attr in rule.collection_methods
-                        and len(coordinates & rule.coordinate_names) >= rule.minimum_coordinates
-                    ):
-                        self.add(rule.kind, node, node.name)
+        scope = parent.child()
+        self._populate_scope(node.body, scope)
+        for rule in self.spec.natural_scan_rules:
+            if node.name not in rule.exempt_functions and _function_has_natural_scan(node, scope, rule):
+                self.add(rule.kind, node, node.name)
+
+
+def _resolved_local_name(name: str, scope: _AuthorityScope, seen: frozenset[str] = frozenset()) -> str:
+    if name in seen:
+        return name
+    value = scope.literals.get(name)
+    if isinstance(value, ast.Name):
+        return _resolved_local_name(value.id, scope, seen | {name})
+    return name
+
+
+def _target_names(node: ast.AST) -> frozenset[str]:
+    return frozenset(child.id for child in ast.walk(node) if isinstance(child, ast.Name))
+
+
+def _function_has_natural_scan(
+    node: ast.FunctionDef | ast.AsyncFunctionDef, scope: _AuthorityScope, rule: SubstitutableNaturalScanRule
+) -> bool:
+    loops = (
+        item
+        for item in _scope_nodes(node.body)
+        if isinstance(item, (ast.For, ast.AsyncFor, ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp))
+    )
+    for loop in loops:
+        generators = (
+            loop.generators
+            if isinstance(loop, (ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp))
+            else (loop,)
+        )
+        for generator in generators:
+            iterator = generator.iter
+            if not isinstance(iterator, ast.Call) or not isinstance(iterator.func, ast.Attribute):
+                continue
+            if not isinstance(iterator.func.value, ast.Name):
+                continue
+            collection = _resolved_local_name(iterator.func.value.id, scope)
+            if collection not in rule.collection_names or iterator.func.attr not in rule.collection_methods:
+                continue
+            candidates = _target_names(generator.target)
+            compared_coordinates = {
+                child.attr
+                for comparison in ast.walk(loop)
+                if isinstance(comparison, ast.Compare)
+                for child in ast.walk(comparison)
+                if isinstance(child, ast.Attribute)
+                and isinstance(child.value, ast.Name)
+                and child.value.id in candidates
+            }
+            if len(compared_coordinates & rule.coordinate_names) >= rule.minimum_coordinates:
+                return True
+    return False
+
+
+def source_contains_substitutable_natural_scan(
+    source: str, rule: SubstitutableNaturalScanRule
+) -> bool:
+    """Return whether a source snippet contains a semantic natural-key selector scan."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return False
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or node.name in rule.exempt_functions:
+            continue
+        scope = _AuthorityScope()
+        for assignment in _scope_nodes(node.body):
+            if not isinstance(assignment, (ast.Assign, ast.AnnAssign)) or assignment.value is None:
+                continue
+            targets = assignment.targets if isinstance(assignment, ast.Assign) else (assignment.target,)
+            for target in targets:
+                if isinstance(target, ast.Name):
+                    scope.literals[target.id] = assignment.value
+        if _function_has_natural_scan(node, scope, rule):
+            return True
+    return False
 
 
 def scan_canonical_authority(
