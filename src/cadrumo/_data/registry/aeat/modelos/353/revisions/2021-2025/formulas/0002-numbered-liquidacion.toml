@@ -1,11 +1,11 @@
-# Modelo 353 numbered-liquidacion formulas for the 2008-2025 revision.
+# Modelo 353 numbered-liquidacion formulas for the 2021-2025 revision.
 #
 # The same arithmetic AEAT prints in its own field descriptions on
 # aeat-dr-353-2021-2025, record 35301: [09] is ([02]-[08]), [03] is
 # ([01] - [08]) and [05] is ([03] - [04]). Nothing is inferred and nothing is
 # widened; these are the expressions the design states.
 
-[[revisions."2008-2025".formulas]]
+[[revisions."2021-2025".formulas]]
 id = "modelo-353-2021-2025-compensar-pendientes-posteriores"
 target_casilla_id = "09"
 expression = { op = "subtract", args = [{ casilla_id = "02" }, { casilla_id = "08" }] }
@@ -13,11 +13,11 @@ rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
-[[revisions."2008-2025".formulas.source_citations]]
+[[revisions."2021-2025".formulas.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]
 
-[[revisions."2008-2025".formulas]]
+[[revisions."2021-2025".formulas]]
 id = "modelo-353-2021-2025-resultado"
 target_casilla_id = "03"
 expression = { op = "subtract", args = [{ casilla_id = "01" }, { casilla_id = "08" }] }
@@ -25,11 +25,11 @@ rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
-[[revisions."2008-2025".formulas.source_citations]]
+[[revisions."2021-2025".formulas.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]
 
-[[revisions."2008-2025".formulas]]
+[[revisions."2021-2025".formulas]]
 id = "modelo-353-2021-2025-resultado-autoliquidacion"
 target_casilla_id = "05"
 expression = { op = "subtract", args = [{ casilla_id = "03" }, { casilla_id = "04" }] }
@@ -37,6 +37,6 @@ rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
-[[revisions."2008-2025".formulas.source_citations]]
+[[revisions."2021-2025".formulas.source_citations]]
 source_ref = "aeat-modelo-353-procedure"
 required_text = ["modelo 353"]

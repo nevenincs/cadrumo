@@ -1,4 +1,4 @@
-[[revisions."2008-2025".verification_expectations]]
+[[revisions."2021-2025".verification_expectations]]
 id = "modelo-353-iva-chain-verification"
 computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general"]
 tolerance = "0.00"

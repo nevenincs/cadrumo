@@ -8,27 +8,26 @@ from typing import Protocol, get_args
 
 import pytest
 
-from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids
-from cadrumo.domain.calculations.registry.handoffs import relation_consumption_index, relation_is_consumed
-from cadrumo.domain.calculations.registry.runtime_graph import expression_relation_refs
-from cadrumo.domain.calculations.registry.schema import (
+from .....core.aggregation import RelationAggregationOp
+from .....core.resources import bundled_path
+from .._validate_relation_periods import select_relation_source_revisions
+from ..binding_selector_utils import selector_as_dict
+from ..bindings import binding_source_casilla_ids
+from ..errors import RegistryValidationError
+from ..handoffs import relation_consumption_index, relation_is_consumed
+from ..iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
+from ..relation_aggregation import relation_aggregation_op
+from ..relations import relation_source_requirements
+from ..runtime_graph import expression_relation_refs
+from ..schema import (
     DataBindingDefinition,
     DependencyClassificationDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
 )
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
-
-from .....core.aggregation import RelationAggregationOp
-from .....core.resources import bundled_path
-from .._validate_relation_periods import select_relation_source_revisions
-from ..binding_selector_utils import selector_as_dict
-from ..errors import RegistryValidationError
-from ..iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
-from ..relation_aggregation import relation_aggregation_op
-from ..relations import relation_source_requirements
+from ..schema_input_kind import InputKind
+from ..schema_surfaces import RelationDefinition
 from ..validate import RegistryValidator
 from ._registry_schema_support import _committed_registry_tree
 

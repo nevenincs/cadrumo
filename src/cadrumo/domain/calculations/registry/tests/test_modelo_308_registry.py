@@ -324,16 +324,26 @@ def test_modelo_308_legal_boundary_and_applicability_snapshot_are_available() ->
     modelo, catalogues = _modelo_308()
     july_ref = catalogues.legal["orden-eha-1033-2011:disposicion-final-unica"]
     amendment_ref = catalogues.legal["orden-eha-1033-2011:articulo-unico"]
+    july_revision = modelo.revisions["2011-julio-2015"]
 
     assert july_ref.effective_from == date(2011, 7, 1)
     assert july_ref.corpus_ref.endswith("orden-eha-1033-2011.html#disposicion-final-unica")
     assert amendment_ref.effective_from == date(2011, 7, 1)
     assert amendment_ref.corpus_ref.endswith("orden-eha-1033-2011.html#articulo-unico")
-    assert modelo.revisions["2011-julio-2015"].orden_aplicabilidad == (
+    assert amendment_ref.id in july_revision.legal_refs
+    assert july_revision.orden_aplicabilidad == (
         "orden-eha-3786-2008:art-2",
         "orden-eha-1033-2011:articulo-unico",
         "orden-eha-1033-2011:disposicion-final-unica",
     )
+    assert {
+        casilla.id: casilla.legal_refs
+        for casilla in july_revision.casillas
+        if casilla.id in {"decl.ejercicio", "decl.periodo"}
+    } == {
+        "decl.ejercicio": ("orden-eha-3786-2008:art-2", "orden-eha-1033-2011:disposicion-final-unica"),
+        "decl.periodo": ("orden-eha-3786-2008:art-2", "orden-eha-1033-2011:disposicion-final-unica"),
+    }
 
     snapshot = _committed_snapshot("308", 2009, "AD-HOC", RegistryAuthorityGrade.APPLICABILITY)
     assert snapshot.revision.id == "2009-2011-junio"

@@ -12,8 +12,9 @@ from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
 from ..authority import bundled_authority
 from ..bindings_previous_filing import previous_filing_source_reference
-from ..errors import RegistryValidationError
+from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..loader import load_catalogue_file, load_modelo_directory
+from ..record_design import extract_record_design
 from ..schema import ModeloDefinition, RegistryCatalogues
 from ..snapshot import build_snapshot
 from ..temporal import select_revision
@@ -63,7 +64,7 @@ def test_modelo_353_historical_designs_are_hash_pinned_but_not_backdated(
     applies_from: date | None,
     applies_to: date | None,
 ) -> None:
-    """Historic geometry is source evidence until the 2008--2025 selector splits.
+    """Historic geometry remains evidence, not a fabricated filing writer.
 
     Load the M353 directory and its IVA source catalogue directly: this precise
     proof must remain runnable while another modelo's full-tree validation is
@@ -80,42 +81,76 @@ def test_modelo_353_historical_designs_are_hash_pinned_but_not_backdated(
     assert source.record_design_epoch == epoch
     assert (source.applies_from, source.applies_to) == (applies_from, applies_to)
     assert (path.stat().st_size, sha256(path.read_bytes()).hexdigest()) == (source.bytes, source.sha256)
-    assert source_id not in modelo.revisions["2008-2025"].source_refs
+    assert all(source_id not in revision.source_refs for revision in modelo.revisions.values())
 
 
-def test_modelo_353_revision_is_monthly_from_2008() -> None:
+@pytest.mark.parametrize(
+    ("source_id", "expected_records"),
+    [
+        ("aeat-dr-353-2015-2016", (("35300", None), ("35301", 1800))),
+        ("aeat-dr-353-2017-2019", (("35300", None), ("35301", 1500))),
+        ("aeat-dr-353-2020", (("35300", None), ("35301", 1500))),
+    ],
+)
+def test_modelo_353_historic_complete_geometry_is_explicitly_below_filing(
+    source_id: str, expected_records: tuple[tuple[str, int | None], ...]
+) -> None:
+    """A complete parser result without a semantic map must not become a writer."""
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "353"))
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+    source = catalogues.sources[source_id]
+    extraction = extract_record_design(bundled_path() / source.corpus_path).require_complete()
+
+    assert tuple((sheet.record_identity, sheet.record_length) for sheet in extraction.sheets) == expected_records
+    assert all(source_id not in revision.source_refs for revision in modelo.revisions.values())
+
+
+def test_modelo_353_2021_design_revision_is_monthly_and_bounded() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-2025"]
-    assert revision.valid_from == date(2008, 1, 1)
+    revision = modelo.revisions["2021-2025"]
+    assert revision.valid_from == date(2021, 1, 1)
+    assert revision.valid_to == date(2025, 12, 31)
     assert len(revision.period_selector.periods) == 12
     assert revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-2",)
 
 
+@pytest.mark.parametrize(
+    ("filing_year", "period", "revision_id"),
+    [(2021, "01", "2021-2025"), (2025, "12", "2021-2025"), (2026, "02", "2026-desde-02")],
+)
+def test_modelo_353_proven_periods_select_their_exact_epoch(
+    filing_year: int, period: str, revision_id: str
+) -> None:
+    modelo, _ = _load_modelo_353()
+    assert select_revision(modelo, filing_year=filing_year, period=period).id == revision_id
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "period"), [(2015, "01"), (2020, "12"), (2026, "01"), (2027, "01")],
+)
+def test_modelo_353_unjoined_or_unproven_periods_refuse_selection(filing_year: int, period: str) -> None:
+    modelo, _ = _load_modelo_353()
+    with pytest.raises(NoRevisionForPeriodError, match="no revision"):
+        select_revision(modelo, filing_year=filing_year, period=period)
+
+
 def test_modelo_353_january_deadline_uses_official_calendar_shift() -> None:
     modelo, _ = _load_modelo_353()
-    # Each window is read from the revision that OWNS it. The former single
-    # span was split at ejercicio 2026, so the 2026 January window belongs to
-    # `2026-y-siguientes` while the 2025 one belongs to `2008-2025`; taking
-    # both from one revision only worked while there was only one.
-    windows = {w.id: w for w in modelo.revisions["2008-2025"].deadline_windows}
-    later_windows = {w.id: w for w in modelo.revisions["2026-y-siguientes"].deadline_windows}
+    # January 2026 intentionally has no design-selected writer: HAC/27/2026
+    # starts the new layout at February, and the prior geometry is not joined.
+    windows = {w.id: w for w in modelo.revisions["2021-2025"].deadline_windows}
     jan_2025 = windows["modelo-353-2025-01"]
     assert jan_2025.opens_on == date(2025, 2, 1)
     assert jan_2025.closes_on == date(2025, 2, 28)
 
-    jan_2026 = later_windows["modelo-353-2026-01"]
-    assert jan_2026.opens_on == date(2026, 2, 1)
-    assert jan_2026.closes_on == date(2026, 3, 2)
-    assert jan_2026.payment_cutoff_on == date(2026, 2, 25)
-    assert "aeat-modelo-353-procedure" in jan_2026.source_refs
-    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in jan_2026.source_refs
-    assert "aeat-calendario-contribuyente-2026-domiciliacion" in jan_2026.source_refs
+    with pytest.raises(NoRevisionForPeriodError, match="no revision"):
+        select_revision(modelo, filing_year=2026, period="01")
 
 
 def test_modelo_353_2025_december_calendar_is_window_scoped_not_revision_scoped() -> None:
     """The following-year calendar grounds its deadline, not the 2025 revision generally."""
     modelo, catalogues = _load_modelo_353()
-    revision = modelo.revisions["2008-2025"]
+    revision = modelo.revisions["2021-2025"]
     calendar_id = "aeat-calendario-contribuyente-2026-domiciliacion"
     december = next(window for window in revision.deadline_windows if window.id == "modelo-353-2025-12")
     calendar = catalogues.sources[calendar_id]
@@ -150,7 +185,7 @@ def test_modelo_353_2025_december_calendar_is_window_scoped_not_revision_scoped(
 
 def test_modelo_353_other_months_close_at_30_days_following_month() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-2025"]
+    revision = modelo.revisions["2021-2025"]
     windows = {w.id: w for w in revision.deadline_windows}
     jun = windows["modelo-353-2025-06"]
     assert jun.opens_on == date(2025, 7, 1)
@@ -362,7 +397,7 @@ def test_modelo_353_historical_deadlines_exactly_match_official_aeat_calendars(
     expected: dict[str, tuple[date, date, date]],
 ) -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-2025"]
+    revision = modelo.revisions["2021-2025"]
     windows = {
         window.period.registry_token: window
         for window in revision.deadline_windows
@@ -391,7 +426,7 @@ def test_modelo_353_historical_deadlines_exactly_match_official_aeat_calendars(
 
 def test_modelo_353_2025_deadlines_exactly_match_the_official_aeat_calendars() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-2025"]
+    revision = modelo.revisions["2021-2025"]
     windows = {
         window.period.registry_token: window for window in revision.deadline_windows if window.filing_year == 2025
     }
@@ -432,10 +467,9 @@ def test_modelo_353_2025_deadlines_exactly_match_the_official_aeat_calendars() -
 
 def test_modelo_353_2026_deadlines_are_exactly_grounded() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2026-y-siguientes"]
+    revision = modelo.revisions["2026-desde-02"]
     windows = {window.period.registry_token: window for window in revision.deadline_windows}
     expected = {
-        "01": (date(2026, 2, 1), date(2026, 3, 2), date(2026, 2, 25)),
         "02": (date(2026, 3, 1), date(2026, 3, 30), date(2026, 3, 25)),
         "03": (date(2026, 4, 1), date(2026, 4, 30), date(2026, 4, 27)),
         "04": (date(2026, 5, 1), date(2026, 6, 1), date(2026, 5, 27)),
@@ -449,7 +483,7 @@ def test_modelo_353_2026_deadlines_are_exactly_grounded() -> None:
         "12": (date(2027, 1, 1), date(2027, 2, 1), date(2027, 1, 27)),
     }
 
-    assert len(windows) == len(expected) == 12
+    assert len(windows) == len(expected) == 11
     assert set(windows) == set(expected)
     assert set(windows) == set(revision.period_selector.periods)
     for period, dates in expected.items():
@@ -467,11 +501,11 @@ def test_modelo_353_2026_deadlines_are_exactly_grounded() -> None:
 @pytest.mark.parametrize(
     ("filing_year", "revision_id", "expected_periods"),
     [
-        (2022, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
-        (2023, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
-        (2024, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
-        (2025, "2008-2025", tuple(f"{month:02d}" for month in range(1, 13))),
-        (2026, "2026-y-siguientes", tuple(f"{month:02d}" for month in range(1, 13))),
+        (2022, "2021-2025", tuple(f"{month:02d}" for month in range(1, 13))),
+        (2023, "2021-2025", tuple(f"{month:02d}" for month in range(1, 13))),
+        (2024, "2021-2025", tuple(f"{month:02d}" for month in range(1, 13))),
+        (2025, "2021-2025", tuple(f"{month:02d}" for month in range(1, 13))),
+        (2026, "2026-desde-02", tuple(f"{month:02d}" for month in range(2, 13))),
     ],
 )
 def test_modelo_353_authored_deadlines_have_one_canonical_owner_and_projection(
@@ -502,7 +536,7 @@ def test_modelo_353_authored_deadlines_have_one_canonical_owner_and_projection(
 def test_modelo_353_snapshot_builds_per_month() -> None:
     modelo, catalogues = _load_modelo_353()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="06")
-    assert snapshot.revision.id == "2008-2025"
+    assert snapshot.revision.id == "2021-2025"
     assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-2",)
     assert "orden-eha-3434-2007:art-2" in snapshot.legal
     assert "aeat-modelo-353-procedure" in snapshot.sources
@@ -511,7 +545,7 @@ def test_modelo_353_snapshot_builds_per_month() -> None:
 
 def test_modelo_353_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-2025"]
+    revision = modelo.revisions["2021-2025"]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
     filed_ref = cross_refs["modelo-353-filed-declarations-read"]
     assert filed_ref.requires_authentication is True
@@ -520,14 +554,14 @@ def test_modelo_353_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_353_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-2025"]
+    revision = modelo.revisions["2021-2025"]
     construct = next(c for c in revision.constructs if c.id == "modelo-353-iva-grupo-agregado")
     assert "modelo-353-dr-2026" in construct.workbook_parity_refs
 
 
 def test_modelo_353_declares_iva_aggregation_bindings() -> None:
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-2025"]
+    revision = modelo.revisions["2021-2025"]
     iva_binding_ids = {binding.id for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert iva_binding_ids == {
         "modelo-353-iva-repercutido-general-cuota",
@@ -544,7 +578,7 @@ def test_modelo_353_declares_iva_aggregation_bindings() -> None:
 # asserted the newer half's ref against whichever revision was named.
 @pytest.mark.parametrize(
     ("revision_id", "design_ref"),
-    [("2008-2025", "aeat-dr-353-2021-2025"), ("2026-y-siguientes", "aeat-dr-353-2026")],
+    [("2021-2025", "aeat-dr-353-2021-2025"), ("2026-desde-02", "aeat-dr-353-2026")],
 )
 def test_modelo_353_declares_322_group_settlement_treatment(revision_id: str, design_ref: str) -> None:
     modelo, catalogues = _load_modelo_353()
@@ -599,7 +633,7 @@ def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> Non
     )
 
     modelo, _ = _load_modelo_353()
-    revision = modelo.revisions["2008-2025"]
+    revision = modelo.revisions["2021-2025"]
     observations = [
         IvaLedgerObservation(
             ledger_id="agg-rep-1",

@@ -81,8 +81,8 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     _GeneratedTree("210", "2025", "aeat-dr-210-2022", "2022", 2025, "0A"),
     _GeneratedTree("232", "2018-y-siguientes", "aeat-dr-232-2018", "2018", 2018, "0A"),
     _GeneratedTree("232", "2016-2017", "aeat-dr-232-2016", "2016", 2016, "0A"),
-    _GeneratedTree("353", "2026-y-siguientes", "aeat-dr-353-2026", "2026", 2026, "01"),
-    _GeneratedTree("353", "2008-2025", "aeat-dr-353-2021-2025", "2021", 2021, "01"),
+    _GeneratedTree("353", "2026-desde-02", "aeat-dr-353-2026", "2026", 2026, "02"),
+    _GeneratedTree("353", "2021-2025", "aeat-dr-353-2021-2025", "2021", 2021, "01"),
     # Split at the 2023/2024 re-layout, where the 2024 design adds nine
     # fields and revives DR32201 offset 1311 out of reserved space. The
     # earlier 2022/2023 boundary is NOT split: no key pairs those two

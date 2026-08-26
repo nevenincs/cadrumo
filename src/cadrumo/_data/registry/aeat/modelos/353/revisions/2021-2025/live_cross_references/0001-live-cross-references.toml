@@ -1,4 +1,4 @@
-[[revisions."2008-2025".live_cross_references]]
+[[revisions."2021-2025".live_cross_references]]
 id = "modelo-353-static-documentation"
 evidence_tier = "official_source_guidance"
 surface = "static_official_documentation"
@@ -19,7 +19,7 @@ requires_aeat_authorization = false
 legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
-[[revisions."2008-2025".live_cross_references]]
+[[revisions."2021-2025".live_cross_references]]
 id = "modelo-353-filed-declarations-read"
 evidence_tier = "official_source_guidance"
 surface = "authenticated_read_surface"

@@ -1,0 +1,86 @@
+[[revisions."2026-desde-02".constructs]]
+id = "modelo-353-iva-grupo-agregado"
+legal_refs = [
+    "orden-eha-3434-2007:art-2",
+    "orden-eha-3434-2007:art-8",
+    "ley-37-1992:art-163-quinquies",
+    "ley-37-1992:art-163-sexies",
+    "ley-37-1992:art-163-nonies",
+    "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-92",
+    "rd-1624-1992:art-71",
+]
+source_refs = [
+    "aeat-modelo-322-procedure",
+    "aeat-dr-353-2026",
+    "aeat-modelo-353-procedure",
+    "aeat-modelo-303-procedure",
+    "aeat-calendario-contribuyente-2026-hasta-1-febrero-2027",
+    "boe-modelo-322-2007-form",
+    "boe-modelo-353-2007-form",
+    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+    "aeat-calendario-contribuyente-2026-domiciliacion",
+]
+casilla_ids = [
+    "01",
+    "02",
+    "08",
+    "09",
+    "03",
+    "04",
+    "10",
+    "05",
+
+    "decl.ejercicio",
+    "decl.periodo",
+]
+formulas = [
+    "modelo-353-2026-compensar-pendientes-posteriores",
+    "modelo-353-2026-resultado",
+    "modelo-353-2026-resultado-autoliquidacion",
+
+]
+bindings = [
+    "modelo-353-prev-322-cuota-devengada-total",
+    "modelo-353-prev-322-cuota-deducible-total",
+    "modelo-353-prev-322-resultado-regimen-general",
+]
+dependency_classifications = ["modelo-353-dep-322"]
+workbook_parity_refs = ["modelo-353-dr-2026"]
+live_cross_references = [
+    "modelo-353-static-documentation",
+    "modelo-353-filed-declarations-read",
+]
+application_links = [
+    "modelo-353-portal",
+    "modelo-353-filing",
+    "modelo-353-extractor",
+    "modelo-353-review",
+    "modelo-353-approval",
+    "modelo-353-reconciliation",
+    "modelo-353-workflow",
+    "modelo-353-deadline",
+    "modelo-353-calculation",
+]
+filing_schedules = ["modelo-353-mensual"]
+deadline_windows = [
+    "modelo-353-2026-02",
+    "modelo-353-2026-03",
+    "modelo-353-2026-04",
+    "modelo-353-2026-05",
+    "modelo-353-2026-06",
+    "modelo-353-2026-07",
+    "modelo-353-2026-08",
+    "modelo-353-2026-09",
+    "modelo-353-2026-10",
+    "modelo-353-2026-11",
+    "modelo-353-2026-12",
+]
+
+# Calculation-completeness manifest for revision 2026-desde-02: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.

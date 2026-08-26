@@ -1,4 +1,4 @@
-[[revisions."2008-2025".applicability]]
+[[revisions."2021-2025".applicability]]
 id = "m353-seed"
 applicable_entity_types = ["attribution_entity", "legal_entity", "natural_person"]
 required_payer_fact = "iva_group_dominant_entity"
