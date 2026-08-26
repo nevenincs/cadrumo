@@ -39,7 +39,10 @@ Submodules
    cadrumo.application.modelo._decimal_parsing
    cadrumo.application.modelo._dt12_advisory
    cadrumo.application.modelo._dt12_antiquity_advisory
+   cadrumo.application.modelo._edit_execution
+   cadrumo.application.modelo._edit_facade
    cadrumo.application.modelo._edit_models
+   cadrumo.application.modelo._edit_services
    cadrumo.application.modelo._export
    cadrumo.application.modelo._export_amendment_evidence
    cadrumo.application.modelo._filed_revision_observation
@@ -118,6 +121,7 @@ Submodules
    cadrumo.application.modelo.filing_repository
    cadrumo.application.modelo.justificante_repository
    cadrumo.application.modelo.m145_communication_period
+   cadrumo.application.modelo.operation_definitions
    cadrumo.application.modelo.profile_binding
    cadrumo.application.modelo.reconciliation
    cadrumo.application.modelo.reconciliation_parsing
@@ -128,6 +132,7 @@ Submodules
    cadrumo.application.modelo.work_review
    cadrumo.application.modelo.work_unit_repository
    cadrumo.application.modelo.work_wizard
+   cadrumo.application.modelo.workspace
    cadrumo.application.modelo.workspace_manifest
    cadrumo.application.modelo.workspace_models
    cadrumo.application.modelo.workspace_producers
