@@ -8,16 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
-from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-
 from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
 from ....core import CasillaId, FilingProducerKey, Period
 from ....core.directory_scan import scan_directory
+from ....domain.calculations.export_field_kind import CasillaFieldKind
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.export_parse import parse_export_payload
+from ....domain.calculations.registry.export_value_policy import ExportValuePolicy
+from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing import (
     FilingExportValidationError,
     ModeloDraft,
@@ -389,7 +388,7 @@ def test_parser_refuses_noncanonical_sign_boolean_and_policy_mutations(mutation:
         "legal_refs": ("ley-27-2014:art-40",),
         "source_refs": ("aeat-dr-200-2025",),
     }
-    from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+    from ....domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
     with pytest.raises(RegistryValidationError):
         parse_export_payload(ExportLayoutDefinition.model_validate(layout), mutation)

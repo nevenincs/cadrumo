@@ -22,6 +22,66 @@ review_status = "agent_reviewed"
 reviewed_by = "agent: complete 2016 AEAT design measured against the distinct two-record 500-byte layout; no 2023-era field is backdated"
 reviewed_at = 2026-08-26
 
+[revisions."2016-2022".family_dispositions.applicability]
+reason = "Modelo 165's registered scope is established by the approving Orden and is consumed through its temporal selector. This informative emitter declaration has no taxpayer-profile predicate or alternative applicability branch to model, so no applicability rule can be authored without inventing one."
+legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
+
+[revisions."2016-2022".family_dispositions.bindings]
+reason = "The 2016 design supplies fixed wire positions, while the informative declaration's values are supplied by its declarant. No ledger, profile, relation, or calculated source is declared for a casilla, so no binding source or selector exists to author."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
+
+[revisions."2016-2022".family_dispositions.dependency_classifications]
+reason = "A dependency classification classifies a declared cross-modelo fold. This revision declares no relation or relation-prefill binding, so it has no dependency edge to classify."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
+
+[revisions."2016-2022".family_dispositions.extraction_profiles]
+reason = "Extraction profiles require AEAT-published artefact labels to match. The bundled 2016 source is a wire record design, not a completed Modelo 165 filing or rendered form, so it supplies no printed label evidence from which an extraction profile may be authored."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
+
+[revisions."2016-2022".family_dispositions.filing_schedules]
+reason = "The Orden establishes a January presentation month, but the bundled sources contain no exercise-specific filing-schedule programme for 2016 through 2022. A recurring month cannot be expanded into schedule dates or routing without inventing calendar authority."
+legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
+
+[revisions."2016-2022".family_dispositions.formulas]
+reason = "Modelo 165 is an informative certification declaration. Its 2016 design identifies declared fields but no rate, threshold, aggregation, or other calculated amount; creating a formula would manufacture tax computation the source does not prescribe."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
+
+[revisions."2016-2022".family_dispositions.live_cross_references]
+reason = "A live cross-reference records an AEAT surface Cadrumo reads at runtime. Modelo 165 declares no such adapter, host, method, or read-only operation, so this revision has no live surface to describe."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
+
+[revisions."2016-2022".family_dispositions.parameters]
+reason = "Parameters hold regulatory values consumed by formulas. Because this informative revision declares no formula, it has no rate, threshold, coefficient, or other parameter consumer to ground."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
+
+[revisions."2016-2022".family_dispositions.projection_endpoints]
+reason = "A projection endpoint describes a typed value source for a repeated projection record. The 2016 layout declares no projection-row record and no projection field, so there is no endpoint coordinate to admit."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+[revisions."2016-2022".family_dispositions.relations]
+reason = "Relations are cross-modelo handoffs landing in relation-prefill bindings. This revision declares neither relation-prefill bindings nor another modelo's carried amount, so no relation is applicable."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
+
+[revisions."2016-2022".family_dispositions.verification_expectations]
+reason = "Verification expectations compare a declared calculation or reconciliation outcome. This revision has no formula, binding, relation, or official outcome specimen against which such an assertion could be grounded."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
+
+[revisions."2016-2022".family_dispositions.verification_predicates]
+reason = "Verification predicates express conditional checks over verification expectations. With no calculation or reconciliation expectation in this informative revision, there is no predicate subject to declare."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
+
 [revisions."2016-2022".family_dispositions.deadline_windows]
 reason = """
 The cited Orden establishes January presentation, but no exercise-specific

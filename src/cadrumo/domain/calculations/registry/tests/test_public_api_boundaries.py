@@ -8,8 +8,8 @@ project-wide ratcheting import-hygiene gate,
 the import-hygiene scanner and its checked-in baseline). Its
 former allowlist
 (``authority.py``, both package ``__init__.py`` files,
-``legal_parameters.py``, ``_imputacion_parameters.py``,
-``_recargo_equivalencia.py``) is now empty in practice: none
+``_imputacion_parameters.py``, ``_recargo_equivalencia.py``) is now empty in
+practice: none
 of those sites still import the raw orchestration symbols cross-package, and
 the general gate now enforces the boundary for every package, not just the
 registry. The checks below (positive facade-content assertions and the

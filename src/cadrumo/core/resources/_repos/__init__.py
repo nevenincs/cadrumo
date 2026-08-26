@@ -13,7 +13,6 @@ from .category_profiles import CategoryProfileRepository
 from .holiday_calendars import HolidayCalendarRepository
 from .iva_catalogues import IvaCatalogueRepository
 from .iva_rate_tables import IvaRateTableRepository
-from .legal_parameters import LegalParameterRepository
 from .manuals import ManualKey, ManualRepository
 from .modelos import StaticModeloRepository
 from .recargo_bands import RecargoBandsRepository
@@ -25,7 +24,6 @@ __all__ = [
     "HolidayCalendarRepository",
     "IvaCatalogueRepository",
     "IvaRateTableRepository",
-    "LegalParameterRepository",
     "ManualKey",
     "ManualRepository",
     "RecargoBandsRepository",

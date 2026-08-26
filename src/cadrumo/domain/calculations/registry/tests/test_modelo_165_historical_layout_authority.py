@@ -12,13 +12,15 @@ from datetime import date
 
 import pytest
 
+from .....core import RegistryAuthorityGrade
 from .....core.resources import bundled_path
 from .._validate_export_exemption import validate_export_exemption_declarations
 from .._validate_export_layout_coverage import validate_export_layout_record_coverage
 from ..errors import RegistryValidationError
-from ..loader import load_catalogue_file, load_modelo_directory
+from ..loader import load_catalogue_file, load_modelo_directory, load_registry_tree
 from ..record_design import extract_record_design
 from ..temporal import select_revision
+from ..validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -28,6 +30,12 @@ def _modelo_and_catalogue():  # type: ignore[no-untyped-def]  # reason: this dir
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "165"))
     catalogue = load_catalogue_file(bundled_path("registry", "aeat", "legal", "modelo-165.toml"))
     return modelo, catalogue
+
+
+def _catalogues():  # type: ignore[no-untyped-def]  # reason: registry catalogue model is private test plumbing
+    """Load the canonical merged catalogue without validating foreign modelos."""
+    _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    return catalogues
 
 
 def _design(catalogue, source_id: str):  # type: ignore[no-untyped-def]  # reason: concrete source/parser models remain test-local
@@ -93,6 +101,24 @@ def test_modelo_165_no_layout_intervals_are_accepted_only_at_applicability_grade
             )
             == []
         )
+
+
+def test_modelo_165_applicability_only_eras_need_no_false_parity_anchor() -> None:
+    """No-layout historical eras remain valid without backdating another design."""
+    modelo, _catalogue = _modelo_and_catalogue()
+
+    RegistryValidator(_catalogues(), source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_modelo_165_filing_claim_without_layout_or_parity_still_refuses() -> None:
+    """The parity prerequisite remains fail-closed once an era claims filing."""
+    modelo, _catalogue = _modelo_and_catalogue()
+    application_only = modelo.revisions["2023-2025"]
+    falsely_promoted = application_only.model_copy(update={"authority_grade": RegistryAuthorityGrade.FILING})
+    mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, falsely_promoted.id: falsely_promoted}})
+
+    with pytest.raises(RegistryValidationError, match="must declare official workbook parity coverage"):
+        RegistryValidator(_catalogues(), source_root=bundled_path()).validate_modelo(mutated)
 
 
 def test_modelo_165_complete_designs_have_distinct_2016_and_2026_type_one_geometry() -> None:

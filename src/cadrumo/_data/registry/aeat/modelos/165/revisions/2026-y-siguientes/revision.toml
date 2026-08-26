@@ -20,6 +20,66 @@ review_status = "agent_reviewed"
 reviewed_by = "agent: current AEAT design headed Ejercicio 2026, with the post-2016 EMPRESA EMERGENTE field and two complete 500-byte records"
 reviewed_at = 2026-08-26
 
+[revisions."2026-y-siguientes".family_dispositions.applicability]
+reason = "Modelo 165's registered scope is established by the approving Orden and is consumed through its temporal selector. This informative emitter declaration has no taxpayer-profile predicate or alternative applicability branch to model, so no applicability rule can be authored without inventing one."
+legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.bindings]
+reason = "The 2026 design supplies fixed wire positions, while the informative declaration's values are supplied by its declarant. No ledger, profile, relation, or calculated source is declared for a casilla, so no binding source or selector exists to author."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.dependency_classifications]
+reason = "A dependency classification classifies a declared cross-modelo fold. This revision declares no relation or relation-prefill binding, so it has no dependency edge to classify."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.extraction_profiles]
+reason = "Extraction profiles require AEAT-published artefact labels to match. The bundled 2026 source is a wire record design, not a completed Modelo 165 filing or rendered form, so it supplies no printed label evidence from which an extraction profile may be authored."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.filing_schedules]
+reason = "The 2026 deadline window establishes only its presentation period. The bundled sources contain no complete filing-schedule programme, routing, or future exercise-specific calendar authority, so no schedule is inferred beyond that declared window."
+legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.formulas]
+reason = "Modelo 165 is an informative certification declaration. Its 2026 design identifies declared fields but no rate, threshold, aggregation, or other calculated amount; creating a formula would manufacture tax computation the source does not prescribe."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.live_cross_references]
+reason = "A live cross-reference records an AEAT surface Cadrumo reads at runtime. Modelo 165 declares no such adapter, host, method, or read-only operation, so this revision has no live surface to describe."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
+
+[revisions."2026-y-siguientes".family_dispositions.parameters]
+reason = "Parameters hold regulatory values consumed by formulas. Because this informative revision declares no formula, it has no rate, threshold, coefficient, or other parameter consumer to ground."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.projection_endpoints]
+reason = "A projection endpoint describes a typed value source for a repeated projection record. The 2026 layout declares no projection-row record and no projection field, so there is no endpoint coordinate to admit."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.relations]
+reason = "Relations are cross-modelo handoffs landing in relation-prefill bindings. This revision declares neither relation-prefill bindings nor another modelo's carried amount, so no relation is applicable."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.verification_expectations]
+reason = "Verification expectations compare a declared calculation or reconciliation outcome. This revision has no formula, binding, relation, or official outcome specimen against which such an assertion could be grounded."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
+[revisions."2026-y-siguientes".family_dispositions.verification_predicates]
+reason = "Verification predicates express conditional checks over verification expectations. With no calculation or reconciliation expectation in this informative revision, there is no predicate subject to declare."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
+
 [revisions."2026-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
 The immediately preceding 2023-2025 revision is intentionally

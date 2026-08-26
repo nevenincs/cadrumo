@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import argparse
 import ast
+import io
 import json
 import re
 import subprocess
+import tarfile
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -19,6 +21,7 @@ from pathlib import Path
 from typing import Final
 
 RELOCATION_COMMIT: Final = "c94133f29516b12e3529f3d154c31592562f6198"
+EVIDENCE_COMMIT: Final = "aef1e903cebe8e463c5ac1c3192b30f2b4f3e8c8"
 REGISTRY_PATH: Final = "src/cadrumo/domain/calculations/registry"
 MATRIX_VERSION: Final = 2
 DISPOSITIONS: Final = (
@@ -27,9 +30,70 @@ DISPOSITIONS: Final = (
     "privatize_external_elimination",
     "delete",
 )
-RAG_RESULT_FIELDS: Final = frozenset({"path", "line_start", "line_end", "node_type", "symbol"})
-EVIDENCE_FILE_SUFFIXES: Final = frozenset({".json", ".md", ".py", ".rst", ".toml", ".yaml", ".yml"})
-EVIDENCE_ROOTS: Final = ("src", "dev", "docs")
+RAG_QUERY_FIELDS: Final = frozenset({"text", "type", "domain", "prefer", "request_id"})
+RAG_RESULT_FIELDS: Final = frozenset(
+    {"id", "path", "score", "source", "line_start", "line_end", "node_type", "function_name", "class_name"}
+)
+# These are the two semantic searches performed for the Sol remediation.  They
+# are intentionally *not* derived from the AST locator census below: a RAG
+# result is an observed vaultspec-rag result, whereas the locators are
+# deterministic immutable-source evidence.  All non-target rows retain null
+# RAG fields rather than claiming an unperformed semantic search.
+RAG_DISCOVERY_BY_PAIR: Final = {
+    (
+        "src/cadrumo/domain/calculations/registry/_aeat_hosts.py",
+        "src/cadrumo/domain/calculations/registry/aeat_hosts.py",
+    ): {
+        "query": {
+            "text": "AEAT remote read host authority canonical hostname only:prod",
+            "type": "code",
+            "domain": "prod",
+            "prefer": "production",
+            "request_id": "eec115fcf1ae4225b7e9209afc205b2b",
+        },
+        "result": {
+            "id": "src/cadrumo/domain/calculations/registry/aeat_hosts.py:1:19-51:a2db203363d2",
+            "path": "src/cadrumo/domain/calculations/registry/aeat_hosts.py",
+            "score": 0.941738772392273,
+            "source": "codebase",
+            "line_start": 19,
+            "line_end": 51,
+            "node_type": None,
+            "function_name": None,
+            "class_name": None,
+        },
+    },
+    (
+        "src/cadrumo/domain/calculations/registry/_record_spec.py",
+        "src/cadrumo/domain/calculations/registry/record_spec.py",
+    ): {
+        "query": {
+            "text": "ENCODING_ALIAS_MAP registry schema export value policy only:prod",
+            "type": "code",
+            "domain": "prod",
+            "prefer": "production",
+            "request_id": "f8cff429a3cd4d8fa1dc335774db9e47",
+        },
+        "result": {
+            "id": "src/cadrumo/domain/calculations/registry/schema_exports.py:0:1-41:708338918763",
+            "path": "src/cadrumo/domain/calculations/registry/schema_exports.py",
+            "score": 1.0188962697982789,
+            "source": "codebase",
+            "line_start": 1,
+            "line_end": 41,
+            "node_type": None,
+            "function_name": None,
+            "class_name": None,
+        },
+    },
+}
+EVIDENCE_FILE_SUFFIXES: Final = frozenset(
+    {".cfg", ".csv", ".ini", ".json", ".md", ".py", ".rst", ".toml", ".tsv", ".txt", ".xml", ".yaml", ".yml"},
+)
+# The generated registry corpus is deliberately excluded.  The archive pathspec
+# keeps authored source, fixtures, manifests, receipts, and documentation while
+# avoiding a multi-hundred-megabyte generated-data snapshot.
+EVIDENCE_ARCHIVE_PATHS: Final = (".vault", "dev", "docs", "src", ":(exclude)src/cadrumo/_data")
 TERMINAL_STATES: Final = {
     "keep_public": frozenset({"public_local_definitions_only"}),
     "hard_move_complete": frozenset(
@@ -80,7 +144,7 @@ class RelocatedFamily:
 
 @dataclass(frozen=True, slots=True)
 class EvidenceFile:
-    """One authored file read from the current census tree."""
+    """One authored text object read from the immutable evidence commit."""
 
     path: str
     text: str
@@ -88,7 +152,7 @@ class EvidenceFile:
 
 @dataclass(frozen=True, slots=True)
 class EvidenceCensus:
-    """Derived current-tree consumer and parser measurements."""
+    """Consumers and parser measurements derived from one immutable archive."""
 
     consumers: dict[str, dict[str, list[str]]]
     dynamic_imports: dict[str, list[dict[str, str]]]
@@ -103,6 +167,16 @@ def _git(*arguments: str) -> str:
         check=True,
         capture_output=True,
         text=True,
+    ).stdout
+
+
+def _git_bytes(*arguments: str) -> bytes:
+    """Run a fixed repository-local git query that returns raw object bytes."""
+    return subprocess.run(  # noqa: S603  # fixed read-only git subcommand assembled only by this module
+        ("git", *arguments),  # noqa: S607  # repository tool is fixed; only literal call sites supply arguments
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
     ).stdout
 
 
@@ -165,7 +239,14 @@ def _historic_facade_exports() -> dict[str, tuple[str, ...]]:
         if name == "__all__":
             public_names = set(ast.literal_eval(value))
         elif name == "_LAZY_EXPORTS":
-            lazy_exports = ast.literal_eval(value)
+            evaluated_exports = ast.literal_eval(value)
+            if not isinstance(evaluated_exports, dict):
+                raise RuntimeError("c941-parent registry facade has a non-string lazy export")
+            lazy_exports = {}
+            for exported_name, module_name in evaluated_exports.items():
+                if not isinstance(exported_name, str) or not isinstance(module_name, str):
+                    raise RuntimeError("c941-parent registry facade has a non-string lazy export")
+                lazy_exports[exported_name] = module_name
     if public_names is None:
         raise RuntimeError("c941-parent registry facade has no literal __all__")
     exports: dict[str, list[str]] = defaultdict(list)
@@ -200,27 +281,32 @@ _EVIDENCE_FILE_CACHE: tuple[EvidenceFile, ...] | None = None
 
 
 def _evidence_files() -> tuple[EvidenceFile, ...]:
-    """Return one deterministic current-tree snapshot for the census run."""
+    """Read the complete authored census corpus from an immutable Git archive.
+
+    This deliberately does not traverse ``ROOT``.  Consequently a dirty tree,
+    later disposition move, or generated-data churn cannot alter the S175
+    reviewed evidence.  The archive includes text, fixtures, manifests, and
+    receipts as well as Python source.
+    """
     global _EVIDENCE_FILE_CACHE
     if _EVIDENCE_FILE_CACHE is not None:
         return _EVIDENCE_FILE_CACHE
+    archive = _git_bytes("archive", "--format=tar", EVIDENCE_COMMIT, "--", *EVIDENCE_ARCHIVE_PATHS)
     files: list[EvidenceFile] = []
-    for root_name in EVIDENCE_ROOTS:
-        root = ROOT / root_name
-        for path in root.rglob("*"):
-            if path.is_file() and path.suffix in EVIDENCE_FILE_SUFFIXES:
-                files.append(
-                    EvidenceFile(
-                        path=path.relative_to(ROOT).as_posix(),
-                        text=path.read_text(encoding="utf-8", errors="replace"),
-                    ),
-                )
-    _EVIDENCE_FILE_CACHE = tuple(sorted(files, key=lambda item: item.path))
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as tar:
+        for member in tar.getmembers():
+            if not member.isfile() or Path(member.name).suffix not in EVIDENCE_FILE_SUFFIXES:
+                continue
+            extracted = tar.extractfile(member)
+            if extracted is None:
+                raise RuntimeError(f"evidence archive cannot read {member.name}")
+            files.append(EvidenceFile(member.name, extracted.read().decode("utf-8", errors="replace")))
+    _EVIDENCE_FILE_CACHE = tuple(sorted(files, key=lambda evidence_file: evidence_file.path))
     return _EVIDENCE_FILE_CACHE
 
 
 def _evidence_text(path: str) -> str:
-    """Read one named source object from the current evidence snapshot."""
+    """Read one source object from the immutable evidence archive."""
     for evidence_file in _evidence_files():
         if evidence_file.path == path:
             return evidence_file.text
@@ -228,15 +314,13 @@ def _evidence_text(path: str) -> str:
 
 
 def _consumer_module_name(relative_path: str) -> tuple[str, bool] | None:
-    """Return the import name and package flag for a scoped Python source path."""
+    """Return an import name and package flag for a Python evidence file."""
     if not relative_path.endswith(".py"):
         return None
     source_path = relative_path.removeprefix("src/").removesuffix(".py")
     module = source_path.replace("/", ".")
     is_package = module.endswith(".__init__")
-    if is_package:
-        module = module.removesuffix(".__init__")
-    return module, is_package
+    return (module.removesuffix(".__init__") if is_package else module, is_package)
 
 
 def _resolve_relative_import(
@@ -246,7 +330,7 @@ def _resolve_relative_import(
     level: int,
     module: str | None,
 ) -> str | None:
-    """Resolve one ``ImportFrom`` target against its importing module."""
+    """Resolve an ``ImportFrom`` target to its absolute module spelling."""
     if level == 0:
         return module
     package = current_module if is_package else current_module.rpartition(".")[0]
@@ -266,7 +350,7 @@ def _python_import_context(
     current_module: str,
     is_package: bool,
 ) -> tuple[tuple[str, ...], dict[str, str], tuple[tuple[str, str], ...]]:
-    """Resolve direct imports, their local spellings, and from-import members."""
+    """Resolve imports, local aliases, and exact ``from`` members."""
     imports: set[str] = set()
     aliases: dict[str, str] = {}
     from_members: list[tuple[str, str]] = []
@@ -274,8 +358,9 @@ def _python_import_context(
         if isinstance(node, ast.Import):
             for alias in node.names:
                 imports.add(alias.name)
-                local_name = alias.asname or alias.name.split(".")[0]
-                aliases[local_name] = alias.name if alias.asname else alias.name.split(".")[0]
+                aliases[alias.asname or alias.name.split(".")[0]] = (
+                    alias.name if alias.asname else alias.name.split(".")[0]
+                )
         elif isinstance(node, ast.ImportFrom):
             target = _resolve_relative_import(
                 current_module,
@@ -285,7 +370,12 @@ def _python_import_context(
             )
             if target is None:
                 continue
-            imports.add(target)
+            # ``from . import member`` binds a concrete member, not a useful
+            # reverse edge to the whole package. Keeping the package edge here
+            # makes the transitive closure jump through ``cadrumo`` and turns a
+            # family census into an unrelated whole-repository closure.
+            if node.module is not None:
+                imports.add(target)
             for alias in node.names:
                 if alias.name == "*":
                     from_members.append((target, "*"))
@@ -299,7 +389,7 @@ def _python_import_context(
 
 
 def _dotted_name(node: ast.AST) -> str | None:
-    """Return a dotted expression spelling when it has no dynamic limb."""
+    """Return a dotted expression spelling only when every limb is static."""
     if isinstance(node, ast.Name):
         return node.id
     if isinstance(node, ast.Attribute):
@@ -312,13 +402,11 @@ def _resolve_import_alias(reference: str, aliases: dict[str, str]) -> str:
     """Expand the first lexical segment of an imported local spelling."""
     first, dot, rest = reference.partition(".")
     target = aliases.get(first)
-    if target is None:
-        return reference
-    return f"{target}{dot}{rest}" if dot else target
+    return reference if target is None else f"{target}{dot}{rest}" if dot else target
 
 
 def _candidate_for_reference(reference: str, by_new_module: dict[str, RelocatedFamily]) -> RelocatedFamily | None:
-    """Find the exact family owner of a module or imported symbol reference."""
+    """Find the one candidate which owns a module or member reference."""
     module = reference
     while module:
         candidate = by_new_module.get(module)
@@ -328,25 +416,15 @@ def _candidate_for_reference(reference: str, by_new_module: dict[str, RelocatedF
     return None
 
 
-def _owner_for_reference(
-    reference: str,
-    *,
-    by_new_module: dict[str, RelocatedFamily],
-    member_owners: dict[str, str],
-) -> str | None:
-    """Resolve a leaf module or package-export symbol to its one c941 family row."""
-    if candidate := _candidate_for_reference(reference, by_new_module):
-        return candidate.old_path
-    package = "cadrumo.domain.calculations.registry."
-    if reference.startswith(package):
-        return member_owners.get(reference.removeprefix(package).split(".", maxsplit=1)[0])
-    return None
+def _is_type_alias(node: ast.AST) -> bool:
+    """Return whether this interpreter exposes the PEP 695 ``TypeAlias`` node."""
+    type_alias = getattr(ast, "TypeAlias", None)
+    return isinstance(type_alias, type) and isinstance(node, type_alias)
 
 
 def _annotation_expressions(tree: ast.AST) -> tuple[ast.AST, ...]:
-    """Collect every function, variable, and type-alias annotation expression."""
+    """Collect function, variable, and both legacy and PEP 695 alias expressions."""
     expressions: list[ast.AST] = []
-    type_alias_node = getattr(ast, "TypeAlias", None)
     for node in ast.walk(tree):
         if isinstance(node, ast.AnnAssign):
             expressions.append(node.annotation)
@@ -362,7 +440,7 @@ def _annotation_expressions(tree: ast.AST) -> tuple[ast.AST, ...]:
             if node.args.kwarg is not None:
                 arguments = (*arguments, node.args.kwarg)
             expressions.extend(argument.annotation for argument in arguments if argument.annotation is not None)
-        elif type_alias_node is not None and isinstance(node, type_alias_node):
+        elif _is_type_alias(node):
             value = getattr(node, "value", None)
             if isinstance(value, ast.AST):
                 expressions.append(value)
@@ -394,14 +472,15 @@ def _annotation_owners(
                     owners.add(candidate.old_path)
             elif isinstance(node, ast.Constant) and isinstance(node.value, str):
                 try:
-                    pending.append(ast.parse(node.value, mode="eval"))
+                    parsed = ast.parse(node.value, mode="eval")
                 except SyntaxError:
                     continue
+                pending.append(parsed)
     return owners
 
 
 def _facade_member_owners(candidates: tuple[RelocatedFamily, ...]) -> dict[str, str]:
-    """Map each historic facade member to one exact family row, failing on ambiguity."""
+    """Map each historic facade member and module stem to one exact row."""
     owners: dict[str, str] = {}
     for old_path, symbols in _historic_facade_exports().items():
         for symbol in symbols:
@@ -419,7 +498,7 @@ def _package_attribute_owners(
     from_members: tuple[tuple[str, str], ...],
     member_owners: dict[str, str],
 ) -> set[str]:
-    """Attribute a registry facade use to the exact member owner, never every row."""
+    """Attribute each package-member access to its exact family owner."""
     package = "cadrumo.domain.calculations.registry"
     owners: set[str] = set()
     for imported_from, member in from_members:
@@ -433,9 +512,8 @@ def _package_attribute_owners(
         reference = _dotted_name(node)
         if reference is None:
             continue
-        first = reference.partition(".")[0]
         resolved = _resolve_import_alias(reference, aliases)
-        if not resolved.startswith(f"{package}.") or aliases.get(first, "").startswith(f"{package}."):
+        if not resolved.startswith(f"{package}."):
             continue
         member = resolved.removeprefix(f"{package}.").split(".", maxsplit=1)[0]
         if owner := member_owners.get(member):
@@ -450,21 +528,16 @@ def _transitive_consumer_paths(
     importers: dict[str, set[str]],
     module_paths: dict[str, set[str]],
 ) -> set[str]:
-    """Return the complete reverse-import closure beyond direct consumers."""
-    # A package-attribute use has no import edge from the defining leaf module:
-    # ``from registry import Member`` imports the package, not
-    # ``registry.defining_leaf``.  The exact member pass has already established
-    # those direct modules, so seed the same graph walk with both kinds of edge.
-    frontier = [candidate_module, *direct_modules]
-    visited_modules = {candidate_module, *direct_modules}
+    """Return the exact one-hop reverse edges beyond direct consumers.
+
+    A recursive walk can jump from a package-level import to the entire project
+    (for example through ``cadrumo``), which is not evidence of this leaf
+    family's substitutability. The direct pass records every concrete consumer;
+    this category preserves only its falsifiable immediate reverse edges.
+    """
     paths: set[str] = set()
-    while frontier:
-        imported = frontier.pop()
+    for imported in (candidate_module, *direct_modules):
         for importer in importers.get(imported, ()):
-            if importer in visited_modules:
-                continue
-            visited_modules.add(importer)
-            frontier.append(importer)
             if importer not in direct_modules:
                 paths.update(module_paths[importer])
     return paths
@@ -480,7 +553,7 @@ def _dynamic_import_call(node: ast.Call, aliases: dict[str, str]) -> str | None:
 
 
 def _resolve_dynamic_target(target: str, *, module: str, is_package: bool) -> str:
-    """Resolve a literal ``import_module`` target when it is relative."""
+    """Resolve a literal ``import_module`` target, including relative strings."""
     if not target.startswith("."):
         return target
     level = len(target) - len(target.lstrip("."))
@@ -491,12 +564,7 @@ _EVIDENCE_CENSUS_CACHE: EvidenceCensus | None = None
 
 
 def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> EvidenceCensus:
-    """Census every family member from one current-tree snapshot.
-
-    Text, manifests, receipts, fixtures, and Python source are all read from the
-    current source corpus. Python edges retain relative-import and dynamic-import
-    semantics rather than silently treating those references as absent.
-    """
+    """Census every candidate from the single immutable evidence corpus."""
     hits = {candidate.old_path: {category: set() for category in CONSUMER_CATEGORIES} for candidate in candidates}
     direct_modules = {candidate.old_path: set() for candidate in candidates}
     importers: dict[str, set[str]] = defaultdict(set)
@@ -511,13 +579,20 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
         relative = evidence_file.path
         text = evidence_file.text
         base = _base_category(relative)
+        mentions_candidate = False
         for candidate in candidates:
             if candidate.old_module in text or candidate.new_module in text:
                 hits[candidate.old_path][base].add(relative)
-        for symbol, old_path in member_owners.items():
-            if f"registry.{symbol}" in text or f"cadrumo.domain.calculations.registry.{symbol}" in text:
-                hits[old_path][base].add(relative)
+                mentions_candidate = True
         if not relative.endswith(".py"):
+            continue
+        # The regression measurements intentionally cover the application
+        # source tree. Other authored Python is parsed only when it actually
+        # references this registry family, so tooling and fixtures still retain
+        # direct, package-attribute, annotation, and dynamic evidence without
+        # inflating the source-language measurements.
+        in_application_source = relative.startswith("src/cadrumo/")
+        if not in_application_source and not mentions_candidate and "cadrumo.domain.calculations.registry" not in text:
             continue
         tree = ast.parse(text, filename=relative)
         consumer_module = _consumer_module_name(relative)
@@ -525,21 +600,22 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
             continue
         module, is_package = consumer_module
         module_paths[module].add(relative)
-        imports, aliases, from_members = _python_import_context(
-            tree,
-            current_module=module,
-            is_package=is_package,
-        )
-        relative_import_edges += sum(
-            1 for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.level > 0
-        )
-        type_alias = getattr(ast, "TypeAlias", None)
-        type_alias_nodes += sum(1 for node in ast.walk(tree) if type_alias is not None and isinstance(node, type_alias))
+        imports, aliases, from_members = _python_import_context(tree, current_module=module, is_package=is_package)
+        if in_application_source:
+            relative_import_edges += sum(
+                1 for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.level > 0
+            )
+            type_alias_nodes += sum(1 for node in ast.walk(tree) if _is_type_alias(node))
         for imported in imports:
             importers[imported].add(module)
-            if old_path := _owner_for_reference(imported, by_new_module=by_new_module, member_owners=member_owners):
-                direct_modules[old_path].add(module)
-                hits[old_path][base].add(relative)
+            candidate = _candidate_for_reference(imported, by_new_module)
+            if candidate is not None:
+                # A resolved relative ``ImportFrom`` may name neither the old
+                # nor the public module textually (for example,
+                # ``from .. import authority``).  It is nevertheless a direct
+                # consumer in the evidence file's operational category.
+                hits[candidate.old_path][base].add(relative)
+                direct_modules[candidate.old_path].add(module)
         for old_path in _package_attribute_owners(
             tree,
             aliases=aliases,
@@ -548,38 +624,34 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
         ):
             hits[old_path]["package_attribute"].add(relative)
             direct_modules[old_path].add(module)
+        registrations = {
+            ast.unparse(node)
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr.startswith("register")
+        }
         for old_path in _annotation_owners(tree, aliases=aliases, by_new_module=by_new_module):
             hits[old_path]["annotation"].add(relative)
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
-            registration = _resolve_import_alias(_dotted_name(node.func) or "", aliases)
-            if registration.rpartition(".")[2].startswith("register"):
-                references = [registration.removesuffix(f".{registration.rpartition('.')[2]}")]
-                references.extend(
-                    _resolve_import_alias(reference, aliases)
-                    for reference in (_dotted_name(arg) for arg in node.args)
-                    if reference
-                )
-                for reference in references:
-                    if old_path := _owner_for_reference(
-                        reference, by_new_module=by_new_module, member_owners=member_owners
-                    ):
-                        hits[old_path]["registration"].add(relative)
             callee = _dynamic_import_call(node, aliases)
-            argument = (
-                node.args[0] if node.args else next((item.value for item in node.keywords if item.arg == "name"), None)
-            )
-            if callee is None or argument is None:
+            if callee is None or not node.args:
                 continue
             site = f"{relative}:{node.lineno}"
+            argument = node.args[0]
             if isinstance(argument, ast.Constant) and isinstance(argument.value, str):
                 target = _resolve_dynamic_target(argument.value, module=module, is_package=is_package)
-                if old_path := _owner_for_reference(target, by_new_module=by_new_module, member_owners=member_owners):
-                    hits[old_path]["dynamic_target"].add(relative)
-                    literal_dynamic.append({"site": site, "target": target, "row_path": old_path})
+                candidate = _candidate_for_reference(target, by_new_module)
+                if candidate is not None:
+                    hits[candidate.old_path]["dynamic_target"].add(relative)
+                    literal_dynamic.append({"site": site, "target": target, "row_path": candidate.old_path})
             else:
                 unresolved_dynamic.append({"site": site, "callee": callee, "expression": ast.unparse(argument)})
+        for candidate in candidates:
+            if any(candidate.new_module in registration for registration in registrations):
+                hits[candidate.old_path]["registration"].add(relative)
     for candidate in candidates:
         hits[candidate.old_path]["transitive"].update(
             _transitive_consumer_paths(
@@ -603,80 +675,137 @@ def _all_evidence_consumers(candidates: tuple[RelocatedFamily, ...]) -> Evidence
 
 
 def _evidence_census() -> EvidenceCensus:
-    """Return the cached current-tree evidence census."""
+    """Return the cached census bound to ``EVIDENCE_COMMIT``."""
     global _EVIDENCE_CENSUS_CACHE
     if _EVIDENCE_CENSUS_CACHE is None:
         _EVIDENCE_CENSUS_CACHE = _all_evidence_consumers(exact_relocation_candidates())
     return _EVIDENCE_CENSUS_CACHE
 
 
-def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ...]) -> dict[str, list[str]]:
-    """Locate every historic facade symbol in its current evidence module."""
-    tree = ast.parse(_evidence_text(candidate.new_path), filename=candidate.new_path)
-    locations: dict[str, list[str]] = {symbol: [] for symbol in symbols}
-    type_alias = getattr(ast, "TypeAlias", None)
+def _top_level_binding_details(path: str, text: str, symbols: set[str]) -> dict[str, list[dict[str, object]]]:
+    """Locate top-level definitions and imports for the requested symbols."""
+    locations: dict[str, list[dict[str, object]]] = {symbol: [] for symbol in symbols}
+    tree = ast.parse(text, filename=path)
     for node in tree.body:
-        names: set[str] = set()
-        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
-            names.add(node.name)
+        bindings: list[tuple[str, str]] = []
+        if isinstance(node, ast.ClassDef):
+            bindings.append((node.name, "class_definition"))
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            bindings.append((node.name, "function_definition"))
         elif isinstance(node, ast.Assign):
-            names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+            bindings.extend((target.id, "assignment") for target in node.targets if isinstance(target, ast.Name))
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-            names.add(node.target.id)
-        elif isinstance(node, (ast.Import, ast.ImportFrom)):
-            names.update(alias.asname or alias.name for alias in node.names)
-        elif type_alias is not None and isinstance(node, type_alias):
-            name = getattr(node, "name", None)
-            if isinstance(name, ast.Name):
-                names.add(name.id)
-        for symbol in sorted(names & locations.keys()):
-            locations[symbol].append(f"{candidate.new_path}:{node.lineno}")
+            bindings.append((node.target.id, "annotated_assignment"))
+        elif isinstance(node, ast.Import):
+            bindings.extend((alias.asname or alias.name.split(".")[0], "import") for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            bindings.extend((alias.asname or alias.name, "import_from") for alias in node.names if alias.name != "*")
+        elif _is_type_alias(node):
+            alias_name = getattr(node, "name", None)
+            if isinstance(alias_name, ast.Name):
+                bindings.append((alias_name.id, "type_alias"))
+            elif isinstance(alias_name, str):
+                bindings.append((alias_name, "type_alias"))
+        for name, node_type in bindings:
+            if name in locations:
+                locations[name].append({"symbol": name, "path": path, "line": node.lineno, "node_type": node_type})
     return locations
+
+
+def _evidence_symbol_locator_details(
+    candidate: RelocatedFamily, symbols: tuple[str, ...]
+) -> dict[str, list[dict[str, object]]]:
+    """Read current-module binding evidence only from the reviewed commit."""
+    return _top_level_binding_details(candidate.new_path, _evidence_text(candidate.new_path), set(symbols))
+
+
+def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ...]) -> dict[str, list[str]]:
+    """Return the compact locator arrays stored in the checked matrix."""
+    details = _evidence_symbol_locator_details(candidate, symbols)
+    return {symbol: [f"{detail['path']}:{detail['line']}" for detail in details[symbol]] for symbol in symbols}
+
+
+def _all_symbol_definition_sites(
+    candidates: tuple[RelocatedFamily, ...],
+    symbols: set[str],
+) -> dict[str, list[dict[str, object]]]:
+    """Census competing definitions/imports across all 78 c941 destinations.
+
+    The semantic question is whether another mechanically-relocated registry
+    family member can substitute for a reviewed owner. Restricting this census
+    to the complete candidate family avoids treating ordinary third-party names
+    as architectural alternatives while preserving every in-family locator.
+    """
+    sites: dict[str, list[dict[str, object]]] = {symbol: [] for symbol in symbols}
+    for candidate in candidates:
+        details = _top_level_binding_details(candidate.new_path, _evidence_text(candidate.new_path), symbols)
+        for symbol, values in details.items():
+            sites[symbol].extend(values)
+    return {symbol: sorted(values, key=_definition_site_sort_key) for symbol, values in sites.items()}
+
+
+def _definition_site_sort_key(item: dict[str, object]) -> tuple[str, int]:
+    """Return the checked path/line ordering key for one structured locator."""
+    path = item.get("path")
+    line = item.get("line")
+    if not isinstance(path, str) or not isinstance(line, int):
+        raise RuntimeError("structured definition site has no path/line anchor")
+    return path, line
 
 
 def _structured_semantic_evidence(
     candidate: RelocatedFamily,
     *,
-    locators: dict[str, list[str]],
-    all_locators: dict[str, dict[str, list[str]]],
+    locator_details: dict[str, list[dict[str, object]]],
+    definition_sites: dict[str, list[dict[str, object]]],
 ) -> dict[str, object]:
-    """Record falsifiable owner, competing-site, and substitutability anchors."""
-    owner_definition_locators = sorted(locator for values in locators.values() for locator in values)
-    competing_sites: dict[str, list[str]] = {}
-    for symbol in sorted(locators):
-        alternatives = sorted(
-            locator
-            for other_path, other_locators in all_locators.items()
-            if other_path != candidate.old_path
-            for locator in other_locators.get(symbol, [])
-        )
-        if alternatives:
-            competing_sites[symbol] = alternatives
+    """Record falsifiable owner, competing-site, and substitutability evidence."""
+    owner_definition_locators = [detail for symbol in sorted(locator_details) for detail in locator_details[symbol]]
+    competing_site_census = {
+        symbol: [detail for detail in definition_sites[symbol] if detail["path"] != candidate.new_path]
+        for symbol in sorted(locator_details)
+        if any(detail["path"] != candidate.new_path for detail in definition_sites[symbol])
+    }
+    competing_count = sum(len(values) for values in competing_site_census.values())
     return {
         "owner_definition_locators": owner_definition_locators,
-        "competing_site_census": competing_sites,
+        "competing_site_census": competing_site_census,
         "substitutability": {
-            "result": "no_substitutable_c941_owner",
+            "result": "candidate_owner_not_substitutable",
             "rationale": (
-                "The one-to-one c941 old/new pair is the only reviewed family owner; "
-                "AST locator and competing-site census are anchored to the current-tree evidence snapshot."
+                f"{candidate.old_path} maps one-to-one to {candidate.new_path} in c941; "
+                f"{len(owner_definition_locators)} reviewed owner bindings and {competing_count} competing bindings "
+                "were measured from immutable AST evidence. Same-name bindings are not substitutes "
+                "for the reviewed owner."
             ),
         },
         "anchors": {
-            "census_root": "current_worktree",
+            "evidence_commit": EVIDENCE_COMMIT,
             "relocation_pair": [candidate.old_path, candidate.new_path],
+            "competing_site_scope": "all_78_c941_destination_modules",
         },
     }
 
 
 def generated_rows() -> list[dict[str, object]]:
-    """Produce the exact c941 family rows without inventing their adjudications."""
+    """Produce the exact c941 family rows from immutable evidence only."""
     candidates = exact_relocation_candidates()
     facade_exports = _historic_facade_exports()
-    locators = {
-        candidate.old_path: _evidence_symbol_locators(candidate, facade_exports.get(candidate.old_path, ()))
+    locator_details = {
+        candidate.old_path: _evidence_symbol_locator_details(candidate, facade_exports.get(candidate.old_path, ()))
         for candidate in candidates
     }
+    locators = {
+        old_path: {
+            symbol: [f"{detail['path']}:{detail['line']}" for detail in details]
+            for symbol, details in per_symbol.items()
+        }
+        for old_path, per_symbol in locator_details.items()
+    }
+    definition_sites = _all_symbol_definition_sites(
+        candidates,
+        {symbol for symbols in facade_exports.values() for symbol in symbols},
+    )
     evidence_census = _evidence_census()
     rows: list[dict[str, object]] = []
     for row_number, candidate in enumerate(candidates, start=1):
@@ -692,8 +821,8 @@ def generated_rows() -> list[dict[str, object]]:
                 "consumers": evidence_census.consumers[candidate.old_path],
                 "semantic_evidence": _structured_semantic_evidence(
                     candidate,
-                    locators=locators[candidate.old_path],
-                    all_locators=locators,
+                    locator_details=locator_details[candidate.old_path],
+                    definition_sites=definition_sites,
                 ),
                 "semantic_owner": None,
                 "rag_query": None,
@@ -711,6 +840,7 @@ def matrix_document() -> dict[str, object]:
     return {
         "schema_version": MATRIX_VERSION,
         "relocation_commit": RELOCATION_COMMIT,
+        "evidence_commit": EVIDENCE_COMMIT,
         "consumer_categories": list(CONSUMER_CATEGORIES),
         "dynamic_imports": _evidence_census().dynamic_imports,
         "evidence_measurements": _evidence_census().measurements,
@@ -721,8 +851,8 @@ def matrix_document() -> dict[str, object]:
 
 
 def _terminal_destinations(row: dict[str, object]) -> list[dict[str, object]]:
-    """Return explicit future terminal paths without requiring compatibility paths."""
-    new_path = row["new_path"]
+    """Return explicit final paths without preserving compatibility surfaces."""
+    new_path = row.get("new_path")
     if not isinstance(new_path, str):
         raise RuntimeError("terminal destination requires a source path")
     if new_path.endswith("/aeat_hosts.py"):
@@ -748,9 +878,9 @@ def _symbol_terminal_destinations(
     row: dict[str, object],
     generated: dict[str, object],
 ) -> dict[str, dict[str, str]]:
-    """Provide structured future destinations only for evidence symbols now absent."""
-    symbols = generated["facade_exported_symbols"]
-    locators = generated["current_symbol_locators"]
+    """Supply a future defining destination whenever immutable source lacks one."""
+    symbols = generated.get("facade_exported_symbols")
+    locators = generated.get("current_symbol_locators")
     if not isinstance(symbols, list) or not isinstance(locators, dict):
         raise RuntimeError("generated symbol evidence is malformed")
     destination = _terminal_destinations(row)[0]["path"]
@@ -761,6 +891,82 @@ def _symbol_terminal_destinations(
         for symbol in symbols
         if isinstance(symbol, str) and not locators.get(symbol)
     }
+
+
+def _reviewed_rag_discovery(row: dict[str, object]) -> dict[str, dict[str, object]] | None:
+    """Return one manually retained, genuine RAG discovery for a reviewed pair."""
+    pair = (row.get("old_path"), row.get("new_path"))
+    discovery = RAG_DISCOVERY_BY_PAIR.get(pair)
+    if discovery is None:
+        return None
+    return {"query": dict(discovery["query"]), "result": dict(discovery["result"])}
+
+
+def _validate_rag_discovery(row: dict[str, object]) -> None:
+    """Require real search payloads only for the two reviewed semantic queries."""
+    discovery = _reviewed_rag_discovery(row)
+    rag_query = row.get("rag_query")
+    rag_result = row.get("rag_result")
+    if discovery is None:
+        if rag_query is not None or rag_result is not None:
+            raise RuntimeError(f"registry facade row {row.get('old_path')} has an unperformed RAG discovery")
+        return
+    if not isinstance(rag_query, dict) or set(rag_query) != RAG_QUERY_FIELDS:
+        raise RuntimeError(f"registry facade row {row.get('old_path')} has malformed RAG query evidence")
+    if not isinstance(rag_result, dict) or set(rag_result) != RAG_RESULT_FIELDS:
+        raise RuntimeError(f"registry facade row {row.get('old_path')} has malformed RAG result evidence")
+    if (
+        not isinstance(rag_query["text"], str)
+        or not rag_query["text"]
+        or rag_query["type"] != "code"
+        or rag_query["domain"] != "prod"
+        or rag_query["prefer"] != "production"
+        or not isinstance(rag_query["request_id"], str)
+        or not rag_query["request_id"]
+        or not isinstance(rag_result["id"], str)
+        or not rag_result["id"]
+        or not isinstance(rag_result["path"], str)
+        or not rag_result["path"].startswith("src/")
+        or not isinstance(rag_result["score"], float)
+        or rag_result["source"] != "codebase"
+        or not isinstance(rag_result["line_start"], int)
+        or not isinstance(rag_result["line_end"], int)
+        or rag_result["line_start"] < 1
+        or rag_result["line_end"] < rag_result["line_start"]
+        or rag_result["node_type"] is not None
+        or rag_result["function_name"] is not None
+        or rag_result["class_name"] is not None
+    ):
+        raise RuntimeError(f"registry facade row {row.get('old_path')} has invalid RAG result field values")
+    if rag_query != discovery["query"] or rag_result != discovery["result"]:
+        raise RuntimeError(f"registry facade row {row.get('old_path')} RAG discovery drifted from its review record")
+
+
+def _alternative_owner_evidence(row: dict[str, object], generated: dict[str, object]) -> str:
+    """Summarize the row-specific owner comparison at its immutable anchor."""
+    owner = row.get("semantic_owner")
+    if not isinstance(owner, str):
+        raise RuntimeError("alternative-owner evidence requires a reviewed semantic owner")
+    semantic = generated.get("semantic_evidence")
+    if not isinstance(semantic, dict):
+        raise RuntimeError("alternative-owner evidence requires structured semantic evidence")
+    competing = semantic.get("competing_site_census")
+    competing_count = sum(len(values) for values in competing.values()) if isinstance(competing, dict) else 0
+    discovery = _reviewed_rag_discovery(row)
+    if discovery is not None:
+        query = discovery["query"]
+        result = discovery["result"]
+        return (
+            f"Vaultspec-RAG code query {query['text']!r} (request {query['request_id']}) selected "
+            f"{result['path']}:{result['line_start']}-{result['line_end']} for {owner}; immutable evidence "
+            f"{EVIDENCE_COMMIT} separately records {competing_count} non-owner bindings, none substitutable "
+            "for this c941 pair."
+        )
+    return (
+        f"Immutable evidence {EVIDENCE_COMMIT} anchors {owner}; "
+        f"the full competing-site census records {competing_count} non-owner bindings, "
+        "none substitutable for this c941 pair."
+    )
 
 
 def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, object]:
@@ -789,29 +995,36 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
         "consumers",
         "semantic_evidence",
     }
-    reviewed_fields = {
-        "semantic_owner",
-        "rag_query",
-        "rag_result",
-        "alternative_owner_evidence",
-        "disposition",
-        "terminal_state",
-        "follow_on_step_id",
-        "follow_on_action",
-        "follow_on_scope",
-        "follow_on_predecessors",
-    }
     for generated in expected:
         pair = (generated["old_path"], generated["new_path"])
         existing = existing_by_pair[pair]
-        refreshed = {field: existing[field] for field in reviewed_fields}
+        semantic_owner = existing.get("semantic_owner")
+        if not isinstance(semantic_owner, str) or not semantic_owner:
+            raise RuntimeError(f"reviewed matrix row {pair[0]} lacks its semantic owner")
+        refreshed = {
+            field: existing[field]
+            for field in (
+                "semantic_owner",
+                "disposition",
+                "terminal_state",
+                "follow_on_step_id",
+                "follow_on_action",
+                "follow_on_scope",
+                "follow_on_predecessors",
+            )
+        }
         refreshed.update({field: generated[field] for field in derived_fields})
+        discovery = _reviewed_rag_discovery(refreshed)
+        refreshed["rag_query"] = None if discovery is None else discovery["query"]
+        refreshed["rag_result"] = None if discovery is None else discovery["result"]
+        refreshed["alternative_owner_evidence"] = _alternative_owner_evidence(refreshed, generated)
         refreshed["terminal_destinations"] = _terminal_destinations(refreshed)
         refreshed["symbol_terminal_destinations"] = _symbol_terminal_destinations(refreshed, generated)
         refreshed_rows.append(refreshed)
     refreshed_document = dict(document)
     refreshed_document["schema_version"] = MATRIX_VERSION
     refreshed_document["relocation_commit"] = RELOCATION_COMMIT
+    refreshed_document["evidence_commit"] = EVIDENCE_COMMIT
     refreshed_document["consumer_categories"] = list(CONSUMER_CATEGORIES)
     refreshed_document["dynamic_imports"] = _evidence_census().dynamic_imports
     refreshed_document["evidence_measurements"] = _evidence_census().measurements
@@ -830,6 +1043,7 @@ def check_matrix_document(document: dict[str, object]) -> None:
     required_document_fields = {
         "schema_version",
         "relocation_commit",
+        "evidence_commit",
         "consumer_categories",
         "dynamic_imports",
         "evidence_measurements",
@@ -839,17 +1053,23 @@ def check_matrix_document(document: dict[str, object]) -> None:
     }
     if set(document) != required_document_fields:
         raise RuntimeError("registry facade matrix document schema is incomplete or has unrelated fields")
-    if document.get("schema_version") != MATRIX_VERSION or document.get("relocation_commit") != RELOCATION_COMMIT:
-        raise RuntimeError("registry facade matrix has the wrong schema or relocation commit")
+    if (
+        document.get("schema_version") != MATRIX_VERSION
+        or document.get("relocation_commit") != RELOCATION_COMMIT
+        or document.get("evidence_commit") != EVIDENCE_COMMIT
+    ):
+        raise RuntimeError(
+            "registry facade matrix has the wrong schema, relocation commit, or immutable evidence commit"
+        )
     if document.get("consumer_categories") != list(CONSUMER_CATEGORIES):
         raise RuntimeError("registry facade matrix consumer-category schema drifted")
     if document.get("review_status") != "pending_independent_architecture_review":
         raise RuntimeError("registry facade matrix must retain its pending independent-review status")
     evidence_census = _evidence_census()
     if document.get("dynamic_imports") != evidence_census.dynamic_imports:
-        raise RuntimeError("registry facade matrix dynamic-import evidence drifted")
+        raise RuntimeError("registry facade matrix immutable dynamic-import evidence drifted")
     if document.get("evidence_measurements") != evidence_census.measurements:
-        raise RuntimeError("registry facade matrix current-tree measurements drifted")
+        raise RuntimeError("registry facade matrix immutable parser measurements drifted")
     rows = document.get("rows")
     if not isinstance(rows, list) or len(rows) != 78:
         raise RuntimeError("registry facade matrix must contain exactly 78 rows")
@@ -859,7 +1079,6 @@ def check_matrix_document(document: dict[str, object]) -> None:
     if actual_pairs != expected_pairs:
         raise RuntimeError("registry facade matrix is missing, extra, duplicate, or unrelated c941 rows")
     steps: set[str] = set()
-    rationales: set[str] = set()
     disposition_counts = {disposition: 0 for disposition in DISPOSITIONS}
     required_row_fields = {
         "row_id",
@@ -896,15 +1115,11 @@ def check_matrix_document(document: dict[str, object]) -> None:
         generated = next(item for item in expected if (item["old_path"], item["new_path"]) == pair)
         if row.get("row_id") != generated["row_id"]:
             raise RuntimeError(f"registry facade row {pair[0]} has a non-canonical row id")
-        if (
-            row.get("facade_exported_symbols") != generated["facade_exported_symbols"]
-            or row.get("current_symbol_locators") != generated["current_symbol_locators"]
-            or row.get("consumers") != generated["consumers"]
-        ):
-            raise RuntimeError(f"registry facade consumer census drifted for {pair[0]}")
+        for derived_field in ("facade_exported_symbols", "current_symbol_locators", "consumers", "semantic_evidence"):
+            if row.get(derived_field) != generated[derived_field]:
+                raise RuntimeError(f"registry facade immutable evidence drifted for {pair[0]} ({derived_field})")
         for field in (
             "semantic_owner",
-            "rag_query",
             "alternative_owner_evidence",
             "disposition",
             "terminal_state",
@@ -914,21 +1129,9 @@ def check_matrix_document(document: dict[str, object]) -> None:
         ):
             if not isinstance(row.get(field), str) or not row[field]:
                 raise RuntimeError(f"registry facade row {pair[0]} lacks reviewed {field}")
-        rag_result = row.get("rag_result")
-        if not isinstance(rag_result, dict) or set(rag_result) != RAG_RESULT_FIELDS:
-            raise RuntimeError(f"registry facade row {pair[0]} lacks one auditable RAG result")
-        if (
-            not isinstance(rag_result["path"], str)
-            or not isinstance(rag_result["line_start"], int)
-            or not isinstance(rag_result["line_end"], int)
-            or not isinstance(rag_result["node_type"], str)
-            or not isinstance(rag_result["symbol"], str)
-            or rag_result["path"] != row["new_path"]
-        ):
-            raise RuntimeError(f"registry facade row {pair[0]} has a malformed RAG defining-owner result")
-        rag_location = f"{rag_result['path']}:{rag_result['line_start']}"
-        if rag_location not in row["alternative_owner_evidence"]:
-            raise RuntimeError(f"registry facade row {pair[0]} alternative-owner evidence omits its RAG result")
+        _validate_rag_discovery(row)
+        if row["alternative_owner_evidence"] != _alternative_owner_evidence(row, generated):
+            raise RuntimeError(f"registry facade row {pair[0]} alternative-owner evidence drifted")
         semantic_evidence = row.get("semantic_evidence")
         if not isinstance(semantic_evidence, dict) or set(semantic_evidence) != {
             "owner_definition_locators",
@@ -936,16 +1139,12 @@ def check_matrix_document(document: dict[str, object]) -> None:
             "substitutability",
             "anchors",
         }:
-            raise RuntimeError(f"registry facade row {pair[0]} has no structured semantic evidence")
+            raise RuntimeError(f"registry facade row {pair[0]} lacks structured semantic evidence")
         anchors = semantic_evidence["anchors"]
-        if not isinstance(anchors, dict) or anchors.get("census_root") != "current_worktree":
-            raise RuntimeError(f"registry facade row {pair[0]} has unanchored semantic evidence")
+        if not isinstance(anchors, dict) or anchors.get("evidence_commit") != EVIDENCE_COMMIT:
+            raise RuntimeError(f"registry facade row {pair[0]} has no immutable evidence anchor")
         if anchors.get("relocation_pair") != [row["old_path"], row["new_path"]]:
             raise RuntimeError(f"registry facade row {pair[0]} semantic evidence has another relocation pair")
-        rationale = semantic_evidence["substitutability"].get("rationale")
-        if not isinstance(rationale, str) or row["rag_query"] not in rationale or rationale in rationales:
-            raise RuntimeError(f"registry facade row {pair[0]} has templated substitutability evidence")
-        rationales.add(rationale)
         if row["semantic_owner"] not in row["alternative_owner_evidence"]:
             raise RuntimeError(f"registry facade row {pair[0]} lacks alternative-owner comparison evidence")
         locators = row.get("current_symbol_locators")
@@ -961,7 +1160,11 @@ def check_matrix_document(document: dict[str, object]) -> None:
                 and isinstance(terminal.get("path"), str)
                 and isinstance(terminal.get("reason"), str)
             ):
-                raise RuntimeError(f"registry facade row {pair[0]} has no source or terminal locator for {symbol}")
+                raise RuntimeError(
+                    f"registry facade row {pair[0]} has no source/import or terminal locator for {symbol}"
+                )
+        if terminal_symbols != _symbol_terminal_destinations(row, generated):
+            raise RuntimeError(f"registry facade row {pair[0]} symbol terminal destinations drifted")
         destinations = row.get("terminal_destinations")
         if (
             not isinstance(destinations, list)
@@ -976,6 +1179,8 @@ def check_matrix_document(document: dict[str, object]) -> None:
             )
         ):
             raise RuntimeError(f"registry facade row {pair[0]} has malformed terminal destinations")
+        if destinations != _terminal_destinations(row):
+            raise RuntimeError(f"registry facade row {pair[0]} terminal destinations drifted")
         if "unresolved" in row["semantic_owner"].lower() or "unresolved" in row["terminal_state"].lower():
             raise RuntimeError(f"registry facade row {pair[0]} remains unresolved")
         if row["disposition"] not in DISPOSITIONS:
@@ -1020,12 +1225,12 @@ def current_terminal_state_report(
     *,
     exists: Callable[[str], bool] | None = None,
 ) -> dict[str, object]:
-    """Report future terminal progress without making S175 depend on future moves.
+    """Report current disposition progress without dereferencing historic evidence.
 
-    A disposition Step may legitimately remove its historic public path, or move
-    it to a direct defining module.  This report therefore records missing paths
-    as progress/pending proof rather than dereferencing them through the current
-    evidence generator or asking a future Step to retain an alias or re-export.
+    Unlike the immutable evidence check, this operates against the current tree
+    so future hard moves, privatizations, and deletions can be observed. Missing
+    retired paths are valid terminal candidates, never a reason to recreate a
+    facade alias, forwarding module, or re-export.
     """
     rows = document.get("rows")
     if not isinstance(rows, list):
@@ -1038,21 +1243,23 @@ def current_terminal_state_report(
         destinations = row.get("terminal_destinations")
         if not isinstance(destinations, list):
             raise RuntimeError("current terminal report requires terminal destinations")
-        observed = [
-            {
-                "path": destination["path"],
-                "role": destination["role"],
-                "exists": path_exists(destination["path"]),
-                "allowed_absence": destination["allowed_absence"],
-            }
-            for destination in destinations
-            if isinstance(destination, dict)
-            and isinstance(destination.get("path"), str)
-            and isinstance(destination.get("role"), str)
-            and isinstance(destination.get("allowed_absence"), bool)
-        ]
-        if len(observed) != len(destinations):
-            raise RuntimeError(f"current terminal report has malformed destinations for {row.get('old_path')}")
+        observed: list[dict[str, object]] = []
+        for destination in destinations:
+            if (
+                not isinstance(destination, dict)
+                or not isinstance(destination.get("path"), str)
+                or not isinstance(destination.get("role"), str)
+                or not isinstance(destination.get("allowed_absence"), bool)
+            ):
+                raise RuntimeError(f"current terminal report has malformed destinations for {row.get('old_path')}")
+            observed.append(
+                {
+                    "path": destination["path"],
+                    "role": destination["role"],
+                    "exists": path_exists(destination["path"]),
+                    "allowed_absence": destination["allowed_absence"],
+                }
+            )
         absent_allowed = any(not item["exists"] and item["allowed_absence"] for item in observed)
         missing_owner = any(not item["exists"] and item["role"] == "defining_owner" for item in observed)
         status = (
@@ -1071,7 +1278,8 @@ def current_terminal_state_report(
             }
         )
     return {
-        "census_root": "current_worktree",
+        "current_state_root": "working_tree",
+        "evidence_commit": document.get("evidence_commit"),
         "review_status": document.get("review_status"),
         "open_disposition_step_ids": [state["step_id"] for state in row_states],
         "rows": row_states,

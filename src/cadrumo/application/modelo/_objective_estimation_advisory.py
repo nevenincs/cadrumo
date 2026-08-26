@@ -27,7 +27,8 @@ from typing import TYPE_CHECKING
 
 from ...core import Modelo
 from ...core.decimal import coerce_decimal_strict
-from ...core.resources import resources
+from ...core.resources import bundled_path
+from ...domain.calculations.registry.loader import load_legal_parameters_only
 from ...domain.deadlines import IrpfEstimationRegime, TaxpayerProfile
 from ...domain.modelos import (
     ModeloValidationError,
@@ -115,7 +116,7 @@ def _objective_estimation_exclusion_advisory_findings(
     if all(raw_value is None for *_prefix, raw_value in declared_values):
         return ()
 
-    parameters = resources().legal_parameters.singleton
+    parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
     findings: list[ModeloVerificationFinding] = []
     for profile_field, parameter_id, raw_value in declared_values:
         if raw_value is None:

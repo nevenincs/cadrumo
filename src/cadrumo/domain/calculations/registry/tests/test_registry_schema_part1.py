@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import pytest
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_spanish_tax_id
 from ...export_field_kind import CasillaFieldKind
@@ -393,9 +393,15 @@ def test_validator_rejects_formula_target_mismatch() -> None:
         _validate_revision(modelo, catalogues, mutated)
 
 
-def test_validator_requires_workbook_parity_coverage() -> None:
+@pytest.mark.parametrize("authority_grade", [RegistryAuthorityGrade.FILING, RegistryAuthorityGrade.APPLICABILITY])
+def test_validator_requires_workbook_parity_for_filing_or_declared_layout(
+    authority_grade: RegistryAuthorityGrade,
+) -> None:
+    """A parity anchor follows a filing claim or layout, never a bare schedule claim."""
     modelo, catalogues = _committed_registry()
-    revision = _revision(modelo).model_copy(update={"workbook_parity_refs": ()})
+    revision = _revision(modelo).model_copy(
+        update={"authority_grade": authority_grade, "workbook_parity_refs": ()},
+    )
 
     with pytest.raises(RegistryValidationError, match="must declare official workbook parity coverage"):
         _validate_revision(modelo, catalogues, revision)

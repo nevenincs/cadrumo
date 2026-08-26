@@ -20,7 +20,6 @@ from ._repos import (
     HolidayCalendarRepository,
     IvaCatalogueRepository,
     IvaRateTableRepository,
-    LegalParameterRepository,
     ManualRepository,
     RecargoBandsRepository,
     TopicCatalogueRepository,
@@ -42,7 +41,6 @@ class ResourceRegistry:
     apoderamientos: ApoderamientosRepository = field(default_factory=ApoderamientosRepository)
     category_profiles: CategoryProfileRepository = field(default_factory=CategoryProfileRepository)
     holiday_calendars: HolidayCalendarRepository = field(default_factory=HolidayCalendarRepository)
-    legal_parameters: LegalParameterRepository = field(default_factory=LegalParameterRepository)
     manuals: ManualRepository = field(default_factory=ManualRepository)
     modelos: StaticModeloRepository = field(default_factory=StaticModeloRepository)
     recargo_bands: RecargoBandsRepository = field(default_factory=RecargoBandsRepository)
