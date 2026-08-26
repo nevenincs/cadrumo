@@ -11,6 +11,7 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Static
 
+from ....core.i18n import tr
 from ._safe_text import bounded_pre_redacted_text
 
 MAX_LOG_ENTRIES: Final[int] = 16
@@ -51,8 +52,19 @@ class SafeLogRecord:
         )
 
 
-class BoundedLogPanel(Vertical, can_focus=False):
-    """Render a fixed tail of supplied safe records without subscriptions."""
+class BoundedLogPanel(Vertical, can_focus=True):
+    """Render a fixed tail of supplied safe records without subscriptions.
+
+    Owns bounded rendering, severity, wrapping, focus, and the empty state
+    (`aeat-interface` D8): a panel with no supplied records renders one
+    localized empty-state line rather than mounting nothing, so an operator
+    tabbing through a screen sees the log channel exists and is quiet.
+    """
+
+    DEFAULT_CSS = """
+    BoundedLogPanel { height: auto; }
+    BoundedLogPanel:focus { border: solid $accent; }
+    """
 
     def __init__(
         self,
@@ -78,6 +90,14 @@ class BoundedLogPanel(Vertical, can_focus=False):
 
     @override
     def compose(self) -> ComposeResult:
+        if not self._records:
+            yield Static(
+                tr("component.log.empty"),
+                id="cadrumo-log-empty",
+                classes="cadrumo-log-empty",
+                markup=False,
+            )
+            return
         for index, record in enumerate(self._records):
             yield Static(
                 f"{record.severity.value.upper()}: {record.message}",

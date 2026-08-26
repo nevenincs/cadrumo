@@ -499,11 +499,50 @@ class ModeloEditDomainRefusalV1(_EditModel):
         return self
 
 
+class ModeloEditUnsupportedIntentReason(StrEnum):
+    """One closed reason per intent kind this V1 executor cannot yet reach.
+
+    Named for what capability is missing, never for the internal plan Step
+    that will supply it: a plan Step id is process metadata, and this reason
+    ships inside a public runtime contract. The Step-to-reason mapping is
+    recorded where cross-referencing code to project tracking belongs -- the
+    Step Record that implements each reason, never the reverse.
+    """
+
+    CLEAR_DECLARED_VALUE_NOT_YET_WIRED = "clear_declared_value_not_yet_wired"
+    REMOVE_OVERRIDE_NOT_YET_WIRED = "remove_override_not_yet_wired"
+    ADD_ROW_NOT_YET_WIRED = "add_row_not_yet_wired"
+    UPDATE_ROW_NOT_YET_WIRED = "update_row_not_yet_wired"
+    DELETE_ROW_NOT_YET_WIRED = "delete_row_not_yet_wired"
+    MOVE_ROW_NOT_YET_WIRED = "move_row_not_yet_wired"
+    RECALCULATE_NOT_YET_WIRED = "recalculate_not_yet_wired"
+
+
+class ModeloEditUnsupportedIntentRefusalV1(_EditModel):
+    """A syntactically admitted intent this V1 executor cannot yet execute.
+
+    Distinct from :class:`ModeloEditDomainRefusalV1`'s ``DISALLOWED_INTENT``:
+    that code means the baseline's permitted surface never admitted the
+    address. This refusal means the address and intent ARE admitted, but the
+    calculation boundary this executor delegates to has no input shape for
+    this intent kind yet, so a caller can tell a not-yet-built path from a
+    genuinely invalid one.
+    """
+
+    kind: Literal["unsupported_intent"] = "unsupported_intent"
+    edit_contract_version: Literal[1] = 1
+    address: ModeloEditAddressV1 | None = None
+    reason: ModeloEditUnsupportedIntentReason
+    responsible_owner: _BoundedCode
+    reconsideration_condition: _BoundedText
+
+
 type ModeloEditRefusalV1 = Annotated[
     ModeloEditVersionRefusalV1
     | ModeloEditCompatibilityRefusalV1
     | ModeloEditStaleBaselineRefusalV1
-    | ModeloEditDomainRefusalV1,
+    | ModeloEditDomainRefusalV1
+    | ModeloEditUnsupportedIntentRefusalV1,
     Field(discriminator="kind"),
 ]
 
@@ -704,6 +743,12 @@ class ModeloEditMutationResultReceiptV1(_EditModel):
     Carries no financial value, raw input, row content, or input digest. A
     matching receipt proves ``UPDATED``; a proven failed compare-and-swap
     proves ``NONE``.
+
+    ``bucket_event_id`` is ``None`` on a duplicate-result confirmation: an
+    identical content-addressed revision already exists, so this commit
+    advances or confirms only the work-unit pointer and emits no fresh
+    ``MODELO_CALCULATION_CREATED`` event to reference. It is always present
+    when the commit created the revision.
     """
 
     receipt_id: ModeloEditMutationResultReceiptId
@@ -712,7 +757,7 @@ class ModeloEditMutationResultReceiptV1(_EditModel):
     baseline_id: ModeloEditBaselineId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
-    bucket_event_id: BucketEventId
+    bucket_event_id: BucketEventId | None
     effect: Literal[ModeloEditExecutionEffect.UPDATED] = ModeloEditExecutionEffect.UPDATED
     committed_at: datetime
     result_destination: OperationReference
@@ -785,6 +830,8 @@ __all__ = [
     "ModeloEditScalarIntentKind",
     "ModeloEditStaleBaselineRefusalV1",
     "ModeloEditSubmissionV1",
+    "ModeloEditUnsupportedIntentReason",
+    "ModeloEditUnsupportedIntentRefusalV1",
     "ModeloEditVersionHeader",
     "ModeloEditVersionRefusalV1",
     "ModeloEditWritableRowGroupSurfaceEntryV1",

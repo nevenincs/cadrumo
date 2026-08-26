@@ -20,11 +20,7 @@ from ...core.identity import ContentDigest
 from ...domain.calculations.registry.bindings import selector_model_for_source
 from ...domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from .workspace_models import ModeloWorkspaceContributorIdentityV1, ModeloWorkspaceSchemaClassification
-from .workspace_producers import (
-    ModeloWorkspaceContributorKindV1,
-    ModeloWorkspaceProducerContractV1,
-)
+from .workspace_models import ModeloWorkspaceSchemaClassification
 
 _MANIFEST_VERSION = 1
 _manifest_capture_process_pid = os.getpid()
@@ -721,20 +717,7 @@ def capture_modelo_workspace_manifest(snapshot: RegistrySnapshot) -> ModeloWorks
     )
 
 
-MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1 = ModeloWorkspaceProducerContractV1.declare(
-    contributor_kind=ModeloWorkspaceContributorKindV1.FIELD_MANIFEST,
-    contributor=ModeloWorkspaceContributorIdentityV1(
-        owner="application.modelo.workspace_manifest",
-        producer="workspace_field_manifest",
-    ),
-    projection_discriminator="workspace_field_manifest",
-    projection_contract_version=_MANIFEST_VERSION,
-    projection_type=ModeloWorkspaceFieldManifestV1,
-)
-
-
 __all__ = [
-    "MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1",
     "ModeloWorkspaceFieldManifestEntryV1",
     "ModeloWorkspaceFieldManifestV1",
     "ModeloWorkspaceManifestCapture",

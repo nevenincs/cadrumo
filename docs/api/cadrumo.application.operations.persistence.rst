@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.operations.persistence.events
+   cadrumo.application.operations.persistence.financial_operand_custody
    cadrumo.application.operations.persistence.idempotency
    cadrumo.application.operations.persistence.journal
    cadrumo.application.operations.persistence.leases

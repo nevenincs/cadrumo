@@ -91,6 +91,23 @@ def test_an_unsupported_locale_refuses_rather_than_capturing_nothing(tmp_path: P
         capture_locale_catalogue(_KEY, locale="de")
 
 
+def test_the_published_digest_is_the_catalogue_it_was_read_under(tmp_path: Path) -> None:
+    """The digest names the exact shard set, and changes only when the shards do."""
+    _write_catalogue(tmp_path, locale="es", value="Total")
+
+    with _override_locales_root(tmp_path):
+        first = capture_locale_catalogue(_KEY, locale="es")
+        unchanged = capture_locale_catalogue(_KEY, locale="es")
+
+        assert first.catalogue_digest == unchanged.catalogue_digest
+
+        _write_catalogue(tmp_path, locale="es", value="Suma total")
+        rewritten = capture_locale_catalogue(_KEY, locale="es")
+
+    assert rewritten.catalogue_digest != first.catalogue_digest
+    assert rewritten.value == "Suma total"
+
+
 def test_capture_exposes_no_catalogue_internals_and_no_parallel_reader() -> None:
     """The capture adds a coordinate only; it derives no second catalogue shape."""
     from dataclasses import fields
@@ -100,6 +117,7 @@ def test_capture_exposes_no_catalogue_internals_and_no_parallel_reader() -> None
         "translation_key",
         "present",
         "value",
+        "catalogue_digest",
         "comparison_domain",
         "generation",
     }

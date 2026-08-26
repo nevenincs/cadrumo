@@ -166,3 +166,93 @@ def test_presentation_row_refuses_blocks_ready_disagreeing_with_classification()
             source=None,
             blocks_ready=True,
         )
+
+
+def test_a_repeatable_socio_row_with_no_clave_needs_applicability_for_its_country(tmp_path: Path) -> None:
+    """A declared socio row whose own clave is unanswered leaves its country unassessed."""
+    record = _real_record(
+        tmp_path,
+        facts=(UserProfileFact(path="attribution_entity_socios.0.nif", value="12345678Z", source="manual_cli"),),
+    )
+
+    presentation = build_profile_presentation(record)
+
+    country_row = next(f for f in presentation.fields if f.path == "attribution_entity_socios.0.country_of_residence")
+    assert country_row.classification is ProfileFieldClassification.NEEDS_APPLICABILITY
+    assert country_row.applicability_assessed is False
+    assert country_row.blocks_ready is True
+
+    clave_row = next(f for f in presentation.fields if f.path == "attribution_entity_socios.0.participe_clave")
+    assert clave_row.classification is ProfileFieldClassification.APPLICABLE_REQUIRED_MISSING
+
+
+def test_a_repeatable_socio_row_with_clave_2_requires_its_country(tmp_path: Path) -> None:
+    """Clave 2 (non-resident, no permanent establishment) makes the country an applicable requirement."""
+    record = _real_record(
+        tmp_path,
+        facts=(
+            UserProfileFact(path="attribution_entity_socios.0.nif", value="12345678Z", source="manual_cli"),
+            UserProfileFact(path="attribution_entity_socios.0.participe_clave", value="2", source="manual_cli"),
+        ),
+    )
+
+    presentation = build_profile_presentation(record)
+
+    country_row = next(f for f in presentation.fields if f.path == "attribution_entity_socios.0.country_of_residence")
+    assert country_row.classification is ProfileFieldClassification.APPLICABLE_REQUIRED_MISSING
+    assert country_row.applicability_assessed is True
+    assert country_row.blocks_ready is True
+
+
+def test_a_repeatable_socio_row_with_clave_1_makes_its_country_not_applicable(tmp_path: Path) -> None:
+    """Clave 1 (resident) settles the country field as not applicable, never a fabricated requirement."""
+    record = _real_record(
+        tmp_path,
+        facts=(
+            UserProfileFact(path="attribution_entity_socios.0.nif", value="12345678Z", source="manual_cli"),
+            UserProfileFact(path="attribution_entity_socios.0.participe_clave", value="1", source="manual_cli"),
+        ),
+    )
+
+    presentation = build_profile_presentation(record)
+
+    country_row = next(f for f in presentation.fields if f.path == "attribution_entity_socios.0.country_of_residence")
+    assert country_row.classification is ProfileFieldClassification.NOT_APPLICABLE
+    assert country_row.applicability_assessed is True
+    assert country_row.blocks_ready is False
+
+
+def test_an_undeclared_repeatable_section_contributes_no_rows(tmp_path: Path) -> None:
+    """A repeatable section with no declared instance reports nothing, per the overview precedent."""
+    record = _real_record(tmp_path, facts=())
+
+    presentation = build_profile_presentation(record)
+
+    assert not any(f.path.startswith("attribution_entity_socios.") for f in presentation.fields)
+
+
+def test_iva_block_unclaimed_leaves_its_required_paths_unassessed(tmp_path: Path) -> None:
+    """No declared IVA-claiming fact leaves the block's own required paths unassessed, not not-applicable."""
+    record = _real_record(tmp_path, facts=())
+
+    presentation = build_profile_presentation(record)
+
+    row = next(f for f in presentation.fields if f.path == "iva.m303_regime_composition")
+    assert row.classification is ProfileFieldClassification.NEEDS_APPLICABILITY
+    assert row.applicability_assessed is False
+    assert row.blocks_ready is True
+
+
+def test_iva_block_claimed_requires_its_resolved_paths_through_the_domain_authority(tmp_path: Path) -> None:
+    """Claiming the IVA block resolves its required paths through modelo_iva_profile_required_paths."""
+    record = _real_record(
+        tmp_path,
+        facts=(UserProfileFact(path="iva.regime", value="GENERAL", source="manual_cli"),),
+    )
+
+    presentation = build_profile_presentation(record)
+
+    row = next(f for f in presentation.fields if f.path == "iva.m303_regime_composition")
+    assert row.classification is ProfileFieldClassification.APPLICABLE_REQUIRED_MISSING
+    assert row.applicability_assessed is True
+    assert row.blocks_ready is True

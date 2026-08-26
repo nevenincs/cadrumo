@@ -101,7 +101,7 @@ def _semantic_map(*, entries: tuple[dict[str, object], ...]) -> SemanticMap:
             "modelo": "130",
             "design_epoch": "2019",
             "source_ref": "aeat-dr-130-2019-v12",
-            "source_sha256": "5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
+            "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
             "records": (
                 {
                     "sheet": "Registro tipo 1",

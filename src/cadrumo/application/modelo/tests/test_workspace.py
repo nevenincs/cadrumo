@@ -1,0 +1,231 @@
+"""Integration contracts for the Workspace V1 WORK-then-REGISTRY capture core."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import Period
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.modelos import WorkUnit
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.profile_capsule import seed_test_profile_record
+from ....tests.secure_sql import isolated_runtime_profile
+from .._work_lifecycle import create_work_unit
+from ..work_addressing import ModeloWorkRegistryYearMismatchError
+from ..workspace import capture_modelo_workspace_target_axes, modelo_work_selector_request_for_target
+from ..workspace_models import (
+    ModeloVisibleFilingTarget,
+    ModeloWorkspaceExactWorkUnitTargetV1,
+    ModeloWorkspaceRevisionAssertionDisposition,
+    ModeloWorkspaceRevisionAssertionSource,
+    ModeloWorkspaceVisibleFilingTargetV1,
+)
+from ..workspace_producers import ModeloWorkspaceRegistryProjectionV1
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_WORKSPACE_PROFILE_ID = "13000000-0000-4000-8000-000000000231"
+_T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
+_LAW_SELECTED_REVISION_ID = "2019-y-siguientes"
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Test Operator"),
+    UserProfileFact(path="identity.surnames", value="Workspace"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="activities.description", value="economic activity"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value=False),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    UserProfileFact(path="provenance.source", value="manual_cli"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
+
+
+def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
+    seed_test_profile_record(
+        UserProfileRecord(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=bucket_id,
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
+
+
+@pytest.fixture
+def workspace_repos(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueRepository]]:
+    """Yield one real bucket-scoped work-unit repository over an isolated profile."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_WORKSPACE_PROFILE_ID) as profile:
+        _seed_ready_profile(profile.repository, bucket_id=profile.bucket_id)
+        yield profile.bucket_id, WorkUnitCatalogueRepository(objects=profile.repository)
+
+
+def _seed_work_unit(
+    repository: WorkUnitCatalogueRepository,
+    *,
+    bucket_id: str,
+    revision_id: str = _LAW_SELECTED_REVISION_ID,
+) -> WorkUnit:
+    return create_work_unit(
+        bucket_id=bucket_id,
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision_id=revision_id,
+        repository=repository,
+        clock=_T0,
+    )
+
+
+def _visible_target(bucket_id: str, *, revision_id: str | None = None) -> ModeloWorkspaceVisibleFilingTargetV1:
+    return ModeloWorkspaceVisibleFilingTargetV1(
+        target=ModeloVisibleFilingTarget(
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            registry_revision_id=revision_id,
+            bucket_id=bucket_id,
+        ),
+    )
+
+
+def test_capture_resolves_registry_from_the_captured_work_coordinate_not_the_target(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """REGISTRY must be captured from resolution.modelo/filing_year/period, never target operands."""
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    resolution, registry_projection, axes = capture_modelo_workspace_target_axes(
+        _visible_target(bucket_id),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    assert resolution.work_unit is not None
+    assert isinstance(registry_projection, ModeloWorkspaceRegistryProjectionV1)
+    assert registry_projection.inspection is not None
+    assert registry_projection.revision_id == _LAW_SELECTED_REVISION_ID
+    assert axes.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+    assert axes.requested_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT
+    assert axes.stored_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.MATCHED
+    assert axes.stored_revision_assertion.asserted_revision_id == _LAW_SELECTED_REVISION_ID
+
+
+def test_requested_and_stored_axes_are_judged_independently_against_the_same_capture(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """A matching requested revision must not be conflated with the stored axis, or vice versa."""
+    bucket_id, repository = workspace_repos
+    _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    _resolution, _projection, axes = capture_modelo_workspace_target_axes(
+        _visible_target(bucket_id, revision_id=_LAW_SELECTED_REVISION_ID),
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    assert axes.requested_revision_assertion.source == ModeloWorkspaceRevisionAssertionSource.REQUESTED
+    assert axes.requested_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.MATCHED
+    assert axes.stored_revision_assertion.source == ModeloWorkspaceRevisionAssertionSource.STORED
+    assert axes.stored_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.MATCHED
+
+
+def test_a_stored_revision_diverging_from_the_law_selected_one_refuses(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """A stale stored revision id must never silently select the resolution it is judged by.
+
+    ``create_work_unit`` itself re-confirms the law-selected pairing at write
+    time, so a genuinely stale stored revision (the registry's law-selected
+    pick moved on after the work unit was created under an earlier orden) is
+    reproduced here the same way :mod:`test_work_addressing` reproduces a
+    generation-superseding write: by constructing the catalogue directly,
+    never by asking Workspace to accept a hand-picked mismatch.
+    """
+    from ....domain.modelos import WorkUnitCatalogue, derive_work_unit_id
+
+    bucket_id, repository = workspace_repos
+    work_unit = _seed_work_unit(repository, bucket_id=bucket_id)
+    corrupted_revision_id = "not-the-law-selected-revision"
+    payload = work_unit.model_dump()
+    payload.update(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=work_unit.bucket_id,
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            revision_id=corrupted_revision_id,
+        ),
+        revision_id=corrupted_revision_id,
+    )
+    repository.save(WorkUnitCatalogue.from_work_units((WorkUnit(**payload),)))
+    authority = bundled_authority()
+
+    with pytest.raises(ModeloWorkRegistryYearMismatchError):
+        capture_modelo_workspace_target_axes(
+            _visible_target(bucket_id),
+            bucket_id=bucket_id,
+            catalogue_repository=repository,
+            authority=authority,
+        )
+
+
+def test_exact_work_unit_target_derives_registry_coordinates_from_the_resolved_work_unit(
+    workspace_repos: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """An exact work-unit target carries no natural coordinates of its own; WORK must supply them."""
+    bucket_id, repository = workspace_repos
+    work_unit = _seed_work_unit(repository, bucket_id=bucket_id)
+    authority = bundled_authority()
+
+    target = ModeloWorkspaceExactWorkUnitTargetV1(target=_exact_target(work_unit))
+
+    resolution, registry_projection, axes = capture_modelo_workspace_target_axes(
+        target,
+        bucket_id=bucket_id,
+        catalogue_repository=repository,
+        authority=authority,
+    )
+
+    assert resolution.modelo == "130"
+    assert registry_projection.revision_id == _LAW_SELECTED_REVISION_ID
+    assert axes.stored_revision_assertion.disposition == ModeloWorkspaceRevisionAssertionDisposition.MATCHED
+
+
+def _exact_target(work_unit: WorkUnit):
+    from ..work_addressing import ModeloExactWorkUnitTarget
+
+    return ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=work_unit.bucket_id)
+
+
+def test_visible_target_projects_into_a_selector_request_with_no_exact_operands() -> None:
+    """The visible-target mapping must carry natural coordinates, not an exact work-unit lookup."""
+    target = _visible_target("some-bucket", revision_id="2019-y-siguientes")
+
+    request = modelo_work_selector_request_for_target(target, bucket_id="some-bucket")
+
+    assert request.modelo == "130"
+    assert request.filing_year == 2026
+    assert request.revision_id == "2019-y-siguientes"
+    assert request.bucket_id == "some-bucket"
+    assert request.work_unit_id is None
+    assert request.has_visible_target
+    assert not request.has_exact_target

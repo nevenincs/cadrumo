@@ -469,3 +469,26 @@ source_refs = ["test-source-001"]
 
     with pytest.raises(RegistryValidationError, match=r"ambiguous bare casilla ids \['01'\]"):
         ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
+
+
+def test_the_authority_module_keeps_a_public_locally_defined_surface() -> None:
+    """Every public authority symbol is defined here, and the package binds none."""
+    import inspect
+
+    from ... import registry as registry_namespace
+    from .. import authority as authority_module
+
+    defined = [
+        name
+        for name, value in vars(authority_module).items()
+        if not name.startswith("_")
+        and (inspect.isclass(value) or inspect.isfunction(value))
+        and getattr(value, "__module__", None) == "cadrumo.domain.calculations.registry.authority"
+    ]
+
+    assert defined
+    for name in defined:
+        assert not hasattr(registry_namespace, name), name
+    assert not hasattr(authority_module, "__all__"), (
+        "authority declares no __all__, so it re-exports nothing; adding one would advertise borrowed symbols"
+    )

@@ -11,6 +11,27 @@ profile:
       on your territory.
     not_configured: No tax-residence profile is configured for RENTA. Run `aeat config
       profile edit NAME --tax-residence-ccaa <ccaa>` to configure it.
+  journey:
+    action:
+      next: Next
+      previous: Previous
+    get_data:
+      placeholder: Source actions are not yet available on this journey.
+    ready:
+      blocked: 'Not ready: blocked by the fields listed in Required.'
+      summary: Filing readiness
+    required:
+      none_missing: Nothing required is missing.
+      show_not_applicable: Show not applicable
+      show_optional: Show optional
+    review:
+      placeholder: Provenance and conflict review is not yet available on this journey.
+    stage:
+      get_data: Get data
+      overview: Overview
+      ready: Ready
+      required: Required
+      review: Review
   keys:
     description: Profile configuration keys and their descriptions
     tax:

@@ -244,3 +244,17 @@ def test_replay_payload_strict_rejects_non_string_value_in_observed_nif_iva() ->
 
     with pytest.raises(ValidationError):
         ReplayPayload.model_validate({"observed": {"DE111222333": 42}})
+
+
+def test_the_oracle_module_keeps_a_public_locally_defined_surface() -> None:
+    """Every exported oracle symbol is defined here, and the package binds none."""
+    from ... import registry as registry_namespace
+    from .. import aeat_nif_iva_oracle
+
+    assert aeat_nif_iva_oracle.__all__
+    for name in aeat_nif_iva_oracle.__all__:
+        owned = getattr(aeat_nif_iva_oracle, name)
+        owner = getattr(owned, "__module__", None)
+        if owner is not None:
+            assert owner == "cadrumo.domain.calculations.registry.aeat_nif_iva_oracle", name
+        assert not hasattr(registry_namespace, name), name

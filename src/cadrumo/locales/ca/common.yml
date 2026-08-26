@@ -452,6 +452,9 @@ categories:
     viajes_transporte:
       label: Transport de viatge
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
+component:
+  log:
+    empty: Encara no hi ha entrades de registre.
 core:
   profile:
     errors:

@@ -459,6 +459,9 @@ categories:
     viajes_transporte:
       label: Transporte en viajes
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
+component:
+  log:
+    empty: Sin entradas de registro todavía.
 core:
   profile:
     errors:

@@ -93,6 +93,14 @@ _CAUSE_CLASSES: tuple[tuple[str, str], ...] = (
     ("missing type", "a field row declares no type"),
     ("missing description", "a field row declares no description"),
     ("misordered", "envelope composition markers out of order"),
+    # Modelo 184's five BOE orden PDFs refuse here. They are the orden that
+    # approves the modelo, carrying its design as an annex, so the parse lands
+    # partway down the document and the first field it finds sits at position
+    # 160 rather than 1. Their AEAT diseño counterparts, which open at position
+    # 1, parse cleanly -- measured on both. The label names the shape without
+    # settling the fix, because either the parser learns to find the annex or
+    # those sources are not layout authorities, and that is a grounding call.
+    ("first field starts at position", "design does not open at wire position 1"),
 )
 
 

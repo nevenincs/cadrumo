@@ -15,16 +15,33 @@ from ._safe_text import bounded_pre_redacted_text
 MAX_ERROR_MESSAGE_CHARACTERS: Final[int] = 320
 """Maximum public error prose retained by the reusable component."""
 
+MAX_ERROR_ACTION_LABEL_CHARACTERS: Final[int] = 80
+"""Maximum public retry/next-step action label retained by the component."""
+
+MAX_ERROR_RUNBOOK_ID_CHARACTERS: Final[int] = 80
+"""Maximum public runbook identifier retained by the component."""
+
 _ERROR_CODE = re.compile(r"[a-z][a-z0-9_.-]{0,127}\Z")
 
 
 @dataclass(frozen=True, slots=True)
 class SafeErrorRecord:
-    """Bounded display facts extracted from one canonical error envelope."""
+    """Bounded display facts extracted from one canonical error envelope.
+
+    Mirrors the safe subset of :class:`core.errors.ErrorEnvelope` this
+    reusable component is permitted to show: code, category, localized
+    message, a typed action label, and retryability with its runbook. The
+    envelope's ``context`` and ``trace_id`` fields are deliberately never
+    accepted here -- diagnostic-shaped material stays operator-support-only,
+    never a public TUI surface.
+    """
 
     code: str
     category: str
     message: str
+    action_label: str | None = None
+    retryable: bool = False
+    runbook_id: str | None = None
 
     def __post_init__(self) -> None:
         """Retain only bounded, pre-redacted presentation facts."""
@@ -41,6 +58,26 @@ class SafeErrorRecord:
                 maximum_characters=MAX_ERROR_MESSAGE_CHARACTERS,
             ),
         )
+        if self.action_label is not None:
+            object.__setattr__(
+                self,
+                "action_label",
+                bounded_pre_redacted_text(
+                    self.action_label,
+                    field="error envelope action label",
+                    maximum_characters=MAX_ERROR_ACTION_LABEL_CHARACTERS,
+                ),
+            )
+        if self.runbook_id is not None:
+            object.__setattr__(
+                self,
+                "runbook_id",
+                bounded_pre_redacted_text(
+                    self.runbook_id,
+                    field="error envelope runbook identifier",
+                    maximum_characters=MAX_ERROR_RUNBOOK_ID_CHARACTERS,
+                ),
+            )
 
 
 class ErrorPanel(Vertical, can_focus=False):
@@ -60,12 +97,41 @@ class ErrorPanel(Vertical, can_focus=False):
 
     @override
     def compose(self) -> ComposeResult:
+        record = self._record
         yield Static(
-            f"{self._record.category}: {self._record.code}",
+            f"{record.category}: {record.code}",
             classes="cadrumo-error-heading",
             markup=False,
         )
-        yield Static(self._record.message, classes="cadrumo-error-message", markup=False)
+        yield Static(record.message, classes="cadrumo-error-message", markup=False)
+        if record.action_label is not None:
+            yield Static(
+                record.action_label,
+                classes="cadrumo-error-action",
+                id="cadrumo-error-action",
+                markup=False,
+            )
+        retry_glyph = "↻" if record.retryable else "✕"
+        retry_text = "retry" if record.retryable else "not retryable"
+        yield Static(
+            f"{retry_glyph} {retry_text}",
+            classes=f"cadrumo-error-retry cadrumo-error-retry-{'yes' if record.retryable else 'no'}",
+            id="cadrumo-error-retry",
+            markup=False,
+        )
+        if record.runbook_id is not None:
+            yield Static(
+                record.runbook_id,
+                classes="cadrumo-error-runbook",
+                id="cadrumo-error-runbook",
+                markup=False,
+            )
 
 
-__all__ = ["MAX_ERROR_MESSAGE_CHARACTERS", "ErrorPanel", "SafeErrorRecord"]
+__all__ = [
+    "MAX_ERROR_ACTION_LABEL_CHARACTERS",
+    "MAX_ERROR_MESSAGE_CHARACTERS",
+    "MAX_ERROR_RUNBOOK_ID_CHARACTERS",
+    "ErrorPanel",
+    "SafeErrorRecord",
+]
