@@ -12,7 +12,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
 modified: '2026-08-26'
-body_hash: 'sha256:89030fc91ac68495a54e345597a92f2eb24fb05a1b79e83775607fc7f2ef8666'
+body_hash: 'sha256:947a0e47d447a865ab672751751884e4bc97eac4889bea86156e0af47d79a705'
 ---
 
 # `tui-architecture` plan
@@ -190,7 +190,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S178` - Retain applicability as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/applicability.py`.
 - [x] `W03.P20.S179` - Prove authority remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [x] `W03.P20.S180` - Prove binding_selector_utils remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/binding_selector_utils.py`.
-- [ ] `W03.P20.S181` - Retain bindings as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/bindings.py`.
+- [x] `W03.P20.S181` - Retain bindings as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/bindings.py`.
 - [x] `W03.P20.S182` - Prove casilla_membership remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/casilla_membership.py`.
 - [x] `W03.P20.S183` - Prove censo_modelos remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/censo_modelos.py`.
 - [x] `W03.P20.S184` - Prove classification_coherence remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/classification_coherence.py`.
@@ -200,7 +200,7 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S188` - Prove coverage remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/coverage.py`.
 - [ ] `W03.P20.S189` - Privatize the cross_revision_divergence implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/cross_revision_divergence.py`.
 - [x] `W03.P20.S190` - Prove deadline_coordinate remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/deadline_coordinate.py`.
-- [ ] `W03.P20.S191` - Retain export as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/export.py`.
+- [x] `W03.P20.S191` - Retain export as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/export.py`.
 - [x] `W03.P20.S192` - Prove export_parse remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/export_parse.py`.
 - [x] `W03.P20.S193` - Prove export_value_policy remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/export_value_policy.py`.
 - [x] `W03.P20.S194` - Prove external_grounding remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/external_grounding.py`.
@@ -236,16 +236,16 @@ Implement the read-only Workspace V1 contract, stamped contributing ports, gener
 - [x] `W03.P20.S224` - Prove period_offset_math remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/period_offset_math.py`.
 - [x] `W03.P20.S225` - Prove period_selector_match remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/period_selector_match.py`.
 - [x] `W03.P20.S226` - Prove profile_grounding remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/profile_grounding.py`.
-- [ ] `W03.P20.S227` - Retain queries as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/queries.py`.
+- [x] `W03.P20.S227` - Retain queries as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/queries.py`.
 - [x] `W03.P20.S228` - Prove rate_box_partition remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/rate_box_partition.py`.
-- [ ] `W03.P20.S229` - Retain record_design as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/record_design.py`.
-- [ ] `W03.P20.S230` - Hard-move ENCODING_ALIAS_MAP to schema_exports and delete the record_spec surface; `src/cadrumo/domain/calculations/registry/record_spec.py and src/cadrumo/domain/calculations/registry/schema_exports.py`.
+- [x] `W03.P20.S229` - Retain record_design as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/record_design.py`.
+- [x] `W03.P20.S230` - Hard-move ENCODING_ALIAS_MAP to schema_exports and delete the record_spec surface; `src/cadrumo/domain/calculations/registry/record_spec.py and src/cadrumo/domain/calculations/registry/schema_exports.py`.
 - [ ] `W03.P20.S231` - Privatize the relation_aggregation implementation after eliminating every external consumer and public package reach; `src/cadrumo/domain/calculations/registry/relation_aggregation.py`.
-- [ ] `W03.P20.S232` - Retain relations as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/relations.py`.
+- [x] `W03.P20.S232` - Retain relations as public only for locally defined contract symbols and direct-import every borrowed owner; `src/cadrumo/domain/calculations/registry/relations.py`.
 - [x] `W03.P20.S233` - Prove remote_state_guard remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/remote_state_guard.py`.
 - [x] `W03.P20.S234` - Prove runtime_graph remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/runtime_graph.py`.
 - [x] `W03.P20.S235` - Prove schedules remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/schedules.py`.
-- [ ] `W03.P20.S236` - Retain schema local definitions, migrate borrowed symbols to their canonical owners, and remove borrowed bindings; `src/cadrumo/domain/calculations/registry/schema.py; existing schema_*, export_semantics, and export_value_policy owners`.
+- [x] `W03.P20.S236` - Retain schema local definitions, migrate borrowed symbols to their canonical owners, and remove borrowed bindings; `src/cadrumo/domain/calculations/registry/schema.py; existing schema_*, export_semantics, and export_value_policy owners`.
 - [x] `W03.P20.S237` - Prove schema_input_kind remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/schema_input_kind.py`.
 - [x] `W03.P20.S238` - Prove schema_rounding remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/schema_rounding.py`.
 - [x] `W03.P20.S239` - Prove schema_scalars remains public with locally defined symbols and direct consumer imports; `src/cadrumo/domain/calculations/registry/schema_scalars.py`.
