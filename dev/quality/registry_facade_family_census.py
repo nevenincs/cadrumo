@@ -720,7 +720,12 @@ def _definition_lines(path: str, symbol: str) -> frozenset[int]:
 
 
 def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ...]) -> dict[str, list[str]]:
-    """Locate every historic facade symbol in its current evidence module."""
+    """Locate every historic facade symbol DEFINED in its current evidence module.
+
+    An imported name is deliberately not a location.  These locators feed
+    ``owner_definition_locators``, so admitting a re-export here made that field
+    assert that a facade defines a symbol it only republishes.
+    """
     current_path = candidate.new_path
     if not any(item.path == current_path for item in _evidence_files()):
         moved_owner = {
@@ -741,8 +746,6 @@ def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ..
             names.update(target.id for target in node.targets if isinstance(target, ast.Name))
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
-        elif isinstance(node, (ast.Import, ast.ImportFrom)):
-            names.update(alias.asname or alias.name for alias in node.names)
         elif type_alias is not None and isinstance(node, type_alias):
             name = getattr(node, "name", None)
             if isinstance(name, ast.Name):
