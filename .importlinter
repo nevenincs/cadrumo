@@ -191,9 +191,7 @@ ignore_imports =
     cadrumo.core.resources._repos.apoderamientos -> cadrumo.domain.auth.apoderamientos
     cadrumo.core.resources._repos.category_profiles -> cadrumo.domain.categories
     cadrumo.core.resources._repos.holiday_calendars -> cadrumo.domain.deadlines
-    cadrumo.core.resources._repos.legal_parameters -> cadrumo.domain.calculations.registry
     cadrumo.core.resources._repos.manuals -> cadrumo.domain.manuals
-    cadrumo.core.resources._repos.modelos -> cadrumo.domain.calculations.registry
     cadrumo.core.resources._repos.iva_catalogues -> cadrumo.domain.iva
     cadrumo.core.resources._repos.iva_rate_tables -> cadrumo.domain.iva
     cadrumo.core.resources._repos.recargo_bands -> cadrumo.domain.deadlines
@@ -698,9 +696,7 @@ ignore_imports =
     cadrumo.core.resources._repos.apoderamientos -> cadrumo.domain.auth.apoderamientos
     cadrumo.core.resources._repos.category_profiles -> cadrumo.domain.categories
     cadrumo.core.resources._repos.holiday_calendars -> cadrumo.domain.deadlines
-    cadrumo.core.resources._repos.legal_parameters -> cadrumo.domain.calculations.registry
     cadrumo.core.resources._repos.manuals -> cadrumo.domain.manuals
-    cadrumo.core.resources._repos.modelos -> cadrumo.domain.calculations.registry
     cadrumo.core.resources._repos.iva_catalogues -> cadrumo.domain.iva
     cadrumo.core.resources._repos.iva_rate_tables -> cadrumo.domain.iva
     cadrumo.core.resources._repos.recargo_bands -> cadrumo.domain.deadlines
