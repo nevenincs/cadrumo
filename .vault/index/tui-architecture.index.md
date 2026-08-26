@@ -6,9 +6,10 @@ tags:
 date: '2026-08-25'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:52ffa32311f29bb296869b97a5145ab69023221a33cd36b8411a8b8a6dcd9468'
+body_hash: 'sha256:f4ab0814f06161e85d6091efe516cf9d4fe63dcde478b435faaa660db7b81078'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S160]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S161]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S162]]'
@@ -16,10 +17,101 @@ related:
   - '[[2026-08-11-tui-architecture-W03-P20-S164]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S165]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S166]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S167]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S173]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S174]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S175]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S176]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S177]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S178]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S179]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S180]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S181]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S182]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S183]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S184]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S186]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S187]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S188]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S189]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S190]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S191]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S192]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S193]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S194]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S195]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S196]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S197]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S198]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S199]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S200]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S201]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S203]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S204]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S205]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S206]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S208]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S209]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S211]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S212]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S213]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S214]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S215]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S216]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S217]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S218]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S219]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S220]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S221]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S222]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S223]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S224]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S225]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S226]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S227]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S228]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S229]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S230]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S231]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S232]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S233]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S234]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S235]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S236]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S237]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S238]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S239]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S240]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S242]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S243]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S244]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S245]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S246]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S248]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S249]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S250]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S251]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S252]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S253]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S257]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S258]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S274]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S277]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S278]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S279]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S283]]'
+  - '[[2026-08-11-tui-architecture-W03-P20-S284]]'
   - '[[2026-08-11-tui-architecture-W03-P21-S132]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S133]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S134]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S135]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S136]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S137]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S138]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S275]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S280]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S281]]'
+  - '[[2026-08-11-tui-architecture-W03-P21-S282]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S60]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S61]]'
   - '[[2026-08-11-tui-architecture-W05-P11-S62]]'
@@ -34,6 +126,17 @@ related:
   - '[[2026-08-11-tui-architecture-W05-P12-S69]]'
   - '[[2026-08-11-tui-architecture-W05-P12-S70]]'
   - '[[2026-08-11-tui-architecture-W05-P12-S71]]'
+  - '[[2026-08-11-tui-architecture-W05-P23-S141]]'
+  - '[[2026-08-11-tui-architecture-W05-P23-S142]]'
+  - '[[2026-08-11-tui-architecture-W05-P23-S143]]'
+  - '[[2026-08-11-tui-architecture-W05-P23-S146]]'
+  - '[[2026-08-11-tui-architecture-W06-P24-S150]]'
+  - '[[2026-08-11-tui-architecture-W06-P24-S151]]'
+  - '[[2026-08-11-tui-architecture-W06-P24-S152]]'
+  - '[[2026-08-11-tui-architecture-W06-P24-S153]]'
+  - '[[2026-08-11-tui-architecture-W06-P24-S154]]'
+  - '[[2026-08-11-tui-architecture-W06-P24-S155]]'
+  - '[[2026-08-11-tui-architecture-W06-P24-S156]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-08-11-tui-architecture-ledger]]'
   - '[[2026-08-11-tui-architecture-plan]]'
@@ -244,6 +347,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 
 - `2026-08-11-tui-architecture-ledger` - `tui-architecture` ledger
 - `2026-08-11-tui-architecture-W02-P19-S124` - Produce the exact clean-commit C0 observation dependency receipt with accepted-parent and rejected-staging provenance, source ancestry, schema and capability inventories, contract digests, validator evidence, and the sole cohort-open disposition
+- `2026-08-11-tui-architecture-W03-P20-S128` - Implement the sole Workspace assembly and dispatch directly in the public application/modelo/workspace.py defining module by capturing WORK exactly once before REGISTRY exactly once, deriving the REGISTRY coordinate only from the captured ModeloWorkResolution, evaluating the independent requested and stored axes through the sole pure S159-backed assertion, then capturing locale-catalogue and field-manifest for static admission or all remaining public S126 registrations for graded admission, with epoch-v2 same-domain two-pass validation, contributor_epoch_digest-consistent process-incarnation-scoped baselines, facets, and typed cursors, bounded materialization, and no _workspace_projection.py path, pre-capture work read, owner reread, or registry grammar
 - `2026-08-11-tui-architecture-W03-P20-S160` - Extend the sole public application/modelo/work_addressing.py defining module with the work-only native atomic capture/current-coordinate pair over the canonical visible or exact operand that returns the strict frozen ModeloWorkResolution, native generation, and neutral opaque physical-scope/process comparison domain, migrate every production, S126-registration, test, dynamic, and tooling consumer to direct imports from that module, compose implicit pointer and one-record catalogue coordinates with bounded retry/currentness and an injective order-preserving generation, preserve the explicit catalogue generation while excluding the pointer limb, keep physical root, bucket, namespace, and key identity private, and prove pointer/catalogue ABA, same-observation singleflight, distinct-root independence, defining-module ownership, and zero registry access, second read, Workspace dependency, package binding, shim, alias, fallback, bridge, or re-export
 - `2026-08-11-tui-architecture-W03-P20-S161` - Hard-move the bounded ModeloWorkReview contract, its sole build_modelo_work_review semantic join, and its native atomic capture/current-coordinate pair with owner generation and neutral opaque comparison domain into the sole public application/modelo/work_review.py defining module, atomically migrate every production, S126-registration, test, dynamic, and tooling consumer to direct imports and delete work_review_projection.py plus every package binding, while proving exact complete-review parity without reconstructing any field, retaining a parallel assembler, or introducing a shim, alias, fallback, bridge, or re-export
 - `2026-08-11-tui-architecture-W03-P20-S162` - Expose the canonical ProjectionModeloReadiness native atomic capture, owner generation, and neutral opaque comparison domain without inferring capability, collapsing readiness axes, or duplicating operator-state computation
@@ -251,10 +355,101 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W03-P20-S164` - Define in the sole public application/modelo/calculation.py module the calculation-materialization and source-graph-safe native atomic capture/current-coordinate pair, owner generation, and neutral opaque comparison domain by delegating the sole calculation-revision and provenance authorities, atomically migrate every production, S126-registration, test, dynamic, and tooling consumer of that public contract to direct defining-module imports while leaving unrelated package-private calculation services private, and prove exact materialization/provenance parity without a parallel calculation, graph, persistence, or redaction path or any package binding, shim, alias, fallback, bridge, or re-export
 - `2026-08-11-tui-architecture-W03-P20-S165` - Define the canonical locale-catalogue native atomic capture, owner generation, and neutral opaque comparison domain in the sole public locales/locale_catalogue.py defining module, migrate every exact consumer to direct defining-module imports, and delegate to the existing canonical key resolution, Spanish fallback, suppression, catalogue loading, and digest semantics without reimplementation, package re-export, alias, shim, fallback, or bridge
 - `2026-08-11-tui-architecture-W03-P20-S166` - Hard-move the generated field-manifest authority and its native atomic capture/current-coordinate pair, owner generation, and neutral opaque comparison domain from _workspace_manifest.py into the sole public application/modelo/workspace_manifest.py defining module, correct its contributor owner to application.modelo.workspace_manifest, atomically migrate every production, S126-registration, test, dynamic, and tooling consumer to direct imports and delete the private module plus every package binding, and prove identity, generation, currentness, and sole-walker parity without a permanent allowlist, shim, alias, fallback, bridge, or re-export
+- `2026-08-11-tui-architecture-W03-P20-S167` - Register in the public application/modelo/workspace_producers.py defining module exactly one application-owned S126 epoch-v2 port realization over each of the eight canonical native owner capture/current-coordinate surfaces, atomically relocate the existing field-manifest contract into that sole registration inventory, consume every native surface by direct defining-module import, and prove exact contributor identities, one native capture, contract-derived stamps, unchanged owner generations and comparison domains, admission-set coverage, same-domain validation, and refusal of missing, duplicate, stale, torn, ABA, cross-domain, or cross-incarnation coordinates without an alternate authority, shim, alias, fallback, re-export bridge, or adapter-package implementation
 - `2026-08-11-tui-architecture-W03-P20-S173` - Semantically harden the already-public domain/calculations/registry/authority.py owner after c94133f29516b12e3529f3d154c31592562f6198 delivered the mechanical private-to-public relocation, direct-import and API-documentation cutover, and inert registry package, consume the reviewed S175 matrix row for this family rather than replaying that move, generate and commit a schema-versioned deterministic authority consumer census whose check mode derives every definition and production, test, fixture, documentation, tooling, annotation, registration, dynamic-target, package-attribute, and transitive consumer instead of relying on unexplained fixed counts, replace the separate load-state-key and comparison-domain normalization paths with one canonical physical registry-root and source-root pair identity helper shared by both, resolve relative, dot-segment, and symlink aliases to one identity, apply platform-native case policy so case aliases coalesce only on case-insensitive filesystems and remain distinct on case-sensitive filesystems, fail closed on unresolvable roots, derive only the opaque ContentDigest domain from that pair plus a guarded process incarnation without exposing roots, PID, or nonce, preserve the native process-monotonic generation and domain-before-integer comparison, install an after-fork and PID guard that rekeys the child incarnation without acquiring inherited locks, reconstructs the state lock, load barrier, root load-state map, generation and reset state before a fresh child load, binds each authority instance to its creating PID and incarnation, and rejects every inherited parent capture or current-coordinate access, delete read_current_generation and every compatibility alias, and prove parent capture and current-coordinate exercise in the child, fork during active readers without deadlock, child re-key and inherited-instance refusal followed by a fresh child load, same-physical-root relative, dot, symlink, and platform-case aliases, distinct registry-root and source-root mismatches, same-domain reset succession, real A -> B -> A invalidation, cross-process refusal, deterministic census drift refusal, and zero ModeloWorkspace, shim, fallback, bridge, package binding, or re-export
 - `2026-08-11-tui-architecture-W03-P20-S174` - Define in the sole public application/modelo/work_addressing.py module one pure application revision assertion that evaluates the independent S125 requested and stored axes against the law-selected revision from exactly one S159 RegistryAuthorityCapture, atomically migrate every addressing, work-review, calculation, external-import, quickfile, lifecycle, CLI, registration, test, dynamic, and tooling consumer to direct defining-module imports, and delete resolve_registry_revision_for_work_target, every package binding, load_registry_tree, asserted-ID selection, stale docstring reference, and parallel registry read from the work path with fixed-point proof and no shim, alias, fallback, bridge, or re-export
 - `2026-08-11-tui-architecture-W03-P20-S175` - Retrospectively adjudicate before S173 or any affected registry-family implementation the exactly 78 private-to-public module candidates mechanically renamed by c94133f29516b12e3529f3d154c31592562f6198 by running semantic Vaultspec-RAG owner discovery followed by a deterministic exact AST and text consumer census, generate and commit a schema-versioned fixed matrix containing exactly 78 unique rows plus a deterministic generator with check mode, require each row to record the c94133f old and new module paths, every exported symbol and categorized production, test, fixture, documentation, tooling, annotation, registration, dynamic-target, package-attribute, and transitive consumer, semantic owner and evidence, exactly one keep-public proof, hard-move/direct-import completion, privatize/external-elimination, or delete disposition, and exactly one unique canonical follow-on Step ID, fail every extra, missing, duplicate, unresolved, unrelated-grouped, omitted, mechanically inferred, or many-to-one row or Step mapping, obtain independent architecture review, and amend W03.P20 through the canonical plan CLI with one bounded disposition Step per matrix row plus one final zero-project-binding, zero-re-export, and zero-unresolved-row registry package gate before S175 can close, without implementing any disposition inside this census Step or hiding work in internal commits
+- `2026-08-11-tui-architecture-W03-P20-S176` - Hard-move the remote-read host authority to the core defining module and eliminate the registry aeat_hosts surface
+- `2026-08-11-tui-architecture-W03-P20-S177` - Prove aeat_nif_iva_oracle remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S178` - Retain applicability as public only for locally defined contract symbols and direct-import every borrowed owner
+- `2026-08-11-tui-architecture-W03-P20-S179` - Prove authority remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S180` - Prove binding_selector_utils remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S181` - Retain bindings as public only for locally defined contract symbols and direct-import every borrowed owner
+- `2026-08-11-tui-architecture-W03-P20-S182` - Prove casilla_membership remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S183` - Prove censo_modelos remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S184` - Prove classification_coherence remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S186` - Prove convenio remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S187` - Prove corpus_catalogue remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S188` - Prove coverage remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S189` - Privatize the cross_revision_divergence implementation after eliminating every external consumer and public package reach
+- `2026-08-11-tui-architecture-W03-P20-S190` - Prove deadline_coordinate remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S191` - Retain export as public only for locally defined contract symbols and direct-import every borrowed owner
+- `2026-08-11-tui-architecture-W03-P20-S192` - Prove export_parse remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S193` - Prove export_value_policy remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S194` - Prove external_grounding remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S195` - Prove filed_state remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S196` - Prove fixed_width_codec remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S197` - Prove formula_initial_values remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S198` - Prove formula_runtime remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S199` - Prove formula_runtime_ops remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S200` - Prove formula_text_inputs remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S201` - Prove groi_oracle remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S203` - Prove handoffs remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S204` - Prove identity remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S205` - Prove ids remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S206` - Prove iva_wallet_relation_targets remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S208` - Prove legal remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S209` - Prove live_parity remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S211` - Prove m303_differentiated_deduction_projection remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S212` - Prove m303_exonerado_390_projection remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S213` - Prove m303_orden_census_artefact remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S214` - Prove m303_orden_manifest remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S215` - Privatize the m303_orden_projection_compiler implementation after eliminating every external consumer and public package reach
+- `2026-08-11-tui-architecture-W03-P20-S216` - Prove m303_orden_projection_models remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S217` - Privatize the m303_orden_raw_models implementation after eliminating every external consumer and public package reach
+- `2026-08-11-tui-architecture-W03-P20-S218` - Prove m303_orden_resolution remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S219` - Privatize the m303_orden_source implementation after eliminating every external consumer and public package reach
+- `2026-08-11-tui-architecture-W03-P20-S220` - Prove m303_prorrata_activity_projection remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S221` - Prove m303_regimen_simplificado_projection remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S222` - Prove modelo_localization remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S223` - Prove observation_fold remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S224` - Prove period_offset_math remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S225` - Prove period_selector_match remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S226` - Prove profile_grounding remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S227` - Retain queries as public only for locally defined contract symbols and direct-import every borrowed owner
+- `2026-08-11-tui-architecture-W03-P20-S228` - Prove rate_box_partition remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S229` - Retain record_design as public only for locally defined contract symbols and direct-import every borrowed owner
+- `2026-08-11-tui-architecture-W03-P20-S230` - Hard-move ENCODING_ALIAS_MAP to schema_exports and delete the record_spec surface
+- `2026-08-11-tui-architecture-W03-P20-S231` - Privatize the relation_aggregation implementation after eliminating every external consumer and public package reach
+- `2026-08-11-tui-architecture-W03-P20-S232` - Retain relations as public only for locally defined contract symbols and direct-import every borrowed owner
+- `2026-08-11-tui-architecture-W03-P20-S233` - Prove remote_state_guard remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S234` - Prove runtime_graph remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S235` - Prove schedules remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S236` - Retain schema local definitions, migrate borrowed symbols to their canonical owners, and remove borrowed bindings
+- `2026-08-11-tui-architecture-W03-P20-S237` - Prove schema_input_kind remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S238` - Prove schema_rounding remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S239` - Prove schema_scalars remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S240` - Prove schema_verification remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S242` - Prove snapshot_coordinate remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S243` - Prove static_inspection remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S244` - Prove support_matrix remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S245` - Privatize the supported_filing_years implementation after eliminating every external consumer and public package reach
+- `2026-08-11-tui-architecture-W03-P20-S246` - Prove temporal remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S248` - Privatize the validate_cross_revision implementation after eliminating every external consumer and public package reach
+- `2026-08-11-tui-architecture-W03-P20-S249` - Privatize the validate_references implementation after eliminating every external consumer and public package reach
+- `2026-08-11-tui-architecture-W03-P20-S250` - Prove validate_registry_scope remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S251` - Prove validate_revision_identity remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S252` - Privatize the verdict_cache implementation after eliminating every external consumer and public package reach
+- `2026-08-11-tui-architecture-W03-P20-S253` - Prove verification_tolerance remains public with locally defined symbols and direct consumer imports
+- `2026-08-11-tui-architecture-W03-P20-S257` - Retire the 2 binding_aggregation re-export(s) from the registry bindings dispatch module by direct-importing binding_aggregation_op, default_binding_aggregation_op from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.
+- `2026-08-11-tui-architecture-W03-P20-S258` - Retire the 4 bindings_previous_filing re-export(s) from the registry bindings dispatch module by direct-importing previous_filing_binding_source_casilla_ids, previous_filing_observation_requirements, previous_filing_source_reference, resolve_previous_filing_binding_values from their defining module at every production, test, fixture, annotation, tooling and dynamic consumer, delete the corresponding __all__ entries and import block, and prove zero remaining reach through the dispatch module for those symbols.
+- `2026-08-11-tui-architecture-W03-P20-S274` - Correct the Workspace producer projection fingerprint so it identifies the contract a consumer actually receives instead of demanding that a model's input and output shapes coincide: derive the fingerprint from the serialization schema alone, replace the validation-equals-serialization equality with a real round-trip property proving a dumped projection re-validates, and prove the fingerprint admits a Decimal-bearing domain model while still refusing a genuine schema drift; amend the governing decision record in the same change
+- `2026-08-11-tui-architecture-W03-P20-S277` - Decide and record the per-casilla join semantics the Workspace schema record requires, deriving each edge from the registry's own declared direction rather than from field-name inference: whether a casilla row lists formulas whose output it is or formulas whose expression references it as an operand, which side of a relation a casilla row claims, and which casilla owns a multi-casilla applicability or constraint rule; amend the governing registry-api-gate decision record in the same change and prove each join against a real revision carrying both edge directions
+- `2026-08-11-tui-architecture-W03-P20-S278` - Decide and record what the field manifest means for the static-inspection admission, which the governing decision record lists as capturing field_manifest while the only generator walks the snapshot-rooted type universe a static inspection never loads: either root a second generator at the inspection's own type universe, or define the snapshot-rooted manifest as the single universe with per-admission availability, and rule out the third reading of a degraded result presented as a complete one; amend the governing registry-api-gate decision record in the same change and prove the chosen manifest digest is stable and admission-honest
+- `2026-08-11-tui-architecture-W03-P20-S279` - Decide and record which canonical public producer answers each Workspace capability and what disposition each admission yields, since the governing record rules that a capability answer is copied from its canonical producer and that absence of a producer or measurement is unmeasured rather than available, without naming the capability-to-producer mapping; rule explicitly whether an admission that structurally excludes a contributor yields not-applicable or unmeasured, amend the governing registry-api-gate decision record in the same change, and prove no capability is inferred from schema population, layout presence, lifecycle state or a neighbouring capability
+- `2026-08-11-tui-architecture-W03-P20-S283` - Decide what a static-inspection casilla row of the Workspace schema record may carry, given the inspection retains casilla and legal IDENTIFIERS by design while the record requires data_type, classification, family membership, legal_refs and constraint presence: rule whether those enrich the inspection, whether the casilla row is bounded to identity alone for this admission, and in either case rule how an absent field is represented so an empty legal_refs or constraint tuple cannot silently read as none declared; amend the governing registry-api-gate decision record in the same change
+- `2026-08-11-tui-architecture-W03-P20-S284` - Decide what the Workspace schema record's required label means for formula, binding, relation and parameter rows, for which no locale-key derivation exists alongside the modelo, revision, construct and casilla functions that do: rule whether these identities carry operator-facing display text at all, and either add the missing key convention with its four catalogue entries or give the label field a way to state that a row's identity is a technical name rather than a translated string, so a bare identifier is never presented as a localized label; amend the governing registry-api-gate decision record in the same change
 - `2026-08-11-tui-architecture-W03-P21-S132` - Define the strict ModeloEditContractV1 family covering version and compatibility headers, read-only edit schema, ModeloEditBaselineV1, parse and preflight requests and results, scalar and repeatable-row intents, guarded apply request, mutation capability, typed refusal, and immutable result receipt
+- `2026-08-11-tui-architecture-W03-P21-S133` - Implement edit admission, registry-backed schema projection, locale-neutral parsing, typed-intent normalization, and preflight services that issue exact ModeloEditBaselineV1 coordinates and never treat a Workspace safe-read baseline as mutation authority
+- `2026-08-11-tui-architecture-W03-P21-S134` - Persist encrypted Modelo edit result receipts with strict current-only serialization, compatibility-tuple validation, atomic lookup, and real round-trip evidence that cannot pass through tautological in-memory reconstruction
+- `2026-08-11-tui-architecture-W03-P21-S135` - Replace calculation-revision persistence with guarded work-and-calculation compare-and-swap so duplicate-existing and new-revision branches recheck the same edit baseline and co-commit immutable revision, work pointer, lifecycle event, and edit result receipt without any unguarded pointer advance
+- `2026-08-11-tui-architecture-W03-P21-S136` - Implement the application-owned edit executor that rechecks every ModeloEditBaselineV1 coordinate at the guarded commit point, refuses stale or incompatible intent without rebasing, delegates canonical calculation and guarded persistence, and returns only typed result receipts
+- `2026-08-11-tui-architecture-W03-P21-S137` - Expose the edit facade and prove schema, parsing, preflight, scalar and row intent, guarded compare-and-swap, duplicate-result, rollback, compatibility refusal, persistence round-trip, non-retention, and redeclaration behavior while leaving operation-enrollment capability UNMEASURED until its C3 receipt exists
+- `2026-08-11-tui-architecture-W03-P21-S138` - Implement the sole ModeloEditContractC3DependencyReceiptV1 validator with exact C2 predecessor, contract schema, baseline, guarded persistence, result-receipt, conformance, financial-handoff, production-definition, no-legacy, and redeclaration checks while leaving receipt minting to the C3 custody phase
+- `2026-08-11-tui-architecture-W03-P21-S275` - Extend the canonical calculation input surface to express explicit CLEAR_DECLARED_VALUE for manual scalar casillas, so an edit that withdraws a previously declared value reaches the engine through the same orchestrator every other input uses rather than a second write path, carrying its own axis on the content-addressed revision so a cleared casilla is provably distinguishable from one never declared
+- `2026-08-11-tui-architecture-W03-P21-S280` - Scope the operator binding-override edit surface that REMOVE_OVERRIDE was modelled for: decide whether an override of a binding-computed casilla is addressed by casilla or by binding, admit it as its own permitted-surface entry kind rather than a manual scalar, and either re-address the intent to the store it targets or record that the scalar-addressed spelling is retired; amend the edit-contract decision record in the same change
+- `2026-08-11-tui-architecture-W03-P21-S281` - Correct the permitted-surface row-group category, which admits ADD_ROW, UPDATE_ROW and DELETE_ROW for every MANUAL_INPUT binding although every such binding in the registry is a statically positioned scalar copy with no row set: decide whether the repeatable-row surface is the per-modelo ModeloDetailRow union the calculate boundary already carries, retire or re-address the binding-keyed row-group entry accordingly, and amend the edit-contract decision record in the same change so no intent can address a static field under a row semantic
+- `2026-08-11-tui-architecture-W03-P21-S282` - Reconcile the two producers of ModeloWorkspaceSchemaIdentityV1.field_manifest_digest, which the edit baseline computes over the calculation completeness manifest while the Workspace contributor computes it over the generated field-classification manifest, so one typed field on one shared record does not carry two meanings that compare unequal for the same revision: rule which manifest the field names, repoint or rename the other producer, and amend both governing decision records in the same change
 - `2026-08-11-tui-architecture-W05-P11-S60` - Implement a TUI controller limited to the composed public submit, atomic observation, registered REVIEW, typed response, cancel, detach, and Workspace-refresh services, with no supervisor inspection or persistence access
 - `2026-08-11-tui-architecture-W05-P11-S61` - Project only OperationPublicProjectionV1 and its public capability and refusal fields into immutable modal view models without importing persisted snapshots, journal records, or supervisor-private state
 - `2026-08-11-tui-architecture-W05-P11-S62` - Project only OperationPublicEventPageV1 into bounded live and historical log views, honoring public cursors, replay and resynchronization dispositions, and approved diagnostic references without reading the journal
@@ -269,6 +464,17 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W05-P12-S69` - Implement filed-history stage, unit, refusal, partial-effect, evidence, wallet, notification, and provenance result projection
 - `2026-08-11-tui-architecture-W05-P12-S70` - Prove census review dispatches exact typed responses and never writes or recomputes policy in the TUI
 - `2026-08-11-tui-architecture-W05-P12-S71` - Prove filed-history progress, scoped errors, viewable logs, child provenance, and partial outcomes remain visible through settlement
+- `2026-08-11-tui-architecture-W05-P23-S141` - Define OperationTransientFinancialOperandProtocolV1 with typed declaration, requirement, submission, access-grant, delivery, acknowledgement, release, expiry, refusal, and broker contracts that are distinct from EphemeralSecretSubmission and persistent secure-reference flows and prohibit operand hashing or durable derivatives
+- `2026-08-11-tui-architecture-W05-P23-S142` - Persist only non-sensitive custody checkpoints and serialize awaiting_submission to bound to delivery_started to delivery_acknowledged to released transitions with expiry, cancellation, terminal settlement, crash classification, restart reconciliation, and exactly-once release across racing supervisor paths
+- `2026-08-11-tui-architecture-W05-P23-S143` - Extend registered operation definitions with validated transient-financial-operand declarations and an effect-receipt resolver that narrows recorded mutation, interruption, and uncertain-effect claims from committed application evidence without exposing financial operand material
+- `2026-08-11-tui-architecture-W05-P23-S146` - Implement the sole TuiOperationFinancialOperandDependencyReceiptV1 validator with accepted-authority, protocol-schema, custody-transition, crash, effect, production-composition, non-retention, current-only, no-legacy, and duplicate-authority evidence checks
+- `2026-08-11-tui-architecture-W06-P24-S150` - Enroll modelo.work.rename through the existing rename_work_unit single writer with exact approval and capability rules, declared atomic write set, safe effect and result receipt, and typed Workspace refresh target without recreating lifecycle policy
+- `2026-08-11-tui-architecture-W06-P24-S151` - Enroll modelo.work.discard through the existing discard_work_unit single writer with exact destructive approval, no-effect refusal, declared atomic write set, safe effect receipt, and typed selection refresh target without recreating lifecycle policy
+- `2026-08-11-tui-architecture-W06-P24-S152` - Enroll modelo.work.verify through the existing verify_modelo_revision authority with exact capability evidence, progress and REVIEW declarations, guarded persistence and event effects, safe result receipt, and typed Workspace refresh target
+- `2026-08-11-tui-architecture-W06-P24-S153` - Enroll modelo.work.file through the existing file_modelo_revision authority as local filing and human handoff only, with precondition refusal, exact approval, atomic filing effects, safe result receipt, and typed Workspace refresh target
+- `2026-08-11-tui-architecture-W06-P24-S154` - Enroll canonical modelo.export through the existing export_modelo_revision authority with capability and identity preconditions, transient output custody, safe effect/result evidence, and no remote AEAT submission or duplicate export writer
+- `2026-08-11-tui-architecture-W06-P24-S155` - Enroll modelo.work.amend through the existing amend_modelo_revision authority as the sole C4 amendment mutation, with baseline evidence, amendment-kind REVIEW, atomic catalogue/event effects, safe result receipt, typed Workspace refresh target, and an explicit amend-wizard denominator disposition
+- `2026-08-11-tui-architecture-W06-P24-S156` - Prove the generated C4 action denominator and every enrolled lifecycle definition against canonical capability owners, exact interactions, single writers, effect receipts, refresh adapters, refusal behavior, non-retention, and semantic-plus-exact redeclaration census before any action becomes available
 
 ### plan
 
