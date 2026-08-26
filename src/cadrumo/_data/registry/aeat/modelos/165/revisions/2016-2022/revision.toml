@@ -1,0 +1,40 @@
+[revisions."2016-2022"]
+authority_grade = "filing"
+# The complete AEAT design headed "Ejercicio 2016" applies through exercise
+# 2022. Its two records tile 1..500, but its type-1 BLANCOS field begins at
+# 184: the later EMPRESA EMERGENTE byte does not yet exist.
+valid_from = 2016-01-01
+valid_to = 2022-12-31
+period_selector = { year_from = 2016, year_to = 2022, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hap-2455-2013:art-1"]
+legal_refs = [
+    "orden-hap-2455-2013:art-1",
+    "orden-hap-2455-2013:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-165-procedure",
+    "enrolled-modelo-165-layout",
+    "aeat-dr-165-2016-2022",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent: complete 2016 AEAT design measured against the distinct two-record 500-byte layout; no 2023-era field is backdated"
+reviewed_at = 2026-08-26
+
+[revisions."2016-2022".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+The 2013-2015 predecessor is deliberately applicability-only because its
+type-2 design has an official unread 102-103 hole. It declares no positional
+casilla identity from which an evolution could be grounded. The 2016 design
+therefore starts the first complete wire identity and has no predecessor
+evolution to declare."""
+legal_refs = [
+    "orden-hap-2455-2013:art-1",
+    "orden-hap-2455-2013:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-165-procedure",
+    "enrolled-modelo-165-layout",
+    "aeat-dr-165-2016-2022",
+]

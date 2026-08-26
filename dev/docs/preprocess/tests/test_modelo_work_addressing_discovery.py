@@ -12,8 +12,8 @@ from typing import Any
 import pytest
 
 from ....quality.import_hygiene_scan import (
-    SubstitutableNaturalScanRule,
-    source_contains_substitutable_natural_scan,
+    SubstitutableWorkSelectorRule,
+    source_contains_substitutable_work_selector,
 )
 
 _ROOT = Path(__file__).resolve().parents[4]
@@ -21,11 +21,13 @@ _CANONICAL_OWNER = "src/cadrumo/application/modelo/work_addressing.py"
 _OWNER_SYMBOLS = frozenset(
     {"ModeloWorkResolution", "ModeloWorkSelectorRequest", "select_modelo_work_resolution"}
 )
-_NATURAL_SCAN_RULE = SubstitutableNaturalScanRule(
+_NATURAL_SCAN_RULE = SubstitutableWorkSelectorRule(
     "parallel natural catalogue scan",
-    collection_names=frozenset({"catalogue"}),
     collection_methods=frozenset({"values", "items"}),
-    coordinate_names=frozenset({"modelo", "filing_year", "period"}),
+    catalogue_types=frozenset({"WorkUnitCatalogue"}),
+    natural_coordinates=frozenset({"modelo", "filing_year", "period"}),
+    exact_coordinates=frozenset({"work_unit_id"}),
+    operator_methods=frozenset({"startswith", "endswith"}),
     exempt_functions=frozenset({"select_modelo_work_resolution"}),
 )
 
@@ -61,7 +63,7 @@ def _classify_modelo_addressing_results(results: list[dict[str, Any]]) -> Modelo
             and "select_modelo_work_resolution(" in snippet
             and any(read in snippet for read in (".load(", ".load_revisioned(", "catalogue.get("))
         )
-        natural_scan = source_contains_substitutable_natural_scan(snippet, _NATURAL_SCAN_RULE)
+        natural_scan = source_contains_substitutable_work_selector(snippet, _NATURAL_SCAN_RULE)
         if is_production and (declared_name in _OWNER_SYMBOLS or declares_owner or wraps_repository or natural_scan):
             parallel.add(path)
     return ModeloAddressingSearchClassification(frozenset(canonical), frozenset(parallel))

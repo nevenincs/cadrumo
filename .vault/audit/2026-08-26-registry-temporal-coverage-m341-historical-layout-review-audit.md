@@ -200,4 +200,3 @@ and the exact four-catalogue search still finds no retired
 `2000-y-siguientes` branch. `m341-revision-localization` and
 `m341-selector-validity-axis` are closed; no critical, high, or medium finding
 remains.
-

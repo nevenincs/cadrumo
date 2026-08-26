@@ -434,7 +434,7 @@ def enroll_filed_justificante_evidence(
     # enough for another caller's filing record to land and be discarded. The
     # parsed receipts are collected instead, and every stamping is applied inside
     # one guarded unit of work below.
-    stampable: list[tuple[Justificante, object]] = []
+    stampable: list[tuple[Justificante, FiledDeclaracionArtefact]] = []
     for artefact in observation.artefacts:
         if artefact.kind != "justificante_pdf" or artefact.storage_ref is None:
             continue

@@ -1,0 +1,38 @@
+[revisions."2026-y-siguientes"]
+authority_grade = "filing"
+# AEAT's current source is itself headed "Ejercicio 2026". Its type-1 record
+# introduces EMPRESA EMERGENTE at offset 184, so this layout cannot be used for
+# either the complete 2016-2022 design or the unevidenced 2023-2025 interval.
+valid_from = 2026-01-01
+period_selector = { year_from = 2026, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hap-2455-2013:art-1"]
+legal_refs = [
+    "orden-hap-2455-2013:art-1",
+    "orden-hap-2455-2013:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-165-procedure",
+    "enrolled-modelo-165-layout",
+    "aeat-dr-165-2026",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent: current AEAT design headed Ejercicio 2026, with the post-2016 EMPRESA EMERGENTE field and two complete 500-byte records"
+reviewed_at = 2026-08-26
+
+[revisions."2026-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
+reason = """
+The immediately preceding 2023-2025 revision is intentionally
+applicability-only: no exact position design for that interval is bundled.
+It therefore declares no positional casilla identity from which an evolution
+can be grounded. The 2026 design begins the next evidenced wire identity."""
+legal_refs = [
+    "orden-hap-2455-2013:art-1",
+    "orden-hap-2455-2013:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-165-procedure",
+    "enrolled-modelo-165-layout",
+    "aeat-dr-165-2026",
+]

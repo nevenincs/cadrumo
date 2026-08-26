@@ -115,14 +115,15 @@ class DelegatingWrapperRule:
 
 
 @dataclass(frozen=True, slots=True)
-class SubstitutableNaturalScanRule:
-    """A forbidden natural-key scan that can substitute for canonical selection."""
+class SubstitutableWorkSelectorRule:
+    """A forbidden catalogue scan that can substitute for canonical work selection."""
 
     kind: str
-    collection_names: frozenset[str]
     collection_methods: frozenset[str]
-    coordinate_names: frozenset[str]
-    minimum_coordinates: int = 2
+    catalogue_types: frozenset[str]
+    natural_coordinates: frozenset[str]
+    exact_coordinates: frozenset[str]
+    operator_methods: frozenset[str]
     exempt_functions: frozenset[str] = frozenset()
 
 
@@ -138,7 +139,7 @@ class CanonicalAuthoritySpec:
         {"__all__", "_EXPORTS", "_EXPORT_MAP", "_LAZY_EXPORTS"}
     )
     wrapper_rules: tuple[DelegatingWrapperRule, ...] = ()
-    natural_scan_rules: tuple[SubstitutableNaturalScanRule, ...] = ()
+    natural_scan_rules: tuple[SubstitutableWorkSelectorRule, ...] = ()
     forbidden_text_references: frozenset[str] = frozenset()
     text_suffixes: frozenset[str] = frozenset(
         {".cfg", ".ini", ".json", ".md", ".py", ".pyi", ".rst", ".toml", ".txt", ".yaml", ".yml"}
@@ -516,38 +517,148 @@ class _CanonicalAuthorityAnalyzer:
         return ()
 
     def _check_natural_scan(
-        self, node: ast.FunctionDef | ast.AsyncFunctionDef, parent: _AuthorityScope
+        self, node: ast.FunctionDef | ast.AsyncFunctionDef, _parent: _AuthorityScope
     ) -> None:
         if "tests" in self.path.parts or self.path.name.startswith("test_"):
             return
-        scope = parent.child()
-        self._populate_scope(node.body, scope)
         for rule in self.spec.natural_scan_rules:
-            if node.name not in rule.exempt_functions and _function_has_natural_scan(node, scope, rule):
+            if node.name not in rule.exempt_functions and _function_has_work_selector(node, rule):
                 self.add(rule.kind, node, node.name)
-
-
-def _resolved_local_name(name: str, scope: _AuthorityScope, seen: frozenset[str] = frozenset()) -> str:
-    if name in seen:
-        return name
-    value = scope.literals.get(name)
-    if isinstance(value, ast.Name):
-        return _resolved_local_name(value.id, scope, seen | {name})
-    return name
 
 
 def _target_names(node: ast.AST) -> frozenset[str]:
     return frozenset(child.id for child in ast.walk(node) if isinstance(child, ast.Name))
 
 
-def _function_has_natural_scan(
-    node: ast.FunctionDef | ast.AsyncFunctionDef, scope: _AuthorityScope, rule: SubstitutableNaturalScanRule
+def _expression_path(node: ast.AST) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute) and (base := _expression_path(node.value)) is not None:
+        return f"{base}.{node.attr}"
+    return None
+
+
+def _annotation_names(node: ast.AST | None) -> frozenset[str]:
+    if node is None:
+        return frozenset()
+    return frozenset(
+        child.id if isinstance(child, ast.Name) else child.attr
+        for child in ast.walk(node)
+        if isinstance(child, (ast.Name, ast.Attribute))
+    )
+
+
+def _catalogue_aliases(
+    node: ast.FunctionDef | ast.AsyncFunctionDef, rule: SubstitutableWorkSelectorRule
+) -> frozenset[str]:
+    aliases = {
+        argument.arg
+        for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+        if _annotation_names(argument.annotation) & rule.catalogue_types
+    }
+    parameters = {
+        argument.arg for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+    }
+    aliases.update(parameters)
+    assignments: list[tuple[str, ast.AST]] = []
+    for assignment in _scope_nodes(node.body):
+        if not isinstance(assignment, (ast.Assign, ast.AnnAssign)) or assignment.value is None:
+            continue
+        targets = assignment.targets if isinstance(assignment, ast.Assign) else (assignment.target,)
+        assignments.extend(
+            (path, assignment.value)
+            for target in targets
+            if (path := _expression_path(target)) is not None
+        )
+    changed = True
+    while changed:
+        changed = False
+        for target, value in assignments:
+            source = _expression_path(value)
+            is_load = isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute) and value.func.attr in {
+                "load",
+                "load_revisioned",
+            }
+            if target not in aliases and (source in aliases or is_load):
+                aliases.add(target)
+                changed = True
+    # An untyped parameter becomes a catalogue by being the receiver of the declared collection protocol.
+    aliases.update(
+        path
+        for call in ast.walk(node)
+        if isinstance(call, ast.Call)
+        and isinstance(call.func, ast.Attribute)
+        and call.func.attr in rule.collection_methods
+        and (path := _expression_path(call.func.value)) is not None
+        and path.split(".", 1)[0] in parameters
+    )
+    return frozenset(aliases)
+
+
+def _selection_decision(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    candidates: frozenset[str],
+    produced_collections: frozenset[str],
 ) -> bool:
+    selected_names = set(candidates)
+    changed = True
+    while changed:
+        changed = False
+        for assignment in _scope_nodes(node.body):
+            if not isinstance(assignment, (ast.Assign, ast.AnnAssign)) or assignment.value is None:
+                continue
+            targets = assignment.targets if isinstance(assignment, ast.Assign) else (assignment.target,)
+            target_names = {target.id for target in targets if isinstance(target, ast.Name)}
+            value = assignment.value
+            selects_collection = (
+                isinstance(value, ast.Subscript)
+                and isinstance(value.value, ast.Name)
+                and value.value.id in produced_collections
+            )
+            aliases_selected = isinstance(value, ast.Name) and value.id in selected_names
+            if (selects_collection or aliases_selected) and not target_names <= selected_names:
+                selected_names.update(target_names)
+                changed = True
+    for returned in (item for item in _scope_nodes(node.body) if isinstance(item, ast.Return) and item.value):
+        names = {child.id for child in ast.walk(returned.value) if isinstance(child, ast.Name)}
+        if names & selected_names:
+            return True
+        if (
+            names & produced_collections
+            and isinstance(returned.value, ast.Call)
+            and _bare_callable_name(returned.value.func) not in {"len", "sum", "min", "max", "sorted"}
+        ):
+            return True
+        if any(
+            isinstance(child, ast.Subscript)
+            and isinstance(child.value, ast.Name)
+            and child.value.id in produced_collections
+            for child in ast.walk(returned.value)
+        ):
+            return True
+    return False
+
+
+def _function_has_work_selector(
+    node: ast.FunctionDef | ast.AsyncFunctionDef, rule: SubstitutableWorkSelectorRule
+) -> bool:
+    catalogue_aliases = _catalogue_aliases(node, rule)
     loops = (
         item
         for item in _scope_nodes(node.body)
         if isinstance(item, (ast.For, ast.AsyncFor, ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp))
     )
+    produced_collections = {
+        target.id
+        for assignment in _scope_nodes(node.body)
+        if isinstance(assignment, (ast.Assign, ast.AnnAssign)) and assignment.value is not None
+        for target in (assignment.targets if isinstance(assignment, ast.Assign) else (assignment.target,))
+        if isinstance(target, ast.Name)
+        and any(
+            isinstance(child, (ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp))
+            for child in ast.walk(assignment.value)
+        )
+    }
     for loop in loops:
         generators = (
             loop.generators
@@ -558,13 +669,11 @@ def _function_has_natural_scan(
             iterator = generator.iter
             if not isinstance(iterator, ast.Call) or not isinstance(iterator.func, ast.Attribute):
                 continue
-            if not isinstance(iterator.func.value, ast.Name):
-                continue
-            collection = _resolved_local_name(iterator.func.value.id, scope)
-            if collection not in rule.collection_names or iterator.func.attr not in rule.collection_methods:
+            collection = _expression_path(iterator.func.value)
+            if collection not in catalogue_aliases or iterator.func.attr not in rule.collection_methods:
                 continue
             candidates = _target_names(generator.target)
-            compared_coordinates = {
+            compared_fields = {
                 child.attr
                 for comparison in ast.walk(loop)
                 if isinstance(comparison, ast.Compare)
@@ -573,15 +682,38 @@ def _function_has_natural_scan(
                 and isinstance(child.value, ast.Name)
                 and child.value.id in candidates
             }
-            if len(compared_coordinates & rule.coordinate_names) >= rule.minimum_coordinates:
+            operator_selection = any(
+                isinstance(call, ast.Call)
+                and isinstance(call.func, ast.Attribute)
+                and call.func.attr in rule.operator_methods
+                and isinstance(call.func.value, ast.Attribute)
+                and isinstance(call.func.value.value, ast.Name)
+                and call.func.value.value.id in candidates
+                and call.func.value.attr in rule.exact_coordinates
+                for call in ast.walk(loop)
+            )
+            predicate = (
+                len(compared_fields & rule.natural_coordinates) >= 2
+                or bool(compared_fields & rule.exact_coordinates)
+                or operator_selection
+            )
+            repository_first_match = any(
+                isinstance(value, ast.Call)
+                and isinstance(value.func, ast.Attribute)
+                and value.func.attr in {"load", "load_revisioned"}
+                for value in ast.walk(node)
+            )
+            if (predicate or repository_first_match) and _selection_decision(
+                node, candidates, frozenset(produced_collections)
+            ):
                 return True
     return False
 
 
-def source_contains_substitutable_natural_scan(
-    source: str, rule: SubstitutableNaturalScanRule
+def source_contains_substitutable_work_selector(
+    source: str, rule: SubstitutableWorkSelectorRule
 ) -> bool:
-    """Return whether a source snippet contains a semantic natural-key selector scan."""
+    """Return whether a source snippet contains a substitutable work selector."""
     try:
         tree = ast.parse(source)
     except SyntaxError:
@@ -589,15 +721,7 @@ def source_contains_substitutable_natural_scan(
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) or node.name in rule.exempt_functions:
             continue
-        scope = _AuthorityScope()
-        for assignment in _scope_nodes(node.body):
-            if not isinstance(assignment, (ast.Assign, ast.AnnAssign)) or assignment.value is None:
-                continue
-            targets = assignment.targets if isinstance(assignment, ast.Assign) else (assignment.target,)
-            for target in targets:
-                if isinstance(target, ast.Name):
-                    scope.literals[target.id] = assignment.value
-        if _function_has_natural_scan(node, scope, rule):
+        if _function_has_work_selector(node, rule):
             return True
     return False
 

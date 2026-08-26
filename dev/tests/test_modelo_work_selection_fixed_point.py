@@ -9,7 +9,7 @@ from ..quality.import_hygiene_scan import (
     CanonicalAuthoritySpec,
     CanonicalAuthorityTarget,
     DelegatingWrapperRule,
-    SubstitutableNaturalScanRule,
+    SubstitutableWorkSelectorRule,
     public_definition_names,
     scan_canonical_authority,
     tracked_live_files,
@@ -25,11 +25,13 @@ _RETIRED = frozenset(
     f"{_MODELO_PACKAGE}.{name}" for name in ("_" + "work_addressing", "work_unit_" + "selection")
 )
 _DEFINED_SYMBOLS = public_definition_names(_CANONICAL)
-_NATURAL_SCAN_RULE = SubstitutableNaturalScanRule(
+_NATURAL_SCAN_RULE = SubstitutableWorkSelectorRule(
     "parallel natural catalogue scan",
-    collection_names=frozenset({"catalogue"}),
     collection_methods=frozenset({"values", "items"}),
-    coordinate_names=frozenset({"modelo", "filing_year", "period"}),
+    catalogue_types=frozenset({"WorkUnitCatalogue"}),
+    natural_coordinates=frozenset({"modelo", "filing_year", "period"}),
+    exact_coordinates=frozenset({"work_unit_id"}),
+    operator_methods=frozenset({"startswith", "endswith"}),
     exempt_functions=frozenset({"select_modelo_work_resolution"}),
 )
 _SPEC = CanonicalAuthoritySpec(

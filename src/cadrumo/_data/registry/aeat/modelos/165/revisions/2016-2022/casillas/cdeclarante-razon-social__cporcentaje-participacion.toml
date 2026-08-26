@@ -1,0 +1,245 @@
+# Modelo 165 -- the official record-design positions. Transcribed from the
+# bundled Diseno de Registro (source aeat-dr-165-2016-2022,
+# corpus/aeat_official/disenos_registro/modelo_165/files/
+# 01-165-diseno-de-registro-actualizado-en-2023.pdf, sha256
+# bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263).
+#
+# Every casilla carries its canonical m165_<id> semantic_role.
+
+# Campo 5. Positions 18-57, alfanumerico. "Se consignara la razon social
+# completa, sin anagrama."
+[[revisions."2016-2022".casillas]]
+id = "declarante-razon-social"
+number = "tipo1.18-57"
+section = ["declarante"]
+data_type = "name"
+semantic_role = "m165_declarante_razon_social"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t1-razon-social"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 7. Positions 59-107, alfanumerico de 49 posiciones. The design
+# subdivides the slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares
+# ONE top-level campo of 49 bytes.
+[[revisions."2016-2022".casillas]]
+id = "persona-relacion"
+number = "tipo1.59-107"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m165_persona_relacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t1-persona-relacion"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 8. Positions 108-120, numerico de 13 posiciones. "Un numero secuencial
+# cuyos tres primeros digitos se corresponderan con el codigo 165."
+[[revisions."2016-2022".casillas]]
+id = "numero-identificativo-declaracion"
+number = "tipo1.108-120"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m165_numero_identificativo_declaracion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t1-numero-identificativo"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 9. Positions 121-122, alfabetico: 121 declaracion complementaria ("C"),
+# 122 declaracion sustitutiva ("S").
+[[revisions."2016-2022".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m165_declaracion_complementaria_sustitutiva"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes."
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t1-complementaria-sustitutiva"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 10. Positions 123-135, numerico de 13 posiciones. "En cualquier otro
+# caso debera rellenarse a CEROS."
+[[revisions."2016-2022".casillas]]
+id = "numero-identificativo-anterior"
+number = "tipo1.123-135"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m165_numero_identificativo_anterior"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t1-numero-identificativo-anterior"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 11. Positions 136-144, numerico de 9 posiciones: "el numero total de
+# registros de socios o participes (Registro de tipo 2) declarados".
+[[revisions."2016-2022".casillas]]
+id = "numero-total-declarados"
+number = "tipo1.136-144"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m165_numero_total_declarados"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t1-numero-total-declarados"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 12. Positions 145-159. IMPORTE TOTAL DE LAS SUSCRIPCIONES O
+# ADQUISICIONES DE ACCIONES O PARTICIPACIONES. "Se consignara sin signo y sin
+# coma decimal", subdivided 145-157 parte entera and 158-159 parte decimal --
+# an unsigned amount with two implied decimals filling the whole 15-byte slot.
+[[revisions."2016-2022".casillas]]
+id = "importe-total-suscripciones"
+number = "tipo1.145-159"
+section = ["declarante", "resumen"]
+data_type = "money"
+semantic_role = "m165_importe_total_suscripciones"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t1-importe-total-suscripciones"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 13. Positions 160-167. FECHA DE CONSTITUCION de la empresa de nueva o
+# reciente creacion, subdivided 160-163 ANO, 164-165 MES, 166-167 DIA.
+[[revisions."2016-2022".casillas]]
+id = "fecha-constitucion"
+number = "tipo1.160-167"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m165_fecha_constitucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t1-fecha-constitucion"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 14. Positions 168-183, alfanumerica de 16 posiciones. IMPORTE FONDOS
+# PROPIOS de la entidad al inicio del periodo impositivo en que el contribuyente
+# adquiere las acciones. The only signed amount on this record: "168 SIGNO:
+# campo alfabetico que se cumplimentara cuando la cuantia de los fondos propios
+# ... sea menor que 0 (cero); en este caso se consignara una 'N'. En cualquier
+# otro caso el contenido del campo sera un espacio", then "169-183 IMPORTE:
+# campo numerico de 15 posiciones", itself 169-181 entera and 182-183 decimal.
+[[revisions."2016-2022".casillas]]
+id = "importe-fondos-propios"
+number = "tipo1.168-183"
+section = ["declarante"]
+data_type = "money"
+semantic_role = "m165_importe_fondos_propios"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t1-importe-fondos-propios"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 15. Position 184, alfabetico. "Se consignara 'X' cuando el declarante
+# tenga la consideracion de empresa emergente, segun lo establecido en el
+# apartado 1 del articulo 3 de la Ley 28/2022, de 21 de diciembre, de fomento
+# del ecosistema de las empresas emergentes." In any other case it goes blank.
+[[revisions."2016-2022".casillas]]
+id = "empresa-emergente"
+number = "tipo1.184"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m165_empresa_emergente"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t1-empresa-emergente"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 5. Positions 18-26. N.I.F. DEL SOCIO O PARTICIPE de la entidad de nueva
+# o reciente creacion.
+[[revisions."2016-2022".casillas]]
+id = "socio-nif"
+number = "tipo2.18-26"
+section = ["socio"]
+data_type = "nif"
+semantic_role = "m165_socio_nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t2-socio-nif"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 6. Positions 27-35. "Si el perceptor es menor de 14 anos se consignara
+# en este campo el numero de identificacion fiscal de su representante legal
+# (padre, madre o tutor). En cualquier otro caso ... se rellenara a espacios."
+[[revisions."2016-2022".casillas]]
+id = "representante-legal-nif"
+number = "tipo2.27-35"
+section = ["socio"]
+data_type = "nif"
+semantic_role = "m165_representante_legal_nif"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t2-representante-legal-nif"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 7. Positions 36-75. APELLIDOS Y NOMBRE DEL SOCIO O PARTICIPE: "el primer
+# apellido, un espacio, el segundo apellido, un espacio y el nombre completo".
+[[revisions."2016-2022".casillas]]
+id = "socio-nombre"
+number = "tipo2.36-75"
+section = ["socio"]
+data_type = "name"
+semantic_role = "m165_socio_nombre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t2-socio-nombre"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 8. Positions 76-88. IMPORTE DE LA SUSCRIPCION O ADQUISICION, "sin signo
+# y sin coma decimal", subdivided 76-86 parte entera and 87-88 parte decimal.
+[[revisions."2016-2022".casillas]]
+id = "importe-suscripcion"
+number = "tipo2.76-88"
+section = ["socio", "adquisicion"]
+data_type = "money"
+semantic_role = "m165_importe_suscripcion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t2-importe-suscripcion"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 9. Positions 89-96. FECHA DE ADQUISICION DE LAS ACCIONES/PARTICIPACIONES,
+# subdivided 89-92 ANO, 93-94 MES, 95-96 DIA.
+[[revisions."2016-2022".casillas]]
+id = "fecha-adquisicion"
+number = "tipo2.89-96"
+section = ["socio", "adquisicion"]
+data_type = "text"
+semantic_role = "m165_fecha_adquisicion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t2-fecha-adquisicion"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]
+
+# Campo 10. Positions 97-101. PORCENTAJE DE PARTICIPACION en el capital social.
+# "Dicho porcentaje, cuando no sea un numero entero, se expresara con dos
+# decimales", subdivided 97-99 parte entera and 100-101 parte decimal.
+[[revisions."2016-2022".casillas]]
+id = "porcentaje-participacion"
+number = "tipo2.97-101"
+section = ["socio", "adquisicion"]
+data_type = "decimal"
+semantic_role = "m165_porcentaje_participacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-165-t2-porcentaje-participacion"]
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2016-2022"]

@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import override
 
 import pytest
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
-from ....adapters.persistence.storage import SecureObjectRevisionConflictError
+from ....adapters.persistence.storage import SecureObjectRevisionConflictError, SecureObjectWrite
 from ....core import Period
 from ....domain.buckets import BucketEventType
 from ....domain.modelos import CalculationRevisionAmendmentKind, ExternalEvidenceKind
 from ...calculations import (
     CalculationObservationRepository,
     CrossPeriodCleanStateBlocker,
+    ObservationEnvelopePayload,
     ObservationSourceKind,
 )
 from ...calculations import (
@@ -49,7 +51,13 @@ _STALE_REVISION_ID = "0" * 64
 class _ConflictingObservationRepository(CalculationObservationRepository):
     """Inject a real observation-row CAS conflict into the production batch."""
 
-    def to_secure_object_write(self, payload, *, expected_revision_id=None):  # type: ignore[no-untyped-def]
+    @override
+    def to_secure_object_write(
+        self,
+        payload: ObservationEnvelopePayload,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         return super().to_secure_object_write(payload, expected_revision_id=_STALE_REVISION_ID)
 
 

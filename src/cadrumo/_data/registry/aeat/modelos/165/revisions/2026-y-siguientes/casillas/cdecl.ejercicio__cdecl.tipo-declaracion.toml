@@ -1,0 +1,26 @@
+# Modelo 165 declaration-header casillas (scheduling/applicability-grade). Only
+# the declaration header (ejercicio, tipo de declaración) is declared, grounded in
+# orden-hap-2455-2013 art 1. No numbered form casilla is invented — no
+# authoritative Modelo 165 diseño de registro is bundled.
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-165-procedure"]

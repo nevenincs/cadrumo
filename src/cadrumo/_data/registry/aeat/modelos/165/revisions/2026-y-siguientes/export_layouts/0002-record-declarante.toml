@@ -1,0 +1,261 @@
+# Registro de tipo 1: registro de declarante. 500 bytes, 15 numbered campos plus the BLANCOS trailer.
+# 1+3+4+9+40+1+49+13+2+13+9+15+8+16+1+316 = 500.
+
+[[revisions."2026-y-siguientes".export_layouts]]
+id = "modelo-165-fichero-2026"
+
+[[revisions."2026-y-siguientes".export_layouts.records]]
+id = "modelo-165-declarante"
+record_type = "declarante"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+# Posicion 1. TIPO DE REGISTRO. Constante '1'.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 2-4. MODELO DECLARACION. Constante '165'.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "165"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 5-8. EJERCICIO -- the draft's own filing year.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-ejercicio"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 9-17. NIF DEL DECLARANTE. The declarante is the entity obliged to
+# certify, which is the taxpayer; a gestor presenting on its behalf is the
+# presenter and must not appear here. A NIF exactly fills its 9-byte slot, so
+# left-zero padding would strip real leading digits from a low-numbered DNI.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-nif-declarante"
+offset = 9
+length = 9
+kind = "header"
+producer_key = "taxpayer.tax_id"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 18-57. DENOMINACION O RAZON SOCIAL DEL DECLARANTE.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-razon-social"
+offset = 18
+length = 40
+kind = "casilla"
+casilla_id = "declarante-razon-social"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posicion 58. TIPO DE SOPORTE. The design admits exactly one clave:
+# "'T': Transmision telematica".
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-tipo-soporte"
+offset = 58
+length = 1
+kind = "literal"
+literal = "T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 59-107. PERSONA CON QUIEN RELACIONARSE.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-persona-relacion"
+offset = 59
+length = 49
+kind = "casilla"
+casilla_id = "persona-relacion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 108-120. NUMERO IDENTIFICATIVO DE LA DECLARACION.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-numero-identificativo"
+offset = 108
+length = 13
+kind = "casilla"
+casilla_id = "numero-identificativo-declaracion"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 121-122. DECLARACION COMPLEMENTARIA O SUSTITUTIVA.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-complementaria-sustitutiva"
+offset = 121
+length = 2
+kind = "casilla"
+casilla_id = "declaracion-complementaria-sustitutiva"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 123-135. NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-numero-identificativo-anterior"
+offset = 123
+length = 13
+kind = "casilla"
+casilla_id = "numero-identificativo-anterior"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 136-144. NUMERO TOTAL DE DECLARADOS.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-numero-total-declarados"
+offset = 136
+length = 9
+kind = "casilla"
+casilla_id = "numero-total-declarados"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 145-159. IMPORTE TOTAL DE LAS SUSCRIPCIONES O ADQUISICIONES.
+# Unsigned, two implied decimals (145-157 entera, 158-159 decimal).
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-importe-total-suscripciones"
+offset = 145
+length = 15
+kind = "casilla"
+casilla_id = "importe-total-suscripciones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 160-167. FECHA DE CONSTITUCION (160-163 ANO, 164-165 MES,
+# 166-167 DIA).
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-fecha-constitucion"
+offset = 160
+length = 8
+kind = "casilla"
+casilla_id = "fecha-constitucion"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 168-183. IMPORTE FONDOS PROPIOS. Signed: position 168 carries 'N'
+# when the fondos propios are below zero and a space otherwise, then 169-183
+# carry the magnitude (169-181 entera, 182-183 decimal). The signed codec emits
+# exactly that shape.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-importe-fondos-propios"
+offset = 168
+length = 16
+kind = "casilla"
+casilla_id = "importe-fondos-propios"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posicion 184. EMPRESA EMERGENTE: 'X' when the declarante qualifies under
+# Ley 28/2022 art. 3.1, blank otherwise.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-empresa-emergente"
+offset = 184
+length = 1
+kind = "casilla"
+casilla_id = "empresa-emergente"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+# Posiciones 185-500. BLANCOS.
+[[revisions."2026-y-siguientes".export_layouts.records.fields]]
+id = "modelo-165-t1-blancos"
+offset = 185
+length = 316
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]

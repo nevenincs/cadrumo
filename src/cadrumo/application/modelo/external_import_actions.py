@@ -56,7 +56,7 @@ from ...domain.buckets import (
 from ...domain.buckets import (
     bucket_event_history_write as _bucket_event_write,
 )
-from ...domain.calculations.registry.bindings import RegistryModeloObservation
+from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -69,6 +69,7 @@ from ...domain.modelos import (
     CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    ModeloCode,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -131,7 +132,7 @@ def _select_active_external_import_work_unit(
     return select_modelo_work_resolution(
         ModeloWorkSelectorRequest(
             bucket_id=bucket_id,
-            modelo=source.modelo,
+            modelo=ModeloCode(source.modelo),
             filing_year=source.filing_year,
             period=source.period,
             revision_id=source.registry_revision_id,
@@ -351,6 +352,79 @@ def _validated_source_lexicals[CasillaKey](
     return validated
 
 
+def _prepare_external_import_revision(
+    *,
+    repository: CalculationRevisionCatalogueRepositoryProtocol,
+    work_unit_id: str,
+    input_values_by_casilla_id: dict[CasillaId, str],
+    outputs: dict[CasillaId, Decimal],
+    observations: tuple[CasillaObservation, ...],
+    actor: str,
+    now: datetime,
+) -> tuple[CalculationRevisionCatalogue, str, CalculationRevision]:
+    """Build and insert the guarded presented revision for one external import."""
+    binding_overrides: dict[BindingId, str] = {}
+    relation_overrides: dict[RelationId, str] = {}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
+        casilla_values=outputs,
+        filing_instance_evidence=None,
+        m303_regimen_simplificado_annual_summary_handoff=None,
+        source_provenance=(),
+    )
+    revisions, revisions_revision_id = repository.load_revisioned()
+    if revision_id in revisions:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_duplicate_revision",
+            context={"calculation_revision_id": revision_id},
+        )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.PRESENTADO,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
+        casilla_values=outputs,
+        created_at=now,
+        updated_at=now,
+        verified_at=now,
+        verified_by=actor.strip(),
+        filed_at=now,
+        filed_by=actor.strip(),
+        observations=observations,
+        filing_instance_evidence=None,
+        m303_regimen_simplificado_annual_summary_handoff=None,
+        source_provenance=(),
+    )
+    return upsert_calculation_revision(revisions, revision), revisions_revision_id, revision
+
+
+def _advance_external_import_work_unit(
+    catalogue: WorkUnitCatalogue,
+    *,
+    work_unit: WorkUnit,
+    revision_id: CalculationRevisionId,
+    filing_record_id: str,
+    now: datetime,
+) -> WorkUnitCatalogue:
+    """Advance one work unit to the co-committed external filing baseline."""
+    return upsert_work_unit(
+        catalogue,
+        work_unit.model_copy(
+            update={
+                "current_calculation_revision_id": revision_id,
+                "filed_calculation_revision_id": revision_id,
+                "current_filing_record_id": filing_record_id,
+                "updated_at": now,
+            },
+        ),
+    )
+
+
 def import_external_filing_evidence[CasillaKey](
     *,
     work_unit_id: str,
@@ -370,21 +444,16 @@ def import_external_filing_evidence[CasillaKey](
 ) -> ModeloRecord:
     """Persist an externally-filed return and return its current :class:`ModeloRecord`.
 
-    The target :class:`WorkUnit` supplies the bucket,
-    modelo, filing year, period, and registry revision used to validate imported
-    casilla ids. Justificante-bound evidence kinds require a stored
-    :class:`Justificante` whose modelo, year, period,
-    and taxpayer id match the target. CSV-register evidence is the imported
-    file itself: its reference is bound to the validated target coordinates in
-    the atomically committed filing record and does not require fabricated
-    Justificante metadata.
+    The target :class:`WorkUnit` supplies the bucket, modelo, filing year,
+    period, and registry revision used to validate imported casillas.
+    Justificante-bound evidence requires stored receipt metadata matching that
+    target; CSV-register evidence binds the imported file itself to the target.
 
     The service writes a ``PRESENTADO``
     :class:`CalculationRevision` containing the imported
     values and registry-grounded observations, creates a ``VIGENTE`` filing
-    record with :class:`ExternalEvidence`, supersedes any
-    previous current filing for the same target, advances the work-unit pointers,
-    and emits ``modelo.filing.imported``.
+    record with :class:`ExternalEvidence`, supersedes the previous current
+    filing, advances the work-unit pointers, and emits ``modelo.filing.imported``.
 
     Returns:
         The new current :class:`ModeloRecord` carrying the
@@ -434,52 +503,23 @@ def import_external_filing_evidence[CasillaKey](
         canonical_values=canonical_values,
         source_lexicals=source_lexical_values_by_casilla_id,
     )
-    binding_overrides: dict[BindingId, str] = {}
-    relation_overrides: dict[RelationId, str] = {}
     outputs = dict(canonical_values)
     observations = _external_filing_observations(casilla_values=outputs, snapshot=snapshot)
 
     now = clock or _utc_now()
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id=input_values_by_casilla_id,
-        binding_overrides=binding_overrides,
-        relation_overrides=relation_overrides,
-        casilla_values=outputs,
-        filing_instance_evidence=None,
-        m303_regimen_simplificado_annual_summary_handoff=None,
-        source_provenance=(),
-    )
     # Revisioned: both catalogues are composed into the co-commit below, so
     # neither can use a self-committing mutation, and an unguarded read would
     # write the whole singleton row back over a concurrent writer's entry.
-    revisions, revisions_revision_id = cr_repo.load_revisioned()
-    if revision_id in revisions:
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_import_duplicate_revision",
-            context={"calculation_revision_id": revision_id},
-        )
-
-    revision = CalculationRevision(
-        calculation_revision_id=revision_id,
+    revisions, revisions_revision_id, revision = _prepare_external_import_revision(
+        repository=cr_repo,
         work_unit_id=work_unit_id,
-        state=CalculationRevisionState.PRESENTADO,
         input_values_by_casilla_id=input_values_by_casilla_id,
-        binding_overrides=binding_overrides,
-        relation_overrides=relation_overrides,
-        casilla_values=outputs,
-        created_at=now,
-        updated_at=now,
-        verified_at=now,
-        verified_by=actor.strip(),
-        filed_at=now,
-        filed_by=actor.strip(),
+        outputs=outputs,
         observations=observations,
-        filing_instance_evidence=None,
-        m303_regimen_simplificado_annual_summary_handoff=None,
-        source_provenance=(),
+        actor=actor,
+        now=now,
     )
-    revisions = upsert_calculation_revision(revisions, revision)
+    revision_id = revision.calculation_revision_id
 
     new_filing_id = derive_filing_record_id(
         work_unit_id=work_unit_id,
@@ -514,16 +554,12 @@ def import_external_filing_evidence[CasillaKey](
     )
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
 
-    advanced_work_units = upsert_work_unit(
+    advanced_work_units = _advance_external_import_work_unit(
         work_units,
-        work_unit.model_copy(
-            update={
-                "current_calculation_revision_id": revision_id,
-                "filed_calculation_revision_id": revision_id,
-                "current_filing_record_id": new_filing_id,
-                "updated_at": now,
-            },
-        ),
+        work_unit=work_unit,
+        revision_id=revision_id,
+        filing_record_id=new_filing_id,
+        now=now,
     )
     imported_event = _build_bucket_event(
         bucket_id=work_unit.bucket_id,

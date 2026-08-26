@@ -152,6 +152,10 @@ class ModeloRecordCatalogueRepositoryProtocol(Protocol):
         """Return the persisted :class:`ModeloRecordCatalogue` or an empty catalogue if absent."""
         ...
 
+    def load_revisioned(self) -> tuple[ModeloRecordCatalogue, str]:
+        """Return the catalogue and secure-object revision for guarded co-commit."""
+        ...
+
     def save(self, catalogue: ModeloRecordCatalogue) -> None:
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...
