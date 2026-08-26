@@ -19,6 +19,7 @@ from .....core.hashing import content_hash_hex
 from ..authority import (
     _authority_comparison_domain,
     _authority_comparison_domain_payload,
+    _canonical_authority_root_pair,
     _fingerprint_key,
     _fingerprint_key_payload,
     _FingerprintKey,
@@ -45,13 +46,16 @@ def test_the_key_digest_uses_the_canonical_framed_content_hash() -> None:
     assert len(_fingerprint_key(fingerprints).digest) == 64
 
 
-def test_the_comparison_domain_preserves_its_frame_under_the_canonical_hash() -> None:
+def test_the_comparison_domain_preserves_its_frame_under_the_canonical_hash(tmp_path: Path) -> None:
     """The opaque domain is byte-for-byte the core hash of its explicit frame."""
-    root = Path("registry-root")
-    source_root = Path("source-root")
+    root = tmp_path / "registry-root"
+    source_root = tmp_path / "source-root"
+    root.mkdir()
+    source_root.mkdir()
+    identity = _canonical_authority_root_pair(root, source_root)
 
-    payload = _authority_comparison_domain_payload(root, source_root)
-    domain = _authority_comparison_domain(root, source_root)
+    payload = _authority_comparison_domain_payload(identity)
+    domain = _authority_comparison_domain(identity)
 
     assert domain == content_hash_hex(payload)
     assert isinstance(domain, str)

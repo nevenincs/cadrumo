@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
+from .. import _source_evidence_fingerprint
 from .._source_evidence_fingerprint import (
     clear_source_evidence_fingerprint_cache,
     collect_source_evidence_fingerprints,
@@ -71,6 +72,27 @@ def test_the_bundled_evidence_root_is_served_from_the_window() -> None:
 
     assert first, "sanity: the bundled evidence corpus must contribute at least one file"
     assert second is first, "the bundled evidence root must be served from the window, not re-walked"
+
+
+def test_the_bundled_evidence_window_walks_once_before_serving_repeats(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The bounded path performs one filesystem walk, then reuses that result."""
+    clear_source_evidence_fingerprint_cache()
+    source_root = bundled_path()
+    original_walk = _source_evidence_fingerprint._walk_source_evidence
+    walks = 0
+
+    def observed_walk(roots: tuple[Path, ...]) -> tuple[tuple[str, int, int], ...]:
+        nonlocal walks
+        walks += 1
+        return original_walk(roots)
+
+    monkeypatch.setattr(_source_evidence_fingerprint, "_walk_source_evidence", observed_walk)
+
+    first = collect_source_evidence_fingerprints(source_root)
+    second = collect_source_evidence_fingerprints(source_root)
+
+    assert second is first
+    assert walks == 1, "a hot bundled lookup must not re-walk the complete evidence corpus"
 
 
 def test_clearing_the_window_forces_a_fresh_walk() -> None:
