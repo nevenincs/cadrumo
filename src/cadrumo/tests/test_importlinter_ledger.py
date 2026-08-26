@@ -110,7 +110,6 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.ledger.llm_classification",
         "cadrumo.application.ledger.llm_diagnostics",
         "cadrumo.application.ledger.participation_read",
-        "cadrumo.application.ledger.preflight",
         "cadrumo.application.ledger.ratios",
         "cadrumo.application.ledger.review_projection",
         "cadrumo.application.live",

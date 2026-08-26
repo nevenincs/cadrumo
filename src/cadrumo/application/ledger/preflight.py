@@ -2,7 +2,7 @@
 
 :func:`preflight_ledger_tax_readiness` loads a
 :class:`~cadrumo.domain.transactions.TransactionCatalogue` via
-:class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository` from the
+:class:`~cadrumo.domain.transactions.TransactionCatalogueRepositoryProtocol` from the
 active bucket and delegates to :func:`preflight_transaction_catalogue` for pure
 in-memory analysis. The report is consumed by modelo readiness projection and
 ledger read surfaces; it is not a calculation engine and never mutates the
@@ -30,8 +30,6 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ElidedProse, OperatorActionAxis, Period
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -56,6 +54,8 @@ from ..aggregation import (
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
 )
+from .transaction_repository import transaction_catalogue_repository
+from .usage_ratio_repository import usage_ratio_profile_with_censo_guard
 
 _CLASSIFIED_TAX_STATES = frozenset(
     {
@@ -161,10 +161,9 @@ def preflight_ledger_tax_readiness(
         bucket_id: Bucket whose ledger catalogue is being checked.
         period: Filing period used to decide whether each transaction belongs in
             the readiness window.
-        transaction_repository: Optional
-            :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`
-            used to load the bucket-local catalogue; a default repository is
-            constructed when ``None``.
+        transaction_repository: Optional transaction-catalogue port used to
+            load the bucket-local catalogue; the outward-composed repository
+            is resolved when ``None``.
         raw_afectacion_ratio: Optional home-office usage ratio from censo data,
             used only to surface proportionality mismatches.
 
@@ -172,7 +171,11 @@ def preflight_ledger_tax_readiness(
         A :class:`LedgerPreflightReport` describing blocking or advisory ledger
         facts for modelo-readiness projection.
     """
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    repository = (
+        transaction_repository
+        if transaction_repository is not None
+        else transaction_catalogue_repository(bucket_id=bucket_id)
+    )
     if repository.bucket_id != bucket_id:
         raise TransactionValidationError(
             "transaction repository bucket_id does not match the ledger preflight bucket",
@@ -296,7 +299,7 @@ def _censo_ratio_mismatch_detail(*, bucket_id: str, raw_afectacion_ratio: Decima
     if resolved_raw is None:
         resolved_raw = _bound_raw_afectacion_ratio(bucket_id=bucket_id)
     try:
-        load_usage_ratios_with_censo_guard(
+        usage_ratio_profile_with_censo_guard(
             bucket_id=bucket_id,
             raw_afectacion_ratio=resolved_raw,
         )
