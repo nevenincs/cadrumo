@@ -81,7 +81,7 @@ def _intermediate(
         {
             "source": {
                 "source_ref": "aeat-dr-130-2019-v12",
-                "source_sha256": "5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
+                "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
                 "workbook_format": RecordDesignWorkbookFormat.XLSX,
                 "design_epoch": "2019",
             },
@@ -160,7 +160,7 @@ def _semantic_map() -> SemanticMap:
             "modelo": "130",
             "design_epoch": "2019",
             "source_ref": "aeat-dr-130-2019-v12",
-            "source_sha256": "5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
+            "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
             "records": (
                 {
                     "sheet": "Registro tipo 1",
@@ -231,7 +231,7 @@ def _profile() -> ExportTreeTransportProfile:
         modelo="130",
         design_epoch="2019",
         source_ref="aeat-dr-130-2019-v12",
-        source_sha256="5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
+        source_sha256="58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
         layout_id="generated-modelo-130-fichero",
         format="fixed_width",
         encoding=ExportEncoding.LATIN_1,
@@ -245,7 +245,7 @@ def _wire_profile() -> RenderProfile:
         modelo="130",
         design_epoch="2019",
         source_ref="aeat-dr-130-2019-v12",
-        source_sha256="5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
+        source_sha256="58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
     )
     return RenderProfile(
         schema_version=1,
@@ -314,7 +314,7 @@ def _synthetic_static_inspection() -> StaticGeneratedArtifactInspection:
                 id=source_ref,
                 kind="record_design",
                 corpus_path="aeat_official/disenos_registro/modelo_130/files/synthetic.xlsx",
-                sha256="5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
+                sha256="58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
                 bytes=1,
                 applies_from=None,
                 applies_to=None,
@@ -348,7 +348,7 @@ def _oversized_authorities(snapshot, *, field_count: int = 245) -> tuple[Semanti
         {
             "source": {
                 "source_ref": "aeat-dr-130-2019-v12",
-                "source_sha256": "5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
+                "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
                 "workbook_format": RecordDesignWorkbookFormat.XLSX,
                 "design_epoch": "2019",
             },
@@ -385,7 +385,7 @@ def _oversized_authorities(snapshot, *, field_count: int = 245) -> tuple[Semanti
             "modelo": "130",
             "design_epoch": "2019",
             "source_ref": "aeat-dr-130-2019-v12",
-            "source_sha256": "5d370a9dd13124dbfa596ee903d7a4f3e8801c4d153aa922e1f445790e181e4f",
+            "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
             "records": (
                 {
                     "sheet": "Oversized record",
