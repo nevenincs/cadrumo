@@ -39,7 +39,7 @@ _REGISTRY_PACKAGE = "domain/calculations/registry"
 _GENERIC_CONSTRUCTION_MODULES: frozenset[str] = frozenset(
     {
         f"{_REGISTRY_PACKAGE}/authority.py",
-        f"{_REGISTRY_PACKAGE}/_snapshot.py",
+        f"{_REGISTRY_PACKAGE}/snapshot.py",
     },
 )
 
@@ -105,7 +105,7 @@ def _modelo_branches_in_generic_construction(
 def test_the_registry_package_is_actually_scanned() -> None:
     """Prove the scan reaches real modules, so a green verdict is not vacuous."""
     scanned = {aeat_relative(path) for path, _ in _registry_items()}
-    assert f"{_REGISTRY_PACKAGE}/_schema.py" in scanned
+    assert f"{_REGISTRY_PACKAGE}/schema.py" in scanned
     assert scanned >= _GENERIC_CONSTRUCTION_MODULES
     assert (SRC_CADRUMO / _REGISTRY_PACKAGE / "_supplementary_orden.py").is_file()
 
@@ -148,7 +148,7 @@ def test_the_field_detector_sees_a_planted_violation() -> None:
     throwaway script.
     """
     planted = ast.parse("class TotallyGenericThing:\n    m303_planted: int = 0\n")
-    found = _modelo_named_fields_on_generic_types(((SRC_CADRUMO / _REGISTRY_PACKAGE / "_schema.py", planted),))
+    found = _modelo_named_fields_on_generic_types(((SRC_CADRUMO / _REGISTRY_PACKAGE / "schema.py", planted),))
 
     assert any(cls == "TotallyGenericThing" and field == "m303_planted" for _path, cls, field in found)
 
@@ -157,7 +157,7 @@ def test_a_per_modelo_class_keeps_its_own_modelo_named_fields() -> None:
     """The control: without this, the test above could be firing on every field."""
     exempt = ast.parse("class M303Envelope:\n    m303_thing: int = 0\n")
 
-    assert _modelo_named_fields_on_generic_types(((SRC_CADRUMO / _REGISTRY_PACKAGE / "_schema.py", exempt),)) == {}
+    assert _modelo_named_fields_on_generic_types(((SRC_CADRUMO / _REGISTRY_PACKAGE / "schema.py", exempt),)) == {}
 
 
 def test_the_branch_detector_sees_a_planted_modelo_branch() -> None:
