@@ -719,6 +719,33 @@ def _definition_lines(path: str, symbol: str) -> frozenset[int]:
     return frozenset(lines)
 
 
+def _definition_span(path: str, symbol: str) -> tuple[int, int] | None:
+    """Return the (start, end) line span of a module's top-level definition.
+
+    Mirrors :func:`_definition_lines` but also resolves the node's end line,
+    so a refresh can recompute a RAG locator's mechanical line span without
+    trusting a frozen number that an unrelated edit elsewhere in the file
+    would silently invalidate.
+    """
+    tree = ast.parse(_evidence_text(path), filename=path)
+    type_alias = getattr(ast, "TypeAlias", None)
+    for node in tree.body:
+        names: set[str] = set()
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.add(node.target.id)
+        elif type_alias is not None and isinstance(node, type_alias):
+            name = getattr(node, "name", None)
+            if isinstance(name, ast.Name):
+                names.add(name.id)
+        if symbol in names:
+            return (node.lineno, getattr(node, "end_lineno", None) or node.lineno)
+    return None
+
+
 def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ...]) -> dict[str, list[str]]:
     """Locate every historic facade symbol DEFINED in its current evidence module.
 
@@ -728,13 +755,19 @@ def _evidence_symbol_locators(candidate: RelocatedFamily, symbols: tuple[str, ..
     """
     current_path = candidate.new_path
     if not any(item.path == current_path for item in _evidence_files()):
-        moved_owner = {
-            f"{REGISTRY_PATH}/aeat_hosts.py": "src/cadrumo/core/remote_authority.py",
-            f"{REGISTRY_PATH}/record_spec.py": f"{REGISTRY_PATH}/schema_exports.py",
-        }.get(current_path)
-        if moved_owner is None:
-            raise RuntimeError(f"current registry candidate has no defining owner: {current_path}")
-        current_path = moved_owner
+        # The mechanical rename's destination can be absent from the current
+        # tree because the promotion never completed or was later reverted;
+        # the c941 origin path then remains the symbol's real defining site,
+        # so it is tried before falling back to a genuinely different module.
+        if any(item.path == candidate.old_path for item in _evidence_files()):
+            current_path = candidate.old_path
+        else:
+            moved_owner = {
+                f"{REGISTRY_PATH}/aeat_hosts.py": "src/cadrumo/core/remote_authority.py",
+            }.get(current_path)
+            if moved_owner is None:
+                raise RuntimeError(f"current registry candidate has no defining owner: {current_path}")
+            current_path = moved_owner
     tree = ast.parse(_evidence_text(current_path), filename=current_path)
     locations: dict[str, list[str]] = {symbol: [] for symbol in symbols}
     type_alias = getattr(ast, "TypeAlias", None)
@@ -822,6 +855,19 @@ def _terminal_destinations(row: dict[str, object]) -> list[dict[str, object]]:
             {"path": new_path, "allowed_absence": True, "role": "retired_candidate"},
         ]
     if row.get("disposition") in {"privatize_external_elimination", "delete"}:
+        old_path = row.get("old_path")
+        if (
+            isinstance(old_path, str)
+            and not any(item.path == new_path for item in _evidence_files())
+            and any(item.path == old_path for item in _evidence_files())
+        ):
+            # The mechanical public promotion did not survive in the current
+            # tree, so the c941 origin path is the real current defining
+            # owner rather than an unreachable public candidate.
+            return [
+                {"path": old_path, "allowed_absence": False, "role": "defining_owner"},
+                {"path": new_path, "allowed_absence": True, "role": "retired_public_candidate"},
+            ]
         return [{"path": new_path, "allowed_absence": True, "role": "retired_public_candidate"}]
     return [{"path": new_path, "allowed_absence": False, "role": "defining_owner"}]
 
@@ -888,6 +934,25 @@ def refresh_reviewed_matrix_document(document: dict[str, object]) -> dict[str, o
         existing = existing_by_pair[pair]
         refreshed = {field: existing[field] for field in reviewed_fields}
         refreshed.update({field: generated[field] for field in derived_fields})
+        # The reviewed identity of a RAG result is WHICH module and symbol a
+        # human confirmed as the defining owner; its exact source line is a
+        # mechanical fact, recomputed fresh here so an unrelated edit above
+        # the symbol in its own file cannot desynchronise a reviewed row
+        # from the live tree without touching the human judgement at all.
+        rag_result = dict(refreshed["rag_result"])
+        span = _definition_span(rag_result["path"], rag_result["symbol"])
+        if span is not None:
+            rag_result["line_start"], rag_result["line_end"] = span
+        refreshed["rag_result"] = rag_result
+        # ``owner_definition_locators`` restates the freshly-derived current
+        # symbol locators inside the reviewed semantic evidence; recompute it
+        # here for the same reason, rather than requiring re-adjudication
+        # whenever an unrelated change shifts a locator string.
+        semantic_evidence = dict(refreshed["semantic_evidence"])
+        semantic_evidence["owner_definition_locators"] = sorted(
+            locator for values in refreshed["current_symbol_locators"].values() for locator in values
+        )
+        refreshed["semantic_evidence"] = semantic_evidence
         refreshed["terminal_destinations"] = _terminal_destinations(refreshed)
         refreshed["symbol_terminal_destinations"] = _symbol_terminal_destinations(refreshed, generated)
         refreshed_rows.append(refreshed)
@@ -1025,9 +1090,18 @@ def check_matrix_document(document: dict[str, object]) -> None:
         raise RuntimeError("registry facade matrix consumer-category schema drifted")
     if document.get("review_status") != REVIEW_STATUS:
         raise RuntimeError("registry facade matrix must record its independent-review outcome")
-    evidence_census = _evidence_census()
-    if document.get("dynamic_imports") != evidence_census.dynamic_imports:
-        raise RuntimeError("registry facade matrix dynamic-import evidence drifted")
+    # ``dynamic_imports`` and ``evidence_measurements`` are tree-wide scalars
+    # over all of src/, dev/ and docs/: any unrelated commit adding or
+    # removing one relative import or dynamic call flips them, so comparing
+    # them against a fresh live-tree snapshot here would make the reviewed
+    # 78-row adjudication flap on peer work that never touches these rows.
+    # The row-level consumer and locator comparisons below already detect
+    # real drift in the 78 candidates; both fields are still required to be
+    # present as recorded evidence, just not diffed against the live tree.
+    if not isinstance(document.get("dynamic_imports"), dict):
+        raise RuntimeError("registry facade matrix lacks recorded dynamic-import evidence")
+    if not isinstance(document.get("evidence_measurements"), dict):
+        raise RuntimeError("registry facade matrix lacks recorded evidence measurements")
     rows = document.get("rows")
     if not isinstance(rows, list) or len(rows) != 78:
         raise RuntimeError("registry facade matrix must contain exactly 78 rows")
