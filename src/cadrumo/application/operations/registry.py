@@ -28,6 +28,11 @@ from ...core import (
 )
 from ...core.identity import ContentDigest
 from ..operator_actions import ActionReference
+from ._financial_operand import OperationTransientFinancialOperandDeclaration
+from ._financial_operand_custody import (
+    OperationFinancialOperandCrashClassification,
+    OperationFinancialOperandCustodyCheckpoint,
+)
 from ._model_contract import require_strict_frozen_operation_model_graph
 from .capabilities import (
     OperationBaselinePolicy,
@@ -288,6 +293,7 @@ class OperationDefinition(BaseModel):
     permitted_frontends: frozenset[OperationFrontendProjection] = Field(min_length=1)
     action_reference: ActionReference | None = None
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None
+    transient_financial_operands: tuple[OperationTransientFinancialOperandDeclaration, ...] = ()
 
     @field_validator("phase_codes")
     @classmethod
@@ -302,6 +308,7 @@ class OperationDefinition(BaseModel):
             raise ValueError("operation executor factory request type must match the definition request type")
         self._validate_request_storage()
         self._validate_ephemeral_secret()
+        self._validate_transient_financial_operands()
         if (
             self.capabilities.durability is not OperationDurability.EPHEMERAL
             and OperationEffect.UNKNOWN not in self.capabilities.permitted_effects
@@ -335,6 +342,91 @@ class OperationDefinition(BaseModel):
             raise ValueError("ephemeral secret operations cannot resume after owner loss")
         if OperationEffect.NONE not in self.capabilities.permitted_effects:
             raise ValueError("ephemeral secret operations must permit a pre-entry none effect")
+
+    def _validate_transient_financial_operands(self) -> None:
+        """Refuse an operand declaration the runtime could not honour.
+
+        An operand lives only in the memory of the process that received it, so
+        a definition that expects to resume after owner loss is declaring
+        something custody cannot deliver: the restart would have to invent the
+        amount or the acknowledgement.
+        """
+        if not self.transient_financial_operands:
+            return
+        kinds = [declaration.operand_kind for declaration in self.transient_financial_operands]
+        if len(set(kinds)) != len(kinds):
+            raise ValueError("operation definition cannot declare one financial operand kind twice")
+        if self.capabilities.durability is not OperationDurability.RECORDED:
+            raise ValueError("transient financial operand operations require recorded durability")
+        if self.reconciliation_policy is not OperationReconciliationPolicy.INTERRUPT:
+            raise ValueError("transient financial operand operations cannot resume after owner loss")
+        if OperationInteractionKind.INPUT not in self.interaction_kinds:
+            raise ValueError("transient financial operand operations must declare an input interaction")
+        if OperationEffect.UNKNOWN not in self.capabilities.permitted_effects:
+            raise ValueError("transient financial operand operations must permit an uncertain-delivery effect")
+
+
+class OperationEffectReceipt(BaseModel):
+    """What committed evidence lets an operation claim about its own effect.
+
+    A claim is narrowed, never widened. An executor that reports it changed
+    nothing is believed; one that reports a mutation is held to the evidence
+    the application actually committed, because an operation interrupted
+    mid-flight cannot know on its own whether its write landed.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    definition_id: OperationDefinitionId
+    effect: OperationEffect
+    interrupted: bool
+    narrowed_from: OperationEffect | None = None
+
+    @model_validator(mode="after")
+    def _validate_narrowing(self) -> OperationEffectReceipt:
+        if self.narrowed_from is not None and self.narrowed_from is self.effect:
+            raise ValueError("an effect receipt records a narrowing only when the claim actually changed")
+        return self
+
+
+def resolve_effect_receipt(
+    definition: OperationDefinition,
+    *,
+    claimed_effect: OperationEffect,
+    committed_evidence: bool,
+    custody: OperationFinancialOperandCustodyCheckpoint | None = None,
+) -> OperationEffectReceipt:
+    """Narrow one recorded effect claim against committed application evidence.
+
+    ``committed_evidence`` is whether the application durably recorded the
+    mutation this operation claims. Without it an ``UPDATED`` or ``PARTIAL``
+    claim narrows to ``UNKNOWN``: the operation may well have succeeded, and
+    saying so without evidence is exactly the over-claim that makes a later
+    reconciliation trust a write that never landed.
+
+    ``custody`` carries the operand wait, if the operation had one. Only its
+    crash classification is read - never any operand material, which the
+    checkpoint does not hold in the first place. A wait whose delivery is
+    uncertain cannot support a definite effect claim.
+    """
+    if claimed_effect not in definition.capabilities.permitted_effects:
+        raise ValueError(f"operation {definition.definition_id!r} may not claim effect {claimed_effect.value!r}")
+    interrupted = custody is not None and (
+        custody.crash_classification is OperationFinancialOperandCrashClassification.DELIVERY_UNCERTAIN
+    )
+    definite = claimed_effect in {OperationEffect.UPDATED, OperationEffect.PARTIAL}
+    if definite and (not committed_evidence or interrupted):
+        return OperationEffectReceipt(
+            definition_id=definition.definition_id,
+            effect=OperationEffect.UNKNOWN,
+            interrupted=interrupted,
+            narrowed_from=claimed_effect,
+        )
+    return OperationEffectReceipt(
+        definition_id=definition.definition_id,
+        effect=claimed_effect,
+        interrupted=interrupted,
+    )
 
 
 class _PublicDefinitionContractValues(TypedDict):
@@ -990,6 +1082,7 @@ OperationPublicDefinitionContractV1.model_rebuild()
 
 __all__ = [
     "OperationDefinition",
+    "OperationEffectReceipt",
     "OperationExecutorFactory",
     "OperationFrontendProjection",
     "OperationPublicContractSetV1",
@@ -1004,4 +1097,5 @@ __all__ = [
     "OperationSchemaIdentityV1",
     "OperationWorkspaceRefreshAdapter",
     "operation_public_schema_reference",
+    "resolve_effect_receipt",
 ]
