@@ -5,7 +5,7 @@ modelo:
         official_name: null
         title: null
       revision:
-        2008-2025:
+        2021-2025:
           casilla:
             '01':
               help: null
@@ -76,7 +76,7 @@ modelo:
                 title: null
           field:
             label: Modelo 353 tax years 2008 to 2025 (Orden EHA/3434/2007)
-        2026-y-siguientes:
+        2026-desde-02:
           casilla:
             '01':
               help: null
