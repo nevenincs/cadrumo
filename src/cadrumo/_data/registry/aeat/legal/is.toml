@@ -1962,6 +1962,25 @@ required_text = [
     "el arrendador sea una entidad de crédito o un establecimiento financiero de crédito",
 ]
 
+[legal."ley-27-2014:art-83"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a83"
+document_id = "BOE-A-2014-12328"
+article = "83"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a83"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a83 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and checked against this corpus's measured anchor-collision set so it is not one of the shadowed bis/ter provisions; required_text confirmed present in the resolved unit; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 83: limitacion en la deduccion de gastos financieros destinados a la adquisicion de participaciones en el capital o en los fondos propios de entidades. Opera a los efectos del art. 16, anadiendo un limite propio para la deuda destinada a adquirir participaciones cuando la entidad adquirida se incorpora al grupo fiscal o es objeto de una reestructuracion. Es la SEGUNDA MITAD del compuesto que nombra la seccion limite_art_16_5_y_o_83_lis del Modelo 200: esa seccion descansa sobre el art. 16.5 y sobre este articulo, de modo que fundarla solo en el art. 16 declararia una autoridad mas estrecha que la que la propia seccion invoca."
+required_text = [
+    "Limitación en la deducción de gastos financieros destinados a la adquisición de participaciones",
+    "A los efectos de lo previsto en el artículo 16 de esta Ley",
+]
+
 [legal."ley-49-2002:art-20"]
 evidence_tier = "legal_authority"
 authority = "boe"
