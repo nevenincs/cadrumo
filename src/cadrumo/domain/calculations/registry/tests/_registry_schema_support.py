@@ -28,11 +28,12 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 from .....core import CasillaId, RegistryAuthorityGrade, validated_casilla_id
 from .....core.directory_scan import scan_directory
 from .....core.resources import bundled_path
+from .._loader_internals import load_modelo_file
 from .._validate import RegistryValidator
 from ..authority import bundled_authority
 from ..coverage import build_model_law_coverage_ledger
 from ..errors import RegistryLoadError, RegistryValidationError
-from ..loader import load_modelo_file, load_registry_tree
+from ..loader import load_registry_tree
 from ..snapshot import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -7,8 +7,9 @@ from pathlib import Path
 import pytest
 
 from .....core import ResultDisposition
+from .._loader_internals import load_modelo_file
 from ..errors import RegistryLoadError
-from ..loader import load_modelo_directory, load_modelo_file
+from ..loader import load_modelo_directory
 from ._loader_directory_mode_support import _standard_manifest_text, _standard_revision_preamble_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

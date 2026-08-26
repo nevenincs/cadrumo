@@ -30,11 +30,7 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.domain.calculations.registry.loader import (
-    _collect_registry_tree_fingerprints,
-    _load_registry_tree_cached,
-    load_registry_tree,
-)
+from cadrumo.domain.calculations.registry.loader import _load_registry_tree_cached, load_registry_tree
 from cadrumo.domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
 
 from .....core import AuthProviderKind, Modelo
@@ -52,6 +48,7 @@ from .._compiled_cache import (
     _registry_disk_cache_key,
     loader_code_fingerprint,
 )
+from .._loader_internals import _collect_registry_tree_fingerprints
 from ..schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

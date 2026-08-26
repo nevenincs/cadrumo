@@ -21,6 +21,7 @@ Submodules
    cadrumo.domain.calculations.registry._formula_runtime_irnr
    cadrumo.domain.calculations.registry._formula_runtime_m131
    cadrumo.domain.calculations.registry._ledger_binding_resolution
+   cadrumo.domain.calculations.registry._loader_internals
    cadrumo.domain.calculations.registry._m303_orden_constants
    cadrumo.domain.calculations.registry._m303_orden_keys
    cadrumo.domain.calculations.registry._m303_orden_legal
@@ -143,7 +144,6 @@ Submodules
    cadrumo.domain.calculations.registry.m303_orden_resolution
    cadrumo.domain.calculations.registry.m303_prorrata_activity_projection
    cadrumo.domain.calculations.registry.m303_regimen_simplificado_projection
-   cadrumo.domain.calculations.registry.manual_input_selector
    cadrumo.domain.calculations.registry.modelo_localization
    cadrumo.domain.calculations.registry.observation_fold
    cadrumo.domain.calculations.registry.period_offset_math

@@ -23,6 +23,7 @@ from .....core import (
 from .....core.directory_scan import (
     scan_directory,
 )
+from .._loader_internals import _compile_export_semantic_field, _compile_projection_endpoint_declaration
 from .._snapshot_internals import _validate_materialized_export_record_families
 from .._validate_evidence import EvidenceValidator
 from .._validate_exports import (
@@ -34,7 +35,6 @@ from ..authority import bundled_authority
 from ..errors import RegistryLoadError, RegistryValidationError
 from ..export import derive_export_layouts_from_bindings
 from ..fixed_width_codec import ExportEncoding
-from ..loader import _compile_export_semantic_field, _compile_projection_endpoint_declaration
 from ..schema import ModeloRevision
 from ..schema_exports import (
     ExportFieldDefinition,
