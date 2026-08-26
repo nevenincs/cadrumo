@@ -5,7 +5,7 @@ tags:
 date: '2026-08-26'
 modified: '2026-08-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:e0492cf5bfd51a232f55e71abcdf481a77c9958fab4e858d9f2f2ab25a665943'
+body_hash: 'sha256:982a8ed6ba1df5501504fd565f59f589a183d833019f160b0848fc83b050adcb'
 step_id: 'S128'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -47,6 +47,9 @@ related:
 - `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `780b24c2e3`: complete `ModeloWorkspaceProjectionV1` assembly)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py -m integration -q` -> `pass` (32 passed)
 - `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m "unit or integration" -q` -> `pass` (74 passed, 1 pre-existing unrelated failure)
+- `M` `src/cadrumo/application/modelo/workspace.py`, `tests/test_workspace.py` (commit `40c802ea31`: GRADED_SNAPSHOT `graded_snapshot_materialization_facet`)
+- `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/workspace.py src/cadrumo/application/modelo/tests/test_workspace.py` -> `pass`
+- `verify:` `uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_manifest.py src/cadrumo/application/modelo/tests/test_workspace_producers.py -m integration -q` -> `pass` (108 passed, 1 pre-existing unrelated failure)
 
 ## Notes
 
@@ -259,3 +262,45 @@ completely unbuilt: request/admission dispatch for that admission,
 materialization/provenance facets, readiness/closure integration, and the
 runtime capability-disposition computation S279 deliberately left out of
 scope. S128 stays unchecked until GRADED_SNAPSHOT is sized and addressed.
+
+Sized GRADED_SNAPSHOT per direction and opened the capability-disposition
+computation as its own ninth gap (S287), confirmed unimplementable as
+written; capability dispositions stay untouched pending that ruling. Of
+the three remaining mechanical pieces, built and tested
+`graded_snapshot_materialization_facet`: groups scalar
+`casilla_values` and repeated `row_casilla_values` into typed
+`ModeloWorkspaceMaterializationRecordV1` rows, keying every repeated-row
+group by its `DirectRowMaterializationProvenance.source_binding_id` (never
+a re-derived identity), and refuses (`ValueError`) a row casilla value
+carrying no `row_casilla_provenance` entry -- proved against a real
+`CalculationRevision` built the same way `test_source_mesh_revision_roundtrip.py`
+builds one, plus a `model_construct`-bypassed defensive-only proof, since
+`CalculationRevision`'s own validator already forecloses that shape from
+ever reaching the facet through normal construction.
+
+Found and held, rather than guessed around, two further gaps while sizing
+the remaining two pieces:
+- `graded_snapshot_provenance_facet`: `CalculationSourceRef` (the sole
+  source of `CalculationRevision.source_provenance`) carries no field
+  naming the casilla or binding it explains, but
+  `ModeloWorkspaceProvenanceRecordV1.subject` requires exactly that
+  identity. `CasillaObservation.source_refs` is a different, unrelated
+  concept (legal-catalogue `SourceRefId`s) from `CalculationSourceRef.source_ref`
+  (a resolver-mesh string), so there is no shared key to join on. Not
+  built.
+- readiness/closure pass-through: `ProjectionModeloReadiness`,
+  `ProfilePreflightRequirement` and `ProjectionModeloBindingRequirement`
+  map 1:1 onto their Workspace equivalents and are safe to build, but
+  `LedgerPreflightIssue.transaction_id: TransactionId | Literal["__period__"]`
+  has no representable arm in the required
+  `ModeloWorkspaceLedgerIssueV1.transaction_id: TransactionId` for a
+  period-level (not one-transaction) issue. Not built.
+
+Landing commit `40c802ea31` also carries an unrelated, pre-staged registry
+relocation continuing `dd44ea6a1a` (`RelationDefinition` consolidation into
+`schema.py`, consumer repoints) that was already staged in the shared
+worktree index when this commit ran; verified harmless (`ty check` clean,
+108 workspace tests pass, the only red collection is the pre-existing
+`.baseline-source-snapshot` fixed-point failure and unrelated
+`cadrumo_harness.mcp` collection errors reproducing independently of this
+change) and disclosed rather than unwound.
