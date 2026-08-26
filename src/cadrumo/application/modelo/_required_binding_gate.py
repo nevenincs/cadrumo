@@ -31,8 +31,8 @@ from decimal import Decimal
 from ...core import ActionEvidenceProvenance, Modelo
 from ...core.resources import bundled_path
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
@@ -40,7 +40,7 @@ from ...domain.user_profile.loader import load_user_profile_schema
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ._action_errors import ModeloRequiredBindingsMissingError
 from ._preconditions import build_modelo_precondition_failure
-from ._profile_binding import profile_fact_index, resolve_profile_binding_value
+from .profile_binding import profile_fact_index, resolve_profile_binding_value
 
 
 def require_modelo_required_bindings_resolved(

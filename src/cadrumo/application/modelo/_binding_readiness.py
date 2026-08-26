@@ -14,7 +14,7 @@ fetched through a :class:`ValidatedRegistryAuthority` given the
 requested modelo, year, and period.
 
 See Also:
-    :func:`cadrumo.application.modelo._profile_binding.resolve_profile_sourced_bindings`
+    :func:`cadrumo.application.modelo.profile_binding.resolve_profile_sourced_bindings`
         Profile binding resolver whose typed binding channels become the
         profile-resolved id set returned here.
     :mod:`cadrumo.application.state_projection`
@@ -28,6 +28,7 @@ from datetime import date
 
 from ...core import Period
 from ...core.logging import get_logger
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -35,11 +36,10 @@ from ...domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.temporal import select_revision_for_year
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ._profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
 from ._registry_resources import authority_via_resources
+from .profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
 
 _log = get_logger(__name__)
 

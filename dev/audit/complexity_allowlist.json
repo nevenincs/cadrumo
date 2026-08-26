@@ -186,11 +186,11 @@
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 12
       },
-      "src/cadrumo/application/modelo/_profile_binding.py::_resolve_maternidad_meses_from_fact_index": {
+      "src/cadrumo/application/modelo/profile_binding.py::_resolve_maternidad_meses_from_fact_index": {
         "reason": "flat guard/dispatch chain, max nesting depth 1; long but linear, never regressed from baseline",
         "score": 11
       },
-      "src/cadrumo/application/modelo/_profile_binding.py::_resolve_one": {
+      "src/cadrumo/application/modelo/profile_binding.py::resolve_profile_binding_value": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 12
       },

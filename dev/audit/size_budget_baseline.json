@@ -38,7 +38,7 @@
     "src/cadrumo/application/modelo/_calculate_input.py": 1524,
     "src/cadrumo/application/modelo/_calculation_actions.py": 1658,
     "src/cadrumo/application/modelo/_export.py": 1353,
-    "src/cadrumo/application/modelo/_profile_binding.py": 1679,
+    "src/cadrumo/application/modelo/profile_binding.py": 1679,
     "src/cadrumo/application/modelo/_verification_actions.py": 1554,
     "src/cadrumo/application/provisioning.py": 1420,
     "src/cadrumo/application/wizard/_commands.py": 2047,

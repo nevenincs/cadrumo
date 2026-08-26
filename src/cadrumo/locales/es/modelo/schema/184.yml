@@ -6,94 +6,134 @@ modelo:
           de atribución de rentas.
         title: Entidades en régimen de atribución de rentas (informativa anual)
       revision:
-        2015-2024:
+        '2015':
           casilla:
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: Casilla 121-122 del modelo 184, ejercicio 2015.
-              label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
             x-chim6r1ecll6asj3d5hmiro:
               help: Casilla ejercicio del modelo 184, ejercicio 2015.
               label: Ejercicio al que se refiere la declaracion
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casilla tipo-declaracion del modelo 184, ejercicio 2015.
+              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+          field:
+            label: Modelo 184, ejercicio 2015
+        2016-2018:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Casilla ejercicio del modelo 184, ejercicios 2016 a 2018.
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casilla tipo-declaracion del modelo 184, ejercicios 2016 a 2018.
+              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+          field:
+            label: Modelo 184, ejercicios 2016 a 2018
+        2019-2021:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Casilla ejercicio del modelo 184, ejercicios 2019 a 2021.
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casilla tipo-declaracion del modelo 184, ejercicios 2019 a 2021.
+              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+          field:
+            label: Modelo 184, ejercicios 2019 a 2021
+        '2022':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Casilla ejercicio del modelo 184, ejercicio 2022.
+              label: Ejercicio al que se refiere la declaracion
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Casilla tipo-declaracion del modelo 184, ejercicio 2022.
+              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+          field:
+            label: Modelo 184, ejercicio 2022
+        2023-2024:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: Casilla 121-122 del modelo 184, ejercicios 2023 y 2024.
+              label: DECLARACIÓN COMPLEMENTARIA O SUSTITUTIVA
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Casilla ejercicio del modelo 184, ejercicios 2023 y 2024.
+              label: Ejercicio al que se refiere la declaracion
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
-              help: Casilla 146 del modelo 184, ejercicio 2015.
+              help: Casilla 146 del modelo 184, ejercicios 2023 y 2024.
               label: ACTIVIDAD PRINCIPAL
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
-              help: Casilla 145 del modelo 184, ejercicio 2015.
+              help: Casilla 145 del modelo 184, ejercicios 2023 y 2024.
               label: TIPO DE ENTIDAD
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
-              help: Casilla 149-150 del modelo 184, ejercicio 2015.
+              help: Casilla 149-150 del modelo 184, ejercicios 2023 y 2024.
               label: CLAVE PAÍS
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
-              help: Casilla 148 del modelo 184, ejercicio 2015.
+              help: Casilla 148 del modelo 184, ejercicios 2023 y 2024.
               label: OBJETO
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
               help: Dato declarado en el modelo 184, declaracion informativa de entidades
                 en regimen de atribucion de rentas.
               label: Porcentaje de renta atribuible
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
-              help: Casilla 147 del modelo 184, ejercicio 2015.
+              help: Casilla 147 del modelo 184, ejercicios 2023 y 2024.
               label: TIPO DE ENTIDAD
             x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
               help: Importe declarado en el modelo 184. El diseno lo divide en parte
                 entera y parte decimal.
               label: Importe neto de la cifra de negocios
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: Casilla 108-120 del modelo 184, ejercicio 2015.
+              help: Casilla 108-120 del modelo 184, ejercicios 2023 y 2024.
               label: NÚMERO IDENTIFICATIVO DE LA DECLARACIÓN
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
-              help: Casilla 59-107 del modelo 184, ejercicio 2015.
+              help: Casilla 59-107 del modelo 184, ejercicios 2023 y 2024.
               label: TELÉFONO
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
-              help: Casilla 172-180 del modelo 184, ejercicio 2015.
+              help: Casilla 172-180 del modelo 184, ejercicios 2023 y 2024.
               label: N.I.F. DEL REPRESENTANTE
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: Casilla 181-220 del modelo 184, ejercicio 2015.
+              help: Casilla 181-220 del modelo 184, ejercicios 2023 y 2024.
               label: APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL REPRESENTANTE
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Casilla tipo-declaracion del modelo 184, ejercicio 2015.
+              help: Casilla tipo-declaracion del modelo 184, ejercicios 2023 y 2024.
               label: Tipo de declaracion (originaria / sustitutiva / complementaria)
             x-chim6r1eehkn0rpdednn0rriehig:
-              help: Casilla 58 del modelo 184, ejercicio 2015.
+              help: Casilla 58 del modelo 184, ejercicios 2023 y 2024.
               label: TIPO DE SOPORTE
             x-chim6r1eehnn8obc5lpmuor9dtpg:
-              help: Casilla 136-144 del modelo 184, ejercicio 2015.
+              help: Casilla 136-144 del modelo 184, ejercicios 2023 y 2024.
               label: NÚMERO TOTAL DE REGISTROS DE SOCIOS, HEREDEROS, COMUNEROS O PARTÍCIPES
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
-              help: Casilla 156 del modelo 184, ejercicio 2015.
+              help: Casilla 156 del modelo 184, ejercicios 2023 y 2024.
               label: TRIBUTACIÓN EN RÉGIMEN DEL IMPUESTO SOBRE SOCIEDADES
             x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
               help: Importe declarado en el modelo 184. El diseno lo divide en parte
                 entera y parte decimal.
               label: Base de la deducción / importe
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
-              help: Casilla 97-116 del modelo 184, ejercicio 2015.
+              help: Casilla 97-116 del modelo 184, ejercicios 2023 y 2024.
               label: DENOMINACIÓN O RAZÓN SOCIAL DEL CESIONARIO / DENOMINACIÓN DE
                 LA INSTITUCIÓN DE INVERSIÓN COLECTIVA
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
-              help: Casilla 88-96 del modelo 184, ejercicio 2015.
+              help: Casilla 88-96 del modelo 184, ejercicios 2023 y 2024.
               label: NIF DE PERSONA O ENTIDAD CESIONARIA / NIF DE LA INSTITUCIÓN DE
                 INVERSIÓN COLECTIVA
             x-ehkn0rpi5phmoobmck:
-              help: Casilla 77 del modelo 184, ejercicio 2015.
+              help: Casilla 77 del modelo 184, ejercicios 2023 y 2024.
               label: Clave del tipo de renta atribuida (A=capital mobiliario, C=capital
                 inmobiliario, D=actividades economicas, F=ganancias/perdidas no transmision,
                 G=ganancias/perdidas transmision, I=deducciones IRPF, J=deducciones
                 IS, K=retenciones soportadas, L=exceso rentas negativas paises sin
                 convenio)
             x-ehkn0rpi5phmoobmckmn0ob9ec:
-              help: Casilla 80-81 del modelo 184, ejercicio 2015.
+              help: Casilla 80-81 del modelo 184, ejercicios 2023 y 2024.
               label: CLAVE PAÍS
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
-              help: Casilla 396 del modelo 184, ejercicio 2015.
+              help: Casilla 396 del modelo 184, ejercicios 2023 y 2024.
               label: CRITERIO DE COBROS Y PAGOS
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
-              help: Casilla 498-500 del modelo 184, ejercicio 2015.
+              help: Casilla 498-500 del modelo 184, ejercicios 2023 y 2024.
               label: NÚMERO DE DÍAS DE ARRENDAMIENTO O CESIÓN DE USO Y DISFRUTE
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
-              help: Casilla 84-87 del modelo 184, ejercicio 2015.
+              help: Casilla 84-87 del modelo 184, ejercicios 2023 y 2024.
               label: GRUPO O EPÍGRAFE IAE
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
-              help: Casilla 117-124 del modelo 184, ejercicio 2015.
+              help: Casilla 117-124 del modelo 184, ejercicios 2023 y 2024.
               label: Año
             x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
               help: Importe declarado en el modelo 184. El diseno lo divide en parte
@@ -199,16 +239,16 @@ modelo:
                 entera y parte decimal.
               label: Porcentaje de reducción
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
-              help: Casilla 246-265 del modelo 184, ejercicio 2015.
+              help: Casilla 246-265 del modelo 184, ejercicios 2023 y 2024.
               label: REFERENCIA CATASTRAL
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
-              help: Casilla 82 del modelo 184, ejercicio 2015.
+              help: Casilla 82 del modelo 184, ejercicios 2023 y 2024.
               label: RÉGIMEN DETERMINACIÓN RENDIMIENTOS
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
-              help: Casilla 196-207 del modelo 184, ejercicio 2015.
+              help: Casilla 196-207 del modelo 184, ejercicios 2023 y 2024.
               label: RENTA ATRIBUIBLE CON DERECHO A REDUCCIÓN
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
-              help: Casilla 177-190 del modelo 184, ejercicio 2015.
+              help: Casilla 177-190 del modelo 184, ejercicios 2023 y 2024.
               label: Importe de la renta atribuible / rendimiento neto atribuible
                 al miembro de la entidad (sin signo, sin coma decimal, en euros)
             x-ehkn0rpi5pp6at35dphmirreclpg:
@@ -216,17 +256,17 @@ modelo:
                 entera y parte decimal.
               label: Retenciones e ingresos a cuenta
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
-              help: Casilla 245 del modelo 184, ejercicio 2015.
+              help: Casilla 245 del modelo 184, ejercicios 2023 y 2024.
               label: SITUACIÓN DEL INMUEBLE
             x-ehkn0rpi5ppnaoj3dhgncp8:
-              help: Casilla 78-79 del modelo 184, ejercicio 2015.
+              help: Casilla 78-79 del modelo 184, ejercicios 2023 y 2024.
               label: Subclave del tipo de renta atribuida (granularidad por origen
                 geografico Espana/extranjero, reducciones aplicables, etc.)
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
-              help: Casilla 83 del modelo 184, ejercicio 2015.
+              help: Casilla 83 del modelo 184, ejercicios 2023 y 2024.
               label: TIPO DE ACTIVIDAD
             x-ehkn0rpi5pq6is3f5lk6uqj1:
-              help: Casilla 76 del modelo 184, ejercicio 2015.
+              help: Casilla 76 del modelo 184, ejercicios 2023 y 2024.
               label: TIPO DE HOJA
             x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
               help: Importe declarado en el modelo 184. El diseno lo divide en parte
@@ -237,24 +277,24 @@ modelo:
                 entera y parte decimal.
               label: 'Valor liquidativo / ajustes: aumentos'
             x-ehkn0rpj5phmoobmck:
-              help: Casilla 93 del modelo 184, ejercicio 2015.
+              help: Casilla 93 del modelo 184, ejercicios 2023 y 2024.
               label: CLAVE
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
               help: Dato declarado en el modelo 184, declaracion informativa de entidades
                 en regimen de atribucion de rentas.
               label: Clave de declarado
             x-ehkn0rpj5phmoobmckmn0ob9ec:
-              help: Casilla 79-80 del modelo 184, ejercicio 2015.
+              help: Casilla 79-80 del modelo 184, ejercicios 2023 y 2024.
               label: CLAVE PAÍS
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
-              help: Casilla 81 del modelo 184, ejercicio 2015.
+              help: Casilla 81 del modelo 184, ejercicios 2023 y 2024.
               label: CLAVE TIPO DE PARTÍCIPE
             x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
               help: Dato del miembro declarado en el registro de tipo 3 del modelo
                 184.
               label: Código provincia
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
-              help: Casilla 200-202 del modelo 184, ejercicio 2015.
+              help: Casilla 200-202 del modelo 184, ejercicios 2023 y 2024.
               label: NÚMERO DE DÍAS DE ARRENDAMIENTO O CESIÓN DE USO Y DISFRUTE DEL
                 INMUEBLE
             x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
@@ -262,10 +302,10 @@ modelo:
                 184.
               label: Número de días como miembro
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
-              help: Casilla 120-159 del modelo 184, ejercicio 2015.
+              help: Casilla 120-159 del modelo 184, ejercicios 2023 y 2024.
               label: DOMICILIO FISCAL DEL MIEMBRO DE LA ENTIDAD
             x-ehkn0rpj5pkmqs3fe9q6a:
-              help: Casilla 96-108 del modelo 184, ejercicio 2015.
+              help: Casilla 96-108 del modelo 184, ejercicios 2023 y 2024.
               label: IMPORTE (RENDIMIENTO / RETENCIÓN / DEDUCCIÓN)
             x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
               help: Dato del miembro declarado en el registro de tipo 3 del modelo
@@ -288,20 +328,20 @@ modelo:
                 entera y parte decimal.
               label: Porcentaje de participación
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
-              help: Casilla 195-199 del modelo 184, ejercicio 2015.
+              help: Casilla 195-199 del modelo 184, ejercicios 2023 y 2024.
               label: PORCENTAJE DE TITULARIDAD DEL INMUEBLE
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
-              help: Casilla 160-171 del modelo 184, ejercicio 2015.
+              help: Casilla 160-171 del modelo 184, ejercicios 2023 y 2024.
               label: PROVISIONES DEDUCIBLES Y GASTOS DE DIFÍCIL JUSTIFICACIÓN
             x-ehkn0rpj5pp6ap3lcdhmirre:
               help: Importe declarado en el modelo 184. El diseno lo divide en parte
                 entera y parte decimal.
               label: Reducción
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
-              help: Casilla 174-193 del modelo 184, ejercicio 2015.
+              help: Casilla 174-193 del modelo 184, ejercicios 2023 y 2024.
               label: REFERENCIA CATASTRAL
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
-              help: Casilla 216-229 del modelo 184, ejercicio 2015.
+              help: Casilla 216-229 del modelo 184, ejercicios 2023 y 2024.
               label: RENDIMIENTO NETO MINORADO DE ACTIVIDADES AGRÍCOLAS, GANADERAS
                 Y FORESTALES EN ESTIMACIÓN OBJETIVA
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
@@ -313,13 +353,13 @@ modelo:
                 en regimen de atribucion de rentas.
               label: NIF del representante fiscal
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
-              help: Casilla 173 del modelo 184, ejercicio 2015.
+              help: Casilla 173 del modelo 184, ejercicios 2023 y 2024.
               label: SITUACIÓN DEL INMUEBLE
             x-ehkn0rpj5ppnaoj3dhgncp8:
-              help: Casilla 94-95 del modelo 184, ejercicio 2015.
+              help: Casilla 94-95 del modelo 184, ejercicios 2023 y 2024.
               label: SUBCLAVE
             x-ehkn0rpj5pq6is3f5lk6uqj1:
-              help: Casilla 76 del modelo 184, ejercicio 2015.
+              help: Casilla 76 del modelo 184, ejercicios 2023 y 2024.
               label: TIPO DE HOJA
           construct:
             modelo-184-informative:
@@ -327,7 +367,7 @@ modelo:
                 title: Modelo 184 declaración informativa de entidades en régimen
                   de atribución de rentas
           field:
-            label: Modelo 184, ejercicios 2015 a 2024
+            label: Modelo 184, ejercicios 2023 y 2024
         2025-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:

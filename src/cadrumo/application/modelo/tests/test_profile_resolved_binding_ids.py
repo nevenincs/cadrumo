@@ -19,7 +19,7 @@ from decimal import Decimal
 import pytest
 
 from ...aggregation import CalculationSourceResolution
-from .._profile_binding import profile_resolved_binding_ids
+from ..profile_binding import profile_resolved_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,8 +72,9 @@ def test_no_consumer_re_encodes_the_channel_union() -> None:
     equality assertion would pass against the duplication it exists to
     prevent.
     """
-    from ... import state_projection
     from importlib import import_module
+
+    from ... import state_projection
 
     _binding_readiness = import_module("cadrumo.application.modelo._binding_readiness")
 

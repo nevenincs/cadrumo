@@ -6,7 +6,7 @@ registry has a selector that must match at least one fact path the
 agreement so a schema refactor or selector typo surfaces as a test failure
 rather than a silent missing-binding at runtime.
 
-The test calls :func:`_profile_fact_index` and :func:`_resolve_one` directly
+The test calls :func:`profile_fact_index` and :func:`resolve_profile_binding_value` directly
 because :func:`resolve_profile_sourced_bindings` filters to formula-consumed
 bindings only — export-only bindings (NIF, display name, …) are intentionally
 excluded from that call path but still need their selectors to be correct.
@@ -18,12 +18,12 @@ Design notes
   :func:`profile_binding_selectors`. They are export-layout bindings consumed
   by the XML serialiser, not the calculation engine. They are verified here by
   confirming their raw selector dict keys exist in the schema sections rather
-  than via ``_resolve_one``.
+  than via ``resolve_profile_binding_value``.
 - The ``profile_model`` selector form (binding 0008, CCAA) resolves through the
-  ``model_selectors`` alias — tested via the real ``_profile_fact_index`` index
+  ``model_selectors`` alias — tested via the real ``profile_fact_index`` index
   that exposes both selector forms.
 - Anti-tautology: one fact is deliberately omitted from the fixture; the test
-  asserts ``_resolve_one`` returns ``None`` for that binding, proving the
+  asserts ``resolve_profile_binding_value`` returns ``None`` for that binding, proving the
   resolver does not invent values.
 """
 
@@ -35,13 +35,14 @@ from typing import Any
 
 import pytest
 
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core.resources import resources
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests import REPO_ROOT
-from .._profile_binding import (
+from ..profile_binding import (
     inject_derived_autonomic_deduccion_facts,
     inject_derived_marriage_facts,
     profile_fact_index,
@@ -85,8 +86,8 @@ def _full_m100_profile() -> UserProfileRecord:
     ``identity.surnames`` / ``identity.name`` and ``renta_spouse.surnames`` /
     ``renta_spouse.name`` are included.
 
-    Value types are chosen to match what ``_resolve_one`` returns after
-    ``_profile_fact_index`` preserves the typed value from the profile record.
+    Value types are chosen to match what ``resolve_profile_binding_value`` returns after
+    ``profile_fact_index`` preserves the typed value from the profile record.
     Dates arrive as Python ``date`` objects; booleans as ``bool``;
     strings as ``str``; Decimals as ``Decimal``.
     """
@@ -176,7 +177,7 @@ def test_profile_model_selector_resolves_via_model_selector_alias() -> None:
     """The ``profile_model = TaxResidenceProfile, field = ccaa`` selector resolves
     through the schema's ``model_selectors`` alias index.
 
-    :func:`_profile_fact_index` exposes each fact under its canonical
+    :func:`profile_fact_index` exposes each fact under its canonical
     ``section.field`` path AND under every ``model_selectors`` alias declared
     in the schema. The CCAA binding uses the ``profile_model`` form, so the
     index key is ``TaxResidenceProfile.ccaa`` — an alias, not the canonical
@@ -188,14 +189,14 @@ def test_profile_model_selector_resolves_via_model_selector_alias() -> None:
 
     # The alias must be present in the index
     assert "TaxResidenceProfile.ccaa" in fact_index, (
-        "TaxResidenceProfile.ccaa alias not found in _profile_fact_index output; "
+        "TaxResidenceProfile.ccaa alias not found in profile_fact_index output; "
         "the model_selectors round-trip is broken"
     )
     assert fact_index["TaxResidenceProfile.ccaa"] == "cataluna"
 
 
 def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
-    """For each scalar ``profile_key`` / ``profile_model`` binding, ``_resolve_one`` returns a non-None value.
+    """For each scalar ``profile_key`` / ``profile_model`` binding, ``resolve_profile_binding_value`` returns a non-None value.
 
     The full-population profile fixture covers all scalar profile_key-form
     and simple profile_model-form bindings (0006-0024 range). Each must
@@ -206,7 +207,7 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
       format for XML export, yield no selector from profile_binding_selectors.
     - Repeating-collection bindings (0025-0035, ``profile_model`` +
       ``collection`` + ``repeating = True``) — hold list-valued facts on the
-      profile record that ``_resolve_one`` cannot project to a scalar;
+      profile record that ``resolve_profile_binding_value`` cannot project to a scalar;
       they are covered by test_repeating_collection_selectors_yield_known_alias.
     - The taxpayer death-date binding (0018) is intentionally absent from the
       fixture and is covered by test_absent_fact_resolves_to_none_anti_tautology.
@@ -340,7 +341,7 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved()
 
 
 def test_typed_values_match_expected_python_types() -> None:
-    """Values returned by ``_resolve_one`` carry the correct Python types.
+    """Values returned by ``resolve_profile_binding_value`` carry the correct Python types.
 
     The channel router in :func:`resolve_profile_sourced_bindings` branches on
     ``isinstance(value, bool)``, so booleans MUST arrive as ``bool``, not as
@@ -413,10 +414,10 @@ def test_typed_values_match_expected_python_types() -> None:
 
 
 def test_absent_fact_resolves_to_none_anti_tautology() -> None:
-    """Deliberately absent fact produces None from ``_resolve_one`` — not a stale value.
+    """Deliberately absent fact produces None from ``resolve_profile_binding_value`` — not a stale value.
 
     The taxpayer death-date fact (0018) is intentionally omitted from the
-    full-population fixture. ``_resolve_one`` must return ``None`` for it.
+    full-population fixture. ``resolve_profile_binding_value`` must return ``None`` for it.
     If the resolver were reading stale state or caching across records this
     test would incorrectly return a value.
     """
@@ -436,7 +437,7 @@ def test_ccaa_binding_selector_yields_model_selector_string() -> None:
     The CCAA binding uses the ``profile_model`` + ``field`` selector form,
     so :func:`profile_binding_selectors` must yield the ``<model>.<field>``
     alias string — not the canonical ``tax_residence.ccaa`` path. If the
-    selector form is mis-parsed, the alias lookup in ``_profile_fact_index``
+    selector form is mis-parsed, the alias lookup in ``profile_fact_index``
     would silently fail.
     """
     profile_bindings = _profile_bindings()

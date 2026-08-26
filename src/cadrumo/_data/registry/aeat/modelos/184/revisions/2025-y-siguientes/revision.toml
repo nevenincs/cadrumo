@@ -35,8 +35,7 @@ reviewed_at = 2026-08-16
 
 [revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
 reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2015-y-siguientes' of modelo 184 has no strictly-earlier sibling revision of this modelo (valid_from 2015-01-01 precedes every other declared revision), so it cannot be the landing point of any within-modelo continuity \
-transition; the casilla_continuidad_evolutions family is empty by construction, not by omission."""
+Revision 2023-2024 is a strictly parsed predecessor, but Orden HAC/1430/2025 changes the modelo's record design. A casilla continuity evolution requires a reviewed field-by-field identity across those two source geometries; no such identity has been established here. The family is therefore empty as an explicit refusal, not because this revision lacks a predecessor. Reconsider only after the two parsed designs have been compared and any surviving identities are authored with their own source evidence."""
 legal_refs = [
     "orden-hac-1430-2025:art-4",
     "orden-hap-2250-2015:art-1",

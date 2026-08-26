@@ -89,6 +89,8 @@ from ...tests import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
 
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -96,7 +98,6 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, RegistryAuthorityGrade, validated_casilla_id
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
@@ -107,8 +108,8 @@ from .._calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from .._work_lifecycle import create_work_unit
 from .._filed_revision_observation import APP_FILING_SOURCE_KIND
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -214,7 +215,7 @@ def _seed_m200_sociedad_profile() -> None:
     ``sal-capital-social``. For a standard SL (not a SAL), the SAL facts are
     absent / zero, which the formulas treat as no dotacion. The profile resolver
     fills all six from the persisted record via
-    :class:`cadrumo.application.modelo._profile_binding.ModeloProfileBindingResolver`;
+    :class:`cadrumo.application.modelo.profile_binding.ModeloProfileBindingResolver`;
     no profile binding is hand-fed through the caller channel. ``display_name``
     matches the ``isolated_runtime_profile`` manifest label.
     """

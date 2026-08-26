@@ -5,138 +5,141 @@ modelo:
         official_name: null
         title: null
       revision:
-        2007-y-siguientes:
+        '2007':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+          field:
+            label: null
+        2008-y-siguientes:
           casilla:
             x-cdmn8bj1clp6urj1epiiqobedsmmcob2e9km6ob3d5nms:
               help: null
-              label: Légi jármű. Gyártási év
+              label: null
             x-cdmn8bj1clp6urj1epiiqpj1c9p6ior1dpq6a:
               help: null
-              label: Légi jármű. Gyártó
+              label: null
             x-cdmn8bj1clp6urj1epiiqrbfchimoro:
               help: null
-              label: Légi jármű. Modell
+              label: null
             x-cdmn8bj1clp6urj1epiiqs35edniqrb1f1kmqrpdchin6s35ctqma:
               help: null
-              label: Légi jármű. Legnagyobb felszállótömeg (kg)
+              label: null
             x-cdmn8bj1clp6urj1epiiqsr5e9kma:
               help: null
-              label: Légi jármű. Sorozatszám
+              label: null
             x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
               help: null
-              label: Vízi jármű. Legnagyobb hossz (méter)
+              label: null
             x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               help: null
-              label: Vízi jármű. Gyártó vagy importőr
+              label: null
             x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
               help: null
-              label: Vízi jármű. Azonosítás (építési szám)
+              label: null
             x-cdmn8bj5dlh62sj3c5hmirre5lmmup35dhng:
               help: null
-              label: Vízi jármű. Modell
+              label: null
             x-cdmn8bj5dlh62sj3c5hmirre5lnm4sr5e9r62or9dtn6aso:
               help: null
-              label: Vízi jármű. Megjegyzések
+              label: null
             x-cdmn8bj6clhmgo9de1p6irb5e9giqrb1ehp6iorldhgm6qbfdo:
               help: null
-              label: Az első nyilvántartásba vétel, üzembe helyezés vagy első használat
-                időpontja
+              label: null
             x-cdmn8bjbd5m6urb5ehp6uspdd1nn4obj5lqn6ro:
               help: null
-              label: Megtett kilométerek vagy a használat óráinak száma
+              label: null
             x-cdmn8bjceljm2shdc5i72tb9edkm6qbfdo:
               help: null
-              label: A közlekedési eszköz beszerzésének helye
+              label: null
             x-cdmn8bjeelincrpdelpm2p3f:
               help: null
-              label: Új vagy használt közlekedési eszköz
+              label: null
             x-cdmn8bjmclk6iorldhniqoj1edq6ip3fe8:
               help: null
-              label: Gépjármű. Azonosító szám (alvázszám)
+              label: null
             x-cdmn8bjmclk6iorldhniqor1ehimerrid5giqor5:
               help: null
-              label: Gépjármű. Besorolás a 70/156/EGK irányelv szerint
+              label: null
             x-cdmn8bjmclk6iorldhniqor9dhkmsp3ic5i62:
               help: null
-              label: Gépjármű. Hengerűrtartalom (cm³)
+              label: null
             x-cdmn8bjmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
               help: null
-              label: Gépjármű. Besorolás építési és használati szempont szerint (RD
-                2822/1998)
+              label: null
             x-cdmn8bjmclk6iorldhniqorfchkmerpdd5q7c:
               help: null
-              label: Gépjármű. Műszaki vizsga (ITV) kód
+              label: null
             x-cdmn8bjmclk6iorldhniqpbdd5pmirreclpiqorf68:
               help: null
-              label: Gépjármű. CO2-kibocsátás (gramm/km)
+              label: null
             x-cdmn8bjmclk6iorldhniqpbgd5jn4ob6ck:
               help: null
-              label: Gépjármű. Tételszám
+              label: null
             x-cdmn8bjmclk6iorldhniqqbkeomn6pbid5ig:
               help: null
-              label: Gépjármű. A műszaki vizsga (ITV) kártya sorozatszáma
+              label: null
             x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
               help: null
-              label: Gépjármű. A műszaki vizsga (ITV) kártya típusa
+              label: null
             x-cdmn8bjmclk6iorldhniqrb1e9hm2:
               help: null
-              label: Gépjármű. Gyártmány
+              label: null
             x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
               help: null
-              label: Gépjármű. Modell-típus
+              label: null
             x-cdmn8bjmclk6iorldhniqrbfehnn4:
               help: null
-              label: Gépjármű. Motortípus (benzin, dízel vagy egyéb)
+              label: null
             x-cdmn8bjmclk6iorldhniqrr2edin4tj1cdkmurj5ec:
               help: null
-              label: Gépjármű. Megjegyzések
+              label: null
             x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
               help: null
-              label: Az adóköteles esemény oka
+              label: null
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: Az önadózás vonatkozási éve
+              label: null
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: null
-              label: Kiegészítő bevallás. Az előző bevallás igazolásszáma
+              label: null
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
-              label: Önadózás típusa (eredeti / helyettesítő / kiegészítő)
+              label: null
             x-chim6r1eehkn0rpdehp62rjje1nn4t35:
               help: null
-              label: 'A közlekedési eszköz típusa (V: gépjármű, E: vízi jármű, A:
-                légi jármű)'
+              label: null
             x-d5n78sjfchqm6t3fe8n6sqb6:
               help: null
-              label: A gépjárművet Spanyolországba behozó személy adószáma (NIF)
+              label: null
             x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
               help: null
-              label: A gépjárművet Spanyolországba behozó személy vezeték- és keresztneve
-                vagy cégneve
+              label: null
             x-dhkn2bj15li6ap3lcdkn4:
               help: null
-              label: Elszámolás. Levonandó összeg
+              label: null
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
               help: null
-              label: Elszámolás. Adóalap
+              label: null
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
               help: null
-              label: Elszámolás. Csökkentett adóalap
+              label: null
             x-dhkn2bj3elnn8o8:
               help: null
-              label: Elszámolás. Adóösszeg
+              label: null
             x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
               help: null
-              label: Elszámolás. Befizetendő adó
+              label: null
             x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
               help: null
-              label: Elszámolás. Lineáris levonás
+              label: null
             x-dhkn2bjiclpnar3kc5i6u:
               help: null
-              label: Elszámolás. Az elszámolás eredménye
+              label: null
             x-dhkn2bjkd5o6u:
               help: null
-              label: Elszámolás. Adókulcs (%)
+              label: null
           construct:
             modelo-576-autoliquidacion:
               field:

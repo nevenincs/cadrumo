@@ -6,10 +6,16 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError, RegistryValidationError
+from cadrumo.domain.calculations.registry.record_design import extract_record_design
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.validate import RegistryValidator
+
+from .....core import RegistryAuthorityGrade
+from .....core.hashing import hash_file
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
-from cadrumo.domain.calculations.registry.validate import RegistryValidator
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -47,51 +53,92 @@ def test_modelo_184_modelo_metadata_matches_hap_2250_2015() -> None:
 
 def test_modelo_184_revision_period_selector_starts_at_2015() -> None:
     modelo, catalogues = _load_modelo_184()
-    # The earlier half of the split carries the 2015 start. Orden HAC/1430/2025
-    # partitioned this modelo at ejercicio 2025, so the revision reaching back to
-    # 2015 is `2015-2024`; `2025-y-siguientes` starts at the boundary.
-    revision = modelo.revisions["2015-2024"]
+    revision = modelo.revisions["2015"]
 
-    # `valid_from` is the revision's DEVENGO window start, canonicalised to the
-    # ejercicio start -- 87 of the tree's 95 revisions sit on January 1, and the
-    # eight that do not are genuine mid-year regime starts (the 369 OSS esquemas,
-    # 490's second quarter), never an orden's publication date. Asserting
-    # 2015-10-30 here conflated the two axes: that is when Orden HAP/2250/2015
-    # entered force, which is a fact about the ORDEN, and the window checks read
-    # `valid_from` as a devengo date.
     assert revision.valid_from == date(2015, 1, 1)
-    # The orden's own effective date, asserted where it actually lives, so the
-    # fact this test used to cover is not dropped by moving it.
+    assert revision.valid_to == date(2015, 12, 31)
     assert catalogues.legal["orden-hap-2250-2015:art-1"].effective_from == date(2015, 10, 30)
     assert revision.period_selector.year_from == 2015
+    assert revision.period_selector.year_to == 2015
     assert revision.period_selector.periods == ("0A",)
     assert revision.orden_aplicabilidad == ("orden-hap-2250-2015:art-1",)
 
 
-def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:
-    """Every published year resolves, and resolves to the half the orden governs.
+_RAW_BOE_DESIGN_ERAS = (
+    ("2015", 2015, 2015, "boe-dr-184-2015", 160),
+    ("2016-2018", 2016, 2018, "boe-dr-184-2016-2018", 81),
+    ("2019-2021", 2019, 2021, "boe-dr-184-2019-2021", 95),
+    ("2022", 2022, 2022, "boe-dr-184-2022", 103),
+    ("2023-2024", 2023, 2024, "boe-dr-184-2023-2024", 27),
+)
 
-    Before the split one revision answered for every year, so this could only
-    assert that a snapshot built at all. Now it also pins WHICH side of the
-    boundary each year lands on, which is the fact that matters: the two halves
-    carry different byte layouts, so a year resolving to the wrong one would
-    write a filing at the wrong offsets while still building cleanly.
+
+@pytest.mark.parametrize(("revision_id", "year_from", "year_to", "source_ref", "first_position"), _RAW_BOE_DESIGN_ERAS)
+def test_modelo_184_raw_boe_design_eras_are_hash_pinned_and_explicitly_not_mapped(
+    revision_id: str,
+    year_from: int,
+    year_to: int,
+    source_ref: str,
+    first_position: int,
+) -> None:
+    """A raw BOE design is provenance, not a surrogate for a later AEAT map.
+
+    The parser refusal is intentional and load-bearing: reconsider promotion
+    only when strict parsing produces complete records starting at position 1.
     """
+    modelo, catalogues = _load_modelo_184()
+    revision = modelo.revisions[revision_id]
+    source = catalogues.sources[source_ref]
+    path = bundled_path() / source.corpus_path
+
+    assert source_ref in revision.source_refs
+    assert source.kind == "record_design"
+    assert source.record_design_epoch is None
+    assert source.applies_from == date(year_from, 1, 1)
+    assert source.applies_to == date(year_to, 12, 31)
+    assert hash_file(path) == (source.sha256, source.bytes)
+    if revision_id != "2023-2024":
+        assert revision.authority_grade.value == "applicability"
+        assert revision.export_layouts == ()
+
+    with pytest.raises(RegistryValidationError, match=rf"first field starts at position {first_position}"):
+        extract_record_design(path)
+
+
+def test_modelo_184_refuses_an_epoch_selector_mutation_that_overlaps_2023() -> None:
+    """A widened 2022 selector cannot silently absorb the 2023-2024 design."""
+    modelo, _ = _load_modelo_184()
+    revision = modelo.revisions["2022"]
+    widened = revision.model_copy(
+        update={
+            "valid_to": date(2023, 12, 31),
+            "period_selector": revision.period_selector.model_copy(update={"year_to": 2023}),
+        },
+    )
+    mutated = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: widened}})
+
+    with pytest.raises(AmbiguousRevisionSelectionError):
+        select_revision(mutated, filing_year=2023, period="0A", on=date(2023, 12, 31))
+
+
+def test_modelo_184_snapshot_builds_for_each_published_filing_year() -> None:
+    """Every claimed year resolves through its own design/applicability era."""
     expected_by_year = {
-        2018: "2015-2024",
-        2019: "2015-2024",
-        2020: "2015-2024",
-        2021: "2015-2024",
-        2022: "2015-2024",
-        2023: "2015-2024",
-        2024: "2015-2024",
-        # Orden HAC/1430/2025 art. cuarto is applicable for the first time to
-        # ejercicio 2025 for modelo 184.
+        2015: "2015",
+        2016: "2016-2018",
+        2017: "2016-2018",
+        2018: "2016-2018",
+        2019: "2019-2021",
+        2020: "2019-2021",
+        2021: "2019-2021",
+        2022: "2022",
+        2023: "2023-2024",
+        2024: "2023-2024",
         2025: "2025-y-siguientes",
         2026: "2025-y-siguientes",
     }
     for filing_year, expected in expected_by_year.items():
-        snapshot = _committed_snapshot("184", filing_year, "0A")
+        snapshot = _committed_snapshot("184", filing_year, "0A", RegistryAuthorityGrade.APPLICABILITY)
         assert snapshot.revision.id == expected, filing_year
 
 
@@ -110,15 +157,7 @@ def test_modelo_184_snapshot_exposes_legal_and_source_grounding() -> None:
 
 
 def test_modelo_184_february_deadline_windows_match_hap_2250_2015_art_4() -> None:
-    """Every February window is correct AND sits on the half its ejercicio resolves to.
-
-    This pinned all nine windows on ``2025-y-siguientes`` while one revision
-    answered for every year. Orden HAC/1430/2025 partitioned the modelo at
-    ejercicio 2025, and a window belongs to the revision whose span contains its
-    ejercicio, so seven moved to ``2015-2024``. Asserting a literal set against
-    one revision would have to be rewritten at the next split; asserting that the
-    window is found on the LAW-SELECTED revision survives it.
-    """
+    """Every February window is on the canonical law-selected revision."""
     expected = {
         "modelo-184-2018-0a": (date(2019, 2, 1), date(2019, 2, 28)),
         "modelo-184-2019-0a": (date(2020, 2, 1), date(2020, 2, 29)),
@@ -134,7 +173,7 @@ def test_modelo_184_february_deadline_windows_match_hap_2250_2015_art_4() -> Non
     seen_by_revision: dict[str, int] = {}
     for window_id, (opens, closes) in expected.items():
         ejercicio = int(window_id.split("-")[2])
-        revision = _committed_snapshot("184", ejercicio, "0A").revision
+        revision = _committed_snapshot("184", ejercicio, "0A", RegistryAuthorityGrade.APPLICABILITY).revision
         windows = {w.id: w for w in revision.deadline_windows}
 
         assert window_id in windows, (
@@ -144,9 +183,13 @@ def test_modelo_184_february_deadline_windows_match_hap_2250_2015_art_4() -> Non
         assert windows[window_id].closes_on == closes
         seen_by_revision[revision.id] = seen_by_revision.get(revision.id, 0) + 1
 
-    # The partition itself, so a regression that copied every window back into
-    # both halves would still be caught: each window must live on exactly one.
-    assert seen_by_revision == {"2015-2024": 7, "2025-y-siguientes": 2}
+    assert seen_by_revision == {
+        "2016-2018": 1,
+        "2019-2021": 3,
+        "2022": 1,
+        "2023-2024": 2,
+        "2025-y-siguientes": 2,
+    }
     for revision_id, count in seen_by_revision.items():
         declared = {w.id for w in _load_modelo_184()[0].revisions[revision_id].deadline_windows}
         assert len(declared) == count, f"{revision_id} declares windows beyond the {count} expected: {declared}"
@@ -284,7 +327,27 @@ def test_modelo_184_socio_record_does_not_carry_the_entidad_positions(design_ref
     assert divergences == len(_ENTIDAD_POSITIONS)
 
 
-@pytest.mark.parametrize("revision_id", ["2015-2024", "2025-y-siguientes"])
+def test_modelo_184_2023_entidad_offset_mutation_conflicts_with_the_source_geometry() -> None:
+    """The 2023 layout's f009 offset is evidence, not a replaceable constant."""
+    modelo, _ = _load_modelo_184()
+    revision = modelo.revisions["2023-2024"]
+    field = next(
+        field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.id == "m184-2023.entidad.f009"
+    )
+    mutated = field.model_copy(update={"offset": field.offset - 1})
+    entidad, _ = _tipo2_sheets("aeat-dr-184-2023-2024")
+    by_offset = {candidate.offset: candidate for candidate in entidad.fields if candidate.offset is not None}
+
+    assert field.offset == 77
+    assert "CLAVE" in by_offset[field.offset].description
+    assert by_offset[mutated.offset].description != by_offset[field.offset].description
+
+
+@pytest.mark.parametrize("revision_id", ["2023-2024", "2025-y-siguientes"])
 def test_modelo_184_manifest_declares_the_entidad_positions_it_was_verified_against(revision_id: str) -> None:
     """The manifest must still declare exactly the positions the design proof pins.
 

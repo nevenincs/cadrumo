@@ -28,12 +28,13 @@ from functools import lru_cache
 
 import pytest
 
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
+from ....core.resources import resources
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._profile_binding import _derived_binding_diagnostics, resolve_profile_sourced_bindings
+from ..profile_binding import _derived_binding_diagnostics, resolve_profile_sourced_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

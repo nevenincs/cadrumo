@@ -1,14 +1,14 @@
 """Profile-sourced values addressed on the exported declaration.
 
 The export-shaped counterpart to the calculation-shaped resolution in
-:mod:`._profile_binding`. Both read the SAME fact index and the SAME
+:mod:`.profile_binding`. Both read the SAME fact index and the SAME
 per-binding resolution -- this module adds only the export-side shaping, so a
 profile fact cannot mean one thing to the calculation engine and another to the
 filed artefact. It is a family module, not a second authority: the fact index
 and single-binding resolution stay owned next door and are imported, never
 reimplemented.
 
-Split out when ``_profile_binding`` crossed its module size budget. The
+Split out when ``profile_binding`` crossed its module size budget. The
 calculation and export halves genuinely are two cohesive concerns over one
 shared substrate, which is the split the budget forced and the shape the
 per-family binding modules elsewhere in the tree already use.
@@ -25,9 +25,9 @@ from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue
 from ..filing import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
-# Intra-package reuse of this package's own resolver internals, which the
-# architecture rule permits; the cross-package boundary has its own gate.
-from ._profile_binding import _profile_fact_index, _resolve_one  # pyright: ignore[reportPrivateUsage]
+# Reuse the public defining module's canonical fact-index and scalar resolver;
+# export shaping must not grow a second profile fact authority.
+from .profile_binding import profile_fact_index, resolve_profile_binding_value
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
 
@@ -90,7 +90,7 @@ def _profile_export_value(
 ) -> UserProfileFactValue | None:
     """Resolve one export binding's value, honouring a declared multi-key format.
 
-    :func:`_resolve_one` returns the FIRST non-blank selector value, which is
+    :func:`resolve_profile_binding_value` returns the FIRST non-blank selector value, which is
     right for a binding whose keys are fallbacks but wrong for one whose keys
     are PARTS: ``DP_APENOM_D`` declares ``("identity.surnames",
     "identity.name")`` with ``format = "surnames_name"``, and taking the first
@@ -105,10 +105,10 @@ def _profile_export_value(
     """
     selector = binding.selector
     if getattr(selector, "format", None) != _SURNAMES_NAME_FORMAT:
-        return _resolve_one(binding, fact_index)
+        return resolve_profile_binding_value(binding, fact_index)
     keys = tuple(getattr(selector, "profile_keys", ()) or ())
     if len(keys) < 2:
-        return _resolve_one(binding, fact_index)
+        return resolve_profile_binding_value(binding, fact_index)
     composed = compose_legal_full_name(
         surnames=str(fact_index.get(keys[0]) or ""),
         name=str(fact_index.get(keys[1]) or ""),
@@ -218,7 +218,7 @@ def resolve_export_identity(
     if record is None:
         return None
     resolved_schema = schema if schema is not None else load_user_profile_schema()
-    return _identity_from_profile_facts(_profile_fact_index(record, resolved_schema))
+    return _identity_from_profile_facts(profile_fact_index(record, resolved_schema))
 
 
 def _load_profile_record(*, bucket_id: str, profile_record: object | None) -> object | None:
@@ -261,7 +261,7 @@ def resolve_declaration_contact(
     if record is None:
         return DeclarationContactFacts()
     resolved_schema = schema if schema is not None else load_user_profile_schema()
-    facts = _profile_fact_index(record, resolved_schema)
+    facts = profile_fact_index(record, resolved_schema)
     phone = str(facts.get(_CONTACT_PERSON_PHONE_KEY) or "").strip()
     full_name = str(facts.get(_CONTACT_PERSON_NAME_KEY) or "").strip()
     return DeclarationContactFacts(phone=phone or None, full_name=full_name or None)
@@ -330,7 +330,7 @@ def _resolve_profile_export_values(
         except ProfileNotFoundError:
             return {}
     resolved_schema = schema if schema is not None else load_user_profile_schema()
-    fact_index = _profile_fact_index(record, resolved_schema)
+    fact_index = profile_fact_index(record, resolved_schema)
 
     values: dict[str, UserProfileFactValue] = {}
     for binding in bindings:

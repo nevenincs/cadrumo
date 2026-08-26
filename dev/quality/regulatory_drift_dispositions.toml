@@ -244,7 +244,7 @@ percentages the law fixes, written as Decimal literals at the resolver.
 """
 
 [[decision]]
-path = "src/cadrumo/application/modelo/_profile_binding.py"
+path = "src/cadrumo/application/modelo/profile_binding.py"
 disposition = "deferred"
 reference = "2026-08-14-registry-temporal-coverage-drift-census-audit"
 rationale = """

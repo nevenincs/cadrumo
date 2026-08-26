@@ -1,4 +1,4 @@
-"""Application-owned profile-sourced binding resolution.
+"""Application-owned profile-sourced Modelo binding resolution.
 
 A registry binding with ``source = "profile"`` carries a value the
 operator already entered onto their user profile (tax-residence CCAA,
@@ -143,7 +143,7 @@ def _is_user_profile_record(record: object) -> TypeGuard[UserProfileRecord]:
     return isinstance(record, UserProfileRecord)
 
 
-def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, UserProfileFactValue]:
+def profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, UserProfileFactValue]:
     """Build a selector -> typed-value index covering both selector forms.
 
     A profile binding's selector resolves either as the canonical
@@ -176,7 +176,7 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
     return index
 
 
-def _inject_derived_marriage_facts(
+def inject_derived_marriage_facts(
     fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
 ) -> None:
@@ -410,7 +410,7 @@ def resolve_maternidad_meses(
     mínimo aggregate makes, for the same reason — and the caller discloses it
     rather than letting a declared figure vanish.
     """
-    fact_index = _profile_fact_index(record, schema if schema is not None else load_user_profile_schema())
+    fact_index = profile_fact_index(record, schema if schema is not None else load_user_profile_schema())
     return _resolve_maternidad_meses_from_fact_index(fact_index, snapshot)
 
 
@@ -629,7 +629,7 @@ def _resolved_minimo_descendientes_thresholds(
     )
 
 
-def _second_entitled_filer_indicated(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
+def second_entitled_filer_indicated(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
     """Derive whether a second contribuyente is also entitled to the mínimo.
 
     Art. 61 norma 1ª prorates whenever two or more contribuyentes hold the
@@ -676,7 +676,7 @@ def _second_entitled_filer_indicated(fact_index: Mapping[str, UserProfileFactVal
     )
 
 
-def _inject_derived_minimo_descendientes_facts(
+def inject_derived_minimo_descendientes_facts(
     fact_index: dict[str, UserProfileFactValue],
     snapshot: RegistrySnapshot,
 ) -> None:
@@ -743,7 +743,7 @@ def _inject_derived_minimo_descendientes_facts(
         return
 
     profile = _renta_family_profile_from_facts(fact_index)
-    second_filer_indicated = _second_entitled_filer_indicated(fact_index)
+    second_filer_indicated = second_entitled_filer_indicated(fact_index)
 
     birth_order_amounts, menor_tres_supplement, fallecimiento_amount = estatal_tranches
     fact_index[estatal_key] = profile.minimo_descendientes_estatal(
@@ -807,7 +807,7 @@ def _declared_anualidades_alimentos(
     return coerce_decimal(raw)
 
 
-def _inject_derived_anualidades_eligibility_facts(
+def inject_derived_anualidades_eligibility_facts(
     fact_index: dict[str, UserProfileFactValue],
     snapshot: RegistrySnapshot,
 ) -> None:
@@ -899,20 +899,20 @@ _MADRID_CCAA_CODE = "madrid"
 _CONJUNTA_DECLARATION_TYPE = "2"
 _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY = "renta_family.madrid_nacimiento_adopcion_eligible_count"
 _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY = "renta_family.unidad_familiar_otros_miembros_base"
-_MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR = 2025
+MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR = 2025
 
 
-def _is_madrid_resident(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
+def is_madrid_resident(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
     """Return whether ``tax_residence.ccaa`` names the Comunidad de Madrid."""
     ccaa = fact_index.get("tax_residence.ccaa")
     return isinstance(ccaa, str) and ccaa.strip().lower() == _MADRID_CCAA_CODE
 
 
-def _is_indeterminate_unidad_familiar(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
+def is_indeterminate_unidad_familiar(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
     """Return whether the filer's unit is a tributación-conjunta or partnered case.
 
     This is exactly the condition that makes the Madrid nacimiento/adopción
-    over-claim guard fail-closed in :func:`_inject_derived_autonomic_deduccion_facts`
+    over-claim guard fail-closed in :func:`inject_derived_autonomic_deduccion_facts`
     (research F9 — no persisted spouse base imponible to evaluate the
     unidad-familiar 61.860 € límite). Shared with the verify-path D4 eligibility
     advisory so both surfaces agree on exactly which units are indeterminate.
@@ -924,7 +924,7 @@ def _is_indeterminate_unidad_familiar(fact_index: Mapping[str, UserProfileFactVa
     return marital_status in _PARTNERED_STATUS_TOKENS
 
 
-def _madrid_nacimiento_adopcion_candidate_weighted_count(
+def madrid_nacimiento_adopcion_candidate_weighted_count(
     fact_index: Mapping[str, UserProfileFactValue],
     filing_year: int,
 ) -> Decimal:
@@ -949,13 +949,13 @@ def _madrid_nacimiento_adopcion_candidate_weighted_count(
     return weighted_count
 
 
-def _inject_derived_autonomic_deduccion_facts(
+def inject_derived_autonomic_deduccion_facts(
     fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
 ) -> None:
     """Inject the Madrid nacimiento/adopción deducción derived facts (casilla 1039).
 
-    Companion to :func:`_inject_derived_marriage_facts` and
+    Companion to :func:`inject_derived_marriage_facts` and
     :func:`_inject_derived_family_facts`. Reads the existing
     ``renta_family.descendiente.{n}.*`` facts and ``tax_residence.ccaa`` and
     computes the prorrateo-weighted count of descendants inside the Comunidad de
@@ -976,7 +976,7 @@ def _inject_derived_autonomic_deduccion_facts(
     other years return early. Idempotent: keys already present are not
     overwritten.
     """
-    if filing_year != _MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR:
+    if filing_year != MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR:
         return
 
     # Always supply a neutral 0 default so the casilla-1039 formula's two profile
@@ -988,12 +988,12 @@ def _inject_derived_autonomic_deduccion_facts(
     fact_index.setdefault(_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY, Decimal("0"))
     fact_index.setdefault(_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY, Decimal("0"))
 
-    if not _is_madrid_resident(fact_index):
+    if not is_madrid_resident(fact_index):
         return
-    if _is_indeterminate_unidad_familiar(fact_index):
+    if is_indeterminate_unidad_familiar(fact_index):
         return
 
-    weighted_count = _madrid_nacimiento_adopcion_candidate_weighted_count(fact_index, filing_year)
+    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(fact_index, filing_year)
     if weighted_count <= 0:
         return
 
@@ -1144,7 +1144,7 @@ def _inject_derived_state_attribution_facts(
 
 def _decimal_value(binding_id: BindingId, value: object) -> Decimal:
     # Boolean-typed profile facts arrive as Python ``bool`` now that
-    # ``_profile_fact_index`` preserves the typed value. ``bool`` is a
+    # ``profile_fact_index`` preserves the typed value. ``bool`` is a
     # subclass of ``int``, so ``isinstance(value, bool)`` must be tested
     # before ``isinstance(value, (int, Decimal))`` to avoid the ``1``/``0``
     # integer path silently accepting booleans.
@@ -1325,13 +1325,13 @@ def _load_profile_facts(
             return None
     profile_record_fingerprint = _profile_record_fingerprint(record)
     resolved_schema = schema if schema is not None else load_user_profile_schema()
-    fact_index = _profile_fact_index(record, resolved_schema)
-    _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
+    fact_index = profile_fact_index(record, resolved_schema)
+    inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     declared_selectors = _declared_profile_selectors(snapshot.revision)
     _inject_derived_family_facts(fact_index, snapshot.filing_year, declared_selectors)
-    _inject_derived_anualidades_eligibility_facts(fact_index, snapshot)
-    _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
-    _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
+    inject_derived_anualidades_eligibility_facts(fact_index, snapshot)
+    inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
+    inject_derived_minimo_descendientes_facts(fact_index, snapshot)
     _inject_derived_deduccion_maternidad_facts(fact_index, snapshot, declared_selectors)
     _inject_derived_incremento_guarderia_facts(fact_index, snapshot, declared_selectors)
     if "tax_residence.state_attribution_ratio" in {
@@ -1355,7 +1355,7 @@ def _resolve_profile_binding_channels(
         binding_id = binding.id
         if binding_id in caller_binding_ids:
             continue
-        value = _resolve_one(binding, fact_index)
+        value = resolve_profile_binding_value(binding, fact_index)
         if value is None:
             continue
         _route_resolved_binding(
@@ -1517,7 +1517,7 @@ def _derived_binding_diagnostics(
     """
     diagnostics: list[CalculationSourceDiagnostic] = []
     for binding in bindings:
-        if _resolve_one(binding, fact_index) is not None:
+        if resolve_profile_binding_value(binding, fact_index) is not None:
             continue
         for selector in profile_binding_selectors(binding.selector):
             derived = derived_selector_for_path(selector, schema.derived_selectors)
@@ -1541,7 +1541,7 @@ def _derived_binding_diagnostics(
     return tuple(diagnostics)
 
 
-def _resolve_one(
+def resolve_profile_binding_value(
     binding: DataBindingDefinition,
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> UserProfileFactValue | None:
@@ -1582,26 +1582,20 @@ def _resolve_one(
     return None
 
 
-inject_derived_marriage_facts = _inject_derived_marriage_facts
-inject_derived_autonomic_deduccion_facts = _inject_derived_autonomic_deduccion_facts
-inject_derived_anualidades_eligibility_facts = _inject_derived_anualidades_eligibility_facts
-second_entitled_filer_indicated = _second_entitled_filer_indicated
-inject_derived_minimo_descendientes_facts = _inject_derived_minimo_descendientes_facts
-profile_fact_index = _profile_fact_index
-resolve_profile_binding_value = _resolve_one
-is_madrid_resident = _is_madrid_resident
-is_indeterminate_unidad_familiar = _is_indeterminate_unidad_familiar
-madrid_nacimiento_adopcion_candidate_weighted_count = _madrid_nacimiento_adopcion_candidate_weighted_count
-MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR = _MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR
-
-
 __all__ = [
+    "MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR",
+    "MaternidadMesesResolution",
     "ProfileBindingResolutionError",
     "inject_derived_anualidades_eligibility_facts",
     "inject_derived_autonomic_deduccion_facts",
     "inject_derived_marriage_facts",
     "inject_derived_minimo_descendientes_facts",
+    "is_indeterminate_unidad_familiar",
+    "is_madrid_resident",
+    "madrid_nacimiento_adopcion_candidate_weighted_count",
     "profile_fact_index",
+    "profile_resolved_binding_ids",
+    "resolve_maternidad_meses",
     "resolve_profile_binding_value",
     "resolve_profile_sourced_bindings",
     "second_entitled_filer_indicated",

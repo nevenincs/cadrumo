@@ -17,9 +17,10 @@ from typing import Any
 
 import pytest
 
-from ....core.resources import resources
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from .._profile_binding import inject_derived_anualidades_eligibility_facts
+
+from ....core.resources import resources
+from ..profile_binding import inject_derived_anualidades_eligibility_facts
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

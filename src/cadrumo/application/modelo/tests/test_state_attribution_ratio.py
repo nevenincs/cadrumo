@@ -22,7 +22,7 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
-from .._profile_binding import (
+from ..profile_binding import (
     ProfileBindingResolutionError,
     _inject_derived_state_attribution_facts,
     resolve_profile_sourced_bindings,

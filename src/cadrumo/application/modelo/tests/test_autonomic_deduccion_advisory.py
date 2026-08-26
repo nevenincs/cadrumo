@@ -2,7 +2,7 @@
 
 Covers ``_madrid_nacimiento_adopcion_eligibility_advisory_finding``: the
 verify-path advisory fires when the calculate-path auto-trigger
-(``_inject_derived_autonomic_deduccion_facts``) fail-closed on an indeterminate
+(``inject_derived_autonomic_deduccion_facts``) fail-closed on an indeterminate
 (tributación conjunta or married/pareja-de-hecho) Madrid unit with at least one
 nacimiento/adopción-eligible descendant, leaving casilla 1039 at zero with no
 operator-facing signal.
@@ -13,14 +13,14 @@ Real adapters throughout: the resident registry authority for the loaded
 :class:`UserProfileRecord` — no mocks, stubs, or fakes. The parity assertion
 reads the SAME weighted count the calculate-path injector would have computed
 from the identical fact set (via the shared
-``_madrid_nacimiento_adopcion_candidate_weighted_count`` primitive), proving
+``madrid_nacimiento_adopcion_candidate_weighted_count`` primitive), proving
 the verify-path advisory is not fabricating a number independent of the
 calculate path.
 
 See Also:
     :func:`~application.modelo._autonomic_deduccion_advisory._madrid_nacimiento_adopcion_eligibility_advisory_finding`:
         Verify-path advisory under test.
-    :func:`~application.modelo._profile_binding.inject_derived_autonomic_deduccion_facts`:
+    :func:`~application.modelo.profile_binding.inject_derived_autonomic_deduccion_facts`:
         Calculate-path fail-closed injector this advisory complements.
     :class:`~domain.calculations.registry.RegistrySnapshot`:
         Registry authority used to resolve the casilla-1039 semantic role.
@@ -37,15 +37,16 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import load_test_profile_record, seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from .._autonomic_deduccion_advisory import _madrid_nacimiento_adopcion_eligibility_advisory_finding
-from .._profile_binding import (
+from ..profile_binding import (
     inject_derived_autonomic_deduccion_facts,
     madrid_nacimiento_adopcion_candidate_weighted_count,
     profile_fact_index,

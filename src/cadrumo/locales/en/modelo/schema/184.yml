@@ -5,93 +5,133 @@ modelo:
         official_name: null
         title: null
       revision:
-        2015-2024:
+        '2015':
           casilla:
-            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: Box 121-122 of modelo 184, tax year 2015.
-              label: SUPPLEMENTARY OR REPLACEMENT RETURN
             x-chim6r1ecll6asj3d5hmiro:
               help: Box ejercicio of modelo 184, tax year 2015.
               label: Tax year the return refers to
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 184, tax year 2015.
+              label: Type of return (original / replacement / supplementary)
+          field:
+            label: Modelo 184, tax year 2015
+        2016-2018:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 184, tax years 2016 to 2018.
+              label: Tax year the return refers to
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 184, tax years 2016 to 2018.
+              label: Type of return (original / replacement / supplementary)
+          field:
+            label: Modelo 184, tax years 2016 to 2018
+        2019-2021:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 184, tax years 2019 to 2021.
+              label: Tax year the return refers to
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 184, tax years 2019 to 2021.
+              label: Type of return (original / replacement / supplementary)
+          field:
+            label: Modelo 184, tax years 2019 to 2021
+        '2022':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 184, tax year 2022.
+              label: Tax year the return refers to
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 184, tax year 2022.
+              label: Type of return (original / replacement / supplementary)
+          field:
+            label: Modelo 184, tax year 2022
+        2023-2024:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: Box 121-122 of modelo 184, tax years 2023 and 2024.
+              label: SUPPLEMENTARY OR REPLACEMENT RETURN
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 184, tax years 2023 and 2024.
+              label: Tax year the return refers to
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
-              help: Box 146 of modelo 184, tax year 2015.
+              help: Box 146 of modelo 184, tax years 2023 and 2024.
               label: MAIN ACTIVITY
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
-              help: Box 145 of modelo 184, tax year 2015.
+              help: Box 145 of modelo 184, tax years 2023 and 2024.
               label: ENTITY TYPE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
-              help: Box 149-150 of modelo 184, tax year 2015.
+              help: Box 149-150 of modelo 184, tax years 2023 and 2024.
               label: COUNTRY CODE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
-              help: Box 148 of modelo 184, tax year 2015.
+              help: Box 148 of modelo 184, tax years 2023 and 2024.
               label: PURPOSE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
               help: Field declared on modelo 184, the informative return of income-attribution
                 entities.
               label: Percentage of attributable income
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
-              help: Box 147 of modelo 184, tax year 2015.
+              help: Box 147 of modelo 184, tax years 2023 and 2024.
               label: ENTITY TYPE
             x-chim6r1ed5mn0rriehiiqrj5ehniqor9cpp62bbecljmuor9dtpg:
               help: Amount declared on modelo 184. The design splits it into an integer
                 and a decimal part.
               label: Net turnover
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: Box 108-120 of modelo 184, tax year 2015.
+              help: Box 108-120 of modelo 184, tax years 2023 and 2024.
               label: IDENTIFYING NUMBER OF THE RETURN
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
-              help: Box 59-107 of modelo 184, tax year 2015.
+              help: Box 59-107 of modelo 184, tax years 2023 and 2024.
               label: TELEPHONE
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
-              help: Box 172-180 of modelo 184, tax year 2015.
+              help: Box 172-180 of modelo 184, tax years 2023 and 2024.
               label: N.I.F. OF THE REPRESENTATIVE
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: Box 181-220 of modelo 184, tax year 2015.
+              help: Box 181-220 of modelo 184, tax years 2023 and 2024.
               label: SURNAMES AND FIRST NAME OR COMPANY NAME OF THE REPRESENTATIVE
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Box tipo-declaracion of modelo 184, tax year 2015.
+              help: Box tipo-declaracion of modelo 184, tax years 2023 and 2024.
               label: Type of return (original / replacement / supplementary)
             x-chim6r1eehkn0rpdednn0rriehig:
-              help: Box 58 of modelo 184, tax year 2015.
+              help: Box 58 of modelo 184, tax years 2023 and 2024.
               label: MEDIUM TYPE
             x-chim6r1eehnn8obc5lpmuor9dtpg:
-              help: Box 136-144 of modelo 184, tax year 2015.
+              help: Box 136-144 of modelo 184, tax years 2023 and 2024.
               label: TOTAL NUMBER OF RECORDS OF MEMBERS, HEIRS, CO-OWNERS OR PARTICIPANTS
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
-              help: Box 156 of modelo 184, tax year 2015.
+              help: Box 156 of modelo 184, tax years 2023 and 2024.
               label: TAXATION UNDER THE CORPORATE INCOME TAX REGIME
             x-ehkn0rpi5ph62sr55li6ap3lcdhmirre:
               help: Amount declared on modelo 184. The design splits it into an integer
                 and a decimal part.
               label: Deduction base / amount
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
-              help: Box 97-116 of modelo 184, tax year 2015.
+              help: Box 97-116 of modelo 184, tax years 2023 and 2024.
               label: NAME OR COMPANY NAME OF THE TRANSFEREE / NAME OF THE COLLECTIVE
                 INVESTMENT INSTITUTION
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
-              help: Box 88-96 of modelo 184, tax year 2015.
+              help: Box 88-96 of modelo 184, tax years 2023 and 2024.
               label: NIF OF THE TRANSFEREE PERSON OR ENTITY / NIF OF THE COLLECTIVE
                 INVESTMENT INSTITUTION
             x-ehkn0rpi5phmoobmck:
-              help: Box 77 of modelo 184, tax year 2015.
+              help: Box 77 of modelo 184, tax years 2023 and 2024.
               label: Attributed-income type key (A=movable capital, C=real-estate
                 capital, D=economic activities, F=gains/losses excl. transfer, G=gains/losses
                 on transfer, I=IRPF deductions, J=IS deductions, K=withholdings borne,
                 L=excess negative income from no-treaty countries)
             x-ehkn0rpi5phmoobmckmn0ob9ec:
-              help: Box 80-81 of modelo 184, tax year 2015.
+              help: Box 80-81 of modelo 184, tax years 2023 and 2024.
               label: COUNTRY CODE
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
-              help: Box 396 of modelo 184, tax year 2015.
+              help: Box 396 of modelo 184, tax years 2023 and 2024.
               label: CASH RECEIPTS AND PAYMENTS BASIS
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
-              help: Box 498-500 of modelo 184, tax year 2015.
+              help: Box 498-500 of modelo 184, tax years 2023 and 2024.
               label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
-              help: Box 84-87 of modelo 184, tax year 2015.
+              help: Box 84-87 of modelo 184, tax years 2023 and 2024.
               label: IAE GROUP OR HEADING
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
-              help: Box 117-124 of modelo 184, tax year 2015.
+              help: Box 117-124 of modelo 184, tax years 2023 and 2024.
               label: Year
             x-ehkn0rpi5pjm2rj1dphmiobj5lo6asj4d5i62so:
               help: Amount declared on modelo 184. The design splits it into an integer
@@ -195,16 +235,16 @@ modelo:
                 and a decimal part.
               label: Reduction percentage
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
-              help: Box 246-265 of modelo 184, tax year 2015.
+              help: Box 246-265 of modelo 184, tax years 2023 and 2024.
               label: CADASTRAL REFERENCE
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
-              help: Box 82 of modelo 184, tax year 2015.
+              help: Box 82 of modelo 184, tax years 2023 and 2024.
               label: RETURN DETERMINATION REGIME
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
-              help: Box 196-207 of modelo 184, tax year 2015.
+              help: Box 196-207 of modelo 184, tax years 2023 and 2024.
               label: ATTRIBUTABLE INCOME WITH THE RIGHT TO A REDUCTION
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
-              help: Box 177-190 of modelo 184, tax year 2015.
+              help: Box 177-190 of modelo 184, tax years 2023 and 2024.
               label: Amount of income attributable / net return attributable to the
                 entity member (unsigned, no decimal comma, in euros)
             x-ehkn0rpi5pp6at35dphmirreclpg:
@@ -212,17 +252,17 @@ modelo:
                 and a decimal part.
               label: Withholdings and payments on account
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
-              help: Box 245 of modelo 184, tax year 2015.
+              help: Box 245 of modelo 184, tax years 2023 and 2024.
               label: LOCATION OF THE PROPERTY
             x-ehkn0rpi5ppnaoj3dhgncp8:
-              help: Box 78-79 of modelo 184, tax year 2015.
+              help: Box 78-79 of modelo 184, tax years 2023 and 2024.
               label: Attributed-income subtype key (granularity by domestic/foreign
                 geographic origin, applicable reductions, etc.)
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
-              help: Box 83 of modelo 184, tax year 2015.
+              help: Box 83 of modelo 184, tax years 2023 and 2024.
               label: ACTIVITY TYPE
             x-ehkn0rpi5pq6is3f5lk6uqj1:
-              help: Box 76 of modelo 184, tax year 2015.
+              help: Box 76 of modelo 184, tax years 2023 and 2024.
               label: SHEET TYPE
             x-ehkn0rpi5pr62r3fe8mm2p3helkn6qb3d5nms:
               help: Amount declared on modelo 184. The design splits it into an integer
@@ -233,33 +273,33 @@ modelo:
                 and a decimal part.
               label: 'Net asset value / adjustments: increases'
             x-ehkn0rpj5phmoobmck:
-              help: Box 93 of modelo 184, tax year 2015.
+              help: Box 93 of modelo 184, tax years 2023 and 2024.
               label: CODE
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
               help: Field declared on modelo 184, the informative return of income-attribution
                 entities.
               label: Reported-party code
             x-ehkn0rpj5phmoobmckmn0ob9ec:
-              help: Box 79-80 of modelo 184, tax year 2015.
+              help: Box 79-80 of modelo 184, tax years 2023 and 2024.
               label: COUNTRY CODE
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
-              help: Box 81 of modelo 184, tax year 2015.
+              help: Box 81 of modelo 184, tax years 2023 and 2024.
               label: PARTICIPANT TYPE CODE
             x-ehkn0rpj5phmup39ctniqs3idtr6irj3d5gg:
               help: Field of the member declared in modelo 184's type 3 record.
               label: Province code
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
-              help: Box 200-202 of modelo 184, tax year 2015.
+              help: Box 200-202 of modelo 184, tax years 2023 and 2024.
               label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT OF
                 THE PROPERTY
             x-ehkn0rpj5pi6iobj5lmmipbdc9p6u:
               help: Field of the member declared in modelo 184's type 3 record.
               label: Number of days as a member
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
-              help: Box 120-159 of modelo 184, tax year 2015.
+              help: Box 120-159 of modelo 184, tax years 2023 and 2024.
               label: TAX ADDRESS OF THE ENTITY MEMBER
             x-ehkn0rpj5pkmqs3fe9q6a:
-              help: Box 96-108 of modelo 184, tax year 2015.
+              help: Box 96-108 of modelo 184, tax years 2023 and 2024.
               label: AMOUNT (RETURN / WITHHOLDING / DEDUCTION)
             x-ehkn0rpj5pmmipbdc9p6ubb15kpj2bb4d5hmipbdc9p6a:
               help: Field of the member declared in modelo 184's type 3 record.
@@ -279,20 +319,20 @@ modelo:
                 and a decimal part.
               label: Participation percentage
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
-              help: Box 195-199 of modelo 184, tax year 2015.
+              help: Box 195-199 of modelo 184, tax years 2023 and 2024.
               label: PERCENTAGE OF OWNERSHIP OF THE PROPERTY
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
-              help: Box 160-171 of modelo 184, tax year 2015.
+              help: Box 160-171 of modelo 184, tax years 2023 and 2024.
               label: DEDUCTIBLE PROVISIONS AND HARD-TO-JUSTIFY EXPENSES
             x-ehkn0rpj5pp6ap3lcdhmirre:
               help: Amount declared on modelo 184. The design splits it into an integer
                 and a decimal part.
               label: Reduction
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
-              help: Box 174-193 of modelo 184, tax year 2015.
+              help: Box 174-193 of modelo 184, tax years 2023 and 2024.
               label: CADASTRAL REFERENCE
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
-              help: Box 216-229 of modelo 184, tax year 2015.
+              help: Box 216-229 of modelo 184, tax years 2023 and 2024.
               label: REDUCED NET RETURN FROM AGRICULTURAL, LIVESTOCK AND FORESTRY
                 ACTIVITIES UNDER OBJECTIVE ASSESSMENT
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqs3iclr6irpdclng:
@@ -304,13 +344,13 @@ modelo:
                 entities.
               label: NIF of the tax representative
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
-              help: Box 173 of modelo 184, tax year 2015.
+              help: Box 173 of modelo 184, tax years 2023 and 2024.
               label: LOCATION OF THE PROPERTY
             x-ehkn0rpj5ppnaoj3dhgncp8:
-              help: Box 94-95 of modelo 184, tax year 2015.
+              help: Box 94-95 of modelo 184, tax years 2023 and 2024.
               label: SUB-CODE
             x-ehkn0rpj5pq6is3f5lk6uqj1:
-              help: Box 76 of modelo 184, tax year 2015.
+              help: Box 76 of modelo 184, tax years 2023 and 2024.
               label: SHEET TYPE
           construct:
             modelo-184-informative:
@@ -318,7 +358,7 @@ modelo:
                 title: Modelo 184 informative return of entidades en régimen de atribución
                   de rentas
           field:
-            label: Modelo 184, tax years 2015 to 2024
+            label: Modelo 184, tax years 2023 and 2024
         2025-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:

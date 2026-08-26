@@ -17,7 +17,7 @@ See Also:
     :func:`cadrumo.application.modelo._borrador_binding.resolve_modelo_100_borrador_bindings`
         Consumes this helper after registry eligibility and caller-precedence
         checks decide that a borrador snapshot may supply the value.
-    :func:`cadrumo.application.modelo._profile_binding.resolve_profile_sourced_bindings`
+    :func:`cadrumo.application.modelo.profile_binding.resolve_profile_sourced_bindings`
         Resolves the same registry binding channels from typed profile facts,
         without raw string parsing.
 

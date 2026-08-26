@@ -7,142 +7,144 @@ modelo:
         title: IEDMT - autoliquidación por matriculación de determinados medios de
           transporte
       revision:
-        2007-y-siguientes:
+        '2007':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: null
+              label: null
+          field:
+            label: null
+        2008-y-siguientes:
           casilla:
             x-cdmn8bj1clp6urj1epiiqobedsmmcob2e9km6ob3d5nms:
               help: null
-              label: Aeronaves. Año de fabricación
+              label: null
             x-cdmn8bj1clp6urj1epiiqpj1c9p6ior1dpq6a:
               help: null
-              label: Aeronaves. Fabricante
+              label: null
             x-cdmn8bj1clp6urj1epiiqrbfchimoro:
               help: null
-              label: Aeronaves. Modelo
+              label: null
             x-cdmn8bj1clp6urj1epiiqs35edniqrb1f1kmqrpdchin6s35ctqma:
               help: null
-              label: Aeronaves. Peso máximo al despegue (kg)
+              label: null
             x-cdmn8bj1clp6urj1epiiqsr5e9kma:
               help: null
-              label: Aeronaves. Número de serie
+              label: null
             x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
               help: null
-              label: Embarcaciones. Eslora máxima (metros)
+              label: null
             x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
               help: null
-              label: Embarcaciones. Fabricante o importador
+              label: null
             x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
               help: null
-              label: Embarcaciones. Identificación (número de construcción)
+              label: null
             x-cdmn8bj5dlh62sj3c5hmirre5lmmup35dhng:
               help: null
-              label: Embarcaciones. Modelo
+              label: null
             x-cdmn8bj5dlh62sj3c5hmirre5lnm4sr5e9r62or9dtn6aso:
               help: null
-              label: Embarcaciones. Observaciones
+              label: null
             x-cdmn8bj6clhmgo9de1p6irb5e9giqrb1ehp6iorldhgm6qbfdo:
               help: null
-              label: Fecha de primera matriculación, puesta en servicio o primera
-                utilización
+              label: null
             x-cdmn8bjbd5m6urb5ehp6uspdd1nn4obj5lqn6ro:
               help: null
-              label: Kilómetros recorridos o número de horas de utilización
+              label: null
             x-cdmn8bjceljm2shdc5i72tb9edkm6qbfdo:
               help: null
-              label: Lugar de adquisición del medio de transporte
+              label: null
             x-cdmn8bjeelincrpdelpm2p3f:
               help: null
-              label: Medio de transporte nuevo o usado
+              label: null
             x-cdmn8bjmclk6iorldhniqoj1edq6ip3fe8:
               help: null
-              label: Vehículos. Número de identificación (bastidor)
+              label: null
             x-cdmn8bjmclk6iorldhniqor1ehimerrid5giqor5:
               help: null
-              label: Vehículos. Clasificación según la Directiva 70/156/CEE
+              label: null
             x-cdmn8bjmclk6iorldhniqor9dhkmsp3ic5i62:
               help: null
-              label: Vehículos. Cilindrada (c.c.)
+              label: null
             x-cdmn8bjmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
               help: null
-              label: Vehículos. Clasificación por criterio de construcción y utilización
-                (RD 2822/1998)
+              label: null
             x-cdmn8bjmclk6iorldhniqorfchkmerpdd5q7c:
               help: null
-              label: Vehículos. Código ITV
+              label: null
             x-cdmn8bjmclk6iorldhniqpbdd5pmirreclpiqorf68:
               help: null
-              label: Vehículos. Emisiones de CO2 (gramos/km)
+              label: null
             x-cdmn8bjmclk6iorldhniqpbgd5jn4ob6ck:
               help: null
-              label: Vehículos. Epígrafe
+              label: null
             x-cdmn8bjmclk6iorldhniqqbkeomn6pbid5ig:
               help: null
-              label: Vehículos. Número de serie de la tarjeta ITV
+              label: null
             x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
               help: null
-              label: Vehículos. Tipo de tarjeta ITV
+              label: null
             x-cdmn8bjmclk6iorldhniqrb1e9hm2:
               help: null
-              label: Vehículos. Marca
+              label: null
             x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
               help: null
-              label: Vehículos. Modelo-tipo
+              label: null
             x-cdmn8bjmclk6iorldhniqrbfehnn4:
               help: null
-              label: Vehículos. Tipo de motor (gasolina, diésel u otros)
+              label: null
             x-cdmn8bjmclk6iorldhniqrr2edin4tj1cdkmurj5ec:
               help: null
-              label: Vehículos. Observaciones
+              label: null
             x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
               help: null
-              label: Causa del hecho imponible
+              label: null
             x-chim6r1ecll6asj3d5hmiro:
               help: null
-              label: Ejercicio al que se refiere la autoliquidación
+              label: null
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
               help: null
-              label: Declaración complementaria. Número de justificante de la declaración
-                anterior
+              label: null
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
-              label: Tipo de autoliquidación (originaria / sustitutiva / complementaria)
+              label: null
             x-chim6r1eehkn0rpdehp62rjje1nn4t35:
               help: null
-              label: 'Tipo de medio de transporte (V: vehículos, E: embarcaciones,
-                A: aeronaves)'
+              label: null
             x-d5n78sjfchqm6t3fe8n6sqb6:
               help: null
-              label: NIF de la persona que ha introducido el vehículo en España
+              label: null
             x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
               help: null
-              label: Apellidos y nombre o razón social del introductor del vehículo
-                en España
+              label: null
             x-dhkn2bj15li6ap3lcdkn4:
               help: null
-              label: Liquidación. A deducir
+              label: null
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
               help: null
-              label: Liquidación. Base imponible
+              label: null
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
               help: null
-              label: Liquidación. Base imponible reducida
+              label: null
             x-dhkn2bj3elnn8o8:
               help: null
-              label: Liquidación. Cuota
+              label: null
             x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
               help: null
-              label: Liquidación. Cuota a ingresar
+              label: null
             x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
               help: null
-              label: Liquidación. Deducción lineal
+              label: null
             x-dhkn2bjiclpnar3kc5i6u:
               help: null
-              label: Liquidación. Resultado de la liquidación
+              label: null
             x-dhkn2bjkd5o6u:
               help: null
-              label: Liquidación. Tipo impositivo (%)
+              label: null
           construct:
             modelo-576-autoliquidacion:
               field:
-                title: Modelo 576 autoliquidación del IEDMT por matriculación
+                title: null
           field:
-            label: Modelo 576 (orden-eha-3851-2007), ejercicios 2007 y siguientes
+            label: null
