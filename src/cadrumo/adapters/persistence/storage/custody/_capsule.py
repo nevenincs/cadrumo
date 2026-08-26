@@ -775,15 +775,27 @@ def list_current_profile_custody_capsule_summary_witnesses(
     entered here.
     """
     return tuple(
-        ProfileCustodyCapsuleSummaryWitness(
-            capsule_path=observation.capsule_path,
-            commit=cast(ProfileCustodyCommit, observation.commit),
-            label=_load_profile_custody_label_from_verified_capsule(
-                observation.capsule_path,
-                profile_id=observation.profile_id,
-            ),
-        )
-        for observation in _current_capsule_commits(settings=settings, root=root)
+        _summary_witness_from_anchored_commit(observation)
+        for observation in _current_capsule_commits(settings=settings, root=root, include_label=True)
+    )
+
+
+def _summary_witness_from_anchored_commit(
+    observation: AnchoredCurrentCapsuleCommit,
+) -> ProfileCustodyCapsuleSummaryWitness:
+    """Build the S22 witness from bytes the discovery anchor already observed."""
+    if observation.label_payload is None:
+        raise ProfileCustodyRecordError("summary discovery omitted the required label provenance")
+    try:
+        label = parse_profile_custody_capsule_label(observation.label_payload)
+    except (ProfileCustodyRecordError, ValueError, TypeError) as exc:
+        raise ProfileCustodyRecordError("profile capsule summary witness is invalid") from exc
+    if label.profile_id != observation.profile_id:
+        raise ProfileCustodyRecordError("profile capsule label UUID differs from its committed capsule")
+    return ProfileCustodyCapsuleSummaryWitness(
+        capsule_path=observation.capsule_path,
+        commit=cast(ProfileCustodyCommit, observation.commit),
+        label=label,
     )
 
 
@@ -791,8 +803,9 @@ def _current_capsule_commits(
     *,
     settings: Settings | None = None,
     root: Path | None = None,
+    include_label: bool = False,
 ) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
-    """Return current commit observations after the one retired-layout refusal."""
+    """Return current observations after the one retired-layout refusal."""
     storage_root = effective_storage_root(root, settings=settings)
     capsules_root = storage_root / storage_location(StorageCategory.BUCKETS).relative_path()
     keystore_root = storage_root / storage_location(StorageCategory.BUCKET_KEYSTORE).relative_path()
@@ -808,6 +821,8 @@ def _current_capsule_commits(
         parse_commit=parse_profile_custody_commit,
         commit_filename=PROFILE_CUSTODY_COMMIT_FILENAME,
         maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
+        label_filename=PROFILE_CUSTODY_LABEL_FILENAME if include_label else None,
+        label_maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES if include_label else None,
     )
 
 

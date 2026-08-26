@@ -48,10 +48,11 @@ class _CommitIdentity(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class AnchoredCurrentCapsuleCommit:
-    """One canonical current-marker observation made under the discovery anchor."""
+    """One current-marker observation, optionally carrying its anchored label bytes."""
 
     capsule_path: Path
     commit: _CommitIdentity
+    label_payload: bytes | None = None
 
     @property
     def profile_id(self) -> UUID:
@@ -246,20 +247,34 @@ def anchored_current_capsule_commits(
     parse_commit: Callable[[bytes], _CommitIdentity],
     commit_filename: str,
     maximum_bytes: int,
+    label_filename: str | None = None,
+    label_maximum_bytes: int | None = None,
 ) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
-    """Discover current capsules while retaining each parsed commit observation."""
+    """Discover current capsules while retaining anchored marker observations.
+
+    An identity-only caller leaves the label arguments absent.  A summary
+    caller supplies both and receives the label's bounded bytes from the same
+    candidate anchor as the parsed commit, so a directory replacement cannot
+    splice one generation's marker to another generation's provenance.
+    """
+    if (label_filename is None) is not (label_maximum_bytes is None):
+        raise ValueError("summary discovery requires both label filename and byte ceiling")
     if os.name != "nt":
         return _anchored_current_capsule_commits_posix(
             capsules_root,
             parse_commit=parse_commit,
             commit_filename=commit_filename,
             maximum_bytes=maximum_bytes,
+            label_filename=label_filename,
+            label_maximum_bytes=label_maximum_bytes,
         )
     return _anchored_current_capsule_commits_windows(
         capsules_root,
         parse_commit=parse_commit,
         commit_filename=commit_filename,
         maximum_bytes=maximum_bytes,
+        label_filename=label_filename,
+        label_maximum_bytes=label_maximum_bytes,
     )
 
 
@@ -269,6 +284,8 @@ def _anchored_current_capsule_commits_posix(
     parse_commit: Callable[[bytes], _CommitIdentity],
     commit_filename: str,
     maximum_bytes: int,
+    label_filename: str | None,
+    label_maximum_bytes: int | None,
 ) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
     discovered: list[AnchoredCurrentCapsuleCommit] = []
     with posix_directory_fd(capsules_root) as root_fd:
@@ -300,10 +317,25 @@ def _anchored_current_capsule_commits_posix(
                     )
                 )
                 if commit.profile_id == profile_id:
+                    label_payload = None
+                    if label_filename is not None:
+                        assert label_maximum_bytes is not None
+                        data_fd = posix_open_child_directory(candidate_fd, "data")
+                        try:
+                            label_payload = read_regular_file_fd(
+                                data_fd,
+                                label_filename,
+                                display_path=capsules_root / candidate_name / "data" / label_filename,
+                                maximum_bytes=label_maximum_bytes,
+                                trace=None,
+                            )
+                        finally:
+                            os.close(data_fd)
                     discovered.append(
                         AnchoredCurrentCapsuleCommit(
                             capsule_path=capsules_root / candidate_name,
                             commit=commit,
+                            label_payload=label_payload,
                         )
                     )
             except ProfileCustodyRecordError:
@@ -342,6 +374,8 @@ def _anchored_current_capsule_commits_windows(
     parse_commit: Callable[[bytes], _CommitIdentity],
     commit_filename: str,
     maximum_bytes: int,
+    label_filename: str | None,
+    label_maximum_bytes: int | None,
 ) -> tuple[AnchoredCurrentCapsuleCommit, ...]:
     discovered: list[AnchoredCurrentCapsuleCommit] = []
     with ExitStack() as anchors:
@@ -355,6 +389,8 @@ def _anchored_current_capsule_commits_windows(
                         parse_commit=parse_commit,
                         commit_filename=commit_filename,
                         maximum_bytes=maximum_bytes,
+                        label_filename=label_filename,
+                        label_maximum_bytes=label_maximum_bytes,
                     )
                     if observation is not None:
                         discovered.append(observation)
@@ -370,6 +406,8 @@ def _windows_candidate_commit(
     parse_commit: Callable[[bytes], _CommitIdentity],
     commit_filename: str,
     maximum_bytes: int,
+    label_filename: str | None,
+    label_maximum_bytes: int | None,
 ) -> AnchoredCurrentCapsuleCommit | None:
     try:
         if not entry.is_dir(follow_symlinks=False):
@@ -387,13 +425,24 @@ def _windows_candidate_commit(
         profile_id = _canonical_profile_id(entry.name)
         if profile_id is None:
             return None
+        label_path = candidate / "data" / label_filename if label_filename is not None else None
+        if label_path is not None:
+            anchor_directory(candidate_anchors, label_path.parent, final_access=0x80000000)
         marker_path = candidate / commit_filename
         if not lexists(marker_path, trace=None):
             return None
         commit = parse_commit(read_regular_file(marker_path, maximum_bytes=maximum_bytes, trace=None))
         if commit.profile_id != profile_id:
             raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
-        return AnchoredCurrentCapsuleCommit(capsule_path=candidate, commit=commit)
+        label_payload = None
+        if label_path is not None:
+            assert label_maximum_bytes is not None
+            label_payload = read_regular_file(label_path, maximum_bytes=label_maximum_bytes, trace=None)
+        return AnchoredCurrentCapsuleCommit(
+            capsule_path=candidate,
+            commit=commit,
+            label_payload=label_payload,
+        )
 
 
 def _canonical_profile_id(candidate_name: str) -> UUID | None:
