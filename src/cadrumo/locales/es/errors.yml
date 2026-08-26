@@ -749,6 +749,8 @@ errors:
       una credencial que necesita.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
+    locale_catalogue_capture_not_current: Esta captura del catálogo de idiomas ya
+      no está vigente.
     m145_communication_record_ambiguous: El prefijo del id de registro de comunicación
       del Modelo 145 coincide con varios registros.
     m145_communication_record_export: El registro local de comunicación del Modelo

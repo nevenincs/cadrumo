@@ -690,6 +690,8 @@ errors:
       a credential it needs.
     ledger_preflight: Ledger preflight rejected the modelo run because it is not yet
       fileable.
+    locale_catalogue_capture_not_current: This locale catalogue capture is no longer
+      current.
     m145_communication_record_ambiguous: The Modelo 145 communication record id prefix
       matches multiple records.
     m145_communication_record_export: The Modelo 145 local communication record could

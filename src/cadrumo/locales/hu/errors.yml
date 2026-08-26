@@ -704,6 +704,7 @@ errors:
       egy szükséges hitelesítő adat.
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modellfuttatást,
       mert az még nem nyújtható be.
+    locale_catalogue_capture_not_current: Ez a nyelvi katalógus rögzítés már nem érvényes.
     m145_communication_record_ambiguous: A Modelo 145 kommunikációs rekord azonosítójának
       előtagja több rekorddal egyezik.
     m145_communication_record_export: A Modelo 145 helyi kommunikációs rekordot nem
