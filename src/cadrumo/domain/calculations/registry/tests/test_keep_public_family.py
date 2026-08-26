@@ -223,8 +223,14 @@ def test_a_completed_hard_move_left_no_importable_private_path(retired_path: str
 #: each with the reason it is still outstanding. A row that finishes must leave
 #: this table, which the staleness test below enforces.
 _OUTSTANDING_ROWS: Final[dict[str, str]] = {
-    "R35": "privatisation blocked behind a large consumer move",
-    "R66": "privatisation blocked behind a consumer move",
+    "R35": (
+        "disposition contested: every out-of-package caller reaches the loader through the shared "
+        "bundled_registry_tree test seam, so the reach is a contract rather than incidental"
+    ),
+    "R66": (
+        "disposition contested: build_snapshot is the compile-only construction contract thirteen "
+        "out-of-package test and tooling callers depend on, and no production caller sits outside"
+    ),
 }
 
 
