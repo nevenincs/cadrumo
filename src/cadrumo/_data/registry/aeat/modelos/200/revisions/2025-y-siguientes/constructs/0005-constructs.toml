@@ -752,4 +752,4 @@ application_links = [
     "modelo-200-2024-export",
 ]
 filing_schedules = ["modelo-200-2024-anual"]
-deadline_windows = ["modelo-200-2024-0a"]
+deadline_windows = ["modelo-200-2025-0a"]
