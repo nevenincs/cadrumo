@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.verification_tolerance module
-===================================================================
+==================================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.verification_tolerance
    :members:

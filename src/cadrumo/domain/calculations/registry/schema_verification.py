@@ -56,10 +56,10 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
+from cadrumo.core.remote_authority import first_aeat_host
 from cadrumo.domain.calculations.registry.schema_scalars import WorkbookCellRefStr
 
 from ....core import CasillaId
-from .aeat_hosts import first_aeat_host
 from .errors import RegistryValidationError
 from .ids import (
     CrossReferenceId,

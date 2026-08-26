@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.record_spec module
-========================================================
+=======================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.record_spec
    :members:

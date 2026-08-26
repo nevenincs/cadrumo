@@ -6,7 +6,7 @@ modelo:
           Modelo agregado. Autoliquidación mensual.
         title: IVA. Grupo de entidades. Modelo agregado. Autoliquidación mensual
       revision:
-        2008-2025:
+        2021-2025:
           casilla:
             '01':
               help: null
@@ -84,7 +84,7 @@ modelo:
                   mensual
           field:
             label: Modelo 353 ejercicios 2008 a 2025 (Orden EHA/3434/2007)
-        2026-y-siguientes:
+        2026-desde-02:
           casilla:
             '01':
               help: null

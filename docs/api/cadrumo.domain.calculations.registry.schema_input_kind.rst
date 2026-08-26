@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.schema_input_kind module
-==============================================================
+=============================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.schema_input_kind
    :members:

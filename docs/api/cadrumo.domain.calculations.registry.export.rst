@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.export module
-===================================================
+==================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.export
    :members:

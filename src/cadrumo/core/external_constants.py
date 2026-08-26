@@ -95,6 +95,7 @@ class AeatDomains(_Frozen):
     www6: str = Field(min_length=1)
     www12: str = Field(min_length=1)
     aeat_gob: str = Field(min_length=1)
+    legacy_host_suffix: str = Field(min_length=1)
     legacy_www: str = Field(min_length=1)
     clave: str = Field(min_length=1)
     boe: str = Field(min_length=1)

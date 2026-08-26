@@ -1,13 +1,16 @@
-"""AEAT host predicates shared by registry live-surface guards."""
+"""Canonical authority checks for read-only AEAT remote hosts.
+
+This module owns the narrow parsing and suffix predicates used by remote-read
+guards and authenticated AEAT landings. It reads immutable external constants
+directly so runtime settings cannot become a competing authority.
+"""
 
 from __future__ import annotations
 
 from typing import Final
 from urllib.parse import urlsplit
 
-from ....core.config import Settings
-
-_AEAT_LEGACY_HOST_SUFFIX = "aeat.es"
+from .external_constants import load_external_constants
 
 #: The only scheme a remote AEAT read may use. AEAT publishes every public and
 #: authenticated read surface over TLS, so a non-``https`` authority reaching a
@@ -66,8 +69,8 @@ def canonical_remote_hostname(url: str) -> str | None:
 
 def aeat_host_suffixes() -> tuple[str, ...]:
     """Return host suffixes treated as AEAT-owned infrastructure."""
-    configured = Settings.external_constants().aeat.domains.host_suffix
-    return (configured, _AEAT_LEGACY_HOST_SUFFIX)
+    domains = load_external_constants().aeat.domains
+    return (domains.host_suffix, domains.legacy_host_suffix)
 
 
 def is_aeat_host(host: str) -> bool:
@@ -89,7 +92,7 @@ def sanctioned_gov_idp_host_suffixes() -> tuple[str, ...]:
     from :func:`is_aeat_host`: it names the single national-IdP apex an
     authenticated AEAT flow structurally delegates to, never a data surface.
     """
-    clave = Settings.external_constants().aeat.domains.clave
+    clave = load_external_constants().aeat.domains.clave
     return (urlsplit(clave).netloc,)
 
 

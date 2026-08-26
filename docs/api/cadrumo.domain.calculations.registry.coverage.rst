@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.coverage module
-=====================================================
+====================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.coverage
    :members:

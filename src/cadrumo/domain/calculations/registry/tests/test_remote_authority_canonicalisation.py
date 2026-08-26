@@ -19,11 +19,26 @@ questions, and the guard consumes it.
 
 from __future__ import annotations
 
+import inspect
+from importlib.util import find_spec
+
 import pytest
 from pydantic import AnyUrl
 
+import cadrumo.core as core
+import cadrumo.domain.calculations.registry as registry
+from cadrumo.core.external_constants import load_external_constants
+from cadrumo.core.remote_authority import (
+    REMOTE_READ_SCHEME,
+    aeat_host_suffixes,
+    canonical_remote_hostname,
+    first_aeat_host,
+    is_aeat_host,
+    is_sanctioned_gov_idp_host,
+    sanctioned_gov_idp_host_suffixes,
+)
+
 from .....tests.aeat_literal_fixtures import aeat_host, aeat_url, configured_path
-from ..aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
 from ..remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -207,6 +222,54 @@ def test_malformed_authority_is_refused(url: str) -> None:
 def test_canonical_scheme_is_tls() -> None:
     """The accepted scheme constant names TLS, not cleartext."""
     assert REMOTE_READ_SCHEME == "https"
+
+
+def test_aeat_suffixes_preserve_configured_and_legacy_authority() -> None:
+    """The typed registry supplies both AEAT suffixes without a runtime-settings facade."""
+    domains = load_external_constants().aeat.domains
+
+    assert aeat_host_suffixes() == (domains.host_suffix, domains.legacy_host_suffix)
+    assert is_aeat_host(domains.host_suffix)
+    assert is_aeat_host(f"www9.{domains.host_suffix}")
+    assert is_aeat_host(domains.legacy_host_suffix)
+    assert is_aeat_host(f"sede.{domains.legacy_host_suffix}")
+    assert first_aeat_host(("example.invalid", f"sede.{domains.legacy_host_suffix}")) == (
+        f"sede.{domains.legacy_host_suffix}"
+    )
+    source = inspect.getsource(aeat_host_suffixes)
+    assert "load_external_constants()" in source
+    assert "Settings" not in source
+
+
+def test_sanctioned_idp_is_separate_from_aeat_authority() -> None:
+    """Cl@ve stays an explicit opt-in IdP surface, never an AEAT host suffix."""
+    domains = load_external_constants().aeat.domains
+    (idp_suffix,) = sanctioned_gov_idp_host_suffixes()
+
+    assert idp_suffix == domains.clave.removeprefix("https://")
+    assert is_sanctioned_gov_idp_host(f"se-pasarela.{idp_suffix}")
+    assert not is_aeat_host(idp_suffix)
+
+
+def test_registry_remote_authority_surface_has_no_facade_or_retired_module() -> None:
+    """Consumers reach the direct core owner; packages expose no compatibility surface."""
+    retired_module = ".".join(("cadrumo", "domain", "calculations", "registry", "aeat_hosts"))
+
+    assert find_spec(retired_module) is None
+    assert registry.__all__ == []
+    assert not hasattr(registry, "aeat_hosts")
+    assert not any(
+        hasattr(core, name)
+        for name in (
+            "REMOTE_READ_SCHEME",
+            "canonical_remote_hostname",
+            "aeat_host_suffixes",
+            "is_aeat_host",
+            "first_aeat_host",
+            "sanctioned_gov_idp_host_suffixes",
+            "is_sanctioned_gov_idp_host",
+        )
+    )
 
 
 # --------------------------------------------------------------------------

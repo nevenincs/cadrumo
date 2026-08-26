@@ -14,8 +14,8 @@ The gate therefore proves four things, none of them a tally:
 - every reconciliation refusal actually refuses -- an unclassified module, a
   ledger row the derivation no longer yields, a machinery claim leaving
   regulatory-literal evidence unanswered, and a dead claim something imports;
-- the regulatory-literal detector still finds the known embed it was built
-  around, so a weakened detector cannot make the corpus look clean.
+- the regulatory-literal detector still finds a live unowned embed, so a
+  weakened detector cannot make the corpus look clean.
 """
 
 from __future__ import annotations
@@ -38,11 +38,11 @@ from ..analysis.modelo_embed_classification import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-#: The proven live embed the classifier must reach independently.  This filing
-#: year selects the censo foundation revision and snapshot cells, so losing its
-#: detected literal would hide a real unowned regulatory-data migration rather
-#: than merely move a campaign-owned M303 implementation detail.
-ANCHOR_EMBED = "src/cadrumo/domain/calculations/registry/censo_modelos.py"
+#: The proven live unowned embed the classifier must reach independently. Its
+#: Modelo 100 filing-year binding is still Python-resident pending its own
+#: registry/application migration, so losing this evidence would hide real
+#: unowned regulatory data rather than merely move campaign-owned M303 detail.
+ANCHOR_EMBED = "src/cadrumo/domain/calculations/registry/inventory_bindings.py"
 
 _MODELO_SPECIFIC_BODIES: dict[str, str] = {
     "module_name": '"""A modelo-named module."""\n\nVALUE = 1\n',
@@ -161,7 +161,7 @@ def test_the_detector_still_finds_the_anchor_embed() -> None:
     anchor = next(record for record in derived() if record.path == ANCHOR_EMBED)
     by_symbol = {(item.symbol, item.kind) for item in anchor.evidence}
 
-    assert ("_CENSO_FOUNDATION_YEAR", EvidenceKind.FILING_YEAR_LITERAL) in by_symbol
+    assert ("filing_year", EvidenceKind.FILING_YEAR_LITERAL) in by_symbol
 
     entry = next(item for item in adjudicated() if item.path == ANCHOR_EMBED)
     assert entry.classification is Classification.REGULATORY_DATA_EMBED

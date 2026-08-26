@@ -21,3 +21,11 @@ Subpackages
    cadrumo.adapters.inbound.justificante
    cadrumo.adapters.inbound.notificacion
    cadrumo.adapters.inbound.pdf
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.adapters.inbound.reconciliation_parser

@@ -19,7 +19,10 @@ from ....application.calculations import (
 )
 from ....application.evidence import EvidenceBundleRepository
 from ....application.filing import ModeloHistoryRepository
-from ....application.ledger.confirmation_record import ConfirmationRecordRepository
+from ....application.ledger.confirmation_record import (
+    ConfirmationRecordDocument,
+    confirmation_record_object_key,
+)
 from ....application.ledger.counterparty_establishment import ConfirmedCounterpartyFactsRepository
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceRepository
 from ....application.ledger.extracted_document_cache import (
@@ -374,10 +377,11 @@ def _ledger_extraction_and_live_deudas_natural_key_resolvers() -> dict[str, Natu
 
     resolvers["cadrumo.application.ledger.extraction_draft"] = _extraction_draft_key
 
-    def _confirmation_record_repo() -> ConfirmationRecordRepository:
-        return ConfirmationRecordRepository()
+    def _confirmation_record_key(record: SecureObjectRecord, _bucket_id: str) -> str:
+        document = _envelope_payload(record, ConfirmationRecordDocument)
+        return confirmation_record_object_key(document)
 
-    resolvers["cadrumo.application.ledger.confirmation_record"] = _bound_resolver(_confirmation_record_repo)
+    resolvers["cadrumo.application.ledger.confirmation_record"] = _confirmation_record_key
 
     def _confirmed_counterparty_facts_repo() -> ConfirmedCounterpartyFactsRepository:
         return ConfirmedCounterpartyFactsRepository()

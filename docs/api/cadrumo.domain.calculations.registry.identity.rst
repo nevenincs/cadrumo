@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.identity module
-=====================================================
+====================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.identity
    :members:

@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.legal module
-==================================================
+=================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.legal
    :members:

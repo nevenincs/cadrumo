@@ -1,5 +1,5 @@
 cadrumo.domain.calculations.registry.verdict_cache module
-==========================================================
+=========================================================
 
 .. automodule:: cadrumo.domain.calculations.registry.verdict_cache
    :members:

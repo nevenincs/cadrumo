@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import ast
+import inspect
 import logging
+from datetime import date
 from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry import censo_modelos as _censo_modelos
 from cadrumo.domain.calculations.registry.censo_modelos import (
     CENSO_MODELO_ERROR_CODES,
     CENSO_MODELO_EVENT_KINDS,
@@ -29,6 +33,8 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from .....core.errors import get_registered_error_code
 from ..authority import bundled_authority
+from ..schema_references import PeriodSelector
+from ._referential_integrity_support import minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -90,6 +96,82 @@ def test_modelo_036_foundation_event_kinds_are_registry_backed(_m036_2025_alta_r
 
     assert record.event_kinds == revision.period_selector.periods
     assert schedules["modelo-036-event-triggered"].periods == record.event_kinds
+
+
+def test_censo_foundation_year_is_derived_from_the_latest_registry_revision(
+    _m036_2025_alta_revision,
+) -> None:
+    """The current foundation year is the latest revision's selector, not Python data."""
+    revision = _m036_2025_alta_revision
+
+    assert _censo_modelos._foundation_year_from_latest_revision(revision) == revision.period_selector.year_from
+    assert revision.period_selector.year_from == revision.valid_from.year
+
+
+def test_censo_foundation_year_tracks_a_shifted_revision_on_both_temporal_axes() -> None:
+    """A later declared revision moves the foundation without a censo-code edit."""
+    revision = _foundation_revision(year=2040)
+    shifted_year = revision.valid_from.year + 1
+    shifted_selector = revision.period_selector.model_copy(update={"year_from": shifted_year})
+    shifted = revision.model_copy(
+        update={
+            "valid_from": date(shifted_year, revision.valid_from.month, revision.valid_from.day),
+            "period_selector": shifted_selector,
+        },
+    )
+
+    assert _censo_modelos._foundation_year_from_latest_revision(shifted) == shifted_year
+
+
+def test_censo_foundation_year_uses_the_first_explicit_selector_year() -> None:
+    """An explicitly enumerated revision still derives its foundation year."""
+    revision = _foundation_revision(year=2040)
+    shifted_year = revision.valid_from.year + 1
+    explicit_selector = revision.period_selector.model_copy(
+        update={"years": (shifted_year + 1, shifted_year), "year_from": None, "year_to": None},
+    )
+    explicit = revision.model_copy(
+        update={
+            "valid_from": date(shifted_year, revision.valid_from.month, revision.valid_from.day),
+            "period_selector": explicit_selector,
+        },
+    )
+
+    assert _censo_modelos._foundation_year_from_latest_revision(explicit) == shifted_year
+
+
+def test_censo_foundation_year_refuses_a_one_axis_temporal_mismatch() -> None:
+    """A selector change cannot silently disagree with the revision's effective date."""
+    revision = _foundation_revision(year=2040)
+    mismatched_selector = revision.period_selector.model_copy(update={"year_from": revision.valid_from.year + 1})
+    mismatched = revision.model_copy(update={"period_selector": mismatched_selector})
+
+    with pytest.raises(RegistryValidationError, match="valid_from year must match"):
+        _censo_modelos._foundation_year_from_latest_revision(mismatched)
+
+
+def test_censo_foundation_module_has_no_embedded_filing_year() -> None:
+    """The foundation only derives temporal routing from the validated registry."""
+    source = inspect.getsource(_censo_modelos)
+    constants = [
+        node.value
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.Constant) and isinstance(node.value, int)
+    ]
+
+    assert "_CENSO_FOUNDATION_YEAR" not in source
+    assert not any(2000 <= value <= 2099 for value in constants)
+
+
+def _foundation_revision(*, year: int):
+    """Build a real schema revision for pure foundation-year mutation checks."""
+    return minimal_revision().model_copy(
+        update={
+            "id": f"{year}-y-siguientes",
+            "valid_from": date(year, 2, 3),
+            "period_selector": PeriodSelector(year_from=year, periods=("alta", "modificacion", "baja")),
+        },
+    )
 
 
 def test_active_036_work_unit_periods_resolve_from_committed_registry_revision(

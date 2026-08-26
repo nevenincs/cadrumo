@@ -162,6 +162,7 @@ Submodules
    cadrumo.core.presentation
    cadrumo.core.product_identity
    cadrumo.core.prose_elision
+   cadrumo.core.remote_authority
    cadrumo.core.secure_object_write
    cadrumo.core.setup_answers
    cadrumo.core.source_connectivity

@@ -98,7 +98,6 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.ledger.actions_import",
         "cadrumo.application.ledger.aeat_record_projection",
         "cadrumo.application.ledger.batch_ingest",
-        "cadrumo.application.ledger.confirmation_record",
         "cadrumo.application.ledger.counterparty_establishment",
         "cadrumo.application.ledger.evidence",
         "cadrumo.application.ledger.evidence_draft",

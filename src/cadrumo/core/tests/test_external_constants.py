@@ -29,6 +29,7 @@ from pydantic import ValidationError
 from ...tests import ast_for_path, discover_test_control_modules, package_ast_items, repo_path, repo_relative
 from ...tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
+    AEAT_LEGACY_APEX_CANARY,
     AEAT_LITERAL_SCAN_TOKENS,
     CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED,
     PORTAL_LITERAL_SCAN_TOKENS,
@@ -131,6 +132,7 @@ def test_aeat_domains_are_absolute_https_urls() -> None:
     domains = load_external_constants().aeat.domains
 
     assert domains.host_suffix == AEAT_HOST_SUFFIX_EXPECTED
+    assert domains.legacy_host_suffix == AEAT_LEGACY_APEX_CANARY
     for value in (
         domains.sede,
         domains.www1,

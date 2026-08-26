@@ -28,6 +28,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     from ...adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ...adapters.outbound.aeat.auth.session_store import build_session_store
     from ...adapters.persistence.profile.buckets import build_bucket_event_history_repository
+    from ...adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
     from ...adapters.persistence.profile.extracted_document_cache import ExtractedDocumentCacheRepository
     from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -41,6 +42,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     from ...application.auth.protocols import bind_session_store
     from ...application.auth.providers import bind_auth_provider_selector
     from ...application.bucket_event_repository import bind_bucket_event_history_repository_factory
+    from ...application.ledger.confirmation_record import bind_confirmation_record_repository_factory
     from ...application.ledger.extracted_document_cache import bind_extracted_document_cache_repository_factory
     from ...application.ledger.participation_read import bind_transaction_participation_index_repository_factory
     from ...application.ledger.transaction_repository import bind_transaction_catalogue_repository_factory
@@ -76,6 +78,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
         composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
         composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
         composition.enter_context(bind_bucket_event_history_repository_factory(build_bucket_event_history_repository))
+        composition.enter_context(bind_confirmation_record_repository_factory(ConfirmationRecordRepository))
         composition.enter_context(bind_extracted_document_cache_repository_factory(ExtractedDocumentCacheRepository))
         composition.enter_context(
             bind_transaction_participation_index_repository_factory(TransactionParticipationIndexRepository)
