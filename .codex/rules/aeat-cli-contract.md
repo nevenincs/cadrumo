@@ -5,18 +5,51 @@ trigger: always_on
 
 # AEAT CLI contract: verbs, notices, single-subject mutations
 
-## `pull` fetches from AEAT, `--file` takes the one local file
+## Transport verbs are keyed on the counterparty
 
-The verb that fetches data from AEAT MUST be named `pull`, and the
-single-local-file input option MUST be named `--file`. A fetch-from-AEAT command
-MUST NOT be named `capture`, `refresh`, `fetch`, `download`, `sync` or `get`; a
-single-file input MUST NOT be `--source`, `--path`, `--from-file`, or a bespoke
-`--from-*` family. A command reconciling from either transport MUST be a subgroup
-of `pull` and `file --file`, never one verb multiplexed by `--from-*` flags.
+Two axes, four tokens. A **remote counterparty** — the AEAT sede, a Drive or
+Sheets store, a model distribution host — is read with `pull` and written with
+`push`. A **local filesystem** counterparty is read with `import` and written
+with `export`. The AEAT axis has no outbound half, permanently, because live
+submission is prohibited.
+
+`capture`, `refresh`, `fetch`, `download`, `upload`, `sync`, `send`, `get`,
+`mirror`, `probe` and `file` MUST NOT name a verb whose primary purpose is
+moving data. `file` retains only its domain meaning, the act of filing a
+declaration, and that meaning is exclusive. A verb whose primary purpose is
+COMPUTATION names the computation; transport it performs as a means is
+incidental and is declared on its parameters.
+
+A command reconciling from either transport MUST be a subgroup of `pull` and
+`import --file`, never one verb multiplexed by `--from-*` flags.
+
+Compounds are legal as `<token>-<subject>` and `<token>-all`; `<token>-<locus>`
+is not, because locus belongs in an option.
 
 The reconcile surface had grown four divergent `--from-*` flags plus a sugar
 verb while sibling surfaces used `capture`, `refresh` and `--source`, so no
-operator could transfer knowledge across verbs.
+operator could transfer knowledge across verbs. Fixing that with one token per
+AEAT fetch left every OTHER remote read unnamed, so the axis was widened from
+"AEAT" to "remote" and given a `push` partner.
+
+## Local paths are spelled by declared locus, shape and role
+
+The parameter spec declares a `TransportLocus`, `TransportShape` and
+`TransportRole`; a gate reads the declaration rather than guessing, because
+type cannot tell a Drive folder id from a filesystem directory and a spelling
+gate that reads spellings proves nothing.
+
+Exactly ONE local input per verb is primary, spelled `--file` or the positional
+subject; one local output is primary, spelled `--output`. A bulk local directory
+is `--directory`, a local output directory `--output-root`, a resolution base
+`--<name>-root`. Every FURTHER local input is auxiliary and is named for the
+role it plays — `--verify-source`, `--receipt`, `--scenario` — because an
+auxiliary's name is the only place that job is written down.
+
+A single-file input MUST NOT be `--source`, `--path`, `--from-file`, or a
+bespoke `--from-*` family. A parameter declaring locus `none` is outside this
+table entirely, which is what protects a closed-enum discriminator that happens
+to be named `--source`, and `--from-year`.
 
 **A verb rename MUST be swept by hand through the surfaces the gates do NOT
 scan:** the runtime write-policy allowlist (`storage_write_policy.py`), the
@@ -85,7 +118,7 @@ a **no-op match that omits a persisted field**, silently dropping the new value.
 
 ## The operator harness cites only the live surface
 
-Every agent-harness document under `src/cadrumo/_data/agent/` that names a CLI
+Every agent-harness document under `src/cadrumo-harness/` that names a CLI
 verb or a JSON-envelope field MUST cite only verbs resolving against the live
 operator-surface manifest and fields existing on the live envelope models, and
 MUST be co-committed with the CLI surface it couples to. A citation to a renamed
@@ -95,8 +128,8 @@ verb hands the agent a dead instruction it cannot recover from.
 
 - **Good:** `aeat app live justificante pull`, `pull-all`, `pull-sources`;
   `aeat app ledger import --file STATEMENT.csv`; a dual-transport reconcile as
-  `reconcile pull` + `reconcile file --file PATH`. `aeat config profile censo` is
-  the worked example: `censo file --file` and `censo pull`, both reconciling
+  `reconcile pull` + `reconcile import --file PATH`. `aeat config profile censo`
+  is the worked example: `censo import --file` and `censo pull`, both reconciling
   through the one `apply_cotejo` authority behind the same `--apply` door.
 - **Good:** an advisory projected with `advisory_notice(code, message,
   context={...})` and passed via `notices=`, its text line rebuilt from the same
